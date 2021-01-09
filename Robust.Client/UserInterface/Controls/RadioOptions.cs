@@ -1,16 +1,19 @@
 using Robust.Client.Graphics;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class RadioOptions : Control
-    {
-        public enum RadioLayout { Horizontal, Vertical }
+    public enum RadioOptionsLayout { Horizontal, Vertical }
 
-        private readonly List<ButtonData> _buttonDataList = new();
-        private readonly Dictionary<int, int> _idMap = new();
+    public class RadioOptions<T> : Control
+    {
+        private int internalIdCount = 0;
+
+        private readonly List<RadioOptionButtonData<T>> _buttonDataList = new();
+        //private readonly Dictionary<int, int> _idMap = new();
         private ButtonGroup _buttonGroup = new();
         private Container _container;
 
@@ -20,16 +23,21 @@ namespace Robust.Client.UserInterface.Controls
 
         public int ItemCount => _buttonDataList.Count;
 
-        public event Action<ItemSelectedEventArgs>? OnItemSelected;
+        /// <summary>
+        /// Called whenever you select a button.
+        ///
+        /// Note: You should add optionButtons.Select(args.Id); if you want to actually select the button.
+        /// </summary>
+        public event Action<RadioOptionItemSelectedEventArgs<T>>? OnItemSelected;
 
-        public RadioOptions(RadioLayout layout)
+        public RadioOptions(RadioOptionsLayout layout)
         {
             switch (layout)
             {
-                case RadioLayout.Vertical:
+                case RadioOptionsLayout.Vertical:
                     _container = new VBoxContainer();
                     break;
-                case RadioLayout.Horizontal:
+                case RadioOptionsLayout.Horizontal:
                 default:
                     _container = new HBoxContainer();
                     break;
@@ -38,60 +46,49 @@ namespace Robust.Client.UserInterface.Controls
             this.AddChild(_container);
         }
 
-        public void AddItem(Texture icon, string label, int? id = null)
+        public int AddItem(string label, T value, Action<RadioOptionItemSelectedEventArgs<T>>? itemSelectedAction = null)
         {
-            AddItem(label, id);
-        }
-
-        public void AddItem(string label, int? id = null, Action<ItemSelectedEventArgs>? itemSelectedAction = null)
-        {
-            if (id == null)
-            {
-                id = _buttonDataList.Count;
-            }
-
-            if (_idMap.ContainsKey(id.Value))
-            {
-                throw new ArgumentException("An item with the same ID already exists.");
-            }
-
             var button = new Button
             {
                 Text = label,
-                ToggleMode = true,
                 Group = _buttonGroup
             };
+
             button.OnPressed += ButtonOnPressed;
-            var data = new ButtonData(label, button)
+
+            var data = new RadioOptionButtonData<T>(label, value, button)
             {
-                Id = id.Value,
+                Id = internalIdCount++
             };
+
             if (itemSelectedAction != null)
             {
                 data.OnItemSelected += itemSelectedAction;
             }
-            _idMap.Add(id.Value, _buttonDataList.Count);
+
             _buttonDataList.Add(data);
             _container.AddChild(button);
             UpdateFirstAndLastButtonStyle();
+
             if (_buttonDataList.Count == 1)
             {
-                Select(0);
+                Select(data.Id);
             }
+            return data.Id;
         }
 
+
+        /// <summary>
+        /// This is triggered when the button is pressed via the UI
+        /// </summary>
+        /// <param name="obj"></param>
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
-            foreach (var buttonData in _buttonDataList)
+            var buttonData = _buttonDataList.FirstOrDefault(bd => bd.Button == obj.Button);
+            if (buttonData != null)
             {
-                if (buttonData.Button == obj.Button)
-                {
-                    if (buttonData.HasOnItemSelectedEvent)
-                        buttonData.InvokeItemSelected(new ItemSelectedEventArgs(buttonData.Id, this));
-                    else
-                        OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
-                    return;
-                }
+                InvokeItemSelected(new RadioOptionItemSelectedEventArgs<T>(buttonData.Id, this));
+                return;
             }
             // Not reachable.
             throw new InvalidOperationException();
@@ -99,7 +96,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Clear()
         {
-            _idMap.Clear();
             foreach (var buttonDatum in _buttonDataList)
             {
                 buttonDatum.Button.OnPressed -= ButtonOnPressed;
@@ -109,45 +105,74 @@ namespace Robust.Client.UserInterface.Controls
             SelectedId = 0;
         }
 
-        public int GetItemId(int idx)
-        {
-            return _buttonDataList[idx].Id;
-        }
-
         public object? GetItemMetadata(int idx)
         {
-            return _buttonDataList[idx].Metadata;
+            return _buttonDataList.FirstOrDefault(bd => bd.Id == idx)?.Metadata;
         }
 
         public int SelectedId { get; private set; }
+        public RadioOptionButtonData<T> SelectedButtonData => _buttonDataList.First(bd => bd.Id == SelectedId);
+        public Button SelectedButton => SelectedButtonData.Button;
+        public string SelectedText => SelectedButtonData.Text;
+        public T SelectedValue => SelectedButtonData.Value;
 
-        public object? SelectedMetadata => _buttonDataList[_idMap[SelectedId]].Metadata;
-
+        /// <summary>
+        /// Always will return true if itemId is not found.
+        /// </summary>
+        /// <param name="idx"></param>
+        /// <returns></returns>
         public bool IsItemDisabled(int idx)
         {
-            return _buttonDataList[idx].Disabled;
+            return _buttonDataList.FirstOrDefault(bd => bd.Id == idx)?.Disabled ?? true;
         }
 
         public void RemoveItem(int idx)
         {
-            var data = _buttonDataList[idx];
-            data.Button.OnPressed -= ButtonOnPressed;
-            _idMap.Remove(data.Id);
-            _container.RemoveChild(data.Button);
-            _buttonDataList.RemoveAt(idx);
-            var newIdx = 0;
-            foreach (var buttonData in _buttonDataList)
+
+            var data = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+            if (data!= null)
             {
-                _idMap[buttonData.Id] = newIdx++;
+                data.Button.OnPressed -= ButtonOnPressed;
+                _container.RemoveChild(data.Button);
+
+                var buttonData = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+                if (buttonData != null)
+                    _buttonDataList.Remove(buttonData);
+
+                UpdateFirstAndLastButtonStyle();
             }
-            UpdateFirstAndLastButtonStyle();
         }
 
         public void Select(int idx)
         {
-            var data = _buttonDataList[idx];
-            SelectedId = data.Id;
-            data.Button.Pressed = true;
+            var data = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+            if (data != null)
+            {
+                SelectedId = data.Id;
+                data.Button.Pressed = true;
+                return;
+            }
+            // Not found.
+        }
+
+        public void SelectByValue(T value)
+        {
+            var data = _buttonDataList.FirstOrDefault(bd => bd.Value.Equals(value));
+            if (data != null)
+            {
+                Select(data.Id);
+            }
+        }
+
+        public void InvokeItemSelected(RadioOptionItemSelectedEventArgs<T> args)
+        {
+            var buttonData = _buttonDataList.FirstOrDefault(bd => bd.Id == args.Id);
+            if (buttonData == null) return;
+
+            if (buttonData.HasOnItemSelectedEvent)
+                buttonData.InvokeItemSelected(args);
+            else
+                OnItemSelected?.Invoke(args);
         }
 
         public void UpdateFirstAndLastButtonStyle()
@@ -170,84 +195,70 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public void SelectId(int id)
-        {
-            Select(GetIdx(id));
-        }
-
-        public int GetIdx(int id)
-        {
-            return _idMap[id];
-        }
-
         public void SetItemDisabled(int idx, bool disabled)
         {
-            var data = _buttonDataList[idx];
-            data.Disabled = disabled;
-            data.Button.Disabled = disabled;
-        }
-
-        public void SetItemId(int idx, int id)
-        {
-            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != idx)
+            var data = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+            if (data != null)
             {
-                throw new InvalidOperationException("An item with said ID already exists.");
+                data.Disabled = disabled;
+                data.Button.Disabled = disabled;
             }
-
-            var data = _buttonDataList[idx];
-            _idMap.Remove(data.Id);
-            _idMap.Add(id, idx);
-            data.Id = id;
         }
 
         public void SetItemMetadata(int idx, object metadata)
         {
-            _buttonDataList[idx].Metadata = metadata;
+            var buttonData = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+            if (buttonData != null)
+                buttonData.Metadata = metadata;
         }
 
         public void SetItemText(int idx, string text)
         {
-            var data = _buttonDataList[idx];
-            data.Text = text;
-            data.Button.Text = text;
-        }
-
-        public class ItemSelectedEventArgs : EventArgs
-        {
-            public RadioOptions Button { get; }
-
-            /// <summary>
-            ///     The ID of the item that has been selected.
-            /// </summary>
-            public int Id { get; }
-
-            public ItemSelectedEventArgs(int id, RadioOptions button)
+            var data = _buttonDataList.FirstOrDefault(bd => bd.Id == idx);
+            if (data != null)
             {
-                Id = id;
-                Button = button;
+                data.Text = text;
+                data.Button.Text = text;
             }
         }
+    }
+    public class RadioOptionItemSelectedEventArgs<T> : EventArgs
+    {
+        public RadioOptions<T> Button { get; }
 
-        private sealed class ButtonData
+        /// <summary>
+        ///     The ID of the item that has been selected.
+        /// </summary>
+        public int Id { get; }
+
+        public RadioOptionItemSelectedEventArgs(int id, RadioOptions<T> button)
         {
-            public string Text;
-            public bool Disabled;
-            public object? Metadata;
-            public int Id;
-            public Button Button;
+            Id = id;
+            Button = button;
+        }
+    }
 
-            public ButtonData(string text, Button button)
-            {
-                Text = text;
-                Button = button;
-            }
+    public sealed class RadioOptionButtonData<T>
+    {
+        public int Id;
+        public string Text;
+        public T Value;
+        public bool Disabled;
+        public object? Metadata;
 
-            public event Action<ItemSelectedEventArgs>? OnItemSelected;
-            public bool HasOnItemSelectedEvent => OnItemSelected != null;
-            public void InvokeItemSelected(ItemSelectedEventArgs args)
-            {
-                OnItemSelected?.Invoke(args);
-            }
+        public Button Button;
+
+        public RadioOptionButtonData(string text, T value, Button button)
+        {
+            Text = text;
+            this.Button = button;
+            Value = value;
+        }
+        public event Action<RadioOptionItemSelectedEventArgs<T>>? OnItemSelected;
+        public bool HasOnItemSelectedEvent => OnItemSelected != null;
+        public void InvokeItemSelected(RadioOptionItemSelectedEventArgs<T> args)
+        {
+            OnItemSelected?.Invoke(args);
         }
     }
 }

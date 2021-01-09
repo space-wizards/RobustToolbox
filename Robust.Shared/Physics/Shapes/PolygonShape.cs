@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using NFluidsynth;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Physics.Shapes
 {
@@ -98,11 +100,6 @@ namespace Robust.Shared.Physics.Shapes
                     _normals.Add(temp);
                 }
 
-                if (_vertices.Count < 3)
-                {
-
-                }
-
                 // Compute the polygon mass data
                 ComputeProperties();
             }
@@ -115,11 +112,44 @@ namespace Robust.Shared.Physics.Shapes
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
-            // TODO: Just use IExposeData on Vertices? ehhh idk
-            // Counter-clockwise order
-            // For consistency sake I started BL
-            // If it's < 3 vertices it'll throw
-            serializer.DataField(this, x => x.Vertices, "vertices", new Vertices());
+
+            if (serializer.Reading)
+            {
+                // TODO: Just use IExposeData on Vertices? ehhh idk
+                // Counter-clockwise order
+                // For consistency sake I started BL
+                // If it's < 3 vertices it'll throw
+                var vertices = serializer.ReadDataField<Vertices?>("vertices", null);
+                if (vertices != null)
+                {
+                    Vertices = vertices;
+                }
+
+                // This is just a helper to make boxes easier
+                var bounds = serializer.ReadDataField<Box2?>("bounds", null);
+                if (bounds != null)
+                {
+                    if (Vertices.Count > 0)
+                    {
+                        Logger.Warning($"Set bounds for entity that already has vertices set!");
+                    }
+
+                    Vertices = new Vertices
+                    {
+                        bounds.Value.BottomLeft,
+                        bounds.Value.BottomRight,
+                        bounds.Value.TopRight,
+                        bounds.Value.TopLeft
+                    };
+                }
+            }
+
+            // Slowly everything will be overridden by this
+            if (serializer.Writing)
+            {
+                serializer.DataField(this, x => x.Vertices, "vertices", new Vertices());
+            }
+
             // Setting vertices should already ComputeProperties
         }
 

@@ -13,14 +13,14 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Specifies the starting point of the ray.
         /// </summary>
-        public Vector2 Start;
+        public readonly Vector2 Start;
 
         /// <summary>
         ///     Specifies the direction the ray is pointing.
         /// </summary>
-        public Vector2 End;
+        public readonly Vector2 End;
 
-        public Vector2 Direction => (End - Start).Normalized;
+        public readonly Vector2 Direction => (End - Start).Normalized;
 
         /// <summary>
         ///     Creates a new instance of a Ray.

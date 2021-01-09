@@ -169,23 +169,14 @@ namespace Robust.Shared.Physics.Broadphase
         {
             base.Update(frameTime);
 
-            var handling = false;
-
             if (_queuedMapChanges.Count > 0)
             {
                 Logger.Debug($"Handling MapId changes for {_queuedMapChanges.Count} entities");
-                handling = true;
             }
 
             while (_queuedMapChanges.Count > 0)
             {
                 HandleMapChange(_queuedMapChanges.Dequeue());
-                Logger.Debug($"{_queuedMapChanges.Count} remaining");
-            }
-
-            if (handling)
-            {
-                Logger.Debug("Handled MapId changes");
             }
         }
 

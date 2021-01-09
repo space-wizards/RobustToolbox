@@ -724,7 +724,8 @@ namespace Robust.Shared.Physics
             if (body.PhysicsMap != this)
                 throw new ArgumentException("You are removing a body that is not in the simulation.", "body");
 
-            Debug.Assert(!AwakeBodySet.Contains(body));
+            // This was an aether assert under the preprocessor
+            // Debug.Assert(!AwakeBodySet.Contains(body));
 
             // Delete the attached joints.
             JointEdge? je = body.JointList;

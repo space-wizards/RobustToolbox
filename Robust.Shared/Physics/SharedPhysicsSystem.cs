@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -28,6 +29,34 @@ namespace Robust.Shared.Physics
                 if (type.IsAbstract) continue;
                 _controllerTypes.Add(type);
             }
+
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            mapManager.MapCreated += HandleMapCreated;
+            mapManager.MapDestroyed += HandleMapDestroyed;
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            mapManager.MapCreated -= HandleMapCreated;
+            mapManager.MapDestroyed -= HandleMapDestroyed;
+        }
+
+        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            if (eventArgs.Map == MapId.Nullspace)
+                return;
+
+            _maps[eventArgs.Map] = new PhysicsMap
+            {
+                MapId = eventArgs.Map,
+            };
+        }
+
+        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
+        {
+            _maps.Remove(eventArgs.Map);
         }
 
         public override void Update(float frameTime)

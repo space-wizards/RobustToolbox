@@ -174,8 +174,7 @@ namespace Robust.Shared.Physics
                 Positions = _positions,
                 Velocities = _velocities
             };
-
-            // TODO: Up to warmstarting
+            
             _contactSolver.Reset(ref step, ContactCount, _contacts, _positions, _velocities);
             _contactSolver.InitializeVelocityConstraints();
 

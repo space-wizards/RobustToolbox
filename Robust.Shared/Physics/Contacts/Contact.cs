@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Physics.Solver;
@@ -48,8 +49,10 @@ namespace Robust.Shared.Physics
                                                            },
                                                        };
 
-        public ContactEdge _nodeA = new ContactEdge();
-        public ContactEdge _nodeB = new ContactEdge();
+        public GridId GridId;
+
+        public ContactEdge _nodeA = new();
+        public ContactEdge _nodeB = new();
 
         /// <summary>
         ///     TimeOfImpact count
@@ -130,9 +133,9 @@ namespace Robust.Shared.Physics
             Friction = PhysicsSettings.MixFriction(FixtureA.Friction, FixtureB.Friction);
         }
 
-        protected Contact(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+        protected Contact(GridId gridId, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
-            Reset(fixtureA, indexA, fixtureB, indexB);
+            Reset(gridId, fixtureA, indexA, fixtureB, indexB);
         }
 
         // TODO: Probs delete coz never used
@@ -149,8 +152,9 @@ namespace Robust.Shared.Physics
             ContactSolver.WorldManifold.Initialize(Manifold, ref aTransform, shapeA.Radius, ref bTransform, shapeB.Radius, out normal, out points);
         }
 
-        private void Reset(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+        private void Reset(GridId gridId, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
+            GridId = gridId;
             Enabled = true;
             IsTouching = false;
             IslandFlag = false;
@@ -239,8 +243,11 @@ namespace Robust.Shared.Physics
             {
                 var aTransform = bodyA.GetTransform();
                 var bTransform = bodyB.GetTransform();
+                Manifold manifold;
+                manifold = Manifold;
 
-                Evaluate(Manifold, ref aTransform, ref bTransform);
+                Evaluate(ref manifold, ref aTransform, ref bTransform);
+                Manifold = manifold;
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the
@@ -265,7 +272,7 @@ namespace Robust.Shared.Physics
                     }
 
                     // TODO: Need to suss this struct bullshit out
-                    var manifold = Manifold;
+                    manifold = Manifold;
                     manifold.Points[i] = mp2;
                     Manifold = manifold;
                 }
@@ -360,7 +367,7 @@ namespace Robust.Shared.Physics
         /// <param name="manifold">The manifold.</param>
         /// <param name="transformA">The first transform.</param>
         /// <param name="transformB">The second transform.</param>
-        private void Evaluate(Manifold manifold, ref PhysicsTransform transformA, ref PhysicsTransform transformB)
+        private void Evaluate(ref Manifold manifold, ref PhysicsTransform transformA, ref PhysicsTransform transformB)
         {
             Debug.Assert(FixtureA != null && FixtureB != null);
 
@@ -394,7 +401,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        internal static Contact? Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact? Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             ShapeType type1 = fixtureA.Shape.ShapeType;
             ShapeType type2 = fixtureB.Shape.ShapeType;
@@ -404,29 +411,29 @@ namespace Robust.Shared.Physics
 
             Contact? c = null;
             var contactPoolList = contactManager._contactPoolList;
-            if (contactPoolList.Next != contactPoolList)
+            if (contactPoolList.TryGetValue(gridId, out var nextPool) && nextPool.Next != nextPool)
             {
                 // get first item in the pool.
-                c = contactPoolList.Next;
+                c = nextPool.Next;
                 Debug.Assert(c != null);
                 // Remove from the pool.
-                contactPoolList.Next = c.Next;
+                nextPool.Next = c.Next;
                 c.Next = null;
             }
             // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {
                 if (c == null)
-                    c = new Contact(fixtureA, indexA, fixtureB, indexB);
+                    c = new Contact(gridId, fixtureA, indexA, fixtureB, indexB);
                 else
-                    c.Reset(fixtureA, indexA, fixtureB, indexB);
+                    c.Reset(gridId, fixtureA, indexA, fixtureB, indexB);
             }
             else
             {
                 if (c == null)
-                    c = new Contact(fixtureB, indexB, fixtureA, indexA);
+                    c = new Contact(gridId, fixtureB, indexB, fixtureA, indexA);
                 else
-                    c.Reset(fixtureB, indexB, fixtureA, indexA);
+                    c.Reset(gridId, fixtureB, indexB, fixtureA, indexA);
             }
 
 
@@ -443,12 +450,14 @@ namespace Robust.Shared.Physics
                 FixtureB.Body.Awake = true;
             }
 
-            Reset(null, 0, null, 0);
+            Reset(default, null, 0, null, 0);
         }
     }
 
     public sealed class ContactEdge
     {
+        public GridId? GridId => Contact?.GridId;
+
         /// <summary>
         ///     Parent contact for this edge.
         /// </summary>

@@ -36,7 +36,6 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void UpdatePairs(BroadphaseDelegate callback)
         {
-            var mapManager = IoCManager.Resolve<IMapManager>();
             // TODO: Only check for movers rather than awake bodies potentially (tl;dr elsewhere I outlined some thoughts
             // on handling shuttles given something can be moving in worldspace but still asleep)
 
@@ -49,7 +48,7 @@ namespace Robust.Shared.Physics.Broadphase
                         var other = _tree.GetUserData(prox);
                         if (proxy.Fixture.Body.ShouldCollide(other.Fixture.Body))
                         {
-                            callback(proxy, other);
+                            callback(GridId, proxy, other);
                         }
 
                         return true;
@@ -154,8 +153,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void QueryRay(DynamicTree<FixtureProxy>.RayQueryCallbackDelegate callback, in Ray ray, bool approx = false)
         {
-            throw new NotImplementedException();
-            // _tree.Query();
+            QueryRay(ref callback, RayQueryDelegateCallbackInst, ray, approx);
         }
 
         public void QueryRay<TState>(ref TState state, DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback, in Ray ray, bool approx = false)

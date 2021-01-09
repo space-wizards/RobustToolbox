@@ -20,9 +20,9 @@ namespace Robust.Shared.Physics
          * issues with velocity differences between entities on shuttles and whatnot but I guess we'll see how we go.
          */
 
-        private ContactManager? _contactManager = default!;
+        private ContactManager? _contactManager;
 
-        private ContactSolver _contactSolver = new ContactSolver();
+        private ContactSolver _contactSolver = new();
 
         private Contact[] _contacts = {};
         private Joint[] _joints = {};
@@ -90,8 +90,8 @@ namespace Robust.Shared.Physics
                 var newBodyBufferCapacity = Math.Max(bodyCapacity, GrowSize);
                 newBodyBufferCapacity = (newBodyBufferCapacity + GrowSize - 1) & ~(GrowSize - 1);
                 Bodies = new PhysicsComponent[newBodyBufferCapacity];
-                // velocities
-                // positions
+                _velocities = new SolverVelocity[newBodyBufferCapacity];
+                _positions = new SolverPosition[newBodyBufferCapacity];
                 // locks eeeeeee
             }
 
@@ -174,7 +174,7 @@ namespace Robust.Shared.Physics
                 Positions = _positions,
                 Velocities = _velocities
             };
-            
+
             _contactSolver.Reset(ref step, ContactCount, _contacts, _positions, _velocities);
             _contactSolver.InitializeVelocityConstraints();
 

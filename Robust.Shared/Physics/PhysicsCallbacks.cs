@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Joints;
 using Robust.Shared.Physics.Shapes;
@@ -42,7 +43,14 @@ namespace Robust.Shared.Physics
 
     public delegate bool CollisionFilterDelegate(Fixture fixtureA, Fixture fixtureB);
 
-    public delegate void BroadphaseDelegate(FixtureProxy proxyA, FixtureProxy proxyB);
+    /// <summary>
+    ///     The 2 proxies that are in contact as well as what grid they are in contact on.
+    ///     Just because there's a broadphase overlap doesn't mean there's contact (their AABBs overlap but not their shapes)./
+    /// </summary>
+    /// <param name="gridId"></param>
+    /// <param name="proxyA"></param>
+    /// <param name="proxyB"></param>
+    public delegate void BroadphaseDelegate(GridId gridId, FixtureProxy proxyA, FixtureProxy proxyB);
 
     public delegate bool BeforeCollisionEventHandler(Fixture sender, Fixture other);
 

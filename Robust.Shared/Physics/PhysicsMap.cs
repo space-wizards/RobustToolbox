@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -82,7 +83,7 @@ namespace Robust.Shared.Physics
         public HashSet<PhysicsComponent> AwakeBodySet { get; private set; }
         List<PhysicsComponent> AwakeBodyList;
         HashSet<PhysicsComponent> IslandSet;
-        HashSet<PhysicsComponent> TOISet;
+        Dictionary<GridId, HashSet<PhysicsComponent>> TOISet;
 
         /// <summary>
         /// If false, the whole simulation stops. It still processes added and removed geometries.
@@ -104,7 +105,7 @@ namespace Robust.Shared.Physics
             AwakeBodySet = new HashSet<PhysicsComponent>();
             AwakeBodyList = new List<PhysicsComponent>(32);
             IslandSet = new HashSet<PhysicsComponent>();
-            TOISet = new HashSet<PhysicsComponent>();
+            TOISet = new Dictionary<GridId, HashSet<PhysicsComponent>>();
 
             ContactManager = new ContactManager();
             ContactManager.Initialize();
@@ -304,21 +305,35 @@ namespace Robust.Shared.Physics
                 }
             }
 
+            // TODO: Cache
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
             // Synchronize fixtures, check for out of range bodies.
             foreach (var b in IslandSet)
             {
-                if (!TOISet.Contains(b))
-                    TOISet.Add(b);
+                foreach (var gridId in mapManager.FindGridIdsIntersecting(MapId, b.WorldAABB, true))
+                {
+                    if (!TOISet.TryGetValue(gridId, out var toi))
+                    {
+                        toi = new HashSet<PhysicsComponent>();
+                        TOISet[gridId] = toi;
+                    }
+
+                    if (!toi.Contains(b))
+                        toi.Add(b);
+                }
 
                 // If a body was not in an island then it did not move.
                 if (!b.Island)
-                {
                     continue;
-                }
+
                 Debug.Assert(b.BodyType != BodyType.Static);
 
                 // Update fixtures (for broad-phase).
                 b.SynchronizeFixtures();
+
+                // Aether2D didn't have this but we'll need to set it
+                b.Island = false;
             }
 
             IslandSet.Clear();
@@ -329,7 +344,7 @@ namespace Robust.Shared.Physics
             AwakeBodyList.Clear();
         }
 
-        private void SolveTOI(ref PhysicsStep step, ref SolverIterations iterations)
+        private void SolveTOI(GridId gridId, ref PhysicsStep step, ref SolverIterations iterations)
         {
             Island.Reset(2 * PhysicsSettings.MaxTOIContacts, PhysicsSettings.MaxTOIContacts, 0, ContactManager);
 
@@ -337,20 +352,26 @@ namespace Robust.Shared.Physics
 
             if (_stepComplete)
             {
-                foreach (var b in TOISet)
+                if (TOISet.TryGetValue(gridId, out var gridToi))
                 {
-                    // Sloth: Original uses BodyFlags but the compilable version just uses the Island bool
-                    b.Island = false;
-                    b.Sweep.Alpha0 = 0.0f;
+                    foreach (var b in gridToi)
+                    {
+                        // Sloth: Original uses BodyFlags but the compilable version just uses the Island bool
+                        b.Island = false;
+                        b.Sweep.Alpha0 = 0.0f;
+                    }
                 }
 
-                foreach (var c in ContactManager.ActiveContacts)
+                if (ContactManager.ActiveContacts.TryGetValue(gridId, out var gridCons))
                 {
-                    // Invalidate TOI
-                    c.IslandFlag = false;
-                    c.TOIFlag = false;
-                    c._toiCount = 0;
-                    c._toi = 1.0f;
+                    foreach (var c in gridCons)
+                    {
+                        // Invalidate TOI
+                        c.IslandFlag = false;
+                        c.TOIFlag = false;
+                        c._toiCount = 0;
+                        c._toi = 1.0f;
+                    }
                 }
             }
 
@@ -361,127 +382,136 @@ namespace Robust.Shared.Physics
                 Contact? minContact = null;
                 float minAlpha = 1.0f;
 
-                foreach (var c in ContactManager.ActiveContacts)
+                if (ContactManager.ActiveContacts.TryGetValue(gridId, out var gridCons))
                 {
-                    // Is this contact disabled?
-                    if (c.Enabled == false)
+                    foreach (var c in gridCons)
                     {
-                        continue;
-                    }
-
-                    // Prevent excessive sub-stepping.
-                    if (c._toiCount > PhysicsSettings.MaxSubSteps)
-                    {
-                        continue;
-                    }
-
-                    float alpha;
-                    if (c.TOIFlag)
-                    {
-                        // This contact has a valid cached TOI.
-                        alpha = c._toi;
-                    }
-                    else
-                    {
-                        Fixture? fA = c.FixtureA;
-                        Fixture? fB = c.FixtureB;
-
-                        Debug.Assert(fA != null && fB != null);
-
-                        // Is there a sensor?
-                        if (fA.IsSensor || fB.IsSensor)
+                        // Is this contact disabled?
+                        if (c.Enabled == false)
                         {
                             continue;
                         }
 
-                        PhysicsComponent bA = fA.Body;
-                        PhysicsComponent bB = fB.Body;
-
-                        BodyType typeA = bA.BodyType;
-                        BodyType typeB = bB.BodyType;
-                        Debug.Assert(typeA == BodyType.Dynamic || typeB == BodyType.Dynamic);
-
-                        bool activeA = bA.Awake && typeA != BodyType.Static;
-                        bool activeB = bB.Awake && typeB != BodyType.Static;
-
-                        // Is at least one body active (awake and dynamic or kinematic)?
-                        if (activeA == false && activeB == false)
+                        // Prevent excessive sub-stepping.
+                        if (c._toiCount > PhysicsSettings.MaxSubSteps)
                         {
                             continue;
                         }
 
-                        bool collideA = (bA.IsBullet || typeA != BodyType.Dynamic) && !bA.IgnoreCCD;
-                        bool collideB = (bB.IsBullet || typeB != BodyType.Dynamic) && !bB.IgnoreCCD;
-
-                        // Are these two non-bullet dynamic bodies?
-                        if (collideA == false && collideB == false)
+                        float alpha;
+                        if (c.TOIFlag)
                         {
-                            continue;
-                        }
-
-                        if (_stepComplete)
-                        {
-                            if (!TOISet.Contains(bA))
-                            {
-                                TOISet.Add(bA);
-                                bA.Island = false;
-                                bA.Sweep.Alpha0 = 0.0f;
-                            }
-                            if (!TOISet.Contains(bB))
-                            {
-                                TOISet.Add(bB);
-                                bB.Island = false;
-                                bB.Sweep.Alpha0 = 0.0f;
-                            }
-                        }
-
-                        // Compute the TOI for this contact.
-                        // Put the sweeps onto the same time interval.
-                        float alpha0 = bA.Sweep.Alpha0;
-
-                        if (bA.Sweep.Alpha0 < bB.Sweep.Alpha0)
-                        {
-                            alpha0 = bB.Sweep.Alpha0;
-                            bA.Sweep.Advance(alpha0);
-                        }
-                        else if (bB.Sweep.Alpha0 < bA.Sweep.Alpha0)
-                        {
-                            alpha0 = bA.Sweep.Alpha0;
-                            bB.Sweep.Advance(alpha0);
-                        }
-
-                        Debug.Assert(alpha0 < 1.0f);
-
-                        // Compute the time of impact in interval [0, minTOI]
-                        _input.ProxyA = new DistanceProxy(fA.Shape, c.ChildIndexA);
-                        _input.ProxyB = new DistanceProxy(fB.Shape, c.ChildIndexB);
-                        _input.SweepA = bA.Sweep;
-                        _input.SweepB = bB.Sweep;
-                        _input.TMax = 1.0f;
-
-                        TOIOutput output;
-                        TimeOfImpact.CalculateTimeOfImpact(out output, ref _input);
-
-                        // Beta is the fraction of the remaining portion of the .
-                        float beta = output.T;
-                        if (output.State == TOIOutputState.Touching)
-                        {
-                            alpha = Math.Min(alpha0 + (1.0f - alpha0) * beta, 1.0f);
+                            // This contact has a valid cached TOI.
+                            alpha = c._toi;
                         }
                         else
                         {
-                            alpha = 1.0f;
+                            Fixture? fA = c.FixtureA;
+                            Fixture? fB = c.FixtureB;
+
+                            Debug.Assert(fA != null && fB != null);
+
+                            // Is there a sensor?
+                            if (fA.IsSensor || fB.IsSensor)
+                            {
+                                continue;
+                            }
+
+                            PhysicsComponent bA = fA.Body;
+                            PhysicsComponent bB = fB.Body;
+
+                            BodyType typeA = bA.BodyType;
+                            BodyType typeB = bB.BodyType;
+                            Debug.Assert(typeA == BodyType.Dynamic || typeB == BodyType.Dynamic);
+
+                            bool activeA = bA.Awake && typeA != BodyType.Static;
+                            bool activeB = bB.Awake && typeB != BodyType.Static;
+
+                            // Is at least one body active (awake and dynamic or kinematic)?
+                            if (activeA == false && activeB == false)
+                            {
+                                continue;
+                            }
+
+                            bool collideA = (bA.IsBullet || typeA != BodyType.Dynamic) && !bA.IgnoreCCD;
+                            bool collideB = (bB.IsBullet || typeB != BodyType.Dynamic) && !bB.IgnoreCCD;
+
+                            // Are these two non-bullet dynamic bodies?
+                            if (collideA == false && collideB == false)
+                            {
+                                continue;
+                            }
+
+                            if (_stepComplete)
+                            {
+                                if (!TOISet.TryGetValue(gridId, out var tois))
+                                {
+                                    tois = new HashSet<PhysicsComponent>();
+                                    TOISet[gridId] = tois;
+                                }
+
+                                if (!tois.Contains(bA))
+                                {
+                                    tois.Add(bA);
+                                    bA.Island = false;
+                                    bA.Sweep.Alpha0 = 0.0f;
+                                }
+                                if (!tois.Contains(bB))
+                                {
+                                    tois.Add(bB);
+                                    bB.Island = false;
+                                    bB.Sweep.Alpha0 = 0.0f;
+                                }
+                            }
+
+                            // Compute the TOI for this contact.
+                            // Put the sweeps onto the same time interval.
+                            float alpha0 = bA.Sweep.Alpha0;
+
+                            if (bA.Sweep.Alpha0 < bB.Sweep.Alpha0)
+                            {
+                                alpha0 = bB.Sweep.Alpha0;
+                                bA.Sweep.Advance(alpha0);
+                            }
+                            else if (bB.Sweep.Alpha0 < bA.Sweep.Alpha0)
+                            {
+                                alpha0 = bA.Sweep.Alpha0;
+                                bB.Sweep.Advance(alpha0);
+                            }
+
+                            Debug.Assert(alpha0 < 1.0f);
+
+                            // Compute the time of impact in interval [0, minTOI]
+                            _input.ProxyA = new DistanceProxy(fA.Shape, c.ChildIndexA);
+                            _input.ProxyB = new DistanceProxy(fB.Shape, c.ChildIndexB);
+                            _input.SweepA = bA.Sweep;
+                            _input.SweepB = bB.Sweep;
+                            _input.TMax = 1.0f;
+
+                            TOIOutput output;
+                            TimeOfImpact.CalculateTimeOfImpact(out output, ref _input);
+
+                            // Beta is the fraction of the remaining portion of the .
+                            float beta = output.T;
+                            if (output.State == TOIOutputState.Touching)
+                            {
+                                alpha = Math.Min(alpha0 + (1.0f - alpha0) * beta, 1.0f);
+                            }
+                            else
+                            {
+                                alpha = 1.0f;
+                            }
+
+                            c._toi = alpha;
+                            c.TOIFlag = true;
                         }
 
-                        c._toi = alpha;
-                        c.TOIFlag = true;
-                    }
-
-                    if (alpha < minAlpha)
-                    {
-                        // This is the minimum TOI found so far.
-                        minContact = c;
-                        minAlpha = alpha;
+                        if (alpha < minAlpha)
+                        {
+                            // This is the minimum TOI found so far.
+                            minContact = c;
+                            minAlpha = alpha;
+                        }
                     }
                 }
 
@@ -624,9 +654,9 @@ namespace Robust.Shared.Physics
 
                             if (_stepComplete)
                             {
-                                if (!TOISet.Contains(other))
+                                if (!TOISet[gridId].Contains(other))
                                 {
-                                    TOISet.Add(other);
+                                    TOISet[gridId].Add(other);
                                     other.Sweep.Alpha0 = 0.0f;
                                 }
                             }
@@ -991,7 +1021,15 @@ namespace Robust.Shared.Physics
                 }
 
                 // Update contacts. This is where some contacts are destroyed.
-                ContactManager.Collide();
+
+                // TODO: Cache
+                var mapManager = IoCManager.Resolve<IMapManager>();
+                ContactManager.Collide(GridId.Invalid);
+
+                foreach (var grid in mapManager.GetAllMapGrids(MapId))
+                {
+                    ContactManager.Collide(grid.Index);
+                }
 
                 // Integrate velocities, solve velocity constraints, and integrate positions.
                 if (_stepComplete && step.DeltaTime > 0.0f)
@@ -1002,7 +1040,12 @@ namespace Robust.Shared.Physics
                 // Handle TOI events.
                 if (PhysicsSettings.ContinuousPhysics && step.DeltaTime > 0.0f)
                 {
-                    SolveTOI(ref step, ref iterations);
+                    SolveTOI(GridId.Invalid, ref step, ref iterations);
+
+                    foreach (var grid in mapManager.GetAllMapGrids(MapId))
+                    {
+                        SolveTOI(grid.Index, ref step, ref iterations);
+                    }
                 }
 
                 if (PhysicsSettings.AutoClearForces)

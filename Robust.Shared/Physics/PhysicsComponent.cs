@@ -372,7 +372,7 @@ namespace Robust.Shared.Physics
 
                         foreach (var proxy in proxies)
                         {
-                            aabb.Combine(proxy.AABB.Translated(offset));
+                            aabb = aabb.Combine(proxy.AABB.Translated(offset));
                         }
                     }
                 }
@@ -445,7 +445,8 @@ namespace Robust.Shared.Physics
             get => _awake;
             set
             {
-                if (_awake == value)
+                // Can't set awake if no PhysicsMap
+                if (_awake == value || PhysicsMap == null)
                     return;
 
                 if (!_awake)
@@ -456,7 +457,7 @@ namespace Robust.Shared.Physics
                         PhysicsMap?.ContactManager.UpdateActiveContacts(ContactList, true);
 
                     if (PhysicsMap?.AwakeBodySet.Contains(this) == false)
-                        PhysicsMap.AwakeBodySet.Add(this);
+                        PhysicsMap?.AwakeBodySet.Add(this);
                 }
                 else
                 {
@@ -490,7 +491,6 @@ namespace Robust.Shared.Physics
             serializer.DataField(this, x => x.AngularDamping, "angularDamping", 1f);
             serializer.DataField(this, x => x._bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
-            serializer.DataField(this, x => x.Awake, "awake", true);
             serializer.DataReadWriteFunction("fixtures",
                 new List<Fixture>(),
                 value =>
@@ -504,6 +504,19 @@ namespace Robust.Shared.Physics
                 },
                 () => FixtureList);
             serializer.DataField(this, x => x.Enabled, "enabled", true);
+        }
+
+        public override void OnAdd()
+        {
+            base.OnAdd();
+
+            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
+            {
+                PhysicsMap = map;
+            }
+
+            // TODO: Need to be able to set this in serialization for startup optimisation
+            Awake = true;
         }
 
         public override ComponentState GetComponentState()

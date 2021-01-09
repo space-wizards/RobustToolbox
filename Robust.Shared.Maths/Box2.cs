@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Maths
 {
@@ -243,6 +244,7 @@ namespace Robust.Shared.Maths
         /// <param name="boxA"></param>
         /// <param name="boxB"></param>
         /// <returns></returns>
+        [Pure]
         public Box2 Combine(Box2 boxB)
         {
             return new Box2(Vector2.ComponentMin(BottomLeft, boxB.BottomLeft), Vector2.ComponentMax(TopRight, boxB.TopRight));

@@ -183,6 +183,8 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Shutdown()
         {
             base.Shutdown();
+            UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.MapCreated -= HandleMapCreated;
@@ -219,11 +221,17 @@ namespace Robust.Shared.Physics.Broadphase
                 oldMap.Remove(physicsComponent);
             }
 
+            foreach (var fixture in physicsComponent.FixtureList)
+            {
+                fixture.DestroyProxies();
+            }
+
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.Entity.Transform.MapID, out var newMap))
             {
                 newMap.Add(physicsComponent);
             }
 
+            /*
             var newBroadPhases = GetBroadphases(physicsComponent).ToList();
             var oldBroadPhases = broadPhases.Where(o => !newBroadPhases.Select(b => b.Broadphase).Contains(o));
 
@@ -240,11 +248,7 @@ namespace Robust.Shared.Physics.Broadphase
                     }
                 }
             }
-            */
-            foreach (var fixture in physicsComponent.FixtureList)
-            {
-                fixture.DestroyProxies();
-            }
+
 
             _lastBroadPhases[physicsComponent].Clear();
             _lastBroadPhases[physicsComponent] = new List<IBroadPhase>();
@@ -271,6 +275,7 @@ namespace Robust.Shared.Physics.Broadphase
                     }
                 }
             }
+            */
         }
 
         private void HandleGridCreated(GridId gridId)
@@ -300,8 +305,10 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleGridRemoval(GridId gridId)
         {
-            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
-            _graph[mapId].Remove(gridId);
+            foreach (var (_, grids) in _graph)
+            {
+                if (grids.Remove(gridId)) return;
+            }
         }
 
         public void AddBody(PhysicsComponent component)
@@ -562,7 +569,19 @@ namespace Robust.Shared.Physics.Broadphase
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
             {
-                foreach (var proxy in _graph[mapId][gridId].QueryAabb(worldAABB, false))
+                Vector2 offset;
+
+                if (gridId == GridId.Invalid)
+                {
+                    offset = Vector2.Zero;
+                }
+                else
+                {
+                    offset = -_mapManager.GetGrid(gridId).WorldPosition;
+                }
+
+                var gridBox = worldAABB.Translated(offset);
+                foreach (var proxy in _graph[mapId][gridId].QueryAabb(gridBox, false))
                 {
                     if (bodies.Contains(proxy.Fixture.Body)) continue;
                     bodies.Add(proxy.Fixture.Body);
@@ -573,15 +592,18 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         // This is dirty but so is a lot of other shit so it'll get refactored at some stage tm
-        public IEnumerable<PhysicsComponent> GetAwakeBodies(MapId mapId, GridId gridId)
+        public List<PhysicsComponent> GetAwakeBodies(MapId mapId, GridId gridId)
         {
+            var bodies = new List<PhysicsComponent>();
             var map = Get<SharedPhysicsSystem>().Maps[mapId];
 
             foreach (var body in map.AwakeBodySet)
             {
                 if (body.Owner.Transform.GridID == gridId)
-                    yield return body;
+                    bodies.Add(body);
             }
+
+            return bodies;
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,

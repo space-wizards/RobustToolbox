@@ -46,23 +46,23 @@ namespace Robust.Shared.Physics
         public int CollideMultithreadThreshold = int.MaxValue;
         #endregion
 
-        private ContactListHead ContactList = default!;
-        public int ContactCount { get; private set; }
-        internal ContactListHead _contactPoolList = default!;
+        private Dictionary<GridId, ContactListHead> ContactList = default!;
 
-        public GridId GridId => throw new NotImplementedException();
+        public int ContactCount { get; private set; }
+
+        internal Dictionary<GridId, ContactListHead> _contactPoolList = default!;
 
         /// <summary>
         /// The set of active contacts.
         /// </summary>
-		public HashSet<Contact> ActiveContacts = new HashSet<Contact>();
+		public Dictionary<GridId, HashSet<Contact>> ActiveContacts = new();
 
         /// <summary>
         /// A temporary copy of active contacts that is used during updates so
 		/// the hash set can have members added/removed during the update.
 		/// This list is cleared after every update.
         /// </summary>
-		List<Contact> ActiveList = new List<Contact>();
+		List<Contact> ActiveList = new();
 
         /// <summary>
         /// The filter used by the contact manager.
@@ -98,16 +98,16 @@ namespace Robust.Shared.Physics
 
         public void Initialize()
         {
-            ContactList = new ContactListHead();
+            ContactList = new Dictionary<GridId, ContactListHead>();
             ContactCount = 0;
-            _contactPoolList = new ContactListHead();
+            _contactPoolList = new Dictionary<GridId, ContactListHead>();
             BroadPhase = EntitySystem.Get<SharedBroadPhaseSystem>();
 
             OnBroadphaseCollision = AddPair;
         }
 
         // Broad-phase callback.
-        private void AddPair(FixtureProxy proxyA, FixtureProxy proxyB)
+        private void AddPair(GridId gridId, FixtureProxy proxyA, FixtureProxy proxyB)
         {
             Fixture? fixtureA = proxyA.Fixture;
             Fixture? fixtureB = proxyB.Fixture;
@@ -127,6 +127,8 @@ namespace Robust.Shared.Physics
             // Does a contact already exist?
             for (ContactEdge? ceB = bodyB.ContactList; ceB != null; ceB = ceB?.Next)
             {
+                if (ceB.GridId != gridId) continue;
+
                 if (ceB.Other == bodyA)
                 {
                     Fixture? fA = ceB?.Contact?.FixtureA;
@@ -168,7 +170,7 @@ namespace Robust.Shared.Physics
                 return;
 
             // Call the factory.
-            Contact? c = Contact.Create(this, fixtureA, indexA, fixtureB, indexB);
+            Contact? c = Contact.Create(this, gridId, fixtureA, indexA, fixtureB, indexB);
 
             if (c == null)
                 return;
@@ -183,7 +185,14 @@ namespace Robust.Shared.Physics
             // TODO: What the fuck the c == null call is right up there
             Debug.Assert(c != null);
             // Insert into the world.
-            c.Prev = ContactList;
+
+            if (!ContactList.TryGetValue(gridId, out var gridCon))
+            {
+                gridCon = new ContactListHead();
+                ContactList[gridId] = gridCon;
+            }
+
+            c.Prev = gridCon;
             c.Next = c.Prev.Next;
             c.Prev.Next = c;
 
@@ -192,7 +201,13 @@ namespace Robust.Shared.Physics
 
             ContactCount++;
 
-			ActiveContacts.Add(c);
+            if (!ActiveContacts.TryGetValue(c.GridId, out var contacts))
+            {
+                contacts = new HashSet<Contact>();
+                ActiveContacts[c.GridId] = contacts;
+            }
+
+			contacts.Add(c);
             // Connect to island graph.
 
             // Connect to body A
@@ -297,17 +312,23 @@ namespace Robust.Shared.Physics
             if (contact._nodeB.Next != null)
                 contact._nodeB.Next.Prev = contact._nodeB.Prev;
 
-			if (ActiveContacts.Contains(contact))
-				ActiveContacts.Remove(contact);
+			if (ActiveContacts[contact.GridId].Contains(contact))
+				ActiveContacts[contact.GridId].Remove(contact);
 
             contact.Destroy();
 
             // Insert into the pool.
-            contact.Next = _contactPoolList.Next;
-            _contactPoolList.Next = contact;
+            if (!_contactPoolList.TryGetValue(contact.GridId, out var poolCon))
+            {
+                poolCon = new ContactListHead();
+                _contactPoolList[contact.GridId] = poolCon;
+            }
+
+            contact.Next = poolCon.Next;
+            poolCon.Next = contact;
         }
 
-        internal void Collide()
+        internal void Collide(GridId gridId)
         {
             /*
 #if NET40 || NET45 || NETSTANDARD2_0 || PORTABLE40 || PORTABLE45 || W10 || W8_1 || WP8_1
@@ -319,8 +340,11 @@ namespace Robust.Shared.Physics
 #endif
 */
 
+            if (!ActiveContacts.TryGetValue(gridId, out var contacts))
+                return;
+
             // Update awake contacts.
-            ActiveList.AddRange(ActiveContacts);
+            ActiveList.AddRange(contacts);
             foreach (var tmpc in ActiveList)
             {
                 Contact? c = tmpc;
@@ -379,13 +403,23 @@ namespace Robust.Shared.Physics
                 // At least one body must be awake and it must be dynamic or kinematic.
                 if (activeA == false && activeB == false)
                 {
-                    ActiveContacts.Remove(c);
+                    ActiveContacts[c.GridId].Remove(c);
                     // c = c.Next;
                     continue;
                 }
 
-                var proxyA = fixtureA.Proxies[GridId][indexA];
-                var proxyB = fixtureB.Proxies[GridId][indexB];
+                if (!fixtureA.Proxies.TryGetValue(gridId, out var proxiesA))
+                {
+                    return;
+                }
+
+                if (!fixtureB.Proxies.TryGetValue(gridId, out var proxiesB))
+                {
+                    return;
+                }
+
+                var proxyA = proxiesA[indexA];
+                var proxyB = proxiesB[indexB];
 
                 bool overlap = BroadPhase.TestOverlap(proxyA, proxyB);
 
@@ -568,8 +602,8 @@ namespace Robust.Shared.Physics
             {
                 for (var contactEdge = ContactList; contactEdge != null; contactEdge = contactEdge.Next)
                 {
-                    if (contactEdge.Contact != null && !ActiveContacts.Contains(contactEdge.Contact))
-                        ActiveContacts.Add(contactEdge.Contact);
+                    if (contactEdge.Contact != null && !ActiveContacts[contactEdge.Contact.GridId].Contains(contactEdge.Contact))
+                        ActiveContacts[contactEdge.Contact.GridId].Add(contactEdge.Contact);
                 }
             }
             else
@@ -578,8 +612,8 @@ namespace Robust.Shared.Physics
                 {
                     if (contactEdge.Contact != null && contactEdge.Other?.Awake == false)
                     {
-                        if (ActiveContacts.Contains(contactEdge.Contact))
-                            ActiveContacts.Remove(contactEdge.Contact);
+                        if (ActiveContacts[contactEdge.Contact.GridId].Contains(contactEdge.Contact))
+                            ActiveContacts[contactEdge.Contact.GridId].Remove(contactEdge.Contact);
                     }
                 }
             }

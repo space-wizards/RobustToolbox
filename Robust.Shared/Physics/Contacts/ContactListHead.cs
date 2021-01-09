@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics.Contacts
     /// </summary>
     public class ContactListHead : Contact , IEnumerable<Contact>
     {
-        internal ContactListHead(): base(null, 0, null, 0)
+        internal ContactListHead(): base(default, null, 0, null, 0)
         {
             Prev = this;
             Next = this;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-
 using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Utility;
@@ -346,15 +345,25 @@ namespace Robust.Client.ResourceManagement
             foreach (var stateObject in manifestJson["states"]!.Cast<JObject>())
             {
                 var stateName = stateObject["name"]!.ToObject<string>()!;
-                var dirValue = stateObject["directions"]!.ToObject<int>();
+                RSI.State.DirectionType directions;
+                int dirValue;
 
-                var directions = dirValue switch
+                if (stateObject.TryGetValue("directions", out var dirJToken))
                 {
-                    1 => RSI.State.DirectionType.Dir1,
-                    4 => RSI.State.DirectionType.Dir4,
-                    8 => RSI.State.DirectionType.Dir8,
-                    _ => throw new RSILoadException($"Invalid direction: {dirValue}")
-                };
+                    dirValue= dirJToken.ToObject<int>();
+                    directions = dirValue switch
+                    {
+                        1 => RSI.State.DirectionType.Dir1,
+                        4 => RSI.State.DirectionType.Dir4,
+                        8 => RSI.State.DirectionType.Dir8,
+                        _ => throw new RSILoadException($"Invalid direction: {dirValue} expected 1, 4 or 8")
+                    };
+                }
+                else
+                {
+                    dirValue = 1;
+                    directions = RSI.State.DirectionType.Dir1;
+                }
 
                 // We can ignore selectors and flags for now,
                 // because they're not used yet!

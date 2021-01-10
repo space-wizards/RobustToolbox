@@ -991,6 +991,10 @@ namespace Robust.Client.GameObjects
             var mRotation = Matrix3.CreateRotation(angle);
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
+            // Only apply scale if needed.
+            if(!MathHelper.CloseTo(Scale.Length, 1f))
+                transform.Multiply(Matrix3.CreateScale(Scale));
+            
             transform.Multiply(worldTransform);
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);

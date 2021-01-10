@@ -992,8 +992,7 @@ namespace Robust.Client.GameObjects
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
             // Only apply scale if needed.
-            if(!Scale.EqualsApprox(Vector2.One))
-                transform.Multiply(Matrix3.CreateScale(Scale));
+            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
 
             transform.Multiply(worldTransform);
 

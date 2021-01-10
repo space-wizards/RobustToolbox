@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Robust.Client.Utility
 {
-    public static class UserDataDir
+    internal static class UserDataDir
     {
         [Pure]
         public static string GetUserDataDir()

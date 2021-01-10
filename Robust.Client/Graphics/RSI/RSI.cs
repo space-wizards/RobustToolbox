@@ -125,7 +125,10 @@ namespace Robust.Client.Graphics
 
         public IDeepClone DeepClone()
         {
-            return new RSI(Size, Path);
+            return new RSI(Size, Path)
+            {
+                States = IDeepClone.CloneValue(States)!
+            };
         }
     }
 }

@@ -11,10 +11,12 @@ namespace Robust.Shared.Prototypes
         public readonly bool ReadOnly;
         public readonly Type? FlagType;
         public readonly Type? ConstantType;
+        public readonly int Priority;
 
-        public YamlFieldAttribute([NotNull] string tag, bool readOnly = false, Type? flagType = null, Type? constType = null)
+        public YamlFieldAttribute([NotNull] string tag, bool readOnly = false, Type? flagType = null, Type? constType = null, int priority = 1)
         {
             Tag = tag;
+            Priority = priority;
             ReadOnly = readOnly;
             FlagType = flagType;
             ConstantType = constType;

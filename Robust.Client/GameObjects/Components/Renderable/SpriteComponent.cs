@@ -35,7 +35,7 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
-    [CustomDataClass(typeof(SpriteComponentDataClass))]
+    [CustomDataClass(typeof(SpriteComponentData))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
@@ -128,6 +128,137 @@ namespace Robust.Client.GameObjects
         [YamlField("directional")]
         private bool _directional = true;
 
+        [CustomYamlField("layerDatums", 2)]
+        private List<PrototypeLayerData> _yamlLayerDataReceiver
+        {
+            get
+            {
+                var layerDatums = new List<PrototypeLayerData>();
+                foreach (var layer in Layers)
+                {
+                    layerDatums.Add(layer.ToPrototypeData());
+                }
+
+                return layerDatums;
+            }
+            set
+            {
+                if(value == null) return;
+
+                foreach (var layerDatum in value)
+                {
+                    var anyTextureAttempted = false;
+                    var layer = new Layer(this);
+                    if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
+                    {
+                        var path = TextureRoot / layerDatum.RsiPath;
+                        try
+                        {
+                            layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                        }
+                        catch
+                        {
+                            Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.State))
+                    {
+                        anyTextureAttempted = true;
+                        var theRsi = layer.RSI ?? BaseRSI;
+                        if (theRsi == null)
+                        {
+                            Logger.ErrorS(SpriteComponent.LogCategory,
+                                "Layer has no RSI to load states from."
+                                + "cannot use 'state' property. ({0})", layerDatum.State);
+                        }
+                        else
+                        {
+                            var stateid = new RSI.StateId(layerDatum.State);
+                            layer.State = stateid;
+                            if (theRsi.TryGetState(stateid, out var state))
+                            {
+                                // Always use south because this layer will be cached in the serializer.
+                                layer.AnimationTimeLeft = state.GetDelay(0);
+                            }
+                            else
+                            {
+                                Logger.ErrorS(LogCategory,
+                                    $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
+                                    stateid);
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
+                    {
+                        anyTextureAttempted = true;
+                        if (layer.State.IsValid)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                "Cannot specify 'texture' on a layer if it has an RSI state specified."
+                            );
+                        }
+                        else
+                        {
+                            layer.Texture =
+                                resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
+                    {
+                        if (IoCManager.Resolve<IPrototypeManager>().TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
+                        {
+                            layer.Shader = prototype.Instance();
+                        }
+                        else
+                        {
+                            Logger.ErrorS(LogCategory,
+                                "Shader prototype '{0}' does not exist.",
+                                layerDatum.Shader);
+                        }
+                    }
+
+                    layer.Color = layerDatum.Color;
+                    layer.Rotation = layerDatum.Rotation;
+                    // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
+                    layer.Visible = anyTextureAttempted && layerDatum.Visible;
+                    layer.Scale = layerDatum.Scale;
+
+                    Layers.Add(layer);
+
+                    if (layerDatum.MapKeys != null)
+                    {
+                        var index = Layers.Count - 1;
+                        foreach (var keyString in layerDatum.MapKeys)
+                        {
+                            object key;
+                            if (IoCManager.Resolve<IReflectionManager>().TryParseEnumReference(keyString, out var @enum))
+                            {
+                                key = @enum;
+                            }
+                            else
+                            {
+                                key = keyString;
+                            }
+
+                            if (LayerMap.ContainsKey(key))
+                            {
+                                Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                                continue;
+                            }
+
+                            LayerMap.Add(key, index);
+                        }
+                    }
+                }
+
+                _layerMapShared = true;
+                UpdateIsInert();
+            }
+        }
+
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -175,24 +306,9 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] [CustomYamlField("layermap")] private Dictionary<object, int> LayerMap = new();
+        [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = new();
-
-        [CustomYamlField("layers")]
-        private List<Layer> LayersSetter
-        {
-            get => Layers;
-            set
-            {
-                Layers.Clear();
-                foreach (var layer in value)
-                {
-                    Layers.Add(new Layer(layer, this));
-                }
-                UpdateIsInert();
-            }
-        }
 
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -1560,6 +1676,22 @@ namespace Robust.Client.GameObjects
             RSI? ISpriteLayer.Rsi { get => RSI; set => SetRsi(value); }
             RSI.StateId ISpriteLayer.RsiState { get => State; set => SetState(value); }
             Texture? ISpriteLayer.Texture { get => Texture; set => SetTexture(value); }
+
+            public PrototypeLayerData ToPrototypeData()
+            {
+                return new PrototypeLayerData
+                {
+                    Color = Color,
+                    Rotation = Rotation,
+                    Scale = Scale,
+                    //todo Shader = Shader,
+                    State = State.Name,
+                    Visible = Visible,
+                    RsiPath = RSI?.Path?.ToString(),
+                    //todo TexturePath = Textur
+                    //todo MapKeys
+                };
+            }
 
             bool ISpriteLayer.Visible
             {

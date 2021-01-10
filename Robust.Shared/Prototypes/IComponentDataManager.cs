@@ -33,6 +33,8 @@ namespace Robust.Shared.Prototypes
 
         bool IsCustom { get; }
 
+        int Priority { get; }
+
         void SetValue(object obj, object? value);
 
         object? GetValue(object obj);
@@ -43,13 +45,15 @@ namespace Robust.Shared.Prototypes
         public string Tag { get; }
         public Type FieldType => _fieldInfo.FieldType;
         public bool IsCustom { get; }
+        public int Priority { get; }
         private FieldInfo _fieldInfo;
 
-        public YamlFieldDefinition([NotNull] string tag, FieldInfo fieldInfo, bool isCustom)
+        public YamlFieldDefinition([NotNull] string tag, FieldInfo fieldInfo, bool isCustom, int? priority)
         {
             Tag = tag;
             _fieldInfo = fieldInfo;
             IsCustom = isCustom;
+            Priority = priority ?? 1;
         }
 
         public void SetValue(object obj, object? value)
@@ -68,12 +72,14 @@ namespace Robust.Shared.Prototypes
         public string Tag { get; }
         public Type FieldType => _propertyInfo.PropertyType;
         public bool IsCustom { get; }
+        public int Priority { get; }
         private PropertyInfo _propertyInfo;
-        public YamlPropertyDefinition([NotNull] string tag, PropertyInfo propertyInfo, bool isCustom)
+        public YamlPropertyDefinition([NotNull] string tag, PropertyInfo propertyInfo, bool isCustom, int? priority)
         {
             Tag = tag;
             _propertyInfo = propertyInfo;
             IsCustom = isCustom;
+            Priority = priority ?? 1;
         }
 
         public void SetValue(object obj, object? value)

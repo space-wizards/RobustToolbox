@@ -119,7 +119,8 @@ namespace Robust.Shared.Prototypes
 
         public void PopulateComponent(IComponent comp, ComponentData values)
         {
-            var def = GetComponentDataDefinition(comp.Name);
+            var def = GetComponentDataDefinition(comp.Name).ToList();
+            def.Sort((x, y) => x.Priority.CompareTo(y.Priority));
             var compType = comp.GetType();
 
             foreach (var fieldDefinition in def)
@@ -277,6 +278,8 @@ namespace Robust.Shared.Prototypes
                 yamlFieldAttr?.Tag ??
                 customYamlAttr?.Tag;
             if (tag == null) return null;
+            var prio = yamlFieldAttr?.Priority ??
+                       customYamlAttr?.Priority;
 
             if (!info.CanWrite)
             {
@@ -289,7 +292,7 @@ namespace Robust.Shared.Prototypes
                 throw new Exception($"Property {info} does not have a required getter.");
             }
 
-            return onlyCustom && customYamlAttr == null ? null : new YamlPropertyDefinition(tag, info, customYamlAttr != null);
+            return onlyCustom && customYamlAttr == null ? null : new YamlPropertyDefinition(tag, info, customYamlAttr != null, prio);
         }
 
         private IYamlFieldDefinition? GetFieldDefinition(FieldInfo info, bool onlyCustom = false)
@@ -307,8 +310,10 @@ namespace Robust.Shared.Prototypes
                 yamlFieldAttr?.Tag ??
                 customYamlAttr?.Tag;
             if (tag == null) return null;
+            var prio = yamlFieldAttr?.Priority ??
+                       customYamlAttr?.Priority;
 
-            return onlyCustom && customYamlAttr == null ? null : new YamlFieldDefinition(tag, info, customYamlAttr != null);
+            return onlyCustom && customYamlAttr == null ? null : new YamlFieldDefinition(tag, info, customYamlAttr != null, prio);
         }
 
         public ComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)

@@ -583,7 +583,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         internal void ChangeMapId(MapId newMapId)
         {
+            if (newMapId == MapID)
+                return;
+
             var oldMapId = MapID;
+
             MapID = newMapId;
             MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);

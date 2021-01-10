@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Reflection.Metadata;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -12,6 +11,7 @@ namespace Robust.Shared.Physics
     /// no coincide with the center of mass. However, to support dynamics
     /// we must interpolate the center of mass position.
     /// </summary>
+    [Serializable, NetSerializable]
     public struct Sweep // moment
     {
         /// <summary>

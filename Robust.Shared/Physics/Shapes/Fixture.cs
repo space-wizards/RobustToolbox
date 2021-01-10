@@ -43,7 +43,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Our child shape.
         /// </summary>
-        public Shape Shape { get; set; } = default!;
+        public Shape Shape { get; private set; } = default!;
 
         /// <summary>
         /// Fires after two shapes have collided and are solved. This gives you a chance to get the impact force.
@@ -149,6 +149,7 @@ namespace Robust.Shared.Physics
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(this, x => x.Shape, "shape", null);
+            DebugTools.Assert(Shape != null);
             serializer.DataField(ref _isSensor, "isSensor", false);
             serializer.DataField(this, x => x.Friction, "friction", 0.2f);
             serializer.DataField(this, x => x.Restitution, "restitution", 0.2f);
@@ -218,7 +219,7 @@ namespace Robust.Shared.Physics
             // The original created them plus added them to broadphase which was clunky and not a good
             // separation of responsibilities so this solely creates them and we'll handle broadphase
             // elsewhere
-            DebugTools.Assert(ProxyCount == 0);
+            DebugTools.Assert(ProxyCount == 0 || ProxyCount == Shape.ChildCount);
             mapManager ??= IoCManager.Resolve<IMapManager>();
 
             PhysicsTransform gridTransform;
@@ -231,6 +232,11 @@ namespace Robust.Shared.Physics
             else
             {
                 gridTransform = transform;
+            }
+
+            if (Shape == null)
+            {
+                throw new InvalidOperationException();
             }
 
             ProxyCount = Shape.ChildCount;
@@ -270,6 +276,39 @@ namespace Robust.Shared.Physics
 
             Proxies.Clear();
             ProxyCount = 0;
+        }
+
+        internal void Destroy()
+        {
+#if DEBUG
+            if (Shape.ShapeType == ShapeType.Polygon)
+                ((PolygonShape)Shape).Vertices.AttachedToBody = false;
+#endif
+
+            // The proxies must be destroyed before calling this.
+            Debug.Assert(ProxyCount == 0);
+
+            // Free the proxy array.
+            Proxies.Clear();
+            //Shape = null;
+
+            BeforeCollision = null;
+            OnCollision = null;
+            OnSeparation = null;
+            AfterCollision = null;
+
+            /*
+            if (Body.PhysicsMap.FixtureRemoved != null)
+            {
+                Body.PhysicsMap.FixtureRemoved(this);
+            }
+
+
+            Body.PhysicsMap.FixtureAdded = null;
+            Body.PhysicsMap.FixtureRemoved = null;
+            */
+            OnSeparation = null;
+            OnCollision = null;
         }
 
         /// <summary>

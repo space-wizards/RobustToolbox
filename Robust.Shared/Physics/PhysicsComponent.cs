@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -28,7 +29,7 @@ namespace Robust.Shared.Physics
 
         internal Sweep Sweep;
 
-        public PhysicsMap? PhysicsMap { get; set; }
+        public PhysicsMap PhysicsMap { get; set; } = default!;
 
         /// <summary>
         ///     True if any fixture is a sensor
@@ -170,6 +171,7 @@ namespace Robust.Shared.Physics
                     Awake = true;
 
                 _angularVelocity = value;
+                Dirty();
             }
         }
 
@@ -191,6 +193,7 @@ namespace Robust.Shared.Physics
                     Awake = true;
 
                 _linearVelocity = value;
+                Dirty();
             }
         }
 
@@ -226,14 +229,36 @@ namespace Robust.Shared.Physics
         /// </summary>
         public float InvI
         {
-            get;
-            private set;
+            get => _invI;
+            private set
+            {
+                if (_invI == value)
+                    return;
+
+                _invI = value;
+                Dirty();
+            }
         }
+
+        private float _invI;
 
         /// <summary>
         ///     Inverse mass. Typically this is used over Mass.
         /// </summary>
-        public float InvMass { get; set; }
+        public float InvMass
+        {
+            get => _invMass;
+            set
+            {
+                if (_invMass == value)
+                    return;
+
+                _invMass = value;
+                Dirty();
+            }
+        }
+
+        private float _invMass;
 
         public float Mass
         {
@@ -275,6 +300,7 @@ namespace Robust.Shared.Physics
                 // Update center of mass velocity.
                 Vector2 a = Sweep.Center - oldCenter;
                 _linearVelocity += new Vector2(-_angularVelocity * a.Y, _angularVelocity * a.X);
+                Dirty();
             }
         }
 
@@ -286,11 +312,50 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     https://en.wikipedia.org/wiki/Torque
         /// </summary>
-        public float Torque { get; set; }
+        public float Torque
+        {
+            get => _torque;
+            set
+            {
+                if (_torque == value)
+                    return;
 
-        public float LinearDamping { get; set; }
+                _torque = value;
+                Dirty();
+            }
+        }
 
-        public float AngularDamping { get; set; }
+        private float _torque;
+
+        public float LinearDamping
+        {
+            get => _linearDamping;
+            set
+            {
+                if (_linearDamping == value)
+                    return;
+
+                _linearDamping = value;
+                Dirty();
+            }
+        }
+
+        private float _linearDamping;
+
+        public float AngularDamping
+        {
+            get => _angularDamping;
+            set
+            {
+                if (_angularDamping == value)
+                    return;
+
+                _angularDamping = value;
+                Dirty();
+            }
+        }
+
+        private float _angularDamping;
 
         /// <summary>
         ///     What type of body this, such as static or dynamic.
@@ -342,44 +407,12 @@ namespace Robust.Shared.Physics
                     foreach (Fixture fixture in FixtureList)
                         fixture.TouchProxies(broadPhase);
                 }
+
+                Dirty();
             }
         }
 
         private BodyType _bodyType;
-
-        public Box2 WorldAABB
-        {
-            get
-            {
-                // TODO: Defo need a test for this.
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var aabb = new Box2();
-
-                foreach (var fixture in FixtureList)
-                {
-                    foreach (var (gridId, proxies) in fixture.Proxies)
-                    {
-                        Vector2 offset;
-
-                        if (gridId == GridId.Invalid)
-                        {
-                            offset = Vector2.Zero;
-                        }
-                        else
-                        {
-                            offset = -mapManager.GetGrid(gridId).WorldPosition;
-                        }
-
-                        foreach (var proxy in proxies)
-                        {
-                            aabb = aabb.Combine(proxy.AABB.Translated(offset));
-                        }
-                    }
-                }
-
-                return aabb;
-            }
-        }
 
         /// <summary>
         ///     Is this body enabled.
@@ -412,6 +445,8 @@ namespace Robust.Shared.Physics
                         DestroyContacts();
                     }
                 }
+
+                Dirty();
             }
         }
 
@@ -429,6 +464,7 @@ namespace Robust.Shared.Physics
                     Awake = true;
 
                 _sleepingAllowed = value;
+                Dirty();
             }
         }
 
@@ -490,7 +526,7 @@ namespace Robust.Shared.Physics
             serializer.DataField(this, x => x.LinearDamping, "linearDamping", 1f);
             serializer.DataField(this, x => x.AngularDamping, "angularDamping", 1f);
             serializer.DataField(this, x => x._bodyType, "bodyType", BodyType.Dynamic);
-            serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
+            serializer.DataField(this, x => x._sleepingAllowed, "sleepingAllowed", true);
             serializer.DataReadWriteFunction("fixtures",
                 new List<Fixture>(),
                 value =>
@@ -503,31 +539,114 @@ namespace Robust.Shared.Physics
                     FixtureList = value;
                 },
                 () => FixtureList);
-            serializer.DataField(this, x => x.Enabled, "enabled", true);
+            serializer.DataField(this, x => x._enabled, "enabled", true);
+            serializer.DataField(this, x => x._awake, "awake", true);
         }
 
-        public override void OnAdd()
+        public override void Initialize()
         {
-            base.OnAdd();
+            base.Initialize();
 
             if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
             {
                 PhysicsMap = map;
+                PhysicsMap.AddBody(this);
+            }
+            else
+            {
+
             }
 
-            // TODO: Need to be able to set this in serialization for startup optimisation
-            Awake = true;
+            var worldPos = Owner.Transform.WorldPosition;
+            Sweep.Center = worldPos;
+            Sweep.Center0 = worldPos;
+
+            var rotation = (float) Owner.Transform.WorldRotation.Theta;
+            Sweep.Angle = rotation;
+            Sweep.Angle0 = rotation;
         }
 
         public override ComponentState GetComponentState()
         {
-            return base.GetComponentState();
+            return new PhysicsComponentState(
+                Enabled,
+                SleepingAllowed,
+                BodyType,
+                IsBullet,
+                IgnoreCCD,
+                FixedRotation,
+                Sweep,
+                FixtureState.ToStates(FixtureList),
+                AngularVelocity,
+                LinearVelocity,
+                InvI,
+                InvMass,
+                Torque,
+                LinearDamping,
+                AngularDamping
+                );
         }
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
+
+            if (curState is not PhysicsComponentState state)
+                return;
+
+            Enabled = state.Enabled;
+            SleepingAllowed = state.SleepingAllowed;
+            BodyType = state.BodyType;
+            IsBullet = state.IsBullet;
+            IgnoreCCD = state.IgnoreCCD;
+            FixedRotation = state.FixedRotation;
+            Sweep = state.Sweep;
+            Owner.Transform.WorldPosition = state.Sweep.Center;
+            FixtureList = FixtureState.ToFixtures(state.Fixtures, this);
+
+            AngularVelocity = state.AngularVelocity;
+            LinearVelocity = state.LinearVelocity;
+            InvI = state.InvI;
+            InvMass = state.InvMass;
+            Torque = state.Torque;
+            LinearDamping = state.LinearDamping;
+            AngularDamping = state.AngularDamping;
             Dirty();
+        }
+
+        public Box2 GetWorldAABB(IMapManager? mapManager = null)
+        {
+            // TODO: Defo need a test for this.
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            Box2? aabb = null;
+            var worldPos = Owner.Transform.WorldPosition;
+
+            foreach (var fixture in FixtureList)
+            {
+                foreach (var (gridId, proxies) in fixture.Proxies)
+                {
+                    Vector2 offset = worldPos;
+
+                    if (gridId != GridId.Invalid)
+                    {
+                        offset = mapManager.GetGrid(gridId).WorldPosition;
+                    }
+
+                    foreach (var proxy in proxies)
+                    {
+                        if (aabb == null)
+                        {
+                            aabb = proxy.AABB.Translated(offset);
+                        }
+                        else
+                        {
+                            aabb = aabb.Value.Combine(proxy.AABB.Translated(offset));
+                        }
+                    }
+                }
+            }
+
+            return aabb ?? Box2.UnitCentered.Translated(worldPos);
         }
 
         // TODO: These 2 need testing
@@ -611,9 +730,9 @@ namespace Robust.Shared.Physics
         public void ResetDynamics()
         {
             Torque = 0;
-            _angularVelocity = 0;
+            AngularVelocity = 0;
             Force = Vector2.Zero;
-            _linearVelocity = Vector2.Zero;
+            LinearVelocity = Vector2.Zero;
         }
 
         internal void Advance(float alpha)
@@ -636,10 +755,6 @@ namespace Robust.Shared.Physics
 
             Owner.Transform.WorldPosition =
                 Sweep.Center - Complex.Multiply(Sweep.LocalCenter, ref transform.Quaternion);
-
-            // OG here just in case.
-            //_xf.q.Phase = _sweep.A;
-            //_xf.p = _sweep.C - Complex.Multiply(ref _sweep.LocalCenter, ref _xf.q);
         }
 
         /// <summary>
@@ -791,6 +906,8 @@ namespace Robust.Shared.Physics
                 // to be created at the beginning of the next time step.
                 PhysicsMap._worldHasNewFixture = true;
             }
+
+            Dirty();
         }
 
         /// <summary>
@@ -803,12 +920,15 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <param name="fixture">The fixture to be removed.</param>
         /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
-        public virtual void RemoveFixture(Fixture fixture)
+        public void RemoveFixture(Fixture fixture)
         {
-            if (PhysicsMap != null && PhysicsMap.IsLocked)
-                throw new InvalidOperationException("The World is locked.");
-            if (fixture.Body != this)
-                throw new ArgumentException("You are removing a fixture that does not belong to this Body.", "fixture");
+            Debug.Assert(fixture.Body == this);
+
+            // Remove the fixture from this body's singly linked list.
+            Debug.Assert(FixtureList.Count > 0);
+
+            // You tried to remove a fixture that not present in the fixturelist.
+            Debug.Assert(FixtureList.Contains(fixture));
 
             // Destroy any contacts associated with the fixture.
             ContactEdge? edge = ContactList;
@@ -837,11 +957,9 @@ namespace Robust.Shared.Physics
 
             // TODO? fixture.Body = null;
             FixtureList.Remove(fixture);
-#if DEBUG
-            if (fixture.Shape.ShapeType == ShapeType.Polygon)
-                ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = false;
-#endif
+            fixture.Destroy();
             ResetMassData();
+            Dirty();
         }
 
         #endregion
@@ -854,12 +972,12 @@ namespace Robust.Shared.Physics
         /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
         public void AddJoint(Joint joint)
         {
-            PhysicsMap?.Add(joint);
+            PhysicsMap?.AddJoint(joint);
         }
 
         public void RemoveJoint(Joint joint)
         {
-            PhysicsMap?.Remove(joint);
+            PhysicsMap?.RemoveJoint(joint);
         }
         #endregion
 
@@ -868,7 +986,9 @@ namespace Robust.Shared.Physics
             var proxies = new List<FixtureProxy>();
             foreach (var fixture in FixtureList)
             {
-                foreach (var proxy in fixture.Proxies[gridId])
+                if (!fixture.Proxies.TryGetValue(gridId, out var gridProxies)) continue;
+
+                foreach (var proxy in gridProxies)
                 {
                     proxies.Add(proxy);
                 }
@@ -912,7 +1032,8 @@ namespace Robust.Shared.Physics
         {
             PhysicsTransform xf1 = new PhysicsTransform(Vector2.Zero, Sweep.Angle0);
             xf1.Position = Sweep.Center0 - Complex.Multiply(Sweep.LocalCenter, ref xf1.Quaternion);
-            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this, xf1, GetTransform());
+            var transform = GetTransform();
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this, xf1, transform);
         }
 
         /// <summary>
@@ -974,7 +1095,7 @@ namespace Robust.Shared.Physics
 
             Awake = true;
 
-            _linearVelocity += impulse * InvMass;
+            LinearVelocity += impulse * InvMass;
         }
 
         /// <summary>
@@ -992,8 +1113,8 @@ namespace Robust.Shared.Physics
 
             Awake = true;
 
-            _linearVelocity += impulse * InvMass;
-            _angularVelocity += InvI * ((point.X - Sweep.Center.X) * impulse.Y - (point.Y - Sweep.Center.Y) * impulse.X);
+            LinearVelocity += impulse * InvMass;
+            AngularVelocity += InvI * ((point.X - Sweep.Center.X) * impulse.Y - (point.Y - Sweep.Center.Y) * impulse.X);
         }
 
         /// <summary>

@@ -98,7 +98,7 @@ namespace Robust.Shared.Physics.Broadphase
             // TODO: Snowflake grids here
             var grids = _graph[body.Owner.Transform.MapID];
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(body.Owner.Transform.MapID, body.WorldAABB, true))
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(body.Owner.Transform.MapID, body.GetWorldAABB(_mapManager), true))
             {
                 yield return (grids[gridId], gridId);
             }
@@ -218,7 +218,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.OldMapId, out var oldMap))
             {
-                oldMap.Remove(physicsComponent);
+                oldMap.RemoveBody(physicsComponent);
             }
 
             foreach (var fixture in physicsComponent.FixtureList)
@@ -228,7 +228,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.Entity.Transform.MapID, out var newMap))
             {
-                newMap.Add(physicsComponent);
+                newMap.AddBody(physicsComponent);
             }
 
             /*
@@ -323,11 +323,17 @@ namespace Robust.Shared.Physics.Broadphase
 
             var grids = _graph[mapId];
             var fixtures = component.FixtureList;
+
+            foreach (var fixture in fixtures)
+            {
+                DebugTools.Assert(fixture.Proxies.Count == 0, "Can't add a body to broadphase when it already has proxies!");
+            }
+
             var transform = component.GetTransform();
             _lastBroadPhases[component] = new List<IBroadPhase>();
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId,
-                component.WorldAABB, true))
+                component.GetWorldAABB(_mapManager), true))
             {
                 var broadPhase = grids[gridId];
 
@@ -344,6 +350,9 @@ namespace Robust.Shared.Physics.Broadphase
 
                 _lastBroadPhases[component].Add(broadPhase);
             }
+
+            // TODO: Remove this garbage
+            EntityManager.UpdateEntityTree(component.Owner);
         }
 
         public void RemoveBody(PhysicsComponent component)
@@ -358,6 +367,13 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 foreach (var fixture in component.FixtureList)
                 {
+                    var gridId = GetGridId(broadPhase);
+
+                    if (!fixture.Proxies.ContainsKey(gridId))
+                    {
+
+                    }
+
                     foreach (var proxy in fixture.Proxies[GetGridId(broadPhase)])
                     {
                         broadPhase.RemoveProxy(proxy.ProxyId);
@@ -365,6 +381,7 @@ namespace Robust.Shared.Physics.Broadphase
                 }
             }
 
+            EntityManager.UpdateEntityTree(component.Owner);
             _lastBroadPhases.Remove(component);
         }
 
@@ -384,7 +401,7 @@ namespace Robust.Shared.Physics.Broadphase
             var oldGridIds = broadPhases.Select(o => GetGridId(o)).ToList();
             var newGridIds = new List<GridId>();
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId,
-                component.WorldAABB, true))
+                component.GetWorldAABB(_mapManager), true))
             {
                 newGridIds.Add(gridId);
             }
@@ -616,7 +633,7 @@ namespace Robust.Shared.Physics.Broadphase
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
             {
                 var gridOrigin = _mapManager.GetGrid(gridId).WorldPosition;
-                var translatedRay = new CollisionRay(ray.Start + gridOrigin, ray.End + gridOrigin, ray.CollisionMask);
+                var translatedRay = new CollisionRay(ray.Start - gridOrigin, ray.End - gridOrigin, ray.CollisionMask);
 
                 _graph[mapId][gridId].QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
@@ -629,6 +646,7 @@ namespace Robust.Shared.Physics.Broadphase
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
+                    // TODO: Suss this out: As we use world-transform and world-ray it's put into local frame of reference anyway...
                     if (!proxy.Fixture.RayCast(out _, ref ray, proxy.ChildIndex))
                         return true;
 

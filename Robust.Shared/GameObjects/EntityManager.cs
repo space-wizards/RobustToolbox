@@ -486,9 +486,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysBody>(out var component))
+            if (entity.TryGetComponent<PhysicsComponent>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(_mapManager), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -505,7 +505,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent(out IPhysBody? component))
             {
-                if (component.WorldAABB.Contains(mapPosition))
+                if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
             }
             else
@@ -549,9 +549,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysBody>(out var component))
+            if (entity.TryGetComponent<PhysicsComponent>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(_mapManager), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
@@ -657,8 +657,10 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
+            /* TODO
             if (ent.TryGetComponent(out IPhysBody? collider))
-                return collider.WorldAABB;
+                return collider.GetWorldAABB();
+            */
 
             var pos = ent.Transform.WorldPosition;
             return new Box2(pos, pos);

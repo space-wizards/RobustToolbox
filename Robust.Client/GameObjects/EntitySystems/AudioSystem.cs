@@ -146,7 +146,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IBroadPhaseManager>().IntersectRayPenetration(
+                                occlusion = EntitySystem.Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

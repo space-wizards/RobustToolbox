@@ -74,42 +74,31 @@ namespace Robust.Shared.Physics
             JointCount = 0;
         }
 
-        internal void Reset(int bodyCapacity, int contactCapacity, int jointsCapacity, ContactManager contactManager)
+        internal void Reset(int bodyCapacity, int contactCapacity, int jointCapacity, ContactManager contactManager)
         {
             _contactManager = contactManager;
             BodyCapacity = bodyCapacity;
             ContactCapacity = contactCapacity;
-            JointCapacity = jointsCapacity;
+            JointCapacity = jointCapacity;
             BodyCount = 0;
             ContactCount = 0;
             JointCount = 0;
 
             if (Bodies.Length < bodyCapacity)
             {
-                // Grow by 32
-                var newBodyBufferCapacity = Math.Max(bodyCapacity, GrowSize);
-                newBodyBufferCapacity = (newBodyBufferCapacity + GrowSize - 1) & ~(GrowSize - 1);
-                Bodies = new PhysicsComponent[newBodyBufferCapacity];
-                _velocities = new SolverVelocity[newBodyBufferCapacity];
-                _positions = new SolverPosition[newBodyBufferCapacity];
-                // locks eeeeeee
+                Bodies = new PhysicsComponent[bodyCapacity];
+                _velocities = new SolverVelocity[bodyCapacity];
+                _positions = new SolverPosition[bodyCapacity];
             }
 
             if (_contacts.Length < contactCapacity)
             {
-                // Grow by x 1.125f
-                var newContactBufferCapacity = Math.Max(contactCapacity, GrowSize);
-                // TODO: Should the bitshift be based on GrowSize? ehhh future problem
-                newContactBufferCapacity = newContactBufferCapacity + (newContactBufferCapacity * 2 >> 4);
-                newContactBufferCapacity = (newContactBufferCapacity + (GrowSize - 1)) & ~(GrowSize - 1);
-                _contacts = new Contact[newContactBufferCapacity];
+                _contacts = new Contact[contactCapacity * 2];
             }
 
-            if (_joints.Length < jointsCapacity)
+            if (_joints.Length < jointCapacity)
             {
-                var newJointBufferCapacity = Math.Max(jointsCapacity, GrowSize);
-                newJointBufferCapacity = (newJointBufferCapacity + (GrowSize - 1)) & ~(GrowSize - 1);
-                _joints = new Joint[newJointBufferCapacity];
+                _joints = new Joint[jointCapacity * 2];
             }
         }
 
@@ -120,10 +109,6 @@ namespace Robust.Shared.Physics
 
         internal void Solve(PhysicsStep step)
         {
-            // TODO: Our AABBs are going to need to be relative to the grid we are on most likely
-            // So I'll need to change a bunch of internal shit for that (RIP me).
-            // Broadphase will probably be the only area we need to change it I HOPE.
-            // TODO: Maybe add a method called "GridAABB" on transform we can call?
             var h = step.DeltaTime;
 
             // Integrate velocities and apply damping. Initialize the body state.

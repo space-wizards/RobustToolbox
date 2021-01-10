@@ -9,43 +9,55 @@ namespace Robust.Shared.GameObjects.Components
     [Serializable, NetSerializable]
     public class PhysicsComponentState : ComponentState
     {
-        public readonly bool CanCollide;
-        public readonly BodyStatus Status;
-        public readonly List<IPhysShape> PhysShapes;
-        public readonly bool Hard;
+        public bool Enabled;
+        public bool SleepingAllowed;
+        public BodyType BodyType;
+        public bool IsBullet;
+        public bool IgnoreCCD;
+        public bool FixedRotation;
+        public Sweep Sweep;
+        public List<FixtureState> Fixtures;
+        public float AngularVelocity;
+        public Vector2 LinearVelocity;
+        public float InvI;
+        public float InvMass;
+        public float Torque;
+        public float LinearDamping;
+        public float AngularDamping;
 
-
-        /// <summary>
-        ///     Current mass of the entity, stored in grams.
-        /// </summary>
-        public readonly int Mass;
-        public readonly Vector2 LinearVelocity;
-        public readonly float AngularVelocity;
-        public readonly bool Anchored;
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="canCollide"></param>
-        /// <param name="status"></param>
-        /// <param name="physShapes"></param>
-        /// <param name="hard"></param>
-        /// <param name="mass">Current Mass of the entity.</param>
-        /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
-        /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
-        /// <param name="anchored">Whether or not the entity is anchored in place.</param>
-        public PhysicsComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
+        public PhysicsComponentState(
+            bool enabled,
+            bool sleepingAllowed,
+            BodyType bodyType,
+            bool isBullet,
+            bool ignoreCCD,
+            bool fixedRotation,
+            Sweep sweep,
+            List<FixtureState> fixtures,
+            float angularVelocity,
+            Vector2 linearVelocity,
+            float invI,
+            float invMass,
+            float torque,
+            float linearDamping,
+            float angularDamping)
             : base(NetIDs.PHYSICS)
         {
-            CanCollide = canCollide;
-            Status = status;
-            PhysShapes = physShapes;
-            Hard = hard;
-
-            LinearVelocity = linearVelocity;
+            Enabled = enabled;
+            SleepingAllowed = sleepingAllowed;
+            BodyType = bodyType;
+            IsBullet = isBullet;
+            IgnoreCCD = ignoreCCD;
+            FixedRotation = fixedRotation;
+            Sweep = sweep;
+            Fixtures = fixtures;
             AngularVelocity = angularVelocity;
-            Mass = (int)Math.Round(mass * 1000); // rounds kg to nearest gram
-            Anchored = anchored;
+            LinearVelocity = linearVelocity;
+            InvI = invI;
+            InvMass = invMass;
+            Torque = torque;
+            LinearDamping = linearDamping;
+            AngularDamping = angularDamping;
         }
     }
 }

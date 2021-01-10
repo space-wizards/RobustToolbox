@@ -1,11 +1,13 @@
 ﻿using System;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics
 {
     /// <summary>
     ///     Holds the mass data computed for a shape
     /// </summary>
+    [Serializable, NetSerializable]
     public struct MassData : IEquatable<MassData>
     {
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -21,7 +22,7 @@ namespace Robust.Shared.Physics
 
         IEntity Owner { get; }
 
-        Box2 WorldAABB { get; }
+        Box2 GetWorldAABB(IMapManager? mapManager = null);
 
         int CollisionLayer { get; }
 

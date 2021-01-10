@@ -156,6 +156,13 @@ namespace Robust.Shared.Physics.Broadphase
             QueryRay(ref callback, RayQueryDelegateCallbackInst, ray, approx);
         }
 
+        private static readonly DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<DynamicTree<FixtureProxy>.RayQueryCallbackDelegate> RayQueryDelegateCallbackInst = RayQueryDelegateCallback;
+
+        private static bool RayQueryDelegateCallback(ref DynamicTree<FixtureProxy>.RayQueryCallbackDelegate state, in FixtureProxy value, in Vector2 point, float distFromOrigin)
+        {
+            return state(value, point, distFromOrigin);
+        }
+
         public void QueryRay<TState>(ref TState state, DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback, in Ray ray, bool approx = false)
         {
             var tuple = (state, callback, _tree, approx ? null : _extractAabb, ray);

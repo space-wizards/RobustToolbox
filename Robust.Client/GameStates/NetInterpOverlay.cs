@@ -47,7 +47,7 @@ namespace Robust.Client.GameStates
                 if(transform.LerpDestination == null)
                     continue;
 
-                var aabb = boundingBox.WorldAABB;
+                var aabb = boundingBox.GetWorldAABB();
 
                 // if not on screen, or too small, continue
                 if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())

@@ -13,6 +13,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.GameObjects.Systems
 {
@@ -82,12 +83,16 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
-            _maps.Add(eventArgs.Map, new PhysicsMap());
+            var map = new PhysicsMap();
+            _maps.Add(eventArgs.Map, map);
+            map.Initialize();
+            Logger.DebugS("physics", $"Created physics map for {eventArgs.Map}");
         }
 
         private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
         {
             _maps.Remove(eventArgs.Map);
+            Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
         }
 
         private void HandleMapChange(EntMapIdChangedMessage message)

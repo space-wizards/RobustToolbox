@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
@@ -28,9 +29,9 @@ namespace Robust.Client.Placement
         public EntityCoordinates MouseCoords { get; set; }
 
         /// <summary>
-        /// Texture resource to draw to represent the entity we are tryign to spawn
+        /// Texture resources to draw to represent the entity we are trying to spawn
         /// </summary>
-        public Texture? SpriteToDraw { get; set; }
+        public List<Texture>? TexturesToDraw { get; set; }
 
         /// <summary>
         /// Color set to the ghost entity when it has a valid spawn position
@@ -85,11 +86,14 @@ namespace Robust.Client.Placement
 
         public virtual void Render(DrawingHandleWorld handle)
         {
-            if (SpriteToDraw == null)
+            if (TexturesToDraw == null)
             {
                 SetSprite();
-                DebugTools.AssertNotNull(SpriteToDraw);
+                DebugTools.AssertNotNull(TexturesToDraw);
             }
+
+            if (TexturesToDraw == null || TexturesToDraw.Count == 0)
+                return;
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -108,13 +112,17 @@ namespace Robust.Client.Placement
                     break;
             }
 
-            var size = SpriteToDraw!.Size;
+            var size = TexturesToDraw[0].Size;
             foreach (var coordinate in locationcollection)
             {
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
-                handle.DrawTexture(SpriteToDraw, pos, color);
+
+                foreach (var texture in TexturesToDraw)
+                {
+                    handle.DrawTexture(texture, pos, color);
+                }
             }
         }
 
@@ -188,7 +196,10 @@ namespace Robust.Client.Placement
 
         public void SetSprite()
         {
-            SpriteToDraw = pManager.CurrentBaseSprite!.TextureFor(pManager.Direction);
+            if (pManager.CurrentTextures == null)
+                return;
+
+            TexturesToDraw = pManager.CurrentTextures.Select(o => o.TextureFor(pManager.Direction)).ToList();
         }
 
         /// <summary>

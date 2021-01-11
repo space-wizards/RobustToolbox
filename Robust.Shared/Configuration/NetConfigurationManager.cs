@@ -10,15 +10,48 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
+    /// <summary>
+    /// A networked configuration manager that controls the replication of
+    /// console variables between client and server.
+    /// </summary>
     public interface INetConfigurationManager : IConfigurationManager
     {
         /// <summary>
         /// Sets up the networking for the config manager.
         /// </summary>
         void SetupNetworking();
+
+        /// <summary>
+        /// Get a replicated client CVar for a specific client.
+        /// </summary>
+        /// <typeparam name="T">CVar type.</typeparam>
+        /// <param name="channel">channel of the connected client.</param>
+        /// <param name="name">Name of the CVar.</param>
+        /// <returns>Replicated CVar of the client.</returns>
         T GetClientCVar<T>(INetChannel channel, string name);
+
+        /// <summary>
+        /// Synchronize the CVars marked with <see cref="CVar.REPLICATED"/> with the client.
+        /// This needs to be called once during the client connection.
+        /// </summary>
+        /// <param name="client">Client's NetChannel to sync replicated CVars with.</param>
         void SyncConnectingClient(INetChannel client);
+
+        /// <summary>
+        /// Synchronize the CVars marked with <see cref="CVar.REPLICATED"/> with the server.
+        /// This needs to be called once when connecting.
+        /// </summary>
         void SyncWithServer();
+
+        /// <summary>
+        /// Called every tick to process any incoming network messages.
+        /// </summary>
+        void TickProcessMessages();
+
+        /// <summary>
+        /// Flushes any NwCVar messages in the receive buffer.
+        /// </summary>
+        void FlushMessages();
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
@@ -28,6 +61,7 @@ namespace Robust.Shared.Configuration
         [Dependency] private readonly IGameTiming _timing = null!;
 
         private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
+        private readonly List<MsgConVars> _netVarsMessages = new();
 
         /// <inheritdoc />
         public void SetupNetworking()
@@ -37,8 +71,8 @@ namespace Robust.Shared.Configuration
                 _netManager.Connected += PeerConnected;
                 _netManager.Disconnect += PeerDisconnected;
             }
-
-            _netManager.RegisterNetMessage<MsgConVars>(MsgConVars.NAME, HandleNetVarChange);
+            
+            _netManager.RegisterNetMessage<MsgConVars>(MsgConVars.NAME, HandleNetVarMessage);
         }
 
         private void PeerConnected(object? sender, NetChannelArgs e)
@@ -51,11 +85,52 @@ namespace Robust.Shared.Configuration
             _replicatedCVars.Remove(e.Channel);
         }
 
-        private void HandleNetVarChange(MsgConVars message)
+        private void HandleNetVarMessage(MsgConVars message)
+        {
+            _netVarsMessages.Add(message);
+        }
+
+        /// <inheritdoc />
+        public void TickProcessMessages()
+        {
+            if(!_timing.InSimulation || _timing.InPrediction)
+                return;
+
+            for (var i = 0; i < _netVarsMessages.Count; i++)
+            {
+                var msg = _netVarsMessages[i];
+
+                if (msg.Tick > _timing.LastRealTick)
+                    continue;
+
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
+
+                if(msg.Tick < _timing.LastRealTick)
+                    Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
+
+                _netVarsMessages.RemoveSwap(i);
+                i--;
+            }
+        }
+
+        /// <inheritdoc />
+        public void FlushMessages()
+        {
+            _netVarsMessages.Sort(((a, b) => a.Tick.Value.CompareTo(b.Tick.Value)));
+
+            foreach (var msg in _netVarsMessages)
+            {
+                ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
+            }
+
+            _netVarsMessages.Clear();
+        }
+
+        private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
         {
             Logger.DebugS("cfg", "Handling replicated cvars...");
 
-            foreach (var (name, value) in message.NetworkedVars)
+            foreach (var (name, value) in networkedVars)
             {
                 if (_netManager.IsClient) // Server sent us a CVar update.
                 {
@@ -67,19 +142,19 @@ namespace Robust.Shared.Configuration
                 {
                     if (!_configVars.TryGetValue(name, out var cVar))
                     {
-                        Logger.WarningS("cfg", $"{message.MsgChannel} tried to replicate an unknown CVar '{name}.'");
+                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unknown CVar '{name}.'");
                         continue;
                     }
 
                     if (!cVar.Registered)
                     {
-                        Logger.WarningS("cfg", $"{message.MsgChannel} tried to replicate an unregistered CVar '{name}.'");
+                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
                         continue;
                     }
 
                     if((cVar.Flags & CVar.REPLICATED) != 0)
                     {
-                        var clientCVars = _replicatedCVars[message.MsgChannel];
+                        var clientCVars = _replicatedCVars[msgChannel];
 
                         if (clientCVars.ContainsKey(name))
                             clientCVars[name] = value;
@@ -90,7 +165,7 @@ namespace Robust.Shared.Configuration
                     }
                     else
                     {
-                        Logger.WarningS("cfg", $"{message.MsgChannel} tried to replicate an unreplicated CVar '{name}.'");
+                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
                     }
                 }
             }

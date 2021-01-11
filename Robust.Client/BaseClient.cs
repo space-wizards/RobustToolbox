@@ -155,6 +155,7 @@ namespace Robust.Client
 
             LastDisconnectReason = args.Reason;
 
+            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
             _entityManager.Shutdown();

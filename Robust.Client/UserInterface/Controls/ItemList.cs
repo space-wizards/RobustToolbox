@@ -433,7 +433,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (item.Region == null)
                     continue;
 
-                if (!item.Region.Value.Contains(args.RelativePosition))
+                if (!item.Region.Value.Contains(args.RelativePixelPosition))
                     continue;
 
                 if (item.Selectable && !item.Disabled)

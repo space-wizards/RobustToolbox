@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -54,10 +56,56 @@ namespace Robust.Shared.GameObjects.Systems
         // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
         private float _speedLimit = 30.0f;
 
+        private Dictionary<MapId, PhysicsMap> _maps = new();
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _mapManager.MapCreated += HandleMapCreated;
+            _mapManager.MapDestroyed += HandleMapDestroyed;
+
             SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            _mapManager.MapCreated -= HandleMapCreated;
+            _mapManager.MapDestroyed -= HandleMapDestroyed;
+
+            UnsubscribeLocalEvent<PhysicsUpdateMessage>();
+            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+        }
+
+        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            _maps.Add(eventArgs.Map, new PhysicsMap());
+        }
+
+        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
+        {
+            _maps.Remove(eventArgs.Map);
+        }
+
+        private void HandleMapChange(EntMapIdChangedMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
+                return;
+
+            var oldMapId = message.OldMapId;
+            if (oldMapId != MapId.Nullspace)
+            {
+                _maps[oldMapId].RemoveBody(physicsComponent);
+            }
+
+            var newMapId = message.Entity.Transform.MapID;
+            if (newMapId != MapId.Nullspace)
+            {
+                _maps[newMapId].AddBody(physicsComponent);
+            }
         }
 
         private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
@@ -111,6 +159,11 @@ namespace Robust.Shared.GameObjects.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
+            foreach (var (_, map) in _maps)
+            {
+                map.Step(deltaTime);
+            }
+
             var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
 
             ProcessQueue();

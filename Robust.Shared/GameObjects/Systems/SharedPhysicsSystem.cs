@@ -24,32 +24,32 @@ namespace Robust.Shared.GameObjects.Systems
 
         private const float Epsilon = 1.0e-6f;
 
-        private readonly List<Manifold> _collisionCache = new List<Manifold>();
+        private readonly List<Manifold> _collisionCache = new();
 
         /// <summary>
         ///     Physics objects that are awake and usable for world simulation.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _awakeBodies = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _awakeBodies = new();
 
         /// <summary>
         ///     Physics objects that are awake and predicted and usable for world simulation.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new();
 
         /// <summary>
         ///     VirtualControllers on applicable <see cref="IPhysicsComponent"/>s
         /// </summary>
         private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers =
-            new Dictionary<IPhysicsComponent, IEnumerable<VirtualController>>();
+            new();
 
         // We'll defer changes to IPhysicsComponent until each step is done.
-        private readonly List<IPhysicsComponent> _queuedDeletions = new List<IPhysicsComponent>();
-        private readonly List<IPhysicsComponent> _queuedUpdates = new List<IPhysicsComponent>();
+        private readonly List<IPhysicsComponent> _queuedDeletions = new();
+        private readonly List<IPhysicsComponent> _queuedUpdates = new();
 
         /// <summary>
         ///     Updates to EntityTree etc. that are deferred until the end of physics.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new();
 
         // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
         private float _speedLimit = 30.0f;
@@ -426,6 +426,9 @@ namespace Robust.Shared.GameObjects.Systems
                 {
                     continue;
                 }
+
+                if (collision.A.Owner.Deleted || collision.B.Owner.Deleted)
+                    continue;
 
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
 

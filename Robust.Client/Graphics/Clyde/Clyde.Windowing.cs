@@ -105,6 +105,18 @@ namespace Robust.Client.Graphics.Clyde
             return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
         }
 
+        public uint? GetX11WindowId()
+        {
+            try
+            {
+                return GLFW.GetX11Window(_glfwWindow);
+            }
+            catch (EntryPointNotFoundException)
+            {
+                return null;
+            }
+        }
+
         private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
 

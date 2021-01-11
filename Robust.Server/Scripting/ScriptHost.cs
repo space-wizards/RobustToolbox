@@ -33,7 +33,7 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
-            new Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>>();
+            new();
 
         public void Initialize()
         {
@@ -222,8 +222,8 @@ namespace Robust.Server.Scripting
         private sealed class ScriptInstance
         {
             public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
-            public StringBuilder InputBuffer { get; } = new StringBuilder();
-            public StringBuilder OutputBuffer { get; } = new StringBuilder();
+            public StringBuilder InputBuffer { get; } = new();
+            public StringBuilder OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
 
             public ScriptGlobals Globals { get; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -41,18 +41,18 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
-        private readonly List<KeyBindingRegistration> _defaultRegistrations = new List<KeyBindingRegistration>();
+        private readonly List<KeyBindingRegistration> _defaultRegistrations = new();
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
-            new Dictionary<BoundKeyFunction, InputCmdHandler>();
+            new();
 
         private readonly Dictionary<BoundKeyFunction, List<KeyBinding>> _bindingsByFunction
-            = new Dictionary<BoundKeyFunction, List<KeyBinding>>();
+            = new();
 
         // For knowing what to write to config.
-        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new HashSet<BoundKeyFunction>();
+        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new();
 
-        [ViewVariables] private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
+        [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
@@ -134,7 +134,8 @@ namespace Robust.Client.Input
                     Priority = p.Priority,
                     Type = p.BindingType,
                     CanFocus = p.CanFocus,
-                    CanRepeat = p.CanRepeat
+                    CanRepeat = p.CanRepeat,
+                    AllowSubCombs = p.AllowSubCombs
                 }).ToArray();
 
             var leaveEmpty = _modifiedKeyFunctions
@@ -149,7 +150,7 @@ namespace Robust.Client.Input
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new YamlDocument(mapping)};
+            var stream = new YamlStream {new(mapping)};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -203,6 +204,7 @@ namespace Robust.Client.Input
 
             var bindsDown = new List<KeyBinding>();
             var hasCanFocus = false;
+            var hasAllowSubCombs = false;
 
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
@@ -221,12 +223,22 @@ namespace Robust.Client.Input
                         matchedCombo = binding.PackedKeyCombo;
 
                         bindsDown.Add(binding);
+
                         hasCanFocus |= binding.CanFocus;
+                        hasAllowSubCombs |= binding.AllowSubCombs;
+
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
-                        // kill any lower level matches
-                        UpBind(binding);
+                        if (hasAllowSubCombs)
+                        {
+                            bindsDown.Add(binding);
+                        }
+                        else
+                        {
+                            // kill any lower level matches
+                            UpBind(binding);
+                        }
                     }
                 }
             }
@@ -378,8 +390,8 @@ namespace Robust.Client.Input
         {
             for (var i = 0; i < 32; i += 8)
             {
-                var key = (Key) (subPackedCombo.Packed >> i);
-                if (!PackedContainsKey(packedCombo, key))
+                var key = (Key) ((subPackedCombo.Packed >> i) & 0b_1111_1111);
+                if (key != Key.Unknown && !PackedContainsKey(packedCombo, key))
                 {
                     return false;
                 }
@@ -406,38 +418,46 @@ namespace Robust.Client.Input
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var baseSerializer = YamlObjectSerializer.NewReader(mapping);
-            var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
 
-            foreach (var reg in baseKeyRegs)
+            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
+
+            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
             {
-                if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
+                foreach (var reg in baseKeyRegs)
                 {
-                    Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
-                        reg.Function.FunctionName);
-                    continue;
-                }
-
-                if (!userData)
-                {
-                    _defaultRegistrations.Add(reg);
-
-                    if (_modifiedKeyFunctions.Contains(reg.Function))
+                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        // Don't read key functions from preset files that have been modified.
-                        // So that we don't bulldoze a user's saved preferences.
+                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                            reg.Function.FunctionName);
                         continue;
                     }
-                }
 
-                RegisterBinding(reg, markModified: userData);
+                    if (!userData)
+                    {
+                        _defaultRegistrations.Add(reg);
+
+                        if (_modifiedKeyFunctions.Contains(reg.Function))
+                        {
+                            // Don't read key functions from preset files that have been modified.
+                            // So that we don't bulldoze a user's saved preferences.
+                            continue;
+                        }
+                    }
+
+                    RegisterBinding(reg, markModified: userData);
+                }
             }
 
             if (userData)
             {
-                // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
-                // Because they've been explicitly cleared.
-                var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
-                _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+
+                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
+                {
+                    // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
+                    // Because they've been explicitly cleared.
+                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                }
             }
         }
 
@@ -445,7 +465,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
-            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false,
+            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false, false,
                 0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
@@ -456,7 +476,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true)
         {
             var binding = new KeyBinding(this, reg.Function, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
-                reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
+                reg.AllowSubCombs, reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
 
             RegisterBinding(binding, markModified);
 
@@ -611,12 +631,18 @@ namespace Robust.Client.Input
             [ViewVariables]
             public bool CanRepeat { get; internal set; }
 
+            /// <summary>
+            ///     Whether the Bound Key Combination allows Sub Combinations of it to trigger.
+            /// </summary>
+            [ViewVariables]
+            public bool AllowSubCombs { get; internal set; }
+
             [ViewVariables] public int Priority { get; internal set; }
 
             public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
                 Key baseKey,
-                bool canFocus, bool canRepeat, int priority, Key mod1 = Key.Unknown,
+                bool canFocus, bool canRepeat, bool allowSubCombs, int priority, Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
             {
@@ -624,6 +650,7 @@ namespace Robust.Client.Input
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
+                AllowSubCombs = allowSubCombs;
                 Priority = priority;
                 _inputManager = inputManager;
 
@@ -764,14 +791,14 @@ namespace Robust.Client.Input
         }
     }
 
-    public enum KeyBindingType
+    public enum KeyBindingType : byte
     {
         Unknown = 0,
         State,
         Toggle,
     }
 
-    public enum CommandState
+    public enum CommandState : byte
     {
         Unknown = 0,
         Enabled,

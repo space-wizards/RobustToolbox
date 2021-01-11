@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Threading;
 using Robust.Client.Interfaces;
+using Robust.LoaderApi;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -21,7 +21,7 @@ namespace Robust.Client
             Start(args);
         }
 
-        public static void Start(string[] args, bool contentStart = false)
+        public static void Start(string[] args, bool contentStart = false, IMainArgs? loaderArgs=null)
         {
             if (_hasStarted)
             {
@@ -32,11 +32,11 @@ namespace Robust.Client
 
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed, contentStart);
+                ParsedMain(parsed, contentStart, loaderArgs);
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args, bool contentStart)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart, IMainArgs? loaderArgs)
         {
             IoCManager.InitThread();
 
@@ -46,6 +46,7 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
+            gc._loaderArgs = loaderArgs;
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.

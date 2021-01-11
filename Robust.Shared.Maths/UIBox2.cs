@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
 {
@@ -7,43 +9,51 @@ namespace Robust.Shared.Maths
     ///     Uses a left-handed coordinate system. This means that X+ is to the right and Y+ down.
     /// </summary>
     [Serializable]
+    [StructLayout(LayoutKind.Explicit)]
     public struct UIBox2 : IEquatable<UIBox2>
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
         /// </summary>
-        public float Left;
-
-        /// <summary>
-        ///     The X coordinate of the right edge of the box.
-        /// </summary>
-        public float Right;
+        [FieldOffset(sizeof(float) * 0)] public float Left;
 
         /// <summary>
         ///     The Y coordinate of the top edge of the box.
         /// </summary>
-        public float Top;
+        [FieldOffset(sizeof(float) * 1)] public float Top;
+
+        /// <summary>
+        ///     The X coordinate of the right edge of the box.
+        /// </summary>
+        [FieldOffset(sizeof(float) * 2)] public float Right;
 
         /// <summary>
         ///     The Y coordinate of the bottom of the box.
         /// </summary>
-        public float Bottom;
+        [FieldOffset(sizeof(float) * 3)] public float Bottom;
 
-        public readonly Vector2 BottomRight => new Vector2(Right, Bottom);
-        public readonly Vector2 TopLeft => new Vector2(Left, Top);
-        public readonly Vector2 TopRight => new Vector2(Right, Top);
-        public readonly Vector2 BottomLeft => new Vector2(Left, Bottom);
+        [FieldOffset(sizeof(float) * 0)] public Vector2 TopLeft;
+        [FieldOffset(sizeof(float) * 2)] public Vector2 BottomRight;
+
+        public readonly Vector2 TopRight => new(Right, Top);
+        public readonly Vector2 BottomLeft => new(Left, Bottom);
         public readonly float Width => MathF.Abs(Right - Left);
         public readonly float Height => MathF.Abs(Top - Bottom);
-        public readonly Vector2 Size => new Vector2(Width, Height);
+        public readonly Vector2 Size => new(Width, Height);
         public readonly Vector2 Center => TopLeft + Size / 2;
 
-        public UIBox2(Vector2 leftTop, Vector2 rightBottom) : this(leftTop.X, leftTop.Y, rightBottom.X, rightBottom.Y)
+        public UIBox2(Vector2 leftTop, Vector2 rightBottom)
         {
+            Unsafe.SkipInit(out this);
+
+            TopLeft = leftTop;
+            BottomRight = rightBottom;
         }
 
         public UIBox2(float left, float top, float right, float bottom)
         {
+            Unsafe.SkipInit(out this);
+
             Left = left;
             Right = right;
             Top = top;
@@ -52,7 +62,7 @@ namespace Robust.Shared.Maths
 
         public static UIBox2 FromDimensions(float left, float top, float width, float height)
         {
-            return new UIBox2(left, top, left + width, top + height);
+            return new(left, top, left + width, top + height);
         }
 
         public static UIBox2 FromDimensions(Vector2 leftTopPosition, Vector2 size)
@@ -117,7 +127,7 @@ namespace Robust.Shared.Maths
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
         public readonly UIBox2 Translated(Vector2 point)
         {
-            return new UIBox2(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
+            return new(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
         public readonly bool Equals(UIBox2 other)

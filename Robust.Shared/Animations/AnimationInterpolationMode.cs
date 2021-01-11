@@ -3,7 +3,7 @@ namespace Robust.Shared.Animations
     /// <summary>
     ///     Specifies how animated properties are interpolated between two keyframes.
     /// </summary>
-    public enum AnimationInterpolationMode
+    public enum AnimationInterpolationMode: byte
     {
         /// <summary>
         ///     Use a linear interpolation for supported values.

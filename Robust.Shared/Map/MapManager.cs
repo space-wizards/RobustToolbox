@@ -55,14 +55,14 @@ namespace Robust.Shared.Map
         private MapId HighestMapID = MapId.Nullspace;
         private GridId HighestGridID = GridId.Invalid;
 
-        private readonly HashSet<MapId> _maps = new HashSet<MapId>();
-        private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();
+        private readonly HashSet<MapId> _maps = new();
+        private readonly Dictionary<MapId, GameTick> _mapCreationTick = new();
 
-        private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
-        private readonly Dictionary<MapId, EntityUid> _mapEntities = new Dictionary<MapId, EntityUid>();
+        private readonly Dictionary<GridId, MapGrid> _grids = new();
+        private readonly Dictionary<MapId, EntityUid> _mapEntities = new();
 
-        private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
-        private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
+        private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
+        private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new();
 
 #if DEBUG
         private bool _dbgGuardInit = false;

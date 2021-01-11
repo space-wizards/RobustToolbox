@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 using Robust.Shared.Interfaces.GameObjects;
@@ -11,7 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private class ComponentRegistration : IComponentRegistration
@@ -20,7 +21,7 @@ namespace Robust.Shared.GameObjects
             public uint? NetID { get; }
             public bool NetworkSynchronizeExistence { get; }
             public Type Type { get; }
-            internal readonly List<Type> References = new List<Type>();
+            internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
 
             public ComponentRegistration(string name, Type type, uint? netID, bool networkSynchronizeExistence)
@@ -42,22 +43,22 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of component name to type.
         /// </summary>
-        private readonly Dictionary<string, ComponentRegistration> names = new Dictionary<string, ComponentRegistration>();
+        private readonly Dictionary<string, ComponentRegistration> names = new();
 
         /// <summary>
         /// Mapping of network ID to type.
         /// </summary>
-        private readonly Dictionary<uint, ComponentRegistration> netIDs = new Dictionary<uint, ComponentRegistration>();
+        private readonly Dictionary<uint, ComponentRegistration> netIDs = new();
 
         /// <summary>
         /// Mapping of concrete component types to their registration.
         /// </summary>
-        private readonly Dictionary<Type, ComponentRegistration> types = new Dictionary<Type, ComponentRegistration>();
+        private readonly Dictionary<Type, ComponentRegistration> types = new();
 
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
         /// </summary>
-        private readonly HashSet<string> IgnoredComponentNames = new HashSet<string>();
+        private readonly HashSet<string> IgnoredComponentNames = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
@@ -196,7 +197,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<IComponent>(types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -205,17 +206,17 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<T>(types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(string componentName)
         {
-            return _typeFactory.CreateInstance<IComponent>(GetRegistration(componentName).Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
         public IComponent GetComponent(uint netId)
         {
-            return _typeFactory.CreateInstance<IComponent>(GetRegistration(netId).Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
         }
 
         public IComponentRegistration GetRegistration(string componentName)
@@ -262,6 +263,52 @@ namespace Robust.Shared.GameObjects
         public IComponentRegistration GetRegistration(IComponent component)
         {
             return GetRegistration(component.GetType());
+        }
+
+        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (names.TryGetValue(componentName, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (types.TryGetValue(reference, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new()
+        {
+            return TryGetRegistration(typeof(T), out registration);
+        }
+
+        public bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (netIDs.TryGetValue(netID, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            return TryGetRegistration(component.GetType(), out registration);
         }
 
         public void DoAutoRegistrations()

@@ -29,15 +29,15 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
 
         private readonly Dictionary<uint, Dictionary<EntityUid, Component>> _entNetIdDict
-            = new Dictionary<uint, Dictionary<EntityUid, Component>>();
+            = new();
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
-            = new Dictionary<Type, Dictionary<EntityUid, Component>>();
+            = new();
 
-        private readonly HashSet<Component> _deleteSet = new HashSet<Component>(TypeCapacity);
+        private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
         private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
-            new UniqueIndexHkm<EntityUid, Component>(ComponentCollectionCapacity);
+            new(ComponentCollectionCapacity);
 
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentAdded;
@@ -133,7 +133,9 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
 
-            component.ExposeData(DefaultValueSerializer.Reader());
+            var defaultSerializer = DefaultValueSerializer.Reader();
+            defaultSerializer.CurrentType = component.GetType();
+            component.ExposeData(defaultSerializer);
 
             _componentDependencyManager.OnComponentAdd(entity, component);
 

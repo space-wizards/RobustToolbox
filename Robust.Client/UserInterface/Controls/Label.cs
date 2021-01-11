@@ -19,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
-        private readonly List<int> _cachedTextWidths = new List<int>();
+        private readonly List<int> _cachedTextWidths = new();
         private bool _textDimensionCacheValid;
         private string? _text;
         private bool _clipText;
@@ -194,7 +194,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum AlignMode
+        public enum AlignMode : byte
         {
             Left = 0,
             Center = 1,
@@ -202,7 +202,7 @@ namespace Robust.Client.UserInterface.Controls
             Fill = 3
         }
 
-        public enum VAlignMode
+        public enum VAlignMode : byte
         {
             Top = 0,
             Center = 1,

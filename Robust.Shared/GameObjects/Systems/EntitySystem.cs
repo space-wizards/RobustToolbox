@@ -31,8 +31,8 @@ namespace Robust.Shared.GameObjects.Systems
         [Obsolete("You need to use `EntityManager.GetEntities(EntityQuery)`, or store a query yourself.")]
         protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
 
-        protected internal List<Type> UpdatesAfter { get; } = new List<Type>();
-        protected internal List<Type> UpdatesBefore { get; } = new List<Type>();
+        protected internal List<Type> UpdatesAfter { get; } = new();
+        protected internal List<Type> UpdatesBefore { get; } = new();
 
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;

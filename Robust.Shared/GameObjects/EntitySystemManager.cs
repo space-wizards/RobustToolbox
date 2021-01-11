@@ -26,35 +26,34 @@ namespace Robust.Shared.GameObjects
 
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
         [ViewVariables]
-        private readonly List<Type> _extraLoadedTypes = new List<Type>();
+        private readonly List<Type> _extraLoadedTypes = new();
 
-        private readonly Stopwatch _stopwatch = new Stopwatch();
+        private readonly Stopwatch _stopwatch = new();
 
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _systems = new();
         /// <summary>
         /// Maps system supertypes to instances.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new();
 
         private bool _initialized;
 
-        [ViewVariables]
-        private IEntitySystem[] _updateOrder = Array.Empty<IEntitySystem>();
-        [ViewVariables]
-        private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
+        [ViewVariables] private UpdateReg[] _updateOrder = Array.Empty<UpdateReg>();
+        [ViewVariables] private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
 
-        [ViewVariables]
-        public IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
+        [ViewVariables] public IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
+
+        public bool MetricsEnabled { get; set; }
 
         /// <inheritdoc />
         public event EventHandler<SystemChangedArgs>? SystemLoaded;
@@ -106,13 +105,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Initialize()
         {
-            HashSet<Type> excludedTypes = new HashSet<Type>();
+            HashSet<Type> excludedTypes = new();
 
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 // Force IoC inject of all systems
-                var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
+                var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type);
 
                 _systems.Add(type, instance);
 
@@ -145,12 +144,21 @@ namespace Robust.Shared.GameObjects
             }
 
             // Create update order for entity systems.
-            (_frameUpdateOrder, _updateOrder) = CalculateUpdateOrder(_systems.Values);
+            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values);
+
+            _frameUpdateOrder = fUpdate.ToArray();
+            _updateOrder = update
+                .Select(s => new UpdateReg
+                {
+                    System = s,
+                    Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
+                })
+                .ToArray();
 
             _initialized = true;
         }
 
-        private static (IEntitySystem[] frameUpd, IEntitySystem[] upd)
+        private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
             CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
         {
             var allNodes = new List<GraphNode>();
@@ -182,8 +190,8 @@ namespace Robust.Shared.GameObjects
             }
 
             var order = TopologicalSort(allNodes).Select(p => p.System).ToArray();
-            var frameUpdate = order.Where(p => NeedsFrameUpdate(p.GetType())).ToArray();
-            var update = order.Where(p => NeedsUpdate(p.GetType())).ToArray();
+            var frameUpdate = order.Where(p => NeedsFrameUpdate(p.GetType()));
+            var update = order.Where(p => NeedsUpdate(p.GetType()));
 
             return (frameUpdate, update);
         }
@@ -231,7 +239,8 @@ namespace Robust.Shared.GameObjects
             }
 
             _systems.Clear();
-            _updateOrder = Array.Empty<IEntitySystem>();
+            _updateOrder = Array.Empty<UpdateReg>();
+            _frameUpdateOrder = Array.Empty<IEntitySystem>();
             _supertypeSystems.Clear();
             _initialized = false;
         }
@@ -239,15 +248,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Update(float frameTime)
         {
-            foreach (var system in _updateOrder)
+            foreach (var updReg in _updateOrder)
             {
-                _stopwatch.Restart();
-                var label = _tickUsageHistogram.WithLabels(system.GetType().Name);
+                if (MetricsEnabled)
+                {
+                    _stopwatch.Restart();
+                }
 #if EXCEPTION_TOLERANCE
                 try
                 {
 #endif
-                    system.Update(frameTime);
+                    updReg.System.Update(frameTime);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -256,7 +267,10 @@ namespace Robust.Shared.GameObjects
                 }
 #endif
 
-                label.Observe(_stopwatch.Elapsed.TotalSeconds);
+                if (MetricsEnabled)
+                {
+                    updReg.Monitor.Observe(_stopwatch.Elapsed.TotalSeconds);
+                }
             }
         }
 
@@ -323,11 +337,22 @@ namespace Robust.Shared.GameObjects
         private sealed class GraphNode
         {
             public readonly IEntitySystem System;
-            public readonly List<GraphNode> DependsOn = new List<GraphNode>();
+            public readonly List<GraphNode> DependsOn = new();
 
             public GraphNode(IEntitySystem system)
             {
                 System = system;
+            }
+        }
+
+        private struct UpdateReg
+        {
+            [ViewVariables] public IEntitySystem System;
+            [ViewVariables] public Histogram.Child Monitor;
+
+            public override string? ToString()
+            {
+                return System.ToString();
             }
         }
     }

@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Default common cursor shapes available in the UI.
         /// </summary>
-        public enum CursorShape
+        public enum CursorShape: byte
         {
             Arrow,
             IBeam,

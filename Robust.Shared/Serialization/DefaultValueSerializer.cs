@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization
     {
         public static DefaultValueSerializer Reader()
         {
-            return new DefaultValueSerializer()
+            return new()
             {
                 Reading = true,
             };

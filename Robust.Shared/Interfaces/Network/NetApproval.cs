@@ -19,12 +19,12 @@ namespace Robust.Shared.Interfaces.Network
 
         public static NetApproval Deny(string reason)
         {
-            return new NetApproval(reason);
+            return new(reason);
         }
 
         public static NetApproval Allow()
         {
-            return new NetApproval(null);
+            return new(null);
         }
     }
 }

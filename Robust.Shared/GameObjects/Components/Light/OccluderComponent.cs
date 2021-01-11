@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
         public sealed override uint? NetID => NetIDs.OCCLUDER;
 
         private bool _enabled = true;
-        private Box2 _boundingBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+        private Box2 _boundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 BoundingBox

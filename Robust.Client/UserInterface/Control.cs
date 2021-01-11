@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -22,7 +23,7 @@ namespace Robust.Client.UserInterface
     [PublicAPI]
     public partial class Control : IDisposable
     {
-        private readonly List<Control> _orderedChildren = new List<Control>();
+        private readonly List<Control> _orderedChildren = new();
 
         private bool _visible = true;
 
@@ -49,6 +50,45 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public Control? Parent { get; private set; }
 
+        public NameScope? NameScope;
+
+        //public void AttachNameScope(Dictionary<string, Control> nameScope)
+        //{
+        //    _nameScope = nameScope;
+        //}
+
+        public NameScope? FindNameScope()
+        {
+            foreach (var control in this.GetSelfAndLogicalAncestors())
+            {
+                if (control.NameScope != null) return control.NameScope;
+            }
+
+            return null;
+        }
+
+        public T FindControl<T>(string name) where T : Control
+        {
+            var nameScope = FindNameScope();
+            if (nameScope == null)
+            {
+                throw new ArgumentException("No Namespace found for Control");
+            }
+
+            var value = nameScope.Find(name);
+            if (value == null)
+            {
+                throw new ArgumentException($"No Control with the name {name} found");
+            }
+
+            if (value is not T ret)
+            {
+                throw new ArgumentException($"Control with name {name} had invalid type {value.GetType()}");
+            }
+
+            return ret;
+        }
+
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
 
         /// <summary>
@@ -61,6 +101,9 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public OrderedChildCollection Children { get; }
+
+        [Content]
+        public virtual ICollection<Control> XamlChildren { get; protected set; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
@@ -193,7 +236,8 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         /// Simple text tooltip that is shown when the mouse is hovered over this control for a bit.
-        /// See <see cref="OnShowTooltip"/> for a more customizable alternative.
+        /// See <see cref="TooltipSupplier"/> or <see cref="OnShowTooltip"/> for a more customizable alternative.
+        /// No effect when TooltipSupplier is specified.
         /// </summary>
         /// <remarks>
         /// If empty or null, no tooltip is shown in the first place (but OnShowTooltip and OnHideTooltip
@@ -202,8 +246,36 @@ namespace Robust.Client.UserInterface
         public string? ToolTip { get; set; }
 
         /// <summary>
+        /// Overrides the global tooltip delay, showing the tooltip for this
+        /// control within the specified number of seconds.
+        /// </summary>
+        public float? TooltipDelay { get; set; }
+
+        /// <summary>
+        /// When a tooltip should be shown for this control, this will be invoked to
+        /// produce a control which will serve as the tooltip (doing nothing if null is returned).
+        /// This is the generally recommended way to implement custom tooltips for controls, as it takes
+        /// care of the various edge cases for showing / hiding the tooltip.
+        /// For an even more customizable approach, <see cref="OnShowTooltip"/>
+        ///
+        /// The returned control will be added to PopupRoot, and positioned
+        /// within the user interface under the current mouse position to avoid going off the edge of the
+        /// screen. When the tooltip should be hidden, the control will be hidden by removing it from the tree.
+        ///
+        /// It is expected that the returned control remains within PopupRoot. Other classes should
+        /// not move it around in the tree or move it out of PopupRoot, but may access and modify
+        /// the control and its children via <see cref="SuppliedTooltip"/>.
+        /// </summary>
+        /// <remarks>
+        /// Returning a new instance of a tooltip control every time is usually fine. If for some
+        /// reason constructing the tooltip control is expensive, it MAY be fine to cache + reuse a single instance but this
+        /// approach has not yet been tested.
+        /// </remarks>
+        public TooltipSupplier? TooltipSupplier { get; set; }
+
+        /// <summary>
         /// Invoked when the mouse is hovered over this control for a bit and a tooltip
-        /// should be shown. Can be used as an alternative to ToolTip to perform custom tooltip
+        /// should be shown. Can be used as an alternative to ToolTip or TooltipSupplier to perform custom tooltip
         /// logic such as showing a more complex tooltip control.
         ///
         /// Any custom tooltip controls should typically be added
@@ -212,6 +284,23 @@ namespace Robust.Client.UserInterface
         /// custom tooltip controls.
         /// </summary>
         public event EventHandler? OnShowTooltip;
+
+
+
+        /// <summary>
+        /// If this control is currently showing a tooltip provided via TooltipSupplier,
+        /// returns that tooltip. Do not move this control within the tree, it should remain in PopupRoot.
+        /// Also, as it may be hidden (removed from tree) at any time, saving a reference to this is a Bad Idea.
+        /// </summary>
+        public Control? SuppliedTooltip => UserInterfaceManagerInternal.GetSuppliedTooltipFor(this);
+
+        /// <summary>
+        /// Manually hide the tooltip currently being shown for this control, if there is one.
+        /// </summary>
+        public void HideTooltip()
+        {
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+        }
 
         internal void PerformShowTooltip()
         {
@@ -227,6 +316,7 @@ namespace Robust.Client.UserInterface
         {
             OnHideTooltip?.Invoke(this, EventArgs.Empty);
         }
+
 
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
@@ -347,6 +437,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
+            XamlChildren = Children;
         }
 
         /// <summary>
@@ -430,7 +521,7 @@ namespace Robust.Client.UserInterface
         {
             DebugTools.Assert(!Disposed, "Control has been disposed.");
 
-            foreach (var child in Children.ToList())
+            foreach (var child in Children.ToArray())
             {
                 RemoveChild(child);
             }
@@ -757,7 +848,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Mode that will be tested when testing controls to invoke mouse button events on.
         /// </summary>
-        public enum MouseFilterMode
+        public enum MouseFilterMode : byte
         {
             /// <summary>
             ///     The control will be able to receive mouse buttons events.
@@ -790,7 +881,7 @@ namespace Robust.Client.UserInterface
 
             public Enumerator GetEnumerator()
             {
-                return new Enumerator(Owner);
+                return new(Owner);
             }
 
             IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();
@@ -865,4 +956,6 @@ namespace Robust.Client.UserInterface
             }
         }
     }
+
+    public delegate Control? TooltipSupplier(Control sender);
 }

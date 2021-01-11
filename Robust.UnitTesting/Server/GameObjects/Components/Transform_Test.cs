@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private MapId MapB;
         private IMapGrid GridB = default!;
 
-        private static readonly EntityCoordinates InitialPos = new EntityCoordinates(new EntityUid(1), (0, 0));
+        private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
 
         [OneTimeSetUp]
         public void Setup()

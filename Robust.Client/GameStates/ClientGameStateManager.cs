@@ -29,11 +29,11 @@ namespace Robust.Client.GameStates
         private GameStateProcessor _processor = default!;
 
         private uint _nextInputCmdSeq = 1;
-        private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+        private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
         private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
             _pendingSystemMessages
-                = new Queue<(uint, GameTick, EntitySystemMessage, object)>();
+                = new();
 
         [Dependency] private readonly IClientEntityManager _entities = default!;
         [Dependency] private readonly IPlayerManager _players = default!;

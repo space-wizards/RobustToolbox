@@ -128,7 +128,8 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             if (!entity.TryGetComponent(out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
 
@@ -138,7 +139,8 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
 

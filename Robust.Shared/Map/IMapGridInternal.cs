@@ -20,6 +20,13 @@ namespace Robust.Shared.Map
         void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
 
         /// <summary>
+        ///     Regenerates anything that is based on chunk collision data.
+        ///     This wouldn't even be separate if not for the whole "ability to suppress automatic collision regeneration" thing.
+        ///     As it is, YamlGridSerializer performs manual collision regeneration and that wasn't properly getting propagated to the grid. Thus, this needs to exist.
+        /// </summary>
+        void NotifyChunkCollisionRegenerated();
+
+        /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
         /// </summary>

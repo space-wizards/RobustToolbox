@@ -11,7 +11,7 @@ namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
-        private readonly List<MemberInfo> _members = new List<MemberInfo>();
+        private readonly List<MemberInfo> _members = new();
 
         public ViewVariablesTraitMembers(IViewVariablesSession session) : base(session)
         {

@@ -255,7 +255,7 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         [Flags]
-        protected enum DragMode
+        protected enum DragMode : byte
         {
             None = 0,
             Move = 1,

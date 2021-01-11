@@ -1,7 +1,9 @@
 using System;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
@@ -12,6 +14,7 @@ namespace Robust.Server.DataMetrics
     internal sealed class MetricsManager : IMetricsManager, IDisposable
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
 
         private bool _initialized;
 
@@ -20,7 +23,7 @@ namespace Robust.Server.DataMetrics
         public void Initialize()
         {
             _initialized = true;
-            
+
             _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => Reload());
             _configurationManager.OnValueChanged(CVars.MetricsHost, _ => Reload());
             _configurationManager.OnValueChanged(CVars.MetricsPort, _ => Reload());
@@ -28,7 +31,7 @@ namespace Robust.Server.DataMetrics
             Reload();
         }
 
-        private async void Stop()
+        private async Task Stop()
         {
             if (_metricServer == null)
             {
@@ -40,23 +43,25 @@ namespace Robust.Server.DataMetrics
             _metricServer = null;
         }
 
-        void IDisposable.Dispose()
+        async void IDisposable.Dispose()
         {
-            Stop();
+            await Stop();
 
             _initialized = false;
         }
 
-        private void Reload()
+        private async void Reload()
         {
             if (!_initialized)
             {
                 return;
             }
 
-            Stop();
+            await Stop();
 
             var enabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
+            _entitySystemManager.MetricsEnabled = enabled;
+
             if (!enabled)
             {
                 return;

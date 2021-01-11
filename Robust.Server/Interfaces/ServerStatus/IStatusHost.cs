@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
 
 namespace Robust.Server.Interfaces.ServerStatus
 {
-    public delegate bool StatusHostHandler(HttpMethod method, HttpRequest request, HttpResponse response);
+    public delegate bool StatusHostHandler(
+        IStatusHandlerContext context);
 
     public interface IStatusHost
     {
@@ -28,5 +32,31 @@ namespace Robust.Server.Interfaces.ServerStatus
         ///     MAKE TRIPLE SURE EVERYTHING IN HERE IS THREAD SAFE DEAR GOD.
         /// </summary>
         event Action<JObject> OnInfoRequest;
+    }
+
+    public interface IStatusHandlerContext
+    {
+        HttpMethod RequestMethod { get; }
+        IPEndPoint RemoteEndPoint { get; }
+        Uri Url { get; }
+        bool IsGetLike { get; }
+        IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+        [return: MaybeNull]
+        public T RequestBodyJson<T>();
+
+        void Respond(
+            string text,
+            HttpStatusCode code = HttpStatusCode.OK,
+            string contentType = "text/plain");
+
+        void Respond(
+            string text,
+            int code = 200,
+            string contentType = "text/plain");
+
+        void RespondError(HttpStatusCode code);
+
+        void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK);
     }
 }

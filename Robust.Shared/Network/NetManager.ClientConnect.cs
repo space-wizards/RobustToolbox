@@ -38,13 +38,12 @@ namespace Robust.Shared.Network
         private readonly
             Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)>
             _awaitingStatusChange
-                = new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<string>)>();
+                = new();
 
         private readonly
             Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<NetIncomingMessage>)>
             _awaitingData =
-                new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<NetIncomingMessage>)
-                >();
+                new();
 
 
         /// <inheritdoc />

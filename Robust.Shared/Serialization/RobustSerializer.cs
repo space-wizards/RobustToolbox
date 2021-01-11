@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
 
-        private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
+        private readonly Lazy<ISawmill> _lazyLogSzr = new(() => Logger.GetSawmill("szr"));
 
         private ISawmill LogSzr => _lazyLogSzr.Value;
 
@@ -36,7 +36,7 @@ namespace Robust.Shared.Serialization
 
         #region Statistics
 
-        private readonly object _statsLock = new object();
+        private readonly object _statsLock = new();
 
         public static long LargestObjectSerializedBytes { get; private set; }
 

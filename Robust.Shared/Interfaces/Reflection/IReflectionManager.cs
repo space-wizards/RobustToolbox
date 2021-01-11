@@ -104,6 +104,8 @@ namespace Robust.Shared.Interfaces.Reflection
         ///     Thrown if this string is an enum reference, but the enum could not be resolved.
         /// </exception>
         bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum);
+
+        Type? YamlTypeTagLookup(Type baseType, string typeName);
     }
 
     public class ReflectionUpdateEventArgs : EventArgs

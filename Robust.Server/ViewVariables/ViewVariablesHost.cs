@@ -26,7 +26,7 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesesSession>
-            _sessions = new Dictionary<uint, ViewVariablesesSession>();
+            _sessions = new();
 
         private uint _nextSessionId = 1;
 

@@ -128,7 +128,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public void OnConnect()
         {
-            ConnectedTime = DateTime.Now;
+            ConnectedTime = DateTime.UtcNow;
             Status = SessionStatus.Connected;
             UpdatePlayerState();
         }

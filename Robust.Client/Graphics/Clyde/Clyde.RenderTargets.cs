@@ -19,10 +19,10 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private readonly Dictionary<ClydeHandle, LoadedRenderTarget> _renderTargets =
-            new Dictionary<ClydeHandle, LoadedRenderTarget>();
+            new();
 
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
-            = new ConcurrentQueue<ClydeHandle>();
+            = new();
 
         IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
         // Initialized in Clyde's constructor
@@ -140,7 +140,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
 
                 // Check on original format is NOT a bug, this is so srgb emulation works
-                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color");
+                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color", TexturePixelType.RenderTarget);
             }
 
             // Depth/stencil buffers.

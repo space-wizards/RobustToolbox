@@ -38,6 +38,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    [UsedImplicitly]
     internal sealed class RemoveCompCommand : IClientCommand
     {
         public string Command => "rmcomp";

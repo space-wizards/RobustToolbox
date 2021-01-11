@@ -54,17 +54,6 @@ namespace Robust.UnitTesting.Shared.Maths
             (-20, -20)
         };
 
-        private static IEnumerable<int> Scalars => new int[]
-        {
-            -10,
-            -5,
-            -1,
-            0,
-            1,
-            5,
-            10
-        };
-
         private static IEnumerable<(UIBox2i a, UIBox2i b, UIBox2i? expected)> Intersections =>
             new (UIBox2i, UIBox2i, UIBox2i?)[]
             {

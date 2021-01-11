@@ -10,12 +10,12 @@ namespace Robust.Client.Utility
     {
         public static Color ConvertImgSharp(this Rgba32 color)
         {
-            return new Color(color.R, color.G, color.B, color.A);
+            return new(color.R, color.G, color.B, color.A);
         }
 
         public static Rgba32 ConvertImgSharp(this Color color)
         {
-            return new Rgba32(color.R, color.G, color.B, color.A);
+            return new(color.R, color.G, color.B, color.A);
         }
 
         /// <summary>

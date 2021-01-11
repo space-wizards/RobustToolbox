@@ -30,16 +30,16 @@ namespace Robust.Client.ViewVariables
         private readonly Vector2i _defaultWindowSize = (640, 420);
 
         private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
-            new Dictionary<ViewVariablesInstance, SS14Window>();
+            new();
 
         private readonly Dictionary<uint, ViewVariablesRemoteSession> _sessions =
-            new Dictionary<uint, ViewVariablesRemoteSession>();
+            new();
 
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesRemoteSession>> _requestedSessions =
-            new Dictionary<uint, TaskCompletionSource<ViewVariablesRemoteSession>>();
+            new();
 
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
-            = new Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>>();
+            = new();
 
         public void Initialize()
         {

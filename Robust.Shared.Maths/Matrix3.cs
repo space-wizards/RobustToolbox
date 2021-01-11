@@ -1086,16 +1086,14 @@ namespace Robust.Shared.Maths
         #region Constants
 
         /// <summary>The identity matrix.</summary>
-        public static readonly Matrix3 Identity = new Matrix3
-        (
+        public static readonly Matrix3 Identity = new(
             1, 0, 0,
             0, 1, 0,
             0, 0, 1
         );
 
         /// <summary>A matrix of all zeros.</summary>
-        public static readonly Matrix3 Zero = new Matrix3
-        (
+        public static readonly Matrix3 Zero = new(
             0, 0, 0,
             0, 0, 0,
             0, 0, 0

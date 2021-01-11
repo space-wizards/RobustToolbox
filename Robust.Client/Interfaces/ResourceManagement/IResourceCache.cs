@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.ResourceManagement;
+using Robust.LoaderApi;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
@@ -47,5 +48,7 @@ namespace Robust.Client.Interfaces.ResourceManagement
     {
         void TextureLoaded(TextureLoadedEventArgs eventArgs);
         void RsiLoaded(RsiLoadedEventArgs eventArgs);
+
+        void MountLoaderApi(IFileApi api, string apiPrefix, ResourcePath? prefix=null);
     }
 }

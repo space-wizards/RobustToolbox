@@ -13,7 +13,7 @@ highp float createOcclusion(highp vec2 diff)
     // Change soft shadow size based on distance from primary occluder.
     highp float distRatio = (ourDist - occlDist.x) / occlDist.x / 2.0;
 
-    perpendicular *= distRatio;
+    perpendicular *= distRatio * lightSoftness;
 
     // Totally not hacky PCF on top of VSM.
     highp float occlusion = smoothstep(0.1, 1.0, ChebyshevUpperBound(occlDist, ourDist));

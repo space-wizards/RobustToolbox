@@ -93,7 +93,7 @@
     [RegisterTextMacro("theName", "en")]
     public class TheName : ITextMacro
     {
-        private readonly NameMacro _nameMacro = new NameMacro();
+        private readonly NameMacro _nameMacro = new();
 
         public string Format(object? argument)
         {

@@ -70,13 +70,13 @@ namespace Robust.Client.UserInterface
         ///     A <see cref="UIBox2"/> with the top left at 0,0 and the size equal to <see cref="Size"/>.
         /// </summary>
         /// <seealso cref="PixelSizeBox"/>
-        public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+        public UIBox2 SizeBox => new(Vector2.Zero, Size);
 
         /// <summary>
         ///     A <see cref="UIBox2i"/> with the top left at 0,0 and the size equal to <see cref="PixelSize"/>.
         /// </summary>
         /// <seealso cref="SizeBox"/>
-        public UIBox2i PixelSizeBox => new UIBox2i(Vector2i.Zero, PixelSize);
+        public UIBox2i PixelSizeBox => new(Vector2i.Zero, PixelSize);
 
         /// <summary>
         ///     The width of the control, in virtual pixels.

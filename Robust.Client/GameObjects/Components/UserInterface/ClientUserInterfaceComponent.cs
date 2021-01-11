@@ -14,7 +14,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
-            new Dictionary<object, BoundUserInterface>();
+            new();
 
         private Dictionary<object, PrototypeData> _interfaceData = default!;
 #pragma warning disable 649

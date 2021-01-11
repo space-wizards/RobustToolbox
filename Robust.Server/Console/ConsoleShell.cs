@@ -24,7 +24,6 @@ namespace Robust.Server.Console
         [Dependency] private readonly IServerNetManager _net = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ILogManager _logMan = default!;
-        [Dependency] private readonly IConfigurationManager _configMan = default!;
         [Dependency] private readonly IConGroupController _groupController = default!;
 
         private readonly Dictionary<string, IClientCommand> _availableCommands =

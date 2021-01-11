@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    public enum WindowMode
+    public enum WindowMode : byte
     {
         Windowed = 0,
         Fullscreen = 1,

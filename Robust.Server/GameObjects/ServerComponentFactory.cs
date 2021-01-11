@@ -5,6 +5,7 @@ using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Components.Appearance;
 using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Renderable;
@@ -53,6 +54,8 @@ namespace Robust.Server.GameObjects
             RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AppearanceComponent>();
+            RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
+
             Register<SnapGridComponent>();
 
             Register<ServerUserInterfaceComponent>();

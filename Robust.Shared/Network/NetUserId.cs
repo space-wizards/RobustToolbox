@@ -13,34 +13,24 @@ namespace Robust.Shared.Network
             UserId = userId;
         }
 
-        public override bool Equals(object? obj)
-        {
-            return obj is NetUserId id && Equals(id);
-        }
+        public override bool Equals(object? obj) =>
+        obj switch {
+            Guid id => Equals(id),
+            NetUserId id => Equals(id),
+            _ => false,
+        };
 
-        public bool Equals(NetUserId other)
-        {
-            return UserId == other.UserId;
-        }
+        public bool Equals(NetUserId other) => UserId == other.UserId;
 
-        public override int GetHashCode()
-        {
-            return UserId.GetHashCode();
-        }
+        public override int GetHashCode() => UserId.GetHashCode();
 
-        public override string ToString()
-        {
-            return UserId.ToString();
-        }
+        public override string ToString() => UserId.ToString();
 
-        public static bool operator ==(NetUserId id1, NetUserId id2)
-        {
-            return id1.Equals(id2);
-        }
+        public static bool operator ==(NetUserId id1, NetUserId id2) => id1.Equals(id2);
 
-        public static bool operator !=(NetUserId id1, NetUserId id2)
-        {
-            return !(id1 == id2);
-        }
+        public static bool operator !=(NetUserId id1, NetUserId id2) => !(id1 == id2);
+
+        public static implicit operator Guid(NetUserId id) => id.UserId;
+        public static explicit operator NetUserId(Guid id) => new(id);
     }
 }

@@ -164,7 +164,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = default!;
 
@@ -209,7 +209,7 @@ namespace Robust.Client.GameObjects
             this.Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
-                this.Layers.Add(new Layer(otherLayer));
+                this.Layers.Add(new Layer(otherLayer, this));
             }
             this.IsInert = other.IsInert;
             this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
@@ -991,6 +991,9 @@ namespace Robust.Client.GameObjects
             var mRotation = Matrix3.CreateRotation(angle);
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
+            // Only apply scale if needed.
+            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
+
             transform.Multiply(worldTransform);
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
@@ -1089,12 +1092,12 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            static List<Layer> CloneLayers(List<Layer> source)
+            List<Layer> CloneLayers(List<Layer> source)
             {
                 var clone = new List<Layer>(source.Count);
                 foreach (var layer in source)
                 {
-                    clone.Add(new Layer(layer));
+                    clone.Add(new Layer(layer, this));
                 }
 
                 return clone;
@@ -1550,9 +1553,9 @@ namespace Robust.Client.GameObjects
                 _parent = parent;
             }
 
-            public Layer(Layer toClone)
+            public Layer(Layer toClone, SpriteComponent parentSprite)
             {
-                _parent = toClone._parent;
+                _parent = parentSprite;
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
@@ -1820,7 +1823,11 @@ namespace Robust.Client.GameObjects
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null) yield return icon;
+            if (icon != null)
+            {
+                yield return icon;
+                yield break;
+            }
 
             if (!prototype.Components.TryGetValue("Sprite", out _))
             {
@@ -1902,12 +1909,12 @@ namespace Robust.Client.GameObjects
             public ITransformComponent Transform { get; } = null!;
             public IMetaDataComponent MetaData { get; } = null!;
 
-            private Dictionary<Type, IComponent> _components = new Dictionary<Type, IComponent>();
+            private Dictionary<Type, IComponent> _components = new();
 
             public T AddComponent<T>() where T : Component, new()
             {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-                var comp = (T) typeFactory.CreateInstance(typeof(T));
+                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
+                var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
 

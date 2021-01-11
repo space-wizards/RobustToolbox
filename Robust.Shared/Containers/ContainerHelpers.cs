@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -65,6 +67,77 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        /// <summary>
+        ///     Attempts to remove an entity from its container, if any.
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="force">Whether to forcibly remove the entity from the container.</param>
+        /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
+        /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        public static bool TryRemoveFromContainer(this IEntity entity, bool force, out bool wasInContainer)
+        {
+            DebugTools.AssertNotNull(entity);
+            DebugTools.Assert(!entity.Deleted);
+
+            if (TryGetContainer(entity, out var container))
+            {
+                wasInContainer = true;
+
+                if (!force)
+                    return container.Remove(entity);
+
+                container.ForceRemove(entity);
+                return true;
+
+            }
+
+            wasInContainer = false;
+            return false;
+        }
+
+        /// <summary>
+        ///     Attempts to remove an entity from its container, if any.
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="force">Whether to forcibly remove the entity from the container.</param>
+        /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
+        public static bool TryRemoveFromContainer(this IEntity entity, bool force = false)
+        {
+            return TryRemoveFromContainer(entity, force, out _);
+        }
+
+        /// <summary>
+        ///     Attempts to remove all entities in a container.
+        /// </summary>
+        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null)
+        {
+            foreach (var entity in container.ContainedEntities.ToArray())
+            {
+                if (entity.Deleted) continue;
+
+                if (force)
+                    container.ForceRemove(entity);
+                else
+                    container.Remove(entity);
+
+                if (moveTo.HasValue)
+                    entity.Transform.Coordinates = moveTo.Value;
+            }
+        }
+
+        /// <summary>
+        ///     Attempts to remove and delete all entities in a container.
+        /// </summary>
+        public static void CleanContainer(this IContainer container)
+        {
+            foreach (var ent in container.ContainedEntities.ToArray())
+            {
+                if (ent.Deleted) continue;
+                container.ForceRemove(ent);
+                ent.Delete();
+            }
+        }
+
         public static void AttachParentToContainerOrGrid(this ITransformComponent transform)
         {
             if (transform.Parent == null
@@ -105,7 +178,7 @@ namespace Robust.Shared.Containers
 
             return false;
         }
-        
+
         public static bool IsInSameOrNoContainer(this IEntity user, IEntity other)
         {
             DebugTools.AssertNotNull(user);

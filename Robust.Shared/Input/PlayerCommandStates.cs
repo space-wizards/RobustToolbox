@@ -30,7 +30,7 @@ namespace Robust.Shared.Input
     /// <inheritdoc />
     public class PlayerCommandStates : IPlayerCommandStates
     {
-        private readonly Dictionary<BoundKeyFunction, BoundKeyState> _functionStates = new Dictionary<BoundKeyFunction, BoundKeyState>();
+        private readonly Dictionary<BoundKeyFunction, BoundKeyState> _functionStates = new();
 
         /// <inheritdoc />
         public BoundKeyState this[BoundKeyFunction function]

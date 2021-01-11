@@ -26,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
         private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)>
             _drawingSpriteList
                 =
-                new RefList<(SpriteComponent, Matrix3, Angle, float)>();
+                new();
 
         public void Render()
         {
@@ -383,7 +383,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class OverlayComparer : IComparer<Overlay>
         {
-            public static readonly OverlayComparer Instance = new OverlayComparer();
+            public static readonly OverlayComparer Instance = new();
 
             public int Compare(Overlay? x, Overlay? y)
             {

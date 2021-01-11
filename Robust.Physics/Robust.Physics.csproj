@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
-    <TargetFramework>$(TargetFramework)</TargetFramework>
-    <Nullable>enable</Nullable>
+
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
 

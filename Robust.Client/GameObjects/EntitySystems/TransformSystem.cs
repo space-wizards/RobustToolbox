@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     ///     Handles interpolation of transform positions.
     /// </summary>
     [UsedImplicitly]
-    internal sealed class TransformSystem : EntitySystem
+    internal sealed class TransformSystem : SharedTransformSystem
     {
         // Max distance per tick how far an entity can move before it is considered teleporting.
         // TODO: Make these values somehow dependent on server TPS.
@@ -27,7 +27,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
-        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new List<TransformComponent>();
+        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new();
 
         public override void Initialize()
         {

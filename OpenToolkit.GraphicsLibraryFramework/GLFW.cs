@@ -5546,5 +5546,10 @@ namespace OpenToolkit.GraphicsLibraryFramework
         {
             return glfwCreateWindowSurface(instance, window, allocator, surface);
         }
+
+        public static unsafe uint GetX11Window(Window* window)
+        {
+            return glfwGetX11Window(window);
+        }
     }
 }

@@ -23,7 +23,7 @@ namespace Robust.UnitTesting
             public int ChannelCount => _channels.Count;
 
             private readonly Dictionary<int, IntegrationNetChannel> _channels =
-                new Dictionary<int, IntegrationNetChannel>();
+                new();
 
             private readonly Channel<object> _messageChannel;
 
@@ -37,8 +37,8 @@ namespace Robust.UnitTesting
             public int Port => default;
             public IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; } = new Dictionary<Type, long>();
 
-            private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
-            private readonly HashSet<Type> _registeredMessages = new HashSet<Type>();
+            private readonly Dictionary<Type, ProcessMessage> _callbacks = new();
+            private readonly HashSet<Type> _registeredMessages = new();
 
             /// <summary>
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
@@ -168,6 +168,7 @@ namespace Robust.UnitTesting
                                     Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
 
                                     _channels.Remove(disconnect.Connection);
+                                    channel.IsConnected = false;
                                 }
                             }
                             else
@@ -249,7 +250,7 @@ namespace Robust.UnitTesting
 
 
             private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
-                = new List<Func<NetConnectingArgs, Task>>();
+                = new();
 
             public event Func<NetConnectingArgs, Task> Connecting
             {
@@ -363,10 +364,10 @@ namespace Robust.UnitTesting
                 public int ConnectionUid { get; }
                 long INetChannel.ConnectionId => ConnectionUid;
 
-                public bool IsConnected { get; }
+                public bool IsConnected { get; set; }
 
                 // TODO: Should this port value make sense?
-                public IPEndPoint RemoteEndPoint { get; } = new IPEndPoint(IPAddress.Loopback, 1212);
+                public IPEndPoint RemoteEndPoint { get; } = new(IPAddress.Loopback, 1212);
                 public NetUserId UserId { get; }
                 public string UserName { get; }
                 public LoginType AuthType => LoginType.GuestAssigned;
@@ -402,6 +403,8 @@ namespace Robust.UnitTesting
                 public void Disconnect(string reason)
                 {
                     OtherChannel.TryWrite(new DisconnectMessage(RemoteUid));
+
+                    IsConnected = false;
                 }
             }
 

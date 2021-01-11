@@ -27,7 +27,7 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
 
-        private readonly PriorityQueue<(uint seq, MsgEntity msg)> _queue = new PriorityQueue<(uint, MsgEntity)>(new MessageTickComparer());
+        private readonly PriorityQueue<(uint seq, MsgEntity msg)> _queue = new(new MessageTickComparer());
         private uint _incomingMsgSequence = 0;
 
         /// <inheritdoc />

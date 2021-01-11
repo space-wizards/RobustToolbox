@@ -1,6 +1,6 @@
 namespace Robust.Client.Interfaces.Graphics
 {
-    internal enum ClydeStockTexture
+    internal enum ClydeStockTexture : byte
     {
         White,
         Black,

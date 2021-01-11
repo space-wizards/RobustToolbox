@@ -223,7 +223,7 @@ namespace Robust.Client.GameObjects
 
         protected override EntityUid GenerateEntityUid()
         {
-            return new EntityUid(_nextClientEntityUid++);
+            return new(_nextClientEntityUid++);
         }
 
         private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,

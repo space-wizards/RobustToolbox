@@ -39,9 +39,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private readonly Dictionary<string, object> _styleProperties = new Dictionary<string, object>();
-        private readonly HashSet<string> _styleClasses = new HashSet<string>();
-        private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
+        private readonly Dictionary<string, object> _styleProperties = new();
+        private readonly HashSet<string> _styleClasses = new();
+        private readonly HashSet<string> _stylePseudoClass = new();
 
         // Styling needs to be updated.
         private bool _stylingDirty;

@@ -36,12 +36,12 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Color set to the ghost entity when it has a valid spawn position
         /// </summary>
-        public Color ValidPlaceColor { get; set; } = new Color(20, 180, 20); //Default valid color is green
+        public Color ValidPlaceColor { get; set; } = new(20, 180, 20); //Default valid color is green
 
         /// <summary>
         /// Color set to the ghost entity when it has an invalid spawn position
         /// </summary>
-        public Color InvalidPlaceColor { get; set; } = new Color(180, 20, 20); //Default invalid placement is red
+        public Color InvalidPlaceColor { get; set; } = new(180, 20, 20); //Default invalid placement is red
 
         /// <summary>
         /// Used for line and grid placement to determine how spaced apart the entities should be

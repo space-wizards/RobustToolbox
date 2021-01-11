@@ -66,4 +66,9 @@ namespace Robust.Shared.Localization
         /// <param name="culture"></param>
         void LoadCulture(CultureInfo culture);
     }
+
+    internal interface ILocalizationManagerInternal : ILocalizationManager
+    {
+        void AddLoadedToStringSerializer();
+    }
 }

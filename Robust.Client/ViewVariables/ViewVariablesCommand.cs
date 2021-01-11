@@ -104,10 +104,10 @@ namespace Robust.Client.ViewVariables
             [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
 
             [ViewVariables]
-            public Dictionary<object, object> Dict => new Dictionary<object, object> {{"a", "b"}, {"c", "d"}};
+            public Dictionary<object, object> Dict => new() {{"a", "b"}, {"c", "d"}};
 
             [ViewVariables]
-            public List<object> List => new List<object> {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
+            public List<object> List => new() {1, 2, 3, 4, 5, 6, 7, 8, 9, x, 11, 12, 13, 14, 15, this};
 
             [ViewVariables] private Vector2 Vector = (50, 50);
 

@@ -19,7 +19,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IGameTiming _gameTimer = default!;
 
-        private readonly List<RayWithLifetime> raysWithLifeTime = new List<RayWithLifetime>();
+        private readonly List<RayWithLifetime> raysWithLifeTime = new();
         private bool _debugDrawRays;
 
         private struct RayWithLifetime

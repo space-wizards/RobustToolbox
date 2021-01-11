@@ -11,17 +11,6 @@ namespace Robust.Shared.Interfaces.Configuration
     public interface IConfigurationManager
     {
         /// <summary>
-        /// Sets up the ConfigurationManager and loads a TOML configuration file.
-        /// </summary>
-        /// <param name="configFile">the full name of the config file.</param>
-        void LoadFromFile(string configFile);
-
-        /// <summary>
-        ///     Specifies the location where the config file should be saved, without trying to load from it.
-        /// </summary>
-        void SetSaveFile(string configFile);
-
-        /// <summary>
         /// Saves the configuration file to disk.
         /// </summary>
         void SaveToFile();
@@ -66,7 +55,7 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>
         T GetCVar<T>(string name);
-        
+
         T GetCVar<T>(CVarDef<T> def) where T : notnull;
 
         /// <summary>
@@ -75,15 +64,10 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar</param>
         Type GetCVarType(string name);
 
-        void OverrideConVars(IEnumerable<(string key, string value)> cVars);
-        void LoadCVarsFromAssembly(Assembly assembly);
-
         void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 
         void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
-
-        void Initialize(bool isServer);
     }
 }

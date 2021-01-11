@@ -38,7 +38,7 @@ namespace Robust.Shared.IoC
     public static class IoCManager
     {
         private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";
-        private static readonly ThreadLocal<IDependencyCollection> _container = new ThreadLocal<IDependencyCollection>();
+        private static readonly ThreadLocal<IDependencyCollection> _container = new();
 
         /// <summary>
         /// Returns the singleton thread-local instance of the IoCManager's dependency collection.

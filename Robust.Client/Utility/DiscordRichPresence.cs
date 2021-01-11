@@ -10,7 +10,7 @@ namespace Robust.Client.Utility
 {
     internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
-        private static readonly RichPresence _defaultPresence = new RichPresence
+        private static readonly RichPresence _defaultPresence = new()
         {
             Details = "In Main Menu",
             State = "In Main Menu",

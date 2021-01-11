@@ -112,7 +112,7 @@ namespace Robust.Server.Console.Commands
                 sb.AppendLine(string.Format("{4,20} {1,12} {2,14:hh\\:mm\\:ss} {3,9} {0,20}",
                     p.ConnectedClient.RemoteEndPoint,
                     p.Status.ToString(),
-                    DateTime.Now - p.ConnectedTime,
+                    DateTime.UtcNow - p.ConnectedTime,
                     p.ConnectedClient.Ping + "ms",
                     p.Name));
             }

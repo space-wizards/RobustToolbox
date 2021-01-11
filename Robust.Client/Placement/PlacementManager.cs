@@ -61,8 +61,8 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Dictionary of all placement mode types
         /// </summary>
-        private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<EntityCoordinates, TimeSpan>>();
+        private readonly Dictionary<string, Type> _modeDictionary = new();
+        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -143,7 +143,7 @@ namespace Robust.Client.Placement
         public Vector2i PlacementOffset { get; set; }
 
 
-        private Box2 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
+        private Box2 _colliderAABB = new(0f, 0f, 0f, 0f);
 
         /// <summary>
         /// The box which certain placement modes collision checks will be done against
@@ -619,7 +619,7 @@ namespace Robust.Client.Placement
             NetworkManager.ClientSendMessage(message);
         }
 
-        public enum PlacementTypes
+        public enum PlacementTypes : byte
         {
             None = 0,
             Line = 1,

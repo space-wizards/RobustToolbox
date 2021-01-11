@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         private readonly
             Dictionary<Type, ComponentDependencyEntry[]>
             _componentDependencyQueries =
-                new Dictionary<Type, ComponentDependencyEntry[]>();
+                new();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)

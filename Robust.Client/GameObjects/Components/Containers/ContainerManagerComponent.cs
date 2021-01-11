@@ -14,7 +14,7 @@ namespace Robust.Client.GameObjects.Components.Containers
     public sealed partial class ContainerManagerComponent : SharedContainerManagerComponent
     {
         [ViewVariables]
-        private readonly Dictionary<string, ClientContainer> _containers = new Dictionary<string, ClientContainer>();
+        private readonly Dictionary<string, ClientContainer> _containers = new();
 
         public override T MakeContainer<T>(string id)
         {

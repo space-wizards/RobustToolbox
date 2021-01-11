@@ -27,12 +27,12 @@ namespace Robust.Shared.Maths
 
         public static implicit operator Vector3d((double, double, double) tuple)
         {
-            return new Vector3d(tuple.Item1, tuple.Item2, tuple.Item3);
+            return new(tuple.Item1, tuple.Item2, tuple.Item3);
         }
 
         public static implicit operator Vector3d(Vector3 vector)
         {
-            return new Vector3d(vector.X, vector.Y, vector.Z);
+            return new(vector.X, vector.Y, vector.Z);
         }
     }
 }

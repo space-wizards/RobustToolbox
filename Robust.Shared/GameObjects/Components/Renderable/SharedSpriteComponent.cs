@@ -15,7 +15,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         /// <summary>
         ///     The resource path from which all texture paths are relative to.
         /// </summary>
-        public static readonly ResourcePath TextureRoot = new ResourcePath("/Textures");
+        public static readonly ResourcePath TextureRoot = new("/Textures");
 
         [Serializable, NetSerializable]
         protected class SpriteComponentState : ComponentState
@@ -72,7 +72,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
 
             public static PrototypeLayerData New()
             {
-                return new PrototypeLayerData
+                return new()
                 {
                     Scale = Vector2.One,
                     Color = Color.White,

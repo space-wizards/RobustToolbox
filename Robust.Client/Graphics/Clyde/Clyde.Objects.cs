@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeHandle AllocRid()
         {
-            return new ClydeHandle(_nextRid++);
+            return new(_nextRid++);
         }
     }
 }

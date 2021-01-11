@@ -5,7 +5,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     internal sealed class AppearanceSystem : EntitySystem
     {
-        private readonly Queue<AppearanceComponent> _updatesQueued = new Queue<AppearanceComponent>();
+        private readonly Queue<AppearanceComponent> _updatesQueued = new();
 
         public override void FrameUpdate(float frameTime)
         {

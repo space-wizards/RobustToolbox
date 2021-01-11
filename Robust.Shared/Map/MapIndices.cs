@@ -41,7 +41,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static MapIndices operator +(MapIndices left, MapIndices right)
         {
-            return new MapIndices(left.X + right.X, left.Y + right.Y);
+            return new(left.X + right.X, left.Y + right.Y);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static MapIndices operator -(MapIndices left, MapIndices right)
         {
-            return new MapIndices(left.X - right.X, left.Y - right.Y);
+            return new(left.X - right.X, left.Y - right.Y);
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static MapIndices operator -(MapIndices indices)
         {
-            return new MapIndices(-indices.X, -indices.Y);
+            return new(-indices.X, -indices.Y);
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static MapIndices operator *(MapIndices indices, int multiplier)
         {
-            return new MapIndices(indices.X * multiplier, indices.Y * multiplier);
+            return new(indices.X * multiplier, indices.Y * multiplier);
         }
 
         /// <summary>
@@ -118,17 +118,17 @@ namespace Robust.Shared.Map
 
         public static implicit operator Vector2i(in MapIndices indices)
         {
-            return new Vector2i(indices.X, indices.Y);
+            return new(indices.X, indices.Y);
         }
 
         public static implicit operator MapIndices(in Vector2i indices)
         {
-            return new MapIndices(indices.X, indices.Y);
+            return new(indices.X, indices.Y);
         }
 
         public static implicit operator Vector2(in MapIndices indices)
         {
-            return new Vector2(indices.X, indices.Y);
+            return new(indices.X, indices.Y);
         }
     }
 }

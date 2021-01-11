@@ -13,8 +13,8 @@ namespace Robust.Shared.Serialization
     /// <inheritdoc cref="ICustomFormatManager"/>
     public class CustomFormatManager : ICustomFormatManager
     {
-        private Dictionary<Type, WithFormat<int>> _flagFormatters = new Dictionary<Type, WithFormat<int>>();
-        private Dictionary<Type, WithFormat<int>> _constantFormatters = new Dictionary<Type, WithFormat<int>>();
+        private Dictionary<Type, WithFormat<int>> _flagFormatters = new();
+        private Dictionary<Type, WithFormat<int>> _constantFormatters = new();
 
         public WithFormat<int> FlagFormat<T>()
         {

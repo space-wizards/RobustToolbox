@@ -30,7 +30,7 @@ namespace Robust.Server.GameStates
     public class ServerGameStateManager : IServerGameStateManager
     {
         // Mapping of net UID of clients -> last known acked state.
-        private readonly Dictionary<long, GameTick> _ackedStates = new Dictionary<long, GameTick>();
+        private readonly Dictionary<long, GameTick> _ackedStates = new();
         private GameTick _lastOldestAck = GameTick.Zero;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;

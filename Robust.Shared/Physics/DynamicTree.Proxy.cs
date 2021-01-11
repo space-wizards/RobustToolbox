@@ -16,7 +16,7 @@ namespace Robust.Shared.Physics
             public static Proxy Free
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => new Proxy(-1);
+                get => new(-1);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,7 +41,7 @@ namespace Robust.Shared.Physics
             public static implicit operator int(Proxy n) => n._value;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static explicit operator Proxy(int v) => new Proxy(v);
+            public static explicit operator Proxy(int v) => new(v);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static bool operator ==(Proxy a, Proxy b) => a._value == b._value;

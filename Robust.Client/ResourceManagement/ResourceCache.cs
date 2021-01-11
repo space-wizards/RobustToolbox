@@ -7,15 +7,16 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.LoaderApi;
 
 namespace Robust.Client.ResourceManagement
 {
-    internal class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
+    internal partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
-            new Dictionary<Type, Dictionary<ResourcePath, BaseResource>>();
+            new();
 
-        private readonly Dictionary<Type, BaseResource> _fallbacks = new Dictionary<Type, BaseResource>();
+        private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
@@ -209,6 +210,13 @@ namespace Robust.Client.ResourceManagement
         public void RsiLoaded(RsiLoadedEventArgs eventArgs)
         {
             OnRsiLoaded?.Invoke(eventArgs);
+        }
+
+        public void MountLoaderApi(IFileApi api, string apiPrefix, ResourcePath? prefix=null)
+        {
+            prefix ??= ResourcePath.Root;
+            var root = new LoaderApiLoader(api, apiPrefix);
+            AddRoot(prefix, root);
         }
     }
 }

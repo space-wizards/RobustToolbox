@@ -72,6 +72,23 @@ namespace Robust.Shared.Network
             message.Write(span);
         }
 
+        public static Color ReadColor(this NetIncomingMessage message)
+        {
+            var rByte = message.ReadByte();
+            var gByte = message.ReadByte();
+            var bByte = message.ReadByte();
+            var aByte = message.ReadByte();
+            return new Color(rByte, gByte, bByte, aByte);
+        }
+
+        public static void Write(this NetOutgoingMessage message, Color color)
+        {
+            message.Write(color.RByte);
+            message.Write(color.GByte);
+            message.Write(color.BByte);
+            message.Write(color.AByte);
+        }
+
         /// <summary>
         ///     Reads byte-aligned data as a memory stream.
         /// </summary>

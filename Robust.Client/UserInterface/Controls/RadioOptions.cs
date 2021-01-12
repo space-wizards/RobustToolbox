@@ -157,7 +157,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SelectByValue(T value)
         {
-            var data = _buttonDataList.FirstOrDefault(bd => bd.Value.Equals(value));
+            var data = _buttonDataList.FirstOrDefault(bd => EqualityComparer<T>.Default.Equals(bd.Value, value));
             if (data != null)
             {
                 Select(data.Id);

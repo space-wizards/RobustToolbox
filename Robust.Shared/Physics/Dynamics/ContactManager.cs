@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
@@ -11,6 +13,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         // Large parts of this will be deprecated as more stuff gets ported.
@@ -29,15 +32,29 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Go through each awake body and find collisions.
         /// </summary>
         /// <param name="map"></param>
-        public void Collide(PhysicsMap map)
+        public void Collide(PhysicsMap map, bool prediction, float frameTime)
         {
-            var bodies = map.AwakeBodies;
+            // TODO: Farseer seems to only sleep in islands, though static bodies can't get added to islands so what if it's removed?
+            var noContacts = new HashSet<PhysicsComponent>();
+            var timeToSleep = _configManager.GetCVar(CVars.TimeToSleep);
 
             var combinations = new HashSet<(EntityUid, EntityUid)>();
+
+            var bodies = map.AwakeBodies;
+
             foreach (var bodyA in bodies)
             {
+                var anyContacts = prediction;
+
+                if (bodyA.BodyType == BodyType.Static)
+                {
+                    noContacts.Add(bodyA);
+                    continue;
+                }
+
                 foreach (var bodyB in _physicsManager.GetCollidingEntities(bodyA, Vector2.Zero, false))
                 {
+                    anyContacts = true;
                     var aUid = bodyA.Entity.Uid;
                     var bUid = bodyB.Uid;
 
@@ -60,6 +77,20 @@ namespace Robust.Shared.Physics.Dynamics
 
                     ContactList.Add(contact);
                 }
+
+                if (!anyContacts)
+                {
+                    noContacts.Add(bodyA);
+                }
+            }
+
+            foreach (var body in noContacts)
+            {
+                body.SleepTime += frameTime;
+                if (body.SleepTime >= timeToSleep)
+                {
+                    body.Awake = false;
+                }
             }
         }
 
@@ -67,6 +98,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
+
             foreach (var contact in ContactList)
             {
                 var bodyA = contact.Manifold.A.Owner;
@@ -126,6 +158,8 @@ namespace Robust.Shared.Physics.Dynamics
                     bodyB.ContactEdges.Clear();
                 }
             }
+
+            ContactList.Clear();
         }
     }
 }

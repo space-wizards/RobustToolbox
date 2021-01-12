@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
@@ -48,7 +49,6 @@ namespace Robust.Shared.GameObjects.Components
         private bool _canCollide;
         private bool _isHard;
         private BodyStatus _status;
-        private BodyType _bodyType;
         private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />
@@ -79,7 +79,27 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public BodyType BodyType { get; set; } = BodyType.Static;
+        public BodyType BodyType
+        {
+            get => _bodyType;
+            set
+            {
+                if (_bodyType == value)
+                    return;
+
+                _bodyType = value;
+                var oldAnchored = _anchored;
+                _anchored = _bodyType == BodyType.Static;
+
+                if (oldAnchored != _anchored)
+                {
+                    AnchoredChanged?.Invoke();
+                    SendMessage(new AnchoredChangedMessage(Anchored));
+                }
+            }
+        }
+
+        private BodyType _bodyType;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -96,13 +116,17 @@ namespace Robust.Shared.GameObjects.Components
 
                 if (_awake)
                 {
-                    // TODO: UpdateContacts?
-                    // TODO: EventBus AwakePhysics
+                    // TODO: Lot more farseer shit here
+                    Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
                 else
                 {
-                    // TODO: EventBus SleepPhysics
+                    Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
+
+                _linVelocity = Vector2.Zero;
+                _angVelocity = 0.0f;
+                Dirty();
             }
         }
 
@@ -159,12 +183,20 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _canCollide, "on", true);
             serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
+            // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
+
+            // TODO: Once anchored is just replaced with bodytype we can dump this
+            if (_anchored)
+            {
+                _bodyType = BodyType.Static;
+            }
+
             serializer.DataField(ref _mass, "mass", 1.0f);
-            // TODO: Set this for walls and stuff
-            serializer.DataField(this, x => x.Awake, "awake", true);
+            serializer.DataField(this, x => x.Awake, "awake", false);
+            serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
         }
 
         /// <inheritdoc />
@@ -254,8 +286,7 @@ namespace Robust.Shared.GameObjects.Components
 
                 _canCollide = value;
 
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new CollisionChangeMessage(Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
                 Dirty();
             }
         }
@@ -337,14 +368,13 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                new CollisionChangeMessage(Owner.Uid, _canCollide));
-        }
+            // Yeah yeah TODO Combine these
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
 
-        public override void OnAdd()
-        {
-            base.OnAdd();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+            if (CanCollide)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+            }
         }
 
         public override void OnRemove()

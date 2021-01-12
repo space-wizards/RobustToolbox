@@ -267,8 +267,11 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
+                if (BodyType == BodyType.Static)
+                    return;
+
                 if (value != Vector2.Zero)
-                    WakeBody();
+                    Awake = true;
 
                 if (_linVelocity.EqualsApprox(value, 0.0001))
                     return;
@@ -287,8 +290,11 @@ namespace Robust.Shared.GameObjects.Components
             get => _angVelocity;
             set
             {
+                if (BodyType == BodyType.Static)
+                    return;
+
                 if (value != 0.0f)
-                    WakeBody();
+                    Awake = true;
 
                 if (Math.Abs(_angVelocity - value) < 0.0001)
                     return;
@@ -336,6 +342,7 @@ namespace Robust.Shared.GameObjects.Components
         ///     Whether or not the entity is anchored in place.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use BodyType.Static instead")]
         public bool Anchored
         {
             get => _anchored;
@@ -344,10 +351,13 @@ namespace Robust.Shared.GameObjects.Components
                 if (_anchored == value)
                     return;
 
+                if (value)
+                {
+                    _bodyType = BodyType.Static;
+                }
+
                 _anchored = value;
-#pragma warning disable 618
                 AnchoredChanged?.Invoke();
-#pragma warning restore 618
                 SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
             }

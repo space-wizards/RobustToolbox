@@ -284,8 +284,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> SleepAllowed =
             CVarDef.Create("physics.sleepallowed", true);
 
+        // Box2D default is 0.5f
         public static readonly CVarDef<float> TimeToSleep =
-            CVarDef.Create("physics.timetosleep", 0.5f);
+            CVarDef.Create("physics.timetosleep", 0.1f);
 
         // - Solver
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.

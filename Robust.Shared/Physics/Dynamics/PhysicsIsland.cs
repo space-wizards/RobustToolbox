@@ -24,7 +24,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private float LinTolSqr => MathF.Pow(_configManager.GetCVar(CVars.LinearSleepTolerance), 2);
 
-        private ContactSolver _contactSolver = new();
+        private ContactSolver _contactSolver = default!;
 
         public IReadOnlyCollection<PhysicsComponent> Bodies => _bodies;
         private PhysicsComponent[] _bodies = Array.Empty<PhysicsComponent>();
@@ -61,6 +61,8 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _contactSolver = new ContactSolver();
+            _contactSolver.Initialize();
         }
 
         public void Add(PhysicsComponent body)
@@ -69,7 +71,7 @@ namespace Robust.Shared.Physics.Dynamics
             _bodies[BodyCount++] = body;
         }
 
-        public void Add(Contacts.Contact contact)
+        public void Add(Contact contact)
         {
             _contacts[ContactCount++] = contact;
         }
@@ -246,7 +248,8 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 body.Owner.Transform.WorldPosition = bodyPos;
-                body.Owner.Transform.WorldRotation = _angles[i];
+                // TODO: We need some override for players as this will go skewiff.
+                // body.Owner.Transform.WorldRotation = _angles[i];
             }
 
             // TODO: Cache rather than GetCVar

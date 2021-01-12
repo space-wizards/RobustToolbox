@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using Robust.Shared.Containers;
+﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -18,11 +14,6 @@ namespace Robust.Shared.GameObjects.Systems
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        /// <summary>
-        ///     Updates to EntityTree etc. that are deferred until the end of physics.
-        /// </summary>
-        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new();
-
         private Dictionary<MapId, PhysicsMap> _maps = new();
 
         public override void Initialize()
@@ -33,7 +24,12 @@ namespace Robust.Shared.GameObjects.Systems
             _mapManager.MapDestroyed += HandleMapDestroyed;
 
             SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
+            SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
+
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
         }
 
         public override void Shutdown()
@@ -44,7 +40,12 @@ namespace Robust.Shared.GameObjects.Systems
             _mapManager.MapDestroyed -= HandleMapDestroyed;
 
             UnsubscribeLocalEvent<PhysicsUpdateMessage>();
+            UnsubscribeLocalEvent<PhysicsWakeMessage>();
+            UnsubscribeLocalEvent<PhysicsSleepMessage>();
             UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+
+            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
+            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -94,6 +95,46 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 _maps[mapId].AddBody(message.Component);
             }
+        }
+
+        private void HandleWakeMessage(PhysicsWakeMessage message)
+        {
+            var mapId = message.Body.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace)
+                return;
+
+            _maps[mapId].AddAwakeBody(message.Body);
+        }
+
+        private void HandleSleepMessage(PhysicsSleepMessage message)
+        {
+            var mapId = message.Body.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace)
+                return;
+
+            _maps[mapId].RemoveSleepBody(message.Body);
+        }
+
+        private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            var mapId = message.Container.Owner.Transform.MapID;
+            if (mapId == MapId.Nullspace) return;
+
+            _maps[mapId].RemoveBody(physicsComponent);
+        }
+
+        private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            var mapId = message.Container.Owner.Transform.MapID;
+            if (mapId == MapId.Nullspace) return;
+
+            _maps[mapId].AddBody(physicsComponent);
         }
 
         /// <summary>

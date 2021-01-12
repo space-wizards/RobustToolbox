@@ -16,7 +16,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     All bodies present on this map.
         /// </summary>
-        public List<PhysicsComponent> Bodies = new();
+        public HashSet<PhysicsComponent> Bodies = new();
 
         /// <summary>
         ///     All awake bodies on this map.
@@ -32,7 +32,10 @@ namespace Robust.Shared.Physics.Dynamics
         private HashSet<PhysicsComponent> _queuedBodyAdd = new();
         private HashSet<PhysicsComponent> _queuedBodyRemove = new();
 
-        private PhysicsIsland _island = new();
+        private HashSet<PhysicsComponent> _queuedWake = new();
+        private HashSet<PhysicsComponent> _queuedSleep = new();
+
+        private PhysicsIsland _island = default!;
 
         /// <summary>
         ///     To build islands we do a depth-first search of all colliding bodies and group them together.
@@ -49,6 +52,8 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             _contactManager.Initialize();
+            _island = new PhysicsIsland();
+            _island.Initialize();
         }
 
         #region AddRemove
@@ -58,10 +63,20 @@ namespace Robust.Shared.Physics.Dynamics
             _queuedBodyAdd.Add(body);
         }
 
+        public void AddAwakeBody(PhysicsComponent body)
+        {
+            _queuedWake.Add(body);
+        }
+
         public void RemoveBody(PhysicsComponent body)
         {
             // DebugTools.Assert(!_queuedBodyRemove.Contains(body));
             _queuedBodyRemove.Add(body);
+        }
+
+        public void RemoveSleepBody(PhysicsComponent body)
+        {
+            _queuedSleep.Add(body);
         }
 
         // TODO: Someday joints too.
@@ -73,18 +88,21 @@ namespace Robust.Shared.Physics.Dynamics
         {
             ProcessAddQueue();
             ProcessRemoveQueue();
+            ProcessWakeQueue();
+            ProcessSleepQueue();
         }
 
         private void ProcessAddQueue()
         {
             foreach (var body in _queuedBodyAdd)
             {
-                Bodies.Add(body);
-
+                // TODO: Kinda dodgy with this and wake shit.
                 if (body.Awake)
                 {
+                    _queuedWake.Remove(body);
                     AwakeBodies.Add(body);
                 }
+                Bodies.Add(body);
             }
 
             _queuedBodyAdd.Clear();
@@ -103,6 +121,29 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             _queuedBodyRemove.Clear();
+        }
+
+        private void ProcessWakeQueue()
+        {
+            foreach (var body in _queuedWake)
+            {
+                if (!Bodies.Contains(body) || !body.Awake) continue;
+                AwakeBodies.Add(body);
+            }
+
+            _queuedWake.Clear();
+        }
+
+        private void ProcessSleepQueue()
+        {
+            foreach (var body in _queuedSleep)
+            {
+                if (body.Awake) continue;
+
+                AwakeBodies.Remove(body);
+            }
+
+            _queuedSleep.Clear();
         }
         #endregion
 
@@ -129,11 +170,12 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            _contactManager.Collide(this);
+            _contactManager.Collide(this, prediction, frameTime);
 
             // TODO: May move this as a PostSolve once we have broadphase collisions where contacts can be generated
             // even though the bodies may not technically be colliding
-            _contactManager.PreSolve();
+            if (!prediction)
+                _contactManager.PreSolve();
 
             // Remove all deleted entities etc.
             ProcessChanges();
@@ -163,7 +205,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in AwakeBodies)
             {
-                if (seed.Island || !seed.Awake || !seed.CanCollide || seed.BodyType == BodyType.Static) continue;
+                if (seed.Island || !seed.CanCollide || seed.BodyType == BodyType.Static) continue;
 
                 // Start of a new island
                 _island.Clear();
@@ -212,6 +254,8 @@ namespace Robust.Shared.Physics.Dynamics
                 // Post-solve cleanup for island
                 foreach (var body in _island.Bodies)
                 {
+                    if (body == null) break;
+
                     // Static bodies can participate in other islands
                     if (body.BodyType == BodyType.Static)
                     {

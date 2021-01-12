@@ -80,8 +80,6 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         float CalculatePenetration(IPhysBody target, IPhysBody source);
 
-        Vector2 SolveCollisionImpulse(Manifold manifold);
-
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
         /// </summary>
@@ -122,8 +120,8 @@ namespace Robust.Shared.Interfaces.Physics
 
     public readonly struct Manifold
     {
-        public readonly IPhysicsComponent A;
-        public readonly IPhysicsComponent B;
+        public readonly PhysicsComponent A;
+        public readonly PhysicsComponent B;
 
         public readonly Vector2 Normal;
         public readonly bool Hard;
@@ -132,7 +130,7 @@ namespace Robust.Shared.Interfaces.Physics
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(IPhysicsComponent a, IPhysicsComponent b, bool hard)
+        public Manifold(PhysicsComponent a, PhysicsComponent b, bool hard)
         {
             A = a;
             B = b;

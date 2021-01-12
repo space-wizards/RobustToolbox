@@ -51,20 +51,11 @@ namespace Robust.Shared.Physics
         MapId MapID { get; }
 
         /// <summary>
-        /// Broad Phase proxy ID.
-        /// </summary>
-        int ProxyId { get; set; }
-
-        /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }
 
-        int SleepAccumulator { get; set; }
-
-        int SleepThreshold { get; set; }
-
-        bool Awake { get; }
+        bool Awake { get; set; }
 
         /// <summary>
         ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
@@ -81,7 +72,7 @@ namespace Robust.Shared.Physics
         float InvMass { get; }
 
         /// <summary>
-        /// Inverse moment of inertia, in 
+        /// Inverse moment of inertia, in
         /// </summary>
         float InvI { get; }
 

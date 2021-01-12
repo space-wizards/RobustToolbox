@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -56,63 +57,93 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
 
+        /// <summary>
+        ///     Has this body been added to an island previously in this tick.
+        /// </summary>
+        public bool Island { get; set; }
+
+        /// <summary>
+        ///     Store the body's index within the island so we can lookup its data.
+        /// </summary>
+        public int IslandIndex { get; set; }
+
+        /// <summary>
+        ///     All of our contacts.
+        /// </summary>
+        internal List<ContactEdge> ContactEdges { get; set; } = new();
+
         public IEntity Entity => Owner;
 
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
-        public int ProxyId { get; set; }
-
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType { get; set; } = BodyType.Static;
-
-        /// <inheritdoc />
-        public int SleepAccumulator
-        {
-            get => _sleepAccumulator;
-            set
-            {
-                if (_sleepAccumulator == value)
-                    return;
-
-                _sleepAccumulator = value;
-                Awake = _physicsManager.SleepTimeThreshold > SleepAccumulator;
-            }
-        }
-
-        private int _sleepAccumulator;
-
-        // TODO: When SleepTimeThreshold updates we need to update Awake
-        public int SleepThreshold
-        {
-            get => _physicsManager.SleepTimeThreshold;
-            set => _physicsManager.SleepTimeThreshold = value;
-        }
 
         /// <inheritdoc />
         [ViewVariables]
         public bool Awake
         {
             get => _awake;
-            private set
+            set
             {
                 if (_awake == value)
                     return;
 
                 _awake = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                _sleepTime = 0.0f;
+
+                if (_awake)
+                {
+                    // TODO: UpdateContacts?
+                    // TODO: EventBus AwakePhysics
+                }
+                else
+                {
+                    // TODO: EventBus SleepPhysics
+                }
             }
         }
 
-        private bool _awake = true;
+        private bool _awake;
+
+        public bool SleepingAllowed
+        {
+            get => _sleepingAllowed;
+            set
+            {
+                if (_sleepingAllowed == value)
+                    return;
+
+                _sleepingAllowed = value;
+
+                if (_sleepingAllowed)
+                    Awake = true;
+            }
+        }
+
+        private bool _sleepingAllowed;
+
+        public float SleepTime
+        {
+            get => _sleepTime;
+            set
+            {
+                if (MathHelper.CloseTo(value, _sleepTime))
+                    return;
+
+                _sleepTime = value;
+            }
+        }
+
+        private float _sleepTime;
 
         /// <inheritdoc />
+        [Obsolete("Set Awake directly")]
         public void WakeBody()
         {
-            if (CanMove())
-                SleepAccumulator = 0;
+            Awake = true;
         }
 
         public PhysicsComponent()
@@ -128,10 +159,12 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _canCollide, "on", true);
             serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
-            serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
+            serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
             serializer.DataField(ref _mass, "mass", 1.0f);
+            // TODO: Set this for walls and stuff
+            serializer.DataField(this, x => x.Awake, "awake", true);
         }
 
         /// <inheritdoc />
@@ -143,10 +176,8 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not PhysicsComponentState newState)
                 return;
-
-            var newState = (PhysicsComponentState) curState;
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
@@ -188,7 +219,7 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables]
-        Box2 IPhysBody.AABB
+        public Box2 AABB
         {
             get
             {
@@ -516,9 +547,9 @@ namespace Robust.Shared.GameObjects.Components
     /// </summary>
     public sealed class PhysicsUpdateMessage : EntitySystemMessage
     {
-        public IPhysicsComponent Component { get; }
+        public PhysicsComponent Component { get; }
 
-        public PhysicsUpdateMessage(IPhysicsComponent component)
+        public PhysicsUpdateMessage(PhysicsComponent component)
         {
             Component = component;
         }

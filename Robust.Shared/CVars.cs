@@ -271,6 +271,32 @@ namespace Robust.Shared
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
+         * PHYSICS
+         */
+
+        // - Sleep
+        public static readonly CVarDef<float> AngularSleepTolerance =
+            CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);
+
+        public static readonly CVarDef<float> LinearSleepTolerance =
+            CVarDef.Create("physics.linsleeptol", 0.01f);
+
+        public static readonly CVarDef<bool> SleepAllowed =
+            CVarDef.Create("physics.sleepallowed", true);
+
+        public static readonly CVarDef<float> TimeToSleep =
+            CVarDef.Create("physics.timetosleep", 0.5f);
+
+        // - Solver
+        // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
+        // Trade-off is obviously performance vs how long it takes to stabilise.
+        public static readonly CVarDef<int> PositionIterations =
+            CVarDef.Create("physics.positer", 2);
+
+        public static readonly CVarDef<int> VelocityIterations =
+            CVarDef.Create("physics.veliter", 6);
+
+        /*
          * DISCORD
          */
 

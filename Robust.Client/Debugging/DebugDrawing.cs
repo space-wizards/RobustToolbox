@@ -10,7 +10,10 @@ using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -158,9 +161,12 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
+
+                var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
+
+                foreach (var comp in _componentManager.EntityQuery<PhysicsComponent>(true))
                 {
-                    var physBody = (IPhysBody) boundingBox;
+                    var physBody = (IPhysBody) comp;
 
                     // all entities have a TransformComponent
                     var transform = physBody.Entity.Transform;
@@ -178,7 +184,7 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in physBody.PhysicsShapes)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, comp.SleepTime / sleepThreshold);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.Physics;
@@ -360,14 +360,7 @@ namespace Robust.Shared.GameObjects.Components
         public bool Predict
         {
             get => _predict;
-            set
-            {
-                if (_predict == value)
-                    return;
-
-                _predict = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
-            }
+            set => _predict = value;
         }
 
         private bool _predict;
@@ -520,7 +513,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public bool CanMove()
         {
-            return !Anchored && Mass > 0;
+            return BodyType == BodyType.Dynamic || (!Anchored && Mass > 0);
         }
     }
 

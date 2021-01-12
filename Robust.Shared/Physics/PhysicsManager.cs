@@ -97,30 +97,6 @@ namespace Robust.Shared.Physics
             return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
         }
 
-        // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
-        public Vector2 SolveCollisionImpulse(Manifold manifold)
-        {
-            var aP = manifold.A;
-            var bP = manifold.B;
-
-            if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
-
-            var restitution = 0.01f;
-            var normal = manifold.Normal;
-            var rV = manifold.RelativeVelocity;
-
-            var vAlongNormal = Vector2.Dot(rV, normal);
-            if (vAlongNormal > 0)
-            {
-                return Vector2.Zero;
-            }
-
-            var impulse = -(1.0f + restitution) * vAlongNormal;
-            impulse /= aP.InvMass + bP.InvMass;
-
-            return manifold.Normal * impulse;
-        }
-
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
             var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();

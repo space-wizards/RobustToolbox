@@ -16,6 +16,7 @@ using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.ServerStatus;
+using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -357,7 +358,7 @@ namespace Robust.UnitTesting
                         }
                     }
 
-                    cfg.OverrideConVars(new []{("log.runtimelog", "false")});
+                    cfg.OverrideConVars(new []{("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {

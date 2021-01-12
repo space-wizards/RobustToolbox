@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 
@@ -59,8 +60,19 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetPredict =
             CVarDef.Create("net.predict", true, CVar.ARCHIVE);
 
-        public static readonly CVarDef<int> NetPredictSize =
-            CVarDef.Create("net.predict_size", 1, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetPredictTickBias =
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.ARCHIVE);
+
+        // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
+        // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
+        // BUT! Lidgren's latency calculation *never* measures this due to how it works.
+        // This broke some prediction calculations quite badly so we bias them to mask it.
+        // This is not necessary on Linux because Linux, for better or worse,
+        // just has the Lidgren thread go absolute brr polling.
+        public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
+                "net.predict_lag_bias",
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.016f : 0,
+                CVar.ARCHIVE);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
@@ -77,6 +89,8 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<int> SysWinTickPeriod =
+            CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);

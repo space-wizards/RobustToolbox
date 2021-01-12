@@ -69,8 +69,8 @@ namespace Robust.Server.ServerStatus
             }
             catch (Exception e)
             {
-                apiContext.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
                 _httpSawmill.Error($"Exception in StatusHost: {e}");
+                apiContext.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
             }
 
             /*

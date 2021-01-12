@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace Robust.Generators
 {
     [Generator]
-    public partial class DataClassGenerator : ISourceGenerator
+    public class DataClassGenerator : ISourceGenerator
     {
         public void Initialize(GeneratorInitializationContext context)
         {
@@ -19,10 +19,6 @@ namespace Robust.Generators
 
         public void Execute(GeneratorExecutionContext context)
         {
-            if (context.SyntaxReceiver is DeepCloneCandidates deepCloneCandidates)
-            {
-                AnalyzeDeepCloneCandidates(context, deepCloneCandidates.Candidates);
-            }
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
             Debugger.Launch();

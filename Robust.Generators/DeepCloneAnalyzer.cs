@@ -1,14 +1,35 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Robust.Generators
 {
-    public partial class DataClassGenerator
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    public class DeepCloneAnalyzer : DiagnosticAnalyzer
     {
-        private void AnalyzeDeepCloneCandidates(GeneratorExecutionContext context, List<ClassDeclarationSyntax> candidates)
+        public override void Initialize(AnalysisContext context)
+        {
+            context.RegisterCompilationAction((c) => AnalyzeDeepCloneCandidates(c));
+        }
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+            new ImmutableArray<DiagnosticDescriptor>()
+            {
+                new DiagnosticDescriptor(
+                    "RADC0004",
+                    "",
+                    $"",
+                    "Usage",
+                    DiagnosticSeverity.Error,
+                    true)
+            };
+
+        private void AnalyzeDeepCloneCandidates(CompilationAnalysisContext context)
         {
             var compilation = context.Compilation;
             var deepCloneSymbol =
@@ -30,7 +51,7 @@ namespace Robust.Generators
                 return null;
             }
 
-            foreach (var syntax in candidates)
+            foreach (var syntax in compilation.SyntaxTrees.SelectMany(s => CandidateWalker.GetClassDeclarationSyntaxes(s.GetRoot())))
             {
                 var symbol = ModelExtensions.GetDeclaredSymbol(compilation.GetSemanticModel(syntax.SyntaxTree), syntax) as ITypeSymbol;
                 if(symbol == null || !InheritsDeepCloneInterface(symbol)) continue;
@@ -58,6 +79,16 @@ namespace Robust.Generators
                     continue; //todo Paul: implementation deferred, allowed (?)
                 }
 
+                context.ReportDiagnostic(Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "RADC0002",
+                        "",
+                        "aaaaaa",
+                        "Usage",
+                        DiagnosticSeverity.Error,
+                        true),
+                    Location.None));
+
                 foreach (var syntaxReference in implementation.DeclaringSyntaxReferences)
                 {
                     var methodSyntax = syntaxReference.SyntaxTree.GetRoot() as MethodDeclarationSyntax;
@@ -75,6 +106,24 @@ namespace Robust.Generators
                             invalidAssignment.GetLocation()));
                     }
                 }
+            }
+        }
+
+        class CandidateWalker : CSharpSyntaxWalker
+        {
+            public static List<ClassDeclarationSyntax> GetClassDeclarationSyntaxes(SyntaxNode node)
+            {
+                var walker = new CandidateWalker();
+                walker.Visit(node);
+                return walker._classDeclarationSyntaxes;
+            }
+
+            private List<ClassDeclarationSyntax> _classDeclarationSyntaxes = new List<ClassDeclarationSyntax>();
+
+            public override void VisitClassDeclaration(ClassDeclarationSyntax node)
+            {
+                _classDeclarationSyntaxes.Add(node);
+                base.VisitClassDeclaration(node);
             }
         }
 

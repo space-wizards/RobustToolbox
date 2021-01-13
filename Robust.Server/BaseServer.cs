@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -37,6 +38,7 @@ using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Log;
+using Robust.Server.Utility;
 using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
@@ -322,6 +324,11 @@ namespace Robust.Server
 
             _stringSerializer.LockStrings();
 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
+
             return false;
         }
 
@@ -504,6 +511,11 @@ namespace Robust.Server
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
         }
 
         private string UpdateBps()

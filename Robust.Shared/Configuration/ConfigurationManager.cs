@@ -312,8 +312,13 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public virtual void SetCVar(string name, object value)
         {
+            SetCVarInternal(name, value);
+        }
+
+        private void SetCVarInternal(string name, object value, bool allowSecure = false)
+        {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (allowSecure || (cVar.Flags & CVar.SECURE) == 0))
             {
                 if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                 {
@@ -352,6 +357,18 @@ namespace Robust.Shared.Configuration
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
+
+        public void SetSecureCVar(string name, object value)
+        {
+            SetCVarInternal(name, value, allowSecure: true);
+        }
+
+
+        public void SetSecureCVar<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            SetSecureCVar(def.Name, value);
+        }
+
 
         public T GetCVar<T>(CVarDef<T> def) where T : notnull
         {

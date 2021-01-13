@@ -58,7 +58,8 @@ namespace Robust.Client.GameStates
 
         public bool Predicting { get; private set; }
 
-        public int PredictSize { get; private set; }
+        public int PredictTickBias { get; private set; }
+        public float PredictLagBias { get; private set; }
 
         public int StateBufferMergeThreshold { get; private set; }
 
@@ -83,14 +84,16 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
             _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
             _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
-            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i, true);
+            _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
+            _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
             _processor.Logging = _config.GetCVar(CVars.NetLogging);
             Predicting = _config.GetCVar(CVars.NetPredict);
-            PredictSize = _config.GetCVar(CVars.NetPredictSize);
+            PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
+            PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
         }
 
         /// <inheritdoc />
@@ -257,9 +260,9 @@ namespace Robust.Client.GameStates
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-            var ping = _network.ServerChannel!.Ping / 1000f; // seconds.
+            var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
+                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 
             // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
 

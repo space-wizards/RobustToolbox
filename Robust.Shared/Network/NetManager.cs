@@ -663,7 +663,6 @@ namespace Robust.Shared.Network
 
             try
             {
-                await Task.Delay(1000);
                 await _serializer.Handshake(channel);
             }
             catch (TaskCanceledException)

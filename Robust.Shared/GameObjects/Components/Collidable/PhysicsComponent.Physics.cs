@@ -196,7 +196,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public float InvMass
         {
-            get => CanMove() ? Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
+            get => CanMove() ? 1.0f / Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
             set => Mass = value > 0 ? 1f / value : 0f;
         }
 

@@ -100,7 +100,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 var restitution = 0.01f;
                 var normal = manifold.Normal;
-                var rV = manifold.RelativeVelocity;
+                var rV = velocityB - velocityA;
 
                 var vAlongNormal = Vector2.Dot(rV, normal);
                 if (vAlongNormal > 0)
@@ -113,7 +113,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 var normalImpulse = manifold.Normal * impulse;
 
-                _linearVelocities[indexA] = velocityA + normalImpulse * invMassA;
+                _linearVelocities[indexA] = velocityA - normalImpulse * invMassA;
                 _linearVelocities[indexB] = velocityB + normalImpulse * invMassB;
             }
         }
@@ -154,11 +154,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 //var correction = collision.Normal * Math.Abs(penetration) * percent;
                 var correction = manifold.Normal * Math.Max(penetration - allowance, 0.0f) / (bodyA.InvMass + bodyB.InvMass) * percent;
 
-                bodyA.Owner.Transform.DeferUpdates = true;
                 var positionA = _positions[indexA];
                 _positions[indexA] = positionA - correction * bodyA.InvMass;
 
-                bodyB.Owner.Transform.DeferUpdates = true;
                 var positionB = _positions[indexB];
                 _positions[indexB] = positionB + correction * bodyB.InvMass;
             }

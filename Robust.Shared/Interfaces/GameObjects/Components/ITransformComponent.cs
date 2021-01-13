@@ -98,12 +98,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// </summary>
         GridId GridID { get; }
 
-        /// <summary>
-        ///     Whether external system updates should run or not (e.g. EntityTree, Matrices, PhysicsTree).
-        ///     These should be manually run later.
-        /// </summary>
-        bool DeferUpdates { get; set; }
-
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);

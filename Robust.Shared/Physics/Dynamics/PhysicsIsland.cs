@@ -206,6 +206,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var body = _bodies[i];
 
+                if (body.BodyType == BodyType.Static) continue;
+
                 /*
                  * Handle new velocity
                  */

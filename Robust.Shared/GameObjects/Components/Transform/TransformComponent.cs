@@ -77,9 +77,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        /// <inheritdoc />
-        public bool DeferUpdates { get; set; }
-
         // Deferred fields
         private Angle? _oldLocalRotation;
         private EntityCoordinates? _oldCoords;
@@ -102,18 +99,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetRotation(value);
                 Dirty();
 
-                if (!DeferUpdates)
-                {
-                    RebuildMatrices();
-                    UpdateEntityTree();
-                    UpdatePhysicsTree();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
-                }
-                else
-                {
-                    _oldLocalRotation ??= oldRotation;
-                }
+                RebuildMatrices();
+                UpdateEntityTree();
+                UpdatePhysicsTree();
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
             }
         }
 
@@ -257,23 +247,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _localPosition = value.Position;
                 Dirty();
 
-                if (!DeferUpdates)
+                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                if (Running)
                 {
-                    //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                    if (Running)
-                    {
-                        RebuildMatrices();
-                        Owner.EntityManager.EventBus.RaiseEvent(
-                            EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
-                    }
+                    RebuildMatrices();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
+                }
 
-                    UpdateEntityTree();
-                    UpdatePhysicsTree();
-                }
-                else
-                {
-                    _oldCoords ??= oldPosition;
-                }
+                UpdateEntityTree();
+                UpdatePhysicsTree();
             }
         }
 
@@ -297,18 +280,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetPosition(value);
                 Dirty();
 
-                if (!DeferUpdates)
-                {
-                    RebuildMatrices();
-                    UpdateEntityTree();
-                    UpdatePhysicsTree();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
-                }
-                else
-                {
-                    _oldCoords ??= oldGridPos;
-                }
+                RebuildMatrices();
+                UpdateEntityTree();
+                UpdatePhysicsTree();
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
             }
         }
 

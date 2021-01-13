@@ -196,6 +196,7 @@ namespace Robust.Shared.Physics.Dynamics
             _island.Reset(AwakeBodies.Count, _contactManager.ContactList.Count);
 
             // Build and simulated islands from awake bodies.
+            // Ideally you don't need a stack size for all bodies but we'll optimise it later.
             var stackSize = Bodies.Count;
             if (stackSize > _stack.Length)
             {

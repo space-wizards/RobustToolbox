@@ -15,8 +15,24 @@ namespace Robust.Client.UserInterface.Controls
         private readonly Popup _popup;
         private readonly VBoxContainer _popupVBox;
         private readonly Label _label;
+        private readonly TextureRect _triangle;
 
         public int ItemCount => _buttonData.Count;
+
+
+        /// <summary>
+        /// If true, hides the triangle that normally appears to the right of the button label
+        /// </summary>
+        public bool HideTriangle
+        {
+            get => _hideTriangle;
+            set
+            {
+                _hideTriangle = value;
+                _triangle.Visible = !_hideTriangle;
+            }
+        }
+        private bool _hideTriangle;
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
@@ -43,12 +59,13 @@ namespace Robust.Client.UserInterface.Controls
             };
             hBox.AddChild(_label);
 
-            var textureRect = new TextureRect
+            _triangle = new TextureRect
             {
                 StyleClasses = { StyleClassOptionTriangle },
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                Visible = !HideTriangle
             };
-            hBox.AddChild(textureRect);
+            hBox.AddChild(_triangle);
         }
 
         public void AddItem(Texture icon, string label, int? id = null)

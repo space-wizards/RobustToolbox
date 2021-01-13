@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -52,6 +53,8 @@ namespace Robust.Shared.Configuration
         /// Flushes any NwCVar messages in the receive buffer.
         /// </summary>
         void FlushMessages();
+
+        public event EventHandler ReceivedInitialNwVars;
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
@@ -62,6 +65,9 @@ namespace Robust.Shared.Configuration
 
         private readonly Dictionary<INetChannel, Dictionary<string, object>> _replicatedCVars = new();
         private readonly List<MsgConVars> _netVarsMessages = new();
+
+        public event EventHandler? ReceivedInitialNwVars;
+        private bool _receivedInitialNwVars;
 
         /// <inheritdoc />
         public void SetupNetworking()
@@ -87,6 +93,10 @@ namespace Robust.Shared.Configuration
 
         private void HandleNetVarMessage(MsgConVars message)
         {
+            if(!_receivedInitialNwVars)
+                ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
+
+            _receivedInitialNwVars = true;
             _netVarsMessages.Add(message);
         }
 
@@ -125,7 +135,7 @@ namespace Robust.Shared.Configuration
 
             _netVarsMessages.Clear();
         }
-
+        
         private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
         {
             Logger.DebugS("cfg", "Handling replicated cvars...");

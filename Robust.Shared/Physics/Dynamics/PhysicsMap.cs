@@ -220,6 +220,7 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     var body = _stack[--stackCount];
                     _island.Add(body);
+                    _islandSet.Add(body);
                     body.Awake = true;
 
                     // Static bodies don't propagate islands

@@ -1,6 +1,6 @@
 ﻿namespace Robust.Shared.Network
 {
-    public enum AuthMode
+    public enum AuthMode : byte
     {
         Optional = 0,
         Required = 1,

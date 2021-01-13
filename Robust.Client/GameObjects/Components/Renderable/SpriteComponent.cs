@@ -36,8 +36,6 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
-        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
-
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -166,7 +164,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = default!;
 
@@ -211,7 +209,7 @@ namespace Robust.Client.GameObjects
             this.Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
-                this.Layers.Add(new Layer(otherLayer));
+                this.Layers.Add(new Layer(otherLayer, this));
             }
             this.IsInert = other.IsInert;
             this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
@@ -993,6 +991,9 @@ namespace Robust.Client.GameObjects
             var mRotation = Matrix3.CreateRotation(angle);
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
+            // Only apply scale if needed.
+            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
+
             transform.Multiply(worldTransform);
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
@@ -1091,12 +1092,12 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            static List<Layer> CloneLayers(List<Layer> source)
+            List<Layer> CloneLayers(List<Layer> source)
             {
                 var clone = new List<Layer>(source.Count);
                 foreach (var layer in source)
                 {
-                    clone.Add(new Layer(layer));
+                    clone.Add(new Layer(layer, this));
                 }
 
                 return clone;
@@ -1118,7 +1119,7 @@ namespace Robust.Client.GameObjects
             var layerData =
                 serializer.ReadDataField("layers", new List<PrototypeLayerData>());
 
-            {
+            if(layerData.Count == 0){
                 var baseState = serializer.ReadDataField<string?>("state", null);
                 var texturePath = serializer.ReadDataField<string?>("texture", null);
 
@@ -1552,9 +1553,9 @@ namespace Robust.Client.GameObjects
                 _parent = parent;
             }
 
-            public Layer(Layer toClone)
+            public Layer(Layer toClone, SpriteComponent parentSprite)
             {
-                _parent = toClone._parent;
+                _parent = parentSprite;
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
@@ -1819,6 +1820,56 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
+        {
+            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            if (icon != null)
+            {
+                yield return icon;
+                yield break;
+            }
+
+            if (!prototype.Components.TryGetValue("Sprite", out _))
+            {
+                yield return resourceCache.GetFallback<TextureResource>().Texture;
+                yield break;
+            }
+
+            var dummy = new DummyIconEntity {Prototype = prototype};
+            var spriteComponent = dummy.AddComponent<SpriteComponent>();
+
+            if (prototype.Components.TryGetValue("Appearance", out _))
+            {
+                var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
+                foreach (var layer in appearanceComponent.Visualizers)
+                {
+                    layer.InitializeEntity(dummy);
+                    layer.OnChangeData(appearanceComponent);
+                }
+            }
+
+            var anyTexture = false;
+            foreach (var layer in spriteComponent.AllLayers)
+            {
+                if (layer.Texture != null) yield return layer.Texture;
+                if (!layer.RsiState.IsValid || !layer.Visible) continue;
+
+                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
+                if (rsi == null ||
+                    !rsi.TryGetState(layer.RsiState, out var state))
+                    continue;
+
+                yield return state;
+                anyTexture = true;
+            }
+
+            dummy.Delete();
+
+            if (!anyTexture)
+                yield return resourceCache.GetFallback<TextureResource>().Texture;
+
+        }
+
         public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
@@ -1829,14 +1880,11 @@ namespace Robust.Client.GameObjects
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
-            newComponent.Owner = dummy;
+            var dummy = new DummyIconEntity() {Prototype = prototype};
+            var spriteComponent = dummy.AddComponent<SpriteComponent>();
+            dummy.Delete();
 
-            newComponent.ExposeData(YamlObjectSerializer.NewReader(spriteNode));
-
-            return newComponent.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
+            return spriteComponent?.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
 
         #region DummyIconEntity
@@ -1851,6 +1899,7 @@ namespace Robust.Client.GameObjects
             public bool Deleted { get; } = true;
             public bool Paused { get; set; }
             public EntityPrototype? Prototype { get; set; }
+
             public string Description { get; set; } = string.Empty;
             public bool IsValid()
             {
@@ -1859,28 +1908,47 @@ namespace Robust.Client.GameObjects
 
             public ITransformComponent Transform { get; } = null!;
             public IMetaDataComponent MetaData { get; } = null!;
+
+            private Dictionary<Type, IComponent> _components = new();
+
             public T AddComponent<T>() where T : Component, new()
             {
-                throw new NotImplementedException();
+                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
+                var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
+                _components[typeof(T)] = comp;
+                comp.Owner = this;
+
+                if (typeof(ISpriteComponent).IsAssignableFrom(typeof(T)))
+                {
+                    _components[typeof(ISpriteComponent)] = comp;
+                }
+
+                if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
+                {
+                    comp.ExposeData(YamlObjectSerializer.NewReader(node));
+                }
+
+                return comp;
             }
 
             public void RemoveComponent<T>()
             {
+                _components.Remove(typeof(T));
             }
 
             public bool HasComponent<T>()
             {
-                return false;
+                return _components.ContainsKey(typeof(T));
             }
 
             public bool HasComponent(Type type)
             {
-                return false;
+                return _components.ContainsKey(type);
             }
 
             public T GetComponent<T>()
             {
-                return default!;
+                return (T) _components[typeof(T)];
             }
 
             public IComponent GetComponent(Type type)
@@ -1896,7 +1964,9 @@ namespace Robust.Client.GameObjects
             public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
-                return false;
+                if (!_components.TryGetValue(typeof(T), out var value)) return false;
+                component = (T) value;
+                return true;
             }
 
             public T? GetComponentOrNull<T>() where T : class
@@ -1907,7 +1977,9 @@ namespace Robust.Client.GameObjects
             public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
             {
                 component = null;
-                return false;
+                if (!_components.TryGetValue(type, out var value)) return false;
+                component = value;
+                return true;
             }
 
             public IComponent? GetComponentOrNull(Type type)

@@ -3,7 +3,7 @@ namespace Robust.Client.Interfaces.Graphics
     /// <summary>
     ///     OS-standard cursor shapes.
     /// </summary>
-    public enum StandardCursorShape
+    public enum StandardCursorShape : byte
     {
         /// <summary>
         /// The standard arrow shape. Used in almost all situations.

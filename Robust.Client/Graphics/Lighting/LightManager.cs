@@ -6,5 +6,6 @@ namespace Robust.Client.Graphics.Lighting
     {
         public bool Enabled { get; set; } = true;
         public bool DrawShadows { get; set; } = true;
+        public bool DrawHardFov { get; set; } = true;
     }
 }

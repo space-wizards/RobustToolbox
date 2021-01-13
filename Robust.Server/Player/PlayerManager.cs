@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -37,26 +38,25 @@ namespace Robust.Server.Player
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 
         private GameTick _lastStateUpdate;
 
-        private readonly ReaderWriterLockSlim _sessionsLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _sessionsLock = new();
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<NetUserId, PlayerSession> _sessions = new Dictionary<NetUserId, PlayerSession>();
+        private readonly Dictionary<NetUserId, PlayerSession> _sessions = new();
 
         [ViewVariables]
-        private readonly Dictionary<NetUserId, PlayerData> _playerData = new Dictionary<NetUserId, PlayerData>();
+        private readonly Dictionary<NetUserId, PlayerData> _playerData = new();
 
         [ViewVariables]
-        private readonly Dictionary<string, NetUserId> _userIdMap = new Dictionary<string, NetUserId>();
+        private readonly Dictionary<string, NetUserId> _userIdMap = new();
 
 
         /// <inheritdoc />
@@ -92,8 +92,6 @@ namespace Robust.Server.Player
 
             MaxPlayers = maxPlayers;
 
-            _network.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
-            _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
 
@@ -379,6 +377,8 @@ namespace Robust.Server.Player
             }
 
             PlayerCountMetric.Set(PlayerCount);
+
+            IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -413,18 +413,6 @@ namespace Robust.Server.Player
 
             PlayerCountMetric.Set(PlayerCount);
             Dirty();
-        }
-
-        private void HandleWelcomeMessageReq(MsgServerInfoReq message)
-        {
-            var channel = message.MsgChannel;
-            var netMsg = channel.CreateNetMessage<MsgServerInfo>();
-
-            netMsg.ServerName = _baseServer.ServerName;
-            netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
-            netMsg.TickRate = _timing.TickRate;
-
-            channel.SendMessage(netMsg);
         }
 
         private void HandlePlayerListReq(MsgPlayerListReq message)

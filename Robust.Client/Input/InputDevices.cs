@@ -10,7 +10,7 @@ namespace Robust.Client.Input
         /// <summary>
         ///     Represents one of three mouse buttons.
         /// </summary>
-        public enum Button
+        public enum Button : byte
         {
             Left = 1,
             Middle = 2,
@@ -34,7 +34,7 @@ namespace Robust.Client.Input
             return _openTKButtonMap[button];
         }
 
-        private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new Dictionary<Button, Keyboard.Key>
+        private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new()
         {
             {Button.Left, Keyboard.Key.MouseLeft},
             {Button.Middle, Keyboard.Key.MouseMiddle},
@@ -48,7 +48,7 @@ namespace Robust.Client.Input
             {Button.LastButton, Keyboard.Key.Unknown},
         };
 
-        private static readonly Dictionary<GlfwButton, Button> _openTKButtonMap = new Dictionary<GlfwButton, Button>
+        private static readonly Dictionary<GlfwButton, Button> _openTKButtonMap = new()
         {
             {GlfwButton.Left, Button.Left},
             {GlfwButton.Middle, Button.Middle},

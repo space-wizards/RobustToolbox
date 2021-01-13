@@ -100,9 +100,9 @@ namespace Robust.Shared.Timing
 
 #if EXCEPTION_TOLERANCE
         private int _tickExceptions;
-#endif
 
         private const int MaxSoftLockExceptions = 10;
+#endif
 
         public GameLoop(IGameTiming timing)
         {
@@ -282,7 +282,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Methods the GameLoop can use to limit the Update rate.
     /// </summary>
-    public enum SleepMode
+    public enum SleepMode : sbyte
     {
         /// <summary>
         ///     Thread will not yield to the scheduler or sleep, and consume 100% cpu. Use this if you are

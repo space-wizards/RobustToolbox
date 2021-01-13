@@ -15,7 +15,7 @@ namespace Robust.Shared.ContentPack
     public sealed class VirtualWritableDirProvider : IWritableDirProvider
     {
         // Just a simple tree. No need to over complicate this.
-        private readonly DirectoryNode _rootDirectoryNode = new DirectoryNode();
+        private readonly DirectoryNode _rootDirectoryNode = new();
 
         /// <inheritdoc />
         public string? RootDir => null;
@@ -237,12 +237,12 @@ namespace Robust.Shared.ContentPack
 
         private sealed class FileNode : INode
         {
-            public MemoryStream Contents { get; } = new MemoryStream();
+            public MemoryStream Contents { get; } = new();
         }
 
         private sealed class DirectoryNode : INode
         {
-            public Dictionary<string, INode> Children { get; } = new Dictionary<string, INode>();
+            public Dictionary<string, INode> Children { get; } = new();
         }
 
         private sealed class VirtualFileStream : Stream

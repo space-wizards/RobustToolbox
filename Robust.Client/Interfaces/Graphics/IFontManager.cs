@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text;
 using Robust.Client.Graphics;
 
 namespace Robust.Client.Interfaces.Graphics
@@ -22,8 +23,13 @@ namespace Robust.Client.Interfaces.Graphics
 
     internal interface IFontInstanceHandle
     {
-        Texture? GetCharTexture(char chr, float scale);
-        CharMetrics? GetCharMetrics(char chr, float scale);
+
+
+        Texture? GetCharTexture(Rune codePoint, float scale);
+        Texture? GetCharTexture(char chr, float scale) => GetCharTexture((Rune) chr, scale);
+        CharMetrics? GetCharMetrics(Rune codePoint, float scale);
+        CharMetrics? GetCharMetrics(char chr, float scale) => GetCharMetrics((Rune) chr, scale);
+
         int GetAscent(float scale);
         int GetDescent(float scale);
         int GetHeight(float scale);

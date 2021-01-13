@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared;
 using Robust.Shared.Utility;
 using C = System.Console;
 
@@ -7,6 +8,7 @@ namespace Robust.Server
 {
     internal sealed class CommandLineArgs
     {
+        public MountOptions MountOptions { get; }
         public string? ConfigFile { get; }
         public string? DataDir { get; }
         public IReadOnlyCollection<(string key, string value)> CVars { get; }
@@ -19,6 +21,7 @@ namespace Robust.Server
             string? configFile = null;
             string? dataDir = null;
             var cvars = new List<(string, string)>();
+            var mountOptions = new MountOptions();
 
             using var enumerator = args.GetEnumerator();
 
@@ -70,13 +73,33 @@ namespace Robust.Server
                     PrintHelp();
                     return false;
                 }
+                else if (arg == "--mount-zip")
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Missing mount path");
+                        return false;
+                    }
+
+                    mountOptions.ZipMounts.Add(enumerator.Current);
+                }
+                else if (arg == "--mount-dir")
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Missing mount path");
+                        return false;
+                    }
+
+                    mountOptions.DirMounts.Add(enumerator.Current);
+                }
                 else
                 {
                     C.WriteLine("Unknown argument: {0}", arg);
                 }
             }
 
-            parsed = new CommandLineArgs(configFile, dataDir, cvars);
+            parsed = new CommandLineArgs(configFile, dataDir, cvars, mountOptions);
             return true;
         }
 
@@ -87,15 +110,18 @@ Options:
   --config-file     Path to the config file to read from.
   --data-dir        Path to the data directory to read/write from/to.
   --cvar            Specifies an additional cvar overriding the config file. Syntax is <key>=<value>
+  --mount-dir       Resource directory to mount.
+  --mount-zip       Resource zip to mount.
   --help            Display this help text and exit.
 ");
         }
 
-        private CommandLineArgs(string? configFile, string? dataDir, IReadOnlyCollection<(string, string)> cVars)
+        private CommandLineArgs(string? configFile, string? dataDir, IReadOnlyCollection<(string, string)> cVars, MountOptions mountOptions)
         {
             ConfigFile = configFile;
             DataDir = dataDir;
             CVars = cVars;
+            MountOptions = mountOptions;
         }
     }
 }

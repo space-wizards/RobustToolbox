@@ -4,6 +4,7 @@ using System.Text;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -61,6 +62,33 @@ namespace Robust.Server.Console.Commands
         }
     }
 
+    public class TeleportToPlayerCommand : IClientCommand
+    {
+        public string Command => "tpto";
+        public string Description => "Teleports the current player to the location of another player.";
+        public string Help => "tpto <username>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        {
+            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+                return;
+
+            if (args.Length < 1)
+                return;
+
+            var players = IoCManager.Resolve<IPlayerManager>();
+            var name = args[0];
+
+            if (players.TryGetSessionByUsername(name, out var target))
+            {
+                if (target.AttachedEntity == null)
+                    return;
+
+                player.AttachedEntity.Transform.Coordinates = target.AttachedEntity.Transform.Coordinates;
+            }
+        }
+    }
+
     public class ListPlayers : IClientCommand
     {
         public string Command => "listplayers";
@@ -84,7 +112,7 @@ namespace Robust.Server.Console.Commands
                 sb.AppendLine(string.Format("{4,20} {1,12} {2,14:hh\\:mm\\:ss} {3,9} {0,20}",
                     p.ConnectedClient.RemoteEndPoint,
                     p.Status.ToString(),
-                    DateTime.Now - p.ConnectedTime,
+                    DateTime.UtcNow - p.ConnectedTime,
                     p.ConnectedClient.Ping + "ms",
                     p.Name));
             }

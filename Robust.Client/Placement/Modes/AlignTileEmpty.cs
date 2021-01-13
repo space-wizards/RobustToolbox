@@ -18,9 +18,16 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
-            CurrentTile = mapGrid.GetTileRef(MouseCoords);
-            float tileSize = mapGrid.TileSize; //convert from ushort to float
+            var tileSize = 1f;
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+
+            if (gridId.IsValid())
+            {
+                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
+                CurrentTile = mapGrid.GetTileRef(MouseCoords);
+                tileSize = mapGrid.TileSize; //convert from ushort to float
+            }
+
             GridDistancing = tileSize;
 
             if (pManager.CurrentPermission!.IsTile)
@@ -43,12 +50,11 @@ namespace Robust.Client.Placement.Modes
                 return false;
             }
 
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            var map = pManager.MapManager.GetGrid(gridId).ParentMapId;
+            var map = MouseCoords.GetMapId(pManager.EntityManager);
             var bottomLeft = new Vector2(CurrentTile.X, CurrentTile.Y);
             var topRight = new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f);
             var box = new Box2(bottomLeft, topRight);
-            
+
             return !pManager.EntityManager.AnyEntitiesIntersecting(map, box);
         }
     }

@@ -71,14 +71,15 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2(-_radius, -_radius, _radius, _radius);
+            return new(-_radius, -_radius, _radius, _radius);
         }
 
         /// <inheritdoc />
         public void ApplyState() { }
 
         /// <inheritdoc />
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
+            float sleepPercent)
         {
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));

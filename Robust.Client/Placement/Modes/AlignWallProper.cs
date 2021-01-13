@@ -16,16 +16,14 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            var grid = pManager.MapManager.GetGrid(gridId);
-            CurrentTile = grid.GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
 
-            var tileCoordinates = grid.GridTileToLocal(CurrentTile.GridIndices);
+            var tileCoordinates = new EntityCoordinates(MouseCoords.EntityId, CurrentTile.GridIndices);
 
             var offsets = new Vector2[]
             {
@@ -38,7 +36,7 @@ namespace Robust.Client.Placement.Modes
             var closestNode = offsets
                 .Select(o => tileCoordinates.Offset(o))
                 .OrderBy(node => node.TryDistance(pManager.EntityManager, MouseCoords, out var distance) ? distance : (float?) null)
-                .First(f => f != null);
+                .First();
 
             MouseCoords = closestNode;
         }

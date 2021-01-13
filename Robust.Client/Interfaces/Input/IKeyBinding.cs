@@ -16,6 +16,7 @@ namespace Robust.Client.Interfaces.Input
 
         bool CanFocus { get; }
         bool CanRepeat { get; }
+        bool AllowSubCombs { get; }
         int Priority { get; }
 
         /// <summary>

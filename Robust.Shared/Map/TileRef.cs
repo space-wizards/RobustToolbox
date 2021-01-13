@@ -10,6 +10,8 @@ namespace Robust.Shared.Map
     [PublicAPI]
     public readonly struct TileRef : IEquatable<TileRef>
     {
+        public static TileRef Zero => new(MapId.Nullspace, GridId.Invalid, Vector2i.Zero, Tile.Empty);
+
         /// <summary>
         ///     Identifier of the <see cref="MapManager.Map"/> this Tile belongs to.
         /// </summary>

@@ -36,7 +36,7 @@ namespace Robust.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-        private readonly List<DrawingHandleBase> TempHandles = new List<DrawingHandleBase>();
+        private readonly List<DrawingHandleBase> TempHandles = new();
 
         private bool Disposed;
 
@@ -98,7 +98,7 @@ namespace Robust.Client.Graphics.Overlays
     ///     Determines in which canvas layers an overlay gets drawn.
     /// </summary>
     [Flags]
-    public enum OverlaySpace
+    public enum OverlaySpace : byte
     {
         /// <summary>
         ///     Used for matching bit flags.

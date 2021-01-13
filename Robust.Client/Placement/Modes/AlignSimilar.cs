@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Robust.Client.Input;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
@@ -16,9 +17,7 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            var mapGrid = pManager.MapManager.GetGrid(gridId);
-            CurrentTile = mapGrid.GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission!.IsTile)
             {
@@ -30,8 +29,10 @@ namespace Robust.Client.Placement.Modes
                 return;
             }
 
+            var mapId = MouseCoords.GetMapId(pManager.EntityManager);
+
             var snapToEntities = pManager.EntityManager.GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.ParentMapId)
+                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapId)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();
 
@@ -74,16 +75,13 @@ namespace Robust.Client.Placement.Modes
             {
                 return false;
             }
-            else if (!RangeCheck(position))
-            {
-                return false;
-            }
-            else if (IsColliding(position))
+
+            if (!RangeCheck(position))
             {
                 return false;
             }
 
-            return true;
+            return !IsColliding(position);
         }
     }
 }

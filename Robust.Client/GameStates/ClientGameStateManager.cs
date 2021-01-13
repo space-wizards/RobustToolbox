@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces;
@@ -10,9 +10,9 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
@@ -30,11 +30,11 @@ namespace Robust.Client.GameStates
         private GameStateProcessor _processor = default!;
 
         private uint _nextInputCmdSeq = 1;
-        private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+        private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
         private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
             _pendingSystemMessages
-                = new Queue<(uint, GameTick, EntitySystemMessage, object)>();
+                = new();
 
         [Dependency] private readonly IClientEntityManager _entities = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
@@ -42,7 +42,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -58,7 +58,8 @@ namespace Robust.Client.GameStates
 
         public bool Predicting { get; private set; }
 
-        public int PredictSize { get; private set; }
+        public int PredictTickBias { get; private set; }
+        public float PredictLagBias { get; private set; }
 
         public int StateBufferMergeThreshold { get; private set; }
 
@@ -79,18 +80,20 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            _config.RegisterCVar("net.interp", true, CVar.ARCHIVE, b => _processor.Interpolation = b);
-            _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
-            _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
-            _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
-            _config.RegisterCVar("net.predict_size", 1, CVar.ARCHIVE, i => PredictSize = i);
-            _config.RegisterCVar("net.state_buf_merge_threshold", 5, CVar.ARCHIVE, i => StateBufferMergeThreshold = i);
+            _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
+            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
+            _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
+            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
+            _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
+            _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
+            _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
-            _processor.Interpolation = _config.GetCVar<bool>("net.interp");
-            _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
-            _processor.Logging = _config.GetCVar<bool>("net.logging");
-            Predicting = _config.GetCVar<bool>("net.predict");
-            PredictSize = _config.GetCVar<int>("net.predict_size");
+            _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
+            _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
+            _processor.Logging = _config.GetCVar(CVars.NetLogging);
+            Predicting = _config.GetCVar(CVars.NetPredict);
+            PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
+            PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
         }
 
         /// <inheritdoc />
@@ -123,7 +126,7 @@ namespace Robust.Client.GameStates
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            Logger.DebugS("net.predict",
+            Logger.DebugS(CVars.NetPredict.Name,
                 $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
@@ -175,7 +178,7 @@ namespace Robust.Client.GameStates
             var i = 0;
             for (; i < applyCount; i++)
             {
-                _timing.CurTick = _lastProcessedTick + 1;
+                _timing.LastRealTick = _timing.CurTick = _lastProcessedTick + 1;
 
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -212,7 +215,7 @@ namespace Robust.Client.GameStates
 
                 if (_lastProcessedSeq < curState.LastProcessedInput)
                 {
-                    Logger.DebugS("net.predict", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
                     _lastProcessedSeq = curState.LastProcessedInput;
                 }
             }
@@ -231,7 +234,7 @@ namespace Robust.Client.GameStates
                 var inCmd = _pendingInputs.Dequeue();
 
                 _inputManager.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("net.predict",
+                Logger.DebugS(CVars.NetPredict.Name,
                     $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
@@ -249,7 +252,7 @@ namespace Robust.Client.GameStates
 
             if (_pendingInputs.Count > 0)
             {
-                Logger.DebugS("net.predict", "CL> Predicted:");
+                Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
             }
 
             var pendingInputEnumerator = _pendingInputs.GetEnumerator();
@@ -257,9 +260,9 @@ namespace Robust.Client.GameStates
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-            var ping = _network.ServerChannel!.Ping / 1000f; // seconds.
+            var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
+                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 
             // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
@@ -274,7 +277,7 @@ namespace Robust.Client.GameStates
 
                     _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
-                    Logger.DebugS("net.predict",
+                    Logger.DebugS(CVars.NetPredict.Name,
                         $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
 
@@ -315,7 +318,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                Logger.DebugS("net.predict", $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
 
                 if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
                 {
@@ -333,7 +336,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    Logger.DebugS("net.predict", $"  And also its component {comp.Name}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
                     comp.HandleComponentState(compState, null);
                 }
@@ -378,6 +381,7 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
+            _config.TickProcessMessages();
             _mapManager.ApplyGameStatePre(curState.MapData);
             var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
                 nextState?.EntityStates);

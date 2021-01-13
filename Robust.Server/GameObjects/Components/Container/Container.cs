@@ -24,7 +24,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
-        private readonly List<IEntity> _containerList = new List<IEntity>();
+        private readonly List<IEntity> _containerList = new();
 
         /// <inheritdoc />
         public Container(string id, IContainerManager manager) : base(id, manager) { }
@@ -122,7 +122,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (transform.Parent == null) // Only true if Parent is the map entity
                 return false;
 
-            if(ContainerHelpers.TryGetContainerMan(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toinsert))
+            if(transform.Parent.Owner.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
             {
                 // Can't remove from existing container, can't insert.
                 return false;
@@ -182,7 +182,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            ContainerHelpers.AttachParentToContainerOrGrid(toremove.Transform);
+            toremove.Transform.AttachParentToContainerOrGrid();
             return true;
         }
 

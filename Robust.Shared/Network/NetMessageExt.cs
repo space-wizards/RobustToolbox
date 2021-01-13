@@ -40,7 +40,7 @@ namespace Robust.Shared.Network
 
         public static EntityUid ReadEntityUid(this NetIncomingMessage message)
         {
-            return new EntityUid(message.ReadInt32());
+            return new(message.ReadInt32());
         }
 
         public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
@@ -50,7 +50,7 @@ namespace Robust.Shared.Network
 
         public static GameTick ReadGameTick(this NetIncomingMessage message)
         {
-            return new GameTick(message.ReadUInt32());
+            return new(message.ReadUInt32());
         }
 
         public static void Write(this NetOutgoingMessage message, GameTick tick)
@@ -70,6 +70,23 @@ namespace Robust.Shared.Network
             Span<byte> span = stackalloc byte[16];
             guid.TryWriteBytes(span);
             message.Write(span);
+        }
+
+        public static Color ReadColor(this NetIncomingMessage message)
+        {
+            var rByte = message.ReadByte();
+            var gByte = message.ReadByte();
+            var bByte = message.ReadByte();
+            var aByte = message.ReadByte();
+            return new Color(rByte, gByte, bByte, aByte);
+        }
+
+        public static void Write(this NetOutgoingMessage message, Color color)
+        {
+            message.Write(color.RByte);
+            message.Write(color.GByte);
+            message.Write(color.BByte);
+            message.Write(color.AByte);
         }
 
         /// <summary>

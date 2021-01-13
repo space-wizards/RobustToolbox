@@ -13,7 +13,7 @@ namespace Robust.Client.Animations
     /// <seealso cref="AnimationPlayerComponent"/>
     public sealed class Animation
     {
-        public readonly List<AnimationTrack> AnimationTracks = new List<AnimationTrack>();
+        public readonly List<AnimationTrack> AnimationTracks = new();
 
         public TimeSpan Length { get; set; }
     }

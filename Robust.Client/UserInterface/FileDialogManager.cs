@@ -1,12 +1,12 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
 using Robust.Shared.IoC;
@@ -24,6 +24,9 @@ namespace Robust.Client.UserInterface
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
+#if LINUX
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+#endif
 
 #if MACOS
         [Dependency] private readonly Shared.Asynchronous.ITaskManager _taskManager;
@@ -39,7 +42,18 @@ namespace Robust.Client.UserInterface
             DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
         }
 
-        public async Task<string?> OpenFile(FileDialogFilters? filters = null)
+        public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
+        {
+            var name = await GetOpenFileName(filters);
+            if (name == null)
+            {
+                return null;
+            }
+
+            return File.Open(name, FileMode.Open);
+        }
+
+        private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -50,7 +64,25 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<string?> SaveFile()
+        public async Task<(Stream, bool)?> SaveFile()
+        {
+            var name = await GetSaveFileName();
+            if (name == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return (File.Open(name, FileMode.Open), true);
+            }
+            catch (FileNotFoundException)
+            {
+                return (File.Open(name, FileMode.Create), false);
+            }
+        }
+
+        private async Task<string?> GetSaveFileName()
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -61,6 +93,7 @@ namespace Robust.Client.UserInterface
             return await SaveFileNfd();
         }
 
+        /*
         public async Task<string?> OpenFolder()
         {
 #if LINUX
@@ -71,6 +104,7 @@ namespace Robust.Client.UserInterface
 #endif
             return await OpenFolderNfd();
         }
+        */
 
         private unsafe Task<string?> OpenFileNfd(FileDialogFilters? filters)
         {
@@ -212,7 +246,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static Task<string?> OpenFileKDialog(FileDialogFilters? filters)
+        private Task<string?> OpenFileKDialog(FileDialogFilters? filters)
         {
             var sb = new StringBuilder();
 
@@ -249,17 +283,19 @@ namespace Robust.Client.UserInterface
             return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, sb.ToString());
         }
 
-        private static Task<string?> SaveFileKDialog()
+        private Task<string?> SaveFileKDialog()
         {
             return RunKDialog("--getsavefilename");
         }
 
-        private static Task<string?> OpenFolderKDialog()
+        /*
+        private Task<string?> OpenFolderKDialog()
         {
             return RunKDialog("--getexistingdirectory");
         }
+        */
 
-        private static async Task<string?> RunKDialog(params string[] options)
+        private async Task<string?> RunKDialog(params string[] options)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -274,11 +310,17 @@ namespace Robust.Client.UserInterface
                 startInfo.ArgumentList.Add(option);
             }
 
+            if (_clyde.GetX11WindowId() is { } id)
+            {
+                startInfo.ArgumentList.Add("--attach");
+                startInfo.ArgumentList.Add(id.ToString());
+            }
+
             var process = Process.Start(startInfo);
 
             DebugTools.AssertNotNull(process);
 
-            await process.WaitForExitAsync();
+            await process!.WaitForExitAsync();
 
             // Cancel hit.
             if (process.ExitCode == 1)
@@ -324,29 +366,6 @@ namespace Robust.Client.UserInterface
             SW_NFD_ERROR,
             SW_NFD_OKAY,
             SW_NFD_CANCEL,
-        }
-    }
-
-    [UsedImplicitly]
-    internal sealed class TestOpenFileCommand : IConsoleCommand
-    {
-        // ReSharper disable once StringLiteralTypo
-        public string Command => "testopenfile";
-        public string Description => string.Empty;
-        public string Help => string.Empty;
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            Inner(console);
-            return false;
-        }
-
-        private static async void Inner(IDebugConsole console)
-        {
-            var manager = IoCManager.Resolve<IFileDialogManager>();
-            var path = await manager.OpenFile();
-
-            console.AddLine(path ?? string.Empty);
         }
     }
 }

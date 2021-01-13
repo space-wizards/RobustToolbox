@@ -15,5 +15,6 @@
         public const uint CONTAINER_MANAGER = 25;
         public const uint OCCLUDER = 26;
         public const uint GRAMMAR = 27;
+        public const uint EYE = 28;
     }
 }

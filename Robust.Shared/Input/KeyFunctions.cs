@@ -84,7 +84,7 @@ namespace Robust.Shared.Input
 
         public static implicit operator BoundKeyFunction(string name)
         {
-            return new BoundKeyFunction(name);
+            return new(name);
         }
 
         public override readonly string ToString()

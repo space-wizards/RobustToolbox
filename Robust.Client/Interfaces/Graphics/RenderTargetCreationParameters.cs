@@ -13,7 +13,7 @@ namespace Robust.Client.Interfaces.Graphics
 
         public static implicit operator RenderTargetFormatParameters(RenderTargetColorFormat colorFormat)
         {
-            return new RenderTargetFormatParameters(colorFormat);
+            return new(colorFormat);
         }
     }
 }

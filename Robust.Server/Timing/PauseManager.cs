@@ -16,8 +16,8 @@ namespace Robust.Server.Timing
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new HashSet<MapId>();
-        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new HashSet<MapId>();
+        [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
+        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
 
         public void SetMapPaused(MapId mapId, bool paused)
         {

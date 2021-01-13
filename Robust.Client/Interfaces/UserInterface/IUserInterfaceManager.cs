@@ -3,6 +3,7 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -33,8 +34,9 @@ namespace Robust.Client.Interfaces.UserInterface
         Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
+
         /// <summary>
-        ///     Gets the default UIScale that we will use if <c>display.uiScale</c> gets set to 0.
+        ///     Gets the default UIScale that we will use if <see cref="CVars.DisplayUIScale"/> gets set to 0.
         ///     Based on the OS-assigned window scale factor.
         /// </summary>
         float DefaultUIScale { get; }
@@ -132,6 +134,17 @@ namespace Robust.Client.Interfaces.UserInterface
         void QueueStyleUpdate(Control control);
         void QueueLayoutUpdate(Control control);
         void CursorChanged(Control control);
+        /// <summary>
+        /// Hides the tooltip for the indicated control, if tooltip for that control is currently showing.
+        /// </summary>
+        void HideTooltipFor(Control control);
+
+        /// <summary>
+        /// If the control is currently showing a tooltip,
+        /// gets the tooltip that was supplied via TooltipSupplier (null if tooltip
+        /// was not supplied by tooltip supplier or tooltip is not showing for the control).
+        /// </summary>
+        Control? GetSuppliedTooltipFor(Control control);
     }
 }
 

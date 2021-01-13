@@ -107,7 +107,7 @@ namespace Robust.Shared.Serialization
         private MappedStringDict _dict = default!;
 
         private readonly Dictionary<INetChannel, InProgressHandshake> _incompleteHandshakes
-            = new Dictionary<INetChannel, InProgressHandshake>();
+            = new();
 
         private byte[]? _mappedStringsPackage;
         private byte[]? _serverHash;
@@ -121,8 +121,10 @@ namespace Robust.Shared.Serialization
         /// </exception>
         public ReadOnlySpan<byte> MappedStringsHash => _stringMapHash;
 
+        public bool EnableCaching { get; set; } = true;
+
         private static readonly Regex RxSymbolSplitter
-            = new Regex(
+            = new(
                 @"(?<=[^\s\W])(?=[A-Z]) # Match for split at start of new capital letter
                             |(?<=[^0-9\s\W])(?=[0-9]) # Match for split before spans of numbers
                             |(?<=[A-Za-z0-9])(?=_) # Match for a split before an underscore
@@ -283,7 +285,10 @@ namespace Robust.Shared.Serialization
             LogSzr.Debug($"Locked in at {_dict.StringCount} mapped strings.");
 
             packageStream.Position = 0;
-            WriteStringCache(packageStream);
+            if (EnableCaching)
+            {
+                WriteStringCache(packageStream);
+            }
 
             // ok we're good now
             var channel = msg.MsgChannel;
@@ -405,7 +410,7 @@ namespace Robust.Shared.Serialization
             LogSzr.Debug($"Received server handshake with hash {hashStr}.");
 
             var fileName = CacheForHash(hashStr);
-            if (!File.Exists(fileName))
+            if (fileName == null || !File.Exists(fileName))
             {
                 LogSzr.Debug($"No string cache for {hashStr}.");
                 var handshake = _net.CreateNetMessage<MsgMapStrClientHandshake>();
@@ -458,8 +463,12 @@ namespace Robust.Shared.Serialization
         /// file itself may or may not exist. If it does not exist, no cache
         /// was made for the given hash.
         /// </returns>
-        private static string CacheForHash(string hashStr)
+        private string? CacheForHash(string hashStr)
         {
+            if (!EnableCaching)
+            {
+                return null;
+            }
             return PathHelpers.ExecutableRelativeFile($"strings-{hashStr}");
         }
 
@@ -471,7 +480,7 @@ namespace Robust.Shared.Serialization
             var hashStr = Convert.ToBase64String(MappedStringsHash);
             hashStr = ConvertToBase64Url(hashStr);
 
-            var fileName = CacheForHash(hashStr);
+            var fileName = CacheForHash(hashStr)!;
             using var file = File.OpenWrite(fileName);
             stream.CopyTo(file);
 

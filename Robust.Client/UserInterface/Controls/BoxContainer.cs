@@ -210,7 +210,7 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2(minWidth, minHeight);
         }
 
-        public enum AlignMode
+        public enum AlignMode : byte
         {
             /// <summary>
             ///     Controls are laid out from the begin of the box container.

@@ -1,73 +1,53 @@
 ﻿using System;
-using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
 
 namespace Robust.Client.Console
 {
-    /// <summary>
-    /// Tracks the console group of the client and which commands they can use.
-    /// Receives up to date permissions from the server whenever they change.
-    /// </summary>
     public class ClientConGroupController : IClientConGroupController
     {
-        [Dependency] private readonly IClientNetManager _netManager = default!;
-
-        /// <summary>
-        /// The console group this client is in. Determines which commands the client can use and if they can use vv.
-        /// </summary>
-        private ConGroup? _clientConGroup;
-
+        private IClientConGroupImplementation? _implementation;
         public event Action? ConGroupUpdated;
 
-        public void Initialize()
+        public IClientConGroupImplementation? Implementation
         {
-            _netManager.RegisterNetMessage<MsgConGroupUpdate>(MsgConGroupUpdate.Name, _onConGroupUpdate);
+            set
+            {
+                if (_implementation != null)
+                {
+                    _implementation.ConGroupUpdated -= GroupUpdated;
+                }
+
+                _implementation = value!;
+                _implementation.ConGroupUpdated += GroupUpdated;
+            }
         }
 
         public bool CanCommand(string cmdName)
         {
-            if (_clientConGroup == null)
-                return false;
-            return _clientConGroup.Commands!.Contains(cmdName);
+            return _implementation?.CanCommand(cmdName) ?? false;
         }
 
         public bool CanViewVar()
         {
-            if (_clientConGroup == null)
-                return false;
-            return _clientConGroup.CanViewVar;
+            return _implementation?.CanViewVar() ?? false;
         }
 
         public bool CanAdminPlace()
         {
-            if (_clientConGroup == null)
-                return false;
-            return _clientConGroup.CanAdminPlace;
+            return _implementation?.CanAdminPlace() ?? false;
         }
 
         public bool CanScript()
         {
-            if (_clientConGroup == null)
-                return false;
-            return _clientConGroup.CanScript;
+            return _implementation?.CanScript() ?? false;
         }
 
         public bool CanAdminMenu()
         {
-            if (_clientConGroup == null)
-                return false;
-            return _clientConGroup.CanAdminMenu;
+            return _implementation?.CanAdminMenu() ?? false;
         }
 
-        /// <summary>
-        /// Update client console group data with message from the server.
-        /// </summary>
-        /// <param name="msg">Server message listing what commands this client can use.</param>
-        private void _onConGroupUpdate(MsgConGroupUpdate msg)
+        private void GroupUpdated()
         {
-            _clientConGroup = msg.ClientConGroup;
-
             ConGroupUpdated?.Invoke();
         }
     }

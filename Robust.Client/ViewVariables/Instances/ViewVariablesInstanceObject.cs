@@ -14,7 +14,7 @@ namespace Robust.Client.ViewVariables.Instances
         private TabContainer _tabs = default!;
         private int _tabCount;
 
-        private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
+        private readonly List<ViewVariablesTrait> _traits = new();
 
         public ViewVariablesRemoteSession? Session { get; private set; }
         public object? Object { get; private set; }

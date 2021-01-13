@@ -84,8 +84,6 @@ namespace Robust.Server
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
             Logger.Info("Server Version " + strVersion + " -> Ready");
 
-            IoCManager.Resolve<ISignalHandler>().MaybeStart();
-
             server.MainLoop();
 
             Logger.Info("Goodbye.");

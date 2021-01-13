@@ -296,7 +296,7 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
-        private enum ShaderKind
+        private enum ShaderKind : byte
         {
             Source,
             Canvas

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Robust.Client.Interfaces.UserInterface
@@ -15,20 +16,20 @@ namespace Robust.Client.Interfaces.UserInterface
         /// <summary>
         ///     Open a file dialog used for opening a single file.
         /// </summary>
-        /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
-        Task<string?> OpenFile(FileDialogFilters? filters = null);
+        /// <returns>
+        /// The file stream for the file the user opened.
+        /// <see langword="null" /> if the user cancelled the action.
+        /// </returns>
+        Task<Stream?> OpenFile(FileDialogFilters? filters = null);
 
         /// <summary>
         ///     Open a file dialog used for saving a single file.
         /// </summary>
-        /// <returns>The path the user selected to save to. Null if the user cancelled the action.</returns>
-        Task<string?> SaveFile();
-
-        /// <summary>
-        ///     Open a file dialog used for opening a single folder.
-        /// </summary>
-        /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
-        Task<string?> OpenFolder();
+        /// <returns>
+        /// The file stream the user chose to save to, and whether the file already existed.
+        /// Null if the user cancelled the action.
+        /// </returns>
+        Task<(Stream fileStream, bool alreadyExisted)?> SaveFile();
     }
 
     public class FileDialogFilters

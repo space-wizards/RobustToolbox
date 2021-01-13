@@ -64,7 +64,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SelectorElement"/>
         public static MutableSelectorElement Element()
         {
-            return new MutableSelectorElement();
+            return new();
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="SelectorElement"/>
         public static MutableSelectorElement Element<T>() where T : Control
         {
-            return new MutableSelectorElement {Type = typeof(T)};
+            return new() {Type = typeof(T)};
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="MutableSelectorChild"/>
         public static MutableSelectorChild Child()
         {
-            return new MutableSelectorChild();
+            return new();
         }
     }
 
@@ -96,7 +96,7 @@ namespace Robust.Client.UserInterface
     /// </remarks>
     public abstract class MutableSelector
     {
-        private readonly List<StyleProperty> _props = new List<StyleProperty>();
+        private readonly List<StyleProperty> _props = new();
 
         public MutableSelector Prop(string key, object value)
         {
@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public static implicit operator StyleRule(MutableSelector elem)
         {
-            return new StyleRule(elem.ToSelector(), elem._props);
+            return new(elem.ToSelector(), elem._props);
         }
 
         public static implicit operator Selector(MutableSelector elem)
@@ -260,7 +260,7 @@ namespace Robust.Client.UserInterface
 
         public static StyleSpecificity operator +(StyleSpecificity a, StyleSpecificity b)
         {
-            return new StyleSpecificity(
+            return new(
                 a.IdSelectors + b.IdSelectors,
                 a.ClassSelectors + b.ClassSelectors,
                 a.TypeSelectors + b.TypeSelectors);
@@ -350,17 +350,17 @@ namespace Robust.Client.UserInterface
 
         public static SelectorElement Type(Type elementType)
         {
-            return new SelectorElement(elementType, null, null, null);
+            return new(elementType, null, null, null);
         }
 
         public static SelectorElement Class(params string[] classes)
         {
-            return new SelectorElement(null, classes, null, null);
+            return new(null, classes, null, null);
         }
 
         public static SelectorElement Id(string id)
         {
-            return new SelectorElement(null, null, id, null);
+            return new(null, null, id, null);
         }
 
         public Type? ElementType { get; }

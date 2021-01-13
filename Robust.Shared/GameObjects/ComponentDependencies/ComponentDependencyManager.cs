@@ -20,7 +20,10 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// <summary>
         /// Cache of queries and their corresponding field offsets
         /// </summary>
-        private readonly Dictionary<Type, (Type Query, int FieldMemoryOffset)[]> _componentDependencyQueries = new Dictionary<Type, (Type Query, int FieldMemoryOffset)[]>();
+        private readonly
+            Dictionary<Type, ComponentDependencyEntry[]>
+            _componentDependencyQueries =
+                new();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
@@ -49,11 +52,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
                 {
-                    foreach (var (type, offset) in queries)
+                    foreach (var entry in queries)
                     {
-                        if (type == reference)
+                        if (entry.Query == reference)
                         {
-                            SetField(newComp, offset, entityComp);
+                            SetField(newComp, entry.FieldMemoryOffset, entityComp);
+                            entry.OnAddMethod?.Invoke(newComp);
                         }
                     }
                 }
@@ -90,6 +94,14 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                     if (compReg.References.Contains(queries[i].Query))
                     {
                         SetField(entityComponent, queries[i].FieldMemoryOffset, comp);
+                        if (comp == null)
+                        {
+                            queries[i].OnRemoveMethod?.Invoke(entityComponent);
+                        }
+                        else
+                        {
+                            queries[i].OnAddMethod?.Invoke(entityComponent);
+                        }
                     }
                 }
             }
@@ -98,9 +110,10 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         private void ClearRemovedComponentDependencies(IComponent comp)
         {
             var queries = GetPointerQueries(comp);
-            foreach (var (_, offset) in queries)
+            foreach (var entry in queries)
             {
-                SetField(comp, offset, null);
+                entry.OnRemoveMethod?.Invoke(comp);
+                SetField(comp, entry.FieldMemoryOffset, null);
             }
         }
 
@@ -112,25 +125,25 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             oRef = value;
         }
 
-        private (Type Query, int FieldMemoryOffset)[] GetPointerQueries(object obj)
+        private ComponentDependencyEntry[] GetPointerQueries(object obj)
         {
             return !_componentDependencyQueries.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
         }
 
-        private (Type Query, int FieldMemoryOffset)[] CreateAndCachePointerOffsets(object obj)
+        private ComponentDependencyEntry[] CreateAndCachePointerOffsets(object obj)
         {
             var objType = obj.GetType();
 
             var attributeFields = objType.GetAllFields()
-                .Where(f => Attribute.IsDefined(f, typeof(ComponentDependencyAttribute))).ToArray();
+                .Where(f => Attribute.IsDefined(f, typeof(ComponentDependencyAttribute))).Select(field => (field, attribute: field.GetCustomAttribute<ComponentDependencyAttribute>())).ToArray();
             var attributeFieldsLength = attributeFields.Length;
 
 
-            var queries = new (Type, int)[attributeFieldsLength];
+            var queries = new ComponentDependencyEntry[attributeFieldsLength];
 
             for (var i = 0; i < attributeFields.Length; i++)
             {
-                var field = attributeFields[i];
+                var field = attributeFields[i].field;
                 if (field.FieldType.IsValueType)
                 {
                     throw new ComponentDependencyValueTypeException(objType, field);
@@ -138,16 +151,53 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 if (!NullableHelper.IsMarkedAsNullable(field))
                 {
-                    throw new ComponentDependencyNotNullableException(objType, field); //todo test
+                    throw new ComponentDependencyNotNullableException(objType, field);
                 }
 
                 var offset = GetFieldOffset(objType, field);
 
-                queries[i] = (field.FieldType, offset);
+                var attribute = attributeFields[i].attribute!;
+
+                var methods = objType.GetRuntimeMethods().ToArray();
+
+                MethodInfo getterMethod = typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
+                    BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);;
+
+                Action<object>? onAddMethod = null;
+                if (attribute.OnAddMethodName != null)
+                {
+                    var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName, getterMethod);
+
+                    onAddMethod = tempMethod ?? throw new ComponentDependencyInvalidOnAddMethodNameException(field);
+                }
+
+                Action<object>? onRemoveMethod = null;
+                if (attribute.OnRemoveMethodName != null)
+                {
+                    var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName, getterMethod);
+
+                    onRemoveMethod = tempMethod ?? throw new ComponentDependencyInvalidOnRemoveMethodNameException(field);
+                }
+
+                queries[i] = new ComponentDependencyEntry(field.FieldType, offset, onAddMethod, onRemoveMethod);
             }
 
             _componentDependencyQueries.Add(objType, queries);
             return queries;
+        }
+
+        private Action<object>? GetEventMethod(MethodInfo[] methods, string methodName, MethodInfo getterMethod)
+        {
+            var method = methods.FirstOrDefault(m => m.Name == methodName);
+            if (method == null) return null;
+
+            return (Action<object>?) getterMethod.Invoke(null, new object[]{method});
+        }
+
+        private static Action<object> GetEventMethodDelegate<T>(MethodInfo m)
+        {
+            var @delegate = (Action<T>) m.CreateDelegate(typeof(Action<T>));
+            return o => @delegate((T) o);
         }
 
         private int GetFieldOffset(Type type, FieldInfo field)
@@ -186,12 +236,28 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             public byte A;
 #pragma warning restore 649
         }
+
+        private sealed class ComponentDependencyEntry
+        {
+            public readonly Type Query;
+            public readonly int FieldMemoryOffset;
+            public readonly Action<object>? OnAddMethod;
+            public readonly Action<object>? OnRemoveMethod;
+
+            public ComponentDependencyEntry(Type query, int fieldMemoryOffset, Action<object>? onAddMethod, Action<object>? onRemoveMethod)
+            {
+                Query = query;
+                FieldMemoryOffset = fieldMemoryOffset;
+                OnAddMethod = onAddMethod;
+                OnRemoveMethod = onRemoveMethod;
+            }
+        }
     }
 
     public class ComponentDependencyValueTypeException : Exception
     {
-        public Type ComponentType;
-        public FieldInfo FieldInfo;
+        public readonly Type ComponentType;
+        public readonly FieldInfo FieldInfo;
 
         public ComponentDependencyValueTypeException(Type componentType, FieldInfo fieldInfo) : base($"Field {fieldInfo} of Type {componentType} is marked as ComponentDependency but is a value Type")
         {
@@ -202,13 +268,37 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
     public class ComponentDependencyNotNullableException : Exception
     {
-        public Type ComponentType;
-        public FieldInfo Field;
+        public readonly Type ComponentType;
+        public readonly FieldInfo Field;
 
         public ComponentDependencyNotNullableException(Type componentType, FieldInfo field) : base($"Field {field} of Type {componentType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!")
         {
             ComponentType = componentType;
             Field = field;
         }
+    }
+
+    public abstract class ComponentDependencyInvalidMethodNameException : Exception
+    {
+        public readonly string MethodTarget;
+        public readonly FieldInfo Field;
+
+        protected ComponentDependencyInvalidMethodNameException(string methodTarget, FieldInfo field) : base($"{methodTarget}MethodName for {field} was invalid")
+        {
+            MethodTarget = methodTarget;
+            Field = field;
+        }
+    }
+
+    public class ComponentDependencyInvalidOnAddMethodNameException : ComponentDependencyInvalidMethodNameException
+    {
+        public ComponentDependencyInvalidOnAddMethodNameException([NotNull] FieldInfo field) : base("OnAdd", field)
+        {}
+    }
+
+    public class ComponentDependencyInvalidOnRemoveMethodNameException : ComponentDependencyInvalidMethodNameException
+    {
+        public ComponentDependencyInvalidOnRemoveMethodNameException([NotNull] FieldInfo field) : base("OnRemove", field)
+        {}
     }
 }

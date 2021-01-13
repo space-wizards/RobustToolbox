@@ -388,7 +388,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     A 1x1 unit rectangle with the origin centered on the world origin.
         /// </summary>
-        public static readonly AlignedRectangle UnitCentered = new AlignedRectangle(new Vector2(0.5f, 0.5f));
+        public static readonly AlignedRectangle UnitCentered = new(new Vector2(0.5f, 0.5f));
 
         /// <summary>
         ///     The lower X coordinate of the left edge of the box.
@@ -503,7 +503,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
-        public static readonly OrientedRectangle UnitCentered = new OrientedRectangle(Vector2.Zero, Vector2.One, 0);
+        public static readonly OrientedRectangle UnitCentered = new(Vector2.Zero, Vector2.One, 0);
 
         public OrientedRectangle(Box2 worldBox)
         {

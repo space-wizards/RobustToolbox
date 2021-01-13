@@ -10,7 +10,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
@@ -25,7 +25,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
@@ -73,22 +73,28 @@ namespace Robust.Client.UserInterface
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
-        private readonly List<Control> _modalStack = new List<Control>();
+        private readonly List<Control> _modalStack = new();
 
         private bool _rendering = true;
         private float _tooltipTimer;
+        // set to null when not counting down
+        private float? _tooltipDelay;
         private Tooltip _tooltip = default!;
+        private bool showingTooltip;
+        private Control? _suppliedTooltip;
         private const float TooltipDelay = 1;
 
-        private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
-        private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+        private readonly Queue<Control> _styleUpdateQueue = new();
+        private readonly Queue<Control> _layoutUpdateQueue = new();
         private Stylesheet? _stylesheet;
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
 
         public void Initialize()
         {
-            _uiScaleChanged(_configurationManager.GetCVar<float>("display.uiScale"));
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -205,10 +211,15 @@ namespace Robust.Client.UserInterface
                 control.DoLayoutUpdate();
             }
 
-            _tooltipTimer -= args.DeltaSeconds;
-            if (_tooltipTimer <= 0)
+            // count down tooltip delay if we're not showing one yet and
+            // are hovering the mouse over a control without moving it
+            if (_tooltipDelay != null && !showingTooltip)
             {
-                _showTooltip();
+                _tooltipTimer += args.DeltaSeconds;
+                if (_tooltipTimer >= _tooltipDelay)
+                {
+                    _showTooltip();
+                }
             }
 
             if (_needUpdateActiveCursor)
@@ -329,6 +340,14 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered?.MouseExited();
                 CurrentlyHovered = newHovered;
                 CurrentlyHovered?.MouseEntered();
+                if (CurrentlyHovered != null)
+                {
+                    _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
+                }
+                else
+                {
+                    _tooltipDelay = null;
+                }
 
                 _needUpdateActiveCursor = true;
             }
@@ -506,6 +525,7 @@ namespace Robust.Client.UserInterface
             {
                 control.MouseExited();
                 CurrentlyHovered = null;
+                _clearTooltip();
             }
 
             if (control == _controlFocused)
@@ -690,43 +710,66 @@ namespace Robust.Client.UserInterface
 
         private void _clearTooltip()
         {
+            if (!showingTooltip) return;
             _tooltip.Visible = false;
+            if (_suppliedTooltip != null)
+            {
+                PopupRoot.RemoveChild(_suppliedTooltip);
+                _suppliedTooltip = null;
+            }
+            CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
+            showingTooltip = false;
+        }
+
+
+        public void HideTooltipFor(Control control)
+        {
+            if (CurrentlyHovered == control)
+            {
+                _clearTooltip();
+            }
+        }
+
+        public Control? GetSuppliedTooltipFor(Control control)
+        {
+            return CurrentlyHovered == control ? _suppliedTooltip : null;
         }
 
         private void _resetTooltipTimer()
         {
-            _tooltipTimer = TooltipDelay;
+            _tooltipTimer = 0;
         }
 
         private void _showTooltip()
         {
+            if (showingTooltip) return;
+            showingTooltip = true;
             var hovered = CurrentlyHovered;
-            if (hovered == null || string.IsNullOrWhiteSpace(hovered.ToolTip))
+            if (hovered == null)
             {
                 return;
             }
 
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, MousePositionScaled);
-
-            var (right, bottom) = _tooltip.Position + _tooltip.Size;
-
-            if (right > RootControl.Size.X)
+            // show supplied tooltip if there is one
+            if (hovered.TooltipSupplier != null)
             {
-                LayoutContainer.SetPosition(_tooltip, (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y));
+                _suppliedTooltip = hovered.TooltipSupplier.Invoke(hovered);
+                if (_suppliedTooltip != null)
+                {
+                    PopupRoot.AddChild(_suppliedTooltip);
+                    Tooltips.PositionTooltip(_suppliedTooltip);
+                }
+            }
+            else if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
+            {
+                // show simple tooltip if there is one
+                _tooltip.Visible = true;
+                _tooltip.Text = hovered.ToolTip;
+               Tooltips.PositionTooltip(_tooltip);
             }
 
-            if (bottom > RootControl.Size.Y)
-            {
-                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
-            }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.RegisterCVar("display.uiScale", 0f, CVar.ARCHIVE, _uiScaleChanged);
+            hovered.PerformShowTooltip();
         }
 
         private void _uiScaleChanged(float newValue)

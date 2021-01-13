@@ -23,7 +23,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             }
         }
 
-        private readonly HashSet<IEntity> _entities = new HashSet<IEntity>();
+        private readonly HashSet<IEntity> _entities = new();
 
         internal GridTileLookupNode(GridTileLookupChunk parentChunk, Vector2i indices)
         {

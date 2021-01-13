@@ -64,6 +64,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
             if (!NetManager.IsConnected)
             {
                 contents.Text = "Not connected to server.";
@@ -93,7 +98,7 @@ PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
+            return new(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

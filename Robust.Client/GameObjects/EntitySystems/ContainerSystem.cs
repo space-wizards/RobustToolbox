@@ -7,7 +7,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class ContainerSystem : EntitySystem
     {
-        private readonly HashSet<IEntity> _updateQueue = new HashSet<IEntity>();
+        private readonly HashSet<IEntity> _updateQueue = new();
 
         public override void Initialize()
         {
@@ -61,7 +61,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 // We have to recursively scan for containers upwards in case of nested containers.
                 var tempParent = entity;
-                while (ContainerHelpers.TryGetContainer(tempParent, out var container))
+                while (tempParent.TryGetContainer(out var container))
                 {
                     if (!container.ShowContents)
                     {
@@ -79,7 +79,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 // We have to recursively scan for containers upwards in case of nested containers.
                 var tempParent = entity;
-                while (ContainerHelpers.TryGetContainer(tempParent, out var container))
+                while (tempParent.TryGetContainer(out var container))
                 {
                     if (container.OccludesLight)
                     {

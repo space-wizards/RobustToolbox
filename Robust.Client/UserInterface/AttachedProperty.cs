@@ -89,13 +89,13 @@ namespace Robust.Client.UserInterface
 
         public new T DefaultValue { get; }
 
-        internal AttachedProperty(string name, Type owningType, T defaultValue = default,
+        internal AttachedProperty(string name, Type owningType, T defaultValue,
             Func<T, bool>? validate = null, AttachedPropertyChangedCallback<T>? changed = null)
             : base(name, owningType, typeof(T), defaultValue,
                 validate != null ? o => validate!((T) o!) : (Func<object?, bool>?) null,
                 changed != null
-                    ? (o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!))
-                    : (AttachedPropertyChangedCallback?) null)
+                    ? (AttachedPropertyChangedCallback?) ((o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!)))
+                    : null)
         {
             Validate = validate;
             Changed = changed;
@@ -103,12 +103,37 @@ namespace Robust.Client.UserInterface
         }
 
         public static AttachedProperty<T> Create(string name, Type owningType,
-            T defaultValue = default,
+            T defaultValue = default!,
             Func<T, bool>? validate = null,
             AttachedPropertyChangedCallback<T>? changed = null)
         {
+            if (!typeof(T).IsValueType && defaultValue == null)
+            {
+                throw new ArgumentNullException(nameof(defaultValue),
+                    "Got defaultValue that is null for reference type." +
+                    "If this is a non-nullable reference type," +
+                    "make sure to fill in a default value with the parameter." +
+                    "If this is intended to be nullable," +
+                    "use the CreateNull() overload (and make sure to set the type nullability correctly!).");
+            }
+
             return new AttachedProperty<T>(name, owningType, defaultValue, validate, changed);
         }
+
+        // TODO: C# 9: use nullable T on the returned attached property here.
+        public static AttachedProperty<T> CreateNull(string name, Type owningType,
+            T defaultValue = default!,
+            Func<T, bool>? validate = null,
+            AttachedPropertyChangedCallback<T>? changed = null)
+        {
+            if (typeof(T).IsValueType)
+            {
+                throw new ArgumentException("Type must not be a value type. Use regular create for that" +
+                                            " (yes, even for nullable value types).");
+            }
+            return new AttachedProperty<T>(name, owningType, defaultValue, validate, changed);
+        }
+
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
     /// <summary>
     /// Specifies key codes and modifiers in US keyboard layout.
     /// </summary>
-    public enum Keys
+    public enum Keys : short
     {
         /// <summary>
         /// An unknown key.

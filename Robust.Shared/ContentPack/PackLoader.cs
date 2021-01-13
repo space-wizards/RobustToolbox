@@ -43,7 +43,10 @@ namespace Robust.Shared.ContentPack
                 }
                 else
                 {
-                    _zip = new ZipArchive(_stream, ZipArchiveMode.Read);
+                    // Stream constructor.
+                    DebugTools.AssertNotNull(_stream);
+
+                    _zip = new ZipArchive(_stream!, ZipArchiveMode.Read);
                 }
             }
 

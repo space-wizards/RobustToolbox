@@ -137,6 +137,58 @@ namespace Robust.Shared.Maths
 
         #endregion NextPowerOfTwo
 
+        #region NextMultipleOf
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double NextMultipleOf(double value, double of)
+        {
+            return Math.Ceiling(value / of) * of;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float NextMultipleOf(float value, float of)
+        {
+            return MathF.Ceiling(value / of) * of;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long NextMultipleOf(long value, long of)
+        {
+            return ((value - 1) | (of - 1)) + 1;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int NextMultipleOf(int value, int of)
+        {
+            return ((value - 1) | (of - 1)) + 1;
+        }
+
+        #endregion
+
         #region Factorial
 
         /// <summary>Calculates the factorial of a given natural number.

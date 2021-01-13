@@ -95,3 +95,6 @@ __pycache__
 MSBuild/Robust.Custom.targets
 
 .idea/
+
+
+release/

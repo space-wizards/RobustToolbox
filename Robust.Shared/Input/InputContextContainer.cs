@@ -81,7 +81,7 @@ namespace Robust.Shared.Input
         /// <inheritdoc />
         public event EventHandler<ContextChangedEventArgs>? ContextChanged;
 
-        private readonly Dictionary<string, InputCmdContext> _contexts = new Dictionary<string, InputCmdContext>();
+        private readonly Dictionary<string, InputCmdContext> _contexts = new();
         private InputCmdContext _activeContext = default!;
 
         /// <inheritdoc />

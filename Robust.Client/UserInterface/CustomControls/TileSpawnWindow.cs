@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private LineEdit SearchBar;
         private Button ClearButton;
 
-        private readonly List<ITileDefinition> _shownItems = new List<ITileDefinition>();
+        private readonly List<ITileDefinition> _shownItems = new();
 
         private bool _clearingSelections;
 

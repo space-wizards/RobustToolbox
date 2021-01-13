@@ -7,7 +7,7 @@ namespace Robust.Shared.Physics
     ///     The properties of physical body. This determines how collisions will effect this body.
     /// </summary>
     [Serializable, NetSerializable]
-    public enum BodyType
+    public enum BodyType : byte
     {
         /// <summary>
         ///     Will not be processed by the collision system. Basically "out of phase" with the world.

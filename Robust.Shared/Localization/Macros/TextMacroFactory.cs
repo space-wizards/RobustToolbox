@@ -8,7 +8,7 @@ namespace Robust.Shared.Localization.Macros
 {
     public class TextMacroFactory : ITextMacroFactory
     {
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private struct TextMacroRegistration
@@ -29,7 +29,7 @@ namespace Robust.Shared.Localization.Macros
                 if (IsMacroForLanguage(languageTag, registeredMacro))
                 {
                     // TODO Handle duplicate macros?
-                    languageMacros.Add(registeredMacro.MacroName, _typeFactory.CreateInstance<ITextMacro>(registeredMacro.MacroType));
+                    languageMacros.Add(registeredMacro.MacroName, _typeFactory.CreateInstanceUnchecked<ITextMacro>(registeredMacro.MacroType));
                 }
             }
 

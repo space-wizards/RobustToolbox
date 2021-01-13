@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private MapId MapB;
         private IMapGrid GridB = default!;
 
-        private static readonly EntityCoordinates InitialPos = new EntityCoordinates(new EntityUid(1), (0, 0));
+        private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
 
         [OneTimeSetUp]
         public void Setup()
@@ -107,8 +107,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             });
 
             // move the parent, and the child should move with it
-            childTrans.WorldPosition = new Vector2(6, 6);
-            parentTrans.WorldPosition += new Vector2(-8, -8);
+            childTrans.LocalPosition = new Vector2(6, 6);
+            parentTrans.WorldPosition = new Vector2(-8, -8);
 
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-2, -2)));
 
@@ -247,7 +247,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         ///     Tests to see if setting the world position of a child causes position rounding errors.
         /// </summary>
         [Test]
-        public void ParentWorldPositionRoundingErrorTest()
+        public void ParentLocalPositionRoundingErrorTest()
         {
             // Arrange
             var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
@@ -271,9 +271,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             for (var i = 0; i < 10000; i++)
             {
                 var dx = i % 2 == 0 ? 5 : -5;
-                node1Trans.WorldPosition += new Vector2(dx, dx);
-                node2Trans.WorldPosition += new Vector2(dx, dx);
-                node3Trans.WorldPosition += new Vector2(dx, dx);
+                node1Trans.LocalPosition += new Vector2(dx, dx);
+                node2Trans.LocalPosition += new Vector2(dx, dx);
+                node3Trans.LocalPosition += new Vector2(dx, dx);
             }
 
             var newWpos = node3Trans.WorldPosition;
@@ -281,7 +281,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y), newWpos.ToString);
+                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y), $"{oldWpos.X} should be {newWpos.Y}");
                 Assert.That(MathHelper.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
             });
         }

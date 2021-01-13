@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics.Shaders
 
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal enum ShaderDataType
+    internal enum ShaderDataType : byte
     {
         Void,
         Bool,
@@ -160,7 +160,7 @@ namespace Robust.Client.Graphics.Shaders
             }
             return Type.GetNativeType();
         }
-        
+
         public bool TypePrecisionConsistent()
         {
             return Type.TypeHasPrecision() == (Precision != ShaderPrecisionQualifier.None);
@@ -190,7 +190,7 @@ namespace Robust.Client.Graphics.Shaders
                     throw new ArgumentOutOfRangeException(nameof(qualifier), qualifier, null);
             }
         }
-        
+
         public static bool TypeHasPrecision(this ShaderDataType type)
         {
             return
@@ -204,7 +204,7 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new Dictionary<ShaderDataType, string>
+        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new()
         {
             {ShaderDataType.Void, "void"},
             {ShaderDataType.Bool, "bool"},
@@ -232,13 +232,13 @@ namespace Robust.Client.Graphics.Shaders
         };
     }
 
-    internal enum ShaderLightMode
+    internal enum ShaderLightMode : byte
     {
         Default = 0,
         Unshaded = 1,
     }
 
-    internal enum ShaderBlendMode
+    internal enum ShaderBlendMode : byte
     {
         None,
         Mix,
@@ -247,7 +247,7 @@ namespace Robust.Client.Graphics.Shaders
         Multiply
     }
 
-    internal enum ShaderPreset
+    internal enum ShaderPreset : byte
     {
         Default,
         Raw
@@ -255,7 +255,7 @@ namespace Robust.Client.Graphics.Shaders
 
     // Yeah I had no idea what to name this.
     [Flags]
-    internal enum ShaderParameterQualifiers
+    internal enum ShaderParameterQualifiers : byte
     {
         None = 0,
         In = 1,
@@ -263,7 +263,7 @@ namespace Robust.Client.Graphics.Shaders
         Inout = 3,
     }
 
-    internal enum ShaderPrecisionQualifier
+    internal enum ShaderPrecisionQualifier : byte
     {
         None = 0,
         Low = 1,

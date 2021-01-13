@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyStyleBox = "stylebox";
 
-        private readonly List<RichTextEntry> _entries = new List<RichTextEntry>();
+        private readonly List<RichTextEntry> _entries = new();
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;

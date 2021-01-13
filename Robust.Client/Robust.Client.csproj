@@ -1,42 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
-    <TargetFramework>$(TargetFramework)</TargetFramework>
-    <LangVersion>8</LangVersion>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Client</OutputPath>
     <NoWarn>NU1701</NoWarn>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.150" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.166" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
     <PackageReference Include="nfluidsynth" Version="0.3.0" />
     <PackageReference Include="NVorbis" Version="0.10.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NJsonSchema" Version="10.1.4" Condition="'$(Configuration)' == 'Debug'" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-rc0002" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0009" />
-    <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="NJsonSchema" Version="10.3.1" Condition="'$(Configuration)' == 'Debug'" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.2" />
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
+    <PackageReference Include="Robust.Natives" Version="0.1.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.5.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.5.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.5.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
 
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
+    <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
@@ -52,5 +49,6 @@
   <PropertyGroup>
     <RobustToolsPath>../Tools</RobustToolsPath>
   </PropertyGroup>
-  <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
+  <Target Name="RobustAfterBuild" AfterTargets="Build" />
+  <Import Project="..\MSBuild\XamlIL.targets" />
 </Project>

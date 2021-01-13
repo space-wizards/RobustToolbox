@@ -33,7 +33,7 @@ namespace Robust.Shared.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator()
         {
-            return new Enumerator(this);
+            return new(this);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
@@ -159,7 +159,7 @@ namespace Robust.Shared.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> GetSpan()
         {
-            return new Span<T>(_array, 0, _size);
+            return new(_array, 0, _size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

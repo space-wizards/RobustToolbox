@@ -16,7 +16,7 @@ namespace Robust.Client.ResourceManagement
     {
         public const float ClickThreshold = 0.25f;
 
-        public override ResourcePath? Fallback => new ResourcePath("/Textures/noSprite.png");
+        public override ResourcePath? Fallback => new("/Textures/noSprite.png");
         public Texture Texture { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
@@ -26,20 +26,23 @@ namespace Robust.Client.ResourceManagement
                 throw new FileNotFoundException("Content file does not exist for texture");
             }
 
-            // Primarily for tracking down iCCP sRGB errors in the image files.
-            Logger.DebugS("res.tex", $"Loading texture {path}.");
-
-            var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
-
-            var manager = IoCManager.Resolve<IClyde>();
-
-            using var image = Image.Load<Rgba32>(stream);
-
-            Texture = manager.LoadTextureFromImage(image, path.ToString(), loadParameters);
-
-            if (cache is IResourceCacheInternal cacheInternal)
+            using (stream)
             {
-                cacheInternal.TextureLoaded(new TextureLoadedEventArgs(path, image, this));
+                // Primarily for tracking down iCCP sRGB errors in the image files.
+                Logger.DebugS("res.tex", $"Loading texture {path}.");
+
+                var loadParameters = _tryLoadTextureParameters(cache, path) ?? TextureLoadParameters.Default;
+
+                var manager = IoCManager.Resolve<IClyde>();
+
+                using var image = Image.Load<Rgba32>(stream);
+
+                Texture = manager.LoadTextureFromImage(image, path.ToString(), loadParameters);
+
+                if (cache is IResourceCacheInternal cacheInternal)
+                {
+                    cacheInternal.TextureLoaded(new TextureLoadedEventArgs(path, image, this));
+                }
             }
         }
 
@@ -48,21 +51,25 @@ namespace Robust.Client.ResourceManagement
             var metaPath = path.WithName(path.Filename + ".yml");
             if (cache.TryContentFileRead(metaPath, out var stream))
             {
-                YamlDocument yamlData;
-                using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
+                using (stream)
                 {
-                    var yamlStream = new YamlStream();
-                    yamlStream.Load(reader);
-                    if (yamlStream.Documents.Count == 0)
+                    YamlDocument yamlData;
+                    using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                     {
-                        return null;
+                        var yamlStream = new YamlStream();
+                        yamlStream.Load(reader);
+                        if (yamlStream.Documents.Count == 0)
+                        {
+                            return null;
+                        }
+
+                        yamlData = yamlStream.Documents[0];
                     }
 
-                    yamlData = yamlStream.Documents[0];
+                    return TextureLoadParameters.FromYaml((YamlMappingNode) yamlData.RootNode);
                 }
-
-                return TextureLoadParameters.FromYaml((YamlMappingNode)yamlData.RootNode);
             }
+
             return null;
         }
 

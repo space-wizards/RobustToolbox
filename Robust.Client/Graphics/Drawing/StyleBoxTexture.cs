@@ -329,7 +329,7 @@ namespace Robust.Client.Graphics.Drawing
         /// <summary>
         ///     Specifies how to stretch the sides and center of the style box.
         /// </summary>
-        public enum StretchMode
+        public enum StretchMode : byte
         {
             Stretch,
             Tile,

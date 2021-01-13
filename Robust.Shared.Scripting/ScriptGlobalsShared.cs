@@ -38,18 +38,23 @@ namespace Robust.Shared.Scripting
             {
                 return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
             }
-            
+
             return new EntityCoordinates(grid.GridEntityId, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
         {
-            return new EntityUid(i);
+            return new(i);
         }
 
         public IEntity getent(int i)
         {
             return getent(eid(i));
+        }
+
+        public T gcm<T>(int i)
+        {
+            return getent(i).GetComponent<T>();
         }
 
         public IEntity getent(EntityUid uid)

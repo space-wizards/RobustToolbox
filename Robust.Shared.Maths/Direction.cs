@@ -3,7 +3,7 @@
 namespace Robust.Shared.Maths
 {
     [Flags]
-    public enum Direction
+    public enum Direction : sbyte
     {
         Invalid = -1,
         East = 0,
@@ -22,7 +22,6 @@ namespace Robust.Shared.Maths
     public static class DirectionExtensions
     {
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
-        private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
         /// <summary>
         /// Converts a direction vector to the closest Direction enum.

@@ -24,7 +24,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Queue<IEntity> _dirtyEntities = new Queue<IEntity>();
+        private readonly Queue<IEntity> _dirtyEntities = new();
 
         private uint _updateGeneration;
 

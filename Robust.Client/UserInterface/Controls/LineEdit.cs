@@ -44,6 +44,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<LineEditEventArgs>? OnTextChanged;
         public event Action<LineEditEventArgs>? OnTextEntered;
+        public event Action<LineEditEventArgs>? OnFocusEnter;
+        public event Action<LineEditEventArgs>? OnFocusExit;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -593,6 +595,13 @@ namespace Robust.Client.UserInterface.Controls
 
             // Reset this so the cursor is always visible immediately after gaining focus..
             _resetCursorBlink();
+            OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
+        }
+
+        protected internal override void FocusExited()
+        {
+            base.FocusExited();
+            OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
         }
 
         [Pure]
@@ -702,7 +711,7 @@ namespace Robust.Client.UserInterface.Controls
             return CharClass.Other;
         }
 
-        private enum CharClass
+        private enum CharClass : byte
         {
             Other,
             AlphaNumeric,

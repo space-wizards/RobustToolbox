@@ -13,13 +13,13 @@ namespace Robust.Client.Graphics.Shaders
     {
         private readonly IResourceManager _resManager;
         private int _tokenIndex;
-        private readonly List<Token> _tokens = new List<Token>();
+        private readonly List<Token> _tokens = new();
 
-        private readonly List<ShaderUniformDefinition> _uniformsParsing = new List<ShaderUniformDefinition>();
-        private readonly List<ShaderConstantDefinition> _constantsParsing = new List<ShaderConstantDefinition>();
-        private readonly List<ShaderVaryingDefinition> _varyingsParsing = new List<ShaderVaryingDefinition>();
-        private readonly List<ShaderFunctionDefinition> _functionsParsing = new List<ShaderFunctionDefinition>();
-        private readonly LinkedList<ResourcePath> _includes = new LinkedList<ResourcePath>();
+        private readonly List<ShaderUniformDefinition> _uniformsParsing = new();
+        private readonly List<ShaderConstantDefinition> _constantsParsing = new();
+        private readonly List<ShaderVaryingDefinition> _varyingsParsing = new();
+        private readonly List<ShaderFunctionDefinition> _functionsParsing = new();
+        private readonly LinkedList<ResourcePath> _includes = new();
 
         public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {
@@ -520,7 +520,7 @@ namespace Robust.Client.Graphics.Shaders
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private static readonly Dictionary<string, ShaderPrecisionQualifier> _shaderTypePrecisionMap =
-            new Dictionary<string, ShaderPrecisionQualifier>
+            new()
             {
                 {"lowp", ShaderPrecisionQualifier.Low},
                 {"mediump", ShaderPrecisionQualifier.Medium},
@@ -529,7 +529,7 @@ namespace Robust.Client.Graphics.Shaders
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         private static readonly Dictionary<string, ShaderDataType> _shaderTypeMap =
-            new Dictionary<string, ShaderDataType>
+            new()
             {
                 {"void", ShaderDataType.Void},
                 {"bool", ShaderDataType.Bool},

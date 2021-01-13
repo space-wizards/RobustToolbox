@@ -55,12 +55,12 @@ namespace Robust.Shared.GameObjects
 
         public static ComponentChanged Added(uint netId, string componentName)
         {
-            return new ComponentChanged(false, netId, componentName);
+            return new(false, netId, componentName);
         }
 
         public static ComponentChanged Removed(uint netId)
         {
-            return new ComponentChanged(true, netId, null);
+            return new(true, netId, null);
         }
     }
 }

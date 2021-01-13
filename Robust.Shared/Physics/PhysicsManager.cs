@@ -20,7 +20,7 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
-            new ConcurrentDictionary<MapId, BroadPhase>();
+            new();
 
         private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
@@ -53,6 +53,13 @@ namespace Robust.Shared.Physics
         public bool IsWeightless(EntityCoordinates coordinates)
         {
             var gridId = coordinates.GetGridId(_entityManager);
+            if (!gridId.IsValid())
+            {
+                // Not on a grid = no gravity for now.
+                // In the future, may want to allow maps to override to always have gravity instead.
+                return true;
+            }
+
             var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
             return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
         }
@@ -99,8 +106,8 @@ namespace Robust.Shared.Physics
             if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
 
             var restitution = 0.01f;
-            var normal = CalculateNormal(manifold.A, manifold.B);
-            var rV = bP.LinearVelocity - aP.LinearVelocity;
+            var normal = manifold.Normal;
+            var rV = manifold.RelativeVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)
@@ -109,11 +116,6 @@ namespace Robust.Shared.Physics
             }
 
             var impulse = -(1.0f + restitution) * vAlongNormal;
-            // So why the 100.0f instead of 0.0f? Well, because the other object needs to have SOME mass value,
-            // or otherwise the physics object can actually sink in slightly to the physics-less object.
-            // (the 100.0f is equivalent to a mass of 0.01kg)
-            // TODO: If one of the objects has infinite mass then this should just cancel out their impulse.
-            // Needs further testing.
             impulse /= aP.InvMass + bP.InvMass;
 
             return manifold.Normal * impulse;
@@ -261,7 +263,7 @@ namespace Robust.Shared.Physics
             float maxLength = 50F,
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
-            List<RayCastResults> results = new List<RayCastResults>();
+            List<RayCastResults> results = new();
 
             this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {

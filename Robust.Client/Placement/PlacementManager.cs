@@ -61,8 +61,8 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Dictionary of all placement mode types
         /// </summary>
-        private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<EntityCoordinates, TimeSpan>>();
+        private readonly Dictionary<string, Type> _modeDictionary = new();
+        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -98,9 +98,9 @@ namespace Robust.Client.Placement
         public bool Eraser { get; private set; }
 
         /// <summary>
-        /// The texture we use to show from our placement manager to represent the entity to place
+        ///     The texture we use to show from our placement manager to represent the entity to place
         /// </summary>
-        public IDirectionalTextureProvider? CurrentBaseSprite { get; set; }
+        public List<IDirectionalTextureProvider>? CurrentTextures { get; set; }
 
         /// <summary>
         /// Which of the placement orientations we are trying to place with
@@ -143,7 +143,7 @@ namespace Robust.Client.Placement
         public Vector2i PlacementOffset { get; set; }
 
 
-        private Box2 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
+        private Box2 _colliderAABB = new(0f, 0f, 0f, 0f);
 
         /// <summary>
         /// The box which certain placement modes collision checks will be done against
@@ -311,7 +311,7 @@ namespace Robust.Client.Placement
         {
             PlacementChanged?.Invoke(this, EventArgs.Empty);
             Hijack = null;
-            CurrentBaseSprite = null;
+            CurrentTextures = null;
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
@@ -555,7 +555,7 @@ namespace Robust.Client.Placement
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
-            CurrentBaseSprite = SpriteComponent.GetPrototypeIcon(prototype, ResourceCache);
+            CurrentTextures = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache).ToList();
             CurrentPrototype = prototype;
 
             IsActive = true;
@@ -563,27 +563,31 @@ namespace Robust.Client.Placement
 
         private void PreparePlacementTile()
         {
-            CurrentBaseSprite = ResourceCache
-                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
+            CurrentTextures = new List<IDirectionalTextureProvider>
+            {ResourceCache
+                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture};
 
             IsActive = true;
         }
 
         private void RequestPlacement(EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridId(EntityManager);
-            if (MapManager.GetGrid(gridId).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode!.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {
-                var grid = MapManager.GetGrid(gridId);
+                var gridId = coordinates.GetGridId(EntityManager);
+                // If we have actually placed something on a valid grid...
+                if (gridId.IsValid())
+                {
+                    var grid = MapManager.GetGrid(gridId);
 
-                // no point changing the tile to the same thing.
-                if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
-                    return;
+                    // no point changing the tile to the same thing.
+                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                        return;
+                }
 
                 foreach (var tileChange in _pendingTileChanges)
                 {
@@ -615,7 +619,7 @@ namespace Robust.Client.Placement
             NetworkManager.ClientSendMessage(message);
         }
 
-        public enum PlacementTypes
+        public enum PlacementTypes : byte
         {
             None = 0,
             Line = 1,

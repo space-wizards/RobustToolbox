@@ -5,6 +5,7 @@ using Robust.Shared.Animations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.EntitySystemMessages;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -35,7 +36,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
+        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -91,10 +92,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                var oldRotation = _localRotation;
-
-                if (_localRotation == value)
+                if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
+
+                var oldRotation = _localRotation;
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
@@ -198,7 +199,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        public bool IsMapTransform => !ContainerHelpers.IsInContainer(Owner);
+        public bool IsMapTransform => !Owner.IsInContainer();
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -277,7 +278,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
+        public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
@@ -286,6 +287,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
+                if (_localPosition.EqualsApprox(value, 0.00001))
+                    return;
+
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
 
@@ -314,6 +318,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public void RunPhysicsDeferred()
         {
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
+            {
+                return;
+            }
+
             RebuildMatrices();
             UpdateEntityTree();
             UpdatePhysicsTree();
@@ -535,7 +546,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (newParent == null)
+            if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,
@@ -575,7 +586,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         internal void ChangeMapId(MapId newMapId)
         {
+            if (newMapId == MapID)
+                return;
+
             var oldMapId = MapID;
+
             MapID = newMapId;
             MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
@@ -710,13 +725,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     rebuildMatrices = true;
                 }
 
-                if (_localPosition != newState.LocalPosition)
+                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
                 {
                     var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);
 
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPos, Coordinates));
+                    var ev = new MoveEvent(Owner, oldPos, Coordinates);
+                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ev);
+
                     rebuildMatrices = true;
                 }
 
@@ -866,6 +882,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
+        public bool Handled { get; set; }
     }
 
     public class RotateEvent : EntitySystemMessage

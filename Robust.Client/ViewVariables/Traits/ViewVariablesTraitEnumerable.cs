@@ -16,7 +16,7 @@ namespace Robust.Client.ViewVariables.Traits
     internal class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
         private const int ElementsPerPage = 25;
-        private readonly List<object?> _cache = new List<object?>();
+        private readonly List<object?> _cache = new();
         private int _page;
         private IEnumerator? _enumerator;
         private bool _ended;

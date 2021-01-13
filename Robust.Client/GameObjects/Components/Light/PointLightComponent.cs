@@ -83,6 +83,18 @@ namespace Robust.Client.GameObjects
             set => _energy = value;
         }
 
+        /// <summary>
+        ///     Soft shadow strength multiplier.
+        ///     Has no effect if soft shadows are not enabled.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public float Softness
+        {
+            get => _softness;
+            set => _softness = value;
+        }
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool VisibleNested
         {
@@ -115,6 +127,7 @@ namespace Robust.Client.GameObjects
         private bool _maskAutoRotate;
         private Angle _rotation;
         private float _energy;
+        private float _softness;
 
         /// <summary>
         ///     Radius, in meters.
@@ -167,6 +180,7 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref _color, "color", Color.White);
             serializer.DataFieldCached(ref _enabled, "enabled", true);
             serializer.DataFieldCached(ref _energy, "energy", 1f);
+            serializer.DataFieldCached(ref _softness, "softness", 1f);
             serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
 

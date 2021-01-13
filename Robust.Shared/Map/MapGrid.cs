@@ -30,10 +30,6 @@ namespace Robust.Shared.Map
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
         /// <inheritdoc />
-        [Obsolete("The concept of 'default grids' is being removed.")]
-        public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
-
-        /// <inheritdoc />
         [ViewVariables]
         public MapId ParentMapId { get; set; }
 
@@ -59,7 +55,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new Dictionary<Vector2i, IMapChunkInternal>();
+        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
         private readonly IEntityManager _entityManager;
@@ -128,9 +124,6 @@ namespace Robust.Shared.Map
         {
             get
             {
-                if(IsDefaultGrid) // Default grids cannot be moved.
-                    return Vector2.Zero;
-
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
                     return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
@@ -138,9 +131,6 @@ namespace Robust.Shared.Map
             }
             set
             {
-                if (IsDefaultGrid) // Default grids cannot be moved.
-                    return;
-
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
@@ -177,8 +167,13 @@ namespace Robust.Shared.Map
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
             LastModifiedTick = _mapManager.GameTiming.CurTick;
-            UpdateAABB();
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
+        }
+
+        /// <inheritdoc />
+        public void NotifyChunkCollisionRegenerated()
+        {
+            UpdateAABB();
         }
 
         /// <inheritdoc />
@@ -372,7 +367,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
         {
-            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(coords.GetGridId(_entityManager)).ParentMapId);
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridCellFor(local, offset);
@@ -451,7 +446,7 @@ namespace Robust.Shared.Map
 
             if (!_mapManager.TryGetGrid(Index, out var grid))
             {
-                return new EntityCoordinates(EntityUid.Invalid, (posWorld.X, posWorld.Y));
+                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
             }
 
             return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));
@@ -520,7 +515,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
-            return new EntityCoordinates(GridEntityId, (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
+            return new(GridEntityId, (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 
         public Vector2 GridTileToWorldPos(Vector2i gridTile)
@@ -533,7 +528,7 @@ namespace Robust.Shared.Map
 
         public MapCoordinates GridTileToWorld(Vector2i gridTile)
         {
-            return new MapCoordinates(GridTileToWorldPos(gridTile), ParentMapId);
+            return new(GridTileToWorldPos(gridTile), ParentMapId);
         }
 
         /// <inheritdoc />

@@ -21,7 +21,7 @@ namespace Robust.Shared.ViewVariables
         }
     }
 
-    public enum VVAccess
+    public enum VVAccess : byte
     {
         /// <summary>
         ///     This property can only be read, not written.

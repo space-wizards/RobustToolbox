@@ -61,7 +61,7 @@ namespace Robust.Shared.ViewVariables
         ///     A list of VV-accessible the remote object has.
         /// </summary>
         public List<(string groupName, List<MemberData> groupMembers)> MemberGroups { get; set; }
-            = new List<(string, List<MemberData>)>();
+            = new();
 
         /// <summary>
         ///     Token used to indicate "this is a reference, but I can't send the actual reference over".
@@ -153,7 +153,7 @@ namespace Robust.Shared.ViewVariables
     [Serializable, NetSerializable]
     public class ViewVariablesBlobEntityComponents : ViewVariablesBlob
     {
-        public List<Entry> ComponentTypes { get; set; } = new List<Entry>();
+        public List<Entry> ComponentTypes { get; set; } = new();
 
         // This might as well be a ValueTuple but I couldn't get that to work.
         [Serializable, NetSerializable]

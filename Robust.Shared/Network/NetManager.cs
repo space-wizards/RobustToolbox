@@ -89,33 +89,33 @@ namespace Robust.Shared.Network
             "Number of queued (unsent) messages that have yet to be sent.");
         */
 
-        private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
+        private readonly Dictionary<Type, ProcessMessage> _callbacks = new();
 
         /// <summary>
         ///     Holds the synced lookup table of NetConnection -> NetChannel
         /// </summary>
-        private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
+        private readonly Dictionary<NetConnection, NetChannel> _channels = new();
 
-        private readonly Dictionary<string, NetConnection> _assignedUsernames = new Dictionary<string, NetConnection>();
+        private readonly Dictionary<string, NetConnection> _assignedUsernames = new();
 
         private readonly Dictionary<NetUserId, NetConnection> _assignedUserIds =
-            new Dictionary<NetUserId, NetConnection>();
+            new();
 
         // Used for processing incoming net messages.
         private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
         // Used for processing outgoing net messages.
         private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
-            new Dictionary<Type, Func<NetMessage>>();
+            new();
 
-        private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
+        private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
         /// </summary>
-        private readonly Dictionary<string, Type> _messages = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _messages = new();
 
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
@@ -125,16 +125,16 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     The list of network peers we are listening on.
         /// </summary>
-        private readonly List<NetPeerData> _netPeers = new List<NetPeerData>();
+        private readonly List<NetPeerData> _netPeers = new();
 
         // Client connect happens during status changed and such callbacks, so we need to defer deletion of these.
-        private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
+        private readonly List<NetPeer> _toCleanNetPeers = new();
 
         private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
-            = new Dictionary<NetConnection, TaskCompletionSource<object?>>();
+            = new();
 
         /// <inheritdoc />
-        public int Port => _config.GetCVar<int>("net.port");
+        public int Port => _config.GetCVar(CVars.NetPort);
 
         public bool IsAuthEnabled => _config.GetCVar<bool>("auth.enabled");
 
@@ -463,6 +463,8 @@ namespace Robust.Shared.Network
                 {
                     _netPeers.RemoveAll(p => p.Peer == peer);
                 }
+
+                _toCleanNetPeers.Clear();
             }
 
             SentMessagesMetrics.IncTo(sentMessages);
@@ -516,10 +518,10 @@ namespace Robust.Shared.Network
 
 #if DEBUG
             //Simulate Latency
-            netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
-            netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
-            netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
-            netConfig.SimulatedDuplicatesChance = _config.GetCVar<float>("net.fakeduplicates");
+            netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);
+            netConfig.SimulatedMinimumLatency = _config.GetCVar(CVars.NetFakeLagMin);
+            netConfig.SimulatedRandomLatency = _config.GetCVar(CVars.NetFakeLagRand);
+            netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
             netConfig.ConnectionTimeout = 30000f;
 #endif
@@ -661,7 +663,6 @@ namespace Robust.Shared.Network
 
             try
             {
-                await Task.Delay(1000);
                 await _serializer.Handshake(channel);
             }
             catch (TaskCanceledException)
@@ -1023,7 +1024,7 @@ namespace Robust.Shared.Network
         }
 
         private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
-            = new List<Func<NetConnectingArgs, Task>>();
+            = new();
 
         /// <inheritdoc />
         public event Func<NetConnectingArgs, Task> Connecting
@@ -1069,10 +1070,10 @@ namespace Robust.Shared.Network
         {
             public readonly NetPeer Peer;
 
-            public readonly List<NetChannel> Channels = new List<NetChannel>();
+            public readonly List<NetChannel> Channels = new();
 
             // So that we can do ServerSendToAll without a list copy.
-            public readonly List<NetConnection> ConnectionsWithChannels = new List<NetConnection>();
+            public readonly List<NetConnection> ConnectionsWithChannels = new();
 
             public NetPeerData(NetPeer peer)
             {

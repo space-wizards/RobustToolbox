@@ -53,7 +53,7 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new AudioParams(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
 
         public void ExposeData(ObjectSerializer serializer)
         {

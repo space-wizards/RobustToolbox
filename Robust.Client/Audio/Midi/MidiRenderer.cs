@@ -14,7 +14,7 @@ using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
 {
-    public enum MidiRendererStatus
+    public enum MidiRendererStatus : byte
     {
         None,
         Input,
@@ -62,6 +62,11 @@ namespace Robust.Client.Audio.Midi
         bool DisablePercussionChannel { get; set; }
 
         /// <summary>
+        /// Whether to drop messages for program change events.
+        /// </summary>
+        bool DisableProgramChangeEvent { get; set; }
+
+        /// <summary>
         ///     Gets the total number of ticks possible for the MIDI player.
         /// </summary>
         int PlayerTotalTick { get; }
@@ -85,12 +90,6 @@ namespace Robust.Client.Audio.Midi
         ///     Start listening for midi input.
         /// </summary>
         bool OpenInput();
-
-        /// <summary>
-        ///     Start playing a midi file.
-        /// </summary>
-        /// <param name="filename">Path to the midi file</param>
-        bool OpenMidi(string filename);
 
         /// <summary>
         ///     Start playing a midi file.
@@ -188,7 +187,7 @@ namespace Robust.Client.Audio.Midi
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
-        private readonly object _playerStateLock = new object();
+        private readonly object _playerStateLock = new();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         public bool Disposed { get; private set; } = false;
@@ -290,11 +289,6 @@ namespace Robust.Client.Audio.Midi
 
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
             return true;
-        }
-
-        public bool OpenMidi(string filename)
-        {
-            return OpenMidi(File.ReadAllBytes(filename));
         }
 
         public bool OpenMidi(ReadOnlySpan<byte> buffer)

@@ -11,6 +11,7 @@ using System.Linq;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
 
@@ -26,7 +27,7 @@ namespace Robust.Server.Placement
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-        public List<PlacementInformation> BuildPermissions { get; set; } = new List<PlacementInformation>();
+        public List<PlacementInformation> BuildPermissions { get; set; } = new();
 
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
@@ -88,6 +89,12 @@ namespace Robust.Server.Placement
 
             var coordinates = msg.EntityCoordinates;
 
+            if (!coordinates.IsValid(_entityManager))
+            {
+                Logger.WarningS("placement",
+                    $"{session} tried to place {msg.ObjType} at invalid coordinate {coordinates}");
+                return;
+            }
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing
             var permission = GetPermission(session.attachedEntity.Uid, alignRcv);

@@ -49,9 +49,15 @@ namespace Robust.Client.Graphics.Clyde
         public string GetKeyName(Keyboard.Key key) => string.Empty;
         public string GetKeyNameScanCode(int scanCode) => string.Empty;
         public int GetKeyScanCode(Keyboard.Key key) => default;
+
         public void Shutdown()
         {
             // Nada.
+        }
+
+        public uint? GetX11WindowId()
+        {
+            return null;
         }
 
         public override void SetWindowTitle(string title)
@@ -66,13 +72,14 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
+            base.Initialize();
             return true;
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized
         {
-            add {}
-            remove {}
+            add { }
+            remove { }
         }
 
         public void Render()
@@ -103,6 +110,15 @@ namespace Robust.Client.Graphics.Clyde
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
+        }
+
+        public OwnedTexture CreateBlankTexture<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
+        {
+            return new DummyTexture(size);
         }
 
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
@@ -154,13 +170,13 @@ namespace Robust.Client.Graphics.Clyde
         public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
         public AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -168,7 +184,7 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
         {
             return DummyBufferedAudioSource.Instance;
         }
@@ -183,6 +199,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetMasterVolume(float newVolume)
+        {
+            // Nada.
+        }
+
         private class DummyCursor : ICursor
         {
             public void Dispose()
@@ -193,7 +214,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private class DummyAudioSource : IClydeAudioSource
         {
-            public static DummyAudioSource Instance { get; } = new DummyAudioSource();
+            public static DummyAudioSource Instance { get; } = new();
 
             public bool IsPlaying => default;
             public bool IsLooping { get; set; }
@@ -246,7 +267,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
         {
-            public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
+            public new static DummyBufferedAudioSource Instance { get; } = new();
             public int SampleRate { get; set; } = 0;
 
             public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
@@ -284,6 +305,11 @@ namespace Robust.Client.Graphics.Clyde
         {
             public DummyTexture(Vector2i size) : base(size)
             {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+                // Just do nothing on mutate.
             }
         }
 
@@ -410,7 +436,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyDebugInfo : IClydeDebugInfo
         {
-            public OpenGLVersion OpenGLVersion { get; } = new OpenGLVersion(3, 3, isES: false, isCore: true);
+            public OpenGLVersion OpenGLVersion { get; } = new(3, 3, isES: false, isCore: true);
             public string Renderer => "ClydeHeadless";
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
@@ -423,7 +449,8 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            public IRenderTexture RenderTarget { get; } = new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+            public IRenderTexture RenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }

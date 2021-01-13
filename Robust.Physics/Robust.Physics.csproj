@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Nullable>enable</Nullable>
+
   </PropertyGroup>
+  <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

@@ -20,7 +20,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up
         /// </summary>
-        private readonly PriorityQueue<EffectSystemMessage> _CurrentEffects = new PriorityQueue<EffectSystemMessage>(new EffectMessageComparer());
+        private readonly PriorityQueue<EffectSystemMessage> _CurrentEffects = new(new EffectMessageComparer());
 
         /// <summary>
         ///     Creates a particle effect and sends it to clients.

@@ -47,12 +47,29 @@ namespace Robust.Shared.Utility
         private static readonly Parser<char, Tag> ParseEnclosedTag =
             ParseTagContents.Between(Char(TagBegin), Char(TagEnd));
 
+        private static readonly Parser<char, Tag> ParseTagOrFallBack =
+            Try(ParseEnclosedTag)
+                // If we couldn't parse a tag then parse the [ of the start of the tag
+                // so the rest is recognized as text.
+                .Or(Char(TagBegin).ThenReturn<Tag>(new TagText("[")));
+
         private static readonly Parser<char, IEnumerable<Tag>> Parse =
             ParseTagText.Cast<Tag>().Or(ParseEnclosedTag).Many();
+
+        private static readonly Parser<char, IEnumerable<Tag>> ParsePermissive =
+            ParseTagText.Cast<Tag>().Or(ParseTagOrFallBack).Many();
 
         public void AddMarkup(string markup)
         {
             _tags.AddRange(Parse.ParseOrThrow(markup));
+        }
+
+        /// <summary>
+        ///     Will parse invalid markup tags as text instead of ignoring them.
+        /// </summary>
+        public void AddMarkupPermissive(string markup)
+        {
+            _tags.AddRange(ParsePermissive.ParseOrThrow(markup));
         }
 
         private static bool ValidColorNameContents(char c)

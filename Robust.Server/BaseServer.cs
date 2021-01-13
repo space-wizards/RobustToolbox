@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -37,6 +38,8 @@ using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Log;
+using Robust.Server.Utility;
+using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -70,7 +73,7 @@ namespace Robust.Server
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
         [Dependency] private readonly IServerEntityManager _entities = default!;
         [Dependency] private readonly ILogManager _log = default!;
@@ -84,15 +87,16 @@ namespace Robust.Server
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog runtimeLog = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
 
-        private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
+        private readonly Stopwatch _uptimeStopwatch = new();
 
-        private CommandLineArgs _commandLineArgs = default!;
+        private CommandLineArgs? _commandLineArgs;
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
@@ -103,13 +107,13 @@ namespace Robust.Server
 
         private string? _shutdownReason;
 
-        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _shutdownEvent = new(false);
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
 
         /// <inheritdoc />
-        public string ServerName => _config.GetCVar<string>("game.hostname");
+        public string ServerName => _config.GetCVar(CVars.GameHostName);
 
         /// <inheritdoc />
         public void Restart()
@@ -183,24 +187,17 @@ namespace Robust.Server
                 _config.OverrideConVars(_commandLineArgs.CVars);
             }
 
-
             //Sets up Logging
-            _config.RegisterCVar("log.enabled", true, CVar.ARCHIVE);
-            _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
-            _config.RegisterCVar("log.runtimelog", true, CVar.ARCHIVE);
-
             _logHandlerFactory = logHandlerFactory;
 
             var logHandler = logHandlerFactory?.Invoke() ?? null;
 
-            var logEnabled = _config.GetCVar<bool>("log.enabled");
+            var logEnabled = _config.GetCVar(CVars.LogEnabled);
 
             if (logEnabled && logHandler == null)
             {
-                var logPath = _config.GetCVar<string>("log.path");
-                var logFormat = _config.GetCVar<string>("log.format");
+                var logPath = _config.GetCVar(CVars.LogPath);
+                var logFormat = _config.GetCVar(CVars.LogFormat);
                 var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
                     .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
                 var fullPath = Path.Combine(logPath, logFilename);
@@ -213,7 +210,7 @@ namespace Robust.Server
                 logHandler = new FileLogHandler(logPath);
             }
 
-            _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
+            _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);
 
             if (logEnabled && logHandler != null)
             {
@@ -259,34 +256,21 @@ namespace Robust.Server
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-#if FULL_RELEASE
-            _resources.MountContentDirectory(@"./Resources/");
-#else
-            // Load from the resources dir in the repo root instead.
-            // It's a debug build so this is fine.
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resources.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
-            _resources.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server");
 
             _modLoader.SetUseLoadContext(!DisableLoadContext);
+            _modLoader.SetEnableSandboxing(false);
 
-            //identical code in game controller for client
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                Logger.Fatal("Errors while loading content assemblies.");
                 return true;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Server DLL.");
-                return true;
+                _config.LoadCVarsFromAssembly(loadedModule);
             }
-
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
@@ -295,6 +279,8 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
+            _loc.AddLoadedToStringSerializer();
+
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
             IoCManager.Resolve<IPrototypeManager>().LoadedData +=
@@ -302,6 +288,8 @@ namespace Robust.Server
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
+            
+            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
 
             _stateManager.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
@@ -323,7 +311,6 @@ namespace Robust.Server
             prototypeManager.Resync();
 
             IoCManager.Resolve<IConsoleShell>().Initialize();
-            IoCManager.Resolve<IConGroupController>().Initialize();
             _entities.Startup();
             _scriptHost.Initialize();
 
@@ -337,27 +324,26 @@ namespace Robust.Server
 
             _stringSerializer.LockStrings();
 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
+
             return false;
         }
 
         private bool SetupLoki()
         {
-            _config.RegisterCVar("loki.enabled", false);
-            _config.RegisterCVar("loki.name", "");
-            _config.RegisterCVar("loki.address", "");
-            _config.RegisterCVar("loki.username", "");
-            _config.RegisterCVar("loki.password", "");
-
-            var enabled = _config.GetCVar<bool>("loki.enabled");
+            var enabled = _config.GetCVar(CVars.LokiEnabled);
             if (!enabled)
             {
                 return true;
             }
 
-            var serverName = _config.GetCVar<string>("loki.name");
-            var address = _config.GetCVar<string>("loki.address");
-            var username = _config.GetCVar<string>("loki.username");
-            var password = _config.GetCVar<string>("loki.password");
+            var serverName = _config.GetCVar(CVars.LokiName);
+            var address = _config.GetCVar(CVars.LokiAddress);
+            var username = _config.GetCVar(CVars.LokiUsername);
+            var password = _config.GetCVar(CVars.LokiPassword);
 
             if (string.IsNullOrWhiteSpace(serverName))
             {
@@ -476,7 +462,7 @@ namespace Robust.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER, i =>
+            cfgMgr.OnValueChanged(CVars.NetTickrate, i =>
             {
                 var b = (byte) i;
                 _time.TickRate = b;
@@ -485,10 +471,7 @@ namespace Robust.Server
                 SendTickRateUpdateToClients(b);
             });
 
-            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.type", GameType.Game);
-
-            _time.TickRate = (byte) _config.GetCVar<int>("net.tickrate");
+            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -506,16 +489,18 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
+
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
             _entities.Shutdown();
 
-            if (_config.GetCVar<bool>("log.runtimelog"))
+            if (_config.GetCVar(CVars.LogRuntimeLog))
             {
                 // Wrtie down exception log
-                var logPath = _config.GetCVar<string>("log.path");
+                var logPath = _config.GetCVar(CVars.LogPath);
                 var relPath = PathHelpers.ExecutableRelativeFile(logPath);
                 Directory.CreateDirectory(relPath);
                 var pathToWrite = Path.Combine(relPath,
@@ -526,6 +511,11 @@ namespace Robust.Server
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
         }
 
         private string UpdateBps()
@@ -554,11 +544,19 @@ namespace Robust.Server
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
+            // These are always the same on the server, there is no prediction.
+            _time.LastRealTick = _time.CurTick;
+
             UpdateTitle();
 
             using (TickUsage.WithLabels("PreEngine").NewTimer())
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
+            {
+                IoCManager.Resolve<INetConfigurationManager>().TickProcessMessages();
             }
 
             using (TickUsage.WithLabels("Timers").NewTimer())
@@ -591,14 +589,5 @@ namespace Robust.Server
 
             _watchdogApi.Heartbeat();
         }
-    }
-
-    /// <summary>
-    ///     Type of game currently running.
-    /// </summary>
-    public enum GameType
-    {
-        MapEditor = 0,
-        Game,
     }
 }

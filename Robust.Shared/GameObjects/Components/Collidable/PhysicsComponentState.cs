@@ -24,7 +24,7 @@ namespace Robust.Shared.GameObjects.Components
         public readonly bool Anchored;
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="canCollide"></param>
         /// <param name="status"></param>

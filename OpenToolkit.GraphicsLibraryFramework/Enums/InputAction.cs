@@ -13,7 +13,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
     /// Defines event information for <see cref="GLFWCallbacks.KeyCallback"/>
     /// or <see cref="GLFWCallbacks.MouseButtonCallback"/>.
     /// </summary>
-    public enum InputAction
+    public enum InputAction : byte
     {
         /// <summary>
         /// The key or mouse button was released.

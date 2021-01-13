@@ -14,11 +14,11 @@ namespace Robust.Server.GameObjects.EntitySystems
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;
 
-        private readonly List<IPlayerSession> _sessionCache = new List<IPlayerSession>();
+        private readonly List<IPlayerSession> _sessionCache = new();
 
         // List of all bound user interfaces that have at least one player looking at them.
         [ViewVariables]
-        private readonly List<BoundUserInterface> _activeInterfaces = new List<BoundUserInterface>();
+        private readonly List<BoundUserInterface> _activeInterfaces = new();
 
         /// <inheritdoc />
         public override void Initialize()

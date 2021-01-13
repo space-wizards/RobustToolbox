@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -19,35 +20,6 @@ namespace Robust.Shared.Interfaces.Resources
         IWritableDirProvider UserData { get; }
 
         /// <summary>
-        ///     Loads the default content pack from the configuration file into the VFS.
-        /// </summary>
-        void MountDefaultContentPack();
-
-        /// <summary>
-        ///     Loads a content pack from disk into the VFS. The path is relative to
-        ///     the executable location on disk.
-        /// </summary>
-        /// <param name="pack">The path of the pack to load on disk.</param>
-        /// <param name="prefix">The resource path to which all files in the pack will be relative to in the VFS.</param>
-        /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
-        void MountContentPack(string pack, ResourcePath? prefix = null);
-
-        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
-
-        /// <summary>
-        ///     Adds a directory to search inside of to the VFS. The directory is relative to
-        ///     the executable location on disk.
-        /// </summary>
-        /// <param name="path">The path of the directory to add to the VFS on disk.</param>
-        /// <param name="prefix">The resource path to which all files in the directory will be relative to in the VFS.</param>
-        /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        void MountContentDirectory(string path, ResourcePath? prefix = null);
-
-        /// <summary>
         ///     Read a file from the mounted content roots.
         /// </summary>
         /// <param name="path">The path to the file in the VFS. Must be rooted.</param>
@@ -55,6 +27,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="path"/> does not exist in the VFS.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
         Stream ContentFileRead(ResourcePath path);
 
         /// <summary>
@@ -93,6 +66,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
         bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
@@ -112,10 +86,24 @@ namespace Robust.Shared.Interfaces.Resources
         ///     If the directory does not exist, an empty enumerable is returned.
         /// </remarks>
         /// <param name="path">Directory to search inside of.</param>
-        /// <returns>Enumeration of all relative file paths of the files found, that is they are relative to <paramref name="path"/>.</returns>
+        /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path);
+
+        IEnumerable<ResourcePath> ContentFindRelativeFiles(ResourcePath path)
+        {
+            foreach (var absPath in ContentFindFiles(path))
+            {
+                if (!absPath.TryRelativeTo(path, out var rel))
+                {
+                    DebugTools.Assert("Past must be relative to be returned, unreachable.");
+                    throw new InvalidOperationException("This is unreachable");
+                }
+
+                yield return rel;
+            }
+        }
 
         /// <summary>
         ///     Recursively finds all files in a directory and all sub directories.
@@ -124,17 +112,10 @@ namespace Robust.Shared.Interfaces.Resources
         ///     If the directory does not exist, an empty enumerable is returned.
         /// </remarks>
         /// <param name="path">Directory to search inside of.</param>
-        /// <returns>Enumeration of all relative file paths of the files found, that is they are relative to <paramref name="path"/>.</returns>
+        /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);
-
-        /// <summary>
-        ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
-        ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
-        ///     Hrm.
-        /// </summary>
-        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
 
         /// <summary>
         ///     Read a file from the mounted content paths to a string.
@@ -206,5 +187,48 @@ namespace Robust.Shared.Interfaces.Resources
         /// <param name="stream">The stream to mount.</param>
         /// <param name="path">The path that the file will be mounted at.</param>
         void MountStreamAt(MemoryStream stream, ResourcePath path);
+
+        /// <summary>
+        ///     Loads the default content pack from the configuration file into the VFS.
+        /// </summary>
+        void MountDefaultContentPack();
+
+        /// <summary>
+        ///     Loads a content pack from disk into the VFS. The path is relative to
+        ///     the executable location on disk.
+        /// </summary>
+        /// <param name="pack">The path of the pack to load on disk.</param>
+        /// <param name="prefix">The resource path to which all files in the pack will be relative to in the VFS.</param>
+        /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
+        void MountContentPack(string pack, ResourcePath? prefix = null);
+
+        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
+
+        /// <summary>
+        ///     Adds a directory to search inside of to the VFS. The directory is relative to
+        ///     the executable location on disk.
+        /// </summary>
+        /// <param name="path">The path of the directory to add to the VFS on disk.</param>
+        /// <param name="prefix">The resource path to which all files in the directory will be relative to in the VFS.</param>
+        /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        void MountContentDirectory(string path, ResourcePath? prefix = null);
+
+        /// <summary>
+        ///     Attempts to get an on-disk path absolute file path for the specified resource path.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        ///     This only works if the resource is mounted as a direct directory,
+        ///     so this obviously fails if the resource is mounted in another way such as a zip file.
+        /// </para>
+        /// <para>
+        ///     This can be used for optimizations such as assembly loading, where an on-disk path is better.
+        /// </para>
+        /// </remarks>
+        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
     }
 }

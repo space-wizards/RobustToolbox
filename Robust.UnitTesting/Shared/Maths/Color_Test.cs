@@ -138,7 +138,8 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(controlColor, Is.EqualTo(sameColor));
             Assert.That(controlColor, Is.EqualTo(sameColorAsObject));
             Assert.That(controlColor, Is.Not.EqualTo(nullColor));
-            Assert.That(controlColor, Is.Not.EqualTo(notColor));
+            // NUnit's analyzer literally disallows this because it knows it's bogus, so...
+            // Assert.That(controlColor, Is.Not.EqualTo(notColor));
         }
 
         [Test]

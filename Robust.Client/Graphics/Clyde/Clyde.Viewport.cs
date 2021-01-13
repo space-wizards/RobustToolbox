@@ -11,7 +11,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         // Use WeakReference here instead of a separate Loaded* object since these only contain managed objects.
         private readonly Dictionary<ClydeHandle, WeakReference<Viewport>> _viewports =
-            new Dictionary<ClydeHandle, WeakReference<Viewport>>();
+            new();
 
         private Viewport CreateViewport(Vector2i size, string? name = null)
         {

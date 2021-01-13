@@ -63,7 +63,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// The identity matrix
         /// </summary>
-        public static readonly Matrix4 Identity = new Matrix4(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
+        public static readonly Matrix4 Identity = new(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
 
         #endregion Fields
 
@@ -143,7 +143,7 @@ namespace Robust.Shared.Maths
         public Vector4 Column0
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector4(Row0.X, Row1.X, Row2.X, Row3.X);
+            get => new(Row0.X, Row1.X, Row2.X, Row3.X);
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Robust.Shared.Maths
         public Vector4 Column1
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector4(Row0.Y, Row1.Y, Row2.Y, Row3.Y);
+            get => new(Row0.Y, Row1.Y, Row2.Y, Row3.Y);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ namespace Robust.Shared.Maths
         public Vector4 Column2
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector4(Row0.Z, Row1.Z, Row2.Z, Row3.Z);
+            get => new(Row0.Z, Row1.Z, Row2.Z, Row3.Z);
         }
 
         /// <summary>
@@ -170,7 +170,7 @@ namespace Robust.Shared.Maths
         public Vector4 Column3
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector4(Row0.W, Row1.W, Row2.W, Row3.W);
+            get => new(Row0.W, Row1.W, Row2.W, Row3.W);
         }
 
         /// <summary>
@@ -1091,7 +1091,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Transpose(Matrix4 mat)
         {
-            return new Matrix4(mat.Column0, mat.Column1, mat.Column2, mat.Column3);
+            return new(mat.Column0, mat.Column1, mat.Column2, mat.Column3);
         }
 
         /// <summary>

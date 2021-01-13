@@ -27,6 +27,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
 
         /// <summary>
         ///     Current position offset of the entity relative to the world.
+        ///     Can de-parent from its parent if the parent is a grid.
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
@@ -96,7 +97,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Returns the index of the grid which this object is on
         /// </summary>
         GridId GridID { get; }
-        
+
         /// <summary>
         ///     Whether external system updates should run or not (e.g. EntityTree, Matrices, PhysicsTree).
         ///     These should be manually run later.
@@ -106,7 +107,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
-        
+
         /// <summary>
         ///     Run the updates marked as deferred (UpdateEntityTree and movement events).
         ///     Don't call this unless you REALLY need to.

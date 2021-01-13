@@ -12,7 +12,7 @@ namespace Robust.Client.Graphics.Overlays
 {
     internal class OverlayManager : IOverlayManagerInternal
     {
-        private readonly Dictionary<string, Overlay> _overlays = new Dictionary<string, Overlay>();
+        private readonly Dictionary<string, Overlay> _overlays = new();
 
         public void FrameUpdate(FrameEventArgs args)
         {

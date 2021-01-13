@@ -41,6 +41,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 optionButton.OnItemSelected += e =>
                 {
+                    optionButton.SelectId(e.Id);
                     ValueChanged(e.Id);
                 };
             }

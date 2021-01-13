@@ -165,10 +165,10 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> GameMaxPlayers =
-            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<string> GameHostName =
-            CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /*
          * LOG

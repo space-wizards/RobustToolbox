@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
@@ -91,8 +92,6 @@ namespace Robust.Server.Player
 
             MaxPlayers = maxPlayers;
 
-            _network.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
-            _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
 
@@ -378,6 +377,8 @@ namespace Robust.Server.Player
             }
 
             PlayerCountMetric.Set(PlayerCount);
+
+            IoCManager.Resolve<INetConfigurationManager>().SyncConnectingClient(args.Channel);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -412,18 +413,6 @@ namespace Robust.Server.Player
 
             PlayerCountMetric.Set(PlayerCount);
             Dirty();
-        }
-
-        private void HandleWelcomeMessageReq(MsgServerInfoReq message)
-        {
-            var channel = message.MsgChannel;
-            var netMsg = channel.CreateNetMessage<MsgServerInfo>();
-
-            netMsg.ServerName = _baseServer.ServerName;
-            netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
-            netMsg.TickRate = _timing.TickRate;
-
-            channel.SendMessage(netMsg);
         }
 
         private void HandlePlayerListReq(MsgPlayerListReq message)

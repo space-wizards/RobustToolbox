@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces;
@@ -11,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
@@ -41,7 +42,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -177,7 +178,7 @@ namespace Robust.Client.GameStates
             var i = 0;
             for (; i < applyCount; i++)
             {
-                _timing.CurTick = _lastProcessedTick + 1;
+                _timing.LastRealTick = _timing.CurTick = _lastProcessedTick + 1;
 
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -380,6 +381,7 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
+            _config.TickProcessMessages();
             _mapManager.ApplyGameStatePre(curState.MapData);
             var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
                 nextState?.EntityStates);

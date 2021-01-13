@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Robust.Shared.Configuration;
 
 namespace Robust.Shared.Interfaces.Configuration
@@ -24,7 +23,8 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
         /// <param name="onValueChanged">Invoked whenever the CVar value changes.</param>
-        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null);
+        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+            where T : notnull;
 
         /// <summary>
         /// Is the named CVar already registered?

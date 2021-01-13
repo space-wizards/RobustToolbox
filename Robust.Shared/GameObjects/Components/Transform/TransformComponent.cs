@@ -19,13 +19,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
-        public enum testEnum
-        {
-            A, B, C, Mauff
-        }
-
-        [ViewVariables (VVAccess.ReadWrite)] public testEnum test = testEnum.C;
-
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation

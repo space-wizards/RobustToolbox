@@ -79,6 +79,7 @@ namespace Robust.Shared.Configuration
             else // this is a key, add CVar
             {
                 // if the CVar has already been registered
+                var tomlValue = TypeConvert(obj);
                 if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
                     if ((cfgVar.Flags & CVar.SECURE) != 0)
@@ -90,13 +91,14 @@ namespace Robust.Shared.Configuration
                         return;
                     }
                     // overwrite the value with the saved one
-                    cfgVar.Value = TypeConvert(obj);
+                    cfgVar.Value = tomlValue;
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);
                 }
                 else
                 {
                     //or add another unregistered CVar
-                    cfgVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
                     _configVars.Add(tablePath, cfgVar);
                 }
 
@@ -194,6 +196,7 @@ namespace Robust.Shared.Configuration
         }
 
         public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+            where T : notnull
         {
             Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
@@ -204,7 +207,7 @@ namespace Robust.Shared.Configuration
             RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
         }
 
-        private void RegisterCVar(string name, Type type, object? defaultValue, CVar flags, Action<object>? onValueChanged)
+        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
         {
             DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
                 $"{name}: Enum cvars must have int as underlying type.");
@@ -379,7 +382,8 @@ namespace Robust.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(key, null, CVar.NONE) { OverrideValue = value };
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
                     _configVars.Add(key, cVar);
                 }
             }
@@ -446,7 +450,7 @@ namespace Robust.Shared.Configuration
             /// everything after is the CVar name in the TOML document.</param>
             /// <param name="defaultValue">The default value of this CVar.</param>
             /// <param name="flags">Optional flags to modify the behavior of this CVar.</param>
-            public ConfigVar(string name, object? defaultValue, CVar flags)
+            public ConfigVar(string name, object defaultValue, CVar flags)
             {
                 Name = name;
                 DefaultValue = defaultValue;
@@ -461,7 +465,7 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The default value of this CVar.
             /// </summary>
-            public object? DefaultValue { get; set; }
+            public object DefaultValue { get; set; }
 
             /// <summary>
             ///     Optional flags to modify the behavior of this CVar.

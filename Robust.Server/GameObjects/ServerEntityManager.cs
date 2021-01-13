@@ -189,11 +189,15 @@ namespace Robust.Server.GameObjects
             // Old PVS used to just get all for no session...
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
-                return GetAllEntityStates(fromTick, player);
+                return new List<EntityState>();
 
             var data = _lookupSystem.GetPlayerLastSeen(player);
             if (data == null)
                 return new List<EntityState>();
+
+            // Probably a round restart so we'll dump all the data on them.
+            if (data.EntityLastSeen.Count == 0)
+                return GetAllEntityStates(fromTick, player);
 
             var entityStates = new List<EntityState>();
             var transform = playerEnt.Transform;
@@ -244,17 +248,9 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            // TODO DEBUG ONLY PLZ REMOVE
-            foreach (var eState in entityStates)
-            {
-                var entity = GetEntity(eState.Uid);
-                var parent = entity.Transform.Parent?.Owner.Uid;
-                if (parent != null && !data.EntityLastSeen.ContainsKey(parent.Value))
-                {
-                    var ourNodes = _lookupSystem.GetNodes(entity);
-                    var parentNodes = _lookupSystem.GetNodes(GetEntity(parent.Value));
-                }
-            }
+            // TODO: I think there may still be the issue of parents not being sent
+            // If there is then to solve this just have each entity retrieved by the lookup
+            // also check if its parent has been retrieved and if not then also retrieve it.
 
             // Sort for the client.
             entityStates.Sort((a, b) => a.Uid.CompareTo(b.Uid));

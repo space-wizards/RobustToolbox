@@ -34,12 +34,6 @@ namespace Robust.Shared.EntityLookup
          * By all means if you come up with a better data structure that can handle grids THEN GO AHEAD.
          */
 
-        // TODO: Have message for stuff inserted into containers
-        // Anything in a container is removed from the graph and anything removed from a container is added to the graph.
-
-        // TODO: This thing is going to memory leak like a motherfucker for space so need to handle that.
-        // Ideally you'd pool space chunks.
-
         [Dependency] protected readonly IMapManager MapManager = default!;
 
         private readonly Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, EntityLookupChunk>>> _graph = new();
@@ -448,7 +442,6 @@ namespace Robust.Shared.EntityLookup
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            // TODO: Check if we still need this, also try using 0.001 instead
             if (entity.TryGetComponent(out IPhysicsComponent? physics))
                 return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
 
@@ -459,6 +452,7 @@ namespace Robust.Shared.EntityLookup
         public override void Initialize()
         {
             SubscribeLocalEvent<MoveEvent>(ev => HandleEntityMove(ev.Sender));
+            SubscribeLocalEvent<RotateEvent>(ev => HandleEntityMove(ev.Sender));
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
@@ -473,6 +467,7 @@ namespace Robust.Shared.EntityLookup
         {
             base.Shutdown();
             UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<RotateEvent>();
             UnsubscribeLocalEvent<EntityInitializedMessage>();
             UnsubscribeLocalEvent<EntityDeletedMessage>();
             UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();

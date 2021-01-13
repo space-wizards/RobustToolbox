@@ -19,7 +19,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public int ItemCount => _buttonData.Count;
 
-
         /// <summary>
         /// If true, hides the triangle that normally appears to the right of the button label
         /// </summary>
@@ -34,12 +33,18 @@ namespace Robust.Client.UserInterface.Controls
         }
         private bool _hideTriangle;
 
+        /// <summary>
+        /// StyleClasses to apply to the options that popup when clicking this button.
+        /// </summary>
+        public ICollection<string> OptionStyleClasses { get; }
+
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
         public string Prefix { get; set; }
 
         public OptionButton()
         {
+            OptionStyleClasses = new List<string>();
             AddStyleClass(StyleClassButton);
             Prefix = "";
             OnPressed += OnPressedInternal;
@@ -90,6 +95,10 @@ namespace Robust.Client.UserInterface.Controls
                 Text = label,
                 ToggleMode = true
             };
+            foreach (var styleClass in OptionStyleClasses)
+            {
+                button.AddStyleClass(styleClass);
+            }
             button.OnPressed += ButtonOnPressed;
             var data = new ButtonData(label, button)
             {

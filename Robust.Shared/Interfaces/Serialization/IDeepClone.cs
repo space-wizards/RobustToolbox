@@ -2,8 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NFluidsynth;
-using Robust.Shared.Interfaces.GameObjects;
+using System.Numerics;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -12,6 +13,18 @@ namespace Robust.Shared.Interfaces.Serialization
     public interface IDeepClone
     {
         IDeepClone DeepClone();
+
+        private static Dictionary<Type, Type>? _deepCloneExtensions;
+
+        private static void CacheDeepCloneExtensions()
+        {
+            _deepCloneExtensions = new();
+            foreach(var extension in IoCManager.Resolve<IReflectionManager>().FindTypesWithAttribute<DeepCloneExtensionAttribute>())
+            {
+                if(Attribute.GetCustomAttribute(extension, typeof(DeepCloneExtensionAttribute)) is DeepCloneExtensionAttribute attr)
+                    _deepCloneExtensions.Add(attr.ForType, extension);
+            }
+        }
 
         public static T? CloneValue<T>(T? value)
         {
@@ -107,6 +120,19 @@ namespace Robust.Shared.Interfaces.Serialization
                 var newSet = Activator.CreateInstance(underlyingType, values.ToArray())!;
 
                 return (T)newSet;
+            }
+
+            if(_deepCloneExtensions == null) CacheDeepCloneExtensions();
+            if (_deepCloneExtensions != null && _deepCloneExtensions.TryGetValue(underlyingType, out var extension))
+            {
+                var extensionInstance = (DeepCloneExtension?) Activator.CreateInstance(extension);
+                if (extensionInstance != null)
+                {
+                    return (T)extensionInstance.DeepClone(value);
+                }
+                else{
+                    Logger.Error($"Failed to create deepcloneextension {extension} for type {type}");
+                }
             }
 
             //class fallback

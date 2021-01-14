@@ -17,6 +17,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
             // On net472, we rely on Mono's DllMap for this. See the .dll.config file.
             NativeLibrary.SetDllImportResolver(typeof(GLFWNative).Assembly, (name, assembly, path) =>
             {
+                // Please keep in sync with what Robust.Shared/DllMapHelper.cs does.
                 if (name != "glfw3.dll")
                 {
                     return IntPtr.Zero;

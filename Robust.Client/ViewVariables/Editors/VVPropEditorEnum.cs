@@ -29,9 +29,9 @@ namespace Robust.Client.ViewVariables.Editors
             var optionButton = new OptionButton();
             foreach (var val in enumList)
             {
-                if(val == null)
+                if (val?.ToString() == null)
                     continue;
-                optionButton.AddItem(val.ToString()!, (int)val);
+                optionButton.AddItem(val.ToString(), (int)val);
             }
 
             optionButton.SelectId((int)value);

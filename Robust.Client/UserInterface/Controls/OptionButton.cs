@@ -196,6 +196,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Select by index rather than id. Throws exception if item with that index
+        /// not in this control.
+        /// </summary>
         public void Select(int idx)
         {
             if (_idMap.TryGetValue(SelectedId, out var prevIdx))
@@ -208,9 +212,27 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Pressed = true;
         }
 
+        /// <summary>
+        /// Select by index rather than id.
+        /// </summary>
+        /// <returns>false if item with that index not in this control</returns>
+        public bool TrySelect(int idx)
+        {
+            if (idx < 0 || idx >= _buttonData.Count) return false;
+            Select(idx);
+            return true;
+        }
+
+        /// throws exception if item with this ID is not in this control
         public void SelectId(int id)
         {
             Select(GetIdx(id));
+        }
+
+        /// <returns>false if item with id not in this control</returns>
+        public bool TrySelectId(int id)
+        {
+            return _idMap.TryGetValue(id, out var idx) && TrySelect(idx);
         }
 
         public int GetIdx(int id)

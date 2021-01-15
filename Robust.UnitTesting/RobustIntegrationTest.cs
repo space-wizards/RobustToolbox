@@ -436,11 +436,12 @@ namespace Robust.UnitTesting
 
                     client.LoadConfigAndUserData = false;
 
+                    var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+
                     if (_options != null)
                     {
                         _options.BeforeStart?.Invoke();
-                        IoCManager.Resolve<IConfigurationManagerInternal>()
-                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
                         if (_options.ExtraPrototypes != null)
                         {
@@ -448,6 +449,8 @@ namespace Robust.UnitTesting
                                 .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
                         }
                     }
+
+                    cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 

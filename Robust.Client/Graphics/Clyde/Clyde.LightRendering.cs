@@ -30,7 +30,6 @@ namespace Robust.Client.Graphics.Clyde
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
         // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
         private const int FovMapSize = 2048;
-        private const int MaxLightsPerScene = 128;
 
         private ClydeShaderInstance _fovDebugShaderInstance = default!;
 
@@ -85,11 +84,14 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
-        private readonly (PointLightComponent light, Vector2 pos)[] _lightsToRenderList
-            = new (PointLightComponent light, Vector2 pos)[MaxLightsPerScene];
+        private (PointLightComponent light, Vector2 pos, float distanceSquared)[] _lightsToRenderList = default!;
 
         private unsafe void InitLighting()
         {
+            // Ensure _lightsToRenderList is ready.
+            MaxLightsPerSceneChanged(_maxLightsPerScene);
+
+            // Other...
             LoadLightingShaders();
 
             {
@@ -160,7 +162,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Shadow FBO.
-            _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
+            _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, _maxLightsPerScene),
                 new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
                 nameof(_shadowRenderTarget));
@@ -352,7 +354,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     for (var i = 0; i < count; i++)
                     {
-                        var (light, lightPos) = lights[i];
+                        var (light, lightPos, _) = lights[i];
 
                         DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
                     }
@@ -390,7 +392,7 @@ namespace Robust.Client.Graphics.Clyde
 
             for (var i = 0; i < count; i++)
             {
-                var (component, lightPos) = lights[i];
+                var (component, lightPos, _) = lights[i];
 
                 var transform = component.Owner.Transform;
 
@@ -481,22 +483,15 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = true;
         }
 
-        private ((PointLightComponent light, Vector2 pos)[] lights, int count, Box2 expandedBounds)
+        private ((PointLightComponent light, Vector2 pos, float distanceSquared)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            // When culling occluders later, we can't just remove any occluders outside the worldBounds.
-            // As they could still affect the shadows of (large) light sources.
-            // We expand the world bounds so that it encompasses the center of every light source.
-            // This should make it so no culled occluder can make a difference.
-            // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
-            var expandedBounds = worldBounds;
-
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
             var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
 
-            var state = (this, expandedBounds, count: 0);
+            var state = (this, worldBounds, maximumDistanceSquared: -1f, count: 0);
 
-            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 expandedBounds, int count) state, in PointLightComponent light) =>
+            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, float maximumDistanceSquared, int count) state, in PointLightComponent light) =>
             {
                 var transform = light.Owner.Transform;
 
@@ -509,26 +504,69 @@ namespace Robust.Client.Graphics.Clyde
 
                 var circle = new Circle(lightPos, light.Radius);
 
-                if (!circle.Intersects(state.expandedBounds))
+                // If the light doesn't touch anywhere the camera can see, it doesn't matter.
+                if (!circle.Intersects(state.worldBounds))
                 {
                     return true;
                 }
 
-                state.clyde._lightsToRenderList[state.count] = (light, lightPos);
-                state.count += 1;
-
-                state.expandedBounds = state.expandedBounds.ExtendToContain(lightPos);
-
-                if (state.count == MaxLightsPerScene)
+                float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
+                var id = state.count;
+                if (state.count < _maxLightsPerScene)
                 {
-                    // TODO: Allow more than MaxLightsPerScene lights.
-                    return false;
+                    // Allocate IDs linearly if we have enough space for best performance.
+                    state.count += 1;
+                    if (state.maximumDistanceSquared < distanceSquared)
+                    {
+                        state.maximumDistanceSquared = distanceSquared;
+                    }
+                }
+                else
+                {
+                    // If that fails, start stealing slots from faraway lights.
+                    if (distanceSquared >= state.maximumDistanceSquared)
+                    {
+                        // It's not possible to find such a light.
+                        return true;
+                    }
+                    // It is possible: Which is it?
+                    var success = false;
+                    float successTarget = distanceSquared;
+                    for (var newId = 0; newId < _maxLightsPerScene; newId++)
+                    {
+                        if (state.clyde._lightsToRenderList[newId].distanceSquared >= successTarget)
+                        {
+                            success = true;
+                            id = newId;
+                            successTarget = state.clyde._lightsToRenderList[newId].distanceSquared;
+                        }
+                    }
+                    if (!success)
+                    {
+                        return true;
+                    }
+                    // Note: This leaves state.maximumDistanceSquared "too high". That's ok.
                 }
 
-                return true;
-            }, expandedBounds);
+                state.clyde._lightsToRenderList[id] = (light, lightPos, distanceSquared);
 
-            return (_lightsToRenderList, state.count, state.expandedBounds);
+                return true;
+            }, worldBounds);
+
+            // When culling occluders later, we can't just remove any occluders outside the worldBounds.
+            // As they could still affect the shadows of (large) light sources.
+            // We expand the world bounds so that it encompasses the center of every light source.
+            // This should make it so no culled occluder can make a difference.
+            // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
+            var expandedBounds = worldBounds;
+
+            for (var i = 0; i < state.count; i++)
+            {
+                var (_, lightPos, _) = _lightsToRenderList[i];
+                expandedBounds = expandedBounds.ExtendToContain(lightPos);
+            }
+
+            return (_lightsToRenderList, state.count, expandedBounds);
         }
 
         private void BlurOntoWalls(Viewport viewport, IEye eye)
@@ -965,6 +1003,12 @@ namespace Robust.Client.Graphics.Clyde
         {
             _lightmapDivider = newValue;
             RegenAllLightRts();
+        }
+
+        protected override void MaxLightsPerSceneChanged(int newValue)
+        {
+            _lightsToRenderList = new (PointLightComponent light, Vector2 pos, float distanceSquared)[newValue];
+            _maxLightsPerScene = newValue;
         }
 
         protected override void SoftShadowsChanged(bool newValue)

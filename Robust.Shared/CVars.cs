@@ -249,6 +249,9 @@ namespace Robust.Shared
         public static readonly CVarDef<int> DisplayLightMapDivider =
             CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<int> DisplayMaxLightsPerScene =
+            CVarDef.Create("display.maxlightsperscene", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 

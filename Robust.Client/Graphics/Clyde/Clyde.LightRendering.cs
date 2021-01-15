@@ -334,6 +334,14 @@ namespace Robust.Client.Graphics.Clyde
 
             DrawFov(viewport, eye);
 
+            if (!_lightManager.DrawLighting)
+            {
+                BindRenderTargetFull(viewport.RenderTarget);
+                GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
+                CheckGlError();
+                return;
+            }
+
             using (DebugGroup("Draw shadow depth"))
             {
                 PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
@@ -355,7 +363,7 @@ namespace Robust.Client.Graphics.Clyde
 
             BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             CheckGlError();
-            GLClearColor(Color.FromSrgb(AmbientLightColor));
+            GLClearColor(_lightManager.AmbientLightColor);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             CheckGlError();
 

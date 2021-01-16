@@ -55,9 +55,22 @@ namespace Robust.Client
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
+            _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged);
+
             _playMan.Initialize();
             _debugDrawMan.Initialize();
             Reset();
+        }
+
+        private void TickRateChanged(int tickrate)
+        {
+            if (GameInfo != null)
+            {
+                GameInfo.TickRate = (byte) tickrate;
+            }
+
+            _timing.TickRate = (byte) tickrate;
+            Logger.InfoS("client", $"Tickrate changed to: {tickrate}");
         }
 
         /// <inheritdoc />
@@ -119,11 +132,6 @@ namespace Robust.Client
             var maxPlayers = _configManager.GetCVar<int>("game.maxplayers");
             info.ServerMaxPlayers = maxPlayers;
 
-            var tickrate = _configManager.GetCVar<int>("net.tickrate");
-            info.TickRate = (byte) tickrate;
-            _timing.TickRate = (byte) tickrate;
-            Logger.InfoS("client", $"Tickrate changed to: {tickrate}");
-            
             var userName = _net.ServerChannel!.UserName;
             var userId = _net.ServerChannel.UserId;
             _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString());

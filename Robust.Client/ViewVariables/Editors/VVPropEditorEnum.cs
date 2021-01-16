@@ -14,14 +14,6 @@ namespace Robust.Client.ViewVariables.Editors
     {
         protected override Control MakeUI(object? value)
         {
-            if (value is ViewVariablesBlobMembers.ServerValueTypeToken typeToken)
-            {
-                return new Label
-                {
-                    Text = typeToken.ToString()
-                };
-            }
-
             DebugTools.Assert(value!.GetType().IsEnum);
             var enumType = value.GetType();
             var enumList = Enum.GetValues(enumType);

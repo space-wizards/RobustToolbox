@@ -94,10 +94,16 @@ namespace Robust.Shared.Configuration
         private void HandleNetVarMessage(MsgConVars message)
         {
             if(!_receivedInitialNwVars)
-                ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
+            {
+                _receivedInitialNwVars = true;
 
-            _receivedInitialNwVars = true;
-            _netVarsMessages.Add(message);
+                // apply the initial set immediately, so that they are available to
+                // for the rest of connection building
+                ApplyNetVarChange(message.MsgChannel, message.NetworkedVars);
+                ReceivedInitialNwVars?.Invoke(this, EventArgs.Empty);
+            }
+            else
+                _netVarsMessages.Add(message);
         }
 
         /// <inheritdoc />
@@ -292,7 +298,7 @@ namespace Robust.Shared.Configuration
             foreach (var cVar in _configVars.Values)
             {
                 if (!cVar.Registered)
-                    return nwVars;
+                    continue;
 
                 if ((cVar.Flags & CVar.REPLICATED) == 0)
                     continue;

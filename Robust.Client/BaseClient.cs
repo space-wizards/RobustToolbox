@@ -15,7 +15,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
 
 namespace Robust.Client
@@ -50,7 +49,6 @@ namespace Robust.Client
         /// <inheritdoc />
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
@@ -70,7 +68,7 @@ namespace Robust.Client
             }
 
             _timing.TickRate = (byte) tickrate;
-            Logger.InfoS("client", $"Tickrate changed to: {tickrate}");
+            Logger.InfoS("client", $"Tickrate changed to: {tickrate} on tick {_timing.CurTick}");
         }
 
         /// <inheritdoc />
@@ -200,12 +198,6 @@ namespace Robust.Client
             _mapManager.Shutdown();
             _discord.ClearPresence();
             Reset();
-        }
-
-        private void HandleSetTickRate(MsgSetTickRate message)
-        {
-            _timing.TickRate = message.NewTickRate;
-            Logger.InfoS("client", $"Tickrate changed to: {message.NewTickRate} on tick {_timing.CurTick}");
         }
 
         private void OnLocalStatusChanged(object? obj, StatusEventArgs eventArgs)

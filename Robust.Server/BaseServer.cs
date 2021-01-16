@@ -238,7 +238,6 @@ namespace Robust.Server
             {
                 netMan.Initialize(true);
                 netMan.StartServer();
-                netMan.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME);
             }
             catch (Exception e)
             {
@@ -468,7 +467,6 @@ namespace Robust.Server
                 _time.TickRate = b;
 
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
-                SendTickRateUpdateToClients(b);
             });
 
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
@@ -476,14 +474,6 @@ namespace Robust.Server
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
-        }
-
-        private void SendTickRateUpdateToClients(byte newTickRate)
-        {
-            var msg = _network.CreateNetMessage<MsgSetTickRate>();
-            msg.NewTickRate = newTickRate;
-
-            _network.ServerSendToAll(msg);
         }
 
         // called right before main loop returns, do all saving/cleanup in here

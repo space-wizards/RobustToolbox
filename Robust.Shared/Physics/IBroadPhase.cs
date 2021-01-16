@@ -4,8 +4,50 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics {
 
-    public interface IBroadPhase : IBroadPhase<IPhysBody> {
+    public interface IBroadPhase
+    {
+        // void UpdatePairs(BroadphaseDelegate callback);
 
+        bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
+
+        DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);
+
+        void RemoveProxy(DynamicTree.Proxy proxy);
+
+        void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
+            Box2 aabb,
+            bool approx = false);
+
+        void QueryAabb<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback,
+            Box2 aabb,
+            bool approx = false);
+
+        IEnumerable<FixtureProxy> QueryAabb(Box2 aabb, bool approx = false);
+
+        void QueryPoint(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
+            Vector2 point,
+            bool approx = false);
+
+        void QueryPoint<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback,
+            Vector2 point,
+            bool approx = false);
+
+        IEnumerable<FixtureProxy> QueryPoint(Vector2 point, bool approx = false);
+
+        void QueryRay(
+            DynamicTree<FixtureProxy>.RayQueryCallbackDelegate callback,
+            in Ray ray,
+            bool approx = false);
+
+        void QueryRay<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback,
+            in Ray ray,
+            bool approx = false);
     }
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {

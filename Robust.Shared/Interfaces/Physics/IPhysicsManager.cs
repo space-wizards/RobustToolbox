@@ -92,12 +92,6 @@ namespace Robust.Shared.Interfaces.Physics
         IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true);
 
         event Action<DebugRayData> DebugDrawRay;
-
-        bool Update(IPhysBody collider);
-
-        void RemovedFromMap(IPhysBody body, MapId mapId);
-        void AddedToMap(IPhysBody body, MapId mapId);
-        int SleepTimeThreshold { get; set; }
     }
 
     public struct DebugRayData

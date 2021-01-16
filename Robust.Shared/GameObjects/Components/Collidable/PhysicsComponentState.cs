@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects.Components
     {
         public readonly bool CanCollide;
         public readonly BodyStatus Status;
-        public readonly List<IPhysShape> PhysShapes;
+        public readonly List<Fixture> Fixtures;
         public readonly bool Hard;
 
 
@@ -21,31 +21,31 @@ namespace Robust.Shared.GameObjects.Components
         public readonly int Mass;
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
-        public readonly bool Anchored;
+        public readonly BodyType BodyType;
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="canCollide"></param>
         /// <param name="status"></param>
-        /// <param name="physShapes"></param>
+        /// <param name="fixtures"></param>
         /// <param name="hard"></param>
         /// <param name="mass">Current Mass of the entity.</param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="anchored">Whether or not the entity is anchored in place.</param>
-        public PhysicsComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
+        public PhysicsComponentState(bool canCollide, BodyStatus status, List<Fixture> fixtures, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, BodyType bodyType)
             : base(NetIDs.PHYSICS)
         {
             CanCollide = canCollide;
             Status = status;
-            PhysShapes = physShapes;
+            Fixtures = fixtures;
             Hard = hard;
 
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
-            Mass = (int)Math.Round(mass * 1000); // rounds kg to nearest gram
-            Anchored = anchored;
+            Mass = (int) Math.Round(mass * 1000); // rounds kg to nearest gram
+            BodyType = bodyType;
         }
     }
 }

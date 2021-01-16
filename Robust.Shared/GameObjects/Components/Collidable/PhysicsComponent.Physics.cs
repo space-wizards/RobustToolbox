@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
@@ -169,13 +175,10 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        private float _mass = 1;
         private float _angularMass = 1;
         private Vector2 _linVelocity;
-        private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
         private bool _anchored = true;
-        private float _friction = 1;
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -186,10 +189,15 @@ namespace Robust.Shared.GameObjects.Components
             get => _mass;
             set
             {
+                if (MathHelper.CloseTo(_mass, value))
+                    return;
+
                 _mass = value;
                 Dirty();
             }
         }
+
+        private float _mass;
 
         /// <summary>
         /// Inverse mass of the entity in kilograms (1 / Mass).
@@ -250,8 +258,16 @@ namespace Robust.Shared.GameObjects.Components
         public float Friction
         {
             get => _friction;
-            set => _friction = value;
+            set
+            {
+                if (MathHelper.CloseTo(value, _friction))
+                    return;
+
+                _friction = value;
+            }
         }
+
+        private float _friction;
 
         public void ApplyImpulse(Vector2 impulse)
         {
@@ -296,13 +312,15 @@ namespace Robust.Shared.GameObjects.Components
                 if (value != 0.0f)
                     Awake = true;
 
-                if (Math.Abs(_angVelocity - value) < 0.0001)
+                if (MathHelper.CloseTo(_angVelocity, value))
                     return;
 
                 _angVelocity = value;
                 Dirty();
             }
         }
+
+        private float _angVelocity;
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -505,6 +523,109 @@ namespace Robust.Shared.GameObjects.Components
 
             _controllers.Clear();
             Dirty();
+        }
+
+        /// <summary>
+        ///     Remove the proxies from all the broadphases.
+        /// </summary>
+        public void ClearProxies()
+        {
+            var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            var mapId = Owner.Transform.MapID;
+
+            foreach (var fixture in Fixtures)
+            {
+                foreach (var (gridId, proxies) in fixture.Proxies)
+                {
+                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                    DebugTools.AssertNotNull(broadPhase);
+                    if (broadPhase == null) continue; // TODO
+
+                    foreach (var proxy in proxies)
+                    {
+                        broadPhase.RemoveProxy(proxy.ProxyId);
+                    }
+                }
+
+                fixture.Proxies.Clear();
+            }
+        }
+
+        /// <summary>
+        ///     Calculate our AABB without using proxies.
+        /// </summary>
+        /// <returns></returns>
+        public Box2 GetWorldAABB()
+        {
+            var mapId = Owner.Transform.MapID;
+            if (mapId == MapId.Nullspace)
+                return new Box2();
+
+            var worldRotation = Owner.Transform.WorldRotation;
+            var bounds = new Box2();
+
+            foreach (var fixture in Fixtures)
+            {
+                var aabb = fixture.Shape.CalculateLocalBounds(worldRotation);
+                bounds = bounds.Union(aabb);
+            }
+
+            return bounds.Translated(Owner.Transform.WorldPosition);
+        }
+
+        /// <summary>
+        ///     Get the proxies for each of our fixtures and add them to the broadphases.
+        /// </summary>
+        /// <param name="mapManager"></param>
+        public void CreateProxies(IMapManager? mapManager = null)
+        {
+            DebugTools.Assert(Fixtures.Count(fix => fix.Proxies.Count != 0) == 0);
+
+            var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            var mapId = Owner.Transform.MapID;
+            var worldAABB = GetWorldAABB();
+            var worldRotation = Owner.Transform.WorldRotation.Theta;
+
+            foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
+            {
+                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                DebugTools.AssertNotNull(broadPhase);
+                if (broadPhase == null) continue; // TODO
+
+                Vector2 offset;
+                double gridRotation = worldRotation;
+
+                if (gridId == GridId.Invalid)
+                {
+                    offset = Vector2.Zero;
+                }
+                else
+                {
+                    var grid = mapManager.GetGrid(gridId);
+                    offset = -grid.WorldPosition;
+                    // TODO: Should probably have a helper for this
+                    gridRotation = worldRotation - Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                }
+
+                foreach (var fixture in Fixtures)
+                {
+                    var proxies = new FixtureProxy[1];
+                    // TODO: Will need update number with ProxyCount
+                    fixture.Proxies[gridId] = proxies;
+                    Box2 aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+
+                    var proxy = new FixtureProxy
+                    {
+                        Fixture = fixture,
+                        AABB =  aabb,
+                        ProxyId = DynamicTree.Proxy.Free,
+                    };
+
+                    proxy.ProxyId = broadPhase.AddProxy(ref proxies[0]);
+                    proxies[0] = proxy;
+                }
+            }
         }
 
         /// <inheritdoc />

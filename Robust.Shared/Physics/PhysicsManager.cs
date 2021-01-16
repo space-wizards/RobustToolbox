@@ -19,11 +19,6 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
-            new();
-
-        private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
-
         /// <summary>
         ///     returns true if collider intersects a physBody under management.
         /// </summary>
@@ -163,77 +158,6 @@ namespace Robust.Shared.Physics
             return true;
         }
 
-        /// <summary>
-        ///     Adds a physBody to the manager.
-        /// </summary>
-        /// <param name="physBody"></param>
-        public void AddBody(IPhysBody physBody)
-        {
-            if (!this[physBody.MapID].Add(physBody))
-            {
-                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Entity}");
-            }
-        }
-
-        /// <summary>
-        ///     Removes a physBody from the manager
-        /// </summary>
-        /// <param name="physBody"></param>
-        public void RemoveBody(IPhysBody physBody)
-        {
-            var removed = false;
-
-            if (physBody.Entity.Deleted || physBody.Entity.Transform.Deleted)
-            {
-                foreach (var mapId in _mapManager.GetAllMapIds())
-                {
-                    removed = this[mapId].Remove(physBody);
-
-                    if (removed)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (!removed)
-            {
-                try
-                {
-                    removed = this[physBody.MapID].Remove(physBody);
-                }
-                catch (InvalidOperationException)
-                {
-                    // TODO: TryGetMapId or something
-                    foreach (var mapId in _mapManager.GetAllMapIds())
-                    {
-                        removed = this[mapId].Remove(physBody);
-
-                        if (removed)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!removed)
-            {
-                foreach (var mapId in _mapManager.GetAllMapIds())
-                {
-                    removed = this[mapId].Remove(physBody);
-
-                    if (removed)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Entity.Uid}");
-        }
-
         /// <inheritdoc />
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
@@ -318,34 +242,5 @@ namespace Robust.Shared.Physics
         }
 
         public event Action<DebugRayData>? DebugDrawRay;
-
-        public bool Update(IPhysBody collider)
-        {
-            collider.WakeBody();
-            return this[collider.MapID].Update(collider);
-        }
-
-        public void RemovedFromMap(IPhysBody body, MapId mapId)
-        {
-            body.WakeBody();
-            this[mapId].Remove(body);
-        }
-
-        public void AddedToMap(IPhysBody body, MapId mapId)
-        {
-            body.WakeBody();
-            this[mapId].Add(body);
-        }
-
-        /// <summary>
-        /// How many ticks before a physics body will go to sleep. Bodies will only sleep if
-        /// they have no velocity.
-        /// </summary>
-        /// <remarks>
-        /// This is an arbitrary number greater than zero. To solve "locker stacks" that span multiple ticks,
-        /// this needs to be greater than one. Every time an entity collides or is moved, the body's <see cref="IPhysBody.SleepAccumulator"/>
-        /// goes back to zero.
-        /// </remarks>
-        public int SleepTimeThreshold { get; set; } = 2;
     }
 }

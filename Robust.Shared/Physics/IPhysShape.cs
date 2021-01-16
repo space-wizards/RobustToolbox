@@ -22,16 +22,6 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         Box2 CalculateLocalBounds(Angle rotation);
 
-        /// <summary>
-        /// Bitmask of the collision layers the component is a part of.
-        /// </summary>
-        int CollisionLayer { get; set; }
-
-        /// <summary>
-        ///  Bitmask of the layers this component collides with.
-        /// </summary>
-        int CollisionMask { get; set; }
-
         void ApplyState();
 
         void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent);

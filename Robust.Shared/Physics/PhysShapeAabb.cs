@@ -13,8 +13,6 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public class PhysShapeAabb : IPhysShape
     {
-        private int _collisionLayer;
-        private int _collisionMask;
         private Box2 _localBounds = Box2.UnitCentered;
 
         /// <summary>
@@ -27,30 +25,6 @@ namespace Robust.Shared.Physics
             set
             {
                 _localBounds = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            set
-            {
-                _collisionLayer = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            set
-            {
-                _collisionMask = value;
                 OnDataChanged?.Invoke();
             }
         }
@@ -82,8 +56,6 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
         }
     }

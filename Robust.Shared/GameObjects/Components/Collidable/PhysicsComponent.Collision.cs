@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -49,7 +50,6 @@ namespace Robust.Shared.GameObjects.Components
         private bool _canCollide;
         private bool _isHard;
         private BodyStatus _status;
-        private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -170,11 +170,6 @@ namespace Robust.Shared.GameObjects.Components
             Awake = true;
         }
 
-        public PhysicsComponent()
-        {
-            PhysicsShapes = new PhysShapeList(this);
-        }
-
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -185,7 +180,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
             // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
-            serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
+            serializer.DataField(ref _fixtures, "fixtures", new List<Fixture>());
             serializer.DataField(ref _anchored, "anchored", true);
 
             // TODO: Once anchored is just replaced with bodytype we can dump this
@@ -195,14 +190,14 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             serializer.DataField(ref _mass, "mass", 1.0f);
-            serializer.DataField(this, x => x.Awake, "awake", false);
-            serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
+            serializer.DataField(ref _awake, "awake", true);
+            serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
+            return new PhysicsComponentState(_canCollide, _status, _fixtures, _isHard, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -214,11 +209,11 @@ namespace Robust.Shared.GameObjects.Components
             _canCollide = newState.CanCollide;
             _status = newState.Status;
             _isHard = newState.Hard;
-            _physShapes = newState.PhysShapes;
+            _fixtures = newState.Fixtures;
 
-            foreach (var shape in _physShapes)
+            foreach (var fixture in _fixtures)
             {
-                shape.ApplyState();
+                fixture.Shape.ApplyState();
             }
 
             Dirty();
@@ -228,13 +223,7 @@ namespace Robust.Shared.GameObjects.Components
             LinearVelocity = newState.LinearVelocity;
             // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
             AngularVelocity = newState.AngularVelocity;
-            Anchored = newState.Anchored;
-            // TODO: Does it make sense to reset controllers here?
-            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
-            // Look man the CM test is in 5 hours cut me some slack.
-            //_controllers = null;
-            // Reset predict flag to false to avoid predicting stuff too long.
-            // Another possibly bad hack for content at the moment.
+            BodyType = newState.BodyType;
             Predict = false;
         }
 
@@ -255,13 +244,32 @@ namespace Robust.Shared.GameObjects.Components
         {
             get
             {
+                var mapManager = IoCManager.Resolve<IMapManager>();
                 var angle = Owner.Transform.WorldRotation;
+                var worldPos = Owner.Transform.WorldPosition;
                 var bounds = new Box2();
 
-                foreach (var shape in _physShapes)
+                foreach (var fixture in _fixtures)
                 {
-                    var shapeBounds = shape.CalculateLocalBounds(angle);
-                    bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                    foreach (var (gridId, proxies) in fixture.Proxies)
+                    {
+                        Vector2 offset;
+
+                        if (gridId == GridId.Invalid)
+                        {
+                            offset = Vector2.Zero;
+                        }
+                        else
+                        {
+                            offset = mapManager.GetGrid(gridId).WorldToLocal(worldPos);
+                        }
+
+                        foreach (var proxy in proxies)
+                        {
+                            var shapeBounds = proxy.AABB.Translated(offset).CalculateLocalBounds(angle);
+                            bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                        }
+                    }
                 }
 
                 return bounds;
@@ -270,7 +278,9 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables]
-        public IList<IPhysShape> PhysicsShapes { get; }
+        public List<Fixture> Fixtures => _fixtures;
+
+        private List<Fixture> _fixtures = new();
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -322,8 +332,8 @@ namespace Robust.Shared.GameObjects.Components
             {
                 var layers = 0x0;
 
-                foreach (var shape in _physShapes)
-                    layers = layers | shape.CollisionLayer;
+                foreach (var fixture in Fixtures)
+                    layers = layers | fixture.CollisionLayer;
                 return layers;
             }
         }
@@ -338,8 +348,8 @@ namespace Robust.Shared.GameObjects.Components
             {
                 var mask = 0x0;
 
-                foreach (var shape in _physShapes)
-                    mask = mask | shape.CollisionMask;
+                foreach (var fixture in Fixtures)
+                    mask = mask | fixture.CollisionMask;
                 return mask;
             }
         }
@@ -450,118 +460,6 @@ namespace Robust.Shared.GameObjects.Components
         public bool IsInAir()
         {
             return Status == BodyStatus.InAir;
-        }
-
-        private void ShapeDataChanged()
-        {
-            Dirty();
-            UpdatePhysicsTree();
-        }
-
-        // Custom IList<> implementation so that we can hook addition/removal of shapes.
-        // To hook into their OnDataChanged event correctly.
-        private sealed class PhysShapeList : IList<IPhysShape>
-        {
-            private readonly PhysicsComponent _owner;
-
-            public PhysShapeList(PhysicsComponent owner)
-            {
-                _owner = owner;
-            }
-
-            public IEnumerator<IPhysShape> GetEnumerator()
-            {
-                return _owner._physShapes.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            public void Add(IPhysShape item)
-            {
-                _owner._physShapes.Add(item);
-
-                ItemAdded(item);
-            }
-
-            public void Clear()
-            {
-                foreach (var item in _owner._physShapes)
-                {
-                    ItemRemoved(item);
-                }
-
-                _owner._physShapes.Clear();
-            }
-
-            public bool Contains(IPhysShape item)
-            {
-                return _owner._physShapes.Contains(item);
-            }
-
-            public void CopyTo(IPhysShape[] array, int arrayIndex)
-            {
-                _owner._physShapes.CopyTo(array, arrayIndex);
-            }
-
-            public bool Remove(IPhysShape item)
-            {
-                var found = _owner._physShapes.Remove(item);
-
-                if (found)
-                {
-                    ItemRemoved(item);
-                }
-
-                return found;
-            }
-
-            public int Count => _owner._physShapes.Count;
-            public bool IsReadOnly => false;
-
-            public int IndexOf(IPhysShape item)
-            {
-                return _owner._physShapes.IndexOf(item);
-            }
-
-            public void Insert(int index, IPhysShape item)
-            {
-                _owner._physShapes.Insert(index, item);
-                ItemAdded(item);
-            }
-
-            public void RemoveAt(int index)
-            {
-                var item = _owner._physShapes[index];
-                ItemRemoved(item);
-
-                _owner._physShapes.RemoveAt(index);
-            }
-
-            public IPhysShape this[int index]
-            {
-                get => _owner._physShapes[index];
-                set
-                {
-                    var oldItem = _owner._physShapes[index];
-                    ItemRemoved(oldItem);
-
-                    _owner._physShapes[index] = value;
-                    ItemAdded(value);
-                }
-            }
-
-            private void ItemAdded(IPhysShape item)
-            {
-                _owner.ShapeAdded(item);
-            }
-
-            public void ItemRemoved(IPhysShape item)
-            {
-                _owner.ShapeRemoved(item);
-            }
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Log;
@@ -14,6 +14,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using IConsoleCommand = Robust.Client.Interfaces.Console.IConsoleCommand;
 
 namespace Robust.Client.Console
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Robust.Shared.Console;
@@ -6,7 +6,7 @@ using Robust.Shared.Console;
 namespace Robust.Shared.Configuration
 {
     [SuppressMessage("ReSharper", "StringLiteralTypo")]
-    internal abstract class SharedCVarCommand : ICommand
+    internal abstract class SharedCVarCommand : IConsoleCommand
     {
         public string Command => "cvar";
         public string Description => "Gets or sets a CVar.";

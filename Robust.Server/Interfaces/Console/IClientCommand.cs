@@ -1,4 +1,4 @@
-﻿using Robust.Server.Interfaces.Player;
+using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
 
 namespace Robust.Server.Interfaces.Console
@@ -6,7 +6,7 @@ namespace Robust.Server.Interfaces.Console
     /// <summary>
     ///     A command, executed from the debug console of a client.
     /// </summary>
-    public interface IClientCommand : ICommand
+    public interface IClientCommand : IConsoleCommand
     {
         /// <summary>
         /// Executes the client command.

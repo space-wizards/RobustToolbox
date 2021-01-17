@@ -2,7 +2,7 @@ using Robust.Shared.Console;
 
 namespace Robust.Client.Interfaces.Console
 {
-    public interface IConsoleCommand : ICommand
+    public interface IConsoleCommand : Shared.Console.IConsoleCommand
     {
         /// <summary>
         /// Executes the command

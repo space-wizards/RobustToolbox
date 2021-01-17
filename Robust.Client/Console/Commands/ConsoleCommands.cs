@@ -1,4 +1,4 @@
-﻿// This file is for commands that do something to the console itself.
+// This file is for commands that do something to the console itself.
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 
@@ -8,6 +8,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using IConsoleCommand = Robust.Client.Interfaces.Console.IConsoleCommand;
 
 namespace Robust.Client.Console.Commands
 {

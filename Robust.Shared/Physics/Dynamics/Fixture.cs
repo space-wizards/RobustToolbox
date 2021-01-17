@@ -17,11 +17,11 @@ namespace Robust.Shared.Physics
     public class Fixture : IFixture, IExposeData
     {
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
-        public Dictionary<GridId, FixtureProxy[]> Proxies = new();
+        public Dictionary<GridId, FixtureProxy[]> Proxies;
 
         public IPhysShape Shape { get; private set; } = default!;
 
-        public IPhysicsComponent Body { get; private set; } = default!;
+        public PhysicsComponent Body { get; private set; } = default!;
 
         /// <summary>
         ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
@@ -30,7 +30,20 @@ namespace Robust.Shared.Physics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        public bool Hard { get; set; }
+        public bool Hard
+        {
+            get => _hard;
+            set
+            {
+                if (_hard == value)
+                    return;
+
+                _hard = value;
+                Body.FixtureChanged(this);
+            }
+        }
+
+        private bool _hard;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -44,6 +57,7 @@ namespace Robust.Shared.Physics
                     return;
 
                 _collisionLayer = value;
+                Body.FixtureChanged(this);
             }
         }
 
@@ -57,56 +71,42 @@ namespace Robust.Shared.Physics
             get => _collisionMask;
             set
             {
-                if (value == _collisionMask)
+                if (_collisionMask == value)
                     return;
 
                 _collisionMask = value;
+                Body.FixtureChanged(this);
             }
         }
 
         private int _collisionMask;
 
-        public Fixture(IPhysicsComponent body)
+        public Fixture(PhysicsComponent body, IPhysShape shape)
         {
             Body = body;
+            Shape = shape;
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
+        }
+
+        public Fixture(IPhysShape shape)
+        {
+            Shape = shape;
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
+        }
+
+        public Fixture()
+        {
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
         }
 
         public void ExposeData(ObjectSerializer serializer)
         {
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
+            serializer.DataField(this, x => x.Shape, "shape", new PhysShapeAabb());
+            serializer.DataField(ref _hard, "hard", true);
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-        }
-
-        public void Startup()
-        {
-            // TODO: Compute proxies and add to broadphases.
-        }
-
-        public void Shutdown()
-        {
-            foreach (var (gridId, proxies) in Proxies)
-            {
-
-            }
-
-            // TODO: Remove from broadphase
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     Test whether a point is contained in this fixture in world-space.
-        /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public bool TestPoint(Vector2 point)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RayCast()
-        {
-            throw new NotImplementedException();
+            Body.FixtureChanged(this);
         }
     }
 }

@@ -16,6 +16,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects.EntitySystems
@@ -57,7 +58,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
         {
             var gridId = ev.Coordinates.GetGridId(_entityManager);
-            
+
             if (!_mapManager.GridExists(gridId))
             {
                 Logger.Error(
@@ -146,7 +147,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

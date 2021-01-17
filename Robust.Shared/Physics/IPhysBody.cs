@@ -26,8 +26,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         Box2 AABB { get; }
 
-        IList<IPhysShape> PhysicsShapes { get; }
-
         /// <summary>
         /// Whether or not this body can collide.
         /// </summary>
@@ -139,5 +137,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <returns>True if this body can move, false if it is static.</returns>
         bool CanMove();
+
+        IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

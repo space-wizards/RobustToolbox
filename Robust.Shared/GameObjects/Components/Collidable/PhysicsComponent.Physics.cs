@@ -178,7 +178,6 @@ namespace Robust.Shared.GameObjects.Components
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
-        private bool _anchored = true;
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -363,18 +362,23 @@ namespace Robust.Shared.GameObjects.Components
         [Obsolete("Use BodyType.Static instead")]
         public bool Anchored
         {
-            get => _anchored;
+            get => BodyType == BodyType.Static;
             set
             {
-                if (_anchored == value)
+                var anchored = BodyType == BodyType.Static;
+
+                if (anchored == value)
                     return;
 
                 if (value)
                 {
                     _bodyType = BodyType.Static;
                 }
+                else
+                {
+                    _bodyType = BodyType.Dynamic;
+                }
 
-                _anchored = value;
                 AnchoredChanged?.Invoke();
                 SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
@@ -551,6 +555,13 @@ namespace Robust.Shared.GameObjects.Components
             }
         }
 
+        public void FixtureChanged(Fixture fixture)
+        {
+            // TODO: Optimise this a LOT
+            Dirty();
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+        }
+
         /// <summary>
         ///     Calculate our AABB without using proxies.
         /// </summary>
@@ -626,6 +637,11 @@ namespace Robust.Shared.GameObjects.Components
                     proxies[0] = proxy;
                 }
             }
+        }
+
+        IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
+        {
+            return EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, offset, approx);
         }
 
         /// <inheritdoc />

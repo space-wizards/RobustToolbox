@@ -31,7 +31,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public virtual IPhysicsComponent? ControlledComponent { protected get; set; }
+        public virtual PhysicsComponent? ControlledComponent { protected get; set; }
 
         /// <summary>
         ///     Tries to set this controller's linear velocity to zero.

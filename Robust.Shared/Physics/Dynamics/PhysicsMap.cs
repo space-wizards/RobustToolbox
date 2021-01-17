@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    internal sealed class PhysicsMap
+    public sealed class PhysicsMap
     {
         // AKA world.
 

@@ -19,32 +19,6 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        /// <summary>
-        ///     returns true if collider intersects a physBody under management.
-        /// </summary>
-        /// <param name="collider">Rectangle to check for collision</param>
-        /// <param name="map">Map ID to filter</param>
-        /// <returns></returns>
-        public bool TryCollideRect(Box2 collider, MapId map)
-        {
-            var state = (collider, map, found: false);
-            this[map].QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in IPhysBody body) =>
-            {
-                if (!body.CanCollide || body.CollisionLayer == 0x0)
-                    return true;
-
-                if (body.MapID == state.map &&
-                    body.WorldAABB.Intersects(state.collider))
-                {
-                    state.found = true;
-                    return false;
-                }
-                return true;
-            }, collider, true);
-
-            return state.found;
-        }
-
         public bool IsWeightless(EntityCoordinates coordinates)
         {
             var gridId = coordinates.GetGridId(_entityManager);
@@ -92,57 +66,7 @@ namespace Robust.Shared.Physics
             return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
         }
 
-        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
-        {
-            var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();
-            var entities = new List<IEntity>();
-
-            var state = (physBody, modifiers, entities);
-
-            this[physBody.MapID].QueryAabb(ref state,
-                (ref (IPhysBody physBody, IEnumerable<ICollideSpecial> modifiers, List<IEntity> entities) state,
-                    in IPhysBody body) =>
-            {
-                if (body.Entity.Deleted) {
-                    return true;
-                }
-
-                if (CollidesOnMask(state.physBody, body))
-                {
-                    var preventCollision = false;
-                    var otherModifiers = body.Entity.GetAllComponents<ICollideSpecial>();
-                    foreach (var modifier in state.modifiers)
-                    {
-                        preventCollision |= modifier.PreventCollide(body);
-                    }
-                    foreach (var modifier in otherModifiers)
-                    {
-                        preventCollision |= modifier.PreventCollide(state.physBody);
-                    }
-
-                    if (preventCollision)
-                    {
-                        return true;
-                    }
-                    state.entities.Add(body.Entity);
-                }
-                return true;
-            }, physBody.WorldAABB, approximate);
-
-            return entities;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
-        {
-            return this[mapId].QueryAabb(worldBox, false);
-        }
-
-        public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
-        {
-            return GetCollidingEntities(body, offset, approximate).Any();
-        }
-
+        [Obsolete("Use fixture masks and layers instead")]
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
@@ -157,90 +81,5 @@ namespace Robust.Shared.Physics
 
             return true;
         }
-
-        /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
-        {
-            List<RayCastResults> results = new();
-
-            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
-            {
-
-                if (returnOnFirstHit && results.Count > 0) return true;
-
-                if (distFromOrigin > maxLength)
-                {
-                    return true;
-                }
-
-                if (!body.CanCollide)
-                {
-                    return true;
-                }
-
-                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
-                {
-                    return true;
-                }
-
-                if (predicate != null && predicate.Invoke(body.Entity))
-                {
-                    return true;
-                }
-
-                var result = new RayCastResults(distFromOrigin, point, body.Entity);
-                results.Add(result);
-                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
-                return true;
-            }, ray);
-            if (results.Count == 0)
-            {
-                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
-            }
-
-            results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
-            return results;
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
-
-        /// <inheritdoc />
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
-        {
-            var penetration = 0f;
-
-            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
-            {
-                if (distFromOrigin > maxLength)
-                {
-                    return true;
-                }
-
-                if (!body.CanCollide)
-                {
-                    return true;
-                }
-
-                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
-                {
-                    return true;
-                }
-
-                if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
-                    body.WorldAABB, out _, out var exitPoint))
-                {
-                    penetration += (point - exitPoint).Length;
-                }
-                return true;
-            }, ray);
-
-            return penetration;
-        }
-
-        public event Action<DebugRayData>? DebugDrawRay;
     }
 }

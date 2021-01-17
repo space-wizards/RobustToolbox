@@ -2,15 +2,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
@@ -31,24 +36,17 @@ namespace Robust.Shared.GameObjects.Components
         bool PreventCollide(IPhysBody collidedwith);
     }
 
+    // TODO: Remove.
     public partial interface IPhysicsComponent : IComponent, IPhysBody
     {
         public new bool Hard { get; set; }
-        bool IsColliding(Vector2 offset, bool approximate = true);
-
-        IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);
-        bool UpdatePhysicsTree();
-
-        void RemovedFromPhysicsTree(MapId mapId);
-        void AddedToPhysicsTree(MapId mapId);
     }
 
-    public partial class PhysicsComponent : Component, IPhysicsComponent
+    public partial class PhysicsComponent : Component
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private bool _canCollide;
-        private bool _isHard;
         private BodyStatus _status;
 
         /// <inheritdoc />
@@ -87,11 +85,11 @@ namespace Robust.Shared.GameObjects.Components
                 if (_bodyType == value)
                     return;
 
+                var oldAnchored = _bodyType == BodyType.Static;
                 _bodyType = value;
-                var oldAnchored = _anchored;
-                _anchored = _bodyType == BodyType.Static;
+                var anchored = _bodyType == BodyType.Static;
 
-                if (oldAnchored != _anchored)
+                if (oldAnchored != anchored)
                 {
                     AnchoredChanged?.Invoke();
                     SendMessage(new AnchoredChangedMessage(Anchored));
@@ -176,18 +174,16 @@ namespace Robust.Shared.GameObjects.Components
             base.ExposeData(serializer);
 
             serializer.DataField(ref _canCollide, "on", true);
-            serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
             // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(ref _fixtures, "fixtures", new List<Fixture>());
-            serializer.DataField(ref _anchored, "anchored", true);
 
-            // TODO: Once anchored is just replaced with bodytype we can dump this
-            if (_anchored)
+            // TODO: Dump someday
+            serializer.DataReadFunction("anchored", true, value =>
             {
-                _bodyType = BodyType.Static;
-            }
+                BodyType = value ? BodyType.Static : BodyType.Dynamic;
+            });
 
             serializer.DataField(ref _mass, "mass", 1.0f);
             serializer.DataField(ref _awake, "awake", true);
@@ -197,7 +193,14 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_canCollide, _status, _fixtures, _isHard, _mass, LinearVelocity, AngularVelocity, BodyType);
+            var fixtureData = new List<FixtureData>();
+
+            foreach (var fixture in _fixtures)
+            {
+                fixtureData.Add(FixtureData.From(fixture));
+            }
+
+            return new PhysicsComponentState(_canCollide, _status, fixtureData, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -208,16 +211,23 @@ namespace Robust.Shared.GameObjects.Components
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
-            _isHard = newState.Hard;
-            _fixtures = newState.Fixtures;
 
             foreach (var fixture in _fixtures)
             {
+                RemoveFixture(fixture);
+            }
+
+            DebugTools.Assert(_fixtures.Count == 0);
+
+            foreach (var data in newState.Fixtures)
+            {
+                Fixture fixture = FixtureData.To(data);
+                AddFixture(fixture);
                 fixture.Shape.ApplyState();
             }
 
             Dirty();
-            UpdateEntityTree();
+            // TODO: Should transform just be doing this??? UpdateEntityTree();
             Mass = newState.Mass / 1000f; // gram to kilogram
 
             LinearVelocity = newState.LinearVelocity;
@@ -266,7 +276,7 @@ namespace Robust.Shared.GameObjects.Components
 
                         foreach (var proxy in proxies)
                         {
-                            var shapeBounds = proxy.AABB.Translated(offset).CalculateLocalBounds(angle);
+                            var shapeBounds = proxy.AABB.Translated(offset);
                             bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
                         }
                     }
@@ -278,7 +288,7 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables]
-        public List<Fixture> Fixtures => _fixtures;
+        public IReadOnlyList<Fixture> Fixtures => _fixtures;
 
         private List<Fixture> _fixtures = new();
 
@@ -296,14 +306,14 @@ namespace Robust.Shared.GameObjects.Components
 
                 _canCollide = value;
 
-                Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
                 Dirty();
             }
         }
 
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
-        ///     while still raising collision events.
+        ///     while still raising collision events. Recommended you use the fixture hard values directly
         /// </summary>
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
@@ -311,14 +321,21 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Hard
         {
-            get => _isHard;
+            get
+            {
+                foreach (var fixture in Fixtures)
+                {
+                    if (fixture.Hard) return true;
+                }
+
+                return false;
+            }
             set
             {
-                if (_isHard == value)
-                    return;
-
-                _isHard = value;
-                Dirty();
+                foreach (var fixture in Fixtures)
+                {
+                    fixture.Hard = value;
+                }
             }
         }
 
@@ -333,7 +350,7 @@ namespace Robust.Shared.GameObjects.Components
                 var layers = 0x0;
 
                 foreach (var fixture in Fixtures)
-                    layers = layers | fixture.CollisionLayer;
+                    layers |= fixture.CollisionLayer;
                 return layers;
             }
         }
@@ -349,7 +366,7 @@ namespace Robust.Shared.GameObjects.Components
                 var mask = 0x0;
 
                 foreach (var fixture in Fixtures)
-                    mask = mask | fixture.CollisionMask;
+                    mask |= fixture.CollisionMask;
                 return mask;
             }
         }
@@ -359,19 +376,6 @@ namespace Robust.Shared.GameObjects.Components
         {
             base.Initialize();
 
-            // normally ExposeData would create this
-            if (_physShapes == null)
-            {
-                _physShapes = new List<IPhysShape> {new PhysShapeAabb()};
-            }
-            else
-            {
-                foreach (var shape in _physShapes)
-                {
-                    ShapeAdded(shape);
-                }
-            }
-
             foreach (var controller in _controllers.Values)
             {
                 controller.ControlledComponent = this;
@@ -379,7 +383,7 @@ namespace Robust.Shared.GameObjects.Components
 
             Dirty();
             // Yeah yeah TODO Combine these
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
 
             if (CanCollide)
             {
@@ -387,70 +391,41 @@ namespace Robust.Shared.GameObjects.Components
             }
         }
 
+        public void AddFixture(Fixture fixture)
+        {
+            // TODO: SynchronizeFixtures could be more optimally done. Maybe just eventbus it
+            // Also we need to queue updates and also not teardown completely every time.
+            _fixtures.Add(fixture);
+            Dirty();
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+        }
+
+        public void RemoveFixture(Fixture fixture)
+        {
+            if (!_fixtures.Remove(fixture))
+            {
+                Logger.WarningS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
+                return;
+            }
+
+            Dirty();
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+        }
+
+        public bool UpdatePhysicsTree()
+        {
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+            return true;
+        }
+
         public override void OnRemove()
         {
             base.OnRemove();
 
-            // In case somebody starts sharing shapes across multiple components I guess?
-            foreach (var shape in _physShapes)
-            {
-                ShapeRemoved(shape);
-            }
-
             // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, false));
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
         }
-
-        private void ShapeAdded(IPhysShape shape)
-        {
-            shape.OnDataChanged += ShapeDataChanged;
-        }
-
-        private void ShapeRemoved(IPhysShape item)
-        {
-            item.OnDataChanged -= ShapeDataChanged;
-        }
-
-        /// <inheritdoc />
-        protected override void Startup()
-        {
-            base.Startup();
-            _physicsManager.AddBody(this);
-        }
-
-        /// <inheritdoc />
-        protected override void Shutdown()
-        {
-            RemoveControllers();
-            _physicsManager.RemoveBody(this);
-            base.Shutdown();
-        }
-
-        public bool IsColliding(Vector2 offset, bool approx = true)
-        {
-            return _physicsManager.IsColliding(this, offset, approx);
-        }
-
-        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approx = true)
-        {
-            return _physicsManager.GetCollidingEntities(this, offset, approx);
-        }
-
-        public bool UpdatePhysicsTree()
-            => _physicsManager.Update(this);
-
-        public void RemovedFromPhysicsTree(MapId mapId)
-        {
-            _physicsManager.RemovedFromMap(this, mapId);
-        }
-
-        public void AddedToPhysicsTree(MapId mapId)
-        {
-            _physicsManager.AddedToMap(this, mapId);
-        }
-
-        private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
 
         public bool IsOnGround()
         {

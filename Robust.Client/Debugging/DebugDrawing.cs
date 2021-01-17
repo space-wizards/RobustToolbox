@@ -182,9 +182,9 @@ namespace Robust.Client.Debugging
                     if (!worldBox.Intersects(in viewport) || worldBox.IsEmpty())
                         continue;
 
-                    foreach (var shape in physBody.PhysicsShapes)
+                    foreach (var fixture in comp.Fixtures)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, MathF.Max(0.0f, 1.0f - comp.SleepTime / sleepThreshold));
+                        fixture.Shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, MathF.Max(0.0f, 1.0f - comp.SleepTime / sleepThreshold));
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

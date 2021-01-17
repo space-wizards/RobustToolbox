@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -14,7 +16,8 @@ namespace Robust.Shared.Physics.Dynamics
     internal sealed class ContactManager
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+
+        private SharedBroadPhaseSystem _broadPhase = default!;
 
         // Large parts of this will be deprecated as more stuff gets ported.
         // For now it's more or less a straight port of the existing code.
@@ -25,6 +28,7 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _broadPhase = EntitySystem.Get<SharedBroadPhaseSystem>();
         }
 
         // At some point the below will be changed to go through contact bodies instead.
@@ -52,11 +56,11 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                foreach (var bodyB in _physicsManager.GetCollidingEntities(bodyA, Vector2.Zero, false))
+                foreach (var bodyB in _broadPhase.GetCollidingEntities(bodyA, Vector2.Zero, false))
                 {
                     anyContacts = true;
                     var aUid = bodyA.Entity.Uid;
-                    var bUid = bodyB.Uid;
+                    var bUid = bodyB.Owner.Uid;
 
                     if (bUid.CompareTo(aUid) > 0)
                     {
@@ -68,10 +72,9 @@ namespace Robust.Shared.Physics.Dynamics
                     if (!combinations.Add((aUid, bUid))) continue;
 
                     // TODO: Do we need to add one to each? eh!
-                    var bPhysics = bodyB.GetComponent<PhysicsComponent>();
                     var contact =
                         new Contact(
-                        new Manifold(bodyA, bPhysics, bPhysics.Hard && bPhysics.Hard));
+                        new Manifold(bodyA, bodyB, bodyA.Hard && bodyB.Hard));
 
                     bodyA.ContactEdges.Add(new ContactEdge(contact));
 

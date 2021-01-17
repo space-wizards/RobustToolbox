@@ -102,15 +102,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
 
-        /// <summary>
-        ///     Run the updates marked as deferred (UpdateEntityTree and movement events).
-        ///     Don't call this unless you REALLY need to.
-        /// </summary>
-        /// <remarks>
-        ///    Physics optimisation so these aren't spammed during physics updates.
-        /// </remarks>
-        void RunPhysicsDeferred();
-
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }
         IEnumerable<EntityUid> ChildEntityUids { get; }

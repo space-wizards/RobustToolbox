@@ -14,6 +14,7 @@ namespace Robust.Shared.GameObjects.Systems
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
 
         public override void Initialize()

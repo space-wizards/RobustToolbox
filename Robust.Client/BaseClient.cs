@@ -174,6 +174,7 @@ namespace Robust.Client
 
         private void Reset()
         {
+            _configManager.ClearReceivedInitialNwVars();
             OnRunLevelChanged(ClientRunLevel.Initialize);
         }
 

@@ -54,6 +54,12 @@ namespace Robust.Shared.Configuration
         /// </summary>
         void FlushMessages();
 
+        /// <summary>
+        ///     Clears internal flag for <see cref="ReceivedInitialNwVars"/>.
+        ///     Must be called upon disconnect.
+        /// </summary>
+        void ClearReceivedInitialNwVars();
+
         public event EventHandler ReceivedInitialNwVars;
     }
 
@@ -77,7 +83,7 @@ namespace Robust.Shared.Configuration
                 _netManager.Connected += PeerConnected;
                 _netManager.Disconnect += PeerDisconnected;
             }
-            
+
             _netManager.RegisterNetMessage<MsgConVars>(MsgConVars.NAME, HandleNetVarMessage);
         }
 
@@ -141,7 +147,7 @@ namespace Robust.Shared.Configuration
 
             _netVarsMessages.Clear();
         }
-        
+
         private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
         {
             Logger.DebugS("cfg", "Handling replicated cvars...");
@@ -289,6 +295,11 @@ namespace Robust.Shared.Configuration
             msg.Tick = _timing.CurTick;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ClientSendMessage(msg);
+        }
+
+        public void ClearReceivedInitialNwVars()
+        {
+            _receivedInitialNwVars = false;
         }
 
         private List<(string name, object value)> GetReplicatedVars()

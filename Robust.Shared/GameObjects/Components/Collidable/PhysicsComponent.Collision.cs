@@ -42,6 +42,8 @@ namespace Robust.Shared.GameObjects.Components
         public new bool Hard { get; set; }
     }
 
+    // TODO: Merge IPhysBody and IPhysicsComponent
+    [ComponentReference(typeof(IPhysicsComponent))]
     public partial class PhysicsComponent : Component
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
@@ -177,12 +179,19 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
             // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
-            serializer.DataField(ref _fixtures, "fixtures", new List<Fixture>());
+            serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), fixtures =>
+            {
+                foreach (var fixture in fixtures)
+                {
+                    fixture.Body = this;
+                    _fixtures.Add(fixture);
+                }
+            }, () => Fixtures);
 
             // TODO: Dump someday
             serializer.DataReadFunction("anchored", true, value =>
             {
-                BodyType = value ? BodyType.Static : BodyType.Dynamic;
+                _bodyType = value ? BodyType.Static : BodyType.Dynamic;
             });
 
             serializer.DataField(ref _mass, "mass", 1.0f);
@@ -212,7 +221,7 @@ namespace Robust.Shared.GameObjects.Components
             _canCollide = newState.CanCollide;
             _status = newState.Status;
 
-            foreach (var fixture in _fixtures)
+            foreach (var fixture in _fixtures.ToArray())
             {
                 RemoveFixture(fixture);
             }
@@ -222,6 +231,7 @@ namespace Robust.Shared.GameObjects.Components
             foreach (var data in newState.Fixtures)
             {
                 Fixture fixture = FixtureData.To(data);
+                fixture.Body = this;
                 AddFixture(fixture);
                 fixture.Shape.ApplyState();
             }
@@ -271,7 +281,7 @@ namespace Robust.Shared.GameObjects.Components
                         }
                         else
                         {
-                            offset = mapManager.GetGrid(gridId).WorldToLocal(worldPos);
+                            offset = mapManager.GetGrid(gridId).WorldPosition;
                         }
 
                         foreach (var proxy in proxies)
@@ -282,7 +292,8 @@ namespace Robust.Shared.GameObjects.Components
                     }
                 }
 
-                return bounds;
+                // Get it back in local-space.
+                return bounds.Translated(-worldPos);
             }
         }
 
@@ -397,7 +408,7 @@ namespace Robust.Shared.GameObjects.Components
             // Also we need to queue updates and also not teardown completely every time.
             _fixtures.Add(fixture);
             Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this));
         }
 
         public void RemoveFixture(Fixture fixture)
@@ -455,6 +466,16 @@ namespace Robust.Shared.GameObjects.Components
         public PhysicsUpdateMessage(PhysicsComponent component)
         {
             Component = component;
+        }
+    }
+
+    public sealed class FixtureUpdateMessage : EntitySystemMessage
+    {
+        public PhysicsComponent Body { get; }
+
+        public FixtureUpdateMessage(PhysicsComponent body)
+        {
+            Body = body;
         }
     }
 }

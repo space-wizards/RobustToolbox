@@ -657,8 +657,9 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
+            // TODO: Need pvs refactor to fix this shit
             if (ent.TryGetComponent(out IPhysicsComponent? collider))
-                return collider.WorldAABB;
+                return new Box2(new Vector2(-0.5f, -0.5f) + ent.Transform.WorldPosition, new Vector2(0.5f, 0.5f) + ent.Transform.WorldPosition);
 
             var pos = ent.Transform.WorldPosition;
             return new Box2(pos, pos);

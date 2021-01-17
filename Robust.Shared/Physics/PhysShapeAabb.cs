@@ -24,6 +24,9 @@ namespace Robust.Shared.Physics
             get => _localBounds;
             set
             {
+                if (_localBounds == value)
+                    return;
+
                 _localBounds = value;
                 OnDataChanged?.Invoke();
             }

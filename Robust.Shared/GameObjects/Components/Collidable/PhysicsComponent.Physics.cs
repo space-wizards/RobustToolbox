@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -594,6 +595,7 @@ namespace Robust.Shared.GameObjects.Components
 
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             mapManager ??= IoCManager.Resolve<IMapManager>();
+            var worldPosition = Owner.Transform.WorldPosition;
             var mapId = Owner.Transform.MapID;
             var worldAABB = GetWorldAABB();
             var worldRotation = Owner.Transform.WorldRotation.Theta;
@@ -604,17 +606,13 @@ namespace Robust.Shared.GameObjects.Components
                 DebugTools.AssertNotNull(broadPhase);
                 if (broadPhase == null) continue; // TODO
 
-                Vector2 offset;
+                Vector2 offset = worldPosition;
                 double gridRotation = worldRotation;
 
-                if (gridId == GridId.Invalid)
-                {
-                    offset = Vector2.Zero;
-                }
-                else
+                if (gridId != GridId.Invalid)
                 {
                     var grid = mapManager.GetGrid(gridId);
-                    offset = -grid.WorldPosition;
+                    offset -= grid.WorldPosition;
                     // TODO: Should probably have a helper for this
                     gridRotation = worldRotation - Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                 }
@@ -626,15 +624,11 @@ namespace Robust.Shared.GameObjects.Components
                     fixture.Proxies[gridId] = proxies;
                     Box2 aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-                    var proxy = new FixtureProxy
-                    {
-                        Fixture = fixture,
-                        AABB =  aabb,
-                        ProxyId = DynamicTree.Proxy.Free,
-                    };
+                    var proxy = new FixtureProxy(aabb, fixture);
 
-                    proxy.ProxyId = broadPhase.AddProxy(ref proxies[0]);
+                    proxy.ProxyId = broadPhase.AddProxy(ref proxy);
                     proxies[0] = proxy;
+                    DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
                 }
             }
         }

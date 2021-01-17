@@ -9,15 +9,18 @@ using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Debugging
@@ -163,8 +166,9 @@ namespace Robust.Client.Debugging
                 var viewport = _eyeManager.GetWorldViewport();
 
                 var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
-
-                foreach (var comp in _componentManager.EntityQuery<PhysicsComponent>(true))
+                var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity;
+                if (player == null) return;
+                foreach (var comp in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(player.Transform.MapID, viewport))
                 {
                     var physBody = (IPhysBody) comp;
 

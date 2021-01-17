@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -18,7 +19,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Broadphase
 {
-    public sealed class SharedBroadPhaseSystem : EntitySystem
+    public abstract class SharedBroadPhaseSystem : EntitySystem
     {
         /*
          * That's right both the system implements IBroadPhase and also each grid has its own as well.
@@ -37,7 +38,9 @@ namespace Robust.Shared.Physics.Broadphase
 
         private Queue<EntMapIdChangedMessage> _queuedMapChanges = new();
 
-        public event Action<DebugRayData>? DebugDrawRay;
+        private Queue<FixtureUpdateMessage> _queuedFixtureUpdates = new();
+
+        private Queue<CollisionChangeMessage> _queuedCollisionChanges = new();
 
         private IEnumerable<IBroadPhase> BroadPhases()
         {
@@ -52,10 +55,11 @@ namespace Robust.Shared.Physics.Broadphase
 
         public IBroadPhase? GetBroadPhase(MapId mapId, GridId gridId)
         {
-            if (mapId == MapId.Nullspace)
+            // Might be null if the grid is being instantiated.
+            if (mapId == MapId.Nullspace || !_graph[mapId].TryGetValue(gridId, out var grid))
                 return null;
 
-            return _graph[mapId][gridId];
+            return grid;
         }
 
         // Look for now I've hardcoded grids
@@ -88,24 +92,37 @@ namespace Robust.Shared.Physics.Broadphase
             SubscribeLocalEvent<CollisionChangeMessage>(HandleCollisionChange);
             SubscribeLocalEvent<MoveEvent>(HandlePhysicsMove);
             SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
+            SubscribeLocalEvent<FixtureUpdateMessage>(HandleFixtureUpdate);
             _mapManager.OnGridCreated += HandleGridCreated;
             _mapManager.OnGridRemoved += HandleGridRemoval;
             _mapManager.MapCreated += HandleMapCreated;
-            UpdatesBefore.Add(typeof(SharedPhysicsSystem));
         }
 
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
 
-            if (_queuedMapChanges.Count > 0)
+            while (_queuedCollisionChanges.Count > 0)
             {
-                Logger.Debug($"Handling MapId changes for {_queuedMapChanges.Count} entities");
+                var message = _queuedCollisionChanges.Dequeue();
+                if (message.CanCollide && !message.Body.Deleted)
+                {
+                    AddBody(message.Body);
+                }
+                else
+                {
+                    RemoveBody(message.Body);
+                }
             }
 
             while (_queuedMapChanges.Count > 0)
             {
                 HandleMapChange(_queuedMapChanges.Dequeue());
+            }
+
+            while (_queuedFixtureUpdates.Count > 0)
+            {
+                SynchronizeFixtures(_queuedFixtureUpdates.Dequeue().Body);
             }
         }
 
@@ -115,6 +132,7 @@ namespace Robust.Shared.Physics.Broadphase
             UnsubscribeLocalEvent<CollisionChangeMessage>();
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+            UnsubscribeLocalEvent<FixtureUpdateMessage>();
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.MapCreated -= HandleMapCreated;
@@ -130,19 +148,17 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleCollisionChange(CollisionChangeMessage message)
         {
-            if (message.CanCollide && !message.Body.Deleted)
-            {
-                AddBody(message.Body);
-            }
-            else
-            {
-                RemoveBody(message.Body);
-            }
+            _queuedCollisionChanges.Enqueue(message);
         }
 
         private void QueueMapChange(EntMapIdChangedMessage message)
         {
             _queuedMapChanges.Enqueue(message);
+        }
+
+        private void HandleFixtureUpdate(FixtureUpdateMessage message)
+        {
+            _queuedFixtureUpdates.Enqueue(message);
         }
 
         /// <summary>
@@ -278,7 +294,7 @@ namespace Robust.Shared.Physics.Broadphase
         {
             var mapId = component.Owner.Transform.MapID;
 
-            if (mapId == MapId.Nullspace)
+            if (mapId == MapId.Nullspace || component.Deleted)
             {
                 component.ClearProxies();
                 return;
@@ -297,6 +313,16 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             component.CreateProxies();
+
+            foreach (var fixture in component.Fixtures)
+            {
+                foreach (var (gridId, _) in fixture.Proxies)
+                {
+                    var broadPhase = GetBroadPhase(mapId, gridId);
+                    if (broadPhase == null) continue;
+                    _lastBroadPhases[component].Add(broadPhase);
+                }
+            }
         }
 
         private GridId GetGridId(IBroadPhase broadPhase)
@@ -382,27 +408,25 @@ namespace Robust.Shared.Physics.Broadphase
                             (ref (PhysicsComponent body, IEnumerable<ICollideSpecial> modifiers, List<PhysicsComponent> entities) state,
                                 in FixtureProxy other) =>
                             {
-                                if (body.Owner.Deleted)
+                                if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
+                                if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
+
+                                var preventCollision = false;
+                                var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
+
+                                foreach (var modifier in state.modifiers)
+                                {
+                                    preventCollision |= modifier.PreventCollide(other.Fixture.Body);
+                                }
+                                foreach (var modifier in otherModifiers)
+                                {
+                                    preventCollision |= modifier.PreventCollide(body);
+                                }
+
+                                if (preventCollision)
                                     return true;
 
-                                if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) != 0)
-                                {
-                                    var preventCollision = false;
-                                    var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
-                                    foreach (var modifier in state.modifiers)
-                                    {
-                                        preventCollision |= modifier.PreventCollide(other.Fixture.Body);
-                                    }
-                                    foreach (var modifier in otherModifiers)
-                                    {
-                                        preventCollision |= modifier.PreventCollide(body);
-                                    }
-
-                                    if (preventCollision)
-                                        return true;
-
-                                    state.entities.Add((PhysicsComponent) body);
-                                }
+                                state.entities.Add(other.Fixture.Body);
                                 return true;
                             }, proxy.AABB, approximate);
                     }
@@ -515,14 +539,18 @@ namespace Robust.Shared.Physics.Broadphase
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, point + offset, proxy.Fixture.Body.Entity);
                     results.Add(result);
-                    DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
+                    EntityManager.EventBus.QueueEvent(EventSource.Local,
+                        new DebugDrawRayMessage(
+                            new DebugRayData(ray, maxLength, result)));
                     return true;
                 }, gridRay);
             }
 
             if (results.Count == 0)
             {
-                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
+                EntityManager.EventBus.QueueEvent(EventSource.Local,
+                    new DebugDrawRayMessage(
+                        new DebugRayData(ray, maxLength, null)));
             }
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));

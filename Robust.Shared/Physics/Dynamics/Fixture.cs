@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics
 {
     public interface IFixture
     {
         // TODO
     }
 
-    [Serializable, NetSerializable]
     public class Fixture : IFixture, IExposeData
     {
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
@@ -21,7 +19,7 @@ namespace Robust.Shared.Physics
 
         public IPhysShape Shape { get; private set; } = default!;
 
-        public PhysicsComponent Body { get; private set; } = default!;
+        public PhysicsComponent Body { get; internal set; } = default!;
 
         /// <summary>
         ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
@@ -106,7 +104,6 @@ namespace Robust.Shared.Physics
             serializer.DataField(ref _hard, "hard", true);
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-            Body.FixtureChanged(this);
         }
     }
 }

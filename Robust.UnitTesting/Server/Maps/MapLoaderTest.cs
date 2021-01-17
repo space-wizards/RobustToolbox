@@ -36,9 +36,10 @@ entities:
     type: Transform
   - index: 0
     type: MapGrid
-  - shapes:
-    - !type:PhysShapeGrid
-      grid: 0
+  - fixtures:
+    - shape:
+        !type:PhysShapeGrid
+          grid: 0
     type: Physics
 - uid: 1
   type: MapDeserializeTest

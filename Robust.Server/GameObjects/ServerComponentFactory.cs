@@ -73,6 +73,8 @@ namespace Robust.Server.GameObjects
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif
+
+            Register<MapSaveIdComponent>();
         }
     }
 }

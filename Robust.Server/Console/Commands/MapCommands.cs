@@ -5,6 +5,7 @@ using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Server.Maps;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -111,7 +112,7 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
-        public string Help => "loadbp <MapID> <Path>";
+        public string Help => "loadbp <MapID> <Path> [storeUids]";
 
         public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
@@ -141,8 +142,14 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
+            var loadOptions = new MapLoadOptions();
+            if (args.Length > 2)
+            {
+                loadOptions.StoreMapUids = bool.Parse(args[2]);
+            }
+
             var mapLoader = IoCManager.Resolve<IMapLoader>();
-            mapLoader.LoadBlueprint(mapId, args[1]);
+            mapLoader.LoadBlueprint(mapId, args[1], loadOptions);
         }
     }
 

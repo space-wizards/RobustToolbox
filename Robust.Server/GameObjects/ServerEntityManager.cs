@@ -7,6 +7,7 @@ using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -24,7 +25,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal, IEntityEventSubscriber
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
@@ -157,7 +158,7 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick, true));
+                stateEntities.Add(GetEntityState(session, ComponentManager, entity.Uid, fromTick, true));
             }
 
             if (session != null)
@@ -278,12 +279,12 @@ namespace Robust.Server.GameObjects
                     return;
                 }
 
-                state = GetEntityState(ComponentManager, entity.Uid, lastSeen);
+                state = GetEntityState(player, ComponentManager, entity.Uid, lastSeen);
             }
             // Never before seen entity
             else
             {
-                state = GetEntityState(ComponentManager, entity.Uid, fromTick, true);
+                state = GetEntityState(player, ComponentManager, entity.Uid, fromTick, true);
             }
 
             data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
@@ -356,33 +357,45 @@ namespace Robust.Server.GameObjects
             EntitySystemManager.Initialize();
             _lookupSystem = EntitySystem.Get<EntityLookupSystem>();
             Started = true;
+            EventBus.SubscribeEvent<PlayerAttachSystemMessage>(EventSource.Local, this, msg =>
+            {
+                // Force sync player-specific states.
+                foreach (var comp in msg.Entity.GetAllComponents())
+                {
+                    if (comp.PlayerOnlyState) comp.Dirty();
+                }
+            });
         }
 
         /// <summary>
-        /// Generates a network entity state for the given entity.
+        ///     Generates a network entity state for the given entity.
         /// </summary>
+        /// <param name="session">The player we're retrieving a state for.</param>
         /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <param name="newEntity"></param>
         /// <returns>New entity State for the given entity.</returns>
-        public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity=false)
+        public EntityState GetEntityState(IPlayerSession? session, IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity=false)
         {
-            // TODO: Being able to send a state to only one person
-            /*
-             * So how I was thinking of doing it is you need a bool flag on the component to indicate this.
-             * Then if the bool is set you need to
-             * a) Always call Dirty on PlayerAttached / PlayerDetached (best way to do this easily? NFI)
-             * b) Check for this flag below here (probably just need to pass in the player session to this method too)
-             */
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 
             var lastTick = newEntity ? GameTick.Zero : fromTick;
 
+            IPlayerSession? entitySession = null;
+
+            if (TryGetEntity(entityUid, out var entity))
+            {
+                entitySession = entity.PlayerSession();
+            }
+
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(comp.Initialized);
+
+                // If only the relevant person gets the state then we'll filter it out.
+                if (comp.PlayerOnlyState && entitySession != session) continue;
 
                 // TODO: This comment is a lie as A) It's being set to Tick 1 and B) Client throws
 

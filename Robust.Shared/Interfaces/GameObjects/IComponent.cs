@@ -34,7 +34,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Whether the Owner has been paused.
         /// </summary>
         bool Paused { get; }
-        
+
+        /// <summary>
+        ///     If set to true only an attached player will receive states.
+        /// </summary>
+        bool PlayerOnlyState { get; set; }
+
         /// <summary>
         ///     Whether the client should synchronize component additions and removals.
         ///     If this is false and the component gets added or removed server side, the client will not do the same.

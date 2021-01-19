@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,7 +6,6 @@ using Prometheus;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -488,7 +486,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysicsComponent>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -505,7 +503,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent(out IPhysicsComponent? component))
             {
-                if (component.WorldAABB.Contains(mapPosition))
+                if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
             }
             else
@@ -551,7 +549,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysicsComponent>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
@@ -601,7 +599,11 @@ namespace Robust.Shared.GameObjects
 
             if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
             {
-                entTree = EntityTreeFactory();
+                entTree = new DynamicTree<IEntity>(
+                    GetWorldAabbFromEntity,
+                    capacity: 16,
+                    growthFunc: x => x == 16 ? 3840 : x + 256
+                );
                 _entityTreesPerMap.Add(mapId, entTree);
             }
 
@@ -645,21 +647,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static DynamicTree<IEntity> EntityTreeFactory() =>
-            new(
-                GetWorldAabbFromEntity,
-                capacity: 16,
-                growthFunc: x => x == 16 ? 3840 : x + 256
-            );
-
-        protected static Box2 GetWorldAabbFromEntity(in IEntity ent)
+        protected Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            // TODO: Need pvs refactor to fix this shit
             if (ent.TryGetComponent(out IPhysicsComponent? collider))
-                return new Box2(new Vector2(-0.5f, -0.5f) + ent.Transform.WorldPosition, new Vector2(0.5f, 0.5f) + ent.Transform.WorldPosition);
+                return collider.GetWorldAABB(_mapManager);
 
             var pos = ent.Transform.WorldPosition;
             return new Box2(pos, pos);

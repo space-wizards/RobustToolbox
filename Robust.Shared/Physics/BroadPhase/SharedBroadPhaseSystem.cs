@@ -410,6 +410,18 @@ namespace Robust.Shared.Physics.Broadphase
 
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
+            // If the body has just had its collision enabled or disabled it may not be ready yet so we'll wait a tick.
+            if (!body.CanCollide || body.Owner.Transform.MapID == MapId.Nullspace)
+            {
+                return Array.Empty<PhysicsComponent>();
+            }
+
+            // Unfortunately due to the way grids are currently created we have to queue CanCollide event changes, hence we need to do this here.
+            if (!_lastBroadPhases.ContainsKey(body))
+            {
+                AddBody(body);
+            }
+
             var modifiers = body.Entity.GetAllComponents<ICollideSpecial>();
             var entities = new List<PhysicsComponent>();
 

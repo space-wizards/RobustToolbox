@@ -59,6 +59,8 @@ namespace Robust.Shared.Physics.Broadphase
         {
             var proxyA = _tree.GetUserData(proxyIdA);
             var proxyB = _tree.GetUserData(proxyIdB);
+
+            if (proxyA == null || proxyB == null) return false;
             if (proxyA.Fixture.Body.Owner.Transform.GridID != proxyB.Fixture.Body.Owner.Transform.GridID) return false;
 
             return proxyA.AABB.Intersects(proxyB.AABB);
@@ -84,7 +86,7 @@ namespace Robust.Shared.Physics.Broadphase
             _tree.MoveProxy(proxy, aabb, displacement);
         }
 
-        public FixtureProxy GetProxy(DynamicTree.Proxy proxy)
+        public FixtureProxy? GetProxy(DynamicTree.Proxy proxy)
         {
             return _tree.GetUserData(proxy);
         }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -19,7 +20,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        Box2 WorldAABB { get; }
+        Box2 GetWorldAABB(IMapManager? mapManager = null);
 
         /// <summary>
         ///     AABB of this entity in local space.

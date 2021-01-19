@@ -179,7 +179,7 @@ namespace Robust.Client.Debugging
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
                         continue;
 
-                    var worldBox = physBody.WorldAABB;
+                    var worldBox = physBody.GetWorldAABB();
                     var colorEdge = Color.Red.WithAlpha(0.33f);
 
                     // if not on screen, or too small, continue

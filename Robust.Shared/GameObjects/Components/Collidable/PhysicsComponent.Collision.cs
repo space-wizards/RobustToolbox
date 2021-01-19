@@ -117,11 +117,11 @@ namespace Robust.Shared.GameObjects.Components
                 if (_awake)
                 {
                     // TODO: Lot more farseer shit here
-                    Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
                 else
                 {
-                    Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
 
                 _linVelocity = Vector2.Zero;
@@ -247,15 +247,36 @@ namespace Robust.Shared.GameObjects.Components
             Predict = false;
         }
 
-        /// <inheritdoc />
-        [ViewVariables]
-        Box2 IPhysBody.WorldAABB
+        // TODO: Move me
+        public Box2 GetWorldAABB(IMapManager? mapManager = null)
         {
-            get
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            var bounds = new Box2();
+
+            foreach (var fixture in _fixtures)
             {
-                var pos = Owner.Transform.WorldPosition;
-                return ((IPhysBody) this).AABB.Translated(pos);
+                foreach (var (gridId, proxies) in fixture.Proxies)
+                {
+                    Vector2 offset;
+
+                    if (gridId == GridId.Invalid)
+                    {
+                        offset = Vector2.Zero;
+                    }
+                    else
+                    {
+                        offset = mapManager.GetGrid(gridId).WorldPosition;
+                    }
+
+                    foreach (var proxy in proxies)
+                    {
+                        var shapeBounds = proxy.AABB.Translated(offset);
+                        bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                    }
+                }
             }
+
+            return bounds;
         }
 
         /// <inheritdoc />
@@ -317,7 +338,7 @@ namespace Robust.Shared.GameObjects.Components
 
                 _canCollide = value;
 
-                Owner.EntityManager.EventBus.QueueEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
                 Dirty();
             }
         }

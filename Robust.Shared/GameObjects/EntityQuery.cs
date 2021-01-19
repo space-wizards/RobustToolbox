@@ -124,7 +124,7 @@ namespace Robust.Shared.GameObjects
         {
             if(Entity.TryGetComponent<IPhysicsComponent>(out var physics))
             {
-                return physics.MapID == entity.Transform.MapID && physics.WorldAABB.Contains(entity.Transform.WorldPosition);
+                return physics.MapID == entity.Transform.MapID && physics.GetWorldAABB().Contains(entity.Transform.WorldPosition);
             }
             return false;
         }

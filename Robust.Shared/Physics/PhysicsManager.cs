@@ -41,27 +41,27 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
-            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            var manifold = target.GetWorldAABB().Intersect(source.GetWorldAABB());
             if (manifold.IsEmpty()) return Vector2.Zero;
             if (manifold.Height > manifold.Width)
             {
                 // X is the axis of seperation
-                var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
-                var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
+                var leftDist = source.GetWorldAABB().Right - target.GetWorldAABB().Left;
+                var rightDist = target.GetWorldAABB().Right - source.GetWorldAABB().Left;
                 return new Vector2(leftDist > rightDist ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
-                var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
-                var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
+                var bottomDist = source.GetWorldAABB().Top - target.GetWorldAABB().Bottom;
+                var topDist = target.GetWorldAABB().Top - source.GetWorldAABB().Bottom;
                 return new Vector2(0, bottomDist > topDist ? 1 : -1);
             }
         }
 
         public float CalculatePenetration(IPhysBody target, IPhysBody source)
         {
-            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            var manifold = target.GetWorldAABB().Intersect(source.GetWorldAABB());
             if (manifold.IsEmpty()) return 0.0f;
             return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
         }

@@ -149,6 +149,9 @@ namespace Robust.Shared.Physics.Dynamics
                 _contactSolver.SolveVelocityConstraints();
             }
 
+            var maxLinVelocity = _configManager.GetCVar(CVars.MaxLinVelocity);
+            var maxAngVelocity = _configManager.GetCVar(CVars.MaxAngVelocity);
+
             // Integrate positions
             for (var i = 0; i < BodyCount; i++)
             {
@@ -163,7 +166,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 // TODO: Maxtranslation.
                 var translation = linearVelocity * frameTime;
-                if (Vector2.Dot(translation, translation) > 4.0f)
+                if (Vector2.Dot(translation, translation) > maxLinVelocity)
                 {
                     var ratio = 4.0f / translation.Length;
                     linearVelocity *= ratio;
@@ -171,7 +174,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 // TODO: This as well
                 var rotation = angularVelocity * frameTime;
-                if (rotation * rotation > (0.5f * MathF.PI))
+                if (rotation * rotation > maxAngVelocity)
                 {
                     var ratio = 2.0f / MathF.Abs(rotation);
                     angularVelocity *= ratio;
@@ -294,7 +297,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void ProcessTileFriction(IPhysicsComponent body, ref Vector2 linearVelocity, ref float angularVelocity, float deltaTime)
         {
-            if (body.LinearVelocity == Vector2.Zero) return;
+            if (linearVelocity == Vector2.Zero) return;
 
             // sliding friction coefficient, and current gravity at current location
             var (friction, gravity) = GetTileFriction(body);
@@ -309,12 +312,12 @@ namespace Robust.Shared.Physics.Dynamics
             var fVelocity = fAcceleration * deltaTime;
 
             // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(fVelocity, body.LinearVelocity.Length);
+            friction = Math.Min(fVelocity, linearVelocity.Length);
 
             if (friction == 0.0f) return;
 
             // No multiplication/division by mass here since that would be redundant.
-            var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
+            var frictionVelocityChange = linearVelocity.Normalized * -friction;
 
             linearVelocity += frictionVelocityChange;
             // TODO Angular

@@ -98,6 +98,8 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// </summary>
         GridId GridID { get; }
 
+        bool UpdateEntityTree();
+
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);

@@ -743,7 +743,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private bool UpdatePhysicsTree() =>
             Owner.TryGetComponent(out PhysicsComponent? collider) && collider.UpdatePhysicsTree();
 
-        private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
+        public bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
 
         public string GetDebugString()
         {

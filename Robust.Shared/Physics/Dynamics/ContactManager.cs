@@ -38,8 +38,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="map"></param>
         public void Collide(PhysicsMap map, bool prediction, float frameTime)
         {
-            // TODO: Farseer seems to only sleep in islands, though static bodies can't get added to islands so what if it's removed?
-            var noContacts = new HashSet<PhysicsComponent>();
             var timeToSleep = _configManager.GetCVar(CVars.TimeToSleep);
 
             var combinations = new HashSet<(EntityUid, EntityUid)>();
@@ -48,17 +46,13 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var bodyA in bodies)
             {
-                var anyContacts = prediction;
-
                 if (bodyA.BodyType == BodyType.Static)
                 {
-                    noContacts.Add(bodyA);
                     continue;
                 }
 
                 foreach (var bodyB in _broadPhase.GetCollidingEntities(bodyA, Vector2.Zero, false))
                 {
-                    anyContacts = true;
                     var aUid = bodyA.Entity.Uid;
                     var bUid = bodyB.Owner.Uid;
 
@@ -79,20 +73,6 @@ namespace Robust.Shared.Physics.Dynamics
                     bodyA.ContactEdges.Add(new ContactEdge(contact));
 
                     ContactList.Add(contact);
-                }
-
-                if (!anyContacts)
-                {
-                    noContacts.Add(bodyA);
-                }
-            }
-
-            foreach (var body in noContacts)
-            {
-                body.SleepTime += frameTime;
-                if (body.SleepTime >= timeToSleep)
-                {
-                    body.Awake = false;
                 }
             }
         }

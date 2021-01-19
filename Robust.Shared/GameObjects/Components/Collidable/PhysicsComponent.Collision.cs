@@ -87,6 +87,7 @@ namespace Robust.Shared.GameObjects.Components
                 if (_bodyType == value)
                     return;
 
+                Awake = false;
                 var oldAnchored = _bodyType == BodyType.Static;
                 _bodyType = value;
                 var anchored = _bodyType == BodyType.Static;
@@ -101,6 +102,7 @@ namespace Robust.Shared.GameObjects.Components
 
         private BodyType _bodyType;
 
+        // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables]
         public bool Awake
@@ -407,6 +409,11 @@ namespace Robust.Shared.GameObjects.Components
         public override void Initialize()
         {
             base.Initialize();
+
+            if (BodyType == BodyType.Static)
+            {
+                _awake = false;
+            }
 
             foreach (var controller in _controllers.Values)
             {

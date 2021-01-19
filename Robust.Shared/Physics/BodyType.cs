@@ -9,11 +9,7 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public enum BodyType : byte
     {
-        /// <summary>
-        ///     Will not be processed by the collision system. Basically "out of phase" with the world.
-        ///     They will not raise collision events. Forces are still applied to the body, and it can move.
-        /// </summary>
-        None,
+        Kinematic,
 
         /// <summary>
         ///     Static objects have infinite mass and cannot be moved by forces or collisions. They are solid,
@@ -26,11 +22,5 @@ namespace Robust.Shared.Physics
         ///     you use for movable objects in the game.
         /// </summary>
         Dynamic,
-
-        /// <summary>
-        ///     Trigger objects cannot be moved by collisions or forces. They are not solid and won't block objects.
-        ///     Collision events will still be raised.
-        /// </summary>
-        Trigger,
     }
 }

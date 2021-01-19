@@ -32,8 +32,11 @@ namespace Robust.Server.GameObjects
             get => _enabled;
             set
             {
-                _enabled = value;
-                Dirty();
+                if (_enabled != value)
+                {
+                    _enabled = value;
+                    Dirty();
+                }
             }
         }
 

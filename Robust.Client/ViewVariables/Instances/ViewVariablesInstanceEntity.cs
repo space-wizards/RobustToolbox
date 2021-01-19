@@ -8,6 +8,7 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -51,7 +52,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         private bool _serverLoaded;
 
-        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IResourceCache resCache, IEntityManager entityManager) : base(vvm, resCache)
+        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IEntityManager entityManager, IRobustSerializer robustSerializer) : base(vvm, robustSerializer)
         {
             _entityManager = entityManager;
         }
@@ -117,7 +118,7 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.SetTabTitle(TabClientVars, "Client Variables");
 
             var first = true;
-            foreach (var group in LocalPropertyList(obj, ViewVariablesManager, _resourceCache))
+            foreach (var group in LocalPropertyList(obj, ViewVariablesManager, _robustSerializer))
             {
                 ViewVariablesTraitMembers.CreateMemberGroupHeader(
                     ref first,
@@ -202,7 +203,7 @@ namespace Robust.Client.ViewVariables.Instances
                     button.Visible = false;
                     continue;
                 }
-                
+
                 button.Visible = true;
             }
         }
@@ -231,7 +232,7 @@ namespace Robust.Client.ViewVariables.Instances
                     button.Visible = false;
                     continue;
                 }
-                
+
                 if (!button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
                 {
                     button.Visible = false;
@@ -314,7 +315,7 @@ namespace Robust.Client.ViewVariables.Instances
 
                 foreach (var propertyData in groupMembers)
                 {
-                    var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
+                    var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _robustSerializer);
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
                     var editor = propertyEdit.SetProperty(propertyData);
                     var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
@@ -328,7 +329,7 @@ namespace Robust.Client.ViewVariables.Instances
             var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
 
             _serverComponents.DisposeAllChildren();
-            
+
             _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
             {
                 PlaceHolder = Loc.GetString("Search"),
@@ -336,7 +337,7 @@ namespace Robust.Client.ViewVariables.Instances
             });
 
             _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
-            
+
             componentsBlob.ComponentTypes.Sort();
 
             var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();

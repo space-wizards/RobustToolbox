@@ -189,15 +189,17 @@ namespace Robust.Server.ServerStatus
             _listener!.Stop();
         }
 
+        #pragma warning disable CS0649
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
             [JsonProperty("engine_version")] public string EngineVersion = default!;
             [JsonProperty("hash")] public string? Hash;
-            [JsonProperty("download")] public string? Download;
+            [JsonProperty("download")] public string? Download = default;
             [JsonProperty("fork_id")] public string ForkId = default!;
             [JsonProperty("version")] public string Version = default!;
         }
+        #pragma warning restore CS0649
 
         private sealed class ContextImpl : IStatusHandlerContext
         {

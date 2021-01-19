@@ -14,45 +14,7 @@ namespace Robust.Shared
             // On .NET Framework this doesn't need to run because:
             // On Windows, the DLL names should check out correctly to just work.
             // On Linux/macOS, Mono's DllMap handles it for us.
-#if NETCOREAPP
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // DLL names should line up on Windows by default.
-                // So a hook won't do anything.
-                return;
-            }
-
-            NativeLibrary.SetDllImportResolver(assembly, (name, _, __) =>
-            {
-                if (name == $"{baseName}.dll")
-                {
-                    var assemblyDir = Path.GetDirectoryName(assembly.Location);
-
-                    if (assemblyDir == null)
-                    {
-                        return IntPtr.Zero;
-                    }
-
-                    string libName;
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        libName = $"lib{baseName}.so";
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    {
-                        libName = $"lib{baseName}.dylib";
-                    }
-                    else
-                    {
-                        throw new NotSupportedException();
-                    }
-
-                    return NativeLibrary.Load(Path.Combine(assemblyDir, libName));
-                }
-
-                return IntPtr.Zero;
-            });
-#endif
+            RegisterExplicitMap(assembly, $"{baseName}.dll", $"lib{baseName}.so", $"lib{baseName}.dylib");
         }
 
         [Conditional("NETCOREAPP")]
@@ -62,32 +24,24 @@ namespace Robust.Shared
             // On Windows, the DLL names should check out correctly to just work.
             // On Linux/macOS, Mono's DllMap handles it for us.
 #if NETCOREAPP
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            NativeLibrary.SetDllImportResolver(assembly, (name, assembly, path) =>
             {
-                // DLL names should line up on Windows by default.
-                // So a hook won't do anything.
-                return;
-            }
-
-            NativeLibrary.SetDllImportResolver(assembly, (name, _, __) =>
-            {
-                if (name == baseName)
+                // Please keep in sync with what GLFWNative does.
+                // This particular API is only really used by the MIDI instruments stuff in SS14 right now,
+                //  which means when it breaks people don't notice or report.
+                if (name != baseName)
                 {
-                    string libName;
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        libName = linuxName;
-                    }
-                    else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-                    {
-                        libName = macName;
-                    }
-                    else
-                    {
-                        throw new NotSupportedException();
-                    }
+                    return IntPtr.Zero;
+                }
 
-                    return NativeLibrary.Load(libName);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    return NativeLibrary.Load(linuxName, assembly, path);
+                }
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    return NativeLibrary.Load(macName, assembly, path);
                 }
 
                 return IntPtr.Zero;

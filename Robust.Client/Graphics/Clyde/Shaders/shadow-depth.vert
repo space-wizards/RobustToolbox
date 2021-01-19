@@ -11,10 +11,8 @@ attribute vec4 aPos;
 // x: deflection(0=A/1=B) y: height
 attribute vec2 subVertex;
 
-// xy: A, zw: B
-varying vec4 fragPos;
-// x: actual angle, y: horizontal (1) / vertical (-1)
-varying vec2 fragAngle;
+// x: actual angle, y: line angle + 90 degrees, z: Distance at y
+varying vec3 fragControl;
 
 // Note: This is *not* the standard projectionMatrix!
 uniform vec2 shadowLightCentre;
@@ -70,8 +68,19 @@ void main()
         }
     }
 
-    fragPos = vec4(pA, pB);
-    fragAngle = vec2(mix(xA, xB, subVertex.x), abs(pA.x - pB.x) - abs(pA.y - pB.y));
+    float targetAngle = mix(xA, xB, subVertex.x);
+
+    // Calculate the necessary control data for the fragment shader.
+    vec2 lineNormal = pB - pA; // hypothetical: <- would have negative X, zero Y
+    lineNormal /= length(lineNormal);
+    fragControl = vec3(
+        // Angle
+        targetAngle,
+        // Angle Out
+        atan(lineNormal.x, lineNormal.y),
+        // Distance @ Angle Out
+        dot(vec2(lineNormal.y, -lineNormal.x), pA)
+    );
 
     // Depth divide MUST be implemented here no matter what,
     //  because GLES SL 1.00 doesn't have gl_FragDepth.
@@ -79,5 +88,5 @@ void main()
     //  and we don't really need to have correction
     float zbufferDepth = 1.0 - (1.0 / (length(mix(pA, pB, subVertex.x)) + DEPTH_ZBUFFER_PREDIV_BIAS));
 
-    gl_Position = vec4(mix(xA, xB, subVertex.x) / PI, mix(1.0, -1.0, subVertex.y), zbufferDepth, 1.0);
+    gl_Position = vec4(targetAngle / PI, mix(1.0, -1.0, subVertex.y), zbufferDepth, 1.0);
 }

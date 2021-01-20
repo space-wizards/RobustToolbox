@@ -187,7 +187,7 @@ namespace Robust.Client.Graphics.Clyde
                     // which is necessary for light application,
                     // but it's ACTUALLY drawing into the center of the render target.
                     var spritePos = entry.sprite.Owner.Transform.WorldPosition;
-                    var screenPos = _eyeManager.WorldToScreen(spritePos);
+                    var screenPos = viewport.WorldToScreen(spritePos);
                     var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
                     var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
                     flippedPos -= EntityPostRenderTarget.Size / 2;

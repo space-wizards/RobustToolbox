@@ -90,7 +90,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (Viewport.Eye == null)
                 return (0, 0);
 
-            var eye = (IEye) Viewport.Eye;
+            var eye = Viewport.Eye;
             var newPoint = point;
 
             eye.GetViewMatrix(out var viewMatrix);

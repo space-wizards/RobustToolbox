@@ -127,7 +127,7 @@ namespace Robust.Shared.Prototypes
             {
                 var value = GetFieldValue(compType, fieldDefinition, values);
                 if(value == null) continue;
-                fieldDefinition.SetValue(comp, value);
+                fieldDefinition.SetValue(comp, IDeepClone.CloneValue(value));
             }
         }
 

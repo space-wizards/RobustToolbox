@@ -162,7 +162,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             _stateDirty = true;
         }
 
-        
+
         /// <summary>
         ///     Switches between closed and open for a specific client.
         /// </summary>
@@ -183,8 +183,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             }
         }
 
-        
-        
+
+
         /// <summary>
         ///     Opens this interface for a specific client.
         /// </summary>
@@ -263,6 +263,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);
+            session.PlayerStatusChanged -= OnSessionOnPlayerStatusChanged;
 
             if (_subscribedSessions.Count == 0)
             {

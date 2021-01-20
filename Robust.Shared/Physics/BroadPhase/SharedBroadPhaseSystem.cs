@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Broadphase
@@ -42,6 +43,10 @@ namespace Robust.Shared.Physics.Broadphase
 
         private Queue<CollisionChangeMessage> _queuedCollisionChanges = new();
 
+        private Queue<EntInsertedIntoContainerMessage> _queuedContainerInsert = new();
+
+        private Queue<EntRemovedFromContainerMessage> _queuedContainerRemove = new();
+
         private IEnumerable<IBroadPhase> BroadPhases()
         {
             foreach (var (_, grids) in _graph)
@@ -60,6 +65,12 @@ namespace Robust.Shared.Physics.Broadphase
                 return null;
 
             return grid;
+        }
+
+        public IEnumerable<IBroadPhase> GetBroadPhases(PhysicsComponent body)
+        {
+            if (!_lastBroadPhases.TryGetValue(body, out var broadPhases)) return Array.Empty<IBroadPhase>();
+            return broadPhases;
         }
 
         // Look for now I've hardcoded grids
@@ -98,10 +109,12 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollisionChangeMessage>(HandleCollisionChange);
+            SubscribeLocalEvent<CollisionChangeMessage>(QueueCollisionChange);
             SubscribeLocalEvent<MoveEvent>(HandlePhysicsMove);
             SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
-            SubscribeLocalEvent<FixtureUpdateMessage>(HandleFixtureUpdate);
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(QueueContainerInsertMessage);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(QueueContainerRemoveMessage);
+            SubscribeLocalEvent<FixtureUpdateMessage>(QueueFixtureUpdate);
             _mapManager.OnGridCreated += HandleGridCreated;
             _mapManager.OnGridRemoved += HandleGridRemoval;
             _mapManager.MapCreated += HandleMapCreated;
@@ -111,9 +124,21 @@ namespace Robust.Shared.Physics.Broadphase
         {
             base.Update(frameTime);
 
+            // TODO: Just call ProcessEventQueue directly?
+            // Manually manage queued stuff ourself given EventBus.QueueEvent happens at the same time every time
             while (_queuedMapChanges.Count > 0)
             {
                 HandleMapChange(_queuedMapChanges.Dequeue());
+            }
+
+            while (_queuedContainerInsert.Count > 0)
+            {
+                HandleContainerInsert(_queuedContainerInsert.Dequeue());
+            }
+
+            while (_queuedContainerRemove.Count > 0)
+            {
+                HandleContainerRemove(_queuedContainerRemove.Dequeue());
             }
 
             while (_queuedCollisionChanges.Count > 0)
@@ -131,7 +156,8 @@ namespace Robust.Shared.Physics.Broadphase
 
             while (_queuedFixtureUpdates.Count > 0)
             {
-                SynchronizeFixtures(_queuedFixtureUpdates.Dequeue().Body);
+                var message = _queuedFixtureUpdates.Dequeue();
+                SynchronizeFixture(message.Body, message.Fixture);
             }
         }
 
@@ -141,6 +167,8 @@ namespace Robust.Shared.Physics.Broadphase
             UnsubscribeLocalEvent<CollisionChangeMessage>();
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
+            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
             UnsubscribeLocalEvent<FixtureUpdateMessage>();
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
@@ -155,7 +183,7 @@ namespace Robust.Shared.Physics.Broadphase
             SynchronizeFixtures(physicsComponent);
         }
 
-        private void HandleCollisionChange(CollisionChangeMessage message)
+        private void QueueCollisionChange(CollisionChangeMessage message)
         {
             _queuedCollisionChanges.Enqueue(message);
         }
@@ -165,9 +193,48 @@ namespace Robust.Shared.Physics.Broadphase
             _queuedMapChanges.Enqueue(message);
         }
 
-        private void HandleFixtureUpdate(FixtureUpdateMessage message)
+        private void QueueContainerInsertMessage(EntInsertedIntoContainerMessage message)
+        {
+            _queuedContainerInsert.Enqueue(message);
+        }
+
+        private void QueueContainerRemoveMessage(EntRemovedFromContainerMessage message)
+        {
+            _queuedContainerRemove.Enqueue(message);
+        }
+
+        private void HandleContainerInsert(EntInsertedIntoContainerMessage message)
+        {
+            if (message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
+            {
+                physicsComponent.CanCollide = false;
+                physicsComponent.Awake = false;
+            }
+        }
+
+        private void HandleContainerRemove(EntRemovedFromContainerMessage message)
+        {
+            if (message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
+            {
+                physicsComponent.CanCollide = true;
+                physicsComponent.Awake = true;
+            }
+        }
+
+        private void QueueFixtureUpdate(FixtureUpdateMessage message)
         {
             _queuedFixtureUpdates.Enqueue(message);
+        }
+
+        public void AddBroadPhase(PhysicsComponent body, IBroadPhase broadPhase)
+        {
+            if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
+            {
+                return;
+            }
+
+            if (broadPhases.Contains(broadPhase)) return;
+            broadPhases.Add(broadPhase);
         }
 
         /// <summary>
@@ -254,7 +321,6 @@ namespace Robust.Shared.Physics.Broadphase
         {
             if (_lastBroadPhases.ContainsKey(body))
             {
-                Logger.WarningS("physics", $"Tried to add body {body.Owner.Uid} to BroadPhase twice!");
                 return;
             }
 
@@ -285,7 +351,6 @@ namespace Robust.Shared.Physics.Broadphase
         {
             if (!_lastBroadPhases.ContainsKey(body))
             {
-                Logger.WarningS("physics", $"Tried to add body {body.Owner.Uid} to BroadPhase twice!");
                 return;
             }
 
@@ -301,15 +366,66 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         /// <summary>
+        ///     Update this fixture's proxies in the broadphase.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="fixture"></param>
+        public void SynchronizeFixture(PhysicsComponent body, Fixture fixture)
+        {
+            if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
+            {
+                return;
+            }
+
+            var mapId = body.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace || body.Deleted)
+            {
+                return;
+            }
+
+            // TODO: Caching and use moveproxies instead
+            fixture.ClearProxies(_mapManager, this);
+            fixture.CreateProxies(_mapManager, this);
+
+            // Need to clean-up old grids
+            // If this is the only fixture then we can just safely remove all broadies.
+            if (body.Fixtures.Count == 1)
+            {
+                broadPhases.Clear();
+            }
+            else
+            {
+                var gridIds = _mapManager.FindGridIdsIntersecting(mapId, body.GetWorldAABB(_mapManager), true).ToList();
+
+                foreach (var broad in broadPhases.ToArray())
+                {
+                    var grid = GetGridId(broad);
+                    if (!gridIds.Contains(grid))
+                    {
+                        broadPhases.Remove(broad);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         ///     Update the broadphase with all the fixtures on this body.
         /// </summary>
         /// <remarks>
-        ///     Should be called after a fixture changes (position or otherwise).
+        ///     Should be called when a body changes position.
         /// </remarks>
         /// <param name="component"></param>
         public void SynchronizeFixtures(PhysicsComponent component)
         {
+            // If the entity's still being initialized it might have MoveEvent called (might change in future?)
+            if (!_lastBroadPhases.TryGetValue(component, out var broadPhases))
+            {
+                return;
+            }
+
             var mapId = component.Owner.Transform.MapID;
+            component.ClearProxies();
 
             if (mapId == MapId.Nullspace || component.Deleted)
             {
@@ -318,16 +434,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             // TODO: Cache the below more, for now we'll just full-clear it for stability
-            if (!_lastBroadPhases.TryGetValue(component, out var broadPhases))
-            {
-                broadPhases = new List<IBroadPhase>();
-                _lastBroadPhases[component] = broadPhases;
-            }
-            else
-            {
-                broadPhases.Clear();
-                component.ClearProxies();
-            }
+            broadPhases.Clear();
 
             component.CreateProxies();
 

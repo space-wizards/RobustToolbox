@@ -220,9 +220,10 @@ namespace Robust.Shared.GameObjects.Components
             if (curState is not PhysicsComponentState newState)
                 return;
 
-            _canCollide = newState.CanCollide;
-            _status = newState.Status;
+            CanCollide = newState.CanCollide;
+            Status = newState.Status;
 
+            // TODO: We should diff fixtures rather than just removing them like we used to with shapes.
             foreach (var fixture in _fixtures.ToArray())
             {
                 RemoveFixture(fixture);
@@ -249,8 +250,7 @@ namespace Robust.Shared.GameObjects.Components
             Predict = false;
         }
 
-        // TODO: Move me
-        public Box2 GetWorldAABB(IMapManager? mapManager = null)
+        public Box2 GetWorldAABB(IMapManager? mapManager)
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
             var bounds = new Box2();
@@ -278,7 +278,7 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }
 
-            return bounds;
+            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
         }
 
         /// <inheritdoc />
@@ -288,7 +288,6 @@ namespace Robust.Shared.GameObjects.Components
             get
             {
                 var mapManager = IoCManager.Resolve<IMapManager>();
-                var angle = Owner.Transform.WorldRotation;
                 var worldPos = Owner.Transform.WorldPosition;
                 var bounds = new Box2();
 
@@ -422,10 +421,14 @@ namespace Robust.Shared.GameObjects.Components
 
             Dirty();
             // Yeah yeah TODO Combine these
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+            // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.
 
             if (CanCollide)
             {
+                if (!Owner.IsInContainer())
+                {
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                }
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
             }
         }
@@ -436,7 +439,7 @@ namespace Robust.Shared.GameObjects.Components
             // Also we need to queue updates and also not teardown completely every time.
             _fixtures.Add(fixture);
             Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
         public void RemoveFixture(Fixture fixture)
@@ -501,9 +504,12 @@ namespace Robust.Shared.GameObjects.Components
     {
         public PhysicsComponent Body { get; }
 
-        public FixtureUpdateMessage(PhysicsComponent body)
+        public Fixture Fixture { get; }
+
+        public FixtureUpdateMessage(PhysicsComponent body, Fixture fixture)
         {
             Body = body;
+            Fixture = fixture;
         }
     }
 }

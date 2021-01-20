@@ -560,7 +560,7 @@ namespace Robust.Shared.GameObjects.Components
         {
             // TODO: Optimise this a LOT
             Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
         /// <summary>

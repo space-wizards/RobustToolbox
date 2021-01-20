@@ -656,7 +656,7 @@ namespace Robust.Shared.GameObjects
                 return collider.GetWorldAABB(_mapManager);
 
             var pos = ent.Transform.WorldPosition;
-            return new Box2(pos - 0.5f, pos + 0.5f);
+            return Box2.UnitCentered.Translated(pos);
         }
 
         #endregion

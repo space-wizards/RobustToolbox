@@ -1,9 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -104,6 +110,78 @@ namespace Robust.Shared.Physics.Dynamics
             serializer.DataField(ref _hard, "hard", true);
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
+        }
+
+        /// <summary>
+        ///     Clear this fixture's proxies from the broadphase.
+        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
+        /// </summary>
+        /// <remarks>
+        ///     Broadphase system will also need cleaning up for the cached broadphases for the body.
+        /// </remarks>
+        /// <param name="broadPhaseSystem"></param>
+        public void ClearProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
+        {
+            var mapId = Body.Owner.Transform.MapID;
+            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
+
+            foreach (var (gridId, proxies) in Proxies)
+            {
+                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                if (broadPhase == null) continue;
+
+                foreach (var proxy in proxies)
+                {
+                    broadPhase.RemoveProxy(proxy.ProxyId);
+                }
+            }
+
+            Proxies.Clear();
+        }
+
+        /// <summary>
+        ///     Creates FixtureProxies on the relevant broadphases.
+        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
+        /// </summary>
+        public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
+        {
+            var mapId = Body.Owner.Transform.MapID;
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
+
+            var worldAABB = Body.GetWorldAABB(mapManager);
+            var worldPosition = Body.Owner.Transform.WorldPosition;
+            var worldRotation = Body.Owner.Transform.WorldRotation;
+
+            foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
+            {
+                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                if (broadPhase == null) continue;
+
+                Vector2 offset = worldPosition;
+                double gridRotation = worldRotation;
+
+                if (gridId != GridId.Invalid)
+                {
+                    var grid = mapManager.GetGrid(gridId);
+                    offset -= grid.WorldPosition;
+                    // TODO: Should probably have a helper for this
+                    gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                }
+
+                var proxies = new FixtureProxy[1];
+                // TODO: Will need update number with ProxyCount
+                Proxies[gridId] = proxies;
+                Box2 aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+
+                var proxy = new FixtureProxy(aabb, this);
+
+                proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+                proxies[0] = proxy;
+                DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
+
+                broadPhaseSystem.AddBroadPhase(Body, broadPhase);
+            }
         }
     }
 }

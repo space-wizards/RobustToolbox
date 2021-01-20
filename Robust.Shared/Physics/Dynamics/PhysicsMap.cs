@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -113,11 +115,7 @@ namespace Robust.Shared.Physics.Dynamics
             foreach (var body in _queuedBodyRemove)
             {
                 Bodies.Remove(body);
-
-                if (body.Awake)
-                {
-                    AwakeBodies.Remove(body);
-                }
+                AwakeBodies.Remove(body);
             }
 
             _queuedBodyRemove.Clear();
@@ -276,7 +274,7 @@ namespace Robust.Shared.Physics.Dynamics
                 body.Island = false;
                 DebugTools.Assert(body.BodyType != BodyType.Static);
 
-                // TODO: Update BroadPhase
+                // TODO: Update BroadPhase -> Maybe just have LocalPosition update broadphase directly?
             }
 
             _islandSet.Clear();

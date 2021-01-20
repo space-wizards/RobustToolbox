@@ -111,13 +111,13 @@ namespace Robust.Shared.Interfaces.Serialization
             // HashSet<T>
             if ((TypeHelpers.TryGenericHashSetType(underlyingType, out var setType) || TypeHelpers.TryGenericSortedSetType(underlyingType, out setType)) && value is IEnumerable rawSetSource)
             {
-                List<object?> values = new();
+                var values = (IList) Activator.CreateInstance(typeof(List<>).MakeGenericType(setType))!;
                 foreach (var val in rawSetSource)
                 {
                     values.Add(CloneValue(val));
                 }
 
-                var newSet = Activator.CreateInstance(underlyingType, values.ToArray())!;
+                var newSet = (T)Activator.CreateInstance(underlyingType, values)!;
 
                 return (T)newSet;
             }

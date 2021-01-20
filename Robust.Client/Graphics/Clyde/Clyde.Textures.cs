@@ -6,6 +6,7 @@ using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -362,7 +363,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ClydeTexture : OwnedTexture
+        private sealed class ClydeTexture : OwnedTexture, IDeepClone
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
@@ -398,6 +399,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return $"ClydeTexture: ({TextureId})";
+            }
+
+            public IDeepClone DeepClone()
+            {
+                return new ClydeTexture(TextureId, Size, IsSrgb, _clyde);
             }
         }
 

@@ -38,10 +38,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="map"></param>
         public void Collide(PhysicsMap map, bool prediction, float frameTime)
         {
-            var timeToSleep = _configManager.GetCVar(CVars.TimeToSleep);
-
             var combinations = new HashSet<(EntityUid, EntityUid)>();
-
             var bodies = map.AwakeBodies;
 
             foreach (var bodyA in bodies)

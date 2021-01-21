@@ -46,9 +46,6 @@ namespace Robust.Shared.GameObjects.Components
     [ComponentReference(typeof(IPhysicsComponent))]
     public partial class PhysicsComponent : Component
     {
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-
-        private bool _canCollide;
         private BodyStatus _status;
 
         /// <inheritdoc />
@@ -344,6 +341,8 @@ namespace Robust.Shared.GameObjects.Components
             }
         }
 
+        private bool _canCollide;
+
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events. Recommended you use the fixture hard values directly
@@ -429,6 +428,10 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
                 }
+                else
+                {
+                    _canCollide = false;
+                }
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
             }
         }
@@ -465,7 +468,8 @@ namespace Robust.Shared.GameObjects.Components
             base.OnRemove();
 
             // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, false));
+            // TODO: Suss out if this best way to do it; tl;dr is if we cache it then body is probably deleted by the time we get to it (and its MapId is no longer valid).
+            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveBody(this);
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
         }
 

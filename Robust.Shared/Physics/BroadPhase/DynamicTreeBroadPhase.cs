@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.Physics.Broadphase
 {
@@ -71,6 +72,11 @@ namespace Robust.Shared.Physics.Broadphase
             return _tree.CreateProxy(proxy.AABB, proxy);
         }
 
+        public void MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb, Vector2 displacement)
+        {
+            _tree.MoveProxy(proxy, aabb, displacement);
+        }
+
         public void RemoveProxy(DynamicTree.Proxy proxy)
         {
             _tree.DestroyProxy(proxy);
@@ -79,11 +85,6 @@ namespace Robust.Shared.Physics.Broadphase
         public void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
         {
             QueryAabb(ref callback, EasyQueryCallback, aabb, approx);
-        }
-
-        public void MoveProxy(DynamicTree.Proxy proxy, ref Box2 aabb, Vector2 displacement)
-        {
-            _tree.MoveProxy(proxy, aabb, displacement);
         }
 
         public FixtureProxy? GetProxy(DynamicTree.Proxy proxy)

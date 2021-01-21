@@ -9,6 +9,9 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public enum BodyType : byte
     {
+        /// <summary>
+        ///     Kinematic objects have to be moved manually and have their forces reset every tick.
+        /// </summary>
         Kinematic,
 
         /// <summary>

@@ -26,8 +26,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private ContactSolver _contactSolver = default!;
 
-        public IReadOnlyCollection<PhysicsComponent> Bodies => _bodies;
-        private PhysicsComponent[] _bodies = Array.Empty<PhysicsComponent>();
+        public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
 
         private Contact[] _contacts = Array.Empty<Contact>();
 
@@ -68,7 +67,7 @@ namespace Robust.Shared.Physics.Dynamics
         public void Add(PhysicsComponent body)
         {
             body.IslandIndex = BodyCount;
-            _bodies[BodyCount++] = body;
+            Bodies[BodyCount++] = body;
         }
 
         public void Add(Contact contact)
@@ -90,9 +89,9 @@ namespace Robust.Shared.Physics.Dynamics
             ContactCapacity = contactCapacity;
             ContactCount = 0;
 
-            if (_bodies.Length < BodyCapacity)
+            if (Bodies.Length < BodyCapacity)
             {
-                Array.Resize(ref _bodies, BodyCapacity);
+                Array.Resize(ref Bodies, BodyCapacity);
                 Array.Resize(ref _linearVelocities, bodyCapacity);
                 Array.Resize(ref _angularVelocities, bodyCapacity);
                 Array.Resize(ref _positions, bodyCapacity);
@@ -111,7 +110,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             for (var i = 0; i < BodyCount; i++)
             {
-                var body = _bodies[i];
+                var body = Bodies[i];
 
                 // In future we'll set these to existing
                 // Didn't use the old variable names because they're hard to read
@@ -156,7 +155,7 @@ namespace Robust.Shared.Physics.Dynamics
             for (var i = 0; i < BodyCount; i++)
             {
                 // TODO: Copy Farseer rate-limits here
-                var body = _bodies[i];
+                var body = Bodies[i];
 
                 Vector2 linearVelocity = _linearVelocities[i];
                 var angularVelocity = _angularVelocities[i];
@@ -207,7 +206,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
-                var body = _bodies[i];
+                var body = Bodies[i];
 
                 if (body.BodyType == BodyType.Static) continue;
 
@@ -265,7 +264,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 for (var i = 0; i < BodyCount; i++)
                 {
-                    var body = _bodies[i];
+                    var body = Bodies[i];
 
                     if (body.BodyType == BodyType.Static)
                         continue;
@@ -288,7 +287,7 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     for (var i = 0; i < BodyCount; i++)
                     {
-                        var body = _bodies[i];
+                        var body = Bodies[i];
                         body.Awake = false;
                     }
                 }

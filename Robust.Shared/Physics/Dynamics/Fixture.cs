@@ -183,5 +183,43 @@ namespace Robust.Shared.Physics.Dynamics
                 broadPhaseSystem.AddBroadPhase(Body, broadPhase);
             }
         }
+
+        /// <summary>
+        ///     Creates FixtureProxies on the relevant broadphase.
+        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
+        /// </summary>
+        public void CreateProxies(IBroadPhase broadPhase, IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
+        {
+            // TODO: Combine with the above method to be less DRY.
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
+
+            var gridId = broadPhaseSystem.GetGridId(broadPhase);
+
+            Vector2 offset = Body.Owner.Transform.WorldPosition;
+            var worldRotation = Body.Owner.Transform.WorldRotation;
+            double gridRotation = worldRotation;
+
+            if (gridId != GridId.Invalid)
+            {
+                var grid = mapManager.GetGrid(gridId);
+                offset -= grid.WorldPosition;
+                // TODO: Should probably have a helper for this
+                gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+            }
+
+            var proxies = new FixtureProxy[1];
+            // TODO: Will need update number with ProxyCount
+            Proxies[gridId] = proxies;
+            Box2 aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+
+            var proxy = new FixtureProxy(aabb, this);
+
+            proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+            proxies[0] = proxy;
+            DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
+
+            broadPhaseSystem.AddBroadPhase(Body, broadPhase);
+        }
     }
 }

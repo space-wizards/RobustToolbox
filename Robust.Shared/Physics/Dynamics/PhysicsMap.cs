@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -252,9 +250,9 @@ namespace Robust.Shared.Physics.Dynamics
                 _island.Solve(frameTime, prediction);
 
                 // Post-solve cleanup for island
-                foreach (var body in _island.Bodies)
+                for (var i = 0; i < _island.BodyCount; i++)
                 {
-                    if (body == null) break;
+                    var body = _island.Bodies[i];
 
                     // Static bodies can participate in other islands
                     if (body.BodyType == BodyType.Static)
@@ -275,6 +273,7 @@ namespace Robust.Shared.Physics.Dynamics
                 DebugTools.Assert(body.BodyType != BodyType.Static);
 
                 // TODO: Update BroadPhase -> Maybe just have LocalPosition update broadphase directly?
+                // Still need to suss this as MoveEvent is currently being used.
             }
 
             _islandSet.Clear();
@@ -290,6 +289,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             _contactManager.PostSolve();
+
         }
 
         private void ClearForces()

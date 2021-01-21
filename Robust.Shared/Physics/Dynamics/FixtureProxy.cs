@@ -1,7 +1,6 @@
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Dynamics;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics
 {
     public class FixtureProxy
     {

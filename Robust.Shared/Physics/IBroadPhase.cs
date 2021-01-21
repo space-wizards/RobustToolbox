@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.Physics {
 
@@ -11,6 +12,8 @@ namespace Robust.Shared.Physics {
         bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
 
         DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);
+
+        void MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb, Vector2 displacement);
 
         void RemoveProxy(DynamicTree.Proxy proxy);
 

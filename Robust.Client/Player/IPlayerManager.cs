@@ -14,6 +14,11 @@ namespace Robust.Client.Player
 
         LocalPlayer? LocalPlayer { get; }
 
+        /// <summary>
+        /// Invoked after LocalPlayer is changed
+        /// </summary>
+        event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
+
         int PlayerCount { get; }
         int MaxPlayers { get; }
         event EventHandler PlayerListUpdated;
@@ -24,5 +29,16 @@ namespace Robust.Client.Player
         void Shutdown();
 
         void ApplyPlayerStates(IEnumerable<PlayerState>? list);
+    }
+
+    public class LocalPlayerChangedEventArgs : EventArgs
+    {
+        public readonly LocalPlayer? OldPlayer;
+        public readonly LocalPlayer? NewPlayer;
+        public LocalPlayerChangedEventArgs(LocalPlayer? oldPlayer, LocalPlayer? newPlayer)
+        {
+            OldPlayer = oldPlayer;
+            NewPlayer = newPlayer;
+        }
     }
 }

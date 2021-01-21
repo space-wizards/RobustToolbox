@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IClyde _displayManager;
         public IClydeViewport Viewport = default!;
 
-        private Vector2 _viewportResolution = (1.0f, 1.0f);
+        private Vector2 _viewportResolution = (1f, 1f);
 
         /// <summary>
         ///     This controls the render target size, *as a fraction of the control size.*
@@ -41,7 +41,7 @@ namespace Robust.Client.UserInterface.CustomControls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            Viewport.Render();
+
             if (Viewport == null)
             {
                 handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UserInterfaceManager.UIScale), Color.Red);

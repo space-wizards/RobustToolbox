@@ -73,6 +73,12 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
+            foreach (var weak in _viewports.Values)
+            {
+                if(weak.TryGetTarget(out var viewport))
+                    RenderViewport(viewport);
+            }
+
             TakeScreenshot(ScreenshotType.BeforeUI);
 
             RenderOverlays(OverlaySpace.ScreenSpace);
@@ -276,7 +282,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RenderViewport(Viewport viewport)
         {
-            if (viewport.Eye == null)
+            if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
             {
                 return;
             }
@@ -310,7 +316,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+                    viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {

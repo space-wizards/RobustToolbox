@@ -21,5 +21,6 @@ namespace Robust.Client.Interfaces.Graphics
         ///     Render the state of the world in this viewport, updating the texture inside the render target.
         /// </summary>
         void Render();
+        Vector2 WorldToLocal(Vector2 point);
     }
 }

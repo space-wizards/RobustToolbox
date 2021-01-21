@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.RenderViewport(this);
             }
 
-            public Vector2 WorldToScreen(Vector2 point)
+            public Vector2 WorldToLocal(Vector2 point)
             {
                 if (Eye == null)
                     return (0, 0);

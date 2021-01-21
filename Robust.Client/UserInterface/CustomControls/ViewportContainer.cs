@@ -1,6 +1,5 @@
 ﻿using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-﻿using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -87,18 +86,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Vector2 WorldToLocalPixel(Vector2 point)
         {
-            if (Viewport.Eye == null)
-                return (0, 0);
-
-            var eye = Viewport.Eye;
-            var newPoint = point;
-
-            eye.GetViewMatrix(out var viewMatrix);
-            newPoint = viewMatrix * newPoint;
-
-            // (inlined version of UiProjMatrix)
-            newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
-            newPoint += Viewport.Size / 2f;
+            var newPoint = Viewport.WorldToLocal(point);
 
             // prescaler
             newPoint /= _viewportResolution;

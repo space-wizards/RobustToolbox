@@ -92,10 +92,13 @@ namespace Robust.Shared.Physics.Dynamics
             Proxies = new Dictionary<GridId, FixtureProxy[]>();
         }
 
-        public Fixture(IPhysShape shape)
+        public Fixture(IPhysShape shape, int collisionLayer, int collisionMask, bool hard)
         {
             Shape = shape;
             Proxies = new Dictionary<GridId, FixtureProxy[]>();
+            _collisionLayer = collisionLayer;
+            _collisionMask = collisionMask;
+            _hard = hard;
         }
 
         public Fixture()
@@ -120,7 +123,7 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Broadphase system will also need cleaning up for the cached broadphases for the body.
         /// </remarks>
         /// <param name="broadPhaseSystem"></param>
-        public void ClearProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
+        public void ClearProxies(SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
             var mapId = Body.Owner.Transform.MapID;
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
@@ -143,6 +146,9 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Creates FixtureProxies on the relevant broadphases.
         ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
         /// </summary>
+        /// <remarks>
+        ///     You will need to manually add this to the body's broadphases.
+        /// </remarks>
         public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
             var mapId = Body.Owner.Transform.MapID;
@@ -179,8 +185,6 @@ namespace Robust.Shared.Physics.Dynamics
                 proxy.ProxyId = broadPhase.AddProxy(ref proxy);
                 proxies[0] = proxy;
                 DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
-
-                broadPhaseSystem.AddBroadPhase(Body, broadPhase);
             }
         }
 

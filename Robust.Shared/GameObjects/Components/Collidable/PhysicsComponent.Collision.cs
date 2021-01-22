@@ -442,7 +442,7 @@ namespace Robust.Shared.GameObjects.Components
             // Also we need to queue updates and also not teardown completely every time.
             _fixtures.Add(fixture);
             Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
+            EntitySystem.Get<SharedBroadPhaseSystem>().AddFixture(this, fixture);
         }
 
         public void RemoveFixture(Fixture fixture)
@@ -454,13 +454,7 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
-        }
-
-        public bool UpdatePhysicsTree()
-        {
-            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this);
-            return true;
+            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
         }
 
         public override void OnRemove()

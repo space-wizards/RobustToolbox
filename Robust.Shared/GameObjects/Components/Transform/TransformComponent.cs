@@ -96,7 +96,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 RebuildMatrices();
                 UpdateEntityTree();
-                UpdatePhysicsTree();
                 Owner.EntityManager.EventBus.RaiseEvent(
                     EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
             }
@@ -251,7 +250,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 UpdateEntityTree();
-                UpdatePhysicsTree();
             }
         }
 
@@ -277,7 +275,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 RebuildMatrices();
                 UpdateEntityTree();
-                UpdatePhysicsTree();
                 Owner.EntityManager.EventBus.RaiseEvent(
                     EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
             }
@@ -673,7 +670,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 Dirty();
                 UpdateEntityTree();
-                TryUpdatePhysicsTree();
             }
 
             if (nextState is TransformComponentState nextTransform)
@@ -736,12 +732,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             _invLocalMatrix = itransMat;
         }
-
-        // TODO: Refactor these
-        private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
-
-        private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out PhysicsComponent? collider) && collider.UpdatePhysicsTree();
 
         public bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
 

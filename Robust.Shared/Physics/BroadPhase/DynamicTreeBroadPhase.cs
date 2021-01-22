@@ -17,8 +17,6 @@ namespace Robust.Shared.Physics.Broadphase
         private B2DynamicTree<FixtureProxy> _tree = new(capacity: 256);
 
         private readonly DynamicTree<FixtureProxy>.ExtractAabbDelegate _extractAabb = ExtractAabbFunc;
-        private static readonly DynamicTree<FixtureProxy>.QueryCallbackDelegate<DynamicTree<FixtureProxy>.QueryCallbackDelegate> EasyQueryCallback =
-            (ref DynamicTree<FixtureProxy>.QueryCallbackDelegate s, in FixtureProxy v) => s(v);
 
         public DynamicTreeBroadPhase(MapId mapId, GridId gridId)
         {
@@ -158,28 +156,14 @@ namespace Robust.Shared.Physics.Broadphase
             return list;
         }
 
-        public void QueryRay(DynamicTree<FixtureProxy>.RayQueryCallbackDelegate callback, in Ray ray, bool approx = false)
-        {
-            QueryRay(ref callback, RayQueryDelegateCallbackInst, ray, approx);
-        }
-
-        private static readonly DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<DynamicTree<FixtureProxy>.RayQueryCallbackDelegate> RayQueryDelegateCallbackInst = RayQueryDelegateCallback;
-
-        private static bool RayQueryDelegateCallback(ref DynamicTree<FixtureProxy>.RayQueryCallbackDelegate state, in FixtureProxy value, in Vector2 point, float distFromOrigin)
-        {
-            return state(value, point, distFromOrigin);
-        }
+        private static readonly DynamicTree<FixtureProxy>.QueryCallbackDelegate<DynamicTree<FixtureProxy>.QueryCallbackDelegate> EasyQueryCallback =
+            (ref DynamicTree<FixtureProxy>.QueryCallbackDelegate s, in FixtureProxy v) => s(v);
 
         public void QueryRay<TState>(ref TState state, DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback, in Ray ray, bool approx = false)
         {
             var tuple = (state, callback, _tree, approx ? null : _extractAabb, ray);
             _tree.RayCast(ref tuple, DelegateCache<TState>.RayQueryState, ray);
             state = tuple.state;
-        }
-
-        public void ShiftOrigin(Vector2 newOrigin)
-        {
-            _tree.ShiftOrigin(newOrigin);
         }
 
         private static bool AabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<FixtureProxy> tree, DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, DynamicTree<FixtureProxy>.ExtractAabbDelegate extract) tuple, DynamicTree.Proxy proxy)
@@ -212,6 +196,18 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             return tuple.callback(ref tuple.state, item, hit, distance);
+        }
+
+        public void QueryRay(DynamicTree<FixtureProxy>.RayQueryCallbackDelegate callback, in Ray ray, bool approx = false)
+        {
+            QueryRay(ref callback, RayQueryDelegateCallbackInst, ray, approx);
+        }
+
+        private static readonly DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<DynamicTree<FixtureProxy>.RayQueryCallbackDelegate> RayQueryDelegateCallbackInst = RayQueryDelegateCallback;
+
+        private static bool RayQueryDelegateCallback(ref DynamicTree<FixtureProxy>.RayQueryCallbackDelegate state, in FixtureProxy value, in Vector2 point, float distFromOrigin)
+        {
+            return state(value, point, distFromOrigin);
         }
 
         private static class DelegateCache<TState>

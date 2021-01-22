@@ -220,18 +220,39 @@ namespace Robust.Shared.GameObjects.Components
             CanCollide = newState.CanCollide;
             Status = newState.Status;
 
-            // TODO: We should diff fixtures rather than just removing them like we used to with shapes.
-            foreach (var fixture in _fixtures.ToArray())
+            var toAdd = new List<Fixture>();
+            var toRemove = new List<Fixture>();
+
+            // TODO: This diffing is crude but at least it will save the broadphase updates 90% of the time.
+            for (var i = 0; i < newState.Fixtures.Count; i++)
+            {
+                var newFixture = FixtureData.To(newState.Fixtures[i]);
+                newFixture.Body = this;
+
+                // Existing fixture
+                if (_fixtures.Count > i)
+                {
+                    var existingFixture = _fixtures[i];
+
+                    if (!existingFixture.Equals(newFixture))
+                    {
+                        toRemove.Add(existingFixture);
+                        toAdd.Add(newFixture);
+                    }
+                }
+                else
+                {
+                    toAdd.Add(newFixture);
+                }
+            }
+
+            foreach (var fixture in toRemove)
             {
                 RemoveFixture(fixture);
             }
 
-            DebugTools.Assert(_fixtures.Count == 0);
-
-            foreach (var data in newState.Fixtures)
+            foreach (var fixture in toAdd)
             {
-                Fixture fixture = FixtureData.To(data);
-                fixture.Body = this;
                 AddFixture(fixture);
                 fixture.Shape.ApplyState();
             }

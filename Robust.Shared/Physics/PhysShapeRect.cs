@@ -78,5 +78,11 @@ namespace Robust.Shared.Physics
         {
             return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox();
         }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeRect rect) return false;
+            return _rectangle.EqualsApprox(rect._rectangle);
+        }
     }
 }

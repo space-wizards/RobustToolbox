@@ -85,5 +85,11 @@ namespace Robust.Shared.Physics
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(in Matrix3.Identity);
         }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeCircle otherCircle) return false;
+            return MathHelper.CloseTo(_radius, otherCircle._radius);
+        }
     }
 }

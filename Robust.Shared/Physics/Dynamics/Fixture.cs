@@ -18,7 +18,7 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO
     }
 
-    public class Fixture : IFixture, IExposeData
+    public class Fixture : IFixture, IExposeData, IEquatable<Fixture>
     {
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
         public Dictionary<GridId, FixtureProxy[]> Proxies;
@@ -224,6 +224,18 @@ namespace Robust.Shared.Physics.Dynamics
             DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
 
             broadPhaseSystem.AddBroadPhase(Body, broadPhase);
+        }
+
+        // This is a crude equals mainly to avoid having to re-create the fixtures every time a state comes in.
+        public bool Equals(Fixture? other)
+        {
+            if (other == null) return false;
+
+            return _hard == other.Hard &&
+                   _collisionLayer == other.CollisionLayer &&
+                   _collisionMask == other.CollisionMask &&
+                   Shape.Equals(other.Shape) &&
+                   Body == other.Body;
         }
     }
 }

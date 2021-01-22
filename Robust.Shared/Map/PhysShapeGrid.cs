@@ -101,5 +101,11 @@ namespace Robust.Shared.Map
         {
             return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox();
         }
+
+        public bool Equals(IPhysShape? other)
+        {
+            // TODO
+            return false;
+        }
     }
 }

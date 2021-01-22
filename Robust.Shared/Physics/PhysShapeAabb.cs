@@ -47,6 +47,7 @@ namespace Robust.Shared.Physics
             handle.SetTransform(Matrix3.Identity);
         }
 
+        // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;
 
@@ -60,6 +61,12 @@ namespace Robust.Shared.Physics
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeAabb otherAABB) return false;
+            return _localBounds.EqualsApprox(otherAABB._localBounds);
         }
     }
 }

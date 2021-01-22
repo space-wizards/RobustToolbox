@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// A primitive physical shape that is used by a <see cref="IPhysBody"/>.
     /// </summary>
-    public interface IPhysShape : IExposeData
+    public interface IPhysShape : IExposeData, IEquatable<IPhysShape>
     {
         /// <summary>
         /// Calculates the AABB of the shape.

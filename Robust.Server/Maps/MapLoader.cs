@@ -16,6 +16,7 @@ using Robust.Shared.GameObjects;
 using System.Globalization;
 using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
+using Robust.Server.GameObjects;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.Serialization;
@@ -29,6 +30,8 @@ namespace Robust.Server.Maps
     /// </summary>
     public class MapLoader : IMapLoader
     {
+        private static readonly MapLoadOptions DefaultLoadOptions = new();
+
         private const int MapFormatVersion = 2;
 
         [Dependency] private readonly IResourceManager _resMan = default!;
@@ -46,7 +49,8 @@ namespace Robust.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                _componentManager, _prototypeManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -68,6 +72,11 @@ namespace Robust.Server.Maps
 
         /// <inheritdoc />
         public IMapGrid? LoadBlueprint(MapId mapId, string path)
+        {
+            return LoadBlueprint(mapId, path, DefaultLoadOptions);
+        }
+
+        public IMapGrid? LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
@@ -108,7 +117,8 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
                 grid = context.Grids[0];
 
@@ -128,7 +138,8 @@ namespace Robust.Server.Maps
         public void SaveMap(MapId mapId, string yamlPath)
         {
             Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                _componentManager, _prototypeManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
@@ -149,11 +160,16 @@ namespace Robust.Server.Maps
                     stream.Save(new YamlMappingFix(new Emitter(writer)), false);
                 }
             }
+
             Logger.InfoS("map", "Save completed!");
         }
 
-        /// <inheritdoc />
         public void LoadMap(MapId mapId, string path)
+        {
+            LoadMap(mapId, path, DefaultLoadOptions);
+        }
+
+        public void LoadMap(MapId mapId, string path, MapLoadOptions options)
         {
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
@@ -188,7 +204,8 @@ namespace Robust.Server.Maps
 
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
@@ -213,6 +230,7 @@ namespace Robust.Server.Maps
             private readonly IComponentManager _componentManager;
             private readonly IPrototypeManager _prototypeManager;
 
+            private readonly MapLoadOptions? _loadOptions;
             private readonly Dictionary<GridId, int> GridIDMap = new();
             public readonly List<IMapGrid> Grids = new();
 
@@ -224,8 +242,6 @@ namespace Robust.Server.Maps
                 = new();
 
             private bool IsBlueprintMode => GridIDMap.Count == 1;
-
-            private int uidCounter;
 
             private readonly YamlMappingNode RootNode;
             private readonly MapId TargetMap;
@@ -239,7 +255,9 @@ namespace Robust.Server.Maps
 
             public bool MapIsPostInit { get; private set; }
 
-            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager, IPrototypeManager prototypeManager)
+            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
+                IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager,
+                IPrototypeManager prototypeManager)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
@@ -251,14 +269,17 @@ namespace Robust.Server.Maps
                 RootNode = new YamlMappingNode();
             }
 
-            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities,
-                IPauseManager pauseManager, IComponentManager componentManager, IPrototypeManager prototypeManager, YamlMappingNode node, MapId targetMapId)
+            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
+                IServerEntityManagerInternal entities,
+                IPauseManager pauseManager, IComponentManager componentManager, IPrototypeManager prototypeManager,
+                YamlMappingNode node, MapId targetMapId, MapLoadOptions options)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
                 _pauseManager = pauseManager;
                 _componentManager = componentManager;
+                _loadOptions = options;
 
                 RootNode = node;
                 TargetMap = targetMapId;
@@ -438,8 +459,8 @@ namespace Robust.Server.Maps
                     var newId = new GridId?();
                     YamlGridSerializer.DeserializeGrid(
                         _mapManager, TargetMap, ref newId,
-                        (YamlMappingNode)grid["settings"],
-                        (YamlSequenceNode)grid["chunks"],
+                        (YamlMappingNode) grid["settings"],
+                        (YamlSequenceNode) grid["chunks"],
                         _tileMap!,
                         _tileDefinitionManager
                     );
@@ -489,6 +510,12 @@ namespace Robust.Server.Maps
                     Entities.Add(entity);
                     UidEntityMap.Add(uid, entity.Uid);
                     _entitiesToDeserialize.Add((entity, entityDef));
+
+                    if (_loadOptions!.StoreMapUids)
+                    {
+                        var comp = entity.AddComponent<MapSaveIdComponent>();
+                        comp.Uid = uid;
+                    }
                 }
             }
 
@@ -501,7 +528,7 @@ namespace Robust.Server.Maps
                     {
                         foreach (var compData in componentList)
                         {
-                            CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode)compData;
+                            CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode) compData;
                         }
                     }
 
@@ -605,14 +632,54 @@ namespace Robust.Server.Maps
 
             private void PopulateEntityList()
             {
+                var withUid = new List<MapSaveIdComponent>();
+                var withoutUid = new List<IEntity>();
+                var takenIds = new HashSet<int>();
+
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
                     if (IsMapSavable(entity))
                     {
-                        var uid = uidCounter++;
-                        EntityUidMap.Add(entity.Uid, uid);
                         Entities.Add(entity);
+                        if (entity.TryGetComponent(out MapSaveIdComponent? mapSaveId))
+                        {
+                            withUid.Add(mapSaveId);
+                        }
+                        else
+                        {
+                            withoutUid.Add(entity);
+                        }
                     }
+                }
+
+                // Go over entities with a MapSaveIdComponent and assign those.
+
+                foreach (var mapIdComp in withUid)
+                {
+                    var uid = mapIdComp.Uid;
+                    if (takenIds.Contains(uid))
+                    {
+                        // Duplicate ID. Just pretend it doesn't have an ID and use the without path.
+                        withoutUid.Add(mapIdComp.Owner);
+                    }
+                    else
+                    {
+                        EntityUidMap.Add(mapIdComp.Owner.Uid, uid);
+                        takenIds.Add(uid);
+                    }
+                }
+
+                var uidCounter = 0;
+                foreach (var entity in withoutUid)
+                {
+                    while (takenIds.Contains(uidCounter))
+                    {
+                        // Find next available UID.
+                        uidCounter += 1;
+                    }
+
+                    EntityUidMap.Add(entity.Uid, uidCounter);
+                    takenIds.Add(uidCounter);
                 }
             }
 
@@ -621,7 +688,7 @@ namespace Robust.Server.Maps
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
-                foreach (var entity in Entities)
+                foreach (var entity in Entities.OrderBy(e => EntityUidMap[e.Uid]))
                 {
                     CurrentWritingEntity = entity;
                     var mapping = new YamlMappingNode
@@ -638,6 +705,9 @@ namespace Robust.Server.Maps
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in entity.GetAllComponents())
                     {
+                        if (component is MapSaveIdComponent)
+                            continue;
+
                         var compMapping = new YamlMappingNode();
                         CurrentWritingComponent = component.Name;
                         var compSerializer = YamlObjectSerializer.NewWriter(compMapping, this);
@@ -683,6 +753,7 @@ namespace Robust.Server.Maps
                         return true;
                     }
                 }
+
                 if (type == typeof(EntityUid))
                 {
                     if (node.AsString() == "null")
@@ -694,7 +765,8 @@ namespace Robust.Server.Maps
                     var val = node.AsInt();
                     if (val >= Entities.Count)
                     {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
+                            val);
                     }
                     else
                     {
@@ -702,12 +774,14 @@ namespace Robust.Server.Maps
                         return true;
                     }
                 }
+
                 if (typeof(IEntity).IsAssignableFrom(type))
                 {
                     var val = node.AsInt();
                     if (val >= Entities.Count)
                     {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
+                            val);
                     }
                     else
                     {
@@ -715,6 +789,7 @@ namespace Robust.Server.Maps
                         return true;
                     }
                 }
+
                 obj = null;
                 return false;
             }
@@ -766,6 +841,7 @@ namespace Robust.Server.Maps
                             return true;
                         }
                 }
+
                 node = null;
                 return false;
             }
@@ -878,7 +954,7 @@ namespace Robust.Server.Maps
                 }
 
                 Stream = stream;
-                GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
+                GridCount = ((YamlSequenceNode) RootNode["grids"]).Children.Count;
             }
         }
     }

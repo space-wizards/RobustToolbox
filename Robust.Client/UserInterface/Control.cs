@@ -521,7 +521,7 @@ namespace Robust.Client.UserInterface
         {
             DebugTools.Assert(!Disposed, "Control has been disposed.");
 
-            foreach (var child in Children.ToList())
+            foreach (var child in Children.ToArray())
             {
                 RemoveChild(child);
             }
@@ -757,14 +757,32 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Called when this control receives keyboard focus.
         /// </summary>
-        protected internal virtual void FocusEntered()
+        protected internal virtual void KeyboardFocusEntered()
         {
         }
 
         /// <summary>
-        ///     Called when this control loses keyboard focus.
+        ///     Called when this control loses keyboard focus (corresponds to UserInterfaceManager.KeyboardFocused).
         /// </summary>
-        protected internal virtual void FocusExited()
+        protected internal virtual void KeyboardFocusExited()
+        {
+        }
+
+        /// <summary>
+        ///     Fired when a control loses control focus for any reason. See <see cref="IUserInterfaceManager.ControlFocused"/>.
+        /// </summary>
+        /// <remarks>
+        ///     Controls which have some sort of drag / drop behavior should usually implement this method (typically by cancelling the drag drop).
+        ///     Otherwise, if a user clicks down LMB over one control to initiate a drag, then clicks RMB down
+        ///     over a different control while still holding down LMB, the control being dragged will now lose focus
+        ///     and will no longer receive the keyup for the LMB, thus won't cancel the drag.
+        ///     This should also be considered for controls which have any special KeyBindUp behavior - consider
+        ///     what would happen if the control lost focus and never received the KeyBindUp.
+        ///
+        ///     There is no corresponding ControlFocusEntered - if a control wants to handle that situation they should simply
+        ///     handle KeyBindDown as that's the only way a control would gain focus.
+        /// </remarks>
+        protected internal virtual void ControlFocusExited()
         {
         }
 

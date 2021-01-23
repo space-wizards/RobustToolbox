@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -120,7 +120,20 @@ namespace Robust.Shared.Interfaces.Timing
         /// </summary>
         void ResetRealTime();
 
+        /// <summary>
+        /// Is this the first time CurTick has been predicted?
+        /// </summary>
         bool IsFirstTimePredicted { get; }
+
+        /// <summary>
+        /// Is CurTick ahead of LastRealTick, meaning we are inside predicted ticks?
+        /// </summary>
+        bool InPrediction { get; }
+
+        /// <summary>
+        /// The last real non-predicted tick that was processed.
+        /// </summary>
+        GameTick LastRealTick { get; set; }
 
         void StartPastPrediction();
         void EndPastPrediction();

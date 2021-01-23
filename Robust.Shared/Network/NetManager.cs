@@ -663,7 +663,6 @@ namespace Robust.Shared.Network
 
             try
             {
-                await Task.Delay(1000);
                 await _serializer.Handshake(channel);
             }
             catch (TaskCanceledException)
@@ -686,7 +685,21 @@ namespace Robust.Shared.Network
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
 
-            OnDisconnected(channel, reason);
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
+                OnDisconnected(channel, reason);
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                // A throw aborting in the middle of this method would be *really* bad
+                // and cause fun bugs like ghost clients sticking around.
+                // I say "would" as if it hasn't already happened...
+                Logger.ErrorS("net", "Caught exception in OnDisconnected handler:\n{0}", e);
+            }
+#endif
             _channels.Remove(connection);
             peer.RemoveChannel(channel);
 
@@ -1005,6 +1018,7 @@ namespace Robust.Shared.Network
             {
                 await conn(args);
             }
+
             return args;
         }
 

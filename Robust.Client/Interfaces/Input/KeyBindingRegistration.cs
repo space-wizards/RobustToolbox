@@ -1,4 +1,4 @@
-﻿using Robust.Client.Input;
+using Robust.Client.Input;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
@@ -16,6 +16,7 @@ namespace Robust.Client.Interfaces.Input
         public int Priority;
         public bool CanFocus;
         public bool CanRepeat;
+        public bool AllowSubCombs;
 
         public void ExposeData(ObjectSerializer serializer)
         {
@@ -28,6 +29,7 @@ namespace Robust.Client.Interfaces.Input
             serializer.DataField(ref Priority, "priority", 0);
             serializer.DataField(ref CanFocus, "canFocus", false);
             serializer.DataField(ref CanRepeat, "canRepeat", false);
+            serializer.DataField(ref AllowSubCombs, "allowSubCombs", false);
         }
     }
 }

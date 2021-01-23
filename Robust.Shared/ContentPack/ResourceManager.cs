@@ -216,7 +216,13 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool ContentFileExists(ResourcePath path)
         {
-            return TryContentFileRead(path, out var _);
+            if (TryContentFileRead(path, out var stream))
+            {
+                stream.Dispose();
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc />

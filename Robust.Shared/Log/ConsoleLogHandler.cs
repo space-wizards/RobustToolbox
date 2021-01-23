@@ -42,7 +42,7 @@ namespace Robust.Shared.Log
         private const string LogBeforeLevel = AnsiFgDefault + "[";
         private const string LogAfterLevel = AnsiFgDefault + "] ";
 
-        private readonly Stream _stream = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
+        private readonly Stream _stream = new BufferedStream(System.Console.OpenStandardOutput(), 128 * 1024);
 
         private readonly StringBuilder _line = new(1024);
 

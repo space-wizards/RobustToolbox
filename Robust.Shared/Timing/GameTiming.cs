@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -237,6 +237,12 @@ namespace Robust.Shared.Timing
         }
 
         public bool IsFirstTimePredicted { get; private set; } = true;
+
+        /// <inheritdoc />
+        public bool InPrediction => CurTick > LastRealTick;
+
+        /// <inheritdoc />
+        public GameTick LastRealTick { get; set; }
 
         public void StartPastPrediction()
         {

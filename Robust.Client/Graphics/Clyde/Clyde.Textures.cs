@@ -11,6 +11,9 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
+using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
+using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
+using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -20,8 +23,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture _stockTextureBlack = default!;
         private ClydeTexture _stockTextureTransparent = default!;
 
-        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures =
-            new();
+        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new();
 
         private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
@@ -69,85 +71,129 @@ namespace Robust.Client.Graphics.Clyde
             // Flip image because OpenGL reads images upside down.
             var copy = FlipClone(image);
 
-            var texture = new GLHandle((uint) GL.GenTexture());
-            CheckGlError();
-            GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            CheckGlError();
-            ApplySampleParameters(actualParams.SampleParameters);
-
-            PixelInternalFormat internalFormat;
-            PixelFormat pixelDataFormat;
-            PixelType pixelDataType;
-            bool isActuallySrgb = false;
-
-            if (pixelType == typeof(Rgba32))
-            {
-                // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.
-                // Shaders are expected to compensate for this
-                internalFormat = (actualParams.Srgb && _hasGLSrgb) ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
-                isActuallySrgb = actualParams.Srgb;
-                pixelDataFormat = PixelFormat.Rgba;
-                pixelDataType = PixelType.UnsignedByte;
-            }
-            else if (pixelType == typeof(A8))
-            {
-                if (image.Width % 4 != 0 || image.Height % 4 != 0)
-                {
-                    throw new ArgumentException("Alpha8 images must have multiple of 4 sizes.");
-                }
-
-                internalFormat = PixelInternalFormat.R8;
-                pixelDataFormat = PixelFormat.Red;
-                pixelDataType = PixelType.UnsignedByte;
-
-                unsafe
-                {
-                    // TODO: Does it make sense to default to 1 for RGB parameters?
-                    // It might make more sense to pass some options to change swizzling.
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.One);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.One);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.One);
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.Red);
-                }
-            }
-            else if (pixelType == typeof(L8) && !actualParams.Srgb)
-            {
-                // Can only use R8 for L8 if sRGB is OFF.
-                // Because OpenGL doesn't provide sRGB single/dual channel image formats.
-                // Vulkan when?
-                if (copy.Width % 4 != 0 || copy.Height % 4 != 0)
-                {
-                    throw new ArgumentException("L8 non-sRGB images must have multiple of 4 sizes.");
-                }
-
-                internalFormat = PixelInternalFormat.R8;
-                pixelDataFormat = PixelFormat.Red;
-                pixelDataType = PixelType.UnsignedByte;
-
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.One);
-            }
-            else
-            {
-                throw new NotImplementedException($"Unable to handle pixel type '{pixelType.Name}'");
-            }
+            var texture = CreateBaseTextureInternal<T>(image.Width, image.Height, actualParams, name);
 
             unsafe
             {
                 var span = copy.GetPixelSpan();
                 fixed (T* ptr = span)
                 {
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, copy.Width, copy.Height, 0,
-                        pixelDataFormat, pixelDataType, (IntPtr) ptr);
-                    CheckGlError();
+                    // Still bound.
+                    DoTexUpload(copy.Width, copy.Height, actualParams.Srgb, ptr);
                 }
             }
 
-            var pressureEst = EstPixelSize(internalFormat) * copy.Width * copy.Height;
+            return texture;
+        }
 
-            return GenTexture(texture, (copy.Width, copy.Height), isActuallySrgb, name, pressureEst);
+        public unsafe OwnedTexture CreateBlankTexture<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
+        {
+            var actualParams = loadParams ?? TextureLoadParameters.Default;
+            if (!_hasGLTextureSwizzle)
+            {
+                // Actually create RGBA32 texture if missing texture swizzle.
+                // This is fine (TexturePixelType that's stored) because all other APIs do the same.
+                if (typeof(T) == typeof(A8) || typeof(T) == typeof(L8))
+                {
+                    return CreateBlankTexture<Rgba32>(size, name, loadParams);
+                }
+            }
+
+            var texture = CreateBaseTextureInternal<T>(
+                size.X, size.Y,
+                actualParams,
+                name);
+
+            // Texture still bound, run glTexImage2D with null data param to specify bounds.
+            DoTexUpload<T>(size.X, size.Y, actualParams.Srgb, null);
+
+            return texture;
+        }
+
+        private unsafe void DoTexUpload<T>(int width, int height, bool srgb, T* ptr) where T : unmanaged, IPixel<T>
+        {
+            if (sizeof(T) < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+                CheckGlError();
+            }
+
+            var (pif, pf, pt) = PixelEnums<T>(srgb);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, pif, width, height, 0, pf, pt, (IntPtr) ptr);
+            CheckGlError();
+
+            if (sizeof(T) < 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                CheckGlError();
+            }
+        }
+
+        private ClydeTexture CreateBaseTextureInternal<T>(
+            int width, int height,
+            in TextureLoadParameters loadParams,
+            string? name = null)
+            where T : unmanaged, IPixel<T>
+        {
+            var texture = new GLHandle((uint) GL.GenTexture());
+            CheckGlError();
+            GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
+            CheckGlError();
+            ApplySampleParameters(loadParams.SampleParameters);
+
+            var (pif, _, _) = PixelEnums<T>(loadParams.Srgb);
+            var pixelType = typeof(T);
+            var texPixType = GetTexturePixelType<T>();
+            var isActuallySrgb = false;
+
+            if (pixelType == typeof(Rgba32))
+            {
+                isActuallySrgb = loadParams.Srgb;
+            }
+            else if (pixelType == typeof(A8))
+            {
+                DebugTools.Assert(_hasGLTextureSwizzle);
+
+                // TODO: Does it make sense to default to 1 for RGB parameters?
+                // It might make more sense to pass some options to change swizzling.
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.One);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.One);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.One);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.Red);
+                CheckGlError();
+            }
+            else if (pixelType == typeof(L8) && !loadParams.Srgb)
+            {
+                DebugTools.Assert(_hasGLTextureSwizzle);
+
+                // Can only use R8 for L8 if sRGB is OFF.
+                // Because OpenGL doesn't provide sRGB single/dual channel image formats.
+                // Vulkan when?
+
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.Red);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.Red);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.Red);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.One);
+                CheckGlError();
+            }
+            else
+            {
+                throw new NotSupportedException($"Unable to handle pixel type '{pixelType.Name}'");
+            }
+
+            var pressureEst = EstPixelSize(pif) * width * height;
+
+            return GenTexture(texture, (width, height), isActuallySrgb, name, texPixType, pressureEst);
         }
 
         private void ApplySampleParameters(TextureSampleParameters? sampleParameters)
@@ -201,10 +247,30 @@ namespace Robust.Client.Graphics.Clyde
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             CheckGlError();
         }
 
-        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, bool srgb, string? name, long memoryPressure=0)
+        private (PIF pif, PF pf, PT pt) PixelEnums<T>(bool srgb)
+            where T : unmanaged, IPixel<T>
+        {
+            return default(T) switch
+            {
+                // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.
+                // Shaders are expected to compensate for this
+                Rgba32 => (srgb && _hasGLSrgb ? PIF.Srgb8Alpha8 : PIF.Rgba8, PF.Rgba, PT.UnsignedByte),
+                A8 or L8 => (PIF.R8, PF.Red, PT.UnsignedByte),
+                _ => throw new NotSupportedException("Unsupported pixel type."),
+            };
+        }
+
+        private ClydeTexture GenTexture(
+            GLHandle glHandle,
+            Vector2i size,
+            bool srgb,
+            string? name,
+            TexturePixelType pixType,
+            long memoryPressure = 0)
         {
             if (name != null)
             {
@@ -222,7 +288,8 @@ namespace Robust.Client.Graphics.Clyde
                 Height = height,
                 IsSrgb = srgb,
                 Name = name,
-                MemoryPressure = memoryPressure
+                MemoryPressure = memoryPressure,
+                TexturePixelType = pixType
                 // TextureInstance = new WeakReference<ClydeTexture>(instance)
             };
 
@@ -244,6 +311,97 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             _loadedTextures.Remove(textureHandle);
             //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
+        }
+
+        private unsafe void SetSubImage<T>(
+            ClydeTexture texture,
+            Vector2i dstTl,
+            Image<T> srcImage,
+            in UIBox2i srcBox)
+            where T : unmanaged, IPixel<T>
+        {
+            if (!_hasGLTextureSwizzle)
+            {
+                if (typeof(T) == typeof(A8))
+                {
+                    SetSubImage(texture, dstTl, ApplyA8Swizzle((Image<A8>) (object) srcImage), srcBox);
+                }
+
+                if (typeof(T) == typeof(L8))
+                {
+                    SetSubImage(texture, dstTl, ApplyL8Swizzle((Image<L8>) (object) srcImage), srcBox);
+                }
+            }
+
+            var loaded = _loadedTextures[texture.TextureId];
+
+            var pixType = GetTexturePixelType<T>();
+
+            if (pixType != loaded.TexturePixelType)
+            {
+                if (loaded.TexturePixelType == TexturePixelType.RenderTarget)
+                    throw new InvalidOperationException("Cannot modify texture for render target directly.");
+
+                throw new InvalidOperationException("Mismatching pixel type for texture.");
+            }
+
+            if (loaded.Width < dstTl.X + srcBox.Width || loaded.Height < dstTl.Y + srcBox.Height)
+                throw new ArgumentOutOfRangeException(nameof(srcBox), "Destination rectangle out of bounds.");
+
+            if (srcBox.Left < 0 || srcBox.Top < 0 || srcBox.Right > srcImage.Width || srcBox.Bottom > srcImage.Height)
+                throw new ArgumentOutOfRangeException(nameof(srcBox), "Source rectangle out of bounds.");
+
+            if (sizeof(T) != 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+                CheckGlError();
+            }
+
+            // sRGB doesn't matter since that only changes the internalFormat, which we don't need here.
+            var (_, pf, pt) = PixelEnums<T>(srgb: false);
+
+            GL.BindTexture(TextureTarget.Texture2D, loaded.OpenGLObject.Handle);
+            CheckGlError();
+
+            var size = srcBox.Width * srcBox.Height;
+
+            var copyBuffer = size < 16 * 16 ? stackalloc T[size] : new T[size];
+
+            for (var y = 0; y < srcBox.Height; y++)
+            for (var x = 0; x < srcBox.Width; x++)
+            {
+                copyBuffer[(srcBox.Height - y - 1) * srcBox.Width + x] = srcImage[x + srcBox.Left, srcBox.Top + y];
+            }
+
+            fixed (T* aPtr = copyBuffer)
+            {
+                var dstY = loaded.Height - dstTl.Y - srcBox.Height;
+                GL.TexSubImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    dstTl.X, dstY,
+                    srcBox.Width, srcBox.Height,
+                    pf, pt,
+                    (IntPtr) aPtr);
+                CheckGlError();
+            }
+
+            if (sizeof(T) != 4)
+            {
+                GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
+                CheckGlError();
+            }
+        }
+
+        private static TexturePixelType GetTexturePixelType<T>() where T : unmanaged, IPixel<T>
+        {
+            return default(T) switch
+            {
+                Rgba32 => TexturePixelType.Rgba32,
+                L8 => TexturePixelType.L8,
+                A8 => TexturePixelType.A8,
+                _ => throw new NotSupportedException("Unsupported pixel type."),
+            };
         }
 
         private void LoadStockTextures()
@@ -350,8 +508,18 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsSrgb;
             public string? Name;
             public long MemoryPressure;
+            public TexturePixelType TexturePixelType;
+
             public Vector2i Size => (Width, Height);
             // public WeakReference<ClydeTexture> TextureInstance;
+        }
+
+        private enum TexturePixelType : byte
+        {
+            RenderTarget = 0,
+            Rgba32,
+            A8,
+            L8,
         }
 
         private void FlushTextureDispose()
@@ -368,6 +536,11 @@ namespace Robust.Client.Graphics.Clyde
             public readonly bool IsSrgb;
 
             internal ClydeHandle TextureId { get; }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+                _clyde.SetSubImage(this, topLeft, sourceImage, sourceRegion);
+            }
 
             protected override void Dispose(bool disposing)
             {

@@ -31,6 +31,8 @@ namespace Robust.Shared.Reflection
 
         private readonly Dictionary<string, Type> _looseTypeCache = new();
 
+        private readonly Dictionary<string, Enum> _enumCache = new();
+
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
         {
@@ -179,8 +181,13 @@ namespace Robust.Shared.Reflection
             }
 
             reference = reference.Substring(5);
+
+            if (_enumCache.TryGetValue(reference, out @enum))
+                return true;
+
             var dotIndex = reference.LastIndexOf('.');
             var typeName = reference.Substring(0, dotIndex);
+
             var value = reference.Substring(dotIndex + 1);
 
             foreach (var assembly in assemblies)
@@ -193,6 +200,7 @@ namespace Robust.Shared.Reflection
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
+                    _enumCache[reference] = @enum;
                     return true;
                 }
             }

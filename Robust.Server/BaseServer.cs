@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -37,6 +38,7 @@ using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Log;
+using Robust.Server.Utility;
 using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
@@ -236,7 +238,6 @@ namespace Robust.Server
             {
                 netMan.Initialize(true);
                 netMan.StartServer();
-                netMan.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME);
             }
             catch (Exception e)
             {
@@ -286,6 +287,8 @@ namespace Robust.Server
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
+            
+            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
 
             _stateManager.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
@@ -319,6 +322,11 @@ namespace Robust.Server
             _watchdogApi.Initialize();
 
             _stringSerializer.LockStrings();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
 
             return false;
         }
@@ -459,7 +467,6 @@ namespace Robust.Server
                 _time.TickRate = b;
 
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
-                SendTickRateUpdateToClients(b);
             });
 
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
@@ -469,17 +476,11 @@ namespace Robust.Server
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
         }
 
-        private void SendTickRateUpdateToClients(byte newTickRate)
-        {
-            var msg = _network.CreateNetMessage<MsgSetTickRate>();
-            msg.NewTickRate = newTickRate;
-
-            _network.ServerSendToAll(msg);
-        }
-
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
+
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
@@ -500,6 +501,11 @@ namespace Robust.Server
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
         }
 
         private string UpdateBps()
@@ -528,11 +534,19 @@ namespace Robust.Server
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
+            // These are always the same on the server, there is no prediction.
+            _time.LastRealTick = _time.CurTick;
+
             UpdateTitle();
 
             using (TickUsage.WithLabels("PreEngine").NewTimer())
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
+            {
+                IoCManager.Resolve<INetConfigurationManager>().TickProcessMessages();
             }
 
             using (TickUsage.WithLabels("Timers").NewTimer())

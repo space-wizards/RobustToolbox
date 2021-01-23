@@ -442,6 +442,7 @@ Types:
     IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
+    PreserveBaseOverridesAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     TaskAwaiter: { All: True }

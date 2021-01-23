@@ -781,6 +781,21 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class GcFullCommand : IConsoleCommand
+    {
+        public string Command => "gcf";
+        public string Description => "Run the GC, fully, compacting LOH and everything.";
+        public string Help => "gcf";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Forced, true, true);
+
+            return false;
+        }
+    }
+
     internal class GcModeCommand : IConsoleCommand
     {
 

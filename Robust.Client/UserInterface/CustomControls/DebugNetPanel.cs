@@ -64,6 +64,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
             if (!NetManager.IsConnected)
             {
                 contents.Text = "Not connected to server.";

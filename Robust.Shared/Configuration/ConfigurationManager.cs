@@ -1,4 +1,4 @@
-﻿using Nett;
+using Nett;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Log;
 using System;
@@ -13,12 +13,12 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    internal sealed class ConfigurationManager : IConfigurationManagerInternal
+    internal class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars = new();
+        protected readonly Dictionary<string, ConfigVar> _configVars = new();
         private string? _configFile;
-        private bool _isServer;
+        protected bool _isServer;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
@@ -79,6 +79,7 @@ namespace Robust.Shared.Configuration
             else // this is a key, add CVar
             {
                 // if the CVar has already been registered
+                var tomlValue = TypeConvert(obj);
                 if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
                     if ((cfgVar.Flags & CVar.SECURE) != 0)
@@ -90,13 +91,14 @@ namespace Robust.Shared.Configuration
                         return;
                     }
                     // overwrite the value with the saved one
-                    cfgVar.Value = TypeConvert(obj);
+                    cfgVar.Value = tomlValue;
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);
                 }
                 else
                 {
                     //or add another unregistered CVar
-                    cfgVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
                     _configVars.Add(tablePath, cfgVar);
                 }
 
@@ -131,6 +133,8 @@ namespace Robust.Shared.Configuration
                         continue;
                     }
 
+                    // Don't write if Archive flag is not set.
+                    // Don't write if the cVar is the default value.
                     if (!cVar.ConfigModified &&
                         (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
                     {
@@ -192,6 +196,7 @@ namespace Robust.Shared.Configuration
         }
 
         public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+            where T : notnull
         {
             Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
@@ -202,7 +207,7 @@ namespace Robust.Shared.Configuration
             RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
         }
 
-        private void RegisterCVar(string name, Type type, object? defaultValue, CVar flags, Action<object>? onValueChanged)
+        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
         {
             DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
                 $"{name}: Enum cvars must have int as underlying type.");
@@ -305,10 +310,15 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value)
+        {
+            SetCVarInternal(name, value);
+        }
+
+        private void SetCVarInternal(string name, object value, bool allowSecure = false)
         {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (allowSecure || (cVar.Flags & CVar.SECURE) == 0))
             {
                 if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                 {
@@ -348,6 +358,18 @@ namespace Robust.Shared.Configuration
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
 
+        public void SetSecureCVar(string name, object value)
+        {
+            SetCVarInternal(name, value, allowSecure: true);
+        }
+
+
+        public void SetSecureCVar<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            SetSecureCVar(def.Name, value);
+        }
+
+
         public T GetCVar<T>(CVarDef<T> def) where T : notnull
         {
             return GetCVar<T>(def.Name);
@@ -377,13 +399,14 @@ namespace Robust.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(key, null, CVar.NONE) { OverrideValue = value };
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
                     _configVars.Add(key, cVar);
                 }
             }
         }
 
-        private object ParseOverrideValue(string value, Type? type)
+        private static object ParseOverrideValue(string value, Type? type)
         {
             if (type == typeof(int))
             {
@@ -434,7 +457,7 @@ namespace Robust.Shared.Configuration
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
-        private class ConfigVar
+        protected class ConfigVar
         {
             /// <summary>
             ///     Constructs a CVar.
@@ -444,7 +467,7 @@ namespace Robust.Shared.Configuration
             /// everything after is the CVar name in the TOML document.</param>
             /// <param name="defaultValue">The default value of this CVar.</param>
             /// <param name="flags">Optional flags to modify the behavior of this CVar.</param>
-            public ConfigVar(string name, object? defaultValue, CVar flags)
+            public ConfigVar(string name, object defaultValue, CVar flags)
             {
                 Name = name;
                 DefaultValue = defaultValue;
@@ -459,7 +482,7 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The default value of this CVar.
             /// </summary>
-            public object? DefaultValue { get; set; }
+            public object DefaultValue { get; set; }
 
             /// <summary>
             ///     Optional flags to modify the behavior of this CVar.

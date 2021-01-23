@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Asynchronous;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -35,8 +35,9 @@ namespace Robust.Shared
         public static void RegisterIoC()
         {
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
+            IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
+            IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             IoCManager.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();

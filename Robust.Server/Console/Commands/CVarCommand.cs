@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
@@ -9,13 +8,13 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
+    internal sealed class CVarCommand : SharedCVarCommand, IServerCommand
     {
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {
-                shell.SendText(player, "Must provide exactly one or two arguments.");
+                shell.WriteLine("Must provide exactly one or two arguments.");
                 return;
             }
 
@@ -25,13 +24,13 @@ namespace Robust.Server.Console.Commands
             if (name == "?")
             {
                 var cvars = configManager.GetRegisteredCVars();
-                shell.SendText(player, string.Join("\n", cvars));
+                shell.WriteLine(string.Join("\n", cvars));
                 return;
             }
 
             if (!configManager.IsCVarRegistered(name))
             {
-                shell.SendText(player, $"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.");
+                shell.WriteLine($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.");
                 return;
             }
 
@@ -39,7 +38,7 @@ namespace Robust.Server.Console.Commands
             {
                 // Read CVar
                 var value = configManager.GetCVar<object>(name);
-                shell.SendText(player, value.ToString());
+                shell.WriteLine(value.ToString()!);
             }
             else
             {
@@ -53,7 +52,7 @@ namespace Robust.Server.Console.Commands
                 }
                 catch (FormatException)
                 {
-                    shell.SendText(player, $"Input value is in incorrect format for type {type}");
+                    shell.WriteLine($"Input value is in incorrect format for type {type}");
                 }
             }
         }

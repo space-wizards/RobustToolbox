@@ -1,12 +1,12 @@
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
 
-namespace Robust.Server.Interfaces.Console
+namespace Robust.Server.Console
 {
     /// <summary>
     ///     A command, executed from the debug console of a client.
     /// </summary>
-    public interface IClientCommand : IConsoleCommand
+    public interface IServerCommand : IConsoleCommand
     {
         /// <summary>
         /// Executes the client command.
@@ -14,6 +14,6 @@ namespace Robust.Server.Interfaces.Console
         /// <param name="shell">The console that executed this command.</param>
         /// <param name="player">The player that ran this command. This is null if the command was ran by the server console.</param>
         /// <param name="args">An array of all the parsed arguments.</param>
-        void Execute(IConsoleShell shell, IPlayerSession? player, string[] args);
+        void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args);
     }
 }

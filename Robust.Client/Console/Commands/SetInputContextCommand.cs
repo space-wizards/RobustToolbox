@@ -1,22 +1,21 @@
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public class SetInputContextCommand : IConsoleCommand
+    public class SetInputContextCommand : IClientCommand
     {
         public string Command => "setinputcontext";
         public string Description => "Sets the active input context.";
         public string Help => "setinputcontext <context>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine("Invalid number of arguments!");
+                shell.WriteLine("Invalid number of arguments!");
                 return false;
             }
 
@@ -24,7 +23,7 @@ namespace Robust.Client.Console.Commands
 
             if (!inputMan.Contexts.Exists(args[0]))
             {
-                console.AddLine("Context not found!");
+                shell.WriteLine("Context not found!");
                 return false;
             }
 

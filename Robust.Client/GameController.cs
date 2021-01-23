@@ -50,7 +50,7 @@ namespace Robust.Client
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
@@ -167,7 +167,7 @@ namespace Robust.Client
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
-            _console.Initialize();
+            _consoleHost.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

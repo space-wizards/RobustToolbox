@@ -14,7 +14,6 @@ using Robust.Client.Interfaces;
 using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.ContentPack;

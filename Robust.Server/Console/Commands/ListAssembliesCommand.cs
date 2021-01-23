@@ -1,19 +1,18 @@
 using System.Runtime.Loader;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal class ListAssembliesCommand : IClientCommand
+    internal class ListAssembliesCommand : IServerCommand
     {
         public string Command => "lsasm";
         public string Description => "Lists loaded assemblies by load context.";
         public string Help => Command;
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var sb = new StringBuilder();
             foreach (var context in AssemblyLoadContext.All)
@@ -25,7 +24,7 @@ namespace Robust.Server.Console.Commands
                 }
             }
 
-            shell.SendText(player, sb.ToString());
+            shell.WriteLine(sb.ToString());
         }
     }
 }

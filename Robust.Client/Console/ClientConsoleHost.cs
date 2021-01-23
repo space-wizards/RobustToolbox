@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Log;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
@@ -12,9 +11,9 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
-using IConsoleCommand = Robust.Client.Interfaces.Console.IConsoleCommand;
 
 namespace Robust.Client.Console
 {
@@ -40,7 +39,7 @@ namespace Robust.Client.Console
         }
     }
 
-    internal sealed class ClientConsole : IClientConsole, IDebugConsole
+    internal sealed class ClientConsoleHost : IClientConsoleHost
     {
         private static readonly Color MsgColor = new Color(65, 105, 225);
 
@@ -48,8 +47,16 @@ namespace Robust.Client.Console
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly ILogManager logManager = default!;
 
-        private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
+        private readonly Dictionary<string, IClientCommand> _commands = new Dictionary<string, IClientCommand>();
         private bool _requestedCommands;
+
+        public IReadOnlyDictionary<string, IClientCommand> Commands => _commands;
+        public IClientConsoleShell LocalShell { get; }
+
+        public ClientConsoleHost()
+        {
+            LocalShell = new ConsoleHostAdapter(this, null);
+        }
 
         /// <inheritdoc />
         public void Initialize()
@@ -84,8 +91,6 @@ namespace Robust.Client.Console
             // We don't have anything to dispose.
         }
 
-        public IReadOnlyDictionary<string, IConsoleCommand> Commands => _commands;
-
         public void AddLine(string text, Color color)
         {
             AddString?.Invoke(this, new AddStringArgs(text, color));
@@ -99,6 +104,11 @@ namespace Robust.Client.Console
         public void Clear()
         {
             ClearText?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ExecuteCommand(string command)
+        {
+            ProcessCommand(command);
         }
 
         public event EventHandler<AddStringArgs>? AddString;
@@ -127,7 +137,7 @@ namespace Robust.Client.Console
                 _commands[commandName] = command;
             }
         }
-
+        
         /// <summary>
         ///     Processes commands (chat messages starting with /)
         /// </summary>
@@ -152,7 +162,7 @@ namespace Robust.Client.Console
             {
                 var command = _commands[commandname];
                 args.RemoveAt(0);
-                forward = command.Execute(this, args.ToArray());
+                forward = command.Execute(new ConsoleHostAdapter(this, null), args.ToArray());
             }
             else if (!_network.IsConnected)
             {
@@ -169,9 +179,9 @@ namespace Robust.Client.Console
         /// </summary>
         private void InitializeCommands()
         {
-            foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
+            foreach (var t in _reflectionManager.GetAllChildren<IClientCommand>())
             {
-                var instance = (IConsoleCommand)Activator.CreateInstance(t)!;
+                var instance = (IClientCommand)Activator.CreateInstance(t)!;
                 if (_commands.ContainsKey(instance.Command))
                     throw new InvalidOperationException($"Command already registered: {instance.Command}");
 
@@ -211,8 +221,20 @@ namespace Robust.Client.Console
 
         public void AddFormattedLine(FormattedMessage message)
         {
-            // Why the hell does this class implement IDebugConsole.
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
+        }
+
+        IConsoleShell IConsoleHost.LocalShell => LocalShell;
+
+        /// <inheritdoc />
+        public IConsoleShell GetSessionShell(ICommonSession session)
+        {
+            return LocalShell;
+        }
+
+        public void WriteLine(ICommonSession? session, string text)
+        {
+            AddLine(text);
         }
     }
 
@@ -220,7 +242,7 @@ namespace Robust.Client.Console
     ///     These dummies are made purely so list and help can list server-side commands.
     /// </summary>
     [Reflect(false)]
-    internal class ServerDummyCommand : IConsoleCommand
+    internal class ServerDummyCommand : IClientCommand
     {
         internal ServerDummyCommand(string command, string help, string description)
         {
@@ -236,9 +258,46 @@ namespace Robust.Client.Console
         public string Description { get; }
 
         // Always forward to server.
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             return true;
+        }
+    }
+
+    internal class ConsoleHostAdapter : IClientConsoleShell
+    {
+        private readonly IClientConsoleHost _host;
+        private readonly ICommonSession? _session;
+
+        public ConsoleHostAdapter(IClientConsoleHost host, ICommonSession? session)
+        {
+            _host = host;
+            _session = session;
+        }
+
+        public IConsoleHost ConsoleHost => _host;
+        public bool IsServer => false;
+        public ICommonSession? Player => _session;
+        public IReadOnlyDictionary<string, IClientCommand> RegisteredCommands => _host.Commands;
+        public void WriteLine(string text, Color color)
+        {
+            _host.AddLine(text, color);
+        }
+
+        public void ExecuteCommand(string command)
+        {
+            // client cannot execute remote commands
+            _host.ExecuteCommand(command);
+        }
+
+        public void WriteLine(string text)
+        {
+            _host.AddLine(text);
+        }
+
+        public void Clear()
+        {
+            _host.Clear();
         }
     }
 }

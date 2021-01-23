@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Player;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -7,18 +6,18 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class ClientSpawnCommand : IConsoleCommand
+    internal sealed class ClientSpawnCommand : IClientCommand
     {
         public string Command => "cspawn";
         public string Description => "Spawns a client-side entity with specific type at your feet.";
         public string Help => "cspawn <entity type>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
             if (player?.ControlledEntity == null)
             {
-                console.AddLine("You don't have an attached entity.");
+                shell.WriteLine("You don't have an attached entity.");
                 return false;
             }
 

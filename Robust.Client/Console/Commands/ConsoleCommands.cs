@@ -3,41 +3,39 @@
 // Couldn't think of a better name sorry.
 
 using System;
-using Robust.Client.Interfaces.Console;
 using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using IConsoleCommand = Robust.Client.Interfaces.Console.IConsoleCommand;
 
 namespace Robust.Client.Console.Commands
 {
-    class ClearCommand : IConsoleCommand
+    class ClearCommand : IClientCommand
     {
         public string Command => "cls";
         public string Help => "Clears the debug console of all messages.";
         public string Description => "Clears the console.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
-            console.Clear();
+            shell.Clear();
             return false;
         }
     }
 
-    class FillCommand : IConsoleCommand
+    class FillCommand : IClientCommand
     {
         public string Command => "fill";
         public string Help => "Fills the console with some nonsense for debugging.";
         public string Description => "Fill up the console for debugging.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             Color[] colors = { Color.Green, Color.Blue, Color.Red };
             var random = IoCManager.Resolve<IRobustRandom>();
             for (int x = 0; x < 50; x++)
             {
-                console.AddLine("filling...", colors[random.Next(0, colors.Length)]);
+                shell.WriteLine("filling...", colors[random.Next(0, colors.Length)]);
             }
             return false;
         }

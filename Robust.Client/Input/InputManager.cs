@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
+using Robust.Client.Console;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
@@ -806,23 +806,23 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class BindCommand : IConsoleCommand
+    internal class BindCommand : IClientCommand
     {
         public string Command => "bind";
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 3)
             {
-                console.AddLine("Too few arguments.");
+                shell.WriteLine("Too few arguments.");
                 return false;
             }
 
             if (args.Length > 3)
             {
-                console.AddLine("Too many arguments.");
+                shell.WriteLine("Too many arguments.");
                 return false;
             }
 
@@ -830,7 +830,7 @@ namespace Robust.Client.Input
 
             if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
             {
-                console.AddLine($"Key '{keyName}' is unrecognized.");
+                shell.WriteLine($"Key '{keyName}' is unrecognized.");
                 return false;
             }
 
@@ -838,7 +838,7 @@ namespace Robust.Client.Input
 
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
-                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
+                shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
                 return false;
             }
 
@@ -862,13 +862,13 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class SaveBindCommand : IConsoleCommand
+    internal class SaveBindCommand : IClientCommand
     {
         public string Command => "svbind";
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();

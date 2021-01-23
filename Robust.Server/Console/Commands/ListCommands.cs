@@ -1,11 +1,10 @@
 ﻿using System.Linq;
 using System.Text;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 
 namespace Robust.Server.Console.Commands
 {
-    public class ListCommands : IClientCommand
+    public class ListCommands : IServerCommand
     {
         public string Command => "list";
 
@@ -15,7 +14,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Usage: list [filter]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var filter = "";
             if (args.Length == 1)
@@ -24,7 +23,7 @@ namespace Robust.Server.Console.Commands
             }
 
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
-            foreach (var command in shell.AvailableCommands.Values
+            foreach (var command in shell.RegisteredCommands.Values
                 .Where(p => p.Command.Contains(filter))
                 .OrderBy(c => c.Command))
             {
@@ -34,7 +33,7 @@ namespace Robust.Server.Console.Commands
             }
 
             var message = builder.ToString().Trim(' ', '\n');
-            shell.SendText(player, message);
+            shell.WriteLine(message);
         }
     }
 }

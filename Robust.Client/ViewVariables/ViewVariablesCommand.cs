@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
+using Robust.Client.Console;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
@@ -14,13 +14,13 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public class ViewVariablesCommand : IConsoleCommand
+    public class ViewVariablesCommand : IClientCommand
     {
         public string Command => "vv";
         public string Description => "Opens View Variables.";
         public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var vvm = IoCManager.Resolve<IViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.
@@ -46,7 +46,7 @@ namespace Robust.Client.ViewVariables
                 var reflection = IoCManager.Resolve<IReflectionManager>();
                 if (!reflection.TryLooseGetType(valArg, out var type))
                 {
-                    console.AddLine("Unable to find that type.");
+                    shell.WriteLine("Unable to find that type.");
                     return false;
                 }
 
@@ -57,7 +57,7 @@ namespace Robust.Client.ViewVariables
                 }
                 catch (UnregisteredTypeException)
                 {
-                    console.AddLine("Unable to find that type.");
+                    shell.WriteLine("Unable to find that type.");
                     return false;
                 }
                 vvm.OpenVV(obj);
@@ -70,7 +70,7 @@ namespace Robust.Client.ViewVariables
                 var obj = IoCManager.Resolve<IUserInterfaceManager>().CurrentlyHovered;
                 if (obj == null)
                 {
-                    console.AddLine("Not currently hovering any control.");
+                    shell.WriteLine("Not currently hovering any control.");
                     return false;
                 }
                 vvm.OpenVV(obj);
@@ -80,14 +80,14 @@ namespace Robust.Client.ViewVariables
             // Entity.
             if (!EntityUid.TryParse(args[0], out var uid))
             {
-                console.AddLine("Invalid specifier format.");
+                shell.WriteLine("Invalid specifier format.");
                 return false;
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
             if (!entityManager.TryGetEntity(uid, out var entity))
             {
-                console.AddLine("That entity does not exist.");
+                shell.WriteLine("That entity does not exist.");
                 return false;
             }
 

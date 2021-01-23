@@ -1,11 +1,10 @@
-﻿using Robust.Client.Interfaces.Console;
-using Robust.Shared.Log;
+﻿using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using System;
 
 namespace Robust.Client.Console.Commands
 {
-    class LogSetLevelCommand : IConsoleCommand
+    class LogSetLevelCommand : IClientCommand
     {
         public string Command => "loglevel";
         public string Description => "Changes the log level for a provided sawmill.";
@@ -13,11 +12,11 @@ namespace Robust.Client.Console.Commands
                             + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 2)
             {
-                console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
                 return false;
             }
 
@@ -32,7 +31,7 @@ namespace Robust.Client.Console.Commands
             {
                 if (!Enum.TryParse<LogLevel>(levelname, out var result))
                 {
-                    console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                    shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
                     return false;
                 }
                 level = result;
@@ -42,7 +41,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class TestLog : IConsoleCommand
+    class TestLog : IClientCommand
     {
         public string Command => "testlog";
         public string Description => "Writes a test log to a sawmill.";
@@ -51,11 +50,11 @@ namespace Robust.Client.Console.Commands
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum."
                             + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 3)
             {
-                console.AddLine("Invalid argument amount. Expected 3 arguments.", Color.Red);
+                shell.WriteLine("Invalid argument amount. Expected 3 arguments.", Color.Red);
                 return false;
             }
 
@@ -64,7 +63,7 @@ namespace Robust.Client.Console.Commands
             var message = args[2]; // yes this doesn't support spaces idgaf.
             if (!Enum.TryParse<LogLevel>(levelname, out var result))
             {
-                console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
                 return false;
             }
             var level = result;

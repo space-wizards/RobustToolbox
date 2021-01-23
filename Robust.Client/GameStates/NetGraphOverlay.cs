@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using Robust.Client.Console;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -166,23 +166,23 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetShowGraphCommand : IConsoleCommand
+        private class NetShowGraphCommand : IClientCommand
         {
             public string Command => "net_graph";
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public bool Execute(IClientConsoleShell shell, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                    shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
                     return false;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
                     return false;
                 }
 
@@ -192,12 +192,12 @@ namespace Robust.Client.GameStates
                 if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
-                    console.AddLine("Enabled network overlay.");
+                    shell.WriteLine("Enabled network overlay.");
                 }
                 else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
-                    console.AddLine("Disabled network overlay.");
+                    shell.WriteLine("Disabled network overlay.");
                 }
 
                 return false;

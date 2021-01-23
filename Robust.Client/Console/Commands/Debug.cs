@@ -12,7 +12,6 @@ using System.Text.RegularExpressions;
 using Robust.Client.Input;
 using System.Threading;
 using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -43,36 +42,36 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Console.Commands
 {
-    internal class DumpEntitiesCommand : IConsoleCommand
+    internal class DumpEntitiesCommand : IClientCommand
     {
         public string Command => "dumpentities";
         public string Help => "Dump entity list";
         public string Description => "Dumps entity list of UIDs and prototype.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.", Color.White);
+                shell.WriteLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.", Color.White);
             }
 
             return false;
         }
     }
 
-    internal class GetComponentRegistrationCommand : IConsoleCommand
+    internal class GetComponentRegistrationCommand : IClientCommand
     {
         public string Command => "getcomponentregistration";
         public string Help => "Usage: getcomponentregistration <componentName>";
         public string Description => "Gets component registration information";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
@@ -94,23 +93,23 @@ namespace Robust.Client.Console.Commands
 
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                console.AddLine(message.ToString(), Color.White);
+                shell.WriteLine(message.ToString(), Color.White);
 
                 foreach (var type in registration.References)
                 {
-                    console.AddLine($"  {type}", Color.White);
+                    shell.WriteLine($"  {type}", Color.White);
                 }
             }
             catch (UnknownComponentException)
             {
-                console.AddLine($"No registration found for '{args[0]}'", Color.Red);
+                shell.WriteLine($"No registration found for '{args[0]}'", Color.Red);
             }
 
             return false;
         }
     }
 
-    internal class ToggleMonitorCommand : IConsoleCommand
+    internal class ToggleMonitorCommand : IClientCommand
     {
         public string Command => "monitor";
 
@@ -119,13 +118,13 @@ namespace Robust.Client.Console.Commands
 
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
 
             if (args.Length != 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
@@ -159,7 +158,7 @@ namespace Robust.Client.Console.Commands
                     monitor.ShowInput ^= true;
                     break;
                 default:
-                    console.AddLine($"Invalid key: {args[0]}");
+                    shell.WriteLine($"Invalid key: {args[0]}");
                     break;
             }
 
@@ -167,25 +166,25 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ExceptionCommand : IConsoleCommand
+    internal class ExceptionCommand : IClientCommand
     {
         public string Command => "fuck";
         public string Help => "Throws an exception";
         public string Description => "Throws an exception";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             throw new InvalidOperationException("Fuck");
         }
     }
 
-    internal class ShowBoundingBoxesCommand : IConsoleCommand
+    internal class ShowBoundingBoxesCommand : IClientCommand
     {
         public string Command => "showbb";
         public string Help => "";
         public string Description => "Enables debug drawing over all bounding boxes in the game, showing their size.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<IDebugDrawing>();
             mgr.DebugColliders = !mgr.DebugColliders;
@@ -193,13 +192,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ShowPositionsCommand : IConsoleCommand
+    internal class ShowPositionsCommand : IClientCommand
     {
         public string Command => "showpos";
         public string Help => "";
         public string Description => "Enables debug drawing over all entity positions in the game.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<IDebugDrawing>();
             mgr.DebugPositions = !mgr.DebugPositions;
@@ -207,48 +206,48 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ShowRayCommand : IConsoleCommand
+    internal class ShowRayCommand : IClientCommand
     {
         public string Command => "showrays";
         public string Help => "Usage: showrays <raylifetime>";
         public string Description => "Toggles debug drawing of physics rays. An integer for <raylifetime> must be provided";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
             if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
+                shell.WriteLine($"{args[0]} is not a valid integer.",Color.Red);
                 return false;
             }
 
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
-            console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
+            shell.WriteLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
             mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
             return false;
         }
     }
 
-    internal class DisconnectCommand : IConsoleCommand
+    internal class DisconnectCommand : IClientCommand
     {
         public string Command => "disconnect";
         public string Help => "";
         public string Description => "Immediately disconnect from the server and go back to the main menu.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
             return false;
         }
     }
 
-    internal class EntityInfoCommand : IConsoleCommand
+    internal class EntityInfoCommand : IClientCommand
     {
         public string Command => "entfo";
 
@@ -257,17 +256,17 @@ namespace Robust.Client.Console.Commands
 
         public string Description => "Displays verbose diagnostics for an entity.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
             if ((!new Regex(@"^c?[0-9]+$").IsMatch(args[0])))
             {
-                console.AddLine("Malformed UID", Color.Red);
+                shell.WriteLine("Malformed UID", Color.Red);
                 return false;
             }
 
@@ -275,15 +274,15 @@ namespace Robust.Client.Console.Commands
             var entmgr = IoCManager.Resolve<IEntityManager>();
             if (!entmgr.TryGetEntity(uid, out var entity))
             {
-                console.AddLine("That entity does not exist. Sorry lad.", Color.Red);
+                shell.WriteLine("That entity does not exist. Sorry lad.", Color.Red);
                 return false;
             }
 
-            console.AddLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
-            console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
+            shell.WriteLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
+            shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {
-                console.AddLine(component.ToString() ?? "");
+                shell.WriteLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)
                 {
                     foreach (var line in debug.GetDebugString().Split('\n'))
@@ -293,7 +292,7 @@ namespace Robust.Client.Console.Commands
                             continue;
                         }
 
-                        console.AddLine("\t" + line);
+                        shell.WriteLine("\t" + line);
                     }
                 }
             }
@@ -302,17 +301,17 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SnapGridGetCell : IConsoleCommand
+    internal class SnapGridGetCell : IClientCommand
     {
         public string Command => "sggcell";
         public string Help => "sggcell <gridID> <vector2i> [offset]\nThat vector2i param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 2 && args.Length != 3)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
@@ -322,13 +321,13 @@ namespace Robust.Client.Console.Commands
 
             if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
+                shell.WriteLine($"{args[0]} is not a valid integer.",Color.Red);
                 return false;
             }
 
             if (!new Regex(@"^-?[0-9]+,-?[0-9]+$").IsMatch(indices))
             {
-                console.AddLine("mapIndicies must be of form x<int>,y<int>", Color.Red);
+                shell.WriteLine("mapIndicies must be of form x<int>,y<int>", Color.Red);
                 return false;
             }
 
@@ -339,7 +338,7 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                console.AddLine("given offset type is not defined", Color.Red);
+                shell.WriteLine("given offset type is not defined", Color.Red);
                 return false;
             }
 
@@ -354,12 +353,12 @@ namespace Robust.Client.Console.Commands
                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
                         selectedOffset))
                 {
-                    console.AddLine(entity.Owner.Uid.ToString());
+                    shell.WriteLine(entity.Owner.Uid.ToString());
                 }
             }
             else
             {
-                console.AddLine("grid does not exist", Color.Red);
+                shell.WriteLine("grid does not exist", Color.Red);
                 return false;
             }
 
@@ -367,39 +366,39 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SetPlayerName : IConsoleCommand
+    internal class SetPlayerName : IClientCommand
     {
         public string Command => "overrideplayername";
         public string Description => "Changes the name used when attempting to connect to the server.";
         public string Help => Command + " <name>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
             var client = IoCManager.Resolve<IBaseClient>();
             client.PlayerNameOverride = args[0];
 
-            console.AddLine($"Overriding player name to \"{args[0]}\".", Color.White);
+            shell.WriteLine($"Overriding player name to \"{args[0]}\".", Color.White);
 
             return false;
         }
     }
 
-    internal class LoadResource : IConsoleCommand
+    internal class LoadResource : IClientCommand
     {
         public string Command => "ldrsc";
         public string Description => "Pre-caches a resource.";
         public string Help => "ldrsc <path> <type>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 2)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
@@ -412,7 +411,7 @@ namespace Robust.Client.Console.Commands
             }
             catch(ArgumentException)
             {
-                console.AddLine("Unable to find type", Color.Red);
+                shell.WriteLine("Unable to find type", Color.Red);
                 return false;
             }
 
@@ -427,17 +426,17 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ReloadResource : IConsoleCommand
+    internal class ReloadResource : IClientCommand
     {
         public string Command => "rldrsc";
         public string Description => "Reloads a resource.";
         public string Help => "rldrsc <path> <type>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 2)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
@@ -450,7 +449,7 @@ namespace Robust.Client.Console.Commands
             }
             catch(ArgumentException)
             {
-                console.AddLine("Unable to find type", Color.Red);
+                shell.WriteLine("Unable to find type", Color.Red);
                 return false;
             }
 
@@ -462,23 +461,23 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GridTileCount : IConsoleCommand
+    internal class GridTileCount : IClientCommand
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";
         public string Help => "Usage: gridtc <gridId>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
             if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine($"{args[0]} is not a valid integer.");
+                shell.WriteLine($"{args[0]} is not a valid integer.");
                 return false;
             }
 
@@ -487,24 +486,24 @@ namespace Robust.Client.Console.Commands
 
             if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                console.AddLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
+                shell.WriteLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
                 return false;
             }
             else
             {
-                console.AddLine($"No grid exists with id {id}",Color.Red);
+                shell.WriteLine($"No grid exists with id {id}",Color.Red);
                 return false;
             }
         }
     }
 
-    internal class GuiDumpCommand : IConsoleCommand
+    internal class GuiDumpCommand : IClientCommand
     {
         public string Command => "guidump";
         public string Description => "Dump GUI tree to /guidump.txt in user data.";
         public string Help => "guidump";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
             var res = IoCManager.Resolve<IResourceManager>();
@@ -569,13 +568,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class UITestCommand : IConsoleCommand
+    internal class UITestCommand : IClientCommand
     {
         public string Command => "uitest";
         public string Description => "Open a dummy UI testing window";
         public string Help => "uitest";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var window = new SS14Window { CustomMinimumSize = (500, 400)};
             var tabContainer = new TabContainer();
@@ -672,13 +671,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SetClipboardCommand : IConsoleCommand
+    internal class SetClipboardCommand : IClientCommand
     {
         public string Command => "setclipboard";
         public string Description => "Sets the system clipboard";
         public string Help => "setclipboard <text>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
             mgr.SetText(args[0]);
@@ -686,27 +685,27 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GetClipboardCommand : IConsoleCommand
+    internal class GetClipboardCommand : IClientCommand
     {
         public string Command => "getclipboard";
         public string Description => "Gets the system clipboard";
         public string Help => "getclipboard";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
-            console.AddLine(mgr.GetText());
+            shell.WriteLine(mgr.GetText());
             return false;
         }
     }
 
-    internal class ToggleLight : IConsoleCommand
+    internal class ToggleLight : IClientCommand
     {
         public string Command => "togglelight";
         public string Description => "Toggles light rendering.";
         public string Help => "togglelight";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -715,13 +714,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleFOV : IConsoleCommand
+    internal class ToggleFOV : IClientCommand
     {
         public string Command => "togglefov";
         public string Description => "Toggles fov for client.";
         public string Help => "togglefov";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var lmgr = IoCManager.Resolve<ILightManager>();
             var mgr = IoCManager.Resolve<IEyeManager>();
@@ -732,13 +731,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleHardFOV : IConsoleCommand
+    internal class ToggleHardFOV : IClientCommand
     {
         public string Command => "togglehardfov";
         public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
         public string Help => "togglehardfov";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -747,13 +746,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleShadows : IConsoleCommand
+    internal class ToggleShadows : IClientCommand
     {
         public string Command => "toggleshadows";
         public string Description => "Toggles shadow rendering.";
         public string Help => "toggleshadows";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -776,13 +775,13 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GcCommand : IConsoleCommand
+    internal class GcCommand : IClientCommand
     {
         public string Command => "gc";
         public string Description => "Run the GC.";
         public string Help => "gc [generation]";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length == 0)
             {
@@ -793,20 +792,20 @@ namespace Robust.Client.Console.Commands
                 if (int.TryParse(args[0], out int result))
                     GC.Collect(result);
                 else
-                    console.AddLine("Failed to parse argument.",Color.Red);
+                    shell.WriteLine("Failed to parse argument.",Color.Red);
             }
 
             return false;
         }
     }
 
-    internal class GcFullCommand : IConsoleCommand
+    internal class GcFullCommand : IClientCommand
     {
         public string Command => "gcf";
         public string Description => "Run the GC, fully, compacting LOH and everything.";
         public string Help => "gcf";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -815,7 +814,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GcModeCommand : IConsoleCommand
+    internal class GcModeCommand : IClientCommand
     {
 
         public string Command => "gc_mode";
@@ -824,16 +823,16 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "gc_mode\nSee current GC Latencymode\ngc_mode [type]\n Change GC Latency mode to [type]";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var prevMode = GCSettings.LatencyMode;
             if (args.Length == 0)
             {
-                console.AddLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
-                console.AddLine("possible modes:");
+                shell.WriteLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
+                shell.WriteLine("possible modes:");
                 foreach (int mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
                 {
-                    console.AddLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
+                    shell.WriteLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
                 }
             }
             else
@@ -845,13 +844,13 @@ namespace Robust.Client.Console.Commands
                 }
                 else if (!Enum.TryParse(args[0], true, out mode))
                 {
-                    console.AddLine($"unknown gc latency mode: {args[0]}");
+                    shell.WriteLine($"unknown gc latency mode: {args[0]}");
                     return false;
                 }
 
-                console.AddLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
+                shell.WriteLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
                 GCSettings.LatencyMode = mode;
-                console.AddLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
+                shell.WriteLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
             }
 
             return false;
@@ -859,7 +858,7 @@ namespace Robust.Client.Console.Commands
 
     }
 
-    internal class SerializeStatsCommand : IConsoleCommand
+    internal class SerializeStatsCommand : IClientCommand
     {
 
         public string Command => "szr_stats";
@@ -868,26 +867,26 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "szr_stats";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
 
-            console.AddLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
-            console.AddLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
-            console.AddLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
-            console.AddLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
+            shell.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
+            shell.WriteLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
+            shell.WriteLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
+            shell.WriteLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
 
             return false;
         }
 
     }
 
-    internal class ChunkInfoCommand : IConsoleCommand
+    internal class ChunkInfoCommand : IClientCommand
     {
         public string Command => "chunkinfo";
         public string Description => "Gets info about a chunk under your mouse cursor.";
         public string Help => Command;
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
             var inputMan = IoCManager.Resolve<IInputManager>();
@@ -897,7 +896,7 @@ namespace Robust.Client.Console.Commands
 
             if (!mapMan.TryFindGridAt(mousePos, out var grid))
             {
-                console.AddLine("No grid under your mouse cursor.");
+                shell.WriteLine("No grid under your mouse cursor.");
                 return false;
             }
 
@@ -906,12 +905,12 @@ namespace Robust.Client.Console.Commands
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
             var chunk = internalGrid.GetChunk(chunkIndex);
 
-            console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
+            shell.WriteLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
             return false;
         }
     }
 
-    internal class ReloadShadersCommand : IConsoleCommand
+    internal class ReloadShadersCommand : IClientCommand
     {
 
         public string Command => "rldshader";
@@ -924,7 +923,7 @@ namespace Robust.Client.Console.Commands
 
         public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new();
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             IResourceCacheInternal resC;
             if (args.Length == 1)
@@ -933,7 +932,7 @@ namespace Robust.Client.Console.Commands
                 {
                     if (_watchers != null)
                     {
-                        console.AddLine("Already watching.");
+                        shell.WriteLine("Already watching.");
                         return false;
                     }
                     resC = IoCManager.Resolve<IResourceCacheInternal>();
@@ -1003,11 +1002,11 @@ namespace Robust.Client.Console.Commands
                                         {
                                             IoCManager.Resolve<IResourceCache>()
                                                 .ReloadResource<ShaderSourceResource>(resPath);
-                                            console.AddLine($"Reloaded shader: {resPath}");
+                                            shell.WriteLine($"Reloaded shader: {resPath}");
                                         }
                                         catch (Exception)
                                         {
-                                            console.AddLine($"Failed to reload shader: {resPath}");
+                                            shell.WriteLine($"Failed to reload shader: {resPath}");
                                         }
 
                                         _reloadShadersQueued.TryRemove(ev.FullPath, out var _);
@@ -1027,7 +1026,7 @@ namespace Robust.Client.Console.Commands
                         ++created;
                     }
 
-                    console.AddLine($"Created {created} shader directory watchers for {shaderCount} shaders.");
+                    shell.WriteLine($"Created {created} shader directory watchers for {shaderCount} shaders.");
 
                     return false;
                 }
@@ -1036,7 +1035,7 @@ namespace Robust.Client.Console.Commands
                 {
                     if (_watchers == null)
                     {
-                        console.AddLine("No shader directory watchers active.");
+                        shell.WriteLine("No shader directory watchers active.");
                         return false;
                     }
 
@@ -1049,7 +1048,7 @@ namespace Robust.Client.Console.Commands
 
                     _watchers = null;
 
-                    console.AddLine($"Disposed of {disposed} shader directory watchers.");
+                    shell.WriteLine($"Disposed of {disposed} shader directory watchers.");
 
                     return false;
                 }
@@ -1057,11 +1056,11 @@ namespace Robust.Client.Console.Commands
 
             if (args.Length > 1)
             {
-                console.AddLine("Not implemented.");
+                shell.WriteLine("Not implemented.");
                 return false;
             }
 
-            console.AddLine("Reloading content shader resources...");
+            shell.WriteLine("Reloading content shader resources...");
 
             resC = IoCManager.Resolve<IResourceCacheInternal>();
 
@@ -1073,24 +1072,24 @@ namespace Robust.Client.Console.Commands
                 }
                 catch (Exception)
                 {
-                    console.AddLine($"Failed to reload shader: {path}");
+                    shell.WriteLine($"Failed to reload shader: {path}");
                 }
             }
 
-            console.AddLine("Done.");
+            shell.WriteLine("Done.");
 
             return false;
         }
 
     }
 
-    internal class ClydeDebugLayerCommand : IConsoleCommand
+    internal class ClydeDebugLayerCommand : IClientCommand
     {
         public string Command => "cldbglyr";
         public string Description => "Toggle fov and light debug layers";
         public string Help => "cldbglyr <layer>: Toggle <layer>\ncldbglyr: Turn all Layers off";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             var clyde = IoCManager.Resolve<IClydeInternal>();
 
@@ -1111,17 +1110,17 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GetKeyInfoCommand : IConsoleCommand
+    internal class GetKeyInfoCommand : IClientCommand
     {
         public string Command => "keyinfo";
         public string Description => "Keys key info for a key";
         public string Help => "keyinfo <Key>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine(Help);
+                shell.WriteLine(Help);
                 return false;
             }
 
@@ -1135,12 +1134,12 @@ namespace Robust.Client.Console.Commands
                 var scanCode = clyde.GetKeyScanCode(key);
                 var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
 
-                console.AddLine($"name: '{name}' scan code: '{scanCode}' name via scan code: '{nameScanCode}'");
+                shell.WriteLine($"name: '{name}' scan code: '{scanCode}' name via scan code: '{nameScanCode}'");
             }
             else if (int.TryParse(args[0], out var scanCode))
             {
                 var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
-                console.AddLine($"name via scan code: '{nameScanCode}'");
+                shell.WriteLine($"name via scan code: '{nameScanCode}'");
             }
 
             return false;

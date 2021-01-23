@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
@@ -8,18 +7,18 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddCompCommand : IConsoleCommand
+    internal sealed class AddCompCommand : IClientCommand
     {
         public string Command => "addcompc";
         public string Description => "Adds a component to an entity on the client";
         public string Help => "addcompc <uid> <componentName>";
 
-        public bool Execute(IDebugConsole shell, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
 
             if (args.Length != 2)
             {
-                shell.AddLine("Wrong number of arguments");
+                shell.WriteLine("Wrong number of arguments");
                 return false;
             }
 
@@ -42,17 +41,17 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    internal sealed class RemoveCompCommand : IConsoleCommand
+    internal sealed class RemoveCompCommand : IClientCommand
     {
         public string Command => "rmcompc";
         public string Description => "Removes a component from an entity.";
         public string Help => "rmcompc <uid> <componentName>";
 
-        public bool Execute(IDebugConsole shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length != 2)
             {
-                shell.AddLine("Wrong number of arguments");
+                shell.WriteLine("Wrong number of arguments");
                 return false;
             }
 

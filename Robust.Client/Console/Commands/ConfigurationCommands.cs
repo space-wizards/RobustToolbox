@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
@@ -10,13 +9,13 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class CVarCommand : SharedCVarCommand, IConsoleCommand
+    internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
     {
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {
-                console.AddLine("Must provide exactly one or two arguments.", Color.Red);
+                shell.WriteLine("Must provide exactly one or two arguments.", Color.Red);
                 return false;
             }
 
@@ -26,13 +25,13 @@ namespace Robust.Client.Console.Commands
             if (name == "?")
             {
                 var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
-                console.AddLine(string.Join("\n", cvars));
+                shell.WriteLine(string.Join("\n", cvars));
                 return false;
             }
 
             if (!configManager.IsCVarRegistered(name))
             {
-                console.AddLine($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.", Color.Red);
+                shell.WriteLine($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.", Color.Red);
                 return false;
             }
 
@@ -40,7 +39,7 @@ namespace Robust.Client.Console.Commands
             {
                 // Read CVar
                 var value = configManager.GetCVar<object>(name);
-                console.AddLine(value.ToString() ?? "");
+                shell.WriteLine(value.ToString() ?? "");
             }
             else
             {
@@ -54,7 +53,7 @@ namespace Robust.Client.Console.Commands
                 }
                 catch (FormatException)
                 {
-                    console.AddLine($"Input value is in incorrect format for type {type}");
+                    shell.WriteLine($"Input value is in incorrect format for type {type}");
                 }
             }
 
@@ -63,13 +62,13 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public class SaveConfig : IConsoleCommand
+    public class SaveConfig : IClientCommand
     {
         public string Command => "saveconfig";
         public string Description => "Saves the client configuration to the config file";
         public string Help => "saveconfig";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public bool Execute(IClientConsoleShell shell, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
             return false;

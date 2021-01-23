@@ -63,6 +63,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLShaderProgram? _currentProgram;
 
         private int _lightmapDivider = 2;
+        private int _maxLightsPerScene = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -133,6 +134,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReadConfig();
             _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
             _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 

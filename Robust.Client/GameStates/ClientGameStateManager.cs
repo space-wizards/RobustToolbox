@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces;
@@ -11,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
@@ -41,7 +42,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
@@ -57,7 +58,8 @@ namespace Robust.Client.GameStates
 
         public bool Predicting { get; private set; }
 
-        public int PredictSize { get; private set; }
+        public int PredictTickBias { get; private set; }
+        public float PredictLagBias { get; private set; }
 
         public int StateBufferMergeThreshold { get; private set; }
 
@@ -82,14 +84,16 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
             _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
             _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
-            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i, true);
+            _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
+            _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
             _processor.Logging = _config.GetCVar(CVars.NetLogging);
             Predicting = _config.GetCVar(CVars.NetPredict);
-            PredictSize = _config.GetCVar(CVars.NetPredictSize);
+            PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
+            PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
         }
 
         /// <inheritdoc />
@@ -174,7 +178,7 @@ namespace Robust.Client.GameStates
             var i = 0;
             for (; i < applyCount; i++)
             {
-                _timing.CurTick = _lastProcessedTick + 1;
+                _timing.LastRealTick = _timing.CurTick = _lastProcessedTick + 1;
 
                 // TODO: We could theoretically communicate with the GameStateProcessor better here.
                 // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
@@ -256,9 +260,9 @@ namespace Robust.Client.GameStates
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-            var ping = _network.ServerChannel!.Ping / 1000f; // seconds.
+            var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
+                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
 
             // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
@@ -377,6 +381,7 @@ namespace Robust.Client.GameStates
 
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
+            _config.TickProcessMessages();
             _mapManager.ApplyGameStatePre(curState.MapData);
             var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
                 nextState?.EntityStates);

@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Reflection;
+using Robust.Shared.Configuration;
 
 namespace Robust.Shared.Interfaces.Configuration
 {
@@ -9,6 +10,10 @@ namespace Robust.Shared.Interfaces.Configuration
         void LoadCVarsFromAssembly(Assembly assembly);
 
         T GetSecureCVar<T>(string name);
+
+        void SetSecureCVar(string name, object value);
+        void SetSecureCVar<T>(CVarDef<T> def, T value) where T : notnull;
+
         void Initialize(bool isServer);
 
         /// <summary>

@@ -1,5 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Analyzer\Robust.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Analyzers\Robust.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 </Project>

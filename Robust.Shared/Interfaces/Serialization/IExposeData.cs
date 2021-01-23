@@ -5,6 +5,7 @@ namespace Robust.Shared.Interfaces.Serialization
     /// <summary>
     ///     Interface for the "expose data" system, which is basically our method of handling data serialization.
     /// </summary>
+    [RequiresExplicitImplementation]
     public interface IExposeData
     {
         /// <summary>

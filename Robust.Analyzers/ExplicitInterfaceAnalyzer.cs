@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
@@ -16,26 +17,23 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Formatting;
 using Document = Microsoft.CodeAnalysis.Document;
 
-namespace Robust.Analyzer
+namespace Robust.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExplicitInterfaceAnalyzer : DiagnosticAnalyzer
     {
-        // Metadata of the analyzer
         public const string DiagnosticId = "RA0000";
 
-        // You could use LocalizedString but it's a little more complicated for this sample
         private static readonly string Title = "No explicit interface specified";
         private static readonly string MessageFormat = "No explicit interface specified";
         private static readonly string Description = "Make sure to specify the interface in your method-declaration.";
         private const string Category = "Usage";
 
-        private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+        [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
-        private const string RequiresExplicitImplementationAttributeName =
-            "Robust.Shared.RequiresExplicitImplementationAttribute";
+        private const string RequiresExplicitImplementationAttributeMetadataName =
+            "Robust.Shared.Analyzers.RequiresExplicitImplementationAttribute";
 
-        // Register the list of rules this DiagnosticAnalizer supports
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
         public override void Initialize(AnalysisContext context)
@@ -48,6 +46,7 @@ namespace Robust.Analyzer
         private void AnalyzeNode(SyntaxNodeAnalysisContext context)
         {
             var methodDecl = (MethodDeclarationSyntax) context.Node;
+            var attrSymbol = context.Compilation.GetTypeByMetadataName(RequiresExplicitImplementationAttributeMetadataName);
 
             //we already have a explicit interface specified, no need to check further
             if(methodDecl.ExplicitInterfaceSpecifier != null) return;
@@ -56,8 +55,8 @@ namespace Robust.Analyzer
 
             var @interface = symbol?.ContainingType.AllInterfaces.FirstOrDefault(
                 i =>
-                    i.GetMembers().OfType<IMethodSymbol>().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m))) &&
-                    i.GetAttributes().Any(a => a.AttributeClass?.Name == RequiresExplicitImplementationAttributeName)
+                    i.GetMembers().OfType<IMethodSymbol>().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m)))
+                    && i.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attrSymbol))
             );
             if (@interface != null)
             {
@@ -74,7 +73,7 @@ namespace Robust.Analyzer
     [ExportCodeFixProvider(LanguageNames.CSharp, nameof(ExplicitInterfaceMethodCodeFixProvider))]
     public class ExplicitInterfaceMethodCodeFixProvider : CodeFixProvider
     {
-        private const string title = "Convert to explicit interface declaration";
+        private const string Title = "Convert to explicit interface declaration";
 
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
@@ -90,9 +89,9 @@ namespace Robust.Analyzer
 
                 context.RegisterCodeFix(
                     CodeAction.Create(
-                        title,
+                        Title,
                         c => FixAsync(context.Document, methodDecl, c, @interface),
-                        title),
+                        Title),
                     diagnostic);
             }
         }
@@ -133,10 +132,7 @@ namespace Robust.Analyzer
             return document.WithSyntaxRoot(newRoot);
         }
 
-        public sealed override ImmutableArray<string> FixableDiagnosticIds
-        {
-            get { return ImmutableArray.Create(ExplicitInterfaceAnalyzer.DiagnosticId); }
-        }
+        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(ExplicitInterfaceAnalyzer.DiagnosticId);
 
         public override FixAllProvider GetFixAllProvider()
         {

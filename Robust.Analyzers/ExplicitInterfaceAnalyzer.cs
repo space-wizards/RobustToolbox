@@ -65,7 +65,7 @@ namespace Robust.Analyzers
         }
     }
 
-    [ExportCodeFixProvider(LanguageNames.CSharp, nameof(ExplicitInterfaceMethodCodeFixProvider))]
+    [ExportCodeFixProvider(LanguageNames.CSharp)]
     public class ExplicitInterfaceMethodCodeFixProvider : CodeFixProvider
     {
         private const string Title = "Convert to explicit interface declaration";

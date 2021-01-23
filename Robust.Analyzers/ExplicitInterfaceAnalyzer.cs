@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -14,7 +10,6 @@ using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Formatting;
 using Document = Microsoft.CodeAnalysis.Document;
 
 namespace Robust.Analyzers
@@ -24,9 +19,9 @@ namespace Robust.Analyzers
     {
         public const string DiagnosticId = "RA0000";
 
-        private static readonly string Title = "No explicit interface specified";
-        private static readonly string MessageFormat = "No explicit interface specified";
-        private static readonly string Description = "Make sure to specify the interface in your method-declaration.";
+        private const string Title = "No explicit interface specified";
+        private const string MessageFormat = "No explicit interface specified";
+        private const string Description = "Make sure to specify the interface in your method-declaration.";
         private const string Category = "Usage";
 
         [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);

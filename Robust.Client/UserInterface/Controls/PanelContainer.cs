@@ -1,4 +1,3 @@
-using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 
@@ -20,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void LayoutUpdateOverride()
         {
-            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? SizeBox;
+            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
 
             foreach (var child in Children)
             {
@@ -34,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
             var childSize = Vector2.Zero;
             foreach (var child in Children)
             {
-                childSize = Vector2.ComponentMax(childSize, child.CombinedMinimumSize);
+                childSize = Vector2.ComponentMax(childSize, child.CombinedPixelMinimumSize);
             }
 
             return styleSize / UIScale + childSize;

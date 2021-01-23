@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -31,8 +32,11 @@ namespace Robust.Analyzer
 
         private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
+        private const string RequiresExplicitImplementationAttributeName =
+            "Robust.Shared.RequiresExplicitImplementationAttribute";
+
         // Register the list of rules this DiagnosticAnalizer supports
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
         public override void Initialize(AnalysisContext context)
         {
@@ -50,9 +54,11 @@ namespace Robust.Analyzer
 
             var symbol = context.SemanticModel.GetDeclaredSymbol(methodDecl);
 
-            var @interface = symbol?.ContainingType.AllInterfaces.FirstOrDefault(i => i.GetMembers()
-                .OfType<IMethodSymbol>().Any(m => SymbolEqualityComparer.Default.Equals(symbol,
-                    symbol.ContainingType.FindImplementationForInterfaceMember(m))));
+            var @interface = symbol?.ContainingType.AllInterfaces.FirstOrDefault(
+                i =>
+                    i.GetMembers().OfType<IMethodSymbol>().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m))) &&
+                    i.GetAttributes().Any(a => a.AttributeClass?.Name == RequiresExplicitImplementationAttributeName)
+            );
             if (@interface != null)
             {
                 //we do not have an explicit interface specified but are an interface method. bad!

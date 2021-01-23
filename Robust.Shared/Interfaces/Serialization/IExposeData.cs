@@ -1,3 +1,4 @@
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Interfaces.Serialization

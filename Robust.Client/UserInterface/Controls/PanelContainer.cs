@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
             var childSize = Vector2.Zero;
             foreach (var child in Children)
             {
-                childSize = Vector2.ComponentMax(childSize, child.CombinedPixelMinimumSize);
+                childSize = Vector2.ComponentMax(childSize, child.CombinedMinimumSize);
             }
 
             return styleSize / UIScale + childSize;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Robust.Client.Console;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
@@ -172,18 +172,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+            public void Execute(IClientConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
                     shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
                     shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -199,8 +199,6 @@ namespace Robust.Client.GameStates
                     overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
                     shell.WriteLine("Disabled network overlay.");
                 }
-
-                return false;
             }
         }
     }

@@ -12,7 +12,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Lists loaded assemblies by load context.";
         public string Help => Command;
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             foreach (var context in AssemblyLoadContext.All)
             {
@@ -22,8 +22,6 @@ namespace Robust.Client.Console.Commands
                     shell.WriteLine($"  {assembly.FullName}");
                 }
             }
-
-            return false;
         }
     }
 }

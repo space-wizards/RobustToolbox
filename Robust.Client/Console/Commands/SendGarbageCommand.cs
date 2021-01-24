@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 
@@ -10,7 +10,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sends garbage to the server.";
         public string Help => "The server will reply with 'no u'";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             // MsgStringTableEntries is registered as NetMessageAccept.Client so the server will immediately deny it.
             // And kick us.
@@ -18,8 +18,6 @@ namespace Robust.Client.Console.Commands
             var msg = net.CreateNetMessage<MsgStringTableEntries>();
             msg.Entries = new MsgStringTableEntries.Entry[0];
             net.ClientSendMessage(msg);
-
-            return false;
         }
     }
 }

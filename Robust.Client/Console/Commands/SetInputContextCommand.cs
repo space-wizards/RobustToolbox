@@ -11,12 +11,12 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sets the active input context.";
         public string Help => "setinputcontext <context>";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
                 shell.WriteLine("Invalid number of arguments!");
-                return false;
+                return;
             }
 
             var inputMan = IoCManager.Resolve<IInputManager>();
@@ -24,11 +24,10 @@ namespace Robust.Client.Console.Commands
             if (!inputMan.Contexts.Exists(args[0]))
             {
                 shell.WriteLine("Context not found!");
-                return false;
+                return;
             }
 
             inputMan.Contexts.SetActiveContext(args[0]);
-            return false;
         }
     }
 }

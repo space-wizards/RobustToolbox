@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables
         public string Description => "Opens View Variables.";
         public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var vvm = IoCManager.Resolve<IViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.
@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables
             if (args.Length == 0)
             {
                 vvm.OpenVV(new VVTest());
-                return false;
+                return;
             }
 
             var valArg = args[0];
@@ -37,7 +37,7 @@ namespace Robust.Client.ViewVariables
                 // Server-side IoC selector.
                 var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
                 vvm.OpenVV(selector);
-                return false;
+                return;
             }
 
             if (valArg.StartsWith("I"))
@@ -47,7 +47,7 @@ namespace Robust.Client.ViewVariables
                 if (!reflection.TryLooseGetType(valArg, out var type))
                 {
                     shell.WriteLine("Unable to find that type.");
-                    return false;
+                    return;
                 }
 
                 object obj;
@@ -58,10 +58,10 @@ namespace Robust.Client.ViewVariables
                 catch (UnregisteredTypeException)
                 {
                     shell.WriteLine("Unable to find that type.");
-                    return false;
+                    return;
                 }
                 vvm.OpenVV(obj);
-                return false;
+                return;
             }
 
             if (valArg.StartsWith("guihover"))
@@ -71,29 +71,27 @@ namespace Robust.Client.ViewVariables
                 if (obj == null)
                 {
                     shell.WriteLine("Not currently hovering any control.");
-                    return false;
+                    return;
                 }
                 vvm.OpenVV(obj);
-                return false;
+                return;
             }
 
             // Entity.
             if (!EntityUid.TryParse(args[0], out var uid))
             {
                 shell.WriteLine("Invalid specifier format.");
-                return false;
+                return;
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
             if (!entityManager.TryGetEntity(uid, out var entity))
             {
                 shell.WriteLine("That entity does not exist.");
-                return false;
+                return;
             }
 
             vvm.OpenVV(entity);
-
-            return false;
         }
 
         /// <summary>

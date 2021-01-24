@@ -1,4 +1,4 @@
-﻿using Robust.Client.Console;
+using Robust.Client.Console;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
@@ -73,18 +73,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+            public void Execute(IClientConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
                     shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
                     shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -100,8 +100,6 @@ namespace Robust.Client.GameStates
                     overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
                     shell.WriteLine("Disabled network interp overlay.");
                 }
-
-                return false;
             }
         }
     }

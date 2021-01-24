@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Robust.Client.Console;
@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
         public string Help => "scene <className>";
         public string Description => "Immediately changes the UI scene/state.";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
             var type = reflection.LooseGetType(args[0]);
@@ -25,8 +25,6 @@ namespace Robust.Client.UserInterface
             var stateMan = IoCManager.Resolve<IStateManager>();
 
             stateMan.RequestStateChange(type);
-
-            return false;
         }
     }
 }

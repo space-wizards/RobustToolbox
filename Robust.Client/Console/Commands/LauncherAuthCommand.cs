@@ -1,4 +1,4 @@
-﻿#if !FULL_RELEASE
+#if !FULL_RELEASE
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -16,7 +16,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Load authentication tokens from launcher data to aid in testing of live servers";
         public string Help => "launchauth [account name]";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var wantName = args.Length > 0 ? args[0] : null;
 
@@ -32,7 +32,7 @@ namespace Robust.Client.Console.Commands
             if (login == null)
             {
                 shell.WriteLine("Unable to find a matching login");
-                return false;
+                return;
             }
 
             var token = login.Token.Token;
@@ -41,8 +41,6 @@ namespace Robust.Client.Console.Commands
             var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
             cfg.SetSecureCVar(CVars.AuthUserId, userId);
             cfg.SetSecureCVar(CVars.AuthToken, token);
-
-            return false;
         }
 
         private sealed class LauncherConfig

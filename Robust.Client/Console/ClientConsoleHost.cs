@@ -157,21 +157,16 @@ namespace Robust.Client.Console
 
             var commandname = args[0];
 
-            var forward = true;
             if (_commands.ContainsKey(commandname))
             {
                 var command = _commands[commandname];
                 args.RemoveAt(0);
-                forward = command.Execute(new ConsoleHostAdapter(this, null), text, args.ToArray());
+                command.Execute(new ConsoleHostAdapter(this, null), text, args.ToArray());
             }
             else if (!_network.IsConnected)
             {
                 AddLine("Unknown command: " + commandname, Color.Red);
-                return;
             }
-
-            if (forward)
-                SendServerConsoleCommand(text);
         }
 
         /// <summary>
@@ -258,9 +253,9 @@ namespace Robust.Client.Console
         public string Description { get; }
 
         // Always forward to server.
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
-            return true;
+            shell.RemoteExecuteCommand(argStr);
         }
     }
 

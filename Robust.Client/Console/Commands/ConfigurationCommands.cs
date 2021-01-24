@@ -11,12 +11,12 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
     {
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {
                 shell.WriteLine("Must provide exactly one or two arguments.", Color.Red);
-                return false;
+                return;
             }
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -26,13 +26,13 @@ namespace Robust.Client.Console.Commands
             {
                 var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
                 shell.WriteLine(string.Join("\n", cvars));
-                return false;
+                return;
             }
 
             if (!configManager.IsCVarRegistered(name))
             {
                 shell.WriteLine($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.", Color.Red);
-                return false;
+                return;
             }
 
             if (args.Length == 1)
@@ -56,8 +56,6 @@ namespace Robust.Client.Console.Commands
                     shell.WriteLine($"Input value is in incorrect format for type {type}");
                 }
             }
-
-            return false;
         }
     }
 
@@ -68,10 +66,9 @@ namespace Robust.Client.Console.Commands
         public string Description => "Saves the client configuration to the config file";
         public string Help => "saveconfig";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
-            return false;
         }
     }
 

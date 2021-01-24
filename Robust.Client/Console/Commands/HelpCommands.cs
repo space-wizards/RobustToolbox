@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -11,7 +11,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
         public string Description => "Display help text.";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             switch (args.Length)
             {
@@ -27,10 +27,10 @@ namespace Robust.Client.Console.Commands
                         {
                             // No server so nothing to respond with unknown command.
                             shell.WriteLine("Unknown command: " + commandname, Color.Red);
-                            return false;
+                            return;
                         }
                         // TODO: Maybe have a server side help?
-                        return false;
+                        return;
                     }
                     IClientCommand command = shell.RegisteredCommands[commandname];
                     shell.WriteLine(string.Format("{0} - {1}", command.Command, command.Description));
@@ -41,7 +41,6 @@ namespace Robust.Client.Console.Commands
                     shell.WriteLine("Invalid amount of arguments.", Color.Red);
                     break;
             }
-            return false;
         }
     }
 
@@ -54,7 +53,7 @@ namespace Robust.Client.Console.Commands
                               "only commands that contain the given string in their name will be listed.";
         public string Description => "List all commands, optionally with a filter.";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var filter = "";
             if (args.Length == 1)
@@ -69,8 +68,6 @@ namespace Robust.Client.Console.Commands
             {
                 shell.WriteLine(command.Command + ": " + command.Description);
             }
-
-            return false;
         }
     }
 }

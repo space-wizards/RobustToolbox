@@ -13,13 +13,13 @@ namespace Robust.Client.Console.Commands
         public string Description => "Adds a component to an entity on the client";
         public string Help => "addcompc <uid> <componentName>";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
 
             if (args.Length != 2)
             {
                 shell.WriteLine("Wrong number of arguments");
-                return false;
+                return;
             }
 
             var entityUid = EntityUid.Parse(args[0]);
@@ -35,8 +35,6 @@ namespace Robust.Client.Console.Commands
             component.Owner = entity;
 
             compManager.AddComponent(entity, component);
-
-            return false;
         }
     }
 
@@ -47,12 +45,12 @@ namespace Robust.Client.Console.Commands
         public string Description => "Removes a component from an entity.";
         public string Help => "rmcompc <uid> <componentName>";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
                 shell.WriteLine("Wrong number of arguments");
-                return false;
+                return;
             }
 
             var entityUid = EntityUid.Parse(args[0]);
@@ -64,8 +62,6 @@ namespace Robust.Client.Console.Commands
             var registration = compFactory.GetRegistration(componentName);
 
             compManager.RemoveComponent(entityUid, registration.Type);
-
-            return false;
         }
     }
 }

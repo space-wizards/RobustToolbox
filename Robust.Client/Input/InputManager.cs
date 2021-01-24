@@ -812,18 +812,18 @@ namespace Robust.Client.Input
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
                 shell.WriteLine("Too few arguments.");
-                return false;
+                return;
             }
 
             if (args.Length > 3)
             {
                 shell.WriteLine("Too many arguments.");
-                return false;
+                return;
             }
 
             var keyName = args[0];
@@ -831,7 +831,7 @@ namespace Robust.Client.Input
             if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
             {
                 shell.WriteLine($"Key '{keyName}' is unrecognized.");
-                return false;
+                return;
             }
 
             var keyId = (Key) keyIdObj!;
@@ -839,7 +839,7 @@ namespace Robust.Client.Input
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
                 shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
-                return false;
+                return;
             }
 
             var keyMode = (KeyBindingType) keyModeObj!;
@@ -856,8 +856,6 @@ namespace Robust.Client.Input
             };
 
             inputMan.RegisterBinding(registration);
-
-            return false;
         }
     }
 
@@ -868,12 +866,10 @@ namespace Robust.Client.Input
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();
-
-            return false;
         }
     }
 }

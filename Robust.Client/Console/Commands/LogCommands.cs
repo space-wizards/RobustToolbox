@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using System;
 
@@ -12,12 +12,12 @@ namespace Robust.Client.Console.Commands
                             + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
                 shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                return false;
+                return;
             }
 
             var name = args[0];
@@ -32,12 +32,11 @@ namespace Robust.Client.Console.Commands
                 if (!Enum.TryParse<LogLevel>(levelname, out var result))
                 {
                     shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
-                    return false;
+                    return;
                 }
                 level = result;
             }
             Logger.GetSawmill(name).Level = level;
-            return false;
         }
     }
 
@@ -50,12 +49,12 @@ namespace Robust.Client.Console.Commands
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum."
                             + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
-        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 3)
             {
                 shell.WriteLine("Invalid argument amount. Expected 3 arguments.", Color.Red);
-                return false;
+                return;
             }
 
             var name = args[0];
@@ -64,12 +63,11 @@ namespace Robust.Client.Console.Commands
             if (!Enum.TryParse<LogLevel>(levelname, out var result))
             {
                 shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
-                return false;
+                return;
             }
             var level = result;
 
             Logger.LogS(level, name, message);
-            return false;
         }
     }
 }

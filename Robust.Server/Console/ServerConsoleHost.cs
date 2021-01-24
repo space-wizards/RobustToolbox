@@ -183,7 +183,7 @@ namespace Robust.Server.Console
                         if (_groupController.CanCommand(session, cmdName)) // client has permission
                         {
                             args.RemoveAt(0);
-                            conCmd.Execute(new ConsoleShellAdapter(this, session), session, args.ToArray());
+                            conCmd.Execute(new ConsoleShellAdapter(this, session), args.ToArray());
                         }
                         else
                             SendText(session, $"Unknown command: '{cmdName}'");
@@ -191,7 +191,7 @@ namespace Robust.Server.Console
                     else // system console
                     {
                         args.RemoveAt(0);
-                        conCmd.Execute(new ConsoleShellAdapter(this, session), null, args.ToArray());
+                        conCmd.Execute(new ConsoleShellAdapter(this, null), args.ToArray());
                     }
                 }
                 else
@@ -237,7 +237,7 @@ namespace Robust.Server.Console
             public string Description => "sudo make me a sandwich";
             public string Help => "sudo";
 
-            public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+            public void Execute(IServerConsoleShell shell, string[] args)
             {
                 var command = args[0];
                 var cArgs = args[1..].Select(CommandParsing.Escape);

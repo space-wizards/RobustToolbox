@@ -13,7 +13,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Adds a component to an entity";
         public string Help => "addcomp <uid> <componentName>";
 
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
             if (args.Length != 2)
             {
@@ -43,7 +43,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "rmcomp";
         public string Description => "Removes a component from an entity.";
         public string Help => "rmcomp <uid> <componentName>";
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
             if (args.Length != 2)
             {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Player;
@@ -19,8 +19,9 @@ namespace Robust.Server.Console.Commands
         public string Description => "Teleports a player to any location in the round.";
         public string Help => "tp <x> <y> [<mapID>]";
 
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
+            var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
 
@@ -67,8 +68,9 @@ namespace Robust.Server.Console.Commands
         public string Description => "Teleports the current player to the location of another player.";
         public string Help => "tpto <username>";
 
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
+            var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
 
@@ -94,7 +96,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Lists all players currently connected";
         public string Help => "listplayers";
 
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
@@ -126,11 +128,12 @@ namespace Robust.Server.Console.Commands
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
         public string Help => "kick <PlayerIndex> [<Reason>]";
 
-        public void Execute(IServerConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IServerConsoleShell shell, string[] args)
         {
             var players = IoCManager.Resolve<IPlayerManager>();
             if (args.Length < 1)
             {
+                var player = shell.Player as IPlayerSession;
                 var toKickPlayer = player ?? players.GetAllPlayers().FirstOrDefault();
                 if (toKickPlayer == null)
                 {

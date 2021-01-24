@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 
@@ -36,12 +35,8 @@ namespace Robust.Shared.Console
         ICommonSession? Player { get; }
 
         /// <summary>
-        /// A map of (commandName -> ICommand) of every registered command in the shell.
-        /// </summary>
-        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
-
-        /// <summary>
-        /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded to the
+        /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded
+        /// to the
         /// remote shell.
         /// </summary>
         /// <param name="command">command line string to execute.</param>

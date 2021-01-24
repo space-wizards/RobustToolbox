@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
@@ -24,7 +24,7 @@ namespace Robust.Server.Console.Commands
             }
 
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
-            foreach (var command in shell.RegisteredCommands.Values
+            foreach (var command in shell.ConsoleHost.RegisteredCommands.Values
                 .Where(p => p.Command.Contains(filter))
                 .OrderBy(c => c.Command))
             {

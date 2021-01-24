@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
 using Robust.Server.Interfaces;
@@ -94,7 +94,7 @@ namespace Robust.Server.Console.Commands
 
                 case 1:
                     var commandName = args[0];
-                    if (!shell.RegisteredCommands.TryGetValue(commandName, out var cmd))
+                    if (!shell.ConsoleHost.RegisteredCommands.TryGetValue(commandName, out var cmd))
                     {
                         shell.WriteLine($"Unknown command: {commandName}");
                         return;

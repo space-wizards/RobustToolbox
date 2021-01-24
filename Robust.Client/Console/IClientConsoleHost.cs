@@ -27,14 +27,12 @@ namespace Robust.Client.Console
         /// <param name="text"></param>
         void ProcessCommand(string text);
 
-        void SendServerCommandRequest();
-
         /// <summary>
         /// Write a line with a specific color to the console window.
         /// </summary>
-        void AddLine(string text, Color color);
+        void WriteLine(string text, Color color);
 
-        void AddLine(string text);
+        void WriteLine(string text);
 
         void AddFormattedLine(FormattedMessage message);
 
@@ -45,6 +43,6 @@ namespace Robust.Client.Console
         /// <summary>
         /// Sends a command directly to the server.
         /// </summary>
-        void SendServerConsoleCommand(string text);
+        void RemoteExecuteCommand(string text);
     }
 }

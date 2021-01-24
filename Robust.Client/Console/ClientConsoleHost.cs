@@ -50,7 +50,7 @@ namespace Robust.Client.Console
         private readonly Dictionary<string, IConsoleCommand> _commands = new();
         private bool _requestedCommands;
 
-        public IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _commands;
+        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _commands;
         public IConsoleShell LocalShell { get; }
 
         public ClientConsoleHost()
@@ -91,14 +91,14 @@ namespace Robust.Client.Console
             // We don't have anything to dispose.
         }
 
-        public void AddLine(string text, Color color)
+        public void WriteLine(string text, Color color)
         {
             AddString?.Invoke(this, new AddStringArgs(text, color));
         }
 
-        public void AddLine(string text)
+        public void WriteLine(string text)
         {
-            AddLine(text, Color.White);
+            WriteLine(text, Color.White);
         }
 
         public void Clear()
@@ -117,7 +117,7 @@ namespace Robust.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            AddLine("< " + msg.Text, MsgColor);
+            WriteLine("< " + msg.Text, MsgColor);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)
@@ -148,7 +148,7 @@ namespace Robust.Client.Console
                 return;
 
             // echo the command locally
-            AddLine("> " + text, Color.Lime);
+            WriteLine("> " + text, Color.Lime);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -165,7 +165,7 @@ namespace Robust.Client.Console
             }
             else if (!_network.IsConnected)
             {
-                AddLine("Unknown command: " + commandname, Color.Red);
+                WriteLine("Unknown command: " + commandname, Color.Red);
             }
         }
 
@@ -204,7 +204,7 @@ namespace Robust.Client.Console
         /// <summary>
         ///     Sends a command directly to the server.
         /// </summary>
-        public void SendServerConsoleCommand(string text)
+        public void RemoteExecuteCommand(string text)
         {
             if (_network == null || !_network.IsConnected)
                 return;
@@ -221,6 +221,15 @@ namespace Robust.Client.Console
 
         IConsoleShell IConsoleHost.LocalShell => LocalShell;
 
+        public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
+        {
+            if (_commands.ContainsKey(command))
+                throw new InvalidOperationException($"Command already registered: {command}");
+
+            var newCmd = new RegisteredCommand(command, description, help, callback);
+            _commands.Add(command, newCmd);
+        }
+
         /// <inheritdoc />
         public IConsoleShell GetSessionShell(ICommonSession session)
         {
@@ -229,7 +238,7 @@ namespace Robust.Client.Console
 
         public void WriteLine(ICommonSession? session, string text)
         {
-            AddLine(text);
+            WriteLine(text);
         }
     }
 
@@ -273,10 +282,10 @@ namespace Robust.Client.Console
         public IConsoleHost ConsoleHost => _host;
         public bool IsServer => false;
         public ICommonSession? Player => _session;
-        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _host.AvailableCommands;
+
         public void WriteLine(string text, Color color)
         {
-            _host.AddLine(text, color);
+            _host.WriteLine(text, color);
         }
 
         public void ExecuteCommand(string command)
@@ -287,12 +296,12 @@ namespace Robust.Client.Console
 
         public void RemoteExecuteCommand(string command)
         {
-            _host.SendServerConsoleCommand(command);
+            _host.RemoteExecuteCommand(command);
         }
 
         public void WriteLine(string text)
         {
-            _host.AddLine(text);
+            _host.WriteLine(text);
         }
 
         public void Clear()

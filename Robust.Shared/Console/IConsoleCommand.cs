@@ -1,9 +1,8 @@
 namespace Robust.Shared.Console
 {
     /// <summary>
-    /// Basic abstract to handle console commands.
-    /// Note that there is no Execute() function, this is due to chat & client commands needing a client,
-    /// While client-side and server console commands don't.
+    /// Basic interface to handle console commands. Any class implementing this will be
+    /// registered with the console system through reflection.
     /// </summary>
     public interface IConsoleCommand
     {

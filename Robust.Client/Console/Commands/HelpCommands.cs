@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -22,7 +22,7 @@ namespace Robust.Client.Console.Commands
 
                 case 1:
                     string commandname = args[0];
-                    if (!shell.RegisteredCommands.ContainsKey(commandname))
+                    if (!shell.ConsoleHost.RegisteredCommands.ContainsKey(commandname))
                     {
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
@@ -33,7 +33,7 @@ namespace Robust.Client.Console.Commands
                         // TODO: Maybe have a server side help?
                         return;
                     }
-                    IConsoleCommand command = shell.RegisteredCommands[commandname];
+                    IConsoleCommand command = shell.ConsoleHost.RegisteredCommands[commandname];
                     shell.WriteLine(string.Format("{0} - {1}", command.Command, command.Description));
                     shell.WriteLine(command.Help);
                     break;
@@ -63,7 +63,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var conGroup = IoCManager.Resolve<IClientConGroupController>();
-            foreach (var command in shell.RegisteredCommands.Values
+            foreach (var command in shell.ConsoleHost.RegisteredCommands.Values
                 .Where(p => p.Command.Contains(filter) && conGroup.CanCommand(p.Command))
                 .OrderBy(c => c.Command))
             {

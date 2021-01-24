@@ -73,7 +73,7 @@ namespace Robust.Client.GameStates
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public bool Execute(IClientConsoleShell shell, string[] args)
+            public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {

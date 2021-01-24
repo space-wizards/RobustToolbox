@@ -8,7 +8,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Kills the game client instantly.";
         public string Help => "Kills the game client instantly, leaving no traces. No telling the server goodbye";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             Environment.Exit(0);
             return false;

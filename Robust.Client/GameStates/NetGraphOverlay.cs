@@ -172,7 +172,7 @@ namespace Robust.Client.GameStates
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IClientConsoleShell shell, string[] args)
+            public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {

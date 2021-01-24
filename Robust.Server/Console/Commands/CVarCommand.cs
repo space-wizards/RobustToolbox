@@ -10,7 +10,7 @@ namespace Robust.Server.Console.Commands
     [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IServerCommand
     {
-        public void Execute(IServerConsoleShell shell, string[] args)
+        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {

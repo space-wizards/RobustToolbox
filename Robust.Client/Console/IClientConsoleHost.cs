@@ -48,5 +48,10 @@ namespace Robust.Client.Console
 
         void Clear();
         void ExecuteCommand(string command);
+
+        /// <summary>
+        ///     Sends a command directly to the server.
+        /// </summary>
+        void SendServerConsoleCommand(string text);
     }
 }

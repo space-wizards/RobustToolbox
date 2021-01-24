@@ -13,7 +13,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Adds a component to an entity on the client";
         public string Help => "addcompc <uid> <componentName>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
 
             if (args.Length != 2)
@@ -47,7 +47,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Removes a component from an entity.";
         public string Help => "rmcompc <uid> <componentName>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

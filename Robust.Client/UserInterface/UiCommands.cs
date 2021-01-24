@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
         public string Help => "scene <className>";
         public string Description => "Immediately changes the UI scene/state.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
             var type = reflection.LooseGetType(args[0]);

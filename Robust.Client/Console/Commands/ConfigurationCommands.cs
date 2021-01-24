@@ -11,7 +11,7 @@ namespace Robust.Client.Console.Commands
     [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
     {
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {
@@ -68,7 +68,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Saves the client configuration to the config file";
         public string Help => "saveconfig";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
             return false;

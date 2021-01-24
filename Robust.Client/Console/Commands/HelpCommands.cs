@@ -11,7 +11,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
         public string Description => "Display help text.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             switch (args.Length)
             {
@@ -54,7 +54,7 @@ namespace Robust.Client.Console.Commands
                               "only commands that contain the given string in their name will be listed.";
         public string Description => "List all commands, optionally with a filter.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var filter = "";
             if (args.Length == 1)

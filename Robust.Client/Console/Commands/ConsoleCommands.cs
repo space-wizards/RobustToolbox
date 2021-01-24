@@ -16,7 +16,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Clears the debug console of all messages.";
         public string Description => "Clears the console.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             shell.Clear();
             return false;
@@ -29,7 +29,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Fills the console with some nonsense for debugging.";
         public string Description => "Fill up the console for debugging.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             Color[] colors = { Color.Green, Color.Blue, Color.Red };
             var random = IoCManager.Resolve<IRobustRandom>();

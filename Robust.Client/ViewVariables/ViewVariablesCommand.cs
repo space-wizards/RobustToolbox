@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables
         public string Description => "Opens View Variables.";
         public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var vvm = IoCManager.Resolve<IViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.

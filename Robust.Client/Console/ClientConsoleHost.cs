@@ -162,7 +162,7 @@ namespace Robust.Client.Console
             {
                 var command = _commands[commandname];
                 args.RemoveAt(0);
-                forward = command.Execute(new ConsoleHostAdapter(this, null), args.ToArray());
+                forward = command.Execute(new ConsoleHostAdapter(this, null), text, args.ToArray());
             }
             else if (!_network.IsConnected)
             {
@@ -209,7 +209,7 @@ namespace Robust.Client.Console
         /// <summary>
         ///     Sends a command directly to the server.
         /// </summary>
-        private void SendServerConsoleCommand(string text)
+        public void SendServerConsoleCommand(string text)
         {
             if (_network == null || !_network.IsConnected)
                 return;
@@ -258,7 +258,7 @@ namespace Robust.Client.Console
         public string Description { get; }
 
         // Always forward to server.
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             return true;
         }
@@ -288,6 +288,11 @@ namespace Robust.Client.Console
         {
             // client cannot execute remote commands
             _host.ExecuteCommand(command);
+        }
+
+        public void RemoteExecuteCommand(string command)
+        {
+            _host.SendServerConsoleCommand(command);
         }
 
         public void WriteLine(string text)

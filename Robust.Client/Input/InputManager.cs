@@ -812,7 +812,7 @@ namespace Robust.Client.Input
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
@@ -868,7 +868,7 @@ namespace Robust.Client.Input
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();

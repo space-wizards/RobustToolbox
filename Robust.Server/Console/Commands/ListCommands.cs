@@ -14,7 +14,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Usage: list [filter]";
 
-        public void Execute(IServerConsoleShell shell, string[] args)
+        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
         {
             var filter = "";
             if (args.Length == 1)

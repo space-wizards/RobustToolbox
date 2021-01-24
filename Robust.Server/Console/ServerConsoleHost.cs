@@ -183,7 +183,7 @@ namespace Robust.Server.Console
                         if (_groupController.CanCommand(session, cmdName)) // client has permission
                         {
                             args.RemoveAt(0);
-                            conCmd.Execute(new ConsoleShellAdapter(this, session), args.ToArray());
+                            conCmd.Execute(new ConsoleShellAdapter(this, session), command, args.ToArray());
                         }
                         else
                             SendText(session, $"Unknown command: '{cmdName}'");
@@ -191,7 +191,7 @@ namespace Robust.Server.Console
                     else // system console
                     {
                         args.RemoveAt(0);
-                        conCmd.Execute(new ConsoleShellAdapter(this, null), args.ToArray());
+                        conCmd.Execute(new ConsoleShellAdapter(this, null), command, args.ToArray());
                     }
                 }
                 else
@@ -237,7 +237,7 @@ namespace Robust.Server.Console
             public string Description => "sudo make me a sandwich";
             public string Help => "sudo";
 
-            public void Execute(IServerConsoleShell shell, string[] args)
+            public void Execute(IServerConsoleShell shell, string argStr, string[] args)
             {
                 var command = args[0];
                 var cArgs = args[1..].Select(CommandParsing.Escape);
@@ -290,6 +290,11 @@ namespace Robust.Server.Console
             _host.ExecuteCommand(_session, command);
         }
 
+        public void RemoteExecuteCommand(string command)
+        {
+            // Does nothing
+        }
+
         public void WriteLine(string text)
         {
             _host.WriteLine(_session, text);
@@ -303,7 +308,7 @@ namespace Robust.Server.Console
 
         public void Clear()
         {
-            //TODO: Make me work!
+            // Does nothing
         }
 
         public IReadOnlyDictionary<string, IServerCommand> RegisteredCommands => _host.AvailableCommands;

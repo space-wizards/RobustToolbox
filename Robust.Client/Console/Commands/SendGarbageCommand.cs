@@ -10,7 +10,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sends garbage to the server.";
         public string Help => "The server will reply with 'no u'";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             // MsgStringTableEntries is registered as NetMessageAccept.Client so the server will immediately deny it.
             // And kick us.

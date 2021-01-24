@@ -12,7 +12,7 @@ namespace Robust.Client.Console.Commands
                             + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -50,7 +50,7 @@ namespace Robust.Client.Console.Commands
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum."
                             + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 3)
             {

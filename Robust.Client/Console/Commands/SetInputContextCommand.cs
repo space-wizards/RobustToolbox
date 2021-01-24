@@ -11,7 +11,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sets the active input context.";
         public string Help => "setinputcontext <context>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {

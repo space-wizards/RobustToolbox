@@ -35,10 +35,18 @@ namespace Robust.Shared.Console
         ICommonSession? Player { get; }
 
         /// <summary>
-        /// Executes a command string on this specific session shell.
+        /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded to the
+        /// remote shell.
         /// </summary>
         /// <param name="command">command line string to execute.</param>
         void ExecuteCommand(string command);
+
+        /// <summary>
+        /// Executes the command string on the remote peer. This is mainly used to forward commands from the client to the server.
+        /// If there is no remote peer (this is a local shell), this function does nothing.
+        /// </summary>
+        /// <param name="command">Command line string to execute at the remote endpoint.</param>
+        void RemoteExecuteCommand(string command);
 
         /// <summary>
         /// Writes a line to the output of the console.

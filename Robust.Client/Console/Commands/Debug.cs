@@ -48,7 +48,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Dump entity list";
         public string Description => "Dumps entity list of UIDs and prototype.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
@@ -67,7 +67,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Usage: getcomponentregistration <componentName>";
         public string Description => "Gets component registration information";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
@@ -118,7 +118,7 @@ namespace Robust.Client.Console.Commands
 
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var monitor = IoCManager.Resolve<IUserInterfaceManager>().DebugMonitors;
 
@@ -172,7 +172,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Throws an exception";
         public string Description => "Throws an exception";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             throw new InvalidOperationException("Fuck");
         }
@@ -184,7 +184,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "";
         public string Description => "Enables debug drawing over all bounding boxes in the game, showing their size.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IDebugDrawing>();
             mgr.DebugColliders = !mgr.DebugColliders;
@@ -198,7 +198,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "";
         public string Description => "Enables debug drawing over all entity positions in the game.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IDebugDrawing>();
             mgr.DebugPositions = !mgr.DebugPositions;
@@ -212,7 +212,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "Usage: showrays <raylifetime>";
         public string Description => "Toggles debug drawing of physics rays. An integer for <raylifetime> must be provided";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -240,7 +240,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "";
         public string Description => "Immediately disconnect from the server and go back to the main menu.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
             return false;
@@ -256,7 +256,7 @@ namespace Robust.Client.Console.Commands
 
         public string Description => "Displays verbose diagnostics for an entity.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -307,7 +307,7 @@ namespace Robust.Client.Console.Commands
         public string Help => "sggcell <gridID> <vector2i> [offset]\nThat vector2i param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2 && args.Length != 3)
             {
@@ -372,7 +372,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Changes the name used when attempting to connect to the server.";
         public string Help => Command + " <name>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1)
             {
@@ -394,7 +394,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Pre-caches a resource.";
         public string Help => "ldrsc <path> <type>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
@@ -432,7 +432,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Reloads a resource.";
         public string Help => "rldrsc <path> <type>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 2)
             {
@@ -467,7 +467,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Gets the tile count of a grid";
         public string Help => "Usage: gridtc <gridId>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
@@ -503,7 +503,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Dump GUI tree to /guidump.txt in user data.";
         public string Help => "guidump";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
             var res = IoCManager.Resolve<IResourceManager>();
@@ -574,7 +574,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Open a dummy UI testing window";
         public string Help => "uitest";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var window = new SS14Window { CustomMinimumSize = (500, 400)};
             var tabContainer = new TabContainer();
@@ -677,7 +677,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sets the system clipboard";
         public string Help => "setclipboard <text>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
             mgr.SetText(args[0]);
@@ -691,7 +691,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Gets the system clipboard";
         public string Help => "getclipboard";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
             shell.WriteLine(mgr.GetText());
@@ -705,7 +705,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggles light rendering.";
         public string Help => "togglelight";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -720,7 +720,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggles fov for client.";
         public string Help => "togglefov";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var lmgr = IoCManager.Resolve<ILightManager>();
             var mgr = IoCManager.Resolve<IEyeManager>();
@@ -737,7 +737,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
         public string Help => "togglehardfov";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -752,7 +752,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggles shadow rendering.";
         public string Help => "toggleshadows";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
@@ -781,7 +781,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Run the GC.";
         public string Help => "gc [generation]";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length == 0)
             {
@@ -805,7 +805,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Run the GC, fully, compacting LOH and everything.";
         public string Help => "gcf";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect(2, GCCollectionMode.Forced, true, true);
@@ -823,7 +823,7 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "gc_mode\nSee current GC Latencymode\ngc_mode [type]\n Change GC Latency mode to [type]";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var prevMode = GCSettings.LatencyMode;
             if (args.Length == 0)
@@ -867,7 +867,7 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "szr_stats";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
 
             shell.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
@@ -886,7 +886,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Gets info about a chunk under your mouse cursor.";
         public string Help => Command;
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
             var inputMan = IoCManager.Resolve<IInputManager>();
@@ -923,7 +923,7 @@ namespace Robust.Client.Console.Commands
 
         public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new();
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             IResourceCacheInternal resC;
             if (args.Length == 1)
@@ -1089,7 +1089,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggle fov and light debug layers";
         public string Help => "cldbglyr <layer>: Toggle <layer>\ncldbglyr: Turn all Layers off";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClydeInternal>();
 
@@ -1116,7 +1116,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Keys key info for a key";
         public string Help => "keyinfo <Key>";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {

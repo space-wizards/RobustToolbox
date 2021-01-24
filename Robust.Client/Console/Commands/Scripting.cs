@@ -11,7 +11,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Opens a C# interactive console.";
         public string Help => "csi";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             new ScriptConsoleClient().OpenCentered();
 
@@ -25,7 +25,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Opens a variable watch window.";
         public string Help => "watch";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             new WatchWindow().OpenCentered();
 
@@ -40,7 +40,7 @@ namespace Robust.Client.Console.Commands
         public string Description => "Opens a C# interactive console on the server.";
         public string Help => "scsi";
 
-        public bool Execute(IClientConsoleShell shell, string[] args)
+        public bool Execute(IClientConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IScriptClient>();
             if (!mgr.CanScript)

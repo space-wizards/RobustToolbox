@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
-            var map = new PhysicsMap();
+            var map = new PhysicsMap(eventArgs.Map);
             _maps.Add(eventArgs.Map, map);
             map.Initialize();
             Logger.DebugS("physics", $"Created physics map for {eventArgs.Map}");

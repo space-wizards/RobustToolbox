@@ -9,6 +9,8 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public Box2 AABB;
 
+        public int ChildIndex;
+
         /// <summary>
         ///     Our parent fixture
         /// </summary>
@@ -19,10 +21,11 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public DynamicTree.Proxy ProxyId = DynamicTree.Proxy.Free;
 
-        public FixtureProxy(Box2 aabb, Fixture fixture)
+        public FixtureProxy(Box2 aabb, Fixture fixture, int childIndex)
         {
             AABB = aabb;
             Fixture = fixture;
+            ChildIndex = childIndex;
         }
     }
 }

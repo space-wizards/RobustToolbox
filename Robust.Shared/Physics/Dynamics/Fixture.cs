@@ -20,12 +20,44 @@ namespace Robust.Shared.Physics.Dynamics
 
     public class Fixture : IFixture, IExposeData, IEquatable<Fixture>
     {
+        // TODO: Need to send FixtureData
+
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
         public Dictionary<GridId, FixtureProxy[]> Proxies;
+
+        public int ProxyCount = 0;
 
         public IPhysShape Shape { get; private set; } = default!;
 
         public PhysicsComponent Body { get; internal set; } = default!;
+
+        public float Friction
+        {
+            get => _friction;
+            set
+            {
+                if (MathHelper.CloseTo(value, _friction)) return;
+
+                _friction = value;
+                Body.FixtureChanged(this);
+            }
+        }
+
+        private float _friction;
+
+        public float Restitution
+        {
+            get => _restitution;
+            set
+            {
+                if (MathHelper.CloseTo(value, _restitution)) return;
+
+                _restitution = value;
+                Body.FixtureChanged(this);
+            }
+        }
+
+        private float _restitution;
 
         /// <summary>
         ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
@@ -110,6 +142,8 @@ namespace Robust.Shared.Physics.Dynamics
         {
             Proxies = new Dictionary<GridId, FixtureProxy[]>();
             serializer.DataField(this, x => x.Shape, "shape", new PhysShapeAabb());
+            serializer.DataField(ref _friction, "friction", 0.2f);
+            serializer.DataField(ref _restitution, "restitution", 0.0f);
             serializer.DataField(ref _hard, "hard", true);
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
@@ -151,6 +185,8 @@ namespace Robust.Shared.Physics.Dynamics
         /// </remarks>
         public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
+            ProxyCount = Shape.ChildCount;
+
             var mapId = Body.Owner.Transform.MapID;
             mapManager ??= IoCManager.Resolve<IMapManager>();
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
@@ -175,16 +211,20 @@ namespace Robust.Shared.Physics.Dynamics
                     gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                 }
 
-                var proxies = new FixtureProxy[1];
-                // TODO: Will need update number with ProxyCount
+                var proxies = new FixtureProxy[Shape.ChildCount];
                 Proxies[gridId] = proxies;
-                Box2 aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-                var proxy = new FixtureProxy(aabb, this);
+                for (var i = 0; i < ProxyCount; i++)
+                {
+                    // TODO: Will need to pass in childIndex to this as well
+                    var aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-                proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                proxies[0] = proxy;
-                DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
+                    var proxy = new FixtureProxy(aabb, this, i);
+
+                    proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+                    proxies[i] = proxy;
+                    DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
+                }
             }
         }
 
@@ -212,16 +252,20 @@ namespace Robust.Shared.Physics.Dynamics
                 gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
             }
 
-            var proxies = new FixtureProxy[1];
-            // TODO: Will need update number with ProxyCount
+            var proxies = new FixtureProxy[Shape.ChildCount];
             Proxies[gridId] = proxies;
-            Box2 aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-            var proxy = new FixtureProxy(aabb, this);
+            for (var i = 0; i < ProxyCount; i++)
+            {
+                // TODO: Will need to pass in childIndex to this as well
+                var aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-            proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-            proxies[0] = proxy;
-            DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
+                var proxy = new FixtureProxy(aabb, this, i);
+
+                proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+                proxies[i] = proxy;
+                DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
+            }
 
             broadPhaseSystem.AddBroadPhase(Body, broadPhase);
         }

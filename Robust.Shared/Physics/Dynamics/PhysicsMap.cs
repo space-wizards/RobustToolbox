@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -11,7 +14,7 @@ namespace Robust.Shared.Physics.Dynamics
     {
         // AKA world.
 
-        private ContactManager _contactManager = new();
+        internal ContactManager ContactManager = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -35,6 +38,11 @@ namespace Robust.Shared.Physics.Dynamics
         private HashSet<PhysicsComponent> _queuedWake = new();
         private HashSet<PhysicsComponent> _queuedSleep = new();
 
+        /// <summary>
+        ///     We'll re-use contacts where possible to save on allocations.
+        /// </summary>
+        internal Queue<Contact> _contactPool = new(256);
+
         private PhysicsIsland _island = default!;
 
         /// <summary>
@@ -48,10 +56,17 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
+        public MapId MapId { get; }
+
+        public PhysicsMap(MapId mapId)
+        {
+            MapId = mapId;
+        }
+
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _contactManager.Initialize();
+            ContactManager.Initialize();
             _island = new PhysicsIsland();
             _island.Initialize();
         }
@@ -103,6 +118,7 @@ namespace Robust.Shared.Physics.Dynamics
                     AwakeBodies.Add(body);
                 }
                 Bodies.Add(body);
+                body.PhysicsMap = this;
             }
 
             _queuedBodyAdd.Clear();
@@ -154,6 +170,10 @@ namespace Robust.Shared.Physics.Dynamics
             // can edit things during the solver so we'll just handle it as it comes up.
             ProcessChanges();
 
+            // Box2D does this at the end of a step and also here when there's a fixture update.
+            // Given external stuff can move bodies we'll just do this here.
+            ContactManager.FindNewContacts(MapId);
+
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
@@ -166,12 +186,12 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            _contactManager.Collide(this, prediction, frameTime);
+            ContactManager.Collide(this);
 
             // TODO: May move this as a PostSolve once we have broadphase collisions where contacts can be generated
             // even though the bodies may not technically be colliding
             if (!prediction)
-                _contactManager.PreSolve();
+                ContactManager.PreSolve();
 
             // Remove all deleted entities etc.
             ProcessChanges();
@@ -189,7 +209,7 @@ namespace Robust.Shared.Physics.Dynamics
         private void Solve(float frameTime, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(AwakeBodies.Count, _contactManager.ContactList.Count);
+            _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count);
 
             // Build and simulated islands from awake bodies.
             // Ideally you don't need a stack size for all bodies but we'll optimise it later.
@@ -222,28 +242,35 @@ namespace Robust.Shared.Physics.Dynamics
                     // Static bodies don't propagate islands
                     if (body.BodyType == BodyType.Static) continue;
 
-                    for (var i = 0; i < body.ContactEdges.Count; i++)
+                    for (var contactEdge = body.ContactEdges; contactEdge != null; contactEdge = contactEdge.Next)
                     {
-                        var contactEdge = body.ContactEdges[i];
-                        var contact = contactEdge.Contact;
+                        var contact = contactEdge.Contact!;
 
-                        if (contact.IslandFlag || !contact.Manifold.Hard) continue;
+                        // Has this contact already been added to an island?
+                        if (contact.IslandFlag) continue;
+
+                        // Is this contact solid and touching?
+                        if (!contact.Enabled || !contact.IsTouching) continue;
+
+                        // Skip sensors.
+                        if (contact.FixtureA?.Hard != false || contact.FixtureB?.Hard != false) continue;
 
                         _island.Add(contact);
                         contact.IslandFlag = true;
 
-                        var other = contactEdge.Other;
+                        var other = contactEdge.Other!;
 
-                        // If it was already added to this island.
+                        // Was the other body already added to this island?
                         if (other.Island) continue;
 
                         DebugTools.Assert(stackCount < stackSize);
-
                         _stack[stackCount++] = other;
-                        _islandSet.Add(body);
+
+                        if (!_islandSet.Contains(body))
+                            _islandSet.Add(body);
+
                         other.Island = true;
                     }
-
                     // TODO: Joint edges
                 }
 
@@ -288,8 +315,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            _contactManager.PostSolve();
-
+            ContactManager.PostSolve();
         }
 
         private void ClearForces()

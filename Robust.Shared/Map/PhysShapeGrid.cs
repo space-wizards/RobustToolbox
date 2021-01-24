@@ -4,7 +4,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
@@ -14,32 +13,13 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public class PhysShapeGrid : IPhysShape
     {
+        public int ChildCount => 1;
+        public ShapeType ShapeType => ShapeType.Polygon;
+
         private GridId _gridId;
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision layer of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
-        }
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision mask of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
-        }
 
         /// <inheritdoc />
         public void ApplyState()

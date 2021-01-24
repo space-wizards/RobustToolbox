@@ -65,14 +65,16 @@ namespace Robust.Shared.GameObjects.Components
         public int IslandIndex { get; set; }
 
         /// <summary>
-        ///     All of our contacts.
+        ///     Linked-list of all of our contacts.
         /// </summary>
-        internal List<ContactEdge> ContactEdges { get; set; } = new();
+        internal ContactEdge? ContactEdges { get; set; } = default!;
 
         public IEntity Entity => Owner;
 
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
+
+        internal PhysicsMap PhysicsMap { get; set; } = default!;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -223,7 +225,7 @@ namespace Robust.Shared.GameObjects.Components
             var toAdd = new List<Fixture>();
             var toRemove = new List<Fixture>();
 
-            // TODO: This diffing is crude but at least it will save the broadphase updates 90% of the time.
+            // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
             for (var i = 0; i < newState.Fixtures.Count; i++)
             {
                 var newFixture = FixtureData.To(newState.Fixtures[i]);
@@ -486,6 +488,36 @@ namespace Robust.Shared.GameObjects.Components
             // TODO: Suss out if this best way to do it; tl;dr is if we cache it then body is probably deleted by the time we get to it (and its MapId is no longer valid).
             EntitySystem.Get<SharedBroadPhaseSystem>().RemoveBody(this);
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+        }
+
+        /// <summary>
+        ///     Used to prevent bodies from colliding; may lie depending on joints.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        internal bool ShouldCollide(PhysicsComponent other)
+        {
+            // At least one body should be dynamic.
+            if (_bodyType != BodyType.Dynamic && other._bodyType != BodyType.Dynamic)
+            {
+                return false;
+            }
+
+            // Does a joint prevent collision?
+            /*
+            for (JointEdge jn = JointList; jn != null; jn = jn.Next)
+            {
+                if (jn.Other == other)
+                {
+                    if (jn.Joint.CollideConnected == false)
+                    {
+                        return false;
+                    }
+                }
+            }
+            */
+
+            return true;
         }
 
         public bool IsOnGround()

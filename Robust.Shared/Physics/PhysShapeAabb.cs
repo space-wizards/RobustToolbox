@@ -13,6 +13,9 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public class PhysShapeAabb : IPhysShape
     {
+        public int ChildCount => 1;
+        public ShapeType ShapeType => ShapeType.Polygon;
+
         private Box2 _localBounds = Box2.UnitCentered;
 
         /// <summary>

@@ -619,16 +619,21 @@ namespace Robust.Shared.GameObjects.Components
 
                 foreach (var fixture in Fixtures)
                 {
-                    var proxies = new FixtureProxy[1];
-                    // TODO: Will need update number with ProxyCount
+                    fixture.ProxyCount = fixture.Shape.ChildCount;
+                    var proxies = new FixtureProxy[fixture.ProxyCount];
+
                     fixture.Proxies[gridId] = proxies;
-                    Box2 aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+                    // TODO: Will need to pass in childIndex to this as well
+                    for (var i = 0; i < fixture.ProxyCount; i++)
+                    {
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
 
-                    var proxy = new FixtureProxy(aabb, fixture);
+                        var proxy = new FixtureProxy(aabb, fixture, i);
 
-                    proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                    proxies[0] = proxy;
-                    DebugTools.Assert(proxies[0].ProxyId != DynamicTree.Proxy.Free);
+                        proxy.ProxyId = broadPhase.AddProxy(ref proxy);
+                        proxies[i] = proxy;
+                        DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
+                    }
                 }
             }
         }

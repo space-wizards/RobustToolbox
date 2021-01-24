@@ -5,11 +5,28 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics
 {
+    public enum ShapeType : sbyte
+    {
+        Unknown = -1,
+        Circle = 0,
+        Edge = 1,
+        Polygon = 2,
+        Chain = 3,
+        TypeCount = 4,
+    }
+
     /// <summary>
     /// A primitive physical shape that is used by a <see cref="IPhysBody"/>.
     /// </summary>
     public interface IPhysShape : IExposeData, IEquatable<IPhysShape>
     {
+        /// <summary>
+        ///     Get hte number of child primitives. Only relevant for chain shape.
+        /// </summary>
+        int ChildCount { get; }
+
+        ShapeType ShapeType { get; }
+
         /// <summary>
         /// Calculates the AABB of the shape.
         /// </summary>

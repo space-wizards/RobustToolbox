@@ -7,7 +7,7 @@ namespace Robust.Shared.Physics {
 
     public interface IBroadPhase
     {
-        // void UpdatePairs(BroadphaseDelegate callback);
+        void UpdatePairs(BroadPhaseDelegate callback);
 
         bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
 

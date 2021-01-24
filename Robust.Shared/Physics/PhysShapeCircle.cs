@@ -12,39 +12,16 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public class PhysShapeCircle : IPhysShape
     {
+        public int ChildCount => 1;
+        public ShapeType ShapeType => ShapeType.Circle;
+
         private const float DefaultRadius = 0.5f;
 
-        private int _collisionLayer;
-        private int _collisionMask;
         private float _radius = DefaultRadius;
 
         /// <inheritdoc />
         [field: NonSerialized]
         public event Action? OnDataChanged;
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            set
-            {
-                _collisionLayer = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            set
-            {
-                _collisionMask = value;
-                OnDataChanged?.Invoke();
-            }
-        }
 
         /// <summary>
         /// The radius of this circle.
@@ -63,8 +40,6 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _radius, "radius", DefaultRadius);
         }
 

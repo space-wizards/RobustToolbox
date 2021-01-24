@@ -71,6 +71,11 @@ namespace Robust.Shared.Physics.Broadphase
             return grid;
         }
 
+        public ICollection<IBroadPhase> GetBroadPhases(MapId mapId)
+        {
+            return _graph[mapId].Values;
+        }
+
         public IEnumerable<IBroadPhase> GetBroadPhases(PhysicsComponent body)
         {
             if (!_lastBroadPhases.TryGetValue(body, out var broadPhases)) return Array.Empty<IBroadPhase>();

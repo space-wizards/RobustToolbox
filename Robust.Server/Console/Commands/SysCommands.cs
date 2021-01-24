@@ -3,6 +3,7 @@ using System.Runtime;
 using System.Text;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -12,49 +13,49 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Server.Console.Commands
 {
-    class RestartCommand : IServerCommand
+    class RestartCommand : IConsoleCommand
     {
         public string Command => "restart";
         public string Description => "Gracefully restarts the server (not just the round).";
         public string Help => "restart";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Restart();
         }
     }
 
-    class ShutdownCommand : IServerCommand
+    class ShutdownCommand : IConsoleCommand
     {
         public string Command => "shutdown";
         public string Description => "Gracefully shuts down the server.";
         public string Help => "shutdown";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
 
-    public class SaveConfig : IServerCommand
+    public class SaveConfig : IConsoleCommand
     {
         public string Command => "saveconfig";
         public string Description => "Saves the server configuration to the config file";
         public string Help => "saveconfig";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
     }
 
-    class NetworkAuditCommand : IServerCommand
+    class NetworkAuditCommand : IConsoleCommand
     {
         public string Command => "netaudit";
         public string Description => "Prints into about NetMsg security.";
         public string Help => "netaudit";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var network = (NetManager) IoCManager.Resolve<INetManager>();
 
@@ -74,7 +75,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class HelpCommand : IServerCommand
+    class HelpCommand : IConsoleCommand
     {
         public string Command => "help";
 
@@ -83,7 +84,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Help";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             switch (args.Length)
             {
@@ -109,26 +110,26 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class ShowTimeCommand : IServerCommand
+    class ShowTimeCommand : IConsoleCommand
     {
         public string Command => "showtime";
         public string Description => "Shows the server time.";
         public string Help => "showtime";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var timing = IoCManager.Resolve<IGameTiming>();
             shell.WriteLine($"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
         }
     }
 
-    internal class GcCommand : IServerCommand
+    internal class GcCommand : IConsoleCommand
     {
         public string Command => "gc";
         public string Description => "Run the GC.";
         public string Help => "gc [generation]";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length == 0)
             {
@@ -144,7 +145,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class GcModeCommand : IServerCommand
+    internal class GcModeCommand : IConsoleCommand
     {
 
         public string Command => "gc_mode";
@@ -153,7 +154,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "gc_mode [type]";
 
-        public void Execute(IServerConsoleShell console, string argStr, string[] args)
+        public void Execute(IConsoleShell console, string argStr, string[] args)
         {
             var prevMode = GCSettings.LatencyMode;
             if (args.Length == 0)
@@ -188,7 +189,7 @@ namespace Robust.Server.Console.Commands
 
     }
 
-    internal class SerializeStatsCommand : IServerCommand
+    internal class SerializeStatsCommand : IConsoleCommand
     {
 
         public string Command => "szr_stats";
@@ -197,7 +198,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "szr_stats";
 
-        public void Execute(IServerConsoleShell console, string argStr, string[] args)
+        public void Execute(IConsoleShell console, string argStr, string[] args)
         {
 
             console.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
@@ -208,13 +209,13 @@ namespace Robust.Server.Console.Commands
 
     }
 
-    internal sealed class MemCommand : IServerCommand
+    internal sealed class MemCommand : IConsoleCommand
     {
         public string Command => "mem";
         public string Description => "prints memory info";
         public string Help => "mem";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
 #if !NETCOREAPP
             shell.SendText(player, "Memory info is only available on .NET Core");

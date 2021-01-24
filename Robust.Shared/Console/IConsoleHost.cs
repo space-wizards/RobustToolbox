@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console
@@ -5,11 +6,16 @@ namespace Robust.Shared.Console
     public interface IConsoleHost
     {
         /// <summary>
+        /// A map of (commandName -> ICommand) of every registered command in the shell.
+        /// </summary>
+        IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands { get; }
+
+        /// <summary>
         /// The local shell of the peer that is always available.
         /// </summary>
         IConsoleShell LocalShell { get; }
 
-        //TODO: ConCmd Registration
+        //TODO: shared ConCmd Registration
 
         /// <summary>
         /// Returns the console shell for a given active session.

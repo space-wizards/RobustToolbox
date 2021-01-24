@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -13,13 +14,13 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal class TeleportCommand : IServerCommand
+    internal class TeleportCommand : IConsoleCommand
     {
         public string Command => "tp";
         public string Description => "Teleports a player to any location in the round.";
         public string Help => "tp <x> <y> [<mapID>]";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
@@ -62,13 +63,13 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class TeleportToPlayerCommand : IServerCommand
+    public class TeleportToPlayerCommand : IConsoleCommand
     {
         public string Command => "tpto";
         public string Description => "Teleports the current player to the location of another player.";
         public string Help => "tpto <username>";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
             if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
@@ -90,13 +91,13 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class ListPlayers : IServerCommand
+    public class ListPlayers : IConsoleCommand
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
         public string Help => "listplayers";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
@@ -122,13 +123,13 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class KickCommand : IServerCommand
+    internal class KickCommand : IConsoleCommand
     {
         public string Command => "kick";
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
         public string Help => "kick <PlayerIndex> [<Reason>]";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var players = IoCManager.Resolve<IPlayerManager>();
             if (args.Length < 1)

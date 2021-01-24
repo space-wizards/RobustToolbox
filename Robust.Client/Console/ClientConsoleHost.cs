@@ -47,11 +47,11 @@ namespace Robust.Client.Console
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly ILogManager logManager = default!;
 
-        private readonly Dictionary<string, IClientCommand> _commands = new Dictionary<string, IClientCommand>();
+        private readonly Dictionary<string, IConsoleCommand> _commands = new();
         private bool _requestedCommands;
 
-        public IReadOnlyDictionary<string, IClientCommand> Commands => _commands;
-        public IClientConsoleShell LocalShell { get; }
+        public IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _commands;
+        public IConsoleShell LocalShell { get; }
 
         public ClientConsoleHost()
         {
@@ -174,9 +174,9 @@ namespace Robust.Client.Console
         /// </summary>
         private void InitializeCommands()
         {
-            foreach (var t in _reflectionManager.GetAllChildren<IClientCommand>())
+            foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IClientCommand)Activator.CreateInstance(t)!;
+                var instance = (IConsoleCommand)Activator.CreateInstance(t)!;
                 if (_commands.ContainsKey(instance.Command))
                     throw new InvalidOperationException($"Command already registered: {instance.Command}");
 
@@ -237,7 +237,7 @@ namespace Robust.Client.Console
     ///     These dummies are made purely so list and help can list server-side commands.
     /// </summary>
     [Reflect(false)]
-    internal class ServerDummyCommand : IClientCommand
+    internal class ServerDummyCommand : IConsoleCommand
     {
         internal ServerDummyCommand(string command, string help, string description)
         {
@@ -253,13 +253,13 @@ namespace Robust.Client.Console
         public string Description { get; }
 
         // Always forward to server.
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             shell.RemoteExecuteCommand(argStr);
         }
     }
 
-    internal class ConsoleHostAdapter : IClientConsoleShell
+    internal class ConsoleHostAdapter : IConsoleShell
     {
         private readonly IClientConsoleHost _host;
         private readonly ICommonSession? _session;
@@ -273,7 +273,7 @@ namespace Robust.Client.Console
         public IConsoleHost ConsoleHost => _host;
         public bool IsServer => false;
         public ICommonSession? Player => _session;
-        public IReadOnlyDictionary<string, IClientCommand> RegisteredCommands => _host.Commands;
+        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _host.AvailableCommands;
         public void WriteLine(string text, Color color)
         {
             _host.AddLine(text, color);

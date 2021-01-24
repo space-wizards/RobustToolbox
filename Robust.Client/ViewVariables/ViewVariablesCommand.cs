@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Console;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
@@ -14,13 +14,13 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public class ViewVariablesCommand : IClientCommand
+    public class ViewVariablesCommand : IConsoleCommand
     {
         public string Command => "vv";
         public string Description => "Opens View Variables.";
         public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var vvm = IoCManager.Resolve<IViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.

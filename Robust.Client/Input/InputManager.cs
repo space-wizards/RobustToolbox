@@ -7,9 +7,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Console;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Console;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Reflection;
@@ -806,13 +806,13 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class BindCommand : IClientCommand
+    internal class BindCommand : IConsoleCommand
     {
         public string Command => "bind";
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
@@ -860,13 +860,13 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class SaveBindCommand : IClientCommand
+    internal class SaveBindCommand : IConsoleCommand
     {
         public string Command => "svbind";
         public string Description => "";
         public string Help => "";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();

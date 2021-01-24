@@ -1,10 +1,11 @@
 ﻿using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Console;
 
 namespace Robust.Server.Console.Commands
 {
-    public class ListCommands : IServerCommand
+    public class ListCommands : IConsoleCommand
     {
         public string Command => "list";
 
@@ -14,7 +15,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Usage: list [filter]";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var filter = "";
             if (args.Length == 1)

@@ -1,17 +1,18 @@
-using System.Linq;
+﻿using System.Linq;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {
-    class HelpCommand : IClientCommand
+    class HelpCommand : IConsoleCommand
     {
         public string Command => "help";
         public string Help => "When no arguments are provided, displays a generic help text. When an argument is passed, display the help text for the command with that name.";
         public string Description => "Display help text.";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             switch (args.Length)
             {
@@ -32,7 +33,7 @@ namespace Robust.Client.Console.Commands
                         // TODO: Maybe have a server side help?
                         return;
                     }
-                    IClientCommand command = shell.RegisteredCommands[commandname];
+                    IConsoleCommand command = shell.RegisteredCommands[commandname];
                     shell.WriteLine(string.Format("{0} - {1}", command.Command, command.Description));
                     shell.WriteLine(command.Help);
                     break;
@@ -44,7 +45,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class ListCommand : IClientCommand
+    class ListCommand : IConsoleCommand
     {
         public string Command => "list";
         public string Help => "Usage: list [filter]\n" +
@@ -53,7 +54,7 @@ namespace Robust.Client.Console.Commands
                               "only commands that contain the given string in their name will be listed.";
         public string Description => "List all commands, optionally with a filter.";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var filter = "";
             if (args.Length == 1)

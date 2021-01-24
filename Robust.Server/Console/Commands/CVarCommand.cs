@@ -2,15 +2,16 @@ using System;
 using JetBrains.Annotations;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class CVarCommand : SharedCVarCommand, IServerCommand
+    internal sealed class CVarCommand : SharedCVarCommand, IConsoleCommand
     {
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public override void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {

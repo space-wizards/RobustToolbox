@@ -1,9 +1,9 @@
-using Robust.Client.Console;
-using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
@@ -67,13 +67,13 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetShowInterpCommand : IClientCommand
+        private class NetShowInterpCommand : IConsoleCommand
         {
             public string Command => "net_draw_interp";
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {

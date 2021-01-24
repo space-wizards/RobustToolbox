@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 
@@ -33,6 +34,11 @@ namespace Robust.Shared.Console
         /// The remote peer that owns this shell. This is null if the shell is running local (<see cref="IsLocal" /> is true.).
         /// </summary>
         ICommonSession? Player { get; }
+
+        /// <summary>
+        /// A map of (commandName -> ICommand) of every registered command in the shell.
+        /// </summary>
+        IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
 
         /// <summary>
         /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded to the

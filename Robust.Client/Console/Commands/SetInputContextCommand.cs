@@ -1,17 +1,18 @@
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Input;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public class SetInputContextCommand : IClientCommand
+    public class SetInputContextCommand : IConsoleCommand
     {
         public string Command => "setinputcontext";
         public string Description => "Sets the active input context.";
         public string Help => "setinputcontext <context>";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {

@@ -22,23 +22,13 @@ namespace Robust.Server.Console
     public interface IServerConsoleHost : IConsoleHost
     {
         /// <summary>
-        /// The local console shell that is always available.
-        /// </summary>
-        IServerConsoleShell LocalShell { get; }
-
-        /// <summary>
-        /// A map of (commandName -> ICommand) of every registered command in the shell.
-        /// </summary>
-        IReadOnlyDictionary<string, IServerCommand> AvailableCommands { get; }
-
-        /// <summary>
         /// Initializes the ConsoleShell service.
         /// </summary>
         void Initialize();
-        
+
         /// <summary>
-        ///     Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
-        ///     should only be used during server initialization.
+        /// Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
+        /// should only be used during server initialization.
         /// </summary>
         void ReloadCommands();
 
@@ -58,7 +48,10 @@ namespace Robust.Server.Console
         /// <summary>
         /// Sends a text string to the remote player.
         /// </summary>
-        /// <param name="session">Remote player to send the text message to. If this is null, the text is sent to the local console.</param>
+        /// <param name="session">
+        /// Remote player to send the text message to. If this is null, the text is sent to the local
+        /// console.
+        /// </param>
         /// <param name="text">Text message to send.</param>
         void SendText(IPlayerSession? session, string text);
 
@@ -84,18 +77,18 @@ namespace Robust.Server.Console
         [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly IConGroupController _groupController = default!;
 
-        private readonly Dictionary<string, IServerCommand> _availableCommands =
-            new Dictionary<string, IServerCommand>();
+        private readonly Dictionary<string, IConsoleCommand> _availableCommands =
+            new Dictionary<string, IConsoleCommand>();
 
         public ServerConsoleHost()
         {
             LocalShell = new ConsoleShellAdapter(this, null);
         }
 
-        public IServerConsoleShell LocalShell { get; }
+        public IConsoleShell LocalShell { get; }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<string, IServerCommand> AvailableCommands => _availableCommands;
+        public IReadOnlyDictionary<string, IConsoleCommand> AvailableCommands => _availableCommands;
 
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
@@ -134,11 +127,11 @@ namespace Robust.Server.Console
         {
             // search for all client commands in all assemblies, and register them
             _availableCommands.Clear();
-            foreach (var type in _reflectionManager.GetAllChildren<IServerCommand>())
+            foreach (var type in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IServerCommand) Activator.CreateInstance(type, null)!;
+                var instance = (IConsoleCommand) Activator.CreateInstance(type, null)!;
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
-                    throw new InvalidImplementationException(instance.GetType(), typeof(IServerCommand),
+                    throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
                         $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
 
                 _availableCommands[instance.Command] = instance;
@@ -231,13 +224,13 @@ namespace Robust.Server.Console
             return session != null ? $"{session.Name}" : "[HOST]";
         }
 
-        private class SudoCommand : IServerCommand
+        private class SudoCommand : IConsoleCommand
         {
             public string Command => "sudo";
             public string Description => "sudo make me a sandwich";
             public string Help => "sudo";
 
-            public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var command = args[0];
                 var cArgs = args[1..].Select(CommandParsing.Escape);
@@ -270,7 +263,7 @@ namespace Robust.Server.Console
         }
     }
 
-    public class ConsoleShellAdapter : IServerConsoleShell
+    public class ConsoleShellAdapter : IConsoleShell
     {
         private IServerConsoleHost _host;
         private ICommonSession? _session;
@@ -311,6 +304,6 @@ namespace Robust.Server.Console
             // Does nothing
         }
 
-        public IReadOnlyDictionary<string, IServerCommand> RegisteredCommands => _host.AvailableCommands;
+        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _host.AvailableCommands;
     }
 }

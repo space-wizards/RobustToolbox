@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -7,13 +8,13 @@ using Robust.Shared.IoC;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal sealed class AddCompCommand : IServerCommand
+    internal sealed class AddCompCommand : IConsoleCommand
     {
         public string Command => "addcomp";
         public string Description => "Adds a component to an entity";
         public string Help => "addcomp <uid> <componentName>";
 
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -38,12 +39,12 @@ namespace Robust.Server.Console.Commands
     }
 
     [UsedImplicitly]
-    internal sealed class RemoveCompCommand : IServerCommand
+    internal sealed class RemoveCompCommand : IConsoleCommand
     {
         public string Command => "rmcomp";
         public string Description => "Removes a component from an entity.";
         public string Help => "rmcomp <uid> <componentName>";
-        public void Execute(IServerConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {

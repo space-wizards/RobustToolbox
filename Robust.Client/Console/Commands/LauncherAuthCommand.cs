@@ -1,22 +1,23 @@
-#if !FULL_RELEASE
+﻿#if !FULL_RELEASE
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Robust.Client.Utility;
 using Robust.Shared;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    internal sealed class LauncherAuthCommand : IClientCommand
+    internal sealed class LauncherAuthCommand : IConsoleCommand
     {
         public string Command => "launchauth";
         public string Description => "Load authentication tokens from launcher data to aid in testing of live servers";
         public string Help => "launchauth [account name]";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var wantName = args.Length > 0 ? args[0] : null;
 

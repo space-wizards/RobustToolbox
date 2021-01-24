@@ -1,10 +1,11 @@
-using Robust.Shared.Log;
+﻿using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using System;
+using Robust.Shared.Console;
 
 namespace Robust.Client.Console.Commands
 {
-    class LogSetLevelCommand : IClientCommand
+    class LogSetLevelCommand : IConsoleCommand
     {
         public string Command => "loglevel";
         public string Description => "Changes the log level for a provided sawmill.";
@@ -12,7 +13,7 @@ namespace Robust.Client.Console.Commands
                             + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
@@ -40,7 +41,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class TestLog : IClientCommand
+    class TestLog : IConsoleCommand
     {
         public string Command => "testlog";
         public string Description => "Writes a test log to a sawmill.";
@@ -49,7 +50,7 @@ namespace Robust.Client.Console.Commands
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum."
                             + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
-        public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 3)
             {

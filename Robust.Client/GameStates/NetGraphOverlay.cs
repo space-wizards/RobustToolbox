@@ -1,5 +1,4 @@
-using System.Collections.Generic;
-using Robust.Client.Console;
+﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
@@ -7,6 +6,7 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -166,13 +166,13 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetShowGraphCommand : IClientCommand
+        private class NetShowGraphCommand : IConsoleCommand
         {
             public string Command => "net_graph";
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public void Execute(IClientConsoleShell shell, string argStr, string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {

@@ -31,6 +31,12 @@ namespace Robust.Shared.Console
         /// </value>
         string Help { get; }
 
-        //TODO: Unified Execute
+        /// <summary>
+        /// Executes the client command.
+        /// </summary>
+        /// <param name="shell">The console that executed this command.</param>
+        /// <param name="argStr">Unparsed text of the complete command with arguments.</param>
+        /// <param name="args">An array of all the parsed arguments.</param>
+        void Execute(IConsoleShell shell, string argStr, string[] args);
     }
 }

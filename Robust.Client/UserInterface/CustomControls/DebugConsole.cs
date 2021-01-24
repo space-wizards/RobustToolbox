@@ -242,7 +242,7 @@ namespace Robust.Client.UserInterface.CustomControls
             searchResults.Clear();
             searchIndex = 0;
             commandChanged = false;
-            foreach (var cmd in _consoleHost.Commands)
+            foreach (var cmd in _consoleHost.AvailableCommands)
             {
                 if (cmd.Key.StartsWith(CommandBar.Text))
                 {

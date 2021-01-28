@@ -156,5 +156,22 @@ namespace Robust.Shared.Utility
 
             return array;
         }
+
+        /// <summary>
+        /// Tries to get a value from a dictionary and checks if that value is of type T
+        /// </summary>
+        /// <typeparam name="T">The type that sould be casted to</typeparam>
+        /// <returns>Wether the value was present in the dictionary and of the required type</returns>
+        public static bool TryCastValue<T>(this Dictionary<string, object> dict, string key, /*[NotNullWhen(true)]*/ out T value)
+        {
+            if (dict.TryGetValue(key, out var untypedValue) && untypedValue is T typedValue)
+            {
+                value = typedValue;
+                return true;
+            }
+
+            value = default!;
+            return false;
+        }
     }
 }

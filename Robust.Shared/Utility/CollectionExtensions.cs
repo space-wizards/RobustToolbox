@@ -163,7 +163,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <typeparam name="T">The type that sould be casted to</typeparam>
         /// <returns>Whether the value was present in the dictionary and of the required type</returns>
-        public static bool TryCastValue<T, TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, [NotNullWhen(true)] out T? value)
+        public static bool TryCastValue<T, TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, [NotNullWhen(true)] out T? value) where TKey : notnull
         {
             if (dict.TryGetValue(key, out var untypedValue) && untypedValue is T typedValue)
             {

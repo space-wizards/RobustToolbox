@@ -16,31 +16,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
 {
-    /// <inheritdoc />
-    internal class ServerConsoleHost : IServerConsoleHost
+    /// <inheritdoc cref="IServerConsoleHost"/>
+    internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost
     {
-        private const string SawmillName = "con";
-
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
-        [Dependency] private readonly IServerNetManager _net = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
-        [Dependency] private readonly ILogManager _logMan = default!;
         [Dependency] private readonly IConGroupController _groupController = default!;
-
-        private readonly Dictionary<string, IConsoleCommand> _availableCommands =
-            new Dictionary<string, IConsoleCommand>();
-
-        public ServerConsoleHost()
-        {
-            LocalShell = new ConsoleShellAdapter(this, null);
-        }
-
-        public IConsoleShell LocalShell { get; }
-
-        /// <inheritdoc />
-        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _availableCommands;
-
+        
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
             var netMgr = IoCManager.Resolve<IServerNetManager>();
@@ -67,26 +49,10 @@ namespace Robust.Server.Console
             ReloadCommands();
 
             // setup networking with clients
-            _net.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
-            _net.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
-            _net.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
+            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
+            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
                 message => HandleRegistrationRequest(message.MsgChannel));
-        }
-
-        /// <inheritdoc />
-        public void ReloadCommands()
-        {
-            // search for all client commands in all assemblies, and register them
-            _availableCommands.Clear();
-            foreach (var type in _reflectionManager.GetAllChildren<IConsoleCommand>())
-            {
-                var instance = (IConsoleCommand) Activator.CreateInstance(type, null)!;
-                if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
-                    throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),
-                        $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
-
-                _availableCommands[instance.Command] = instance;
-            }
         }
 
         private void ProcessCommand(MsgConCmd message)
@@ -95,19 +61,19 @@ namespace Robust.Server.Console
             var sender = message.MsgChannel;
             var session = _players.GetSessionByChannel(sender);
 
-            _logMan.GetSawmill(SawmillName).Info($"{FormatPlayerString(session)}:{text}");
+            LogManager.GetSawmill(SawmillName).Info($"{FormatPlayerString(session)}:{text}");
 
             ExecuteCommand(session, text);
         }
 
         /// <inheritdoc />
-        public void ExecuteCommand(string command)
+        public override void ExecuteCommand(string command)
         {
             ExecuteCommand(null, command);
         }
 
         /// <inheritdoc />
-        public void ExecuteCommand(ICommonSession? session, string command)
+        public override void ExecuteCommand(ICommonSession? session, string command)
         {
             var svSession = session as IPlayerSession;
             try
@@ -121,14 +87,14 @@ namespace Robust.Server.Console
 
                 var cmdName = args[0];
 
-                if (_availableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
+                if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
                     if (svSession != null) // remote client
                     {
                         if (_groupController.CanCommand(svSession, cmdName)) // client has permission
                         {
                             args.RemoveAt(0);
-                            conCmd.Execute(new ConsoleShellAdapter(this, session), command, args.ToArray());
+                            conCmd.Execute(new ConsoleShell(this, session), command, args.ToArray());
                         }
                         else
                             SendText(svSession, $"Unknown command: '{cmdName}'");
@@ -136,7 +102,7 @@ namespace Robust.Server.Console
                     else // system console
                     {
                         args.RemoveAt(0);
-                        conCmd.Execute(new ConsoleShellAdapter(this, null), command, args.ToArray());
+                        conCmd.Execute(new ConsoleShell(this, null), command, args.ToArray());
                     }
                 }
                 else
@@ -144,9 +110,14 @@ namespace Robust.Server.Console
             }
             catch (Exception e)
             {
-                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(svSession)}: ExecuteError - {command}:\n{e}");
+                LogManager.GetSawmill(SawmillName).Warning($"{FormatPlayerString(svSession)}: ExecuteError - {command}:\n{e}");
                 SendText(svSession, $"There was an error while executing the command: {e}");
             }
+        }
+
+        public override void RemoteExecuteCommand(ICommonSession? session, string command)
+        {
+            //TODO: Server -> Client remote execute, just like how the client forwards the command
         }
 
         /// <summary>
@@ -157,7 +128,7 @@ namespace Robust.Server.Console
         /// console.
         /// </param>
         /// <param name="text">Text message to send.</param>
-        public void SendText(IPlayerSession? session, string text)
+        private void SendText(IPlayerSession? session, string text)
         {
             if (session != null)
                 SendText(session.ConnectedClient, text);
@@ -170,11 +141,11 @@ namespace Robust.Server.Console
         /// </summary>
         /// <param name="target">Net channel to send the text string to.</param>
         /// <param name="text">Text message to send.</param>
-        public void SendText(INetChannel target, string text)
+        private void SendText(INetChannel target, string text)
         {
-            var replyMsg = _net.CreateNetMessage<MsgConCmdAck>();
+            var replyMsg = NetManager.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
-            _net.ServerSendMessage(replyMsg, target);
+            NetManager.ServerSendMessage(replyMsg, target);
         }
         
         private static string FormatPlayerString(IPlayerSession? session)
@@ -200,24 +171,16 @@ namespace Robust.Server.Console
 
         IConsoleShell IConsoleHost.LocalShell => LocalShell;
 
-        public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
-        {
-            if (_availableCommands.ContainsKey(command))
-                throw new InvalidOperationException($"Command already registered: {command}");
-
-            var newCmd = new RegisteredCommand(command, description, help, callback);
-            _availableCommands.Add(command, newCmd);
-        }
-
-        public IConsoleShell GetSessionShell(ICommonSession session)
+        /// <inheritdoc />
+        public override IConsoleShell GetSessionShell(ICommonSession session)
         {
             if (session.Status >= SessionStatus.Disconnected)
                 throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
 
-            return new ConsoleShellAdapter(this, session);
+            return new ConsoleShell(this, session);
         }
 
-        public void WriteLine(ICommonSession? session, string text)
+        public override void WriteLine(ICommonSession? session, string text)
         {
             if (session is IPlayerSession playerSession)
             {
@@ -228,47 +191,16 @@ namespace Robust.Server.Console
                 SendText(null as IPlayerSession, text);
             }
         }
-    }
 
-    public class ConsoleShellAdapter : IConsoleShell
-    {
-        private IServerConsoleHost _host;
-        private ICommonSession? _session;
-
-        public ConsoleShellAdapter(IServerConsoleHost host, ICommonSession? session)
+        public override void WriteLine(ICommonSession? session, string text, Color color)
         {
-            _host = host;
-            _session = session;
+            //TODO: Make colors work.
+            WriteLine(session, text);
         }
 
-        public IConsoleHost ConsoleHost => _host;
-        public bool IsServer => true;
-        public ICommonSession? Player => _session;
-
-        public void ExecuteCommand(string command)
+        public override void ClearLocalConsole()
         {
-            _host.ExecuteCommand(_session, command);
-        }
-
-        public void RemoteExecuteCommand(string command)
-        {
-            // Does nothing
-        }
-
-        public void WriteLine(string text)
-        {
-            _host.WriteLine(_session, text);
-        }
-
-        public void WriteLine(string text, Color color)
-        {
-            //TODO: Make the color work!
-            _host.WriteLine(_session, text);
-        }
-
-        public void Clear()
-        {
-            // Does nothing
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.Log;
-using Robust.Client.Utility;
 using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
@@ -39,44 +38,34 @@ namespace Robust.Client.Console
         }
     }
 
-    internal sealed class ClientConsoleHost : IClientConsoleHost
+    /// <inheritdoc cref="IClientConsoleHost"/>
+    internal sealed class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
         private static readonly Color MsgColor = new Color(65, 105, 225);
-
-        [Dependency] private readonly IClientNetManager _network = default!;
+        
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly ILogManager logManager = default!;
 
-        private readonly Dictionary<string, IConsoleCommand> _commands = new();
         private bool _requestedCommands;
-
-        public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => _commands;
-        public IConsoleShell LocalShell { get; }
-
-        public ClientConsoleHost()
-        {
-            LocalShell = new ConsoleHostAdapter(this, null);
-        }
-
+        
         /// <inheritdoc />
         public void Initialize()
         {
-            _network.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
-            _network.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
-            _network.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
+            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
+            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
+            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
 
             Reset();
-            logManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
+            LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
         /// <inheritdoc />
         public void Reset()
         {
-            _commands.Clear();
+            AvailableCommands.Clear();
             _requestedCommands = false;
-            _network.Connected += OnNetworkConnected;
+            NetManager.Connected += OnNetworkConnected;
 
-            InitializeCommands();
+            ReloadCommands();
             SendServerCommandRequest();
         }
 
@@ -91,24 +80,19 @@ namespace Robust.Client.Console
             // We don't have anything to dispose.
         }
 
-        public void WriteLine(string text, Color color)
+        public override void WriteLine(ICommonSession? session, string text, Color color)
         {
             AddString?.Invoke(this, new AddStringArgs(text, color));
         }
 
-        public void WriteLine(string text)
-        {
-            WriteLine(text, Color.White);
-        }
-
-        public void Clear()
+        public override void ClearLocalConsole()
         {
             ClearText?.Invoke(this, EventArgs.Empty);
         }
 
-        public void ExecuteCommand(string command)
+        public override void ExecuteCommand(ICommonSession? session, string command)
         {
-            ProcessCommand(command);
+            ExecuteCommand(command);
         }
 
         public event EventHandler<AddStringArgs>? AddString;
@@ -117,7 +101,7 @@ namespace Robust.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            WriteLine("< " + msg.Text, MsgColor);
+            WriteLine(null, "< " + msg.Text, MsgColor);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)
@@ -127,14 +111,14 @@ namespace Robust.Client.Console
                 var commandName = cmd.Name;
 
                 // Do not do duplicate commands.
-                if (_commands.ContainsKey(commandName))
+                if (AvailableCommands.ContainsKey(commandName))
                 {
                     Logger.DebugS("console", $"Server sent console command {commandName}, but we already have one with the same name. Ignoring.");
                     continue;
                 }
 
                 var command = new ServerDummyCommand(commandName, cmd.Help, cmd.Description);
-                _commands[commandName] = command;
+                AvailableCommands[commandName] = command;
             }
         }
         
@@ -142,13 +126,13 @@ namespace Robust.Client.Console
         ///     Processes commands (chat messages starting with /)
         /// </summary>
         /// <param name="text">input text</param>
-        public void ProcessCommand(string text)
+        public override void ExecuteCommand(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
             // echo the command locally
-            WriteLine("> " + text, Color.Lime);
+            WriteLine(null, "> " + text, Color.Lime);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -157,30 +141,15 @@ namespace Robust.Client.Console
 
             var commandname = args[0];
 
-            if (_commands.ContainsKey(commandname))
+            if (AvailableCommands.ContainsKey(commandname))
             {
-                var command = _commands[commandname];
+                var command = AvailableCommands[commandname];
                 args.RemoveAt(0);
-                command.Execute(new ConsoleHostAdapter(this, null), text, args.ToArray());
+                command.Execute(new ConsoleShell(this, null), text, args.ToArray());
             }
-            else if (!_network.IsConnected)
+            else if (!NetManager.IsConnected)
             {
-                WriteLine("Unknown command: " + commandname, Color.Red);
-            }
-        }
-
-        /// <summary>
-        ///     Locates and registeres all local commands.
-        /// </summary>
-        private void InitializeCommands()
-        {
-            foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
-            {
-                var instance = (IConsoleCommand)Activator.CreateInstance(t)!;
-                if (_commands.ContainsKey(instance.Command))
-                    throw new InvalidOperationException($"Command already registered: {instance.Command}");
-
-                _commands[instance.Command] = instance;
+                WriteLine(null, "Unknown command: " + commandname, Color.Red);
             }
         }
 
@@ -192,11 +161,11 @@ namespace Robust.Client.Console
             if (_requestedCommands)
                 return;
 
-            if (!_network.IsConnected)
+            if (!NetManager.IsConnected)
                 return;
 
-            var msg = _network.CreateNetMessage<MsgConCmdReg>();
-            _network.ClientSendMessage(msg);
+            var msg = NetManager.CreateNetMessage<MsgConCmdReg>();
+            NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }
@@ -204,41 +173,30 @@ namespace Robust.Client.Console
         /// <summary>
         ///     Sends a command directly to the server.
         /// </summary>
-        public void RemoteExecuteCommand(string text)
+        public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
-            if (_network == null || !_network.IsConnected)
+            if (NetManager == null || !NetManager.IsConnected)
                 return;
 
-            var msg = _network.CreateNetMessage<MsgConCmd>();
-            msg.Text = text;
-            _network.ClientSendMessage(msg);
+            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            msg.Text = command;
+            NetManager.ClientSendMessage(msg);
         }
 
         public void AddFormattedLine(FormattedMessage message)
         {
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
         }
-
-        IConsoleShell IConsoleHost.LocalShell => LocalShell;
-
-        public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
-        {
-            if (_commands.ContainsKey(command))
-                throw new InvalidOperationException($"Command already registered: {command}");
-
-            var newCmd = new RegisteredCommand(command, description, help, callback);
-            _commands.Add(command, newCmd);
-        }
-
+        
         /// <inheritdoc />
-        public IConsoleShell GetSessionShell(ICommonSession session)
+        public override IConsoleShell GetSessionShell(ICommonSession session)
         {
             return LocalShell;
         }
 
-        public void WriteLine(ICommonSession? session, string text)
+        public override void WriteLine(ICommonSession? session, string text)
         {
-            WriteLine(text);
+            WriteLine(null, text, Color.White);
         }
     }
 
@@ -265,48 +223,6 @@ namespace Robust.Client.Console
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             shell.RemoteExecuteCommand(argStr);
-        }
-    }
-
-    internal class ConsoleHostAdapter : IConsoleShell
-    {
-        private readonly IClientConsoleHost _host;
-        private readonly ICommonSession? _session;
-
-        public ConsoleHostAdapter(IClientConsoleHost host, ICommonSession? session)
-        {
-            _host = host;
-            _session = session;
-        }
-
-        public IConsoleHost ConsoleHost => _host;
-        public bool IsServer => false;
-        public ICommonSession? Player => _session;
-
-        public void WriteLine(string text, Color color)
-        {
-            _host.WriteLine(text, color);
-        }
-
-        public void ExecuteCommand(string command)
-        {
-            // client cannot execute remote commands
-            _host.ExecuteCommand(command);
-        }
-
-        public void RemoteExecuteCommand(string command)
-        {
-            _host.RemoteExecuteCommand(command);
-        }
-
-        public void WriteLine(string text)
-        {
-            _host.WriteLine(text);
-        }
-
-        public void Clear()
-        {
-            _host.Clear();
         }
     }
 }

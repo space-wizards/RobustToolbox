@@ -1,6 +1,5 @@
 using System;
 using Robust.Shared.Console;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Console
@@ -21,28 +20,6 @@ namespace Robust.Client.Console
         event EventHandler<AddFormattedMessageArgs> AddFormatted;
         event EventHandler ClearText;
 
-        /// <summary>
-        /// Parses console commands (verbs).
-        /// </summary>
-        /// <param name="text"></param>
-        void ProcessCommand(string text);
-
-        /// <summary>
-        /// Write a line with a specific color to the console window.
-        /// </summary>
-        void WriteLine(string text, Color color);
-
-        void WriteLine(string text);
-
         void AddFormattedLine(FormattedMessage message);
-
-        void Clear();
-
-        void ExecuteCommand(string command);
-
-        /// <summary>
-        /// Sends a command directly to the server.
-        /// </summary>
-        void RemoteExecuteCommand(string text);
     }
 }

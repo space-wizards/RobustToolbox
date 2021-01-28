@@ -153,7 +153,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (!string.IsNullOrWhiteSpace(args.Text))
             {
-                _consoleHost.ProcessCommand(args.Text);
+                _consoleHost.ExecuteCommand(args.Text);
                 CommandBar.Clear();
             }
 

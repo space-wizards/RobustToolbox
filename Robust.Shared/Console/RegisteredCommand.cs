@@ -2,8 +2,11 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Shared.Console
 {
+    /// <summary>
+    /// A console command that was registered inline through <see cref="IConsoleHost"/>.
+    /// </summary>
     [Reflect(false)]
-    public class RegisteredCommand : IConsoleCommand
+    internal class RegisteredCommand : IConsoleCommand
     {
         private readonly ConCommandCallback _callback;
 

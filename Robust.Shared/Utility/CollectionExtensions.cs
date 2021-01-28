@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Robust.Shared.Utility
@@ -161,8 +162,8 @@ namespace Robust.Shared.Utility
         /// Tries to get a value from a dictionary and checks if that value is of type T
         /// </summary>
         /// <typeparam name="T">The type that sould be casted to</typeparam>
-        /// <returns>Wether the value was present in the dictionary and of the required type</returns>
-        public static bool TryCastValue<T>(this Dictionary<string, object> dict, string key, /*[NotNullWhen(true)]*/ out T value)
+        /// <returns>Whether the value was present in the dictionary and of the required type</returns>
+        public static bool TryCastValue<T, TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, [NotNullWhen(true)] out T? value)
         {
             if (dict.TryGetValue(key, out var untypedValue) && untypedValue is T typedValue)
             {
@@ -170,7 +171,7 @@ namespace Robust.Shared.Utility
                 return true;
             }
 
-            value = default!;
+            value = default;
             return false;
         }
     }

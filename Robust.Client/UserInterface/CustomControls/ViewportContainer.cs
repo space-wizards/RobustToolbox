@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.CustomControls
     public class ViewportContainer : Control
     {
         private readonly IClyde _displayManager;
-        public IClydeViewport Viewport = default!;
+        public IClydeViewport? Viewport;
 
         private Vector2 _viewportResolution = (1f, 1f);
 
@@ -52,7 +52,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        protected override void Resized()
+        protected sealed override void Resized()
         {
             Viewport?.Dispose();
             Viewport = _displayManager.CreateViewport(Vector2i.ComponentMax((1, 1), (Vector2i) (PixelSize * _viewportResolution)), "ViewportContainerViewport");
@@ -64,13 +64,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public MapCoordinates LocalPixelToMap(Vector2 point)
         {
-            if (Viewport.Eye == null)
+            if (Viewport?.Eye == null)
                 return MapCoordinates.Nullspace;
 
-            var eye = (IEye) Viewport.Eye;
+            var eye = Viewport.Eye;
             var newPoint = point;
 
-            // prescaler
+            // pre-scaler
             newPoint *= _viewportResolution;
 
             // (inlined version of UiProjMatrix^-1)
@@ -86,9 +86,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Vector2 WorldToLocalPixel(Vector2 point)
         {
+            if (Viewport?.Eye == null)
+                return Vector2.Zero;
+
             var newPoint = Viewport.WorldToLocal(point);
 
-            // prescaler
+            // pre-scaler
             newPoint /= _viewportResolution;
 
             return newPoint;

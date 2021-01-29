@@ -3,6 +3,7 @@ using Robust.Shared.Utility;
 ﻿using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -14,15 +15,17 @@ namespace Robust.Client.UserInterface.CustomControls
     {
         private readonly IEyeManager _eyeManager;
 
-        public MainViewportContainer(IEyeManager eyeManager) : base()
+        public MainViewportContainer(IEyeManager eyeManager)
         {
             _eyeManager = eyeManager;
         }
 
-        protected internal override void Draw(DrawingHandleScreen handle)
+        protected override void Update(FrameEventArgs args)
         {
-            Viewport.Eye = _eyeManager.CurrentEye;
-            base.Draw(handle);
+            base.Update(args);
+
+            if(Viewport != null)
+                Viewport.Eye = _eyeManager.CurrentEye;
         }
     }
 }

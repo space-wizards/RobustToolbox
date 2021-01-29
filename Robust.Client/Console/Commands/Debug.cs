@@ -709,7 +709,8 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.Enabled = !mgr.Enabled;
+            if (!mgr.LockConsoleAccess)
+                mgr.Enabled = !mgr.Enabled;
             return false;
         }
     }
@@ -722,10 +723,12 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-          var mgr = IoCManager.Resolve<IEyeManager>();
-          if (mgr.CurrentEye != null)
-              mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
-          return false;
+            var lmgr = IoCManager.Resolve<ILightManager>();
+            var mgr = IoCManager.Resolve<IEyeManager>();
+            if (!lmgr.LockConsoleAccess)
+                if (mgr.CurrentEye != null)
+                    mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+            return false;
         }
     }
 
@@ -738,7 +741,8 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.DrawHardFov = !mgr.DrawHardFov;
+            if (!mgr.LockConsoleAccess)
+                mgr.DrawHardFov = !mgr.DrawHardFov;
             return false;
         }
     }
@@ -752,7 +756,22 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
-            mgr.DrawShadows = !mgr.DrawShadows;
+            if (!mgr.LockConsoleAccess)
+                mgr.DrawShadows = !mgr.DrawShadows;
+            return false;
+        }
+    }
+    internal class ToggleLightBuf : IConsoleCommand
+    {
+        public string Command => "togglelightbuf";
+        public string Description => "Toggles lighting rendering. This includes shadows but not FOV.";
+        public string Help => "togglelightbuf";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            if (!mgr.LockConsoleAccess)
+                mgr.DrawLighting = !mgr.DrawLighting;
             return false;
         }
     }

@@ -9,6 +9,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Simple control that draws a single texture using a variety of possible stretching modes.
     /// </summary>
+    /// <seealso cref="AnimatedTextureRect"/>
     public class TextureRect : Control
     {
         public const string StylePropertyTexture = "texture";
@@ -28,8 +29,13 @@ namespace Robust.Client.UserInterface.Controls
             get => _texture;
             set
             {
+                var oldSize = _texture?.Size;
                 _texture = value;
-                MinimumSizeChanged();
+
+                if (value?.Size != oldSize)
+                {
+                    MinimumSizeChanged();
+                }
             }
         }
 

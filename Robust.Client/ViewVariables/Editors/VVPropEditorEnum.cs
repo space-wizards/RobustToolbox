@@ -24,18 +24,19 @@ namespace Robust.Client.ViewVariables.Editors
                 var label = val?.ToString();
                 if (label == null)
                     continue;
-                optionButton.AddItem(label, (int?)val);
+                optionButton.AddItem(label, Convert.ToInt32(val));
             }
 
-            optionButton.SelectId((int)value);
+            optionButton.SelectId(Convert.ToInt32(value));
             optionButton.Disabled = ReadOnly;
 
             if (!ReadOnly)
             {
+                var underlyingType = Enum.GetUnderlyingType(value.GetType());
                 optionButton.OnItemSelected += e =>
                 {
                     optionButton.SelectId(e.Id);
-                    ValueChanged(e.Id);
+                    ValueChanged(Convert.ChangeType(e.Id, underlyingType));
                 };
             }
 

@@ -51,7 +51,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var oldHeight = _entry.Height;
                 var oldWidth = _entry.Width;
-                _entry.Update(font, MaxWidth ?? Width, UIScale);
+                _entry.Update(font, (MaxWidth ?? Width) * UIScale, UIScale);
                 if (oldHeight != _entry.Height || MaxWidth != null && _entry.Width != oldWidth)
                 {
                     MinimumSizeChanged();

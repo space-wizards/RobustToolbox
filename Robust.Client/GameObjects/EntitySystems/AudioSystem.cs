@@ -56,12 +56,12 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
         {
-            var gridId = ev.Coordinates.GetGridId(_entityManager);
-            
-            if (!_mapManager.GridExists(gridId))
+            var mapId = ev.Coordinates.GetMapId(_entityManager);
+
+            if (!_mapManager.MapExists(mapId))
             {
                 Logger.Error(
-                    $"Server tried to play sound on grid {gridId}, which does not exist. Ignoring.");
+                    $"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
                 return;
             }
 
@@ -111,13 +111,13 @@ namespace Robust.Client.GameObjects.EntitySystems
                     if (stream.TrackingCoordinates != null)
                     {
                         var coords = stream.TrackingCoordinates.Value;
-                        if (_mapManager.GridExists(coords.GetGridId(_entityManager)))
+                        if (_mapManager.MapExists(coords.GetMapId(_entityManager)))
                         {
                             mapPos = stream.TrackingCoordinates.Value.ToMap(_entityManager);
                         }
                         else
                         {
-                            // Grid no longer exists, delete stream.
+                            // Map no longer exists, delete stream.
                             StreamDone(stream);
                             continue;
                         }

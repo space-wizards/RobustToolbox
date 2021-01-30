@@ -1,10 +1,11 @@
 ﻿using System;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
     [Serializable, NetSerializable]
-    public struct GridId : IEquatable<GridId>
+    public struct GridId : IEquatable<GridId>, IDeepClone
     {
         /// <summary>
         /// An invalid grid ID.
@@ -60,6 +61,11 @@ namespace Robust.Shared.Map
         public override string ToString()
         {
             return Value.ToString();
+        }
+
+        public IDeepClone DeepClone()
+        {
+            return new GridId(Value);
         }
     }
 }

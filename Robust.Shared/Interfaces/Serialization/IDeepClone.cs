@@ -32,7 +32,7 @@ namespace Robust.Shared.Interfaces.Serialization
             var type = value.GetType();
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal) || underlyingType == typeof(String) || type.IsEnum)
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal) || underlyingType == typeof(String) || type.IsEnum || value is Type)
                 return value;
 
             if (typeof(IDeepClone).IsAssignableFrom(underlyingType))

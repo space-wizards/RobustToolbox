@@ -79,7 +79,7 @@ namespace Robust.Client.Animations
             };
         }
 
-        public struct KeyFrame
+        public struct KeyFrame : IDeepClone
         {
             /// <summary>
             ///     The RSI state to play when this keyframe gets triggered.
@@ -95,6 +95,11 @@ namespace Robust.Client.Animations
             {
                 State = state;
                 KeyTime = keyTime;
+            }
+
+            public IDeepClone DeepClone()
+            {
+                return new KeyFrame(IDeepClone.CloneValue(State), KeyTime);
             }
         }
     }

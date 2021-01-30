@@ -173,7 +173,15 @@ namespace Robust.Shared.Audio
 
         public IDeepClone DeepClone()
         {
-            return this;
+            return new AudioParams(
+                Volume,
+                PitchScale,
+                BusName,
+                MaxDistance,
+                Attenuation,
+                IDeepClone.CloneValue(MixTarget),
+                Loop,
+                PlayOffsetSeconds);
         }
     }
 

@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -13,7 +14,7 @@ namespace Robust.Shared.Utility
     ///     Is a reference to EITHER an RSI + RSI State, OR a bare texture path.
     /// </summary>
     [Serializable, NetSerializable]
-    public class SpriteSpecifier
+    public abstract class SpriteSpecifier : IDeepClone
     {
         public static readonly SpriteSpecifier Invalid = new Texture(new ResourcePath("."));
 
@@ -51,6 +52,11 @@ namespace Robust.Shared.Utility
             {
                 return RsiPath.GetHashCode() ^ RsiState.GetHashCode();
             }
+
+            public override IDeepClone DeepClone()
+            {
+                return new Rsi(IDeepClone.CloneValue(RsiPath)!, RsiState);
+            }
         }
 
         [Serializable, NetSerializable]
@@ -71,6 +77,11 @@ namespace Robust.Shared.Utility
             public override int GetHashCode()
             {
                 return TexturePath.GetHashCode();
+            }
+
+            public override IDeepClone DeepClone()
+            {
+                return new Texture(IDeepClone.CloneValue(TexturePath)!);
             }
         }
 
@@ -95,6 +106,13 @@ namespace Robust.Shared.Utility
             {
                 return EntityPrototypeId.GetHashCode();
             }
+
+            public override IDeepClone DeepClone()
+            {
+                return new EntityPrototype(EntityPrototypeId);
+            }
         }
+
+        public abstract IDeepClone DeepClone();
     }
 }

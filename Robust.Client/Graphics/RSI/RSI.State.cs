@@ -160,12 +160,7 @@ namespace Robust.Client.Graphics
 
             public IDeepClone DeepClone()
             {
-                return new State(
-                    IDeepClone.CloneValue(Size),
-                    IDeepClone.CloneValue(StateId),
-                    IDeepClone.CloneValue(Directions),
-                    IDeepClone.CloneValue(Delays)!,
-                    IDeepClone.CloneValue(Icons)!);
+                return this;
             }
         }
     }

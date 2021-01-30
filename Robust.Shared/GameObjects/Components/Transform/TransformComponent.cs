@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
@@ -203,6 +203,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Vector2 WorldPosition
         {
             get

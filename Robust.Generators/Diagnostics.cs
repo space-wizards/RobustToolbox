@@ -4,42 +4,45 @@ namespace Robust.Generators
 {
     public static class Diagnostics
     {
-        public static DiagnosticDescriptor InvalidYamlAttrTarget(string member, string symbol) => new DiagnosticDescriptor(
+        public static SuppressionDescriptor YamlMeansImplicitUse =>
+            new SuppressionDescriptor("RADC1000", "CS0649", "Used by ComponentDataManager.");
+
+        public static DiagnosticDescriptor InvalidYamlAttrTarget = new DiagnosticDescriptor(
             "RADC0000",
             "",
-            $"YamlFieldAttribute assigned for Member {member} of type {symbol} which is neither Field or Property! It will be ignored.",
+            $"YamlFieldAttribute assigned for Member which is neither Field or Property! It will be ignored.",
             "Usage",
             DiagnosticSeverity.Warning,
             true);
 
-        public static DiagnosticDescriptor FailedCustomDataClassAttributeResolve(string text) => new DiagnosticDescriptor(
+        public static DiagnosticDescriptor FailedCustomDataClassAttributeResolve = new DiagnosticDescriptor(
             "RADC0001",
             "",
-            $"Could not resolve CustomDataClassAttribute for class {text}",
+            $"Could not resolve CustomDataClassAttribute",
             "Usage",
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor InvalidDeepCloneImpl(string invalidAssignment) => new DiagnosticDescriptor(
+        public static DiagnosticDescriptor InvalidDeepCloneImpl = new DiagnosticDescriptor(
             "RADC0002",
             "",
-            $"Invalid assignment found in DeepClone implementation: {invalidAssignment}",
+            $"Invalid assignment found in DeepClone implementation",
             "Usage",
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor InvalidYamlTag(string member, string symbol, string fieldName) => new DiagnosticDescriptor(
+        public static DiagnosticDescriptor InvalidYamlTag = new DiagnosticDescriptor(
             "RADC0003",
             "",
-            $"YamlFieldAttribute for Member {member} of type {symbol} has an invalid tag {fieldName}.",
+            $"YamlFieldAttribute has an invalid tag.",
             "Usage",
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor NoDeepCloneImpl(string symbol) => new DiagnosticDescriptor(
+        public static DiagnosticDescriptor NoDeepCloneImpl = new DiagnosticDescriptor(
             "RADC0004",
             "",
-            $"{symbol} should implement IDeepClone.DeepClone",
+            $"Missing Implementation of IDeepClone.DeepClone",
             "Usage",
             DiagnosticSeverity.Error,
             true);

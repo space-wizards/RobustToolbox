@@ -11,6 +11,54 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace Robust.Generators
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    public class DeepCloneSuppressor : DiagnosticSuppressor
+    {
+        private string[] SuppressedAttributes => new[]
+        {
+            "Robust.Shared.Prototypes.YamlFieldAttribute",
+            "Robust.Shared.Prototypes.CustomYamlFieldAttribute"
+        };
+
+        public override void ReportSuppressions(SuppressionAnalysisContext context)
+        {
+            var attributeSymbols = SuppressedAttributes.Select(attr => context.Compilation.GetTypeByMetadataName(attr));
+            foreach (var reportedDiagnostic in context.ReportedDiagnostics)
+            {
+                if(reportedDiagnostic.Id != Diagnostics.YamlMeansImplicitUse.SuppressedDiagnosticId) continue;
+
+                var node = reportedDiagnostic.Location.SourceTree?.GetRoot(context.CancellationToken).FindNode(reportedDiagnostic.Location.SourceSpan);
+                if (node == null) continue;
+
+                var symbol = context.GetSemanticModel(reportedDiagnostic.Location.SourceTree).GetDeclaredSymbol(node);
+
+                ImmutableArray<AttributeData> attributes;
+                switch (symbol)
+                {
+                    case IFieldSymbol field:
+                        attributes = field.GetAttributes();
+                        break;
+                    case IPropertySymbol property:
+                        attributes = property.GetAttributes();
+                        break;
+                    default:
+                        throw new Exception($"Invalid SymbolType: {symbol?.GetType()}");
+                }
+
+                if(attributes.All(a => !attributeSymbols.Any(attr => SymbolEqualityComparer.Default.Equals(attr, a.AttributeClass))))
+                {
+                    continue;
+                }
+
+                context.ReportSuppression(Suppression.Create(
+                    Diagnostics.YamlMeansImplicitUse,
+                    reportedDiagnostic));
+            }
+        }
+
+        public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions => ImmutableArray.Create(Diagnostics.YamlMeansImplicitUse);
+    }
+
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class DeepCloneAnalyzer : DiagnosticAnalyzer
     {
         public override void Initialize(AnalysisContext context)
@@ -19,12 +67,7 @@ namespace Robust.Generators
             context.EnableConcurrentExecution();
         }
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
-            new ImmutableArray<DiagnosticDescriptor>()
-            {
-                Diagnostics.NoDeepCloneImpl(""),
-                Diagnostics.InvalidDeepCloneImpl("")
-            };
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Diagnostics.NoDeepCloneImpl, Diagnostics.InvalidDeepCloneImpl);
 
         private void AnalyzeDeepCloneCandidates(CompilationAnalysisContext context)
         {
@@ -59,7 +102,7 @@ namespace Robust.Generators
                     foreach (var loc in symbol.Locations)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            Diagnostics.NoDeepCloneImpl(symbol.ToString()),
+                            Diagnostics.NoDeepCloneImpl,
                             loc));
                     }
                     continue;
@@ -70,10 +113,6 @@ namespace Robust.Generators
                     continue; //todo Paul: implementation deferred, allowed (?)
                 }
 
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Diagnostics.InvalidDeepCloneImpl("aaaaaaaaaaaaaaa"),
-                    Location.None));
-
                 foreach (var syntaxReference in implementation.DeclaringSyntaxReferences)
                 {
                     var methodSyntax = syntaxReference.SyntaxTree.GetRoot() as MethodDeclarationSyntax;
@@ -81,7 +120,7 @@ namespace Robust.Generators
                     foreach (var invalidAssignment in MethodSyntaxWalker.GetFaultyAssignments(methodSyntax))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            Diagnostics.InvalidDeepCloneImpl(invalidAssignment.ToString()),
+                            Diagnostics.InvalidDeepCloneImpl,
                             invalidAssignment.GetLocation()));
                     }
                 }

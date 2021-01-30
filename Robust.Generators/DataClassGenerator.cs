@@ -21,8 +21,6 @@ namespace Robust.Generators
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
-            Debugger.Launch();
-
             var comp = (CSharpCompilation)context.Compilation;
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
@@ -53,7 +51,7 @@ namespace Robust.Generators
                 if (!TryResolveCustomDataClass(symbol, out var customDataClass))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        Diagnostics.FailedCustomDataClassAttributeResolve(classDeclarationSyntax.Identifier.Text),
+                        Diagnostics.FailedCustomDataClassAttributeResolve,
                         classDeclarationSyntax.GetLocation()));
                     continue;
                 }
@@ -119,7 +117,7 @@ namespace Robust.Generators
                     if (fieldName == null || !SyntaxFacts.IsValidIdentifier(GetFieldName(fieldName)))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            Diagnostics.InvalidYamlTag(member.ToString(), symbol.ToString(), fieldName),
+                            Diagnostics.InvalidYamlTag,
                             member.Locations.First()));
                         continue;
                     }
@@ -139,7 +137,7 @@ namespace Robust.Generators
                             break;
                         default:
                             context.ReportDiagnostic(Diagnostic.Create(
-                                Diagnostics.InvalidYamlAttrTarget(member.ToString(), symbol.ToString()),
+                                Diagnostics.InvalidYamlAttrTarget,
                                 member.Locations.First()));
                             continue;
                     }

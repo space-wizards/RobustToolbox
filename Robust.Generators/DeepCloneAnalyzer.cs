@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,18 +16,14 @@ namespace Robust.Generators
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterCompilationAction((c) => AnalyzeDeepCloneCandidates(c));
+            context.EnableConcurrentExecution();
         }
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
             new ImmutableArray<DiagnosticDescriptor>()
             {
-                new DiagnosticDescriptor(
-                    "RADC0004",
-                    "",
-                    $"",
-                    "Usage",
-                    DiagnosticSeverity.Error,
-                    true)
+                Diagnostics.NoDeepCloneImpl(""),
+                Diagnostics.InvalidDeepCloneImpl("")
             };
 
         private void AnalyzeDeepCloneCandidates(CompilationAnalysisContext context)
@@ -62,13 +59,7 @@ namespace Robust.Generators
                     foreach (var loc in symbol.Locations)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor(
-                                "RADC0004",
-                                "",
-                                $"{symbol} should implement IDeepClone.DeepClone",
-                                "Usage",
-                                DiagnosticSeverity.Error,
-                                true),
+                            Diagnostics.NoDeepCloneImpl(symbol.ToString()),
                             loc));
                     }
                     continue;
@@ -80,13 +71,7 @@ namespace Robust.Generators
                 }
 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        "RADC0002",
-                        "",
-                        "aaaaaa",
-                        "Usage",
-                        DiagnosticSeverity.Error,
-                        true),
+                    Diagnostics.InvalidDeepCloneImpl("aaaaaaaaaaaaaaa"),
                     Location.None));
 
                 foreach (var syntaxReference in implementation.DeclaringSyntaxReferences)
@@ -96,13 +81,7 @@ namespace Robust.Generators
                     foreach (var invalidAssignment in MethodSyntaxWalker.GetFaultyAssignments(methodSyntax))
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor(
-                                "RADC0002",
-                                "",
-                                $"Invalid assignment found in DeepClone implementation: {invalidAssignment}",
-                                "Usage",
-                                DiagnosticSeverity.Error,
-                                true),
+                            Diagnostics.InvalidDeepCloneImpl(invalidAssignment.ToString()),
                             invalidAssignment.GetLocation()));
                     }
                 }
@@ -140,7 +119,7 @@ namespace Robust.Generators
                 return walker.foundFaultyAssignments;
             }
 
-            //makes sure we only analyse the returnstatement
+            //makes sure we only analyze the returnstatement
             public override void VisitReturnStatement(ReturnStatementSyntax node)
             {
                 base.VisitReturnStatement(node);

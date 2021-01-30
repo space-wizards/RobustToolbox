@@ -52,9 +52,8 @@ namespace Robust.Generators
 
                 if (!TryResolveCustomDataClass(symbol, out var customDataClass))
                 {
-                    var msg = $"Could not resolve CustomDataClassAttribute for class {classDeclarationSyntax.Identifier.Text}";
                     context.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                        Diagnostics.FailedCustomDataClassAttributeResolve(classDeclarationSyntax.Identifier.Text),
                         classDeclarationSyntax.GetLocation()));
                     continue;
                 }
@@ -119,10 +118,8 @@ namespace Robust.Generators
                     var fieldName = GetCtorArg<string>(attribute.ConstructorArguments, 0);
                     if (fieldName == null || !SyntaxFacts.IsValidIdentifier(GetFieldName(fieldName)))
                     {
-                        var msg =
-                            $"YamlFieldAttribute for Member {member} of type {symbol} has an invalid tag {fieldName}.";
                         context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("RADC0003", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            Diagnostics.InvalidYamlTag(member.ToString(), symbol.ToString(), fieldName),
                             member.Locations.First()));
                         continue;
                     }
@@ -141,10 +138,8 @@ namespace Robust.Generators
                             type = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             break;
                         default:
-                            var msg =
-                                $"YamlFieldAttribute assigned for Member {member} of type {symbol} which is neither Field or Property! It will be ignored.";
                             context.ReportDiagnostic(Diagnostic.Create(
-                                new DiagnosticDescriptor("RADC0000", msg, msg, "Usage", DiagnosticSeverity.Warning, true),
+                                Diagnostics.InvalidYamlAttrTarget(member.ToString(), symbol.ToString()),
                                 member.Locations.First()));
                             continue;
                     }

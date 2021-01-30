@@ -234,6 +234,16 @@ namespace Robust.Shared.GameObjects.Components
             set => I = value > 0 ? 1 / value : 0f;
         }
 
+        // TODO: Will be used someday
+        /// <summary>
+        ///     Get this body's center of mass offset to world position.
+        /// </summary>
+        /// <remarks>
+        ///     AKA Sweep.LocalCenter in Box2D.
+        ///     Not currently in use as this is set after mass data gets set (when fixtures update).
+        /// </remarks>
+        public Vector2 CenterOfMass => Vector2.Zero;
+
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
         /// </summary>
@@ -561,6 +571,11 @@ namespace Robust.Shared.GameObjects.Components
             // TODO: Optimise this a LOT
             Dirty();
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
+        }
+
+        internal Physics.Transform GetTransform()
+        {
+            return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
         /// <summary>

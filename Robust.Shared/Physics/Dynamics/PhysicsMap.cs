@@ -67,6 +67,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             ContactManager.Initialize();
+            ContactManager.MapId = MapId;
             _island = new PhysicsIsland();
             _island.Initialize();
         }
@@ -186,7 +187,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            ContactManager.Collide(this);
+            ContactManager.Collide();
 
             // TODO: May move this as a PostSolve once we have broadphase collisions where contacts can be generated
             // even though the bodies may not technically be colliding
@@ -197,7 +198,7 @@ namespace Robust.Shared.Physics.Dynamics
             ProcessChanges();
 
             // Integrate velocities, solve velocity constraints, and do integration.
-            Solve(frameTime, prediction);
+            Solve(frameTime, dtRatio, prediction);
 
             // SolveTOI
 
@@ -206,7 +207,7 @@ namespace Robust.Shared.Physics.Dynamics
             _invDt0 = invDt;
         }
 
-        private void Solve(float frameTime, bool prediction)
+        private void Solve(float frameTime, float dtRatio, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
             _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count);
@@ -274,7 +275,7 @@ namespace Robust.Shared.Physics.Dynamics
                     // TODO: Joint edges
                 }
 
-                _island.Solve(frameTime, prediction);
+                _island.Solve(frameTime, dtRatio, prediction);
 
                 // Post-solve cleanup for island
                 for (var i = 0; i < _island.BodyCount; i++)
@@ -324,6 +325,11 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 body.Force = Vector2.Zero;
                 body.Torque = 0.0f;
+
+                foreach (var controller in body.GetControllers())
+                {
+                    controller.Impulse = Vector2.Zero;
+                }
             }
         }
     }

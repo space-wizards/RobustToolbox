@@ -88,7 +88,7 @@ namespace Robust.Shared.Physics.Broadphase
                 FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyA)!;
                 FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyB)!;
 
-                callback(in userDataA, in userDataB);
+                callback(GridId, in userDataA, in userDataB);
                 ++i;
 
                 // Skip any duplicate pairs.

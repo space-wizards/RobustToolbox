@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 

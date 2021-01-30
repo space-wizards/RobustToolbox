@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents a circle. The circle cannot be rotated,
@@ -32,6 +32,7 @@ namespace Robust.Shared.Physics
             get => _radius;
             set
             {
+                if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
             }

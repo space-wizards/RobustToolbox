@@ -18,6 +18,8 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
+        internal MapId MapId { get; set; }
+
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         /// <param name="proxyA"></param>
         /// <param name="proxyB"></param>
-        private void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
+        private void AddPair(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB)
         {
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
@@ -98,11 +100,11 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Does a joint override collision? Is at least one body dynamic?
-            if (bodyB.ShouldCollide(bodyA) == false)
+            if (!bodyB.ShouldCollide(bodyA))
                 return;
 
             //Check default filter
-            if (ShouldCollide(fixtureA, fixtureB) == false)
+            if (!ShouldCollide(fixtureA, fixtureB))
                 return;
 
             //FPE feature: BeforeCollision delegate
@@ -115,7 +117,7 @@ namespace Robust.Shared.Physics.Dynamics
             */
 
             // Call the factory.
-            Contact c = Contact.Create(fixtureA, indexA, fixtureB, indexB);
+            Contact c = Contact.Create(gridId, fixtureA, indexA, fixtureB, indexB);
 
             //if (c == null)
             //    return;
@@ -172,45 +174,148 @@ namespace Robust.Shared.Physics.Dynamics
             return (fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0;
         }
 
-        /// <summary>
-        ///     Go through each awake body and find collisions.
-        /// </summary>
-        /// <param name="map"></param>
-        public void Collide(PhysicsMap map)
+        private void Destroy(Contact contact)
         {
-            var combinations = new HashSet<(EntityUid, EntityUid)>();
-            var bodies = map.AwakeBodies;
+            Fixture fixtureA = contact.FixtureA!;
+            Fixture fixtureB = contact.FixtureB!;
+            PhysicsComponent bodyA = fixtureA.Body;
+            PhysicsComponent bodyB = fixtureB.Body;
 
-            foreach (var bodyA in bodies)
+            if (contact.IsTouching)
             {
-                if (bodyA.BodyType == BodyType.Static)
+                //Report the separation to both participants:
+                // TODO: Needs to do like a comp message and system message
+                // fixtureA?.OnSeparation(fixtureA, fixtureB);
+
+                //Reverse the order of the reported fixtures. The first fixture is always the one that the
+                //user subscribed to.
+                // fixtureB.OnSeparation(fixtureB, fixtureA);
+
+                // EndContact(contact);
+            }
+
+            // Remove from the world.
+            ContactList.Remove(contact);
+
+            // Remove from body 1
+            if (contact.NodeA.Previous != null)
+            {
+                contact.NodeA.Previous.Next = contact.NodeA.Next;
+            }
+
+            if (contact.NodeA.Next != null)
+            {
+                contact.NodeA.Next.Previous = contact.NodeA.Previous;
+            }
+
+            if (contact.NodeA == bodyA.ContactEdges)
+            {
+                bodyA.ContactEdges = contact.NodeA.Next;
+            }
+
+            // Remove from body 2
+            if (contact.NodeB.Previous != null)
+            {
+                contact.NodeB.Previous.Next = contact.NodeB.Next;
+            }
+
+            if (contact.NodeB.Next != null)
+            {
+                contact.NodeB.Next.Previous = contact.NodeB.Previous;
+            }
+
+            if (contact.NodeB == bodyB.ContactEdges)
+            {
+                bodyB.ContactEdges = contact.NodeB.Next;
+            }
+
+            /*
+#if USE_ACTIVE_CONTACT_SET
+			if (ActiveContacts.Contains(contact))
+			{
+				ActiveContacts.Remove(contact);
+			}
+#endif
+*/
+            contact.Destroy();
+        }
+
+        internal void Collide()
+        {
+            // Can be changed while enumerating
+            for (var i = 0; i < ContactList.Count; i++)
+            {
+                var contact = ContactList[i];
+                Fixture fixtureA = contact.FixtureA!;
+                Fixture fixtureB = contact.FixtureB!;
+                int indexA = contact.ChildIndexA;
+                int indexB = contact.ChildIndexB;
+                PhysicsComponent bodyA = fixtureA.Body;
+                PhysicsComponent bodyB = fixtureB.Body;
+
+                // Do not try to collide disabled bodies
+                if (!bodyA.CanCollide || !bodyB.CanCollide)
+                    continue;
+
+                // Is this contact flagged for filtering?
+                if (contact.FilterFlag)
+                {
+                    // Should these bodies collide?
+                    if (!bodyB.ShouldCollide(bodyA))
+                    {
+                        Contact cNuke = contact;
+                        Destroy(cNuke);
+                        continue;
+                    }
+
+                    // Check default filtering
+                    if (!ShouldCollide(fixtureA, fixtureB))
+                    {
+                        Contact cNuke = contact;
+                        Destroy(cNuke);
+                        continue;
+                    }
+
+                    // Check user filtering.
+                    /*
+                    if (ContactFilter != null && ContactFilter(fixtureA, fixtureB) == false)
+                    {
+                        Contact cNuke = c;
+                        Destroy(cNuke);
+                        continue;
+                    }
+                    */
+
+                    // Clear the filtering flag.
+                    contact.FilterFlag = false;
+                }
+
+                var activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
+                var activeB = bodyB.Awake && bodyB.BodyType != BodyType.Static;
+
+                // At least one body must be awake and it must be dynamic or kinematic.
+                if (!activeA && !activeB)
                 {
                     continue;
                 }
 
-                foreach (var bodyB in _broadPhaseSystem.GetCollidingEntities(bodyA, Vector2.Zero, false))
+                var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
+                var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
+
+                var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
+
+                var overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
+
+                // Here we destroy contacts that cease to overlap in the broad-phase.
+                if (overlap == false)
                 {
-                    var aUid = bodyA.Entity.Uid;
-                    var bUid = bodyB.Owner.Uid;
-
-                    if (bUid.CompareTo(aUid) > 0)
-                    {
-                        var tmpUid = bUid;
-                        bUid = aUid;
-                        aUid = tmpUid;
-                    }
-
-                    if (!combinations.Add((aUid, bUid))) continue;
-
-                    // TODO: Do we need to add one to each? eh!
-                    var contact =
-                        new Contact(
-                        new Manifold(bodyA, bodyB, bodyA.Hard && bodyB.Hard));
-
-                    bodyA.ContactEdges.Add(new ContactEdge(contact));
-
-                    ContactList.Add(contact);
+                    Contact cNuke = contact;
+                    Destroy(cNuke);
+                    continue;
                 }
+
+                // The contact persists.
+                contact.Update(this);
             }
         }
 
@@ -221,8 +326,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var contact in ContactList)
             {
-                var bodyA = contact.Manifold.A.Owner;
-                var bodyB = contact.Manifold.B.Owner;
+                var bodyA = contact.FixtureA!.Body.Owner;
+                var bodyB = contact.FixtureB!.Body.Owner;
 
                 // Apply onCollide behavior
                 foreach (var behavior in bodyA.GetAllComponents<ICollideBehavior>().ToArray())
@@ -262,26 +367,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void PostSolve()
         {
-            // As above this is temporary as we don't retain contacts over ticks (out of scope HARD).
-            foreach (var contact in ContactList)
-            {
-                var bodyA = contact.Manifold.A;
-                var bodyB = contact.Manifold.B;
 
-                if (!bodyA.Deleted)
-                {
-                    bodyA.ContactEdges.Clear();
-                }
-
-                if (bodyB.Deleted)
-                {
-                    bodyB.ContactEdges.Clear();
-                }
-            }
-
-            ContactList.Clear();
         }
     }
 
-    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
+    public delegate void BroadPhaseDelegate(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB);
 }

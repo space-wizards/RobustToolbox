@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents an Axis-Aligned Bounding Box.
@@ -14,6 +17,24 @@ namespace Robust.Shared.Physics
     public class PhysShapeAabb : IPhysShape
     {
         public int ChildCount => 1;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        private float _radius;
+
         public ShapeType ShapeType => ShapeType.Polygon;
 
         private Box2 _localBounds = Box2.UnitCentered;
@@ -64,6 +85,8 @@ namespace Robust.Shared.Physics
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
+
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         public bool Equals(IPhysShape? other)

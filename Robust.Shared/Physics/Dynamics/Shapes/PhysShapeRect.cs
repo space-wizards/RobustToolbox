@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents an OBB.
@@ -14,6 +17,23 @@ namespace Robust.Shared.Physics
     public class PhysShapeRect : IPhysShape
     {
         public int ChildCount => 1;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        private float _radius;
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
@@ -44,6 +64,8 @@ namespace Robust.Shared.Physics
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
+
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         [field: NonSerialized]

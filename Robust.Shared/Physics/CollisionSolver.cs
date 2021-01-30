@@ -2,6 +2,7 @@
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Shapes;
 
 namespace Robust.Shared.Physics
 {

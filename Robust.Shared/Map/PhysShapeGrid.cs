@@ -1,9 +1,11 @@
 ﻿using System;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
@@ -14,6 +16,24 @@ namespace Robust.Shared.Map
     public class PhysShapeGrid : IPhysShape
     {
         public int ChildCount => 1;
+
+        public Box2 LocalBounds => _mapGrid.LocalBounds;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+            }
+        }
+
+        private float _radius;
         public ShapeType ShapeType => ShapeType.Polygon;
 
         private GridId _gridId;
@@ -72,6 +92,8 @@ namespace Robust.Shared.Map
                 var mapMan = IoCManager.Resolve<IMapManager>();
                 _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
             }
+
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         public event Action? OnDataChanged { add { } remove { } }

@@ -21,9 +21,11 @@ namespace Robust.Shared.Physics
     public interface IPhysShape : IExposeData, IEquatable<IPhysShape>
     {
         /// <summary>
-        ///     Get hte number of child primitives. Only relevant for chain shape.
+        ///     Get the number of child primitives. Only relevant for chain shape.
         /// </summary>
         int ChildCount { get; }
+
+        float Radius { get; set; }
 
         ShapeType ShapeType { get; }
 

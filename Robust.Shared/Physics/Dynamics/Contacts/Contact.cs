@@ -1,6 +1,11 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
@@ -53,10 +58,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public bool IslandFlag { get; set; }
 
+        public bool FilterFlag { get; set; }
+
         /// <summary>
         ///     Determines whether the contact is touching.
         /// </summary>
         public bool IsTouching { get; set; }
+
+        // Some day we'll refactor it to be more like EntityCoordinates
+        public GridId GridId { get; set; } = GridId.Invalid;
 
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
@@ -104,7 +114,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <param name="fixtureB"></param>
         /// <param name="indexB"></param>
         /// <returns></returns>
-        internal static Contact Create(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;
@@ -137,6 +147,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 }
             }
 
+            contact.GridId = gridId;
             contact._type = _registers[(int) type1, (int) type2];
 
             return contact;
@@ -188,6 +199,228 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
 
             TangentSpeed = 0;
+        }
+
+        /// <summary>
+        /// Update the contact manifold and touching status.
+        /// Note: do not assume the fixture AABBs are overlapping or are valid.
+        /// </summary>
+        /// <param name="contactManager">The contact manager.</param>
+        internal void Update(ContactManager contactManager)
+        {
+            PhysicsComponent bodyA = FixtureA!.Body;
+            PhysicsComponent bodyB = FixtureB!.Body;
+
+            if (FixtureA == null || FixtureB == null)
+                return;
+
+            AetherManifold oldManifold = Manifold;
+
+            // Re-enable this contact.
+            Enabled = true;
+
+            bool touching;
+            bool wasTouching = IsTouching;
+
+            bool sensor = !FixtureA.Hard || !FixtureB.Hard;
+
+            // Is this contact a sensor?
+            if (sensor)
+            {
+                IPhysShape shapeA = FixtureA.Shape;
+                IPhysShape shapeB = FixtureB.Shape;
+                touching = IoCManager.Resolve<ICollisionManager>().TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+
+                // Sensors don't generate manifolds.
+                Manifold.PointCount = 0;
+            }
+            else
+            {
+                // TODO: Use existing one here maybe?
+                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                touching = Manifold.PointCount > 0;
+
+                // Match old contact ids to new contact ids and copy the
+                // stored impulses to warm start the solver.
+                for (int i = 0; i < Manifold.PointCount; ++i)
+                {
+                    ManifoldPoint mp2 = Manifold.Points[i];
+                    mp2.NormalImpulse = 0.0f;
+                    mp2.TangentImpulse = 0.0f;
+                    ContactID id2 = mp2.Id;
+
+                    for (int j = 0; j < oldManifold.PointCount; ++j)
+                    {
+                        ManifoldPoint mp1 = oldManifold.Points[j];
+
+                        if (mp1.Id.Key == id2.Key)
+                        {
+                            mp2.NormalImpulse = mp1.NormalImpulse;
+                            mp2.TangentImpulse = mp1.TangentImpulse;
+                            break;
+                        }
+                    }
+
+                    Manifold.Points[i] = mp2;
+                }
+
+                if (touching != wasTouching)
+                {
+                    bodyA.Awake = true;
+                    bodyB.Awake = true;
+                }
+            }
+
+            IsTouching = touching;
+            // TODO: Need to do collision behaviors around here.
+
+            if (!wasTouching)
+            {
+                if (touching)
+                {
+                    var enabledA = true;
+                    var enabledB = true;
+
+                    /*
+                    // Report the collision to both participants. Track which ones returned true so we can
+                    // later call OnSeparation if the contact is disabled for a different reason.
+                    if (FixtureA.OnCollision != null)
+                        foreach (OnCollisionEventHandler handler in FixtureA.OnCollision.GetInvocationList())
+                            enabledA = handler(FixtureA, FixtureB, this) && enabledA;
+
+                    // Reverse the order of the reported fixtures. The first fixture is always the one that the
+                    // user subscribed to.
+                    if (FixtureB.OnCollision != null)
+                        foreach (OnCollisionEventHandler handler in FixtureB.OnCollision.GetInvocationList())
+                            enabledB = handler(FixtureB, FixtureA, this) && enabledB;
+                    */
+
+                    Enabled = enabledA && enabledB;
+
+                    // BeginContact can also return false and disable the contact
+                    /*
+                    if (enabledA && enabledB && contactManager.BeginContact != null)
+                        Enabled = contactManager.BeginContact(this);
+                    */
+                }
+            }
+            else
+            {
+                if (!touching)
+                {
+                    /*
+                    //Report the separation to both participants:
+                    if (FixtureA != null && FixtureA.OnSeparation != null)
+                        FixtureA.OnSeparation(FixtureA, FixtureB);
+
+                    //Reverse the order of the reported fixtures. The first fixture is always the one that the
+                    //user subscribed to.
+                    if (FixtureB != null && FixtureB.OnSeparation != null)
+                        FixtureB.OnSeparation(FixtureB, FixtureA);
+
+                    if (contactManager.EndContact != null)
+                        contactManager.EndContact(this);
+                    */
+                }
+            }
+
+            if (sensor)
+                return;
+
+            /*
+            if (contactManager.PreSolve != null)
+                contactManager.PreSolve(this, ref oldManifold);
+            */
+        }
+
+        /// <summary>
+        /// Evaluate this contact with your own manifold and transforms.
+        /// </summary>
+        /// <param name="manifold">The manifold.</param>
+        /// <param name="transformA">The first transform.</param>
+        /// <param name="transformB">The second transform.</param>
+        private void Evaluate(ref AetherManifold manifold, in Transform transformA, in Transform transformB)
+        {
+            var collisionManager = IoCManager.Resolve<ICollisionManager>();
+
+            switch (_type)
+            {
+                case ContactType.Polygon:
+                    // Blame remie
+                    // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
+                    // I might fix it later
+                    PolygonShape polyA;
+                    PolygonShape polyB;
+
+                    switch (FixtureA!.Shape)
+                    {
+                        case PhysShapeAabb aabb:
+                            polyA = new PolygonShape(aabb);
+                            break;
+                        case PhysShapeGrid grid:
+                            polyA = new PolygonShape(grid);
+                            break;
+                        case PhysShapeRect rect:
+                            polyA = new PolygonShape(rect);
+                            break;
+                        case PolygonShape poly:
+                            polyA = poly;
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                    switch (FixtureB!.Shape)
+                    {
+                        case PhysShapeAabb aabb:
+                            polyB = new PolygonShape(aabb);
+                            break;
+                        case PhysShapeGrid grid:
+                            polyB = new PolygonShape(grid);
+                            break;
+                        case PhysShapeRect rect:
+                            polyB = new PolygonShape(rect);
+                            break;
+                        case PolygonShape poly:
+                            polyB = poly;
+                            break;
+                        default:
+                            throw new NotImplementedException();
+                    }
+
+                    collisionManager.CollidePolygons(ref manifold, polyA, transformA, polyB, transformB);
+                    break;
+                case ContactType.PolygonAndCircle:
+                    collisionManager.CollidePolygonAndCircle(ref manifold, (PolygonShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    break;
+                case ContactType.EdgeAndCircle:
+                    throw new NotImplementedException();
+                    // collisionManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) FixtureA.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, ref transformB);
+                    break;
+                case ContactType.EdgeAndPolygon:
+                    throw new NotImplementedException();
+                    // collisionManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA.Shape, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
+                    break;
+                case ContactType.ChainAndCircle:
+                    throw new NotImplementedException();
+                    /*
+                    ChainShape chain = (ChainShape)FixtureA.Shape;
+                    chain.GetChildEdge(_edge, ChildIndexA);
+                    Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
+                    */
+                    break;
+                case ContactType.ChainAndPolygon:
+                    throw new NotImplementedException();
+                    /*
+                    ChainShape loop2 = (ChainShape)FixtureA.Shape;
+                    loop2.GetChildEdge(_edge, ChildIndexA);
+                    Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
+                    */
+                    break;
+                case ContactType.Circle:
+                    collisionManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
+                    break;
+            }
         }
 
         internal void Destroy()

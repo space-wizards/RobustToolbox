@@ -88,7 +88,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Vector2 Rounded()
         {
-            return new((float) MathF.Round(X), (float) MathF.Round(Y));
+            return new(MathF.Round(X), MathF.Round(Y));
         }
 
         /// <summary>

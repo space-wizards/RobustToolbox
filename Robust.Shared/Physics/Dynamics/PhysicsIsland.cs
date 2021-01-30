@@ -104,7 +104,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        public void Solve(float frameTime, bool prediction)
+        public void Solve(float frameTime, float dtRatio, bool prediction)
         {
             // TODO: This is probably suss given we're integrating before collisions?
 
@@ -116,8 +116,8 @@ namespace Robust.Shared.Physics.Dynamics
                 // Didn't use the old variable names because they're hard to read
                 var position = body.Owner.Transform.WorldPosition;
                 var angle = (float) body.Owner.Transform.WorldRotation.Theta;
-                var linearVelocity = Vector2.Zero;
-                var angularVelocity = 0f;
+                var linearVelocity = body.LinearVelocity;
+                var angularVelocity = body.AngularVelocity;
 
                 // if the body cannot move, nothing to do here
                 // TODO: Change anchored to just use static bodytype instead.
@@ -126,7 +126,10 @@ namespace Robust.Shared.Physics.Dynamics
                     foreach (var controller in body.GetControllers())
                     {
                         linearVelocity += controller.LinearVelocity;
+                        linearVelocity += controller.Impulse * body.InvMass;
                     }
+
+                    angularVelocity += frameTime * body.InvI * body.Torque;
 
                     // Process frictional forces
                     // TODO Replace with damping at some stage.
@@ -140,13 +143,27 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Pass the data into the solver
-            _contactSolver.Reset(ContactCount, _contacts, _linearVelocities, _angularVelocities, _positions, _angles);
+            _contactSolver.Reset(dtRatio, ContactCount, _contacts, _linearVelocities, _angularVelocities, _positions, _angles);
+
+            _contactSolver.InitializeVelocityConstraints();
+
+            if (_configManager.GetCVar(CVars.WarmStarting))
+            {
+                _contactSolver.WarmStart();
+            }
+
+            // TODO: Joint inits
 
             // Velocity solver
             for (var i = 0; i < _configManager.GetCVar(CVars.VelocityIterations); i++)
             {
+                // TODO: Joints here
+
                 _contactSolver.SolveVelocityConstraints();
             }
+
+            // Store for warm starting.
+            _contactSolver.StoreImpulses();
 
             var maxLinVelocity = _configManager.GetCVar(CVars.MaxLinVelocity);
             var maxAngVelocity = _configManager.GetCVar(CVars.MaxAngVelocity);
@@ -154,16 +171,12 @@ namespace Robust.Shared.Physics.Dynamics
             // Integrate positions
             for (var i = 0; i < BodyCount; i++)
             {
-                // TODO: Copy Farseer rate-limits here
-                var body = Bodies[i];
-
-                Vector2 linearVelocity = _linearVelocities[i];
+                var linearVelocity = _linearVelocities[i];
                 var angularVelocity = _angularVelocities[i];
 
                 var position = _positions[i];
                 var angle = _angles[i];
 
-                // TODO: Maxtranslation.
                 var translation = linearVelocity * frameTime;
                 if (Vector2.Dot(translation, translation) > maxLinVelocity)
                 {
@@ -171,7 +184,6 @@ namespace Robust.Shared.Physics.Dynamics
                     linearVelocity *= ratio;
                 }
 
-                // TODO: This as well
                 var rotation = angularVelocity * frameTime;
                 if (rotation * rotation > maxAngVelocity)
                 {
@@ -196,6 +208,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var contactsOkay = _contactSolver.SolvePositionConstraints();
 
+                // TODO: Joints here
+
                 if (contactsOkay)
                 {
                     positionSolved = true;
@@ -208,6 +222,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var body = Bodies[i];
 
+                // TODO: Do we need this? We shouldn't...?
                 if (body.BodyType == BodyType.Static) continue;
 
                 /*
@@ -224,10 +239,6 @@ namespace Robust.Shared.Physics.Dynamics
                         body.Owner.Transform.Parent!.Owner.SendMessage(body.Owner.Transform, relayEntityMoveMessage);
                     }
                 }
-
-                // For now this won't do anything anyway as we reset velocity every tick
-                // body.LinearVelocity = _linearVelocities[i];
-                // body.AngularVelocity = _angularVelocities[i];
 
                 /*
                  * Handle new position
@@ -251,9 +262,15 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
+                // body.Sweep.Center = _positions[i];
+                // body.Sweep.Angle = _angles[i];
+
                 body.Owner.Transform.WorldPosition = bodyPos;
                 // TODO: We need some override for players as this will go skewiff.
-                // body.Owner.Transform.WorldRotation = _angles[i];
+                body.Owner.Transform.WorldRotation = _angles[i];
+
+                body.LinearVelocity = _linearVelocities[i];
+                body.AngularVelocity = _angularVelocities[i];
             }
 
             // TODO: Cache rather than GetCVar

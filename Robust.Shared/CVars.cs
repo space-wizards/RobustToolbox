@@ -311,6 +311,39 @@ namespace Robust.Shared
         public static readonly CVarDef<int> VelocityIterations =
             CVarDef.Create("physics.veliter", 6);
 
+        public static readonly CVarDef<bool> WarmStarting =
+            CVarDef.Create("physics.warmstart", true);
+
+        public static readonly CVarDef<float> VelocityThreshold =
+            CVarDef.Create("physics.velocitythreshold", 1.0f);
+
+        // TODO: Copy Box2D's comments on baumgarte I think it's on the solver class.
+        /// <summary>
+        ///     How much overlap is resolved per tick.
+        /// </summary>
+        public static readonly CVarDef<float> Baumgarte =
+            CVarDef.Create("physics.baumgarte", 0.2f);
+
+        public static readonly CVarDef<float> LinearSlop =
+            CVarDef.Create("physics.linearslop", 0.005f);
+
+        /// <summary>
+        /// The radius of the polygon/edge shape skin. This should not be modified. Making
+        /// this smaller means polygons will have an insufficient buffer for continuous collision.
+        /// Making it larger may create artifacts for vertex collision.
+        /// </summary>
+        /// <remarks>
+        ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
+        /// </remarks>
+        public static readonly CVarDef<float> PolygonRadius =
+            CVarDef.Create("physics.polygonradius", 2 * 0.005f);
+
+        public static readonly CVarDef<int> MaxPolygonVertices =
+            CVarDef.Create("physics.maxpolygonvertices", 8);
+
+        public static readonly CVarDef<float> MaxLinearCorrection =
+            CVarDef.Create("physics.maxlinearcorrection", 0.2f);
+
         // - Maximums
         // Squared
         public static readonly CVarDef<float> MaxLinVelocity =

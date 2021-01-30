@@ -363,7 +363,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class ClydeTexture : OwnedTexture, IDeepClone
+        private sealed class ClydeTexture : OwnedTexture
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
@@ -399,11 +399,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return $"ClydeTexture: ({TextureId})";
-            }
-
-            public IDeepClone DeepClone()
-            {
-                return new ClydeTexture(TextureId, Size, IsSrgb, _clyde);
             }
         }
 

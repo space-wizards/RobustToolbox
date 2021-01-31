@@ -44,7 +44,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             base.Shutdown();
             UnsubscribeNetworkEvent<ChunkDirtyMessage>();
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(nameof(_overlay));
+            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(nameof(ChunkOverlay));
         }
 
         private void HandleChunkDirty(ChunkDirtyMessage message)

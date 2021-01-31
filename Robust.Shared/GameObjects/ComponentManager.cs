@@ -562,7 +562,7 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = true)
+        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
         {
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)

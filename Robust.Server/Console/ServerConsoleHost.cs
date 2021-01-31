@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
-using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
-using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -16,61 +12,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Console
 {
-    /// <inheritdoc cref="IServerConsoleHost"/>
+    /// <inheritdoc cref="IServerConsoleHost" />
     internal class ServerConsoleHost : ConsoleHost, IServerConsoleHost
     {
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly IConGroupController _groupController = default!;
-        
-        private void HandleRegistrationRequest(INetChannel senderConnection)
-        {
-            var netMgr = IoCManager.Resolve<IServerNetManager>();
-            var message = netMgr.CreateNetMessage<MsgConCmdReg>();
-
-            var counter = 0;
-            message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
-            foreach (var command in RegisteredCommands.Values)
-            {
-                message.Commands[counter++] = new MsgConCmdReg.Command
-                {
-                    Name = command.Command,
-                    Description = command.Description,
-                    Help = command.Help
-                };
-            }
-
-            netMgr.ServerSendMessage(message, senderConnection);
-        }
-
-        /// <inheritdoc />
-        public void Initialize()
-        {
-            ReloadCommands();
-
-            // setup networking with clients
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
-            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
-            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
-                message => HandleRegistrationRequest(message.MsgChannel));
-        }
-
-        private void ProcessCommand(MsgConCmd message)
-        {
-            var text = message.Text;
-            var sender = message.MsgChannel;
-            var session = _players.GetSessionByChannel(sender);
-
-            LogManager.GetSawmill(SawmillName).Info($"{FormatPlayerString(session)}:{text}");
-
-            ExecuteCommand(session, text);
-        }
-
-        /// <inheritdoc />
-        public override void ExecuteCommand(string command)
-        {
-            ExecuteCommand(null, command);
-        }
 
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
@@ -120,6 +67,72 @@ namespace Robust.Server.Console
             //TODO: Server -> Client remote execute, just like how the client forwards the command
         }
 
+        public override void WriteLine(ICommonSession? session, string text)
+        {
+            if (session is IPlayerSession playerSession)
+                SendText(playerSession, text);
+            else
+                SendText(null as IPlayerSession, text);
+        }
+
+        public override void WriteLine(ICommonSession? session, string text, Color color)
+        {
+            //TODO: Make colors work.
+            WriteLine(session, text);
+        }
+
+        /// <inheritdoc />
+        public void Initialize()
+        {
+            RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>", (shell, _, args) =>
+            {
+                var command = args[0];
+                var cArgs = args[1..].Select(CommandParsing.Escape);
+
+                var localShell = shell.ConsoleHost.LocalShell;
+                localShell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
+            });
+
+            ReloadCommands();
+
+            // setup networking with clients
+            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
+            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
+                message => HandleRegistrationRequest(message.MsgChannel));
+        }
+
+        private void HandleRegistrationRequest(INetChannel senderConnection)
+        {
+            var netMgr = IoCManager.Resolve<IServerNetManager>();
+            var message = netMgr.CreateNetMessage<MsgConCmdReg>();
+
+            var counter = 0;
+            message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
+            foreach (var command in RegisteredCommands.Values)
+            {
+                message.Commands[counter++] = new MsgConCmdReg.Command
+                {
+                    Name = command.Command,
+                    Description = command.Description,
+                    Help = command.Help
+                };
+            }
+
+            netMgr.ServerSendMessage(message, senderConnection);
+        }
+
+        private void ProcessCommand(MsgConCmd message)
+        {
+            var text = message.Text;
+            var sender = message.MsgChannel;
+            var session = _players.GetSessionByChannel(sender);
+
+            LogManager.GetSawmill(SawmillName).Info($"{FormatPlayerString(session)}:{text}");
+
+            ExecuteCommand(session, text);
+        }
+
         /// <summary>
         /// Sends a text string to the remote player.
         /// </summary>
@@ -147,60 +160,10 @@ namespace Robust.Server.Console
             replyMsg.Text = text;
             NetManager.ServerSendMessage(replyMsg, target);
         }
-        
-        private static string FormatPlayerString(IPlayerSession? session)
+
+        private static string FormatPlayerString(IBaseSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
-        }
-
-        private class SudoCommand : IConsoleCommand
-        {
-            public string Command => "sudo";
-            public string Description => "sudo make me a sandwich";
-            public string Help => "sudo";
-
-            public void Execute(IConsoleShell shell, string argStr, string[] args)
-            {
-                var command = args[0];
-                var cArgs = args[1..].Select(CommandParsing.Escape);
-
-                var localShell = shell.ConsoleHost.LocalShell;
-                localShell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
-            }
-        }
-
-        IConsoleShell IConsoleHost.LocalShell => LocalShell;
-
-        /// <inheritdoc />
-        public override IConsoleShell GetSessionShell(ICommonSession session)
-        {
-            if (session.Status >= SessionStatus.Disconnected)
-                throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
-
-            return new ConsoleShell(this, session);
-        }
-
-        public override void WriteLine(ICommonSession? session, string text)
-        {
-            if (session is IPlayerSession playerSession)
-            {
-                SendText(playerSession, text);
-            }
-            else
-            {
-                SendText(null as IPlayerSession, text);
-            }
-        }
-
-        public override void WriteLine(ICommonSession? session, string text, Color color)
-        {
-            //TODO: Make colors work.
-            WriteLine(session, text);
-        }
-
-        public override void ClearLocalConsole()
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -37,6 +38,9 @@ namespace Robust.Shared.Console
         /// A map of (commandName -> ICommand) of every registered command in the shell.
         /// </summary>
         IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
+
+
+        event EventHandler ClearText;
 
         /// <summary>
         /// Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
@@ -109,6 +113,9 @@ namespace Robust.Shared.Console
         /// <param name="color">Foreground color of the text.</param>
         void WriteLine(ICommonSession? session, string text, Color color);
 
+        /// <summary>
+        /// Removes all text from the local console.
+        /// </summary>
         void ClearLocalConsole();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
@@ -7,9 +8,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
+using Robust.Shared.Reflection;
 
 namespace Robust.Shared.Console
 {
+    /// <inheritdoc />
     public abstract class ConsoleHost : IConsoleHost
     {
         protected const string SawmillName = "con";
@@ -20,18 +23,22 @@ namespace Robust.Shared.Console
 
         protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
 
-        public bool IsServer { get; }
+        /// <inheritdoc />
+        public bool IsServer => NetManager.IsServer;
 
+        /// <inheritdoc />
         public IConsoleShell LocalShell { get; }
 
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
 
-        public ConsoleHost()
+        protected ConsoleHost()
         {
             LocalShell = new ConsoleShell(this, null);
-            IsServer = NetManager.IsServer;
         }
+
+        /// <inheritdoc />
+        public event EventHandler? ClearText;
 
         /// <inheritdoc />
         public void ReloadCommands()
@@ -51,6 +58,7 @@ namespace Robust.Shared.Console
             }
         }
 
+        /// <inheritdoc />
         public void RegisterCommand(string command, string description, string help, ConCommandCallback callback)
         {
             if (AvailableCommands.ContainsKey(command))
@@ -60,12 +68,77 @@ namespace Robust.Shared.Console
             AvailableCommands.Add(command, newCmd);
         }
 
-        public abstract IConsoleShell GetSessionShell(ICommonSession session);
-        public abstract void ExecuteCommand(string command);
+        //TODO: Pull up
         public abstract void ExecuteCommand(ICommonSession? session, string command);
+
+        //TODO: server -> client forwarding, making the system asymmetrical
         public abstract void RemoteExecuteCommand(ICommonSession? session, string command);
+
+        //TODO: IConsoleOutput for [e#1225]
         public abstract void WriteLine(ICommonSession? session, string text);
         public abstract void WriteLine(ICommonSession? session, string text, Color color);
-        public abstract void ClearLocalConsole();
+
+        /// <inheritdoc />
+        public void ClearLocalConsole()
+        {
+            ClearText?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <inheritdoc />
+        public IConsoleShell GetSessionShell(ICommonSession session)
+        {
+            if (!IsServer)
+                return LocalShell;
+
+            if (session.Status >= SessionStatus.Disconnected)
+                throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
+
+            return new ConsoleShell(this, session);
+        }
+
+        /// <inheritdoc />
+        public void ExecuteCommand(string command)
+        {
+            ExecuteCommand(null, command);
+        }
+
+        /// <summary>
+        /// A console command that was registered inline through <see cref="IConsoleHost"/>.
+        /// </summary>
+        [Reflect(false)]
+        private class RegisteredCommand : IConsoleCommand
+        {
+            private readonly ConCommandCallback _callback;
+
+            /// <inheritdoc />
+            public string Command { get; }
+
+            /// <inheritdoc />
+            public string Description { get; }
+
+            /// <inheritdoc />
+            public string Help { get; }
+
+            /// <summary>
+            /// Constructs a new instance of <see cref="RegisteredCommand"/>.
+            /// </summary>
+            /// <param name="command">Name of the command.</param>
+            /// <param name="description">Short description of the command.</param>
+            /// <param name="help">Extended description for the command.</param>
+            /// <param name="callback">Callback function that is ran when the command is executed.</param>
+            public RegisteredCommand(string command, string description, string help, ConCommandCallback callback)
+            {
+                Command = command;
+                Description = description;
+                Help = help;
+                _callback = callback;
+            }
+
+            /// <inheritdoc />
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
+            {
+                _callback(shell, argStr, args);
+            }
+        }
     }
 }

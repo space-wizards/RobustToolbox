@@ -18,7 +18,6 @@ namespace Robust.Client.Console
 
         event EventHandler<AddStringArgs> AddString;
         event EventHandler<AddFormattedMessageArgs> AddFormatted;
-        event EventHandler ClearText;
 
         void AddFormattedLine(FormattedMessage message);
     }

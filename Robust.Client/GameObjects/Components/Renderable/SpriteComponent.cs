@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -1310,6 +1310,45 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        /// <inheritdoc/>
+        public Box2 CalculateBoundingBox()
+        {
+            // we need to calculate bounding box taking into account all layers
+            // layers have same center, so we just need their union size
+            // don't forget about layers-sprite rotation and scale 
+            var spritePixelSize = Vector2i.Zero;
+            foreach (var layer in Layers)
+            {
+                // first calculate layer bounding box
+                // we can optimize it a bit, if layer doesn't have rotation
+                var layerBox = Box2.CentredAroundZero(layer.PixelSize * layer.Scale);
+                var layerHasRotation = !layer.Rotation.EqualsApprox(Angle.Zero);
+                var layerBB = layerHasRotation ?
+                    new Box2Rotated(layerBox, layer.Rotation).CalcBoundingBox() : layerBox;
+
+                // apply sprite transformations and calculate sprite bounding box
+                // it's not 100% correct, because we should scale and rotate layerBox, not bounding
+                // but I don't want to mess with parent-local transform order here
+                var spriteBox = layerBB.Scale(Scale);
+                var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
+                var spriteBB = spriteHasRotation ?
+                    new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+
+                // now let see if new sprite BB bigger than current
+                var size = (Vector2i)spriteBB.Size;
+                if (spritePixelSize.X < size.X)
+                    spritePixelSize.X = size.X;
+                if (spritePixelSize.Y < size.Y)
+                    spritePixelSize.Y = size.Y;
+            }
+           
+            // move it all to world transform system
+            var worldPosition = Owner.Transform.WorldPosition;
+            var worldScale = spritePixelSize / EyeManager.PixelsPerMeter;
+            var finalBB = Box2.CenteredAround(worldPosition + Offset, worldScale);
+            return finalBB;
+        }
+
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
@@ -1764,6 +1803,25 @@ namespace Robust.Client.GameObjects
                 Texture = texture;
 
                 _parent.UpdateIsInert();
+            }
+
+            /// <inheritdoc/>
+            public Vector2i PixelSize
+            {
+                get
+                {
+                    var pixelSize = Vector2i.Zero;
+                    if (Texture != null)
+                    {
+                        pixelSize = Texture.Size;
+                    }
+                    else if (ActualRsi != null)
+                    {
+                        pixelSize = ActualRsi.Size;
+                    }
+
+                    return pixelSize;
+                }
             }
         }
 

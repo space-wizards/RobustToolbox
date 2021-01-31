@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -192,6 +192,32 @@ namespace Robust.Client.Graphics.Clyde
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
+                    var spriteBB = entry.sprite.CalculateBoundingBox();
+                    spriteBB = spriteBB.Scale(1.1f);
+                    //Vector2 spriteSize = spriteBB.Size;
+                    //var worldScaleMatrix = entry.worldMatrix;
+
+                    //var scaleX = new Vector2(entry.worldMatrix.R0C0, worldScaleMatrix.R1C0).Length;
+                    // var scaleY = new Vector2(entry.worldMatrix.R0C1, worldScaleMatrix.R1C1).Length;
+                    //var worldScale = new Vector2(scaleX, scaleY);
+
+                    // var screenPixelSize = (spriteSize * worldScale);
+
+                    var spriteScreenLB = _eyeManager.WorldToScreen(spriteBB.BottomLeft);
+                    var spriteScreenRT = _eyeManager.WorldToScreen(spriteBB.TopRight);
+
+                    var eyeSize = (Vector2i)(spriteScreenRT - spriteScreenLB);
+                    eyeSize.Y = -eyeSize.Y;
+
+                    if (EntityPostRenderTarget != null)
+                        EntityPostRenderTarget.Dispose();
+
+                    EntityPostRenderTarget = CreateRenderTarget(eyeSize,
+                        new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                        name: nameof(EntityPostRenderTarget));
+
+
+
                     _renderHandle.UseRenderTarget(EntityPostRenderTarget);
                     _renderHandle.Clear(new Color());
                     // Calculate viewport so that the entity thinks it's drawing to the same position,

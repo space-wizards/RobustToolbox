@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
@@ -204,6 +204,11 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         ISpriteLayer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
+
+        /// <summary>
+        /// Calculates sprite bounding box in world-space coordinates 
+        /// </summary>
+        Box2 CalculateBoundingBox();
     }
 
     public interface ISpriteLayer
@@ -218,6 +223,12 @@ namespace Robust.Client.Interfaces.GameObjects.Components
 
         Angle Rotation { get; set; }
         Vector2 Scale { get; set; }
+
+        /// <summary>
+        /// Layer size in pixels.
+        /// Doesn't account layer scale or sprite world transform
+        /// </summary>
+        Vector2i PixelSize { get; }
 
         bool Visible { get; set; }
         Color Color { get; set; }

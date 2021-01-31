@@ -59,7 +59,7 @@ namespace Robust.Client.Console
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;
 
-            ReloadCommands();
+            LoadConsoleCommands();
             SendServerCommandRequest();
         }
 

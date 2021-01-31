@@ -93,7 +93,7 @@ namespace Robust.Server.Console
                 localShell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
             });
 
-            ReloadCommands();
+            LoadConsoleCommands();
 
             // setup networking with clients
             NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);

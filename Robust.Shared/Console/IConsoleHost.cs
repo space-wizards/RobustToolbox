@@ -46,7 +46,7 @@ namespace Robust.Shared.Console
         /// Scans all loaded assemblies for console commands and registers them. This will NOT sync with connected clients, and
         /// should only be used during server initialization.
         /// </summary>
-        void ReloadCommands();
+        void LoadConsoleCommands();
 
         /// <summary>
         /// Registers a console command into the console system. This is an alternative to

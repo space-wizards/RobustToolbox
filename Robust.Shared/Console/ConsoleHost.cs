@@ -41,10 +41,9 @@ namespace Robust.Shared.Console
         public event EventHandler? ClearText;
 
         /// <inheritdoc />
-        public void ReloadCommands()
+        public void LoadConsoleCommands()
         {
             // search for all client commands in all assemblies, and register them
-            AvailableCommands.Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
                 var instance = (IConsoleCommand) Activator.CreateInstance(type, null)!;

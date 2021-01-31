@@ -145,8 +145,9 @@ namespace Robust.Shared.GameObjects.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            foreach (var (_, map) in _maps)
+            foreach (var (mapId, map) in _maps)
             {
+                if (mapId == MapId.Nullspace) continue;
                 map.Step(deltaTime, prediction);
             }
         }

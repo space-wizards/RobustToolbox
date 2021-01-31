@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
@@ -254,8 +256,9 @@ namespace Robust.Shared.Physics.Dynamics
                         if (!contact.Enabled || !contact.IsTouching) continue;
 
                         // Skip sensors.
-                        if (contact.FixtureA?.Hard != false || contact.FixtureB?.Hard != false) continue;
+                        if (contact.FixtureA?.Hard != true || contact.FixtureB?.Hard != true) continue;
 
+                        Logger.DebugS("physics", $"Added contact to island {IoCManager.Resolve<IGameTiming>().CurTick}");
                         _island.Add(contact);
                         contact.IslandFlag = true;
 

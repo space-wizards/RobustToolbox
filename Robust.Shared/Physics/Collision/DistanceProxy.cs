@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Utility;
@@ -37,7 +38,23 @@ namespace Robust.Shared.Physics.Collision
                     break;
 
                 case ShapeType.Polygon:
-                    PolygonShape polygon = (PolygonShape)shape;
+                    PolygonShape polygon;
+                    // TODO: REMMIIIEEEEE
+                    switch (shape)
+                    {
+                        case PhysShapeAabb aabb:
+                            polygon = new PolygonShape(aabb);
+                            break;
+                        case PhysShapeGrid grid:
+                            polygon = new PolygonShape(grid);
+                            break;
+                        case PhysShapeRect rect:
+                            polygon = new PolygonShape(rect);
+                            break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+
                     Vertices.Clear();
                     for (int i = 0; i < polygon.Vertices.Count; i++)
                     {

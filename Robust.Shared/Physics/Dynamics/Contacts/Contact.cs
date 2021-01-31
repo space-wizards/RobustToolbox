@@ -18,7 +18,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
-        public AetherManifold Manifold = default!;
+        public AetherManifold Manifold = new();
 
         private ContactType _type;
 
@@ -168,14 +168,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Enabled = true;
             IsTouching = false;
             IslandFlag = false;
-            // FilterFlag = false;
+            FilterFlag = false;
             // TOIFlag = false;
 
             FixtureA = fixtureA;
             FixtureB = fixtureB;
 
-            // ChildIndexA = indexA;
-            // ChildIndexB = indexB;
+            ChildIndexA = indexA;
+            ChildIndexB = indexB;
 
             Manifold.PointCount = 0;
 
@@ -236,7 +236,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
             else
             {
-                // TODO: Use existing one here maybe?
                 Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
                 touching = Manifold.PointCount > 0;
 

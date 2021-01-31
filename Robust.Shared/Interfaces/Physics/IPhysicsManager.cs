@@ -47,25 +47,4 @@ namespace Robust.Shared.Interfaces.Physics
         public RayCastResults? Results { get; }
         public float MaxLength { get; }
     }
-
-    public readonly struct Manifold
-    {
-        public readonly PhysicsComponent A;
-        public readonly PhysicsComponent B;
-
-        public readonly Vector2 Normal;
-        public readonly bool Hard;
-
-        public Vector2 RelativeVelocity => B.LinearVelocity - A.LinearVelocity;
-
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
-
-        public Manifold(PhysicsComponent a, PhysicsComponent b, bool hard)
-        {
-            A = a;
-            B = b;
-            Normal = PhysicsManager.CalculateNormal(a, b);
-            Hard = hard;
-        }
-    }
 }

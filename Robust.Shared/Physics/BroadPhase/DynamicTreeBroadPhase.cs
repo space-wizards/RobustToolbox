@@ -137,14 +137,18 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         // TODO: Refactor to use fatAABB
+        /// <summary>
+        ///     Already assumed to be within the same broadphase.
+        /// </summary>
+        /// <param name="proxyIdA"></param>
+        /// <param name="proxyIdB"></param>
+        /// <returns></returns>
         public bool TestOverlap(DynamicTree.Proxy proxyIdA, DynamicTree.Proxy proxyIdB)
         {
             var proxyA = _tree.GetUserData(proxyIdA);
             var proxyB = _tree.GetUserData(proxyIdB);
 
             if (proxyA == null || proxyB == null) return false;
-            // TODO: Need to check the proxy's GridID.
-            if (proxyA.Fixture.Body.Owner.Transform.GridID != proxyB.Fixture.Body.Owner.Transform.GridID) return false;
 
             return proxyA.AABB.Intersects(proxyB.AABB);
         }

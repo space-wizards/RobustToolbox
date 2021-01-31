@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
@@ -106,8 +107,17 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void Solve(float frameTime, float dtRatio, bool prediction)
         {
-            // TODO: This is probably suss given we're integrating before collisions?
+#if DEBUG
+            var debugBodies = new List<PhysicsComponent>();
+            for (var i = 0; i < BodyCount; i++)
+            {
+                debugBodies.Add(Bodies[i]);
+            }
 
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(debugBodies));
+#endif
+
+            // TODO: This is probably suss given we're integrating before collisions?
             for (var i = 0; i < BodyCount; i++)
             {
                 var body = Bodies[i];
@@ -125,8 +135,8 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     foreach (var controller in body.GetControllers())
                     {
-                        linearVelocity += controller.LinearVelocity;
-                        linearVelocity += controller.Impulse * body.InvMass;
+                        linearVelocity += controller.LinearVelocity * frameTime;
+                        linearVelocity += controller.Impulse * body.InvMass * frameTime;
                     }
 
                     angularVelocity += frameTime * body.InvI * body.Torque;
@@ -134,6 +144,9 @@ namespace Robust.Shared.Physics.Dynamics
                     // Process frictional forces
                     // TODO Replace with damping at some stage.
                     ProcessTileFriction(body, ref linearVelocity, ref angularVelocity, frameTime);
+
+                    // linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);
+                    // angularVelocity *= Math.Clamp(1.0f - frameTime * body.AngularDamping, 0.0f, 1.0f);
                 }
 
                 _positions[i] = position;

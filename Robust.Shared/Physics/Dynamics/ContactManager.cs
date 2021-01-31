@@ -171,11 +171,14 @@ namespace Robust.Shared.Physics.Dynamics
 
         private bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
         {
-            return (fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0;
+            // TODO: Should we only be checking one side's mask? I think maybe fixtureB? IDK
+            return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
+                     (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
         }
 
         private void Destroy(Contact contact)
         {
+            Logger.DebugS("physics", $"Destroying contact with bodies {contact.FixtureA?.Body.Owner} / {contact.FixtureB?.Body.Owner}");
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
             PhysicsComponent bodyA = fixtureA.Body;
@@ -299,6 +302,7 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
+                // TODO: Need to handle moving grids
                 var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
                 var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
 

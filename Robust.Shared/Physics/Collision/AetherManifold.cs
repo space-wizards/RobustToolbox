@@ -62,7 +62,8 @@ namespace Robust.Shared.Physics.Collision
         public uint Key;
     }
 
-    public struct AetherManifold
+    // Originally this was a struct but it gets mutated all over the place so I just made it a class for now.
+    internal sealed class AetherManifold
     {
         public Vector2 LocalNormal;
 
@@ -76,7 +77,7 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     Points of contact, can only be 0 -> 2.
         /// </summary>
-        public ManifoldPoint[] Points;
+        public ManifoldPoint[] Points = new ManifoldPoint[2];
 
         public ManifoldType Type;
     }

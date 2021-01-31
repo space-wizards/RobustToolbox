@@ -206,8 +206,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
-            _entCompIndex.Remove(uid);
-
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
                 RemoveComponentDeferred(comp, uid, false);
@@ -221,6 +219,10 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveComponentDeferred(comp, uid, true);
             }
+
+            // DisposeComponents means the entity is getting deleted.
+            // Safe to wipe the entity out of the index.
+            _entCompIndex.Remove(uid);
         }
 
         private void RemoveComponentDeferred(Component component, EntityUid uid, bool removeProtected)
@@ -306,6 +308,7 @@ namespace Robust.Shared.GameObjects
 
             var netId = component.NetID.Value;
             _entNetIdDict[netId].Remove(entityUid);
+            _entCompIndex.Remove(entityUid, component);
 
             // mark the owning entity as dirty for networking
             component.Owner.Dirty();

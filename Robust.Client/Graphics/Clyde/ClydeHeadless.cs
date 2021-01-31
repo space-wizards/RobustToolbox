@@ -458,6 +458,11 @@ namespace Robust.Client.Graphics.Clyde
             public void Render()
             {
             }
+
+            public Vector2 WorldToLocal(Vector2 point)
+            {
+                return point;
+            }
         }
     }
 }

@@ -56,13 +56,12 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
-        private Viewport _mainViewport = default!;
-
         private bool _drawingSplash = true;
 
         private GLShaderProgram? _currentProgram;
 
         private int _lightmapDivider = 2;
+        private int _maxLightsPerScene = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -133,6 +132,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReadConfig();
             _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
             _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
@@ -322,19 +322,6 @@ namespace Robust.Client.Graphics.Clyde
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
-
-            CreateMainViewport();
-        }
-
-        private void CreateMainViewport()
-        {
-            var (w, h) = _framebufferSize;
-
-            // Ensure viewport size is always even to avoid artifacts.
-            if (w % 2 == 1) w += 1;
-            if (h % 2 == 1) h += 1;
-
-            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         [Conditional("DEBUG")]

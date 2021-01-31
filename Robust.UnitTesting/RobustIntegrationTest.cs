@@ -16,6 +16,7 @@ using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.ServerStatus;
+using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -357,7 +358,7 @@ namespace Robust.UnitTesting
                         }
                     }
 
-                    cfg.OverrideConVars(new []{("log.runtimelog", "false")});
+                    cfg.OverrideConVars(new []{("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {
@@ -435,11 +436,12 @@ namespace Robust.UnitTesting
 
                     client.LoadConfigAndUserData = false;
 
+                    var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+
                     if (_options != null)
                     {
                         _options.BeforeStart?.Invoke();
-                        IoCManager.Resolve<IConfigurationManagerInternal>()
-                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
                         if (_options.ExtraPrototypes != null)
                         {
@@ -447,6 +449,8 @@ namespace Robust.UnitTesting
                                 .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
                         }
                     }
+
+                    cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 

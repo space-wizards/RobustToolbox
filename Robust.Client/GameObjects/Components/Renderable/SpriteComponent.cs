@@ -991,6 +991,9 @@ namespace Robust.Client.GameObjects
             var mRotation = Matrix3.CreateRotation(angle);
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
+            // Only apply scale if needed.
+            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
+
             transform.Multiply(worldTransform);
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
@@ -1043,7 +1046,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState();
+                    state = GetFallbackState(resourceCache);
                 }
 
                 var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
@@ -1276,7 +1279,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState();
+                    state = GetFallbackState(resourceCache);
                 }
 
                 if (!state.IsAnimated)
@@ -1404,7 +1407,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState();
+                    state = GetFallbackState(resourceCache);
                 }
 
                 if (state.IsAnimated)
@@ -1415,9 +1418,9 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State GetFallbackState()
+        internal static RSI.State GetFallbackState(IResourceCache cache)
         {
-            var rsi = resourceCache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
+            var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
             return rsi["error"];
         }
 
@@ -1735,14 +1738,14 @@ namespace Robust.Client.GameObjects
                 var rsi = ActualRsi;
                 if (rsi == null)
                 {
-                    state = _parent.GetFallbackState();
+                    state = GetFallbackState(_parent.resourceCache);
                     Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 }
                 else
                 {
                     if (!rsi.TryGetState(stateId, out state))
                     {
-                        state = _parent.GetFallbackState();
+                        state = GetFallbackState(_parent.resourceCache);
                         Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                             Environment.StackTrace);
                     }
@@ -1793,7 +1796,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public IDirectionalTextureProvider? Icon
+        public IRsiStateLike? Icon
         {
             get
             {
@@ -1803,13 +1806,13 @@ namespace Robust.Client.GameObjects
 
                 var texture = layer.Texture;
 
-                if (!layer.State.IsValid) return null;
+                if (!layer.State.IsValid) return texture;
 
                 // Pull texture from RSI state instead.
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState();
+                    state = GetFallbackState(resourceCache);
                 }
 
                 return state;
@@ -1867,21 +1870,21 @@ namespace Robust.Client.GameObjects
 
         }
 
-        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             if (icon != null) return icon;
 
-            if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
+            if (!prototype.Components.ContainsKey("Sprite"))
             {
-                return resourceCache.GetFallback<TextureResource>().Texture;
+                return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity() {Prototype = prototype};
+            var dummy = new DummyIconEntity {Prototype = prototype};
             var spriteComponent = dummy.AddComponent<SpriteComponent>();
             dummy.Delete();
 
-            return spriteComponent?.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
+            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
         }
 
         #region DummyIconEntity

@@ -15,7 +15,7 @@ namespace Robust.Client.Graphics
     ///     Contains a texture used for drawing things.
     /// </summary>
     [PublicAPI]
-    public abstract class Texture : IDirectionalTextureProvider
+    public abstract class Texture : IRsiStateLike
     {
         /// <summary>
         ///     The width of the texture, in pixels.
@@ -83,6 +83,26 @@ namespace Robust.Client.Graphics
 
         Texture IDirectionalTextureProvider.TextureFor(Direction dir)
         {
+            return this;
+        }
+
+        RSI.State.DirectionType IRsiStateLike.Directions => RSI.State.DirectionType.Dir1;
+        bool IRsiStateLike.IsAnimated => false;
+        int IRsiStateLike.AnimationFrameCount => 0;
+
+        float IRsiStateLike.GetDelay(int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
+            return 0;
+        }
+
+        Texture IRsiStateLike.GetFrame(RSI.State.Direction dir, int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
             return this;
         }
     }

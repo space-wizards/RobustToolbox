@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -164,6 +164,7 @@ namespace Robust.Client
 
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
+            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();

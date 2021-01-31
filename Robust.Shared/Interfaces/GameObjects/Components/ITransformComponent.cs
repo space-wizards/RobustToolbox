@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
@@ -29,6 +29,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Current position offset of the entity relative to the world.
         ///     Can de-parent from its parent if the parent is a grid.
         /// </summary>
+        [Animatable]
         Vector2 WorldPosition { get; set; }
 
         /// <summary>

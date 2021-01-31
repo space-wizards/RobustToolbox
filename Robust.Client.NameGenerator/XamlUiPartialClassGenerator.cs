@@ -153,7 +153,7 @@ namespace {nameSpace}
                                 DiagnosticSeverity.Error,
                                 true),
                             typeSymbol.Locations[0]));
-                    return;
+                    continue;
                 }
 
                 var txt = relevantXamlFile.GetText()?.ToString();
@@ -169,7 +169,7 @@ namespace {nameSpace}
                                 DiagnosticSeverity.Error,
                                 true),
                             Location.Create(xamlFileName, new TextSpan(0,0), new LinePositionSpan(new LinePosition(0,0),new LinePosition(0,0)))));
-                    return;
+                    continue;
                 }
 
                 try
@@ -189,7 +189,7 @@ namespace {nameSpace}
                                 DiagnosticSeverity.Error,
                                 true),
                             typeSymbol.Locations[0]));
-                    return;
+                    continue;
                 }
             }
         }

@@ -168,6 +168,8 @@ namespace Robust.Shared.EntityLookup
         public IList<EntityLookupChunk> GetChunksInRange(MapId mapId, Box2 worldBox, GridId? gridId=null)
         {
             var results = new List<EntityLookupChunk>();
+            if (mapId == MapId.Nullspace) return results;
+
             var range = (worldBox.BottomLeft - worldBox.Center).Length;
 
             // This is the max in any direction that we can get a chunk (e.g. max 2 chunks away of data).

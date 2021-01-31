@@ -87,7 +87,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>())
+            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))
             {
                 eyeComponent.UpdateEyePosition();
             }

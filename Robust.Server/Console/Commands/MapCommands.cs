@@ -245,6 +245,12 @@ namespace Robust.Server.Console.Commands
         public string Help => "Usage: pausemap <map ID>";
         public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
+            if (args.Length != 1)
+            {
+                shell.SendText(player, "Need to supply a valid MapId");
+                return;
+            }
+
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 

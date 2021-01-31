@@ -55,14 +55,12 @@ namespace Robust.Client.GameObjects
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
-            
+
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
             Register<ClientUserInterfaceComponent>();
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
-
-            RegisterIgnore("IgnorePause");
 
             Register<AnimationPlayerComponent>();
 

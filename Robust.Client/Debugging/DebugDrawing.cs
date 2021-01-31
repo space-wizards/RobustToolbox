@@ -158,7 +158,7 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
+                foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>(true))
                 {
                     var physBody = (IPhysBody) boundingBox;
 

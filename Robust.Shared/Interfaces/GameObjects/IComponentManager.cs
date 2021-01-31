@@ -201,7 +201,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <returns>All components that have the specified type.</returns>
-        IEnumerable<T> EntityQuery<T>(bool includePaused = true);
+        IEnumerable<T> EntityQuery<T>(bool includePaused);
 
         /// <summary>
         /// Returns the relevant components from all entities that contain the two required components.
@@ -209,7 +209,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="TComp1">First required component.</typeparam>
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the two required components.</returns>
-        IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = true)
+        IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused)
             where TComp1 : IComponent
             where TComp2 : IComponent;
 
@@ -220,7 +220,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="TComp2">Second required component.</typeparam>
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the three required components.</returns>
-        IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = true)
+        IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent;
@@ -233,7 +233,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="TComp3">Third required component.</typeparam>
         /// <typeparam name="TComp4">Fourth required component.</typeparam>
         /// <returns>The pairs of components from each entity that has the four required components.</returns>
-        IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = true)
+        IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent

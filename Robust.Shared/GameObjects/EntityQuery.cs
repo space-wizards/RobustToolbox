@@ -98,7 +98,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.ComponentManager.EntityQuery<T>().Select(component => component.Owner);
+            return entityMan.ComponentManager.EntityQuery<T>(true).Select(component => component.Owner);
         }
     }
 

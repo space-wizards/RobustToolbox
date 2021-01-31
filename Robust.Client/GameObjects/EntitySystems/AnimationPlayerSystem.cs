@@ -7,7 +7,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     {
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var animationPlayerComponent in EntityManager.ComponentManager.EntityQuery<AnimationPlayerComponent>())
+            foreach (var animationPlayerComponent in EntityManager.ComponentManager.EntityQuery<AnimationPlayerComponent>(true))
             {
                 animationPlayerComponent.Update(frameTime);
             }

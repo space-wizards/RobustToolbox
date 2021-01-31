@@ -734,12 +734,11 @@ namespace Robust.Client.Console.Commands
         public string Description => "Toggles lighting rendering. This includes shadows but not FOV.";
         public string Help => "togglelightbuf";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             if (!mgr.LockConsoleAccess)
                 mgr.DrawLighting = !mgr.DrawLighting;
-            return false;
         }
     }
 

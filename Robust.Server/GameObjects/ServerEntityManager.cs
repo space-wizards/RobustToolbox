@@ -190,7 +190,7 @@ namespace Robust.Server.GameObjects
             // Old PVS used to just get all for no session...
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
-                return new List<EntityState>();
+                return GetAllEntityStates(fromTick, player);
 
             var data = _lookupSystem.GetPlayerLastSeen(player);
             if (data == null)
@@ -216,6 +216,7 @@ namespace Robust.Server.GameObjects
             {
                 if (map == MapId.Nullspace) continue;
                 var mapEntity = _mapManager.GetMapEntity(map);
+
                 seenEntities.Add(mapEntity.Uid);
                 AddEntityState(data, player, fromTick, mapEntity, entityStates);
 

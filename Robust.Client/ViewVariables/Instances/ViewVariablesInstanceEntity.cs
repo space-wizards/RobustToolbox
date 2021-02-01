@@ -464,6 +464,12 @@ namespace Robust.Client.ViewVariables.Instances
 
         private async void _tabsOnTabChanged(int tab)
         {
+            if (tab == TabClientComponents)
+            {
+                // Repopulate client components in case something changed.
+                PopulateClientComponents();
+            }
+
             if (_serverLoaded || tab != TabServerComponents && tab != TabServerVars)
             {
                 return;

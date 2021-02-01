@@ -91,8 +91,6 @@ namespace Robust.Client.Interfaces.UserInterface
         ICursor? WorldCursor { get; set; }
 
         void PushModal(Control modal);
-
-        void RemoveModal(Control modal);
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
@@ -128,6 +126,8 @@ namespace Robust.Client.Interfaces.UserInterface
         void ControlHidden(Control control);
 
         void ControlRemovedFromTree(Control control);
+
+        void RemoveModal(Control modal);
 
         void Render(IRenderHandle renderHandle);
 

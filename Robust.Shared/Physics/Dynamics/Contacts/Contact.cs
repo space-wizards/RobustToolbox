@@ -346,52 +346,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             switch (_type)
             {
                 case ContactType.Polygon:
-                    // Blame remie
-                    // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
-                    // I might fix it later
-                    PolygonShape polyA;
-                    PolygonShape polyB;
-
-                    switch (FixtureA!.Shape)
-                    {
-                        case PhysShapeAabb aabb:
-                            polyA = new PolygonShape(aabb);
-                            break;
-                        case PhysShapeGrid grid:
-                            polyA = new PolygonShape(grid);
-                            break;
-                        case PhysShapeRect rect:
-                            polyA = new PolygonShape(rect);
-                            break;
-                        case PolygonShape poly:
-                            polyA = poly;
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                    switch (FixtureB!.Shape)
-                    {
-                        case PhysShapeAabb aabb:
-                            polyB = new PolygonShape(aabb);
-                            break;
-                        case PhysShapeGrid grid:
-                            polyB = new PolygonShape(grid);
-                            break;
-                        case PhysShapeRect rect:
-                            polyB = new PolygonShape(rect);
-                            break;
-                        case PolygonShape poly:
-                            polyB = poly;
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                    collisionManager.CollidePolygons(ref manifold, polyA, transformA, polyB, transformB);
+                    collisionManager.CollidePolygons(ref manifold, new PolygonShape(FixtureA!.Shape), transformA, new PolygonShape(FixtureB!.Shape), transformB);
                     break;
                 case ContactType.PolygonAndCircle:
-                    collisionManager.CollidePolygonAndCircle(ref manifold, (PolygonShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    collisionManager.CollidePolygonAndCircle(ref manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndCircle:
                     throw new NotImplementedException();

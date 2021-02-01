@@ -178,7 +178,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void Destroy(Contact contact)
         {
-            Logger.DebugS("physics", $"Destroying contact with bodies {contact.FixtureA?.Body.Owner} / {contact.FixtureB?.Body.Owner}");
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
             PhysicsComponent bodyA = fixtureA.Body;
@@ -303,12 +302,19 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // TODO: Need to handle moving grids
-                var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
-                var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
+                bool? overlap = false;
 
-                var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
+                // Sloth addition: Kind of hacky and might need to be removed at some point.
+                // One of the bodies was probably put into nullspace so we need to remove I think.
+                if (fixtureA.Proxies.ContainsKey(contact.GridId) && fixtureB.Proxies.ContainsKey(contact.GridId))
+                {
+                    var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
+                    var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
 
-                var overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
+                    var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
+
+                    overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
+                }
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)

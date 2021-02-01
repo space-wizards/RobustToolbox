@@ -80,37 +80,43 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
-        public PolygonShape(PhysShapeAabb aabb)
+        // You did dis remmiiieeeee
+        // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
+        // I might fix it later
+        public PolygonShape(IPhysShape shape)
         {
-            Vertices = new List<Vector2>
+            switch (shape)
             {
-                aabb.LocalBounds.BottomLeft,
-                aabb.LocalBounds.BottomRight,
-                aabb.LocalBounds.TopRight,
-                aabb.LocalBounds.TopLeft,
-            };
-        }
-
-        public PolygonShape(PhysShapeGrid grid)
-        {
-            Vertices = new List<Vector2>
-            {
-                grid.LocalBounds.BottomLeft,
-                grid.LocalBounds.BottomRight,
-                grid.LocalBounds.TopRight,
-                grid.LocalBounds.TopLeft,
-            };
-        }
-
-        public PolygonShape(PhysShapeRect rect)
-        {
-            Vertices = new List<Vector2>
-            {
-                rect.Rectangle.BottomLeft,
-                rect.Rectangle.BottomRight,
-                rect.Rectangle.TopRight,
-                rect.Rectangle.TopLeft,
-            };
+                case PhysShapeAabb aabb:
+                    Vertices = new List<Vector2>
+                    {
+                        aabb.LocalBounds.BottomLeft,
+                        aabb.LocalBounds.BottomRight,
+                        aabb.LocalBounds.TopRight,
+                        aabb.LocalBounds.TopLeft,
+                    };
+                    break;
+                case PhysShapeGrid grid:
+                    Vertices = new List<Vector2>
+                    {
+                        grid.LocalBounds.BottomLeft,
+                        grid.LocalBounds.BottomRight,
+                        grid.LocalBounds.TopRight,
+                        grid.LocalBounds.TopLeft,
+                    };
+                    break;
+                case PhysShapeRect rect:
+                    Vertices = new List<Vector2>
+                    {
+                        rect.Rectangle.BottomLeft,
+                        rect.Rectangle.BottomRight,
+                        rect.Rectangle.TopRight,
+                        rect.Rectangle.TopLeft,
+                    };
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public void ExposeData(ObjectSerializer serializer)
@@ -165,6 +171,11 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         {
             // TODO HARD
             return;
+        }
+
+        public static explicit operator PolygonShape(PhysShapeAabb aabb)
+        {
+            return new(aabb);
         }
     }
 }

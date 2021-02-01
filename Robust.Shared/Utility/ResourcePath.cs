@@ -719,7 +719,7 @@ namespace Robust.Shared.Utility
 
         public IDeepClone DeepClone()
         {
-            return new ResourcePath(Segments, Separator);
+            return new ResourcePath(IDeepClone.CloneValue(Segments)!, Separator);
         }
     }
 }

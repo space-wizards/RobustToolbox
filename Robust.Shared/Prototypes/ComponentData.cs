@@ -30,7 +30,7 @@ namespace Robust.Shared.Prototypes
 
         public IDeepClone DeepClone()
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException("ComponentData cannot be cloned.");
         }
     }
 }

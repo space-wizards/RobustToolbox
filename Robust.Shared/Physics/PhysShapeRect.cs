@@ -84,7 +84,7 @@ namespace Robust.Shared.Physics
         {
             return new PhysShapeRect
             {
-                _rectangle = _rectangle,
+                _rectangle = IDeepClone.CloneValue(_rectangle),
                 _collisionLayer = _collisionLayer,
                 _collisionMask = _collisionMask
             };

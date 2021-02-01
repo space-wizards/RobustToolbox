@@ -178,7 +178,7 @@ namespace Robust.Shared.Audio
                 PitchScale,
                 BusName,
                 MaxDistance,
-                Attenuation,
+                IDeepClone.CloneValue(Attenuation),
                 IDeepClone.CloneValue(MixTarget),
                 Loop,
                 PlayOffsetSeconds);

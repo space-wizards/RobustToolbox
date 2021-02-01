@@ -141,8 +141,7 @@ namespace Robust.Client.GameObjects
 
             public override IDeepClone DeepClone()
             {
-                return new SpriteLayerToggle(
-                    Key, SpriteLayer);
+                return new SpriteLayerToggle(IDeepClone.CloneValue(Key)!, SpriteLayer);
             }
         }
     }

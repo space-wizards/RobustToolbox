@@ -155,7 +155,7 @@ namespace Robust.Client.Animations
 
             public IDeepClone DeepClone()
             {
-                return new KeyFrame(Value, KeyTime);
+                return new KeyFrame(IDeepClone.CloneValue(Value)!, KeyTime);
             }
         }
     }

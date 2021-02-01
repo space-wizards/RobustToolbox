@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
 
             public IDeepClone DeepClone()
             {
-                return new PrototypeData {UiKey = UiKey, ClientType = ClientType};
+                return new PrototypeData {UiKey = IDeepClone.CloneValue(UiKey)!, ClientType = ClientType};
             }
         }
 

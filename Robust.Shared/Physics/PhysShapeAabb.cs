@@ -94,7 +94,7 @@ namespace Robust.Shared.Physics
             {
                 _collisionLayer = _collisionLayer,
                 _collisionMask = _collisionMask,
-                _localBounds = _localBounds
+                _localBounds = IDeepClone.CloneValue(_localBounds)
             };
         }
     }

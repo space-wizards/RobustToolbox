@@ -35,9 +35,7 @@ namespace Robust.Client.Graphics
 
         public IDeepClone DeepClone()
         {
-            return new AtlasTexture(
-                SourceTexture,
-                IDeepClone.CloneValue(SubRegion));
+            return new AtlasTexture(SourceTexture, IDeepClone.CloneValue(SubRegion));
         }
     }
 }

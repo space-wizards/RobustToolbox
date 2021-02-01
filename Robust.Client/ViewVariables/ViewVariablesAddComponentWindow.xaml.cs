@@ -24,7 +24,7 @@ namespace Robust.Client.ViewVariables
         {
             RobustXamlLoader.Load(this);
 
-            Title = Loc.GetString(serverside ? "Add Component (s)" : "Add Component (c)");
+            Title = Loc.GetString(serverside ? "Add Component [S]" : "Add Component [C]");
 
             ComponentItemList.OnItemSelected += _ => RefreshAddButton();
             ComponentItemList.OnItemDeselected += _ => RefreshAddButton();

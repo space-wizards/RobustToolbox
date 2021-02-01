@@ -189,51 +189,50 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 }
 
+
+                RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
+                    // calculate world bounding box
                     var spriteBB = entry.sprite.CalculateBoundingBox();
-                    spriteBB = spriteBB.Scale(1.1f);
-                    //Vector2 spriteSize = spriteBB.Size;
-                    //var worldScaleMatrix = entry.worldMatrix;
+                    // though we still need to apply world matrix
+                    //var worldLB = entry.worldMatrix * spriteBB.BottomLeft;
+                    //var worldRT = entry.worldMatrix * spriteBB.TopRight;
 
-                    //var scaleX = new Vector2(entry.worldMatrix.R0C0, worldScaleMatrix.R1C0).Length;
-                    // var scaleY = new Vector2(entry.worldMatrix.R0C1, worldScaleMatrix.R1C1).Length;
-                    //var worldScale = new Vector2(scaleX, scaleY);
+                    var worldLB = spriteBB.BottomLeft;
+                    var worldRT = spriteBB.TopRight;
 
-                    // var screenPixelSize = (spriteSize * worldScale);
+                    // finally we can calculate screen bounding in pixels 
+                    var screenLB = _eyeManager.WorldToScreen(worldLB);
+                    var screenRT = _eyeManager.WorldToScreen(worldRT);
+                    var screenSpriteSize = (Vector2i)(screenRT - screenLB);
+                    screenSpriteSize.Y = -screenSpriteSize.Y;
 
-                    var spriteScreenLB = _eyeManager.WorldToScreen(spriteBB.BottomLeft);
-                    var spriteScreenRT = _eyeManager.WorldToScreen(spriteBB.TopRight);
+                    // check that sprite size is valid
+                    if (screenSpriteSize.X > 0 && screenSpriteSize.Y > 0)
+                    {
+                        // create new render texture with correct sprite size
+                        entityPostRenderTarget = CreateRenderTarget(screenSpriteSize,
+                            new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                            name: nameof(entityPostRenderTarget));
+                        _renderHandle.UseRenderTarget(entityPostRenderTarget);
 
-                    var eyeSize = (Vector2i)(spriteScreenRT - spriteScreenLB);
-                    eyeSize.Y = -eyeSize.Y;
-
-                    if (EntityPostRenderTarget != null)
-                        EntityPostRenderTarget.Dispose();
-
-                    EntityPostRenderTarget = CreateRenderTarget(eyeSize,
-                        new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                        name: nameof(EntityPostRenderTarget));
-
-
-
-                    _renderHandle.UseRenderTarget(EntityPostRenderTarget);
-                    _renderHandle.Clear(new Color());
-                    // Calculate viewport so that the entity thinks it's drawing to the same position,
-                    // which is necessary for light application,
-                    // but it's ACTUALLY drawing into the center of the render target.
-                    var spritePos = entry.sprite.Owner.Transform.WorldPosition;
-                    var screenPos = _eyeManager.WorldToScreen(spritePos);
-                    var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                    var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
-                    flippedPos -= EntityPostRenderTarget.Size / 2;
-                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
+                        // Calculate viewport so that the entity thinks it's drawing to the same position,
+                        // which is necessary for light application,
+                        // but it's ACTUALLY drawing into the center of the render target.
+                        var spritePos = spriteBB.Center;
+                        var screenPos = _eyeManager.WorldToScreen(spritePos);
+                        var (roundedX, roundedY) = roundedPos = (Vector2i)screenPos;
+                        var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
+                        flippedPos -= entityPostRenderTarget.Size / 2;
+                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
+                    }
                 }
 
                 entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
 
-                if (entry.sprite.PostShader != null)
+                if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
                 {
                     var oldProj = _currentMatrixProj;
                     var oldView = _currentMatrixView;
@@ -246,11 +245,11 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetProjView(proj, view);
                     _renderHandle.SetModelTransform(Matrix3.Identity);
 
-                    var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+                    var rounded = roundedPos - entityPostRenderTarget.Size / 2;
 
-                    var box = Box2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+                    var box = Box2i.FromDimensions(rounded, entityPostRenderTarget.Size);
 
-                    _renderHandle.DrawTextureScreen(EntityPostRenderTarget.Texture,
+                    _renderHandle.DrawTextureScreen(entityPostRenderTarget.Texture,
                         box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
                         Color.White, null);
 

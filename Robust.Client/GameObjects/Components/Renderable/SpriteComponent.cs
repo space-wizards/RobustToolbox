@@ -1315,33 +1315,33 @@ namespace Robust.Client.GameObjects
         {
             // we need to calculate bounding box taking into account all layers
             // layers have same center, so we just need their union size
-            // don't forget about layers-sprite rotation and scale 
-            var spritePixelSize = Vector2i.Zero;
+            var spritePixelSize = Vector2.Zero;
             foreach (var layer in Layers)
             {
                 // first calculate layer bounding box
-                // we can optimize it a bit, if layer doesn't have rotation
-                var layerBox = Box2.CentredAroundZero(layer.PixelSize * layer.Scale);
-                var layerHasRotation = !layer.Rotation.EqualsApprox(Angle.Zero);
-                var layerBB = layerHasRotation ?
-                    new Box2Rotated(layerBox, layer.Rotation).CalcBoundingBox() : layerBox;
+                // because layer scale and rotation are placeholders thats easy
+                var layerBB = Box2.CentredAroundZero(layer.PixelSize);
 
                 // apply sprite transformations and calculate sprite bounding box
-                // it's not 100% correct, because we should scale and rotate layerBox, not bounding
-                // but I don't want to mess with parent-local transform order here
+                // we can optimize it a bit, if sprite doesn't have rotation
                 var spriteBox = layerBB.Scale(Scale);
                 var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
                 var spriteBB = spriteHasRotation ?
                     new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
 
                 // now let see if new sprite BB bigger than current
-                var size = (Vector2i)spriteBB.Size;
+                var size = spriteBB.Size;
                 if (spritePixelSize.X < size.X)
                     spritePixelSize.X = size.X;
                 if (spritePixelSize.Y < size.Y)
                     spritePixelSize.Y = size.Y;
             }
-           
+
+            if (Scale.X > 1)
+            {
+                Logger.Debug("Cool");
+            }
+
             // move it all to world transform system
             var worldPosition = Owner.Transform.WorldPosition;
             var worldScale = spritePixelSize / EyeManager.PixelsPerMeter;

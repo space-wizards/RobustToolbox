@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
@@ -13,6 +14,7 @@ namespace Robust.Shared.Scripting
     [PublicAPI]
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
+    [SuppressMessage("ReSharper", "CA1822")]
     public abstract class ScriptGlobalsShared
     {
         [field: Dependency] public IEntityManager ent { get; } = default!;
@@ -80,6 +82,38 @@ namespace Robust.Shared.Scripting
         public T res<T>()
         {
             return IoCManager.Resolve<T>();
+        }
+
+        public object? prop(object target, string name)
+        {
+            return target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                    !.GetValue(target);
+        }
+
+        public void setprop(object target, string name, object? value)
+        {
+            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                !.SetValue(target, value);
+        }
+
+        public object? fld(object target, string name)
+        {
+            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                !.GetValue(target);
+        }
+
+        public void setfld(object target, string name, object? value)
+        {
+            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                !.SetValue(target, value);
+        }
+
+        public object? call(object target, string name, params object[] args)
+        {
+            var t = target.GetType();
+            // TODO: overloads
+            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            return m!.Invoke(target, args);
         }
 
         public abstract void write(object toString);

@@ -150,7 +150,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             if (proxyA == null || proxyB == null) return false;
 
-            return proxyA.AABB.Intersects(proxyB.AABB);
+            return proxyB.AABB.Intersects(proxyA.AABB);
         }
 
         public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)

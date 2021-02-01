@@ -214,6 +214,11 @@ namespace Robust.Shared.Physics.Dynamics
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
             _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count);
 
+            foreach (var contact in ContactManager.ContactList)
+            {
+                contact.IslandFlag = false;
+            }
+
             // Build and simulated islands from awake bodies.
             // Ideally you don't need a stack size for all bodies but we'll optimise it later.
             var stackSize = Bodies.Count;
@@ -258,7 +263,6 @@ namespace Robust.Shared.Physics.Dynamics
                         // Skip sensors.
                         if (contact.FixtureA?.Hard != true || contact.FixtureB?.Hard != true) continue;
 
-                        Logger.DebugS("physics", $"Added contact to island {IoCManager.Resolve<IGameTiming>().CurTick}");
                         _island.Add(contact);
                         contact.IslandFlag = true;
 

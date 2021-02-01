@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
+using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -13,6 +15,24 @@ using Robust.Shared.Physics;
 
 namespace Robust.Client.Physics
 {
+    internal sealed class PhysicsIslandCommand : IConsoleCommand
+    {
+        public string Command => "showislands";
+        public string Description => "Shows the current physics bodies involved in each physics island.";
+        public string Help => "showislands";
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length != 0)
+            {
+                console.AddLine("This command doesn't take args!");
+                return false;
+            }
+
+            EntitySystem.Get<DebugPhysicsIslandSystem>().Mode ^= DebugPhysicsIslandMode.Solve;
+            return false;
+        }
+    }
+
     internal sealed class DebugPhysicsIslandSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -64,10 +84,11 @@ namespace Robust.Client.Physics
     }
 
     [Flags]
-    internal enum DebugPhysicsIslandMode : byte
+    internal enum DebugPhysicsIslandMode : ushort
     {
         None = 0,
         Solve = 1 << 0,
+        Contacts = 1 << 1,
     }
 
     internal sealed class PhysicsIslandOverlay : Overlay
@@ -82,6 +103,8 @@ namespace Robust.Client.Physics
         public PhysicsIslandOverlay() : base(nameof(PhysicsIslandOverlay))
         {
             _islandSystem = EntitySystem.Get<DebugPhysicsIslandSystem>();
+            _eyeManager = IoCManager.Resolve<IEyeManager>();
+            _gameTiming = IoCManager.Resolve<IGameTiming>();
         }
 
         protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)

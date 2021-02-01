@@ -191,7 +191,7 @@ namespace Robust.Shared.Physics.Broadphase
             if (!moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;
 
-            ActualSynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
+            SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
         }
 
         private void HandlePhysicsRotate(RotateEvent rotateEvent)
@@ -199,7 +199,7 @@ namespace Robust.Shared.Physics.Broadphase
             if (!rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;
 
-            ActualSynchronizeFixtures(physicsComponent, Vector2.Zero);
+            SynchronizeFixtures(physicsComponent, Vector2.Zero);
         }
 
         private void QueueCollisionChange(CollisionChangeMessage message)
@@ -518,7 +518,8 @@ namespace Robust.Shared.Physics.Broadphase
         ///     Move all of the fixtures on this body.
         /// </summary>
         /// <param name="body"></param>
-        public void ActualSynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
+        /// <param name="displacement"></param>
+        public void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))

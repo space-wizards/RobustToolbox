@@ -1,14 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
@@ -256,8 +252,13 @@ namespace Robust.Shared.Physics.Dynamics
                 PhysicsComponent bodyB = fixtureB.Body;
 
                 // Do not try to collide disabled bodies
+                // FPE just continues here but in our case I think it's better to also destroy the contact.
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
+                {
+                    Contact cNuke = contact;
+                    Destroy(cNuke);
                     continue;
+                }
 
                 // Is this contact flagged for filtering?
                 if (contact.FilterFlag)

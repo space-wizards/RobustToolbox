@@ -264,6 +264,9 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public float Torque { get; set; }
 
+        /// <summary>
+        ///     Contact friction between 2 bodies.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float Friction
         {
@@ -274,10 +277,53 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _friction = value;
+                // TODO
+                // Dirty();
             }
         }
 
         private float _friction;
+
+        /// <summary>
+        ///     This is a set amount that the body's linear velocity is reduced by every tick.
+        ///     Combined with the tile friction.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float LinearDamping
+        {
+            get => _linearDamping;
+            set
+            {
+                if (MathHelper.CloseTo(value, _linearDamping))
+                    return;
+
+                _linearDamping = value;
+                // Dirty();
+            }
+        }
+
+        private float _linearDamping;
+
+        /// <summary>
+        ///     This is a set amount that the body's angular velocity is reduced every tick.
+        ///     Combined with the tile friction.
+        /// </summary>
+        /// <returns></returns>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float AngularDamping
+        {
+            get => _angularDamping;
+            set
+            {
+                if (MathHelper.CloseTo(value, _angularDamping))
+                    return;
+
+                _angularDamping = value;
+                // Dirty();
+            }
+        }
+
+        private float _angularDamping;
 
         public void ApplyImpulse(Vector2 impulse)
         {

@@ -142,11 +142,11 @@ namespace Robust.Shared.Physics.Dynamics
                     angularVelocity += frameTime * body.InvI * body.Torque;
 
                     // Process frictional forces
-                    // TODO Replace with damping at some stage.
-                    ProcessTileFriction(body, ref linearVelocity, ref angularVelocity, frameTime);
+                    // TODO: Might change how TileFriction works here, idk. The overall formula is from FPE regardless.
+                    var tileFriction = GetTileFriction(body);
 
-                    // linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);
-                    // angularVelocity *= Math.Clamp(1.0f - frameTime * body.AngularDamping, 0.0f, 1.0f);
+                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction), 0.0f, 1.0f);
+                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction), 0.0f, 1.0f);
                 }
 
                 _positions[i] = position;
@@ -324,45 +324,16 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private void ProcessTileFriction(IPhysicsComponent body, ref Vector2 linearVelocity, ref float angularVelocity, float deltaTime)
-        {
-            if (linearVelocity == Vector2.Zero) return;
-
-            // sliding friction coefficient, and current gravity at current location
-            var (friction, gravity) = GetTileFriction(body);
-
-            // friction between the two objects
-            var effectiveFriction = friction * body.Friction;
-
-            // current acceleration due to friction
-            var fAcceleration = effectiveFriction * gravity;
-
-            // integrate acceleration
-            var fVelocity = fAcceleration * deltaTime;
-
-            // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(fVelocity, linearVelocity.Length);
-
-            if (friction == 0.0f) return;
-
-            // No multiplication/division by mass here since that would be redundant.
-            var frictionVelocityChange = linearVelocity.Normalized * -friction;
-
-            linearVelocity += frictionVelocityChange;
-            // TODO Angular
-            angularVelocity += 0.0f;
-        }
-
-        private (float friction, float gravity) GetTileFriction(IPhysicsComponent body)
+        private float GetTileFriction(IPhysicsComponent body)
         {
             if (!body.OnGround)
-                return (0f, 0f);
+                return 0.0f;
 
             var location = body.Owner.Transform;
             var grid = _mapManager.GetGrid(location.Coordinates.GetGridId(_entityManager));
             var tile = grid.GetTileRef(location.Coordinates);
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return (tileDef.Friction, grid.HasGravity ? 9.8f : 0f);
+            return tileDef.Friction;
         }
     }
 }

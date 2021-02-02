@@ -419,7 +419,7 @@ namespace Robust.Server.GameObjects
                                 var oldState =
                                     (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                                 var newState = new TransformComponent.TransformComponentState(Vector2NaN,
-                                    oldState.Rotation, oldState.ParentID);
+                                    oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                                 state.ComponentStates[idx] = newState;
                                 seenMovers.Remove(uid);
                                 ClearLastSeenTick(lSeen, uid);
@@ -457,7 +457,7 @@ namespace Robust.Server.GameObjects
                             new ComponentState[]
                             {
                                 new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                                    oldState.ParentID)
+                                    oldState.ParentID, oldState.NoLocalRotation)
                             }));
 
                         seenMovers.Remove(uid);
@@ -608,7 +608,7 @@ namespace Robust.Server.GameObjects
 
                 var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                 var newState =
-                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                 state.ComponentStates[idx] = newState;
 
 
@@ -661,7 +661,7 @@ namespace Robust.Server.GameObjects
                     var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                     var newState =
                         new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                            oldState.ParentID);
+                            oldState.ParentID, oldState.NoLocalRotation);
                     state.ComponentStates[idx] = newState;
                     seenMovers.Remove(uid);
 

@@ -14,6 +14,11 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
     public interface ITransformComponent : IComponent
     {
         /// <summary>
+        /// Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
+        /// </summary>
+        bool NoLocalRotation { get; set; }
+
+        /// <summary>
         ///     Local offset of this entity relative to its parent
         ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
         /// </summary>

@@ -9,6 +9,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Serialization;
@@ -250,7 +251,7 @@ namespace Robust.Client.ViewVariables.Instances
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsole>().ProcessCommand($"rmcomp {_entity.Uid} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity.Uid} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -394,7 +395,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsole>().ProcessCommand($"addcomp {_entity.Uid} {eventArgs.Component}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity.Uid} {eventArgs.Component}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;

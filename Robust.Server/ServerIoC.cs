@@ -1,10 +1,9 @@
-﻿using Robust.Server.Console;
+using Robust.Server.Console;
 using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Debugging;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
@@ -50,7 +49,7 @@ namespace Robust.Server
             IoCManager.Register<IBaseServerInternal, BaseServer>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
-            IoCManager.Register<IConsoleShell, ConsoleShell>();
+            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityNetworkManager>();

@@ -195,7 +195,7 @@ namespace Robust.Shared.GameObjects.Components
                 _bodyType = value ? BodyType.Static : BodyType.Dynamic;
             });
 
-            serializer.DataField(ref _linearDamping, "linearDamping", 200f);
+            serializer.DataField(ref _linearDamping, "linearDamping", 0.8f);
             serializer.DataField(ref _angularDamping, "angularDamping", 0.2f);
             serializer.DataField(ref _mass, "mass", 1.0f);
             serializer.DataField(ref _awake, "awake", true);

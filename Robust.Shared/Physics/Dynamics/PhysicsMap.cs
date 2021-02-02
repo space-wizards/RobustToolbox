@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 
@@ -32,6 +34,11 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Temporarily store island-bodies for easier iteration.
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
+
+        /// <summary>
+        ///     Physics controllers for this map.
+        /// </summary>
+        private List<AetherController> _controllers = new();
 
         // Queued map changes
         private HashSet<PhysicsComponent> _queuedBodyAdd = new();
@@ -72,6 +79,18 @@ namespace Robust.Shared.Physics.Dynamics
             ContactManager.MapId = MapId;
             _island = new PhysicsIsland();
             _island.Initialize();
+
+            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
+
+            foreach (var controller in EntitySystem.Get<SharedPhysicsSystem>().ControllerTypes)
+            {
+                _controllers.Add((AetherController) typeFactory.CreateInstance(controller));
+            }
+
+            foreach (var controller in _controllers)
+            {
+                controller.Initialize();
+            }
         }
 
         #region AddRemove
@@ -180,13 +199,9 @@ namespace Robust.Shared.Physics.Dynamics
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            // Update controllers
-            foreach (var body in AwakeBodies)
+            foreach (var controller in _controllers)
             {
-                foreach (var controller in body.GetControllers())
-                {
-                    controller.UpdateBeforeProcessing();
-                }
+                controller.UpdateBeforeSolve(frameTime);
             }
 
             ContactManager.Collide();
@@ -203,6 +218,11 @@ namespace Robust.Shared.Physics.Dynamics
             Solve(frameTime, dtRatio, prediction);
 
             // SolveTOI
+
+            foreach (var controller in _controllers)
+            {
+                controller.UpdateAfterSolve(frameTime);
+            }
 
             ClearForces();
 
@@ -336,6 +356,7 @@ namespace Robust.Shared.Physics.Dynamics
                 foreach (var controller in body.GetControllers())
                 {
                     controller.Impulse = Vector2.Zero;
+                    controller.LinearVelocity = Vector2.Zero;
                 }
             }
         }

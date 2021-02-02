@@ -7,7 +7,6 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
@@ -130,23 +129,19 @@ namespace Robust.Shared.Physics.Dynamics
                 var angularVelocity = body.AngularVelocity;
 
                 // if the body cannot move, nothing to do here
-                // TODO: Change anchored to just use static bodytype instead.
-                if (body.CanMove())
+                if (body.BodyType == BodyType.Dynamic)
                 {
-                    foreach (var controller in body.GetControllers())
-                    {
-                        linearVelocity += controller.LinearVelocity * frameTime;
-                        linearVelocity += controller.Impulse * body.InvMass * frameTime;
-                    }
-
+                    // TODO: Look at FullWalkMove under https://github.com/ValveSoftware/source-sdk-2013/blob/master/sp/src/game/shared/gamemovement.cpp#L1822
+                    linearVelocity += body.Force * frameTime;
                     angularVelocity += frameTime * body.InvI * body.Torque;
 
                     // Process frictional forces
                     // TODO: Might change how TileFriction works here, idk. The overall formula is from FPE regardless.
                     var tileFriction = GetTileFriction(body);
 
-                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction), 0.0f, 1.0f);
-                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction), 0.0f, 1.0f);
+                    // TODO: This damping is mega-suss and the player controllers will need fine-tuning.
+                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction) * 10, 0.0f, 1.0f);
+                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction) * 10, 0.0f, 1.0f);
                 }
 
                 _positions[i] = position;

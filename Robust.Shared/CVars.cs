@@ -306,10 +306,10 @@ namespace Robust.Shared
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.
         public static readonly CVarDef<int> PositionIterations =
-            CVarDef.Create("physics.positer", 2);
+            CVarDef.Create("physics.positer", 3);
 
         public static readonly CVarDef<int> VelocityIterations =
-            CVarDef.Create("physics.veliter", 6);
+            CVarDef.Create("physics.veliter", 8);
 
         public static readonly CVarDef<bool> WarmStarting =
             CVarDef.Create("physics.warmstart", true);

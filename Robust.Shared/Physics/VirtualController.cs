@@ -36,18 +36,22 @@ namespace Robust.Shared.Physics
             get => _impulse;
             set
             {
-                if (value != Vector2.Zero)
-                    ControlledComponent?.WakeBody();
-
                 if (_impulse.EqualsApprox(value, 0.0001))
                     return;
 
                 _impulse = value;
-                ControlledComponent?.Dirty();
             }
         }
 
         private Vector2 _impulse;
+
+        public virtual void UpdateImpulse(float frameTime)
+        {
+            if (Impulse != Vector2.Zero)
+                ControlledComponent?.WakeBody();
+
+            return;
+        }
 
         public virtual PhysicsComponent? ControlledComponent { protected get; set; }
 

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Robust.Client.Console;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -9,7 +12,9 @@ using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -38,6 +43,9 @@ namespace Robust.Client.ViewVariables.Instances
         private TabContainer _tabs = default!;
         private IEntity _entity = default!;
 
+        private ViewVariablesAddComponentWindow? _addComponentWindow;
+        private bool _addComponentServer;
+
         private ViewVariablesRemoteSession? _entitySession;
 
         private ViewVariablesBlobMembers? _membersBlob;
@@ -46,6 +54,9 @@ namespace Robust.Client.ViewVariables.Instances
 
         private VBoxContainer _serverVariables = default!;
         private VBoxContainer _serverComponents = default!;
+
+        private Button _clientComponentsAddButton = default!;
+        private Button _serverComponentsAddButton = default!;
 
         private LineEdit _clientComponentsSearchBar = default!;
         private LineEdit _serverComponentsSearchBar = default!;
@@ -135,23 +146,7 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.AddChild(_clientComponents);
             _tabs.SetTabTitle(TabClientComponents, "Client Components");
 
-            _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
-            {
-                PlaceHolder = Loc.GetString("Search"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
-            });
-
-            _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
-
-            // See engine#636 for why the Distinct() call.
-            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
-
-            foreach (var component in componentList)
-            {
-                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
-                button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
-                _clientComponents.AddChild(button);
-            }
+            PopulateClientComponents();
 
             if (!_entity.Uid.IsClientSide())
             {
@@ -163,13 +158,103 @@ namespace Robust.Client.ViewVariables.Instances
                 _tabs.AddChild(_serverComponents);
                 _tabs.SetTabTitle(TabServerComponents, "Server Components");
 
-                _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
-                {
-                    PlaceHolder = Loc.GetString("Search"),
-                    SizeFlagsHorizontal = SizeFlags.FillExpand
-                });
+                PopulateServerComponents(false);
+            }
+        }
 
-                _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
+        private void PopulateClientComponents()
+        {
+            _clientComponents.DisposeAllChildren();
+
+            _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
+            {
+                PlaceHolder = Loc.GetString("Search"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+
+            _clientComponents.AddChild(_clientComponentsAddButton = new Button()
+            {
+                Text = Loc.GetString("Add Component"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+
+            _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
+            _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
+
+            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
+
+            foreach (var component in componentList)
+            {
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
+                var removeButton = new TextureButton()
+                {
+                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                };
+                button.OnPressed += _ => ViewVariablesManager.OpenVV(component);
+                removeButton.OnPressed += _ => RemoveClientComponent(component);
+                button.AddChild(removeButton);
+                _clientComponents.AddChild(button);
+            }
+        }
+
+        private async void PopulateServerComponents(bool request = true)
+        {
+            _serverComponents.DisposeAllChildren();
+
+            _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
+            {
+                PlaceHolder = Loc.GetString("Search"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+
+            _serverComponents.AddChild(_serverComponentsAddButton = new Button()
+            {
+                Text = Loc.GetString("Add Component"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+
+            _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
+            _serverComponentsAddButton.OnPressed += OnServerComponentsAddButtonPressed;
+
+            if (!request || _entitySession == null) return;
+
+            var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
+
+            componentsBlob.ComponentTypes.Sort();
+
+            var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_serverComponentsSearchBar.Text))
+            {
+                componentTypes = componentTypes
+                    .Where(t => t.Stringified.Contains(_serverComponentsSearchBar.Text,
+                        StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            componentTypes = componentTypes.OrderBy(t => t.Stringified);
+
+            foreach (var componentType in componentTypes)
+            {
+                var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
+                var removeButton = new TextureButton()
+                {
+                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                };
+                button.OnPressed += _ =>
+                {
+                    ViewVariablesManager.OpenVV(
+                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
+                };
+                removeButton.OnPressed += _ =>
+                {
+                    // We send a command to remove the component.
+                    IoCManager.Resolve<IClientConsole>().ProcessCommand($"rmcomp {_entity.Uid} {componentType.ComponentName}");
+                    PopulateServerComponents();
+                };
+                button.AddChild(removeButton);
+                _serverComponents.AddChild(button);
             }
         }
 
@@ -187,7 +272,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var child in _clientComponents.Children)
             {
-                if (child is not Button button)
+                if (child is not Button button || child == _clientComponentsAddButton)
                 {
                     continue;
                 }
@@ -253,6 +338,103 @@ namespace Robust.Client.ViewVariables.Instances
             UpdateServerComponentListVisibility(args.Text);
         }
 
+        private void OnClientComponentsAddButtonPressed(BaseButton.ButtonEventArgs _)
+        {
+            _addComponentWindow?.Dispose();
+
+            _addComponentWindow = new ViewVariablesAddComponentWindow(GetValidComponentsForAdding(), false);
+            _addComponentWindow.AddComponentButtonPressed += OnTryAddComponent;
+            _addComponentServer = false;
+
+            _addComponentWindow.OpenCentered();
+        }
+
+        private async void OnServerComponentsAddButtonPressed(BaseButton.ButtonEventArgs _)
+        {
+            _addComponentWindow?.Dispose();
+
+            if (_entitySession == null) return;
+
+            _addComponentWindow = new ViewVariablesAddComponentWindow(await GetValidServerComponentsForAdding(), true);
+            _addComponentWindow.AddComponentButtonPressed += OnTryAddComponent;
+            _addComponentServer = true;
+
+            _addComponentWindow.OpenCentered();
+        }
+
+        /// <summary>
+        ///     Returns an enumeration of components that can *probably* be added to an entity.
+        /// </summary>
+        private IEnumerable<string> GetValidComponentsForAdding()
+        {
+            var componentFactory = IoCManager.Resolve<IComponentFactory>();
+
+            foreach (var type in componentFactory.AllRegisteredTypes)
+            {
+                if (_entity.HasComponent(type))
+                    continue;
+
+                yield return (componentFactory.GetRegistration(type).Name);
+            }
+        }
+
+        /// <summary>
+        ///     Requests and returns an enumeration of server-side components that can *probably* be added to an entity.
+        /// </summary>
+        private async Task<IEnumerable<string>> GetValidServerComponentsForAdding()
+        {
+            var blob = (ViewVariablesBlobAllValidComponents)
+                await ViewVariablesManager.RequestData(_entitySession!, new ViewVariablesRequestAllValidComponents());
+
+            return blob.ComponentTypes;
+        }
+
+        private async void OnTryAddComponent(ViewVariablesAddComponentWindow.AddComponentButtonPressedEventArgs eventArgs)
+        {
+            if (_addComponentServer)
+            {
+                // Attempted to add a component to the server entity... We send a command.
+                IoCManager.Resolve<IClientConsole>().ProcessCommand($"addcomp {_entity.Uid} {eventArgs.Component}");
+                PopulateServerComponents();
+                _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
+                return;
+            }
+
+            var componentFactory = IoCManager.Resolve<IComponentFactory>();
+
+            if(!componentFactory.TryGetRegistration(eventArgs.Component, out var registration)) return;
+
+            try
+            {
+                var comp = (Component) componentFactory.GetComponent(registration.Type);
+                comp.Owner = _entity;
+                _entityManager.ComponentManager.AddComponent(_entity, comp);
+            }
+            catch (Exception e)
+            {
+                Logger.Warning($"Failed to add component!\n{e}");
+            }
+
+            PopulateClientComponents();
+
+            // Update list of components.
+            _addComponentWindow?.Populate(GetValidComponentsForAdding());
+        }
+
+        private void RemoveClientComponent(IComponent component)
+        {
+            try
+            {
+                _entityManager.ComponentManager.RemoveComponent(_entity.Uid, component);
+            }
+            catch (Exception e)
+            {
+                Logger.Warning($"Couldn't remove component!\n{e}");
+            }
+
+            PopulateClientComponents();
+        }
+
         public override async void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             // TODO: this is pretty poorly implemented right now.
@@ -282,6 +464,12 @@ namespace Robust.Client.ViewVariables.Instances
 
         private async void _tabsOnTabChanged(int tab)
         {
+            if (tab == TabClientComponents)
+            {
+                // Repopulate client components in case something changed.
+                PopulateClientComponents();
+            }
+
             if (_serverLoaded || tab != TabServerComponents && tab != TabServerVars)
             {
                 return;
@@ -303,9 +491,9 @@ namespace Robust.Client.ViewVariables.Instances
                     _serverComponents.AddChild(new Label {Text = text});
                     return;
                 }
-
-                _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(_entitySession, new ViewVariablesRequestMembers());
             }
+
+            _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(_entitySession, new ViewVariablesRequestMembers());
 
             var otherStyle = false;
             var first = true;
@@ -326,41 +514,7 @@ namespace Robust.Client.ViewVariables.Instances
                 }
             }
 
-            var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
-
-            _serverComponents.DisposeAllChildren();
-
-            _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
-            {
-                PlaceHolder = Loc.GetString("Search"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
-            });
-
-            _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
-
-            componentsBlob.ComponentTypes.Sort();
-
-            var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();
-
-            if (!string.IsNullOrEmpty(_serverComponentsSearchBar.Text))
-            {
-                componentTypes = componentTypes
-                    .Where(t => t.Stringified.Contains(_serverComponentsSearchBar.Text,
-                        StringComparison.InvariantCultureIgnoreCase));
-            }
-
-            componentTypes = componentTypes.OrderBy(t => t.Stringified);
-
-            foreach (var componentType in componentTypes)
-            {
-                var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
-                button.OnPressed += args =>
-                {
-                    ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
-                };
-                _serverComponents.AddChild(button);
-            }
+            PopulateServerComponents();
         }
     }
 }

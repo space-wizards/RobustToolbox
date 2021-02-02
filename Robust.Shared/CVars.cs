@@ -344,6 +344,9 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MaxLinearCorrection =
             CVarDef.Create("physics.maxlinearcorrection", 0.2f);
 
+        public static readonly CVarDef<float> MaxAngularCorrection =
+            CVarDef.Create("physics.maxangularcorrection", 8.0f / 180.0f * MathF.PI);
+
         // - Maximums
         // Squared
         public static readonly CVarDef<float> MaxLinVelocity =

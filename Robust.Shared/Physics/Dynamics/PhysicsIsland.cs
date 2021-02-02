@@ -140,8 +140,8 @@ namespace Robust.Shared.Physics.Dynamics
                     var tileFriction = GetTileFriction(body);
 
                     // TODO: This damping is mega-suss and the player controllers will need fine-tuning.
-                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction) * 10, 0.0f, 1.0f);
-                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction) * 10, 0.0f, 1.0f);
+                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction), 0.0f, 1.0f);
+                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction), 0.0f, 1.0f);
                 }
 
                 _positions[i] = position;

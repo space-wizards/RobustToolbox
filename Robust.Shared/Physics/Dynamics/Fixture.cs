@@ -11,6 +11,7 @@ using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -26,12 +27,13 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
         public Dictionary<GridId, FixtureProxy[]> Proxies;
 
-        public int ProxyCount = 0;
+        [ViewVariables] public int ProxyCount = 0;
 
-        public IPhysShape Shape { get; private set; } = default!;
+        [ViewVariables] public IPhysShape Shape { get; private set; } = default!;
 
-        public PhysicsComponent Body { get; internal set; } = default!;
+        [ViewVariables] public PhysicsComponent Body { get; internal set; } = default!;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Friction
         {
             get => _friction;
@@ -46,6 +48,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private float _friction;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Restitution
         {
             get => _restitution;
@@ -67,6 +70,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Hard
         {
             get => _hard;
@@ -85,6 +89,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public int CollisionLayer
         {
             get => _collisionLayer;
@@ -103,6 +108,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///  Bitmask of the layers this component collides with.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public int CollisionMask
         {
             get => _collisionMask;

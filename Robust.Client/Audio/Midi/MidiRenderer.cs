@@ -319,9 +319,8 @@ namespace Robust.Client.Audio.Midi
 
             lock (_playerStateLock)
             {
-                if (_player == null)
-                    _player = new NFluidsynth.Player(_synth);
-                _player.Stop();
+                _player?.Dispose();
+                _player = new NFluidsynth.Player(_synth);
                 _player.AddMem(buffer);
                 _player.SetPlaybackCallback(MidiPlayerEventHandler);
                 _player.Play();

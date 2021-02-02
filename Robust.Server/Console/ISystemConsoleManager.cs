@@ -1,4 +1,4 @@
-﻿namespace Robust.Server.Interfaces.Console
+﻿namespace Robust.Server.Console
 {
     /// <summary>
     ///     Wraps the system console.

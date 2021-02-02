@@ -6,7 +6,6 @@ using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Placement;
@@ -309,7 +308,7 @@ namespace Robust.Server
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
-            IoCManager.Resolve<IConsoleShell>().Initialize();
+            IoCManager.Resolve<IServerConsoleHost>().Initialize();
             _entities.Startup();
             _scriptHost.Initialize();
 

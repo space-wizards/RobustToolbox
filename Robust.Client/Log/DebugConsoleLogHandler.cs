@@ -1,4 +1,4 @@
-﻿using Robust.Client.Interfaces.Console;
+﻿using Robust.Client.Console;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -12,9 +12,9 @@ namespace Robust.Client.Log
     /// </summary>
     class DebugConsoleLogHandler : ILogHandler
     {
-        readonly IDebugConsole Console;
+        readonly IClientConsoleHost Console;
 
-        public DebugConsoleLogHandler(IDebugConsole console)
+        public DebugConsoleLogHandler(IClientConsoleHost console)
         {
             Console = console;
         }

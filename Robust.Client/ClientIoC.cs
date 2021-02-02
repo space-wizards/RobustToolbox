@@ -78,7 +78,7 @@ namespace Robust.Client
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
-            IoCManager.Register<IClientConsole, ClientConsole>();
+            IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();

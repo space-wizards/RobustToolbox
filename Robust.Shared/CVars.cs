@@ -324,8 +324,11 @@ namespace Robust.Shared
         public static readonly CVarDef<float> Baumgarte =
             CVarDef.Create("physics.baumgarte", 0.2f);
 
+        /// <summary>
+        ///     How much 2 bodies are allowed to overlap before we start to correct their positions.
+        /// </summary>
         public static readonly CVarDef<float> LinearSlop =
-            CVarDef.Create("physics.linearslop", 0.005f);
+            CVarDef.Create("physics.linearslop", 0.05f);
 
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making
@@ -337,6 +340,15 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> PolygonRadius =
             CVarDef.Create("physics.polygonradius", 2 * 0.005f);
+
+        /// <summary>
+        /// If true, it will run a GiftWrap convex hull on all polygon inputs.
+        /// This makes for a more stable engine when given random input,
+        /// but if speed of the creation of polygons are more important,
+        /// you might want to set this to false.
+        /// </summary>
+        public static readonly CVarDef<bool> ConvexHullPolygons =
+            CVarDef.Create("physics.convexhullpolygons", true);
 
         public static readonly CVarDef<int> MaxPolygonVertices =
             CVarDef.Create("physics.maxpolygonvertices", 8);

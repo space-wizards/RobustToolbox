@@ -756,6 +756,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     normal = -normal;
                 }
                 break;
+                default:
+                    // Shouldn't happentm
+                    throw new InvalidOperationException();
+
             }
         }
 

@@ -250,7 +250,11 @@ namespace Robust.Shared.Physics.Dynamics
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in AwakeBodies)
             {
-                if (seed.Island || !seed.CanCollide || seed.BodyType == BodyType.Static) continue;
+                // Sloth change: If client's running prediction we won't run physics for non-predicted bodies (that is unless a predicted body is in the same island).
+                if ((prediction && !seed.Predict) ||
+                    seed.Island ||
+                    !seed.CanCollide ||
+                    seed.BodyType == BodyType.Static) continue;
 
                 // Start of a new island
                 _island.Clear();

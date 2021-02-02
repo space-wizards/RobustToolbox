@@ -5,6 +5,7 @@ namespace Robust.Shared.Physics.Collision
 {
     public enum ManifoldType : byte
     {
+        Invalid = 0,
         Circles,
         FaceA,
         FaceB,

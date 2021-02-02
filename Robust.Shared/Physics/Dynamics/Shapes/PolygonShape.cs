@@ -13,6 +13,9 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     [Serializable, NetSerializable]
     public class PolygonShape : IPhysShape
     {
+        /// <summary>
+        ///     Counter-clockwise (CCW) order.
+        /// </summary>
         public List<Vector2> Vertices
         {
             get => _vertices;
@@ -23,17 +26,16 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 var configManager = IoCManager.Resolve<IConfigurationManager>();
                 DebugTools.Assert(_vertices.Count >= 3 && _vertices.Count <= configManager.GetCVar(CVars.MaxPolygonVertices));
 
-                /* TODO:
-                if (configManager.GetCVar(CVars.UseConvexHullPolygons))
+
+                if (configManager.GetCVar(CVars.ConvexHullPolygons))
                 {
                     //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
                     //So instead of giftwrapping a triangle, we just force it to be clock wise.
                     if (_vertices.Count <= 3)
-                        _vertices.ForceCounterClockWise();
+                        _vertices.ForceCounterClockwise();
                     else
                         _vertices = GiftWrap.GetConvexHull(_vertices);
                 }
-                */
 
                 _normals = new List<Vector2>(_vertices.Count);
 

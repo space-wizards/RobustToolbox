@@ -308,7 +308,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var child in _serverComponents.Children)
             {
-                if (child is not Button button)
+                if (child is not Button button || child == _serverComponentsAddButton)
                 {
                     continue;
                 }

@@ -1,9 +1,9 @@
 ﻿using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
@@ -73,18 +73,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -93,15 +93,13 @@ namespace Robust.Client.GameStates
                 if (bValue && !overlayMan.HasOverlay(nameof(NetInterpOverlay)))
                 {
                     overlayMan.AddOverlay(new NetInterpOverlay());
-                    console.AddLine("Enabled network interp overlay.");
+                    shell.WriteLine("Enabled network interp overlay.");
                 }
                 else if (overlayMan.HasOverlay(nameof(NetInterpOverlay)))
                 {
                     overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
-                    console.AddLine("Disabled network interp overlay.");
+                    shell.WriteLine("Disabled network interp overlay.");
                 }
-
-                return false;
             }
         }
     }

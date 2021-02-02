@@ -56,8 +56,6 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
-        private Viewport _mainViewport = default!;
-
         private bool _drawingSplash = true;
 
         private GLShaderProgram? _currentProgram;
@@ -324,19 +322,6 @@ namespace Robust.Client.Graphics.Clyde
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
-
-            CreateMainViewport();
-        }
-
-        private void CreateMainViewport()
-        {
-            var (w, h) = _framebufferSize;
-
-            // Ensure viewport size is always even to avoid artifacts.
-            if (w % 2 == 1) w += 1;
-            if (h % 2 == 1) h += 1;
-
-            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         [Conditional("DEBUG")]

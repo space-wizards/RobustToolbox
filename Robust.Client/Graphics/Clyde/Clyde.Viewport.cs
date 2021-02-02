@@ -115,6 +115,24 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.RenderViewport(this);
             }
 
+            public Vector2 WorldToLocal(Vector2 point)
+            {
+                if (Eye == null)
+                    return (0, 0);
+
+                var eye = (IEye) Eye;
+                var newPoint = point;
+
+                eye.GetViewMatrix(out var viewMatrix);
+                newPoint = viewMatrix * newPoint;
+
+                // (inlined version of UiProjMatrix)
+                newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+                newPoint += Size / 2f;
+
+                return newPoint;
+            }
+
             public void Dispose()
             {
                 RenderTarget.Dispose();

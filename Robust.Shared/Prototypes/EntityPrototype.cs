@@ -136,11 +136,11 @@ namespace Robust.Shared.GameObjects
 
         public EntityPrototype()
         {
-            var compDataMgr = IoCManager.Resolve<IComponentDataManager>();
+            var compDataMgr = IoCManager.Resolve<IDataClassManager>();
             // Everybody gets a transform component!
-            Components.Add("Transform", compDataMgr.GetEmptyComponentData("Transform"));
+            Components.Add("Transform", compDataMgr.GetEmptyComponentDataClass("Transform"));
             // And a metadata component too!
-            Components.Add("MetaData", compDataMgr.GetEmptyComponentData("MetaData"));
+            Components.Add("MetaData", compDataMgr.GetEmptyComponentDataClass("MetaData"));
         }
 
         public void LoadFrom(YamlMappingNode mapping)

@@ -39,10 +39,10 @@ namespace Robust.Generators
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor NoDeepCloneImpl = new DiagnosticDescriptor(
+        public static DiagnosticDescriptor DataClassNotFound = new DiagnosticDescriptor(
             "RADC0004",
             "",
-            $"Missing Implementation of IDeepClone.DeepClone",
+            "Dataclass not found.",
             "Usage",
             DiagnosticSeverity.Error,
             true);

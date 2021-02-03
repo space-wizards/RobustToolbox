@@ -12,6 +12,39 @@ namespace Robust.Generators
     [Generator]
     public class DataClassGenerator : ISourceGenerator
     {
+        private bool IsPrimitive(ITypeSymbol symbol)
+        {
+            if (symbol.SpecialType == SpecialType.System_Nullable_T)
+            {
+                //TODO
+            }
+
+            //TODO Paul: does this work w/ nullables?
+            switch (symbol.SpecialType)
+            {
+                case SpecialType.System_Boolean:
+                case SpecialType.System_Byte:
+                case SpecialType.System_SByte:
+                case SpecialType.System_Int16:
+                case SpecialType.System_Int32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt16:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_IntPtr:
+                case SpecialType.System_UIntPtr:
+                case SpecialType.System_Single:
+                case SpecialType.System_Double:
+                case SpecialType.System_Char:
+                case SpecialType.System_String:
+                case SpecialType.System_Enum:
+                case SpecialType.System_Decimal:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new AutoDataClassRegistrationReceiver());
@@ -21,8 +54,10 @@ namespace Robust.Generators
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
+
+
             var comp = (CSharpCompilation)context.Compilation;
-            var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
+            //var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
             //resolve autodata registrations (we need the to validate the customdataclasses)
             var resolvedAutoDataRegistrations =
@@ -63,7 +98,7 @@ namespace Robust.Generators
                 }
                 else
                 {
-                    shouldInherit = ResolveParentDataClass(symbol, true);
+                    shouldInherit = ResolveParentDataClass(symbol, true) ?? "Robust.Shared.Prototypes.DataClass";
                 }
                 context.AddSource($"{customDataClass.Name}_INHERIT.g.cs", SourceText.From(GenerateCustomDataClassInheritanceCode(customDataClass.Name, customDataClass.ContainingNamespace.ToString(), shouldInherit), Encoding.UTF8));
 
@@ -85,8 +120,8 @@ namespace Robust.Generators
                 var dataClass = comp.GetTypeByMetadataName(metaName);
                 if (dataClass != null || resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(r, typeSymbol))) return metaName;
 
-                if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
-                    return "Robust.Shared.Prototypes.ComponentData";
+                if(typeSymbol.BaseType == null)
+                    return null;
 
                 return ResolveParentDataClass(typeSymbol.BaseType);
             }
@@ -126,14 +161,14 @@ namespace Robust.Generators
                     var flagType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 2);
                     var constType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 3);
 
-                    string type;
+                    ITypeSymbol type;
                     switch (member)
                     {
                         case IFieldSymbol fieldSymbol:
-                            type = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            type = fieldSymbol.Type;
                             break;
                         case IPropertySymbol propertySymbol:
-                            type = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            type = propertySymbol.Type;
                             break;
                         default:
                             context.ReportDiagnostic(Diagnostic.Create(
@@ -141,13 +176,31 @@ namespace Robust.Generators
                                 member.Locations.First()));
                             continue;
                     }
-                    fields.Add(new FieldTemplate(fieldName, type, @readonly, flagType, constType));
+
+                    string typeString;
+                    if (!IsPrimitive(type))
+                    {
+                        typeString = ResolveParentDataClass(type);
+                        if (typeString == null)
+                        {
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                Diagnostics.DataClassNotFound,
+                                member.Locations.First()));
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        typeString = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    }
+
+                    fields.Add(new FieldTemplate(fieldName, typeString, @readonly, flagType, constType));
                 }
 
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                var inheriting = ResolveParentDataClass(symbol.BaseType);
+                var inheriting = ResolveParentDataClass(symbol.BaseType) ?? "Robust.Shared.Prototypes.DataClass";
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
@@ -13,6 +13,11 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
     [PublicAPI]
     public interface ITransformComponent : IComponent
     {
+        /// <summary>
+        /// Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
+        /// </summary>
+        bool NoLocalRotation { get; set; }
+
         /// <summary>
         ///     Local offset of this entity relative to its parent
         ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
@@ -29,6 +34,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Current position offset of the entity relative to the world.
         ///     Can de-parent from its parent if the parent is a grid.
         /// </summary>
+        [Animatable]
         Vector2 WorldPosition { get; set; }
 
         /// <summary>

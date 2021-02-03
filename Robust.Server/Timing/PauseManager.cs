@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -26,7 +26,6 @@ namespace Robust.Server.Timing
                 _pausedMaps.Add(mapId);
                 foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
                 {
-                    if (entity.HasComponent<IgnorePauseComponent>()) continue;
                     entity.Paused = true;
                 }
             }
@@ -60,7 +59,7 @@ namespace Robust.Server.Timing
         public void DoGridMapInitialize(GridId gridId)
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
-            
+
             foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)

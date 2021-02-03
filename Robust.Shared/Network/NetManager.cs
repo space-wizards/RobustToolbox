@@ -345,7 +345,6 @@ namespace Robust.Shared.Network
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Peer.Shutdown(reason));
-            _netPeers.Clear();
 
             // wait for the network thread to finish its work (like flushing packets and gracefully disconnecting)
             // Lidgren does not expose the thread, so we can't join or or anything
@@ -356,6 +355,8 @@ namespace Robust.Shared.Network
                 // sleep the thread for an arbitrary length so it isn't spinning in the while loop as much
                 Thread.Sleep(50);
             }
+
+            _netPeers.Clear();
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);

@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -57,46 +57,53 @@ namespace Robust.Client.GameObjects
 
         public void CreateEffect(EffectSystemMessage message)
         {
+            // The source of effects is either local actions during FirstTimePredicted, or the network at LastServerTick
+            // When replaying predicted input, don't spam effects.
+            if(gameTiming.InPrediction && !gameTiming.IsFirstTimePredicted)
+                return;
+
             if (message.AttachedEntityUid != null && message.Coordinates != default)
             {
                 Logger.Warning("Set both an AttachedEntityUid and EntityCoordinates on an EffectSystemMessage for sprite {0} which is not supported!", message.EffectSprite);
             }
 
-            var gameTime = gameTiming.CurTime;
-            if (gameTime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
+            if (message.LifeTime <= TimeSpan.Zero)
             {
-                Logger.Warning("Effect using sprite {0} died in transit to the client", message.EffectSprite);
+                Logger.Warning("Effect using sprite {0} had zero lifetime.", message.EffectSprite);
                 return;
             }
 
             //Create effect from creation message
             var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
+            effect.Deathtime = gameTiming.CurTime + message.LifeTime;
             if (effect.AttachedEntityUid != null)
             {
                 effect.AttachedEntity = _entityManager.GetEntity(effect.AttachedEntityUid.Value);
             }
-
-            //Age the effect through a single update to the previous update tick of the effect system
-            //effect.Update((float)((lasttimeprocessed - effect.Age).TotalSeconds));
 
             _Effects.Add(effect);
         }
 
         public override void FrameUpdate(float frameTime)
         {
+            var curTime = gameTiming.CurTime;
             for (int i = 0; i < _Effects.Count; i++)
             {
                 var effect = _Effects[i];
 
-                //Update variables of the effect via its deltas
-                effect.Update(frameTime);
-
                 //These effects have died
-                if (effect.Age > effect.Deathtime)
+                // Effects are purely visual, so they don't need to be ran through prediction.
+                // once CurTime ever passes DeathTime (clients render the top at IsFirstTimePredicted, where this happens) just remove them.
+                if (curTime > effect.Deathtime)
                 {
                     //Remove from the effects list and decrement the iterator
                     _Effects.Remove(effect);
                     i--;
+                }
+                else
+                {
+                    //Update variables of the effect via its deltas
+                    effect.Update(frameTime);
                 }
             }
         }
@@ -205,14 +212,9 @@ namespace Robust.Client.GameObjects
             public bool Shaded = true;
 
             /// <summary>
-            /// Effect's age -- from 0f
+            /// CurTime after which the effect will "die"
             /// </summary>
-            public TimeSpan Age = TimeSpan.Zero;
-
-            /// <summary>
-            /// Time after which the effect will "die"
-            /// </summary>
-            public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
+            public TimeSpan Deathtime;
 
             private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
@@ -245,8 +247,6 @@ namespace Robust.Client.GameObjects
                 RadialAcceleration = effectcreation.RadialAcceleration;
                 TangentialVelocity = effectcreation.TangentialVelocity;
                 TangentialAcceleration = effectcreation.TangentialAcceleration;
-                Age = effectcreation.Born;
-                Deathtime = effectcreation.DeathTime;
                 Rotation = effectcreation.Rotation;
                 RotationRate = effectcreation.RotationRate;
                 Size = effectcreation.Size;
@@ -260,10 +260,6 @@ namespace Robust.Client.GameObjects
 
             public void Update(float frameTime)
             {
-                Age += TimeSpan.FromSeconds(frameTime);
-                if (Age >= Deathtime)
-                    return;
-
                 Velocity += Acceleration * frameTime;
                 RadialVelocity += RadialAcceleration * frameTime;
                 TangentialVelocity += TangentialAcceleration * frameTime;

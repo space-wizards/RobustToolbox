@@ -53,7 +53,7 @@ namespace Robust.Client
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
-            _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged);
+            _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
             _debugDrawMan.Initialize();

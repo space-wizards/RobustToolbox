@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables
         public string Description => "Opens View Variables.";
         public string Help => "Usage: vv <entity ID|IoC interface name|SIoC interface name>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var vvm = IoCManager.Resolve<IViewVariablesManager>();
             // If you don't provide an entity ID, it opens the test class.
@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables
             if (args.Length == 0)
             {
                 vvm.OpenVV(new VVTest());
-                return false;
+                return;
             }
 
             var valArg = args[0];
@@ -37,7 +37,7 @@ namespace Robust.Client.ViewVariables
                 // Server-side IoC selector.
                 var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
                 vvm.OpenVV(selector);
-                return false;
+                return;
             }
 
             if (valArg.StartsWith("I"))
@@ -46,8 +46,8 @@ namespace Robust.Client.ViewVariables
                 var reflection = IoCManager.Resolve<IReflectionManager>();
                 if (!reflection.TryLooseGetType(valArg, out var type))
                 {
-                    console.AddLine("Unable to find that type.");
-                    return false;
+                    shell.WriteLine("Unable to find that type.");
+                    return;
                 }
 
                 object obj;
@@ -57,11 +57,11 @@ namespace Robust.Client.ViewVariables
                 }
                 catch (UnregisteredTypeException)
                 {
-                    console.AddLine("Unable to find that type.");
-                    return false;
+                    shell.WriteLine("Unable to find that type.");
+                    return;
                 }
                 vvm.OpenVV(obj);
-                return false;
+                return;
             }
 
             if (valArg.StartsWith("guihover"))
@@ -70,30 +70,28 @@ namespace Robust.Client.ViewVariables
                 var obj = IoCManager.Resolve<IUserInterfaceManager>().CurrentlyHovered;
                 if (obj == null)
                 {
-                    console.AddLine("Not currently hovering any control.");
-                    return false;
+                    shell.WriteLine("Not currently hovering any control.");
+                    return;
                 }
                 vvm.OpenVV(obj);
-                return false;
+                return;
             }
 
             // Entity.
             if (!EntityUid.TryParse(args[0], out var uid))
             {
-                console.AddLine("Invalid specifier format.");
-                return false;
+                shell.WriteLine("Invalid specifier format.");
+                return;
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
             if (!entityManager.TryGetEntity(uid, out var entity))
             {
-                console.AddLine("That entity does not exist.");
-                return false;
+                shell.WriteLine("That entity does not exist.");
+                return;
             }
 
             vvm.OpenVV(entity);
-
-            return false;
         }
 
         /// <summary>

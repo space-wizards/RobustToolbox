@@ -1,5 +1,3 @@
-using Robust.Server.Interfaces.Console;
-
 namespace Robust.Server.Console
 {
     internal sealed class SystemConsoleManagerDummy : ISystemConsoleManager

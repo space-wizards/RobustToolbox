@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -97,7 +97,7 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_console, _resourceManager);
+            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,

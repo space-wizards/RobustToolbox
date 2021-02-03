@@ -206,7 +206,7 @@ namespace Robust.Client.Graphics.Clyde
                     // finally we can calculate screen bounding in pixels 
                     var screenLB = _eyeManager.WorldToScreen(worldLB);
                     var screenRT = _eyeManager.WorldToScreen(worldRT);
-                    var screenSpriteSize = (Vector2i)(screenRT - screenLB);
+                    var screenSpriteSize = (Vector2i)(screenRT - screenLB).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 
                     // check that sprite size is valid

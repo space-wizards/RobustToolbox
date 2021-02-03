@@ -987,12 +987,15 @@ namespace Robust.Client.GameObjects
                 angle -= new Angle(MathHelper.PiOver2);
             }
 
-            var mOffset = Matrix3.CreateTranslation(Offset);
-            var mRotation = Matrix3.CreateRotation(angle);
-            Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
+            var hasTranslation = !Offset.EqualsApprox(Vector2.Zero);
+            var hasRotation = !angle.EqualsApprox(Angle.Zero);
+            var hasScale = !Scale.EqualsApprox(Vector2.One);
 
-            // Only apply scale if needed.
-            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
+            var transform = hasScale ? Matrix3.CreateScale(Scale) : Matrix3.Identity;
+            if (hasRotation)
+                transform.Multiply(Matrix3.CreateRotation(angle));
+            if (hasTranslation)
+                transform.Multiply(Matrix3.CreateTranslation(Offset));
 
             transform.Multiply(worldTransform);
 

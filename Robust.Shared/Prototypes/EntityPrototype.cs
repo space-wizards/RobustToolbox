@@ -342,14 +342,14 @@ namespace Robust.Shared.GameObjects
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            var dataMgr = IoCManager.Resolve<IComponentDataManager>();
+            var dataMgr = IoCManager.Resolve<IDataClassManager>();
             // Copy component data over.
             foreach (var(type, component) in source.Components)
             {
                 if (target.Components.TryGetValue(type, out var targetComponent))
                 {
                     // Copy over values the target component does not have.
-                    dataMgr.PushInheritance(type, component, targetComponent);
+                    dataMgr.PushInheritance(component, targetComponent);
                 }
                 else
                 {
@@ -365,8 +365,8 @@ namespace Robust.Shared.GameObjects
                         }
                     }
 
-                    var data = dataMgr.GetEmptyComponentData(type);
-                    dataMgr.PushInheritance(type, component, data);
+                    var data = dataMgr.GetEmptyComponentDataClass(type);
+                    dataMgr.PushInheritance(component, data);
 
                     target.Components[type] = data;
                 }
@@ -485,7 +485,7 @@ namespace Robust.Shared.GameObjects
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IComponentDataManager>().PopulateComponent(component, data);
+            IoCManager.Resolve<IDataClassManager>().Populate(component, data);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -517,7 +517,7 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var data = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(type, copy); //todo handle cached fields
+            var data = IoCManager.Resolve<IDataClassManager>().Parse(factory.GetRegistration(type).Type, copy); //todo handle cached fields
 
             Components[type] = data;
         }

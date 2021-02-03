@@ -71,11 +71,6 @@ namespace Robust.Shared.Physics
         float InvMass { get; }
 
         /// <summary>
-        /// Inverse moment of inertia, in
-        /// </summary>
-        float InvI { get; }
-
-        /// <summary>
         /// Current Force being applied to this entity in Newtons.
         /// </summary>
         /// <remarks>

@@ -29,13 +29,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             IoCManager.InjectDependencies(this);
         }
 
-        public void Reset(float dtRatio, int contactCount, Contact[] contacts, Vector2[] linearVelocities, float[] angularVelocities, Vector2[] positions, float[] angles)
+        public void Reset(SolverData data, int contactCount, Contact[] contacts)
         {
-            _linearVelocities = linearVelocities;
-            _angularVelocities = angularVelocities;
+            _linearVelocities = data.LinearVelocities;
+            _angularVelocities = data.AngularVelocities;
 
-            _positions = positions;
-            _angles = angles;
+            _positions = data.Positions;
+            _angles = data.Angles;
 
             _contactCount = contactCount;
             _contacts = contacts;
@@ -54,6 +54,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _positionConstraints[i] = new ContactPositionConstraint();
                 }
             }
+
+            var warmStarting = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting);
 
             // Build constraints
             // For now these are going to be bare but will change
@@ -117,11 +119,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     var contactPoint = manifold.Points[j];
                     var constraintPoint = velocityConstraint.Points[j];
 
-                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                    if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting))
+                    if (warmStarting)
                     {
-                        constraintPoint.NormalImpulse = dtRatio * contactPoint.NormalImpulse;
-                        constraintPoint.TangentImpulse = dtRatio * contactPoint.TangentImpulse;
+                        constraintPoint.NormalImpulse = data.DtRatio * contactPoint.NormalImpulse;
+                        constraintPoint.TangentImpulse = data.DtRatio * contactPoint.TangentImpulse;
                     }
                     else
                     {

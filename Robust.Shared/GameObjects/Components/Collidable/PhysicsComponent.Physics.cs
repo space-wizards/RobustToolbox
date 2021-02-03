@@ -176,8 +176,6 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        private float _angularMass = 1;
-        private Vector2 _linVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
 
         /// <summary>
@@ -215,24 +213,50 @@ namespace Robust.Shared.GameObjects.Components
         /// https://en.wikipedia.org/wiki/Moment_of_inertia
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float I
+        public float Inertia
         {
-            get => _angularMass;
+            get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
             set
             {
-                _angularMass = value;
-                Dirty();
+                if (_bodyType != BodyType.Dynamic) return;
+
+                if (MathHelper.CloseTo(_inertia, value)) return;
+
+                if (value > 0.0f && !_fixedRotation)
+                {
+                    _inertia = value - Mass * Vector2.Dot(CenterOfMass, CenterOfMass);
+                    DebugTools.Assert(_inertia > 0.0f);
+                    InvI = 1.0f / _inertia;
+                    Dirty();
+                }
             }
         }
+
+        private float _inertia;
 
         /// <summary>
         /// Inverse moment of inertia (1 / I).
         /// </summary>
-        public float InvI
+        internal float InvI { get; set; }
+
+        /// <summary>
+        ///     Is the body allowed to have angular velocity.
+        /// </summary>
+        public bool FixedRotation
         {
-            get => I > 0 ? 1 / I : 0f;
-            set => I = value > 0 ? 1 / value : 0f;
+            get => _fixedRotation;
+            set
+            {
+                if (_fixedRotation == value)
+                    return;
+
+                _fixedRotation = value;
+                _angVelocity = 0.0f;
+                // Dirty();
+            }
         }
+
+        private bool _fixedRotation;
 
         // TODO: Will be used someday
         /// <summary>
@@ -353,6 +377,8 @@ namespace Robust.Shared.GameObjects.Components
             }
         }
 
+        private Vector2 _linVelocity;
+
         /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
@@ -458,6 +484,27 @@ namespace Robust.Shared.GameObjects.Components
         {
             get => _controllers;
             set => _controllers = value;
+        }
+
+        /// <summary>
+        /// Gets a local point relative to the body's origin given a world point.
+        /// Note that the vector only takes the rotation into account, not the position.
+        /// </summary>
+        /// <param name="worldPoint">A point in world coordinates.</param>
+        /// <returns>The corresponding local point relative to the body's origin.</returns>
+        public Vector2 GetLocalPoint(in Vector2 worldPoint)
+        {
+            return Physics.Transform.MulT(GetTransform(), worldPoint);
+        }
+
+        /// <summary>
+        /// Get the world coordinates of a point given the local coordinates.
+        /// </summary>
+        /// <param name="localPoint">A point on the body measured relative the the body's origin.</param>
+        /// <returns>The same point expressed in world coordinates.</returns>
+        public Vector2 GetWorldPoint(in Vector2 localPoint)
+        {
+            return Physics.Transform.Mul(GetTransform(), localPoint);
         }
 
         /// <inheritdoc />

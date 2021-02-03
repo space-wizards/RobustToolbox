@@ -14,6 +14,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -67,7 +68,12 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal ContactEdge? ContactEdges { get; set; } = default!;
+        internal ContactEdge? ContactEdges { get; set; } = null;
+
+        /// <summary>
+        ///     Linked-list of all of our joints.
+        /// </summary>
+        internal JointEdge? JointEdges { get; set; } = null;
 
         public IEntity Entity => Owner;
 
@@ -189,14 +195,32 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }, () => Fixtures);
 
+            serializer.DataReadWriteFunction("joints", new List<Joint>(), joints =>
+            {
+                if (joints.Count == 0) return;
+
+                // TODO: Brain no worky rn
+                throw new NotImplementedException();
+            }, () =>
+            {
+                var joints = new List<Joint>();
+
+                for (var jn = JointEdges; jn != null; jn = jn.Next)
+                {
+                    joints.Add(jn.Joint);
+                }
+
+                return joints;
+            });
+
             // TODO: Dump someday
             serializer.DataReadFunction("anchored", true, value =>
             {
                 _bodyType = value ? BodyType.Static : BodyType.Dynamic;
             });
 
-            serializer.DataField(ref _linearDamping, "linearDamping", 0.8f);
-            serializer.DataField(ref _angularDamping, "angularDamping", 0.2f);
+            serializer.DataField(ref _linearDamping, "linearDamping", 0.02f);
+            serializer.DataField(ref _angularDamping, "angularDamping", 0.02f);
             serializer.DataField(ref _mass, "mass", 1.0f);
             serializer.DataField(ref _awake, "awake", true);
             serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
@@ -506,18 +530,12 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             // Does a joint prevent collision?
-            /*
-            for (JointEdge jn = JointList; jn != null; jn = jn.Next)
+            for (var jn = JointEdges; jn != null; jn = jn.Next)
             {
-                if (jn.Other == other)
-                {
-                    if (jn.Joint.CollideConnected == false)
-                    {
-                        return false;
-                    }
-                }
+                if (jn.Other != other) continue;
+                if (jn.Joint.CollideConnected) continue;
+                return false;
             }
-            */
 
             return true;
         }

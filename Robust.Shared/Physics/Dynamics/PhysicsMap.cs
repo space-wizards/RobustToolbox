@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -31,6 +29,11 @@ namespace Robust.Shared.Physics.Dynamics
         public HashSet<PhysicsComponent> AwakeBodies = new();
 
         /// <summary>
+        ///     Get all the joints on this map
+        /// </summary>
+        public List<Joint> Joints { get; private set; } = new();
+
+        /// <summary>
         ///     Temporarily store island-bodies for easier iteration.
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
@@ -43,6 +46,9 @@ namespace Robust.Shared.Physics.Dynamics
         // Queued map changes
         private HashSet<PhysicsComponent> _queuedBodyAdd = new();
         private HashSet<PhysicsComponent> _queuedBodyRemove = new();
+
+        private HashSet<Joint> _queuedJointAdd = new();
+        private HashSet<Joint> _queuedJointRemove = new();
 
         private HashSet<PhysicsComponent> _queuedWake = new();
         private HashSet<PhysicsComponent> _queuedSleep = new();
@@ -116,7 +122,15 @@ namespace Robust.Shared.Physics.Dynamics
             _queuedSleep.Add(body);
         }
 
-        // TODO: Someday joints too.
+        public void AddJoint(Joint joint)
+        {
+            _queuedJointAdd.Add(joint);
+        }
+
+        public void RemoveJoint(Joint joint)
+        {
+            _queuedJointRemove.Add(joint);
+        }
 
         #endregion
 
@@ -127,6 +141,8 @@ namespace Robust.Shared.Physics.Dynamics
             ProcessRemoveQueue();
             ProcessWakeQueue();
             ProcessSleepQueue();
+            ProcessAddedJoints();
+            ProcessRemovedJoints();
         }
 
         private void ProcessAddQueue()
@@ -179,6 +195,138 @@ namespace Robust.Shared.Physics.Dynamics
 
             _queuedSleep.Clear();
         }
+
+        private void ProcessAddedJoints()
+        {
+            foreach (var joint in _queuedJointAdd)
+            {
+                // Connect to the world list.
+                Joints.Add(joint);
+
+                // Connect to the bodies' doubly linked lists.
+                joint.EdgeA.Joint = joint;
+                joint.EdgeA.Other = joint.BodyB;
+                joint.EdgeA.Prev = null;
+                joint.EdgeA.Next = joint.BodyA.JointEdges;
+
+                if (joint.BodyA.JointEdges != null)
+                    joint.BodyA.JointEdges.Prev = joint.EdgeA;
+
+                joint.BodyA.JointEdges = joint.EdgeA;
+
+
+                joint.EdgeB.Joint = joint;
+                joint.EdgeB.Other = joint.BodyA;
+                joint.EdgeB.Prev = null;
+                joint.EdgeB.Next = joint.BodyB.JointEdges;
+
+                if (joint.BodyB.JointEdges != null)
+                    joint.BodyB.JointEdges.Prev = joint.EdgeB;
+
+                joint.BodyB.JointEdges = joint.EdgeB;
+
+                PhysicsComponent bodyA = joint.BodyA;
+                PhysicsComponent bodyB = joint.BodyB;
+
+                // If the joint prevents collisions, then flag any contacts for filtering.
+                if (!joint.CollideConnected)
+                {
+                    ContactEdge? edge = bodyB.ContactEdges;
+                    while (edge != null)
+                    {
+                        if (edge.Other == bodyA)
+                        {
+                            // Flag the contact for filtering at the next time step (where either
+                            // body is awake).
+                            edge.Contact!.FilterFlag = true;
+                        }
+
+                        edge = edge.Next;
+                    }
+                }
+                // Note: creating a joint doesn't wake the bodies.
+            }
+
+            _queuedJointAdd.Clear();
+        }
+
+        private void ProcessRemovedJoints()
+        {
+            foreach (var joint in _queuedJointRemove)
+            {
+                bool collideConnected = joint.CollideConnected;
+
+                // Remove from the world list.
+                Joints.Remove(joint);
+
+                // Disconnect from island graph.
+                PhysicsComponent bodyA = joint.BodyA;
+                PhysicsComponent bodyB = joint.BodyB;
+
+                // Wake up connected bodies.
+                bodyA.Awake = true;
+
+                bodyB.Awake = true;
+
+                // Remove from body 1.
+                if (joint.EdgeA.Prev != null)
+                {
+                    joint.EdgeA.Prev.Next = joint.EdgeA.Next;
+                }
+
+                if (joint.EdgeA.Next != null)
+                {
+                    joint.EdgeA.Next.Prev = joint.EdgeA.Prev;
+                }
+
+                if (joint.EdgeA == bodyA.JointEdges)
+                {
+                    bodyA.JointEdges = joint.EdgeA.Next;
+                }
+
+                joint.EdgeA.Prev = null;
+                joint.EdgeA.Next = null;
+
+                // Remove from body 2
+                if (joint.EdgeB.Prev != null)
+                {
+                    joint.EdgeB.Prev.Next = joint.EdgeB.Next;
+                }
+
+                if (joint.EdgeB.Next != null)
+                {
+                    joint.EdgeB.Next.Prev = joint.EdgeB.Prev;
+                }
+
+                if (joint.EdgeB == bodyB.JointEdges)
+                {
+                    bodyB.JointEdges = joint.EdgeB.Next;
+                }
+
+                joint.EdgeB.Prev = null;
+                joint.EdgeB.Next = null;
+
+                // If the joint prevents collisions, then flag any contacts for filtering.
+                if (!collideConnected)
+                {
+                    ContactEdge? edge = bodyB.ContactEdges;
+                    while (edge != null)
+                    {
+                        if (edge.Other == bodyA)
+                        {
+                            // Flag the contact for filtering at the next time step (where either
+                            // body is awake).
+                            edge.Contact!.FilterFlag = true;
+                        }
+
+                        edge = edge.Next;
+                    }
+                }
+            }
+
+            _queuedJointRemove.Clear();
+        }
+
         #endregion
 
         /// <summary>
@@ -215,7 +363,7 @@ namespace Robust.Shared.Physics.Dynamics
             ProcessChanges();
 
             // Integrate velocities, solve velocity constraints, and do integration.
-            Solve(frameTime, dtRatio, prediction);
+            Solve(frameTime, dtRatio, invDt, prediction);
 
             // SolveTOI
 
@@ -229,14 +377,19 @@ namespace Robust.Shared.Physics.Dynamics
             _invDt0 = invDt;
         }
 
-        private void Solve(float frameTime, float dtRatio, bool prediction)
+        private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count);
+            _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count, Joints.Count);
 
             foreach (var contact in ContactManager.ContactList)
             {
                 contact.IslandFlag = false;
+            }
+
+            foreach (var joint in Joints)
+            {
+                joint.IslandFlag = false;
             }
 
             // Build and simulated islands from awake bodies.
@@ -303,10 +456,35 @@ namespace Robust.Shared.Physics.Dynamics
 
                         other.Island = true;
                     }
-                    // TODO: Joint edges
+
+                    for (JointEdge? je = body.JointEdges; je != null; je = je.Next)
+                    {
+                        if (je.Joint.IslandFlag)
+                        {
+                            continue;
+                        }
+
+                        PhysicsComponent other = je.Other;
+
+                        // Don't simulate joints connected to inactive bodies.
+                        if (!other.CanCollide) continue;
+
+                        _island.Add(je.Joint);
+                        je.Joint.IslandFlag = true;
+
+                        if (other.Island) continue;
+
+                        DebugTools.Assert(stackCount < stackSize);
+                        _stack[stackCount++] = other;
+
+                        if (!_islandSet.Contains(body))
+                            _islandSet.Add(body);
+
+                        other.Island = true;
+                    }
                 }
 
-                _island.Solve(frameTime, dtRatio, prediction);
+                _island.Solve(frameTime, dtRatio, invDt,  prediction);
 
                 // Post-solve cleanup for island
                 for (var i = 0; i < _island.BodyCount; i++)

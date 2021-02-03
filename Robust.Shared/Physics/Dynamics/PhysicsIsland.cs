@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Dynamics.Joints;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -20,15 +21,15 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
 
+        private ContactSolver _contactSolver = default!;
+
         private float AngTolSqr => MathF.Pow(_configManager.GetCVar(CVars.AngularSleepTolerance), 2);
 
         private float LinTolSqr => MathF.Pow(_configManager.GetCVar(CVars.LinearSleepTolerance), 2);
 
-        private ContactSolver _contactSolver = default!;
-
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
-
         private Contact[] _contacts = Array.Empty<Contact>();
+        private Joint[] _joints = Array.Empty<Joint>();
 
         // These are joint in box2d / derivatives
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
@@ -36,6 +37,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Vector2[] _positions = Array.Empty<Vector2>();
         private float[] _angles = Array.Empty<float>();
+
+        internal SolverData _solverData = new();
 
         /// <summary>
         ///     How many bodies we can fit in the island before needing to re-size.
@@ -57,6 +60,16 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public int ContactCount { get; private set; }
 
+        /// <summary>
+        ///     How many joints we can fit in the island before needing to re-size.
+        /// </summary>
+        public int JointCapacity { get; private set; }
+
+        /// <summary>
+        ///     How many joints are in the island.
+        /// </summary>
+        public int JointCount { get; private set; }
+
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
@@ -75,13 +88,24 @@ namespace Robust.Shared.Physics.Dynamics
             _contacts[ContactCount++] = contact;
         }
 
+        public void Add(Joint joint)
+        {
+            _joints[JointCount++] = joint;
+        }
+
         public void Clear()
         {
             BodyCount = 0;
             ContactCount = 0;
+            JointCount = 0;
         }
 
-        public void Reset(int bodyCapacity, int contactCapacity)
+        /*
+         * Look there's a whole lot of stuff going on around here but all you need to know is it's trying to avoid
+         * allocations where possible so it does a whole lot of passing data around and using arrays.
+         */
+
+        public void Reset(int bodyCapacity, int contactCapacity, int jointCapacity)
         {
             BodyCapacity = bodyCapacity;
             BodyCount = 0;
@@ -89,9 +113,12 @@ namespace Robust.Shared.Physics.Dynamics
             ContactCapacity = contactCapacity;
             ContactCount = 0;
 
-            if (Bodies.Length < BodyCapacity)
+            JointCapacity = jointCapacity;
+            JointCount = 0;
+
+            if (Bodies.Length < bodyCapacity)
             {
-                Array.Resize(ref Bodies, BodyCapacity);
+                Array.Resize(ref Bodies, bodyCapacity);
                 Array.Resize(ref _linearVelocities, bodyCapacity);
                 Array.Resize(ref _angularVelocities, bodyCapacity);
                 Array.Resize(ref _positions, bodyCapacity);
@@ -100,11 +127,16 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (_contacts.Length < contactCapacity)
             {
-                Array.Resize(ref _contacts, contactCapacity);
+                Array.Resize(ref _contacts, contactCapacity * 2);
+            }
+
+            if (_joints.Length < jointCapacity)
+            {
+                Array.Resize(ref _joints, jointCapacity * 2);
             }
         }
 
-        public void Solve(float frameTime, float dtRatio, bool prediction)
+        public void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
 #if DEBUG
             var debugBodies = new List<PhysicsComponent>();
@@ -135,13 +167,8 @@ namespace Robust.Shared.Physics.Dynamics
                     linearVelocity += body.Force * frameTime;
                     angularVelocity += frameTime * body.InvI * body.Torque;
 
-                    // Process frictional forces
-                    // TODO: Might change how TileFriction works here, idk. The overall formula is from FPE regardless.
-                    var tileFriction = GetTileFriction(body);
-
-                    // TODO: This damping is mega-suss and the player controllers will need fine-tuning.
-                    linearVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.LinearDamping * tileFriction), 0.0f, 1.0f);
-                    angularVelocity *= Math.Clamp(1.0f - frameTime * MathF.Sqrt(body.AngularDamping * tileFriction), 0.0f, 1.0f);
+                    linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);
+                    angularVelocity *= Math.Clamp(1.0f - frameTime * body.AngularDamping, 0.0f, 1.0f);
                 }
 
                 _positions[i] = position;
@@ -150,8 +177,18 @@ namespace Robust.Shared.Physics.Dynamics
                 _angularVelocities[i] = angularVelocity;
             }
 
+            // TODO: Do these up front of the world step.
+            _solverData.FrameTime = frameTime;
+            _solverData.DtRatio = dtRatio;
+            _solverData.InvDt = invDt;
+
+            _solverData.LinearVelocities = _linearVelocities;
+            _solverData.AngularVelocities = _angularVelocities;
+            _solverData.Positions = _positions;
+            _solverData.Angles = _angles;
+
             // Pass the data into the solver
-            _contactSolver.Reset(dtRatio, ContactCount, _contacts, _linearVelocities, _angularVelocities, _positions, _angles);
+            _contactSolver.Reset(_solverData, ContactCount, _contacts);
 
             _contactSolver.InitializeVelocityConstraints();
 
@@ -160,12 +197,26 @@ namespace Robust.Shared.Physics.Dynamics
                 _contactSolver.WarmStart();
             }
 
-            // TODO: Joint inits
+            for (var i = 0; i < JointCount; i++)
+            {
+                var joint = _joints[i];
+                if (!joint.Enabled) continue;
+                joint.InitVelocityConstraints(_solverData);
+            }
 
             // Velocity solver
             for (var i = 0; i < _configManager.GetCVar(CVars.VelocityIterations); i++)
             {
-                // TODO: Joints here
+                for (var j = 0; j < JointCount; ++j)
+                {
+                    Joint joint = _joints[j];
+
+                    if (!joint.Enabled)
+                        continue;
+
+                    joint.SolveVelocityConstraints(_solverData);
+                    joint.Validate(invDt);
+                }
 
                 _contactSolver.SolveVelocityConstraints();
             }
@@ -215,8 +266,19 @@ namespace Robust.Shared.Physics.Dynamics
             for (var i = 0; i < _configManager.GetCVar(CVars.PositionIterations); i++)
             {
                 var contactsOkay = _contactSolver.SolvePositionConstraints();
+                var jointsOkay = true;
 
-                // TODO: Joints here
+                for (int j = 0; j < JointCount; ++j)
+                {
+                    Joint joint = _joints[j];
+
+                    if (!joint.Enabled)
+                        continue;
+
+                    bool jointOkay = joint.SolvePositionConstraints(_solverData);
+
+                    jointsOkay = jointsOkay && jointOkay;
+                }
 
                 if (contactsOkay)
                 {
@@ -330,5 +392,21 @@ namespace Robust.Shared.Physics.Dynamics
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
             return tileDef.Friction;
         }
+    }
+
+    /// <summary>
+    ///     Easy way of passing around the data required for the contact solver.
+    /// </summary>
+    internal sealed class SolverData
+    {
+        public float FrameTime { get; set; }
+        public float DtRatio { get; set; }
+        public float InvDt { get; set; }
+
+        public Vector2[] LinearVelocities { get; set; } = default!;
+        public float[] AngularVelocities { get; set; } = default!;
+
+        public Vector2[] Positions { get; set; } = default!;
+        public float[] Angles { get; set; } = default!;
     }
 }

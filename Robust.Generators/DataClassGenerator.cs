@@ -12,14 +12,16 @@ namespace Robust.Generators
     [Generator]
     public class DataClassGenerator : ISourceGenerator
     {
-        private bool IsPrimitive(ITypeSymbol symbol)
+        private bool NeedsDataClass(ITypeSymbol symbol)
         {
+
+            //TODO Paul: make this work for nullables
+            //TODO Paul: make this work for collections
             if (symbol.SpecialType == SpecialType.System_Nullable_T)
             {
                 //TODO
             }
 
-            //TODO Paul: does this work w/ nullables?
             switch (symbol.SpecialType)
             {
                 case SpecialType.System_Boolean:
@@ -39,9 +41,9 @@ namespace Robust.Generators
                 case SpecialType.System_String:
                 case SpecialType.System_Enum:
                 case SpecialType.System_Decimal:
-                    return true;
-                default:
                     return false;
+                default:
+                    return true;
             }
         }
 
@@ -178,7 +180,7 @@ namespace Robust.Generators
                     }
 
                     string typeString;
-                    if (!IsPrimitive(type))
+                    if (NeedsDataClass(type))
                     {
                         typeString = ResolveParentDataClass(type);
                         if (typeString == null)

@@ -1,6 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.Components.Markers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 

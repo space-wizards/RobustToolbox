@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Maps;
@@ -9,6 +9,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -245,6 +246,12 @@ namespace Robust.Server.Console.Commands
         public string Help => "Usage: pausemap <map ID>";
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            if (args.Length != 1)
+            {
+                shell.WriteLine(Loc.GetString("Need to supply a valid MapId"));
+                return;
+            }
+
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
@@ -266,6 +273,12 @@ namespace Robust.Server.Console.Commands
         public string Help => "Usage: unpausemap <map ID>";
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            if (args.Length != 1)
+            {
+                shell.WriteLine(Loc.GetString("Need to supply a valid MapId"));
+                return;
+            }
+
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 

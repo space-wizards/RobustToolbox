@@ -1,6 +1,5 @@
 ﻿using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.GameObjects.Components.Eye;
-using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
@@ -60,8 +59,6 @@ namespace Robust.Server.GameObjects
 
             Register<ServerUserInterfaceComponent>();
             RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
-
-            Register<IgnorePauseComponent>();
 
             Register<TimerComponent>();
 

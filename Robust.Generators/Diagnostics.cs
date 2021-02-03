@@ -4,6 +4,9 @@ namespace Robust.Generators
 {
     public static class Diagnostics
     {
+        public static Diagnostic DebugDiag(string msg, Location loc = null) => Diagnostic.Create(
+            new DiagnosticDescriptor("RADC9999", "", msg, "Usage", DiagnosticSeverity.Error, true), loc ?? Location.None);
+
         public static SuppressionDescriptor YamlMeansImplicitUse =>
             new SuppressionDescriptor("RADC1000", "CS0649", "Used by ComponentDataManager.");
 

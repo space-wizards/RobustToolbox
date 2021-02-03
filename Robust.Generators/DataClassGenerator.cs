@@ -12,16 +12,21 @@ namespace Robust.Generators
     [Generator]
     public class DataClassGenerator : ISourceGenerator
     {
-        private bool NeedsDataClass(ITypeSymbol symbol)
+        private bool NeedsDataClass(ITypeSymbol symbol, ITypeSymbol serializableAttrSymbol)
         {
+            if (symbol is INamedTypeSymbol nsym && nsym.IsSerializable) return false;
 
-            //TODO Paul: make this work for nullables
-            //TODO Paul: make this work for collections
-            if (symbol.SpecialType == SpecialType.System_Nullable_T)
+            switch (symbol.BaseType?.SpecialType)
             {
-                //TODO
+                case SpecialType.System_Enum:
+                    return false;
+                case SpecialType.System_Collections_Generic_IList_T:
+                case SpecialType.System_Collections_Generic_IReadOnlyList_T:
+                case SpecialType.System_Nullable_T:
+                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), serializableAttrSymbol);
             }
 
+            //TODO Paul: Make this work for dicts
             switch (symbol.SpecialType)
             {
                 case SpecialType.System_Boolean:
@@ -39,7 +44,6 @@ namespace Robust.Generators
                 case SpecialType.System_Double:
                 case SpecialType.System_Char:
                 case SpecialType.System_String:
-                case SpecialType.System_Enum:
                 case SpecialType.System_Decimal:
                     return false;
                 default:
@@ -56,9 +60,8 @@ namespace Robust.Generators
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
-
-
             var comp = (CSharpCompilation)context.Compilation;
+            var serializableAttrSymbol = comp.GetTypeByMetadataName("System.SerializableAttribute");
             //var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
             //resolve autodata registrations (we need the to validate the customdataclasses)
@@ -180,7 +183,7 @@ namespace Robust.Generators
                     }
 
                     string typeString;
-                    if (NeedsDataClass(type))
+                    if (NeedsDataClass(type, serializableAttrSymbol))
                     {
                         typeString = ResolveParentDataClass(type);
                         if (typeString == null)

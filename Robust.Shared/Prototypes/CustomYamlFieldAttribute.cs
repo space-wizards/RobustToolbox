@@ -1,17 +1,13 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Prototypes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class CustomYamlFieldAttribute : Attribute
+    public class CustomYamlFieldAttribute : BaseYamlField
     {
-        public string Tag;
-        public int Priority;
-
-        public CustomYamlFieldAttribute(string tag, int priority = 1)
+        public CustomYamlFieldAttribute([NotNull] string tag, int priority = 1) : base(tag, priority)
         {
-            Tag = tag;
-            Priority = priority;
         }
     }
 }

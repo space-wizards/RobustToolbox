@@ -61,7 +61,7 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<IComponentDataManager, ComponentDataManager>();
+            IoCManager.Register<IDataClassManager, DataClassManager>();
         }
     }
 }

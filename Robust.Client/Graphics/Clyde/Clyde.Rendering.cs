@@ -800,7 +800,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            GL.CreateBuffers(1, out uint pbo);
+            GL.GenBuffers(1, out uint pbo);
             CheckGlError();
             GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
             CheckGlError();

@@ -73,10 +73,15 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
-            foreach (var weak in _viewports.Values)
+            _mainViewport.Eye = _eyeManager.CurrentEye;
+            RenderViewport(_mainViewport);
+
             {
-                if(weak.TryGetTarget(out var viewport))
-                    RenderViewport(viewport);
+                var handle = _renderHandle.DrawingHandleScreen;
+                var tex = _mainViewport.RenderTarget.Texture;
+
+                handle.DrawTexture(tex, (0, 0));
+                FlushRenderQueue();
             }
 
             TakeScreenshot(ScreenshotType.BeforeUI);
@@ -193,7 +198,7 @@ namespace Robust.Client.Graphics.Clyde
                     // which is necessary for light application,
                     // but it's ACTUALLY drawing into the center of the render target.
                     var spritePos = entry.sprite.Owner.Transform.WorldPosition;
-                    var screenPos = viewport.WorldToLocal(spritePos);
+                    var screenPos = _eyeManager.WorldToScreen(spritePos);
                     var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
                     var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
                     flippedPos -= EntityPostRenderTarget.Size / 2;
@@ -282,7 +287,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RenderViewport(Viewport viewport)
         {
-            if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
+            if (viewport.Eye == null)
             {
                 return;
             }
@@ -316,7 +321,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+                    _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {

@@ -59,7 +59,6 @@ namespace Robust.Client.UserInterface
 
         public Control? ControlFocused { get; private set; }
 
-        public ViewportContainer MainViewport { get; private set; } = default!;
         public LayoutContainer StateRoot { get; private set; } = default!;
         public PopupContainer ModalRoot { get; private set; } = default!;
         public Control? CurrentlyHovered { get; private set; } = default!;
@@ -130,13 +129,6 @@ namespace Robust.Client.UserInterface
             };
             RootControl.Size = _displayManager.ScreenSize / UIScale;
             _displayManager.OnWindowResized += args => _updateRootSize();
-
-            MainViewport = new MainViewportContainer(_eyeManager)
-            {
-                Name = "MainViewport",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(MainViewport);
 
             StateRoot = new LayoutContainer
             {

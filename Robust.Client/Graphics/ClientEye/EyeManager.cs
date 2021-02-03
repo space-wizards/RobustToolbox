@@ -1,6 +1,5 @@
 ﻿using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -22,7 +21,6 @@ namespace Robust.Client.Graphics.ClientEye
 
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
 
         // We default to this when we get set to a null eye.
         private readonly FixedEye _defaultEye = new();
@@ -65,7 +63,16 @@ namespace Robust.Client.Graphics.ClientEye
         /// <inheritdoc />
         public Vector2 WorldToScreen(Vector2 point)
         {
-            return _uiManager.MainViewport.WorldToScreen(point);
+            var newPoint = point;
+
+            CurrentEye.GetViewMatrix(out var viewMatrix);
+            newPoint = viewMatrix * newPoint;
+
+            // (inlined version of UiProjMatrix)
+            newPoint *= new Vector2(1, -1) * PixelsPerMeter;
+            newPoint += _displayManager.ScreenSize / 2f;
+
+            return newPoint;
         }
 
         /// <inheritdoc />
@@ -110,7 +117,17 @@ namespace Robust.Client.Graphics.ClientEye
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
-            return _uiManager.MainViewport.ScreenToMap(point);
+            var newPoint = point;
+
+            // (inlined version of UiProjMatrix^-1)
+            newPoint -= _displayManager.ScreenSize / 2f;
+            newPoint *= new Vector2(1, -1) / PixelsPerMeter;
+
+            // view matrix
+            CurrentEye.GetViewMatrixInv(out var viewMatrixInv);
+            newPoint = viewMatrixInv * newPoint;
+
+            return new MapCoordinates(newPoint, CurrentMap);
         }
     }
 }

@@ -770,8 +770,8 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            ComponentData IEntityLoadContext.GetComponentData(string componentName,
-                ComponentData? protoData)
+            DataClass IEntityLoadContext.GetComponentData(string componentName,
+                DataClass? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {

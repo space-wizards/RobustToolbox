@@ -24,7 +24,7 @@ namespace Robust.Client.GameObjects
 
         //TODO Paul: fix dis, also dont forget about exposedata to set the icon
         //TODO actually, do we even need this now?
-        private static IDirectionalTextureProvider TextureForConfig(ComponentData compData, IResourceCache resourceCache)
+        private static IDirectionalTextureProvider TextureForConfig(DataClass compData, IResourceCache resourceCache)
         {
             /*IDirectionalTextureProvider dirTex;
 

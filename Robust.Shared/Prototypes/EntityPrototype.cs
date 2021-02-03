@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, ComponentData> Components { get; } = new();
+        public Dictionary<string, DataClass> Components { get; } = new();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -473,7 +473,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, ComponentData data)
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, DataClass data)
         {
             var compType = factory.GetRegistration(compName).Type;
 

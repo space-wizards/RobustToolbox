@@ -117,7 +117,7 @@ namespace Robust.Shared.Prototypes
             return GetCustomField(type.BaseType, tag);
         }
 
-        public void PopulateComponent(IComponent comp, ComponentData values)
+        public void PopulateComponent(IComponent comp, DataClass values)
         {
             var def = GetComponentDataDefinition(comp.Name).ToList();
             def.Sort((x, y) => x.Priority.CompareTo(y.Priority));
@@ -131,7 +131,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public void PushInheritance(string compName, ComponentData source, ComponentData target)
+        public void PushInheritance(string compName, DataClass source, DataClass target)
         {
             var def = GetComponentDataDefinition(compName);
             var compType = _componentFactory.GetRegistration(compName).Type;
@@ -146,7 +146,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private object? GetFieldValue(Type type, IYamlFieldDefinition field, ComponentData data)
+        private object? GetFieldValue(Type type, IYamlFieldDefinition field, DataClass data)
         {
             if (field.IsCustom)
             {
@@ -156,7 +156,7 @@ namespace Robust.Shared.Prototypes
             return data.GetValue(field.Tag);
         }
 
-        private void SetFieldValue(Type type, IYamlFieldDefinition field, ComponentData data, object? value)
+        private void SetFieldValue(Type type, IYamlFieldDefinition field, DataClass data, object? value)
         {
             var clone = IDeepClone.CloneValue(value);
             if (field.IsCustom)
@@ -199,7 +199,7 @@ namespace Robust.Shared.Prototypes
             var mapping = new YamlMappingNode();
             var ser = YamlObjectSerializer.NewWriter(mapping, context);
 
-            ComponentData data = GetEmptyComponentData(comp.Name);
+            DataClass data = GetEmptyComponentData(comp.Name);
             var def = GetComponentDataDefinition(comp.Name);
             var compType = comp.GetType();
             foreach (var fieldDefinition in def)
@@ -229,9 +229,9 @@ namespace Robust.Shared.Prototypes
             return dataDefinition;
         }
 
-        public ComponentData GetEmptyComponentData(string compName)
+        public DataClass GetEmptyComponentData(string compName)
         {
-            var compData = (ComponentData?)Activator.CreateInstance(GetComponentDataType(compName));
+            var compData = (DataClass?)Activator.CreateInstance(GetComponentDataType(compName));
             if (compData == null)
                 throw new Exception($"Failed creating instance of dataclass of component {compName}");
 
@@ -316,7 +316,7 @@ namespace Robust.Shared.Prototypes
             return onlyCustom && customYamlAttr == null ? null : new YamlFieldDefinition(tag, info, customYamlAttr != null, prio);
         }
 
-        public ComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)
+        public DataClass ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)
         {
             //var dataDefinition = GetComponentDataDefinition(compName);
             var ser = YamlObjectSerializer.NewReader(mapping, context);

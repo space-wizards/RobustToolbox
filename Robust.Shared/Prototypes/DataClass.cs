@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Prototypes
 {
-    public abstract class ComponentData : IExposeData
+    public abstract class DataClass : IExposeData
     {
         /// <summary>
         /// gets the mapped value of the given key. null if not mapped. exception if not in datadefinition (no corresponding [YamlField])
@@ -30,7 +30,7 @@ namespace Robust.Shared.Prototypes
 
         public IDeepClone DeepClone()
         {
-            throw new InvalidOperationException("ComponentData cannot be cloned.");
+            throw new InvalidOperationException("DataClass cannot be cloned.");
         }
     }
 }

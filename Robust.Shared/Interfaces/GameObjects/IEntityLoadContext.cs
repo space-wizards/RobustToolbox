@@ -13,7 +13,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Gets the serializer used to ExposeData a specific component.
         /// </summary>
-        ComponentData GetComponentData(string componentName, ComponentData? protoData);
+        DataClass GetComponentData(string componentName, DataClass? protoData);
 
         /// <summary>
         ///     Gets extra component names that must also be instantiated on top of the ones defined in the prototype,

@@ -511,6 +511,11 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.Viewport(0, 0, fbW, fbH);
                 CheckGlError();
+                if (fbW != 0 && fbH != 0)
+                {
+                    _mainViewport.Dispose();
+                    CreateMainViewport();
+                }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
             }

@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq;
 using System.Text;
 using Robust.Server.Interfaces.Maps;
@@ -9,6 +9,7 @@ using Robust.Shared.Console;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -247,7 +248,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 1)
             {
-                shell.SendText(player, "Need to supply a valid MapId");
+                shell.WriteLine(Loc.GetString("Need to supply a valid MapId"));
                 return;
             }
 
@@ -274,7 +275,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 1)
             {
-                shell.SendText(player, "Need to supply a valid MapId");
+                shell.WriteLine(Loc.GetString("Need to supply a valid MapId"));
                 return;
             }
 

@@ -17,6 +17,13 @@ namespace Robust.Analyzers
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class ExplicitInterfaceAnalyzer : DiagnosticAnalyzer
     {
+        public readonly SyntaxKind[] ExcludedModifiers =
+        {
+            SyntaxKind.VirtualKeyword,
+            SyntaxKind.AbstractKeyword,
+            SyntaxKind.OverrideKeyword
+        };
+
         public const string DiagnosticId = "RA0000";
 
         private const string Title = "No explicit interface specified";
@@ -46,9 +53,9 @@ namespace Robust.Analyzers
             switch (context.Node)
             {
                 //we already have a explicit interface specified, no need to check further
-                case MethodDeclarationSyntax methodDecl when methodDecl.ExplicitInterfaceSpecifier != null:
+                case MethodDeclarationSyntax methodDecl when methodDecl.ExplicitInterfaceSpecifier != null || methodDecl.Modifiers.Any(m => ExcludedModifiers.Contains(m.Kind())):
                     return;
-                case PropertyDeclarationSyntax propertyDecl when propertyDecl.ExplicitInterfaceSpecifier != null:
+                case PropertyDeclarationSyntax propertyDecl when propertyDecl.ExplicitInterfaceSpecifier != null || propertyDecl.Modifiers.Any(m => ExcludedModifiers.Contains(m.Kind())):
                     return;
 
                 case MethodDeclarationSyntax methodDecl:
@@ -74,7 +81,7 @@ namespace Robust.Analyzers
 
             if (isInterfaceMember)
             {
-                //we do not have an explicit interface specified but are an interface/property. bad!
+                //we do not have an explicit interface specified. bad!
                 var diagnostic = Diagnostic.Create(
                     Rule,
                     location);

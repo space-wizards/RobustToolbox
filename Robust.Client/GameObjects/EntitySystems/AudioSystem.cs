@@ -356,4 +356,76 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         event Action PlaybackDone;
     }
+
+    public static class AudioSystemExtensions
+    {
+
+        /// <summary>
+        ///     Play an audio file following an entity.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this IEntity entity,
+            string filename,
+            AudioParams? audioParams,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(filename, entity, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio stream following an entity.
+        /// </summary>
+        /// <param name="stream">The audio stream to play.</param>
+        /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this IEntity entity,
+            AudioStream stream,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(stream, entity, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio file at a static position.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this EntityCoordinates coordinates,
+            string filename,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(filename, coordinates, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio stream at a static position.
+        /// </summary>
+        /// <param name="stream">The audio stream to play.</param>
+        /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this EntityCoordinates coordinates,
+            AudioStream stream,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(stream, coordinates, audioParams);
+        }
+    }
 }

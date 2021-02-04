@@ -129,6 +129,14 @@ namespace Robust.Server.Maps
                         entity.RunMapInit();
                     }
                 }
+
+                if (_pauseManager.IsMapPaused(mapId))
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        entity.Paused = true;
+                    }
+                }
             }
 
             return grid;

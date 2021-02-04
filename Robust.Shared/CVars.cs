@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
@@ -78,10 +78,10 @@ namespace Robust.Shared
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPVS =
-            CVarDef.Create("net.pvs", true, CVar.ARCHIVE);
+            CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
+            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);

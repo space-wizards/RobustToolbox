@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
             public object UiKey { get; private set; } = default!;
             public string ClientType { get; private set; } = default!;
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 UiKey = serializer.ReadStringEnumKey("key");
                 ClientType = serializer.ReadDataField<string>("type");

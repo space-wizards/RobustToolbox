@@ -22,7 +22,12 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
-            var svSession = session as IPlayerSession;
+            var shell = new ConsoleShell(this, session);
+            ExecuteInShell(shell, command);
+        }
+
+        private void ExecuteInShell(IConsoleShell shell, string command)
+        {
             try
             {
                 var args = new List<string>();
@@ -36,29 +41,29 @@ namespace Robust.Server.Console
 
                 if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
-                    if (svSession != null) // remote client
+                    if (shell.Player != null) // remote client
                     {
-                        if (_groupController.CanCommand(svSession, cmdName)) // client has permission
+                        if (_groupController.CanCommand((IPlayerSession) shell.Player, cmdName)) // client has permission
                         {
                             args.RemoveAt(0);
-                            conCmd.Execute(new ConsoleShell(this, session), command, args.ToArray());
+                            conCmd.Execute(shell, command, args.ToArray());
                         }
                         else
-                            SendText(svSession, $"Unknown command: '{cmdName}'");
+                            shell.WriteLine($"Unknown command: '{cmdName}'");
                     }
                     else // system console
                     {
                         args.RemoveAt(0);
-                        conCmd.Execute(new ConsoleShell(this, null), command, args.ToArray());
+                        conCmd.Execute(shell, command, args.ToArray());
                     }
                 }
                 else
-                    SendText(svSession, $"Unknown command: '{cmdName}'");
+                    shell.WriteLine($"Unknown command: '{cmdName}'");
             }
             catch (Exception e)
             {
-                LogManager.GetSawmill(SawmillName).Warning($"{FormatPlayerString(svSession)}: ExecuteError - {command}:\n{e}");
-                SendText(svSession, $"There was an error while executing the command: {e}");
+                LogManager.GetSawmill(SawmillName).Warning($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
+                shell.WriteLine($"There was an error while executing the command: {e}");
             }
         }
 
@@ -90,7 +95,8 @@ namespace Robust.Server.Console
                 var cArgs = args[1..].Select(CommandParsing.Escape);
 
                 var localShell = shell.ConsoleHost.LocalShell;
-                localShell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
+                var sudoShell = new SudoShell(this, localShell, shell);
+                ExecuteInShell(sudoShell, $"{command} {string.Join(' ', cArgs)}");
             });
 
             LoadConsoleCommands();
@@ -164,6 +170,52 @@ namespace Robust.Server.Console
         private static string FormatPlayerString(IBaseSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
+        }
+
+        private sealed class SudoShell : IConsoleShell
+        {
+            private readonly ServerConsoleHost _host;
+            private readonly IConsoleShell _owner;
+            private readonly IConsoleShell _sudoer;
+
+            public SudoShell(ServerConsoleHost host, IConsoleShell owner, IConsoleShell sudoer)
+            {
+                _host = host;
+                _owner = owner;
+                _sudoer = sudoer;
+            }
+
+            public IConsoleHost ConsoleHost => _host;
+            public bool IsServer => _owner.IsServer;
+            public ICommonSession? Player => _owner.Player;
+
+            public void ExecuteCommand(string command)
+            {
+                _host.ExecuteInShell(this, command);
+            }
+
+            public void RemoteExecuteCommand(string command)
+            {
+                _owner.RemoteExecuteCommand(command);
+            }
+
+            public void WriteLine(string text)
+            {
+                _owner.WriteLine(text);
+                _sudoer.WriteLine(text);
+            }
+
+            public void WriteLine(string text, Color color)
+            {
+                _owner.WriteLine(text, color);
+                _sudoer.WriteLine(text, color);
+            }
+
+            public void Clear()
+            {
+                _owner.Clear();
+                _sudoer.Clear();
+            }
         }
     }
 }

@@ -36,102 +36,50 @@ namespace Robust.Analyzers
             context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.None);
             context.EnableConcurrentExecution();
             context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.MethodDeclaration);
+            context.RegisterSyntaxNodeAction(AnalyzeNode, SyntaxKind.PropertyDeclaration);
         }
 
         private void AnalyzeNode(SyntaxNodeAnalysisContext context)
         {
-            var methodDecl = (MethodDeclarationSyntax) context.Node;
+            ISymbol symbol;
+            Location location;
+            switch (context.Node)
+            {
+                //we already have a explicit interface specified, no need to check further
+                case MethodDeclarationSyntax methodDecl when methodDecl.ExplicitInterfaceSpecifier != null:
+                    return;
+                case PropertyDeclarationSyntax propertyDecl when propertyDecl.ExplicitInterfaceSpecifier != null:
+                    return;
+
+                case MethodDeclarationSyntax methodDecl:
+                    symbol = context.SemanticModel.GetDeclaredSymbol(methodDecl);
+                    location = methodDecl.Identifier.GetLocation();
+                    break;
+                case PropertyDeclarationSyntax propertyDecl:
+                    symbol = context.SemanticModel.GetDeclaredSymbol(propertyDecl);
+                    location = propertyDecl.Identifier.GetLocation();
+                    break;
+
+                default:
+                    return;
+            }
+
             var attrSymbol = context.Compilation.GetTypeByMetadataName(RequiresExplicitImplementationAttributeMetadataName);
 
-            //we already have a explicit interface specified, no need to check further
-            if(methodDecl.ExplicitInterfaceSpecifier != null) return;
-
-            var symbol = context.SemanticModel.GetDeclaredSymbol(methodDecl);
-
-            var @interface = symbol?.ContainingType.AllInterfaces.FirstOrDefault(
+            var isInterfaceMember = symbol?.ContainingType.AllInterfaces.Any(
                 i =>
-                    i.GetMembers().OfType<IMethodSymbol>().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m)))
+                    i.GetMembers().Any(m => SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(m)))
                     && i.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attrSymbol))
-            );
-            if (@interface != null)
+            ) ?? false;
+
+            if (isInterfaceMember)
             {
-                //we do not have an explicit interface specified but are an interface method. bad!
+                //we do not have an explicit interface specified but are an interface/property. bad!
                 var diagnostic = Diagnostic.Create(
                     Rule,
-                    methodDecl.Identifier.GetLocation(),
-                    ImmutableDictionary.CreateRange(new Dictionary<string, string>(){{"interface", @interface.Name}}));
+                    location);
                 context.ReportDiagnostic(diagnostic);
             }
-        }
-    }
-
-    [ExportCodeFixProvider(LanguageNames.CSharp)]
-    public class ExplicitInterfaceMethodCodeFixProvider : CodeFixProvider
-    {
-        private const string Title = "Convert to explicit interface declaration";
-
-        public override async Task RegisterCodeFixesAsync(CodeFixContext context)
-        {
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
-
-            foreach (var diagnostic in context.Diagnostics)
-            {
-                var span = diagnostic.Location.SourceSpan;
-                var methodDecl = root.FindToken(span.Start).Parent.AncestorsAndSelf().OfType<MethodDeclarationSyntax>()
-                    .First();
-
-                if(!diagnostic.Properties.TryGetValue("interface", out var @interface)) return;
-
-                context.RegisterCodeFix(
-                    CodeAction.Create(
-                        Title,
-                        c => FixAsync(context.Document, methodDecl, c, @interface),
-                        Title),
-                    diagnostic);
-            }
-        }
-
-        private async Task<Document> FixAsync(Document document, MethodDeclarationSyntax methodDecl,
-            CancellationToken cancellationToken, string @interface)
-        {
-            var removableModifiers = new[]
-            {
-                SyntaxKind.PublicKeyword,
-                SyntaxKind.OverrideKeyword
-            };
-
-            var keepMods =
-                new SyntaxTokenList(methodDecl.Modifiers.Where(m => removableModifiers.All(rm => rm != m.Kind())));
-
-            var leadingtrivia = methodDecl.Modifiers.Where(m => !keepMods.Contains(m)).SelectMany(m => m.LeadingTrivia);
-
-            if (keepMods.Count != 0)
-                keepMods = keepMods.Replace(keepMods[0], keepMods[0].WithLeadingTrivia(leadingtrivia));
-
-            var newMethodDecl = methodDecl
-                .WithExplicitInterfaceSpecifier(
-                    SyntaxFactory.ExplicitInterfaceSpecifier(SyntaxFactory.IdentifierName(@interface)))
-                .WithModifiers(keepMods);
-
-            if (keepMods.Count == 0)
-            {
-                newMethodDecl = newMethodDecl.WithLeadingTrivia(leadingtrivia);
-            }
-            //.WithAdditionalAnnotations(Formatter.Annotation);
-
-            /*var formattedMethod = Formatter.Format(newMethodDecl, Formatter.Annotation,
-                document.Project.Solution.Workspace, document.Project.Solution.Workspace.Options);*/
-
-            var oldRoot = await document.GetSyntaxRootAsync(cancellationToken);
-            var newRoot = oldRoot.ReplaceNode(methodDecl, newMethodDecl);
-            return document.WithSyntaxRoot(newRoot);
-        }
-
-        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(ExplicitInterfaceAnalyzer.DiagnosticId);
-
-        public override FixAllProvider GetFixAllProvider()
-        {
-            return WellKnownFixAllProviders.BatchFixer;
         }
     }
 }

@@ -987,17 +987,19 @@ namespace Robust.Client.GameObjects
                 angle -= new Angle(MathHelper.PiOver2);
             }
 
-            var hasTranslation = !Offset.EqualsApprox(Vector2.Zero);
-            var hasRotation = !angle.EqualsApprox(Angle.Zero);
-            var hasScale = !Scale.EqualsApprox(Vector2.One);
-
-            var transform = hasScale ? Matrix3.CreateScale(Scale) : Matrix3.Identity;
-            if (hasRotation)
-                transform.Multiply(Matrix3.CreateRotation(angle));
-            if (hasTranslation)
-                transform.Multiply(Matrix3.CreateTranslation(Offset));
+            var transform = Matrix3.CreateScale(Scale);
+            transform.Multiply(Matrix3.CreateRotation(angle));
 
             transform.Multiply(worldTransform);
+
+            // we don't want offset to be affected by worldTransform rotation
+            // so we can just apply it after world transform
+            // worldTransform scale will be ignored too
+            var hasTranslation = !Offset.EqualsApprox(Vector2.Zero);
+            if (hasTranslation)
+            {
+                transform.Multiply(Matrix3.CreateTranslation(Offset));
+            }
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
         }

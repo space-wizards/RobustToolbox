@@ -54,12 +54,13 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         IEnumerable<Type> AllRegisteredTypes { get; }
 
-            /// <summary>
+        /// <summary>
         /// Get whether a component is available right now.
         /// </summary>
         /// <param name="componentName">The name of the component to check.</param>
+        /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <returns>The availability of the component.</returns>
-        ComponentAvailability GetComponentAvailability(string componentName);
+        ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
         /// <summary>
         /// Registers a prototype to be available for spawning.
@@ -109,11 +110,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// Gets a new component instantiated of the specified <see cref="IComponent.Name"/>.
         /// </summary>
         /// <param name="componentName">name of component to make</param>
+        /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <returns>A Component</returns>
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given name <see cref="componentName"/>.
         /// </exception>
-        IComponent GetComponent(string componentName);
+        IComponent GetComponent(string componentName, bool ignoreCase = false);
 
         /// <summary>
         /// Gets a new component instantiated of the specified network ID.
@@ -129,10 +131,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
+        /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given name <see cref="componentName"/>.
         /// </exception>
-        IComponentRegistration GetRegistration(string componentName);
+        IComponentRegistration GetRegistration(string componentName, bool ignoreCase = false);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
@@ -179,8 +182,9 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = true);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.

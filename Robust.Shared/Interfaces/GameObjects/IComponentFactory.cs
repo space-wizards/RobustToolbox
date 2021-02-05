@@ -184,7 +184,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <param name="ignoreCase">Whether or not to ignore casing on <see cref="componentName"/></param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = true);
+        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = false);
 
         /// <summary>
         ///     Tries to get the registration belonging to a component.

@@ -78,19 +78,7 @@ namespace Robust.Shared.GameObjects
         public bool Deleted { get; private set; }
 
         [ViewVariables]
-        public bool Paused
-        {
-            get => _paused;
-            set
-            {
-                if (_paused == value || value && HasComponent<SharedIgnorePauseComponent>())
-                    return;
-
-                _paused = value;
-            }
-        }
-
-        private bool _paused;
+        public bool Paused { get; set; }
 
         private ITransformComponent? _transform;
 

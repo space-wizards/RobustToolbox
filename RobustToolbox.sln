@@ -45,7 +45,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.IL.Cecil", "XamlX\src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.Runtime", "XamlX\src\XamlX.Runtime\XamlX.Runtime.csproj", "{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzer", "Robust.Analyzer\Robust.Analyzer.csproj", "{86AACB9A-4782-475A-8D25-067ED00FC68F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzers", "Robust.Analyzers\Robust.Analyzers.csproj", "{3173712A-9E75-4685-B657-9AF9B7D54EFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -191,14 +191,14 @@ Global
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|x64.ActiveCfg = Release|Any CPU
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|x64.Build.0 = Release|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Debug|x64.Build.0 = Debug|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Release|x64.ActiveCfg = Release|Any CPU
-		{86AACB9A-4782-475A-8D25-067ED00FC68F}.Release|x64.Build.0 = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|x64.Build.0 = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.ActiveCfg = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

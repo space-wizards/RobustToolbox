@@ -196,16 +196,12 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // calculate world bounding box
                     var spriteBB = entry.sprite.CalculateBoundingBox();
-                    // though we still need to apply world matrix
-                    //var worldLB = entry.worldMatrix * spriteBB.BottomLeft;
-                    //var worldRT = entry.worldMatrix * spriteBB.TopRight;
-
-                    var worldLB = spriteBB.BottomLeft;
-                    var worldRT = spriteBB.TopRight;
+                    var spriteLB = spriteBB.BottomLeft;
+                    var spriteRT = spriteBB.TopRight;
 
                     // finally we can calculate screen bounding in pixels 
-                    var screenLB = _eyeManager.WorldToScreen(worldLB);
-                    var screenRT = _eyeManager.WorldToScreen(worldRT);
+                    var screenLB = _eyeManager.WorldToScreen(spriteLB);
+                    var screenRT = _eyeManager.WorldToScreen(spriteRT);
                     var screenSpriteSize = (Vector2i)(screenRT - screenLB).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 

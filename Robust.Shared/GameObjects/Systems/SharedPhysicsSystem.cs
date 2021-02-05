@@ -96,6 +96,8 @@ namespace Robust.Shared.GameObjects.Systems
 
             foreach (var physics in _queuedDeletions)
             {
+                // If an entity was swapped from awake -> sleep -> awake then it's still relevant.
+                if (!physics.Deleted && physics.Awake) continue;
                 _awakeBodies.Remove(physics);
                 _predictedAwakeBodies.Remove(physics);
                 _controllers.Remove(physics);

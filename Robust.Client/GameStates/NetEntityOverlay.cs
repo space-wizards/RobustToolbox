@@ -233,13 +233,13 @@ namespace Robust.Client.GameStates
             {
                 if (args.Length != 1)
                 {
-                    shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
                     return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.", Color.Red);
+                    shell.WriteError("Invalid argument: Needs to be 0 or 1.");
                     return;
                 }
 

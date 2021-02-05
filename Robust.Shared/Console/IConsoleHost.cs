@@ -110,8 +110,7 @@ namespace Robust.Shared.Console
         /// console.
         /// </param>
         /// <param name="text">Text message to send.</param>
-        /// <param name="color">Foreground color of the text.</param>
-        void WriteLine(ICommonSession? session, string text, Color color);
+        void WriteError(ICommonSession? session, string text);
 
         /// <summary>
         /// Removes all text from the local console.

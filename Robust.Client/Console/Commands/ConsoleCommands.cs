@@ -30,11 +30,9 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            Color[] colors = { Color.Green, Color.Blue, Color.Red };
-            var random = IoCManager.Resolve<IRobustRandom>();
             for (int x = 0; x < 50; x++)
             {
-                shell.WriteLine("filling...", colors[random.Next(0, colors.Length)]);
+                shell.WriteLine("filling...");
             }
         }
     }

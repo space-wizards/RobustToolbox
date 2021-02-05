@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Shared.Interfaces.Resources;
@@ -23,14 +23,14 @@ namespace Robust.Shared.Console.Commands
 
             if (args.Length < 1)
             {
-                shell.WriteLine("No file specified!", Color.Red);
+                shell.WriteError("No file specified!");
                 return;
             }
 
             var path = new ResourcePath(args[0]).ToRootedPath();
             if (!res.UserData.Exists(path))
             {
-                shell.WriteLine("File does not exist.", Color.Red);
+                shell.WriteError("File does not exist.");
                 return;
             }
 

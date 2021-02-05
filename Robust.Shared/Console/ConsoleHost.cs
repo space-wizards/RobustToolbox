@@ -75,7 +75,7 @@ namespace Robust.Shared.Console
 
         //TODO: IConsoleOutput for [e#1225]
         public abstract void WriteLine(ICommonSession? session, string text);
-        public abstract void WriteLine(ICommonSession? session, string text, Color color);
+        public abstract void WriteError(ICommonSession? session, string text);
 
         /// <inheritdoc />
         public void ClearLocalConsole()

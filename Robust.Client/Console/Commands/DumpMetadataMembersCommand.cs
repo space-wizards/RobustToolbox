@@ -18,7 +18,7 @@ namespace Robust.Client.Console.Commands
 
             if (type == null)
             {
-                shell.WriteLine("That type does not exist", Color.Red);
+                shell.WriteError("That type does not exist");
                 return;
             }
 

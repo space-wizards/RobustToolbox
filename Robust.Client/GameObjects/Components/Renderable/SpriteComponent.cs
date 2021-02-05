@@ -1342,11 +1342,6 @@ namespace Robust.Client.GameObjects
                     spritePixelSize.Y = size.Y;
             }
 
-            if (Scale.X > 1)
-            {
-                Logger.Debug("Cool");
-            }
-
             // move it all to world transform system
             var worldPosition = Owner.Transform.WorldPosition;
             var worldScale = spritePixelSize / EyeManager.PixelsPerMeter;

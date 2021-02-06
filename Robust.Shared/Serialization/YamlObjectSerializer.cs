@@ -568,7 +568,7 @@ namespace Robust.Shared.Serialization
                     }
                     default:
                         throw new InvalidOperationException(
-                            $"Cannot read from KeyValuePair from mapping node with more than one child.");
+                            $"Cannot read KeyValuePair from mapping node with more than one child.");
                 }
             }
 

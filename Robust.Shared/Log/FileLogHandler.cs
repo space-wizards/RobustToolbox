@@ -6,7 +6,7 @@ using Serilog.Events;
 
 namespace Robust.Shared.Log
 {
-    public sealed class FileLogHandler : ILogHandler, IDisposable
+    internal sealed class FileLogHandler : ILogHandler, IDisposable
     {
         private readonly TextWriter writer;
 

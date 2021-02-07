@@ -7,7 +7,7 @@ namespace Robust.Server.GameObjects
 {
     public partial class SpriteComponentData
     {
-        [CustomYamlField("layers")]
+        [DataClassTarget("layers")]
         private List<SharedSpriteComponent.PrototypeLayerData>? Layers;
 
         public override void ExposeData(ObjectSerializer serializer)

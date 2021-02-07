@@ -128,7 +128,7 @@ namespace Robust.Client.GameObjects
         [YamlField("directional")]
         private bool _directional = true;
 
-        [CustomYamlField("layerDatums", 2)]
+        [DataClassTarget("layerDatums", 2)]
         private List<PrototypeLayerData> _yamlLayerDataReceiver
         {
             get
@@ -262,7 +262,7 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [CustomYamlField("rsi")]
+        [DataClassTarget("rsi")]
         public RSI? BaseRSI
         {
             get => _baseRsi;

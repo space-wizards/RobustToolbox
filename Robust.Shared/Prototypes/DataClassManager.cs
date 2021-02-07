@@ -36,21 +36,21 @@ namespace Robust.Shared.Prototypes
             {
                 BaseYamlField? yamlField =
                     (BaseYamlField?) Attribute.GetCustomAttribute(fieldInfo, typeof(YamlFieldAttribute)) ??
-                    (BaseYamlField?) Attribute.GetCustomAttribute(fieldInfo, typeof(CustomYamlFieldAttribute));
+                    (BaseYamlField?) Attribute.GetCustomAttribute(fieldInfo, typeof(DataClassTargetAttribute));
                 if(yamlField == null) continue;
 
-                fields.Add(new YamlFieldDefinition(yamlField.Tag, fieldInfo, yamlField.GetType() == typeof(CustomYamlFieldAttribute), yamlField.Priority));
+                fields.Add(new YamlFieldDefinition(yamlField.Tag, fieldInfo, yamlField.GetType() == typeof(DataClassTargetAttribute), yamlField.Priority));
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
             {
                 BaseYamlField? yamlField =
                     (BaseYamlField?) Attribute.GetCustomAttribute(propertyInfo, typeof(YamlFieldAttribute)) ??
-                    (BaseYamlField?) Attribute.GetCustomAttribute(propertyInfo, typeof(CustomYamlFieldAttribute));
+                    (BaseYamlField?) Attribute.GetCustomAttribute(propertyInfo, typeof(DataClassTargetAttribute));
 
                 if(yamlField == null) continue;
 
-                fields.Add(new YamlPropertyDefinition(yamlField.Tag, propertyInfo, yamlField.GetType() == typeof(CustomYamlFieldAttribute), yamlField.Priority));
+                fields.Add(new YamlPropertyDefinition(yamlField.Tag, propertyInfo, yamlField.GetType() == typeof(DataClassTargetAttribute), yamlField.Priority));
             }
 
             var fieldArr = fields.ToArray();

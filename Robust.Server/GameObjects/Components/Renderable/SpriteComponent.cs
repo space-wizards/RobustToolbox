@@ -18,7 +18,7 @@ namespace Robust.Server.GameObjects
     {
         const string LayerSerializationCache = "spritelayersrv";
         [ViewVariables]
-        [CustomYamlField("layers")]
+        [DataClassTarget("layers")]
         private List<PrototypeLayerData> Layers = new();
 
         [YamlField("visible")]

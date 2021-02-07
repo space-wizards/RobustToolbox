@@ -20,10 +20,10 @@ namespace Robust.Client.GameObjects.Components.Renderable
 {
     public partial class SpriteComponentData
     {
-        [CustomYamlField("rsi")]
+        [DataClassTarget("rsi")]
         public RSI? RSI;
 
-        [CustomYamlField("layerDatums")]
+        [DataClassTarget("layerDatums")]
         public List<SharedSpriteComponent.PrototypeLayerData>? LayerDatums;
 
         public override void ExposeData(ObjectSerializer serializer)

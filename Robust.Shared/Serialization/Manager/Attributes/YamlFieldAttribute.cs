@@ -1,11 +1,12 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Prototypes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class YamlFieldAttribute : BaseYamlField
+    public class YamlFieldAttribute : BaseDataFieldAttribute
     {
         public readonly bool ReadOnly;
         public readonly Type? FlagType;

@@ -86,7 +86,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         {
             entity
                 .EnsureComponent<TimerComponent>()
-                .Spawn(milliseconds, onFired, cancellationToken);
+                .SpawnRepeating(milliseconds, onFired, cancellationToken);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         {
             entity
                 .EnsureComponent<TimerComponent>()
-                .Spawn(duration, onFired, cancellationToken);
+                .SpawnRepeating(duration, onFired, cancellationToken);
         }
     }
 }

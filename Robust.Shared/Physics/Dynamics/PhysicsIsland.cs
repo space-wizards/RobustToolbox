@@ -323,8 +323,14 @@ namespace Robust.Shared.Physics.Dynamics
                         grid.GridEntityId.IsValid() &&
                         grid.GridEntityId != body.Owner.Uid)
                     {
+                        // Also this may deparent if 2 entities are parented but not using containers so fix that
                         if (grid.GridEntityId != body.Owner.Transform.ParentUid)
+                        {
                             body.Owner.Transform.AttachParent(body.Owner.EntityManager.GetEntity(grid.GridEntityId));
+
+                            // TODO: Need to remove old grid friction joints and create new ones
+                            throw new NotImplementedException();
+                        }
                     }
                     else
                     {
@@ -345,7 +351,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: Cache rather than GetCVar
             // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (_configManager.GetCVar(CVars.SleepAllowed) && !prediction)
+            if (!prediction && _configManager.GetCVar(CVars.SleepAllowed))
             {
                 var minSleepTime = float.MaxValue;
 
@@ -379,18 +385,6 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
             }
-        }
-
-        private float GetTileFriction(IPhysicsComponent body)
-        {
-            if (!body.OnGround)
-                return 0.0f;
-
-            var location = body.Owner.Transform;
-            var grid = _mapManager.GetGrid(location.Coordinates.GetGridId(_entityManager));
-            var tile = grid.GetTileRef(location.Coordinates);
-            var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return tileDef.Friction;
         }
     }
 

@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -41,31 +42,32 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// Indicate if this join is enabled or not. Disabling a joint
         /// means it is still in the simulation, but inactive.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled = true;
 
-        internal JointEdge EdgeA = new();
-        internal JointEdge EdgeB = new();
+        [NonSerialized] internal JointEdge EdgeA = new();
+        [NonSerialized] internal JointEdge EdgeB = new();
 
         /// <summary>
         ///     Has this joint already been added to an island.
         /// </summary>
-        internal bool IslandFlag;
+        [NonSerialized] internal bool IslandFlag;
 
         /// <summary>
         ///     Gets or sets the type of the joint.
         /// </summary>
         /// <value>The type of the joint.</value>
-        public virtual JointType JointType { get; }
+        public abstract JointType JointType { get; }
 
         /// <summary>
         ///     Get the first body attached to this joint.
         /// </summary>
-        public PhysicsComponent BodyA { get; internal set; }
+        [field:NonSerialized] public PhysicsComponent BodyA { get; internal set; }
 
         /// <summary>
         ///     Get the second body attached to this joint.
         /// </summary>
-        public PhysicsComponent BodyB { get; internal set; }
+        [field:NonSerialized] public PhysicsComponent BodyB { get; internal set; }
 
         /// <summary>
         /// Get the anchor point on bodyA in world coordinates.
@@ -82,12 +84,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         ///     Set this flag to true if the attached bodies should collide.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool CollideConnected { get; set; }
 
         /// <summary>
         ///     The Breakpoint simply indicates the maximum Value the JointError can be before it breaks.
         ///     The default value is float.MaxValue, which means it never breaks.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Breakpoint
         {
             get => _breakpoint;
@@ -100,9 +104,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         private float _breakpoint;
-        private double _breakpointSquared;
+        [NonSerialized] private double _breakpointSquared;
 
-        public void ExposeData(ObjectSerializer serializer)
+        public virtual void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(this, x => x.Enabled, "enabled", true);
             // TODO: Later nerd

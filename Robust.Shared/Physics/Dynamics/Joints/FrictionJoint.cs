@@ -3,6 +3,8 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -25,24 +27,61 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     public sealed class FrictionJoint : Joint
     {
         // Solver shared
-        private Vector2 _linearImpulse;
-        private float _angularImpulse;
+        [NonSerialized] private Vector2 _linearImpulse;
+
+        [NonSerialized] private float _angularImpulse;
 
         // Solver temp
-        private int _indexA;
-        private int _indexB;
-        private Vector2 _rA;
-        private Vector2 _rB;
-        private Vector2 _localCenterA;
-        private Vector2 _localCenterB;
-        private float _invMassA;
-        private float _invMassB;
-        private float _invIA;
-        private float _invIB;
-        private float _angularMass;
-        private Vector2[] _linearMass = new Vector2[2];
+        [NonSerialized] private int _indexA;
+        [NonSerialized] private int _indexB;
+        [NonSerialized] private Vector2 _rA;
+        [NonSerialized] private Vector2 _rB;
+        [NonSerialized] private Vector2 _localCenterA;
+        [NonSerialized] private Vector2 _localCenterB;
+        [NonSerialized] private float _invMassA;
+        [NonSerialized] private float _invMassB;
+        [NonSerialized] private float _invIA;
+        [NonSerialized] private float _invIB;
+        [NonSerialized] private float _angularMass;
+        [NonSerialized] private Vector2[] _linearMass = new Vector2[2];
 
         public override JointType JointType => JointType.Friction;
+
+        /// <summary>
+        ///     The maximum friction force in N.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MaxForce { get; set; }
+
+        /// <summary>
+        ///     The maximum friction torque in N-m.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MaxTorque { get; set; }
+
+        /// <summary>
+        ///     The local anchor point on BodyA
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorA { get; set; }
+
+        /// <summary>
+        ///     The local anchor point on BodyB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorB { get; set; }
+
+        public override Vector2 WorldAnchorA
+        {
+            get => BodyA.GetWorldPoint(LocalAnchorA);
+            set => LocalAnchorA = BodyA.GetLocalPoint(value);
+        }
+
+        public override Vector2 WorldAnchorB
+        {
+            get => BodyB.GetWorldPoint(LocalAnchorB);
+            set => LocalAnchorB = BodyB.GetLocalPoint(value);
+        }
 
         /// <summary>
         /// Constructor for FrictionJoint.
@@ -66,37 +105,27 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
-        /// <summary>
-        /// The local anchor point on BodyA
-        /// </summary>
-        public Vector2 LocalAnchorA { get; set; }
-
-        /// <summary>
-        /// The local anchor point on BodyB
-        /// </summary>
-        public Vector2 LocalAnchorB { get; set; }
-
-        public override Vector2 WorldAnchorA
+        public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, bool useWorldCoordinates = false)
+            : base(bodyA, bodyB)
         {
-            get => BodyA.GetWorldPoint(LocalAnchorA);
-            set => LocalAnchorA = BodyA.GetLocalPoint(value);
+            if (useWorldCoordinates)
+            {
+                LocalAnchorA = BodyA.GetLocalPoint(Vector2.Zero);
+                LocalAnchorB = BodyB.GetLocalPoint(Vector2.Zero);
+            }
+            else
+            {
+                LocalAnchorA = Vector2.Zero;
+                LocalAnchorB = Vector2.Zero;
+            }
         }
 
-        public override Vector2 WorldAnchorB
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            get => BodyB.GetWorldPoint(LocalAnchorB);
-            set => LocalAnchorB = BodyB.GetLocalPoint(value);
+            base.ExposeData(serializer);
+            serializer.DataField(this, x => x.MaxForce, "maxForce", 0f);
+            serializer.DataField(this, x => x.MaxTorque, "maxTorque", 0f);
         }
-
-        /// <summary>
-        ///     The maximum friction force in N.
-        /// </summary>
-        public float MaxForce { get; set; }
-
-        /// <summary>
-        ///     The maximum friction torque in N-m.
-        /// </summary>
-        public float MaxTorque { get; set; }
 
         public override Vector2 GetReactionForce(float invDt)
         {

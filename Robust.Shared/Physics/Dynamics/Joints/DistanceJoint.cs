@@ -4,6 +4,7 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -34,23 +35,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         // Box2D is replacing rope with distance hence this is also a partial port of Box2D
 
          // Solver shared
-        private float _bias;
-        private float _gamma;
-        private float _impulse;
+        [NonSerialized] private float _bias;
+        [NonSerialized] private float _gamma;
+        [NonSerialized] private float _impulse;
 
         // Solver temp
-        private int _indexA;
-        private int _indexB;
-        private Vector2 _u;
-        private Vector2 _rA;
-        private Vector2 _rB;
-        private Vector2 _localCenterA;
-        private Vector2 _localCenterB;
-        private float _invMassA;
-        private float _invMassB;
-        private float _invIA;
-        private float _invIB;
-        private float _mass;
+        [NonSerialized] private int _indexA;
+        [NonSerialized] private int _indexB;
+        [NonSerialized] private Vector2 _u;
+        [NonSerialized] private Vector2 _rA;
+        [NonSerialized] private Vector2 _rB;
+        [NonSerialized] private Vector2 _localCenterA;
+        [NonSerialized] private Vector2 _localCenterB;
+        [NonSerialized] private float _invMassA;
+        [NonSerialized] private float _invMassB;
+        [NonSerialized] private float _invIA;
+        [NonSerialized] private float _invIB;
+        [NonSerialized] private float _mass;
 
         public override JointType JointType => JointType.Distance;
 
@@ -87,11 +88,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         /// The local anchor point relative to bodyA's origin.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalAnchorA { get; set; }
 
         /// <summary>
         /// The local anchor point relative to bodyB's origin.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalAnchorB { get; set; }
 
         public override Vector2 WorldAnchorA
@@ -110,17 +113,20 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// The natural length between the anchor points.
         /// Manipulating the length can lead to non-physical behavior when the frequency is zero.
         /// </summary>
+        [ViewVariables]
         public float Length { get; set; }
 
         /// <summary>
         /// The mass-spring-damper frequency in Hertz. A value of 0
         /// disables softness.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Frequency { get; set; }
 
         /// <summary>
         /// The damping ratio. 0 = no damping, 1 = critical damping.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float DampingRatio { get; set; }
 
         /// <summary>

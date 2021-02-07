@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -14,6 +16,9 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public sealed class PhysicsMap
     {
+        // TODO: FixedRotation. I hope most of the rigidbody bugs are from this not being set so need to add it and pray.
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         // AKA world.
 
         internal ContactManager ContactManager = new();
@@ -157,6 +162,21 @@ namespace Robust.Shared.Physics.Dynamics
                 }
                 Bodies.Add(body);
                 body.PhysicsMap = this;
+                var transform = body.Owner.Transform;
+
+                // If parented to the grid then give them a friction joint
+                if (body.BodyType == BodyType.Dynamic &&
+                    _mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
+                    grid.GridEntityId == transform.ParentUid &&
+                    _entityManager.TryGetEntity(grid.GridEntityId, out var gridEntity) &&
+                    gridEntity.TryGetComponent(out PhysicsComponent? gridBody))
+                {
+                    // TODO: Need static helper class to easily create Joints
+                    var friction = new FrictionJoint(body, gridBody);
+                    AddJoint(friction);
+                    friction.MaxForce = 1000;
+                    friction.MaxTorque = 1000;
+                }
             }
 
             _queuedBodyAdd.Clear();
@@ -214,7 +234,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                 joint.BodyA.JointEdges = joint.EdgeA;
 
-
                 joint.EdgeB.Joint = joint;
                 joint.EdgeB.Other = joint.BodyA;
                 joint.EdgeB.Prev = null;
@@ -244,6 +263,9 @@ namespace Robust.Shared.Physics.Dynamics
                         edge = edge.Next;
                     }
                 }
+
+                bodyA.Dirty();
+                bodyB.Dirty();
                 // Note: creating a joint doesn't wake the bodies.
             }
 

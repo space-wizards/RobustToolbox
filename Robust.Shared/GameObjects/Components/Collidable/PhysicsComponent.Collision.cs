@@ -74,6 +74,8 @@ namespace Robust.Shared.GameObjects.Components
         ///     Linked-list of all of our joints.
         /// </summary>
         internal JointEdge? JointEdges { get; set; } = null;
+        // TODO: Should there be a VV thing for joints? Would be useful. Same with contacts.
+        // Though not sure how to do it well with the linked-list.
 
         public IEntity Entity => Owner;
 
@@ -171,7 +173,6 @@ namespace Robust.Shared.GameObjects.Components
         private float _sleepTime;
 
         /// <inheritdoc />
-        [Obsolete("Set Awake directly")]
         public void WakeBody()
         {
             Awake = true;
@@ -186,6 +187,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
             // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
+            serializer.DataField(ref _fixedRotation, "fixedRotation", true);
             serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), fixtures =>
             {
                 foreach (var fixture in fixtures)
@@ -235,6 +237,9 @@ namespace Robust.Shared.GameObjects.Components
             {
                 fixtureData.Add(FixtureData.From(fixture));
             }
+
+            throw new NotImplementedException();
+            // TODO: Sending joints. We'll need to send the edges unfortunately so they need to be serializable
 
             return new PhysicsComponentState(_canCollide, _status, fixtureData, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
@@ -498,12 +503,22 @@ namespace Robust.Shared.GameObjects.Components
         {
             if (!_fixtures.Remove(fixture))
             {
-                Logger.WarningS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
+                Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
                 return;
             }
 
             Dirty();
             EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
+        }
+
+        public void AddJoint(Joint joint)
+        {
+            PhysicsMap.AddJoint(joint);
+        }
+
+        public void RemoveJoint(Joint joint)
+        {
+            PhysicsMap.RemoveJoint(joint);
         }
 
         public override void OnRemove()

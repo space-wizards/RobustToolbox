@@ -380,6 +380,16 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
+        public override void WriteDataField<T>(string name, T value, T defaultValue)
+        {
+            if (Reading || value == null) return;
+
+            var val = TypeToNode(value);
+
+            AssignTag(typeof(T), value, defaultValue, val);
+
+            WriteMap!.Add(name, val);
+        }
 
         /// <inheritdoc />
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)

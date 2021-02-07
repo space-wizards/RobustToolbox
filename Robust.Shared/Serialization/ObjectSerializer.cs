@@ -412,6 +412,8 @@ namespace Robust.Shared.Serialization
             return TryReadDataField(name, format, out value);
         }
 
+        public abstract void WriteDataField<T>(string name, T value, T defaultValue);
+
         /// <summary>
         ///     Sets a cached field for this serialization context.
         ///     This field does not get written in any way,

@@ -775,6 +775,21 @@ namespace Robust.Shared.Serialization
                 return node;
             }
 
+            if (TryGenericKeyValuePairType(type, out var kvpKeyType, out var kvpValType))
+            {
+                var node = new YamlMappingNode {Tag = TagSkipTag};
+                dynamic pair = obj;
+                var keyNode = TypeToNode(pair.Key);
+                var valNode = TypeToNode(pair.Value);
+
+                // write the concrete type tag
+                AssignTag<object?>(kvpValType, obj.GetType(), null, valNode);
+
+                node.Add(keyNode, valNode);
+
+                return node;
+            }
+
             // Hand it to the context.
             if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {
@@ -915,6 +930,24 @@ namespace Robust.Shared.Serialization
                 }
 
                 if (setB.MoveNext())
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (TryGenericKeyValuePairType(type!, out _, out _))
+            {
+                dynamic tupleA = a;
+                dynamic tupleB = b!;
+
+                if (!IsSerializedEqual(tupleA.Key, tupleB.Key))
+                {
+                    return false;
+                }
+
+                if (!IsSerializedEqual(tupleA.Value, tupleB.Value))
                 {
                     return false;
                 }

@@ -13,6 +13,16 @@ namespace Robust.Shared.Utility
 
         private static Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?> _nullableContextAttributeTypeCache = new();
 
+        public static Type EnsureNullableType(this Type type)
+        {
+            if (type.IsValueType)
+            {
+                return typeof(Nullable<>).MakeGenericType(type);
+            }
+
+            return type;
+        }
+
         /// <summary>
         /// Checks if the field has a nullable annotation [?]
         /// </summary>

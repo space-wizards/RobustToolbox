@@ -478,8 +478,8 @@ namespace Robust.Shared.Serialization
             }
 
             // val enum
-            if (type.IsEnum)
-                return Enum.Parse(type, node.ToString());
+            if (underlyingType.IsEnum)
+                return Enum.Parse(underlyingType, node.ToString());
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
             if (TryGenericReadOnlyCollectionType(type, out var collectionType))

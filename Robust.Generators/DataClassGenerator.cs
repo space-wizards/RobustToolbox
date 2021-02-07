@@ -12,18 +12,21 @@ namespace Robust.Generators
     [Generator]
     public class DataClassGenerator : ISourceGenerator
     {
-        private bool NeedsDataClass(ITypeSymbol symbol, ITypeSymbol serializableAttrSymbol)
+        private bool NeedsDataClass(ITypeSymbol symbol, ITypeSymbol[] enumarableSymbols)
         {
-            if (symbol is INamedTypeSymbol nsym && nsym.IsSerializable) return false;
+            if (symbol is INamedTypeSymbol nsym)
+            {
+                if (nsym.IsSerializable) return false;
+                if (enumarableSymbols.Any(enS => SymbolEqualityComparer.Default.Equals(enS, nsym.ConstructedFrom)))
+                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
+            }
 
             switch (symbol.BaseType?.SpecialType)
             {
                 case SpecialType.System_Enum:
                     return false;
-                case SpecialType.System_Collections_Generic_IList_T:
-                case SpecialType.System_Collections_Generic_IReadOnlyList_T:
                 case SpecialType.System_Nullable_T:
-                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), serializableAttrSymbol);
+                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
             }
 
             //TODO Paul: Make this work for dicts
@@ -46,6 +49,9 @@ namespace Robust.Generators
                 case SpecialType.System_String:
                 case SpecialType.System_Decimal:
                     return false;
+                case SpecialType.System_Collections_Generic_IList_T:
+                case SpecialType.System_Collections_Generic_IReadOnlyList_T:
+                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
                 default:
                     return true;
             }
@@ -144,6 +150,11 @@ namespace Robust.Generators
                 }
             }
 
+            var enumarableSymbols = new INamedTypeSymbol[]
+            {
+                comp.GetTypeByMetadataName("System.Collections.Generic.List<T>")
+            };
+
             //generate all autodata classes
             foreach (var symbol in resolvedAutoDataRegistrations)
             {
@@ -183,7 +194,7 @@ namespace Robust.Generators
                     }
 
                     string typeString;
-                    if (NeedsDataClass(type, serializableAttrSymbol))
+                    if (NeedsDataClass(type, enumarableSymbols))
                     {
                         typeString = ResolveParentDataClass(type);
                         if (typeString == null)

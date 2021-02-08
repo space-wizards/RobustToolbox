@@ -18,6 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
+// #define DEBUG_DYNAMIC_TREE
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -268,6 +270,9 @@ namespace Robust.Shared.Physics
         /// </summary>
         public Proxy CreateProxy(in Box2 aabb, T userData)
         {
+            // Also catches NaN fuckery.
+            Assert(aabb.Right >= aabb.Left && aabb.Top >= aabb.Bottom);
+
             ref var proxy = ref AllocateNode(out var proxyId);
 
             // Fatten the aabb.
@@ -292,6 +297,8 @@ namespace Robust.Shared.Physics
         public bool MoveProxy(Proxy proxy, in Box2 aabb, Vector2 displacement)
         {
             Assert(0 <= proxy && proxy < Capacity);
+            // Also catches NaN fuckery.
+            Assert(aabb.Right >= aabb.Left && aabb.Top >= aabb.Bottom);
 
             ref var leafNode = ref _nodes[proxy];
 

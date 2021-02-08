@@ -554,7 +554,7 @@ namespace Robust.Shared.Serialization
                 switch (pairNode.Children.Count)
                 {
                     case 0:
-                        return Activator.CreateInstance(pairType, new object?[] {default, default})!;
+                        return Activator.CreateInstance(pairType)!;
                     case 1:
                     {
                         using var enumerator = pairNode.GetEnumerator();

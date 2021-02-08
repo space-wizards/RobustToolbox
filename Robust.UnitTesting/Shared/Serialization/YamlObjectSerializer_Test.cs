@@ -354,6 +354,34 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void SerializeDefaultPairTest()
+        {
+            var mapping = new YamlMappingNode();
+            var pair = SerializableDefaultPair;
+
+            var writer = YamlObjectSerializer.NewWriter(mapping);
+
+            writer.DataField(ref pair, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedDefaultPairYaml));
+        }
+
+        [Test]
+        public void DeserializeDefaultPairTest()
+        {
+            KeyValuePair<int, int> data = default;
+            var rootNode = YamlTextToNode(SerializedDefaultPairYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            Assert.That(data, Is.EqualTo(default(KeyValuePair<int, int>)));
+            Assert.That(data.Key, Is.EqualTo(SerializableDefaultPair.Key));
+            Assert.That(data.Value, Is.EqualTo(SerializableDefaultPair.Value));
+        }
+
+        [Test]
         public void SerializedEqualPairTest()
         {
             var pair = new KeyValuePair<string, int>("val0", 0);
@@ -373,6 +401,9 @@ namespace Robust.UnitTesting.Shared.Serialization
 
         private readonly string SerializedPairYaml = "dataPair:\n  val1: 1\n...\n";
         private readonly KeyValuePair<string, int> SerializablePair = new("val1", 1);
+
+        private readonly string SerializedDefaultPairYaml = "dataPair: {}\n...\n";
+        private readonly KeyValuePair<int, int> SerializableDefaultPair = new(0, 0);
 
         [Test]
         public void NullablePrimitiveSerializeNullTest()

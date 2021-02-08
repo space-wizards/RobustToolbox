@@ -382,6 +382,20 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void DeserializeNoPairTest()
+        {
+            KeyValuePair<int, int> data = default;
+            var rootNode = YamlTextToNode(SerializedNoPairYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            Assert.That(data, Is.EqualTo(default(KeyValuePair<int, int>)));
+            Assert.That(data.Key, Is.EqualTo(SerializedNoPair.Key));
+            Assert.That(data.Value, Is.EqualTo(SerializedNoPair.Value));
+        }
+
+        [Test]
         public void SerializedEqualPairTest()
         {
             var pair = new KeyValuePair<string, int>("val0", 0);
@@ -404,6 +418,9 @@ namespace Robust.UnitTesting.Shared.Serialization
 
         private readonly string SerializedDefaultPairYaml = "{}\n...\n";
         private readonly KeyValuePair<int, int> SerializableDefaultPair = new(0, 0);
+
+        private readonly string SerializedNoPairYaml = "dataPair: {}\n...\n";
+        private readonly KeyValuePair<int, int> SerializedNoPair = new(0, 0);
 
         [Test]
         public void NullablePrimitiveSerializeNullTest()

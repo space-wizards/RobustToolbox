@@ -24,6 +24,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// Friction joint. This is used for top-down friction.
     /// It provides 2D translational friction and angular friction.
     /// </summary>
+    [Serializable, NetSerializable]
     public sealed class FrictionJoint : Joint
     {
         // Solver shared

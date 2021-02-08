@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Serialization;
 
@@ -11,27 +12,26 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// maintained in each attached body. Each joint has two joint
     /// nodes, one for each attached body.
     /// </summary>
-    [Serializable, NetSerializable]
     public sealed class JointEdge
     {
         /// <summary>
         /// The joint.
         /// </summary>
-        public Joint Joint = default!;
+        public Joint Joint { get; set; } = default!;
 
         /// <summary>
         /// The next joint edge in the body's joint list.
         /// </summary>
-        [NonSerialized] public JointEdge? Next;
+        public JointEdge? Next { get; set; }
 
         /// <summary>
         /// Provides quick access to the other body attached.
         /// </summary>
-        [NonSerialized] public PhysicsComponent Other = default!;
+        public PhysicsComponent Other { get; set; } = default!;
 
         /// <summary>
         /// The previous joint edge in the body's joint list.
         /// </summary>
-        [NonSerialized] public JointEdge? Prev = default!;
+       public JointEdge? Prev { get; set; }
     }
 }

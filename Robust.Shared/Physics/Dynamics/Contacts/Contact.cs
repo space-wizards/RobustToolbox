@@ -123,7 +123,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             DebugTools.Assert(ShapeType.Unknown < type1 && type1 < ShapeType.TypeCount);
             DebugTools.Assert(ShapeType.Unknown < type2 && type2 < ShapeType.TypeCount);
 
-            Queue<Contact> pool = fixtureA.Body.PhysicsMap._contactPool;
+            Queue<Contact> pool = fixtureA.Body.PhysicsMap.ContactPool;
             if (pool.TryDequeue(out var contact))
             {
                 if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
@@ -385,7 +385,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             // Seems like active contacts were never used in farseer anyway
             // FixtureA?.Body.PhysicsMap.ContactManager.RemoveActiveContact(this);
-            FixtureA?.Body.PhysicsMap._contactPool.Enqueue(this);
+            FixtureA?.Body.PhysicsMap.ContactPool.Enqueue(this);
 
             if (Manifold.PointCount > 0 && FixtureA?.Hard == true && FixtureB?.Hard == true)
             {

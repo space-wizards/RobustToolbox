@@ -64,10 +64,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         [field:NonSerialized] public PhysicsComponent BodyA { get; internal set; }
 
+        public EntityUid BodyAUid { get; internal set; }
+
         /// <summary>
         ///     Get the second body attached to this joint.
         /// </summary>
         [field:NonSerialized] public PhysicsComponent BodyB { get; internal set; }
+
+        public EntityUid BodyBUid { get; internal set; }
 
         /// <summary>
         /// Get the anchor point on bodyA in world coordinates.

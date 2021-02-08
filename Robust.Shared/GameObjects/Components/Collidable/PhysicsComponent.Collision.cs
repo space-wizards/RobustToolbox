@@ -228,20 +228,32 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }
 
+        public override void OnAdd()
+        {
+            base.OnAdd();
+            // Doing this here because we need all of our shit set before HandleComponentState so we can't defer this.
+            // If someone fixes transform state so its state is ACTUALLY applied with the correct MapId you can dump this shit.
+
+            // TODO: I'd really prefer to fix this before merge b
+            if (!EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Entity.Transform.MapID, out var map))
+            {
+                return;
+            }
+
+            map.AddBody(this);
+        }
+
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            var fixtureData = new List<FixtureData>();
-
-            foreach (var fixture in _fixtures)
+            // TODO: Could optimise the shit out of this because only linear velocity and angular velocity are changing 99% of the time.
+            var joints = new List<Joint>();
+            for (var je = JointEdges; je != null; je = je.Next)
             {
-                fixtureData.Add(FixtureData.From(fixture));
+                joints.Add(je.Joint);
             }
 
-            throw new NotImplementedException();
-            // TODO: Sending joints. We'll need to send the edges unfortunately so they need to be serializable
-
-            return new PhysicsComponentState(_canCollide, _status, fixtureData, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _fixedRotation, _status, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -253,13 +265,30 @@ namespace Robust.Shared.GameObjects.Components
             CanCollide = newState.CanCollide;
             Status = newState.Status;
 
+            // TODO: Optimise; need to diff old vs new joints which saves the updates on the map.
+            ClearJoints();
+            // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
+            // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
+            // PJB, please forgive me and come up with something better.
+
+            // We will pray that this deferred joint is handled properly.
+
+            foreach (var joint in newState.Joints)
+            {
+                joint.EdgeA = new();
+                joint.EdgeB = new();
+                // Defer joints given it relies on 2 bodies.
+                AddJoint(joint);
+            }
+
             var toAdd = new List<Fixture>();
             var toRemove = new List<Fixture>();
 
             // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
             for (var i = 0; i < newState.Fixtures.Count; i++)
             {
-                var newFixture = FixtureData.To(newState.Fixtures[i]);
+                var newFixture = newState.Fixtures[i];
+                newFixture.Proxies = new Dictionary<GridId, FixtureProxy[]>();
                 newFixture.Body = this;
 
                 // Existing fixture
@@ -487,6 +516,14 @@ namespace Robust.Shared.GameObjects.Components
                     _canCollide = false;
                 }
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+            }
+        }
+
+        public void ClearJoints()
+        {
+            for (var je = JointEdges; je != null; je = je.Next)
+            {
+                RemoveJoint(je.Joint);
             }
         }
 

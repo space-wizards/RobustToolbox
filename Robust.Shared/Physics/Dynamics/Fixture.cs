@@ -20,18 +20,21 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO
     }
 
-    public class Fixture : IFixture, IExposeData, IEquatable<Fixture>
+    [Serializable, NetSerializable]
+    public sealed class Fixture : IFixture, IExposeData, IEquatable<Fixture>
     {
-        // TODO: Need to send FixtureData
-
         // TODO: For now we'll just do 1 proxy until we get multiple shapes
-        public Dictionary<GridId, FixtureProxy[]> Proxies;
+        [NonSerialized] public Dictionary<GridId, FixtureProxy[]> Proxies = new();
 
-        [ViewVariables] public int ProxyCount = 0;
+        [ViewVariables]
+        [NonSerialized]
+        public int ProxyCount = 0;
 
         [ViewVariables] public IPhysShape Shape { get; private set; } = default!;
 
-        [ViewVariables] public PhysicsComponent Body { get; internal set; } = default!;
+        [ViewVariables]
+        [field:NonSerialized]
+        public PhysicsComponent Body { get; internal set; } = default!;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Friction
@@ -128,26 +131,20 @@ namespace Robust.Shared.Physics.Dynamics
         {
             Body = body;
             Shape = shape;
-            Proxies = new Dictionary<GridId, FixtureProxy[]>();
         }
 
         public Fixture(IPhysShape shape, int collisionLayer, int collisionMask, bool hard)
         {
             Shape = shape;
-            Proxies = new Dictionary<GridId, FixtureProxy[]>();
             _collisionLayer = collisionLayer;
             _collisionMask = collisionMask;
             _hard = hard;
         }
 
-        public Fixture()
-        {
-            Proxies = new Dictionary<GridId, FixtureProxy[]>();
-        }
+        public Fixture() {}
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            Proxies = new Dictionary<GridId, FixtureProxy[]>();
             serializer.DataField(this, x => x.Shape, "shape", new PhysShapeAabb());
             serializer.DataField(ref _friction, "friction", 0.2f);
             serializer.DataField(ref _restitution, "restitution", 0.0f);

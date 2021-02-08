@@ -86,7 +86,8 @@ namespace Robust.Shared.GameObjects.Systems
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                _maps[oldMapId].RemoveBody(physicsComponent);
+                _maps[oldMapId].RemoveBodyDeferred(physicsComponent);
+                physicsComponent.ClearJoints();
             }
 
             var newMapId = message.Entity.Transform.MapID;
@@ -105,7 +106,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                _maps[mapId].RemoveBody(message.Component);
+                _maps[mapId].RemoveBodyDeferred(message.Component);
             }
             else
             {
@@ -140,7 +141,7 @@ namespace Robust.Shared.GameObjects.Systems
             var mapId = message.Container.Owner.Transform.MapID;
             if (mapId == MapId.Nullspace) return;
 
-            _maps[mapId].RemoveBody(physicsComponent);
+            _maps[mapId].RemoveBodyDeferred(physicsComponent);
         }
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)

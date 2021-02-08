@@ -61,7 +61,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     We'll re-use contacts where possible to save on allocations.
         /// </summary>
-        internal Queue<Contact> _contactPool = new(256);
+        internal Queue<Contact> ContactPool = new(128);
 
         private PhysicsIsland _island = default!;
 
@@ -105,7 +105,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         #region AddRemove
-        public void AddBody(PhysicsComponent body)
+        public void AddBodyDeferred(PhysicsComponent body)
         {
             // DebugTools.Assert(!_queuedBodyAdd.Contains(body));
             _queuedBodyAdd.Add(body);
@@ -116,7 +116,7 @@ namespace Robust.Shared.Physics.Dynamics
             _queuedWake.Add(body);
         }
 
-        public void RemoveBody(PhysicsComponent body)
+        public void RemoveBodyDeferred(PhysicsComponent body)
         {
             // DebugTools.Assert(!_queuedBodyRemove.Contains(body));
             _queuedBodyRemove.Add(body);
@@ -154,32 +154,39 @@ namespace Robust.Shared.Physics.Dynamics
         {
             foreach (var body in _queuedBodyAdd)
             {
-                // TODO: Kinda dodgy with this and wake shit.
-                if (body.Awake)
-                {
-                    _queuedWake.Remove(body);
-                    AwakeBodies.Add(body);
-                }
-                Bodies.Add(body);
-                body.PhysicsMap = this;
-                var transform = body.Owner.Transform;
-
-                // If parented to the grid then give them a friction joint
-                if (body.BodyType == BodyType.Dynamic &&
-                    _mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
-                    grid.GridEntityId == transform.ParentUid &&
-                    _entityManager.TryGetEntity(grid.GridEntityId, out var gridEntity) &&
-                    gridEntity.TryGetComponent(out PhysicsComponent? gridBody))
-                {
-                    // TODO: Need static helper class to easily create Joints
-                    var friction = new FrictionJoint(body, gridBody);
-                    AddJoint(friction);
-                    friction.MaxForce = 1000;
-                    friction.MaxTorque = 1000;
-                }
+                AddBody(body);
             }
 
             _queuedBodyAdd.Clear();
+        }
+
+        public void AddBody(PhysicsComponent body)
+        {
+            if (Bodies.Contains(body)) return;
+
+            // TODO: Kinda dodgy with this and wake shit.
+            if (body.Awake)
+            {
+                _queuedWake.Remove(body);
+                AwakeBodies.Add(body);
+            }
+            Bodies.Add(body);
+            body.PhysicsMap = this;
+            var transform = body.Owner.Transform;
+
+            // If parented to the grid then give them a friction joint
+            if (body.BodyType == BodyType.Dynamic &&
+                _mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
+                grid.GridEntityId == transform.ParentUid &&
+                _entityManager.TryGetEntity(grid.GridEntityId, out var gridEntity) &&
+                gridEntity.TryGetComponent(out PhysicsComponent? gridBody))
+            {
+                // TODO: Need static helper class to easily create Joints
+                var friction = new FrictionJoint(body, gridBody);
+                AddJoint(friction);
+                friction.MaxForce = 1000;
+                friction.MaxTorque = 1000;
+            }
         }
 
         private void ProcessRemoveQueue()
@@ -220,32 +227,65 @@ namespace Robust.Shared.Physics.Dynamics
         {
             foreach (var joint in _queuedJointAdd)
             {
+                if (Joints.Contains(joint)) continue;
+
+                // Just end me, I fucken hate how garbage the physics compstate is.
+
+                // because EACH body will have a joint update we needs to check if.
+
+                PhysicsComponent? bodyA;
+                PhysicsComponent? bodyB;
+
+                throw new NotImplementedException();
+                // TODO: You need to check our body for this joint and if there's a copy then don't add it.
+
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if (joint.BodyA == null || joint.BodyB == null)
+                {
+                    if (!_entityManager.TryGetEntity(joint.BodyAUid, out var bodyAEntity) ||
+                        !_entityManager.TryGetEntity(joint.BodyBUid, out var bodyBEntity))
+                    {
+                        continue;
+                    }
+
+                    if (!bodyAEntity.TryGetComponent(out bodyA) ||
+                        !bodyBEntity.TryGetComponent(out bodyB))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    bodyA = joint.BodyA;
+                    bodyB = joint.BodyB;
+                }
+
                 // Connect to the world list.
                 Joints.Add(joint);
 
                 // Connect to the bodies' doubly linked lists.
                 joint.EdgeA.Joint = joint;
-                joint.EdgeA.Other = joint.BodyB;
+                joint.EdgeA.Other = bodyB;
                 joint.EdgeA.Prev = null;
-                joint.EdgeA.Next = joint.BodyA.JointEdges;
+                joint.EdgeA.Next = bodyA.JointEdges;
 
-                if (joint.BodyA.JointEdges != null)
-                    joint.BodyA.JointEdges.Prev = joint.EdgeA;
+                if (bodyA.JointEdges != null)
+                    bodyA.JointEdges.Prev = joint.EdgeA;
 
-                joint.BodyA.JointEdges = joint.EdgeA;
+                bodyA.JointEdges = joint.EdgeA;
 
                 joint.EdgeB.Joint = joint;
-                joint.EdgeB.Other = joint.BodyA;
+                joint.EdgeB.Other = bodyA;
                 joint.EdgeB.Prev = null;
-                joint.EdgeB.Next = joint.BodyB.JointEdges;
+                joint.EdgeB.Next = bodyB.JointEdges;
 
-                if (joint.BodyB.JointEdges != null)
-                    joint.BodyB.JointEdges.Prev = joint.EdgeB;
+                if (bodyB.JointEdges != null)
+                    bodyB.JointEdges.Prev = joint.EdgeB;
 
-                joint.BodyB.JointEdges = joint.EdgeB;
+                bodyB.JointEdges = joint.EdgeB;
 
-                PhysicsComponent bodyA = joint.BodyA;
-                PhysicsComponent bodyB = joint.BodyB;
+                joint.BodyAUid = bodyA.Owner.Uid;
+                joint.BodyBUid = bodyB.Owner.Uid;
 
                 // If the joint prevents collisions, then flag any contacts for filtering.
                 if (!joint.CollideConnected)

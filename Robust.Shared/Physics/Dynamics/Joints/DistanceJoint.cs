@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -29,6 +30,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// to remain at a fixed distance from each other. You can view
     /// this as a massless, rigid rod.
     /// </summary>
+    [Serializable, NetSerializable]
     public sealed class DistanceJoint : Joint
     {
         // Sloth note:

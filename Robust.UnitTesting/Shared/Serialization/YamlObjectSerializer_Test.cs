@@ -402,7 +402,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         private readonly string SerializedPairYaml = "dataPair:\n  val1: 1\n...\n";
         private readonly KeyValuePair<string, int> SerializablePair = new("val1", 1);
 
-        private readonly string SerializedDefaultPairYaml = "dataPair: {}\n...\n";
+        private readonly string SerializedDefaultPairYaml = "{}\n...\n";
         private readonly KeyValuePair<int, int> SerializableDefaultPair = new(0, 0);
 
         [Test]

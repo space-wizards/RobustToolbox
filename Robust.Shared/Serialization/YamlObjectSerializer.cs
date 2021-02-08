@@ -783,7 +783,7 @@ namespace Robust.Shared.Serialization
                 var valNode = TypeToNode(pair.Value);
 
                 // write the concrete type tag
-                AssignTag<object?>(kvpValType, obj.GetType(), null, valNode);
+                AssignTag<object?>(kvpValType, pair, null, valNode);
 
                 node.Add(keyNode, valNode);
 

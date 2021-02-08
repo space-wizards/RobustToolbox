@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -80,7 +81,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());

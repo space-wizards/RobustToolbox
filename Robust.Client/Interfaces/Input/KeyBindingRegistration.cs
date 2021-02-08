@@ -18,7 +18,7 @@ namespace Robust.Client.Interfaces.Input
         public bool CanRepeat;
         public bool AllowSubCombs;
 
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref Function, "function", default);
             serializer.DataField(ref Type, "type", KeyBindingType.State);

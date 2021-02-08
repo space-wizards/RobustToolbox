@@ -1,8 +1,10 @@
 ﻿using Robust.Shared.Serialization;
 using System;
+using Robust.Shared.Analyzers;
 
 namespace Robust.Shared.GameObjects
 {
+    [RequiresSerializable]
     [Serializable, NetSerializable]
     public class ComponentState
     {

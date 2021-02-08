@@ -32,6 +32,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ManagedHttpListener", "ManagedHttpListener", "{15D28C35-25F6-4EA8-8D53-29DA7C8A24A7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Net.HttpListener", "ManagedHttpListener\src\System.Net.HttpListener.csproj", "{C3EB43AF-31FD-48F5-A4FB-552D0F13948B}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.Injectors", "Robust.Client.Injectors\Robust.Client.Injectors.csproj", "{EEF2C805-5E03-41EA-A916-49C1DD15EF41}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.NameGenerator", "Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj", "{EFB7A05D-71D0-47D1-B7B4-35D4FF661F13}"
@@ -43,6 +44,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.IL.Cecil", "XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj", "{1CDC9C4F-668E-47A3-8A44-216E95644BEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.Runtime", "XamlX\src\XamlX.Runtime\XamlX.Runtime.csproj", "{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzers", "Robust.Analyzers\Robust.Analyzers.csproj", "{3173712A-9E75-4685-B657-9AF9B7D54EFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -188,6 +191,14 @@ Global
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|x64.ActiveCfg = Release|Any CPU
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}.Release|x64.Build.0 = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Debug|x64.Build.0 = Debug|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.ActiveCfg = Release|Any CPU
+		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

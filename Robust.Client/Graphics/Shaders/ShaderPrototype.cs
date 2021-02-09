@@ -7,13 +7,16 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.Graphics.Shaders
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype
+    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype, IExposeData
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
@@ -32,11 +35,13 @@ namespace Robust.Client.Graphics.Shaders
         private ShaderInstance? _cachedInstance;
 
         private bool _stencilEnabled;
-        private int _stencilRef;
-        private int _stencilReadMask = unchecked((int) uint.MaxValue);
-        private int _stencilWriteMask = unchecked((int) uint.MaxValue);
-        private StencilFunc _stencilFunc = StencilFunc.Always;
-        private StencilOp _stencilOp = StencilOp.Keep;
+        private int _stencilRef => StencilDataHolder?.StencilRef ?? 0;
+        private int _stencilReadMask => StencilDataHolder?.ReadMask ?? unchecked((int) uint.MaxValue);
+        private int _stencilWriteMask => StencilDataHolder?.WriteMask ?? unchecked((int) uint.MaxValue);
+        private StencilFunc _stencilFunc => StencilDataHolder?.StencilFunc ?? StencilFunc.Always;
+        private StencilOp _stencilOp => StencilDataHolder?.StencilOp ?? StencilOp.Keep;
+
+        private StencilData? StencilDataHolder;
 
         /// <summary>
         ///     Retrieves a ready-to-use instance of this shader.
@@ -96,74 +101,65 @@ namespace Robust.Client.Graphics.Shaders
             return Instance().Duplicate();
         }
 
-        public void LoadFrom(YamlMappingNode mapping)
+        public void ExposeData(ObjectSerializer serializer)
         {
-            ID = mapping.GetNode("id").ToString();
-
-            var kind = mapping.GetNode("kind").AsString();
+            serializer.DataField(this, x => x.ID, "id", string.Empty);
+            string kind = "";
+            serializer.DataField(ref kind, "kind", "");
             switch (kind)
             {
                 case "source":
                     Kind = ShaderKind.Source;
-                    ReadSourceKind(mapping);
+                    ReadSourceKind(serializer);
                     break;
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    ReadCanvasKind(mapping);
+                    ReadCanvasKind(serializer);
                     break;
 
                 default:
                     throw new InvalidOperationException($"Invalid shader kind: '{kind}'");
             }
 
-            // Load stencil data.
-            if (mapping.TryGetNode("stencil", out YamlMappingNode? stencilData))
+            serializer.DataField(ref StencilDataHolder, "stencil", null);
+            if (StencilDataHolder != null) _stencilEnabled = true;
+        }
+
+        [YamlDefinition]
+        public class StencilData
+        {
+            [YamlField("ref")] public int StencilRef;
+
+            [YamlField("op")] public StencilOp StencilOp;
+
+            [YamlField("func")] public StencilFunc StencilFunc;
+
+            [YamlField("readMask")] public int ReadMask;
+
+            [YamlField("writeMask")] public int WriteMask;
+
+            public void CopyTo(StencilData data)
             {
-                ReadStencilData(stencilData);
+                data.StencilRef = StencilRef;
+                data.StencilOp = StencilOp;
+                data.StencilFunc = StencilFunc;
+                data.WriteMask = WriteMask;
+                data.ReadMask = ReadMask;
             }
         }
 
-        private void ReadStencilData(YamlMappingNode stencilData)
+        private void ReadSourceKind(ObjectSerializer serializer)
         {
-            _stencilEnabled = true;
-
-            if (stencilData.TryGetNode("ref", out var dataNode))
-            {
-                _stencilRef = dataNode.AsInt();
-            }
-
-            if (stencilData.TryGetNode("op", out dataNode))
-            {
-                _stencilOp = dataNode.AsEnum<StencilOp>();
-            }
-
-            if (stencilData.TryGetNode("func", out dataNode))
-            {
-                _stencilFunc = dataNode.AsEnum<StencilFunc>();
-            }
-
-            if (stencilData.TryGetNode("readMask", out dataNode))
-            {
-                _stencilReadMask = dataNode.AsInt();
-            }
-
-            if (stencilData.TryGetNode("writeMask", out dataNode))
-            {
-                _stencilWriteMask = dataNode.AsInt();
-            }
-        }
-
-        private void ReadSourceKind(YamlMappingNode mapping)
-        {
-            var path = mapping.GetNode("path").AsResourcePath();
+            ResourcePath path = serializer.ReadDataField<ResourcePath>("path");
             Source = _resourceCache.GetResource<ShaderSourceResource>(path);
-            if (mapping.TryGetNode<YamlMappingNode>("params", out var paramMapping))
+
+            if (serializer.TryReadDataField("params", out Dictionary<string, string>? paramMapping))
             {
                 ShaderParams = new Dictionary<string, object>();
-                foreach (var item in paramMapping)
+                foreach (var item in paramMapping!)
                 {
-                    var name = item.Key.AsString();
+                    var name = item.Key;
                     if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
                     {
                         Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
@@ -176,13 +172,13 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
-        private void ReadCanvasKind(YamlMappingNode mapping)
+        private void ReadCanvasKind(ObjectSerializer serializer)
         {
             var source = "";
 
-            if (mapping.TryGetNode("light_mode", out var node))
+            if(serializer.TryReadDataField("light_mode", out string? mode))
             {
-                switch (node.AsString())
+                switch (mode)
                 {
                     case "normal":
                         break;
@@ -192,13 +188,12 @@ namespace Robust.Client.Graphics.Shaders
                         break;
 
                     default:
-                        throw new InvalidOperationException($"Invalid light mode: '{node.AsString()}'");
+                        throw new InvalidOperationException($"Invalid light mode: '{mode}'");
                 }
             }
 
-            if (mapping.TryGetNode("blend_mode", out node))
-            {
-                switch (node.AsString())
+            if(serializer.TryReadDataField("blend_mode", out string? blendMode)){
+                switch (blendMode)
                 {
                     case "mix":
                         source += "blend_mode mix;\n";
@@ -217,7 +212,7 @@ namespace Robust.Client.Graphics.Shaders
                         break;
 
                     default:
-                        throw new InvalidOperationException($"Invalid blend mode: '{node.AsString()}'");
+                        throw new InvalidOperationException($"Invalid blend mode: '{blendMode}'");
                 }
             }
 

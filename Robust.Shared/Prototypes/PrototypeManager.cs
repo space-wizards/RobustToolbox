@@ -13,6 +13,7 @@ using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -91,6 +92,7 @@ namespace Robust.Shared.Prototypes
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
+    [MeansYamlDefinition]
     public class PrototypeAttribute : Attribute
     {
         private readonly string type;

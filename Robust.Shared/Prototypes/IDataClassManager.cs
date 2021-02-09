@@ -16,6 +16,8 @@ namespace Robust.Shared.Prototypes
         /// <returns></returns>
         DataClass GetEmptyDataClass(Type classType);
 
+        Type GetDataClassType(Type classType);
+
         /// <summary>
         /// Returns an empty dataclass for <paramref name="compName"/>
         /// </summary>

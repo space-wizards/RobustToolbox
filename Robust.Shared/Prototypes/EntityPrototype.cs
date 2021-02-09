@@ -11,6 +11,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -25,13 +26,24 @@ namespace Robust.Shared.GameObjects
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
+        [YamlField("id")]
         public string ID { get; private set; } = default!;
 
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables, CanBeNull]
-        public string Name { get; private set; } = "";
+        [YamlField("name")]
+        public string Name {
+            get => _name;
+            private set
+            {
+                _nameModified = true;
+                _name = Loc.GetString(value);
+            }
+        }
+
+        private string _name = "";
 
         private bool _nameModified;
         private bool _descriptionModified;
@@ -41,59 +53,81 @@ namespace Robust.Shared.GameObjects
         ///     to provide additional info without ruining the Name property itself.
         /// </summary>
         [ViewVariables]
-        public string? EditorSuffix { get; private set; }
+        [YamlField("suffix")]
+        public string? EditorSuffix
+        {
+            get => _editorSuffix;
+            private set { _editorSuffix = value != null ? Loc.GetString(value) : null; }
+        }
+        private string? _editorSuffix;
 
         /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
-        public string Description { get; private set; } = "";
+        [YamlField("description")]
+        public string Description
+        {
+            get => _description;
+            private set
+            {
+                _descriptionModified = true;
+                _description = Loc.GetString(value);
+            }
+
+        }
+        private string _description = "";
 
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
         /// </summary>
         [ViewVariables]
+        [YamlField("abstract")]
         public bool Abstract { get; private set; }
+
+        [YamlField("placement")]
+        private EntityPlacementProperties PlacementProperties = new();
 
         /// <summary>
         /// The different mounting points on walls. (If any).
         /// </summary>
         [ViewVariables]
-        public List<int>? MountingPoints { get; private set; }
+        public List<int>? MountingPoints => PlacementProperties.MountingPoints;
 
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
         /// </summary>
         [ViewVariables]
-        public string PlacementMode { get; protected set; } = "PlaceFree";
+        public string PlacementMode => PlacementProperties.PlacementMode;
 
         /// <summary>
         /// The Range this entity can be placed from. This is only used serverside since the server handles normal gameplay. The client uses unlimited range since it handles things like admin spawning and editing.
         /// </summary>
         [ViewVariables]
-        public int PlacementRange { get; protected set; } = DEFAULT_RANGE;
+        public int PlacementRange => PlacementProperties.PlacementRange;
 
         private const int DEFAULT_RANGE = 200;
 
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
         /// </summary>
-        private readonly HashSet<string> _snapFlags = new();
+        private HashSet<string> _snapFlags => PlacementProperties.SnapFlags;
 
-        private bool _snapOverriden = false;
+        private bool _snapOverriden => PlacementProperties.SnapOverriden;
 
         /// <summary>
         /// Offset that is added to the position when placing. (if any). Client only.
         /// </summary>
         [ViewVariables]
-        public Vector2i PlacementOffset { get; protected set; }
+        public Vector2i PlacementOffset => PlacementProperties.PlacementOffset;
 
-        private bool _placementOverriden = false;
+        private bool _placementOverriden => PlacementProperties.PlacementOverriden;
 
         /// <summary>
         /// True if this entity will be saved by the map loader.
         /// </summary>
         [ViewVariables]
+        [YamlField("save")]
         public bool MapSavable { get; protected set; } = true;
 
         /// <summary>
@@ -113,17 +147,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Used to store the parent id until we sync when all templates are done loading.
         /// </summary>
+        [YamlField("parent")]
         private string? parentTemp;
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, DataClass> Components { get; } = new();
-
-        /// <summary>
-        /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
-        /// </summary>
-        public YamlMappingNode? DataNode { get; set; }
+        [YamlField("components")]
+        public ComponentRegistry Components { get; } = new();
 
         private readonly HashSet<Type> ReferenceTypes = new();
 
@@ -141,121 +172,6 @@ namespace Robust.Shared.GameObjects
             Components.Add("Transform", compDataMgr.GetEmptyComponentDataClass("Transform"));
             // And a metadata component too!
             Components.Add("MetaData", compDataMgr.GetEmptyComponentDataClass("MetaData"));
-        }
-
-        public void LoadFrom(YamlMappingNode mapping)
-        {
-            ID = mapping.GetNode("id").AsString();
-
-            if (mapping.TryGetNode("name", out var node))
-            {
-                _nameModified = true;
-                Name = Loc.GetString(node.AsString());
-            }
-
-            if (mapping.TryGetNode("parent", out node))
-            {
-                parentTemp = node.AsString();
-            }
-
-            // DESCRIPTION
-            if (mapping.TryGetNode("description", out node))
-            {
-                _descriptionModified = true;
-                Description = Loc.GetString(node.AsString());
-            }
-
-            if (mapping.TryGetNode("suffix", out node))
-            {
-                EditorSuffix = Loc.GetString(node.AsString());
-            }
-
-            // COMPONENTS
-            if (mapping.TryGetNode<YamlSequenceNode>("components", out var componentsequence))
-            {
-                var factory = IoCManager.Resolve<IComponentFactory>();
-                foreach (var componentMapping in componentsequence.Cast<YamlMappingNode>())
-                {
-                    ReadComponent(componentMapping, factory);
-                }
-
-                // Assert that there are no conflicting component references.
-                foreach (var componentName in Components.Keys)
-                {
-                    var registration = factory.GetRegistration(componentName);
-                    foreach (var type in registration.References)
-                    {
-                        if (ReferenceTypes.Contains(type))
-                        {
-                            throw new InvalidOperationException(
-                                $"Duplicate component reference in prototype: '{type}'");
-                        }
-
-                        ReferenceTypes.Add(type);
-                    }
-                }
-            }
-
-            // DATA FIELD
-            if (mapping.TryGetNode<YamlMappingNode>("data", out var dataMapping))
-            {
-                DataNode = dataMapping;
-            }
-
-            // PLACEMENT
-            // TODO: move to a component or something. Shouldn't be a root part of prototypes IMO.
-            if (mapping.TryGetNode<YamlMappingNode>("placement", out var placementMapping))
-            {
-                ReadPlacementProperties(placementMapping);
-            }
-
-            // SAVING
-            if (mapping.TryGetNode("save", out node))
-            {
-                MapSavable = node.AsBool();
-            }
-
-            if (mapping.TryGetNode("abstract", out node))
-            {
-                Abstract = node.AsBool();
-            }
-        }
-
-        private void ReadPlacementProperties(YamlMappingNode mapping)
-        {
-            if (mapping.TryGetNode("mode", out var node))
-            {
-                PlacementMode = node.AsString();
-                _placementOverriden = true;
-            }
-
-            if (mapping.TryGetNode("offset", out node))
-            {
-                PlacementOffset = node.AsVector2i();
-                _placementOverriden = true;
-            }
-
-            if (mapping.TryGetNode<YamlSequenceNode>("nodes", out var sequence))
-            {
-                MountingPoints = sequence.Select(p => p.AsInt()).ToList();
-            }
-
-            if (mapping.TryGetNode("range", out node))
-            {
-                PlacementRange = node.AsInt();
-            }
-
-            // Reads snapping flags that this object holds that describe its properties to such as wire/pipe/wallmount, used to prevent certain stacked placement
-            if (mapping.TryGetNode<YamlSequenceNode>("snap", out var snapSequence))
-            {
-                var flagsList = snapSequence.Select(p => p.AsString());
-                foreach (var flag in flagsList)
-                {
-                    _snapFlags.Add(flag);
-                }
-
-                _snapOverriden = true;
-            }
         }
 
         // Resolve inheritance.
@@ -342,7 +258,7 @@ namespace Robust.Shared.GameObjects
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            var dataMgr = IoCManager.Resolve<IDataClassManager>();
+            /*var dataMgr = IoCManager.Resolve<IDataClassManager>();
             // Copy component data over.
             foreach (var(type, component) in source.Components)
             {
@@ -374,6 +290,7 @@ namespace Robust.Shared.GameObjects
                 next: ;
             }
 
+            target.PlacementProperties
             // Copy all simple data over.
             if (!target._placementOverriden)
             {
@@ -421,7 +338,7 @@ namespace Robust.Shared.GameObjects
             if (target.Children == null)
             {
                 return;
-            }
+            }*/
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context) //yeah officer this method right here
@@ -517,7 +434,7 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var data = IoCManager.Resolve<IDataClassManager>().Parse(factory.GetRegistration(type).Type, copy); //todo handle cached fields
+            var data = IoCManager.Resolve<IDataClassManager>().Parse(factory.GetRegistration(type).Type, copy);
 
             Components[type] = data;
         }
@@ -527,6 +444,54 @@ namespace Robust.Shared.GameObjects
             return $"EntityPrototype({ID})";
         }
 
+        public class ComponentRegistry : Dictionary<string, DataClass>{}
+
+        [YamlDefinition]
+        public class EntityPlacementProperties
+        {
+            public bool PlacementOverriden { get; private set; }
+            public bool SnapOverriden { get; private set; }
+            private string _placementMode = "PlaceFree";
+            private Vector2i _placementOffset;
+
+            [YamlField("mode")]
+            public string PlacementMode
+            {
+                get => _placementMode;
+                set
+                {
+                    PlacementOverriden = true;
+                    _placementMode = value;
+                }
+            }
+
+            [YamlField("offset")]
+            public Vector2i PlacementOffset
+            {
+                get => _placementOffset;
+                set
+                {
+                    PlacementOverriden = true;
+                    _placementOffset = value;
+                }
+            }
+
+            [YamlField("nodes")] public List<int>? MountingPoints;
+
+            [YamlField("range")] public int PlacementRange = DEFAULT_RANGE;
+            private HashSet<string> _snapFlags = new ();
+
+            [YamlField("snap")]
+            public HashSet<string> SnapFlags
+            {
+                get => _snapFlags;
+                set
+                {
+                    SnapOverriden = true;
+                    _snapFlags = value;
+                }
+            }
+        }
         /*private class PrototypeSerializationContext : YamlObjectSerializer.Context
         {
             readonly EntityPrototype? prototype;

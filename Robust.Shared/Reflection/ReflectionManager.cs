@@ -159,11 +159,17 @@ namespace Robust.Shared.Reflection
         /// <inheritdoc />
         public IEnumerable<Type> FindTypesWithAttribute<T>()
         {
+            return FindTypesWithAttribute(typeof(T));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> FindTypesWithAttribute(Type attributeType)
+        {
             var types = new List<Type>();
 
             foreach (var assembly in Assemblies)
             {
-                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(T))));
+                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, attributeType)));
             }
 
             return types;

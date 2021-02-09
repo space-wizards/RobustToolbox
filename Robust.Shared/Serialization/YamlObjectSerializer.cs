@@ -4,14 +4,19 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -50,6 +55,7 @@ namespace Robust.Shared.Serialization
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
                 { typeof(TimeSpan), new TimeSpanSerializer() },
+                { typeof(EntityPrototype.ComponentRegistry), new ComponentRegistrySerializer() }
             };
         }
 
@@ -380,11 +386,11 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        public override void WriteDataField<T>(string name, T value, T defaultValue)
+        public override void WriteDataField<T>(string name, T value, T defaultValue, bool alwaysWrite = false)
         {
-            if (Reading || value == null) return;
+            if (Reading || (IsValueDefault(name, value, defaultValue, WithFormat<T>.NoFormat) && !alwaysWrite)) return;
 
-            var val = TypeToNode(value);
+            var val = value == null ? TypeToNode(defaultValue!) : TypeToNode(value);
 
             AssignTag(typeof(T), value, defaultValue, val);
 
@@ -1250,6 +1256,93 @@ namespace Robust.Shared.Serialization
             {
                 var seconds = ((TimeSpan) obj).TotalSeconds;
                 return new YamlScalarNode(seconds.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        class ComponentRegistrySerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                if (node is not YamlSequenceNode componentsequence) return new EntityPrototype.ComponentRegistry();
+
+                var factory = IoCManager.Resolve<IComponentFactory>();
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+                var dataClassMgr = IoCManager.Resolve<IDataClassManager>();
+
+                var components = new EntityPrototype.ComponentRegistry();
+                foreach (var componentMapping in componentsequence.Cast<YamlMappingNode>())
+                {
+                    string compType = componentMapping.GetNode("type").AsString();
+                    // See if type exists to detect errors.
+                    switch (factory.GetComponentAvailability(compType))
+                    {
+                        case ComponentAvailability.Available:
+                            break;
+
+                        case ComponentAvailability.Ignore:
+                            continue;
+
+                        case ComponentAvailability.Unknown:
+                            Logger.Error($"Unknown component '{compType}' in prototype!");
+                            continue;
+                    }
+
+                    // Has this type already been added?
+                    if (components.Keys.Contains(compType))
+                    {
+                        Logger.Error($"Component of type '{compType}' defined twice in prototype!");
+                        continue;
+                    }
+
+                    var copy = new YamlMappingNode(componentMapping.AsEnumerable());
+                    // TODO: figure out a better way to exclude the type node.
+                    // Also maybe deep copy this? Right now it's pretty error prone.
+                    copy.Children.Remove(new YamlScalarNode("type"));
+
+                    var dataClassType = dataClassMgr.GetDataClassType(factory.GetRegistration(compType).Type);
+                    var data = (DataClass)serv3Mgr.Populate(dataClassType, NewReader(copy));
+
+                    components[compType] = data;
+                }
+
+                var referenceTypes = new List<Type>();
+                // Assert that there are no conflicting component references.
+                foreach (var componentName in components.Keys)
+                {
+                    var registration = factory.GetRegistration(componentName);
+                    foreach (var compType in registration.References)
+                    {
+                        if (referenceTypes.Contains(compType))
+                        {
+                            throw new InvalidOperationException(
+                                $"Duplicate component reference in prototype: '{compType}'");
+                        }
+
+                        referenceTypes.Add(compType);
+                    }
+                }
+
+                return components;
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var registry = (EntityPrototype.ComponentRegistry)obj;
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+                var compSequence = new YamlSequenceNode();
+                foreach (var (type, component) in registry)
+                {
+                    var mapping = new YamlMappingNode();
+                    var tempSerializer = NewReader(mapping, serializer._context);
+                    serv3Mgr.Serialize(component.GetType(), component, tempSerializer);
+                    if (mapping.Children.Count != 0)
+                    {
+                        mapping.Add("type", type);
+                        compSequence.Add(mapping);
+                    }
+                }
+
+                return compSequence;
             }
         }
     }

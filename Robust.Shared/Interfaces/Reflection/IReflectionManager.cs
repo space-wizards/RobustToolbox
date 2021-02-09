@@ -74,6 +74,13 @@ namespace Robust.Shared.Interfaces.Reflection
         IEnumerable<Type> FindTypesWithAttribute<T>();
 
         /// <summary>
+        /// Finds all Types in all Assemblies that have a specific Attribute.
+        /// </summary>
+        /// <param name="attributeType">Attribute to search for.</param>
+        /// <returns>Enumeration of all types with the specified attribute.</returns>
+        IEnumerable<Type> FindTypesWithAttribute(Type attributeType);
+
+        /// <summary>
         /// Loads assemblies into the manager and get all the types.
         /// </summary>
         void LoadAssemblies(IEnumerable<Assembly> assemblies);

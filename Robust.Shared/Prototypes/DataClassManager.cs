@@ -136,7 +136,7 @@ namespace Robust.Shared.Prototypes
 
         private Dictionary<Type, Type> _dataClasses = new();
 
-        private Type GetDataClassType(Type type)
+        public Type GetDataClassType(Type type)
         {
             if (_dataClasses.TryGetValue(type, out var dataClassType))
             {

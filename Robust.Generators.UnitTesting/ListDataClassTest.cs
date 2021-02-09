@@ -10,11 +10,17 @@ namespace Robust.Generators.UnitTesting
             const string source = @"
 using Robust.Shared.Prototypes;
 using System.Collections.Generic;
+using System;
 
 namespace Test{
+    [Serializable]
+    public class Thingy {}
+
     public class TestClass{
         [YamlField(""myList"")]
         public List<string> testList;
+        [YamlField(""myList"")]
+        public Hashset<string> testList;
     }
 }
 ";

@@ -10,7 +10,9 @@ namespace Robust.Shared.Serialization.Manager
 
         object Populate(Type type, YamlObjectSerializer serializer);
 
-        YamlMappingNode? Serialize(Type type, object obj, YamlObjectSerializer.Context? context = null);
+        void PushInheritance(object source, object target);
+
+        void Serialize(Type type, object obj, YamlObjectSerializer serializer, bool alwaysWrite = false);
 
         public static string GetAutoDataClassMetadataName(Type type)
         {

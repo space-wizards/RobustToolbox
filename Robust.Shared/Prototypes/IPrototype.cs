@@ -12,10 +12,6 @@ namespace Robust.Shared.Prototypes
     /// </remarks>
     public interface IPrototype
     {
-        /// <summary>
-        /// Load data from the YAML mappings in the prototype files.
-        /// </summary>
-        void LoadFrom(YamlMappingNode mapping);
     }
 
     /// <summary>

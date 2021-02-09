@@ -38,6 +38,10 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
+        public override void WriteDataField<T>(string name, T value, T defaultValue, bool alwaysWrite = false)
+        {
+        }
+
         public override void DataField<TTarget, TSource>(
             ref TTarget value,
             string name,

@@ -17,9 +17,17 @@ namespace Robust.Shared.Serialization.Manager
         public void Initialize()
         {
             //generating all datadefinitions except exposedata
-            foreach (var directType in _reflectionManager.FindTypesWithAttribute<YamlDefinition>())
+            foreach (var type in _reflectionManager.FindTypesWithAttribute<YamlDefinition>())
             {
-                _dataDefinitions.Add(directType, new SerializationDataDefinition(directType, _reflectionManager));
+                _dataDefinitions.Add(type, new SerializationDataDefinition(type, _reflectionManager));
+            }
+
+            foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansYamlDefinition>())
+            {
+                foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
+                {
+                    _dataDefinitions.Add(type, new SerializationDataDefinition(type, _reflectionManager));
+                }
             }
         }
 
@@ -38,6 +46,8 @@ namespace Robust.Shared.Serialization.Manager
 
         public object Populate(Type type, YamlObjectSerializer serializer)
         {
+            if (!serializer.Reading) throw new InvalidOperationException();
+
             var currentType = type;
             var dataDef = GetDataDefinition(type);
             if (dataDef == null) return Activator.CreateInstance(type)!;
@@ -47,7 +57,7 @@ namespace Robust.Shared.Serialization.Manager
             while (currentType != null)
             {
                 dataDef = GetDataDefinition(currentType);
-                dataDef?.PopulateDelegate(obj, serializer);
+                dataDef?.PopulateDelegate(obj, serializer, this);
 
                 currentType = currentType.BaseType;
             }
@@ -55,25 +65,48 @@ namespace Robust.Shared.Serialization.Manager
             return obj;
         }
 
-        public YamlMappingNode? Serialize(Type type, object obj, YamlObjectSerializer.Context? context = null)
+        public void Serialize(Type type, object obj, YamlObjectSerializer serializer, bool alwaysWrite = false)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
 
             var currentType = type;
-            var mapping = new YamlMappingNode();
-            var serializer = YamlObjectSerializer.NewWriter(mapping, context);
 
             while (currentType != null)
             {
                 var dataDef = GetDataDefinition(type);
                 if (dataDef?.CanCallWith(obj) != true)
                     throw new ArgumentException($"Supplied parameter does not fit with datadefinition of {type}.", nameof(obj));
-                dataDef?.SerializeDelegate(obj, serializer);
+                dataDef?.SerializeDelegate(obj, serializer, this, alwaysWrite);
                 currentType = currentType.BaseType;
             }
-
-            return mapping;
         }
 
+        public void PushInheritance(object source, object target)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+
+            var sourceType = source.GetType();
+            var targetType = target.GetType();
+            Type? commonType;
+            if (sourceType.IsAssignableFrom(targetType))
+            {
+                commonType = sourceType;
+            }else if (targetType.IsAssignableFrom(sourceType))
+            {
+                commonType = targetType;
+            }
+            else
+            {
+                throw new InvalidOperationException("Could not find common type in PushInheritance!");
+            }
+
+            while (commonType != null)
+            {
+                var dataDef = GetDataDefinition(commonType);
+                dataDef?.PushInheritanceDelegate(source, target, this);
+                commonType = commonType.BaseType;
+            }
+        }
     }
 }

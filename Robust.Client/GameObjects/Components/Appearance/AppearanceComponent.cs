@@ -78,6 +78,8 @@ namespace Robust.Client.GameObjects
 
         private void SetData(object key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value)) return;
+
             data[key] = value;
 
             MarkDirty();
@@ -85,10 +87,9 @@ namespace Robust.Client.GameObjects
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not AppearanceComponentState actualState)
                 return;
 
-            var actualState = (AppearanceComponentState) curState;
             data = actualState.Data;
             MarkDirty();
         }

@@ -31,7 +31,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// this as a massless, rigid rod.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class DistanceJoint : Joint
+    public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
     {
         // Sloth note:
         // Box2D is replacing rope with distance hence this is also a partial port of Box2D
@@ -322,6 +322,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Angles[_indexB] = aB;
 
             return Math.Abs(C) < linearSlop;
+        }
+
+        public bool Equals(DistanceJoint? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
+                   LocalAnchorB.EqualsApprox(other.LocalAnchorB) &&
+                   MathHelper.CloseTo(Length, other.Length) &&
+                   MathHelper.CloseTo(Frequency, other.Frequency) &&
+                   MathHelper.CloseTo(DampingRatio, other.DampingRatio);
         }
     }
 }

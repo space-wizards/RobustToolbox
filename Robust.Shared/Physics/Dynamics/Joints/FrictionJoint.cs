@@ -25,7 +25,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// It provides 2D translational friction and angular friction.
     /// </summary>
     [Serializable, NetSerializable]
-    public sealed class FrictionJoint : Joint
+    public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
     {
         // Solver shared
         [NonSerialized] private Vector2 _linearImpulse;
@@ -274,6 +274,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         internal override bool SolvePositionConstraints(SolverData data)
         {
             return true;
+        }
+
+        public bool Equals(FrictionJoint? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                   MathHelper.CloseTo(MaxForce, other.MaxForce) &&
+                   MathHelper.CloseTo(MaxTorque, other.MaxTorque) &&
+                   LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
+                   LocalAnchorB.EqualsApprox(other.LocalAnchorB);
         }
     }
 }

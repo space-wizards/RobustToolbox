@@ -265,21 +265,64 @@ namespace Robust.Shared.GameObjects.Components
             CanCollide = newState.CanCollide;
             Status = newState.Status;
 
-            // TODO: Optimise; need to diff old vs new joints which saves the updates on the map.
-            ClearJoints();
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
             // PJB, please forgive me and come up with something better.
 
             // We will pray that this deferred joint is handled properly.
 
-            foreach (var joint in newState.Joints)
+            // TODO: Crude as FUCK diffing here as well, fine for now.
+            /*
+             * -- Joints --
+             */
+
+            var existingJoints = new List<Joint>();
+
+            for (var je = JointEdges; je != null; je = je.Next)
             {
-                joint.EdgeA = new();
-                joint.EdgeB = new();
-                // Defer joints given it relies on 2 bodies.
-                AddJoint(joint);
+                existingJoints.Add(je.Joint);
             }
+
+            var jointsDiff = true;
+
+            if (existingJoints.Count == newState.Joints.Count)
+            {
+                var anyDiff = false;
+
+                for (var i = 0; i < existingJoints.Count; i++)
+                {
+                    var existing = existingJoints[i];
+                    var newJoint = newState.Joints[i];
+
+                    if (!existing.Equals(newJoint))
+                    {
+                        anyDiff = true;
+                        break;
+                    }
+                }
+
+                if (!anyDiff)
+                {
+                    jointsDiff = false;
+                }
+            }
+
+            if (jointsDiff)
+            {
+                ClearJoints();
+
+                foreach (var joint in newState.Joints)
+                {
+                    joint.EdgeA = new JointEdge();
+                    joint.EdgeB = new JointEdge();
+                    // Defer joints given it relies on 2 bodies.
+                    AddJoint(joint);
+                }
+            }
+
+            /*
+             * -- Fixtures --
+             */
 
             var toAdd = new List<Fixture>();
             var toRemove = new List<Fixture>();
@@ -318,6 +361,10 @@ namespace Robust.Shared.GameObjects.Components
                 AddFixture(fixture);
                 fixture.Shape.ApplyState();
             }
+
+            /*
+             * -- Sundries --
+             */
 
             Dirty();
             // TODO: Should transform just be doing this??? UpdateEntityTree();

@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     }
 
     [Serializable, NetSerializable]
-    public abstract class Joint : IExposeData
+    public abstract class Joint : IExposeData, IEquatable<Joint>
     {
         /// <summary>
         /// Indicate if this join is enabled or not. Disabling a joint
@@ -177,5 +177,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         /// <returns>returns true if the position errors are within tolerance.</returns>
         internal abstract bool SolvePositionConstraints(SolverData data);
+
+        public bool Equals(Joint? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Enabled == other.Enabled &&
+                   JointType == other.JointType &&
+                   BodyAUid.Equals(other.BodyAUid) &&
+                   BodyBUid.Equals(other.BodyBUid) &&
+                   CollideConnected == other.CollideConnected &&
+                   MathHelper.CloseTo(_breakpoint, other._breakpoint);
+        }
     }
 }

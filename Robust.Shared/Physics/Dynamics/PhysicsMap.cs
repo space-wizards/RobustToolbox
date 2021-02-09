@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -227,6 +229,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             foreach (var joint in _queuedJointAdd)
             {
+                // TODO: Optimise dafuk out of this.
                 if (Joints.Contains(joint)) continue;
 
                 // Just end me, I fucken hate how garbage the physics compstate is.
@@ -235,9 +238,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                 PhysicsComponent? bodyA;
                 PhysicsComponent? bodyB;
-
-                throw new NotImplementedException();
-                // TODO: You need to check our body for this joint and if there's a copy then don't add it.
 
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 if (joint.BodyA == null || joint.BodyB == null)
@@ -253,11 +253,21 @@ namespace Robust.Shared.Physics.Dynamics
                     {
                         continue;
                     }
+
+                    // TODO: Need to mark all this shit as nullable coming in from the state probably.
+                    joint.BodyA = bodyAEntity.GetComponent<PhysicsComponent>();
+                    joint.BodyB = bodyBEntity.GetComponent<PhysicsComponent>();
                 }
                 else
                 {
                     bodyA = joint.BodyA;
                     bodyB = joint.BodyB;
+                }
+
+                // BodyA and BodyB should share joints so we can just check if BodyA already has this joint.
+                for (var je = bodyA.JointEdges; je != null; je = je.Next)
+                {
+                    if (je.Joint.Equals(joint)) continue;
                 }
 
                 // Connect to the world list.
@@ -527,6 +537,16 @@ namespace Robust.Shared.Physics.Dynamics
                         }
 
                         PhysicsComponent other = je.Other;
+
+                        // Robust code: Don't propagate island if it's a friction joint between dynamic body and a grid.
+                        // Kind of hacky TBH.
+                        // If you want a rope between 2 grids you'll need to fix this shiz.
+                        if (body.Entity.HasComponent<MapGridComponent>() ||
+                            other.Entity.HasComponent<MapGridComponent>())
+                        {
+                            je.Joint.IslandFlag = true;
+                            continue;
+                        }
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;

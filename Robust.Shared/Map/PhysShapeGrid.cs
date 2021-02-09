@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -106,8 +107,9 @@ namespace Robust.Shared.Map
 
         public bool Equals(IPhysShape? other)
         {
-            // TODO
-            return false;
+            if (other is not PhysShapeGrid otherGrid) return false;
+            return MathHelper.CloseTo(_radius, otherGrid._radius) &&
+                   _gridId == otherGrid._gridId;
         }
     }
 }

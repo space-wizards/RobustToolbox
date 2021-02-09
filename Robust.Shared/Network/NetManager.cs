@@ -14,6 +14,7 @@ using Prometheus;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -112,6 +113,7 @@ namespace Robust.Shared.Network
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -235,6 +237,8 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
+            SynchronizeNetTime();
+
             IsServer = isServer;
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
@@ -262,6 +266,24 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 SAGenerateRsaKeys();
+            }
+        }
+
+        private void SynchronizeNetTime()
+        {
+            // Synchronize Lidgren NetTime with our RealTime.
+
+            for (var i = 0; i < 10; i++)
+            {
+                // Try and set this in a loop to avoid any JIT hang fuckery or similar.
+                // Loop until the time is within acceptable margin.
+                // Fixing this "properly" would basically require re-architecturing Lidgren to do DI stuff
+                // so we can more sanely wire these together.
+                NetTime.SetNow(_timing.RealTime.TotalSeconds);
+                var dev = TimeSpan.FromSeconds(NetTime.Now) - _timing.RealTime;
+
+                if (Math.Abs(dev.TotalMilliseconds) < 0.05)
+                    break;
             }
         }
 

@@ -32,6 +32,15 @@ namespace Robust.Shared.Interfaces.Timing
         TimeSpan RealTime { get; }
 
         /// <summary>
+        ///     The <see cref="RealTime"/> of the server.
+        /// </summary>
+        /// <remarks>
+        ///     0 if we are the client and we are not connected to a server.
+        ///     <see cref="RealTime"/> if we are the server.
+        /// </remarks>
+        TimeSpan ServerTime { get; }
+
+        /// <summary>
         ///     The simulated time it took to render the last frame.
         /// </summary>
         TimeSpan FrameTime { get; }

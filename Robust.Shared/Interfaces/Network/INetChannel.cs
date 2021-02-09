@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Interfaces.Network
@@ -33,6 +34,16 @@ namespace Robust.Shared.Interfaces.Network
         string UserName { get; }
 
         LoginType AuthType { get; }
+
+        /// <summary>
+        ///     Offset between local RealTime and remote RealTime.
+        /// </summary>
+        TimeSpan RemoteTimeOffset { get; }
+
+        /// <summary>
+        ///     Remote RealTime.
+        /// </summary>
+        TimeSpan RemoteTime { get; }
 
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.

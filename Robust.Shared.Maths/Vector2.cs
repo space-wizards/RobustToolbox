@@ -42,6 +42,11 @@ namespace Robust.Shared.Maths
         public static readonly Vector2 UnitY = new(0, 1);
 
         /// <summary>
+        ///     A vector with NaN X and Y.
+        /// </summary>
+        public static readonly Vector2 NaN = new(float.NaN, float.NaN);
+
+        /// <summary>
         ///     Construct a vector from its coordinates.
         /// </summary>
         /// <param name="x">X coordinate</param>

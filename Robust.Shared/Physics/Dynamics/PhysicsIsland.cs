@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -340,6 +341,8 @@ namespace Robust.Shared.Physics.Dynamics
 
                 // body.Sweep.Center = _positions[i];
                 // body.Sweep.Angle = _angles[i];
+
+                DebugTools.Assert(bodyPos != Vector2.NaN);
 
                 body.Owner.Transform.WorldPosition = bodyPos;
                 // TODO: We need some override for players as this will go skewiff.

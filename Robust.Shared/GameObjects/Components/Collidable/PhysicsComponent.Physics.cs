@@ -363,6 +363,8 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value.Length));
+
                 if (BodyType == BodyType.Static)
                     return;
 

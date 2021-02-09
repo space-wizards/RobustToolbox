@@ -45,14 +45,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled = true;
 
-        // Currently just used so we don't netsync the friction joint for players -> grid as they can manage that on their own maybe? IDFK.
-        public bool NetSyncEnabled { get; set; } = true;
-
-        /// <summary>
-        ///     Does this joint propagate the physics island further.
-        /// </summary>
-        public bool PropagateIsland { get; set; } = true;
-
         [NonSerialized] internal JointEdge EdgeA = new();
         [NonSerialized] internal JointEdge EdgeB = new();
 

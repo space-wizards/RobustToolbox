@@ -131,6 +131,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void AddJoint(Joint joint)
         {
+            // TODO: Need static helper class to easily create Joints
             _queuedJointAdd.Add(joint);
         }
 
@@ -174,21 +175,6 @@ namespace Robust.Shared.Physics.Dynamics
             }
             Bodies.Add(body);
             body.PhysicsMap = this;
-            var transform = body.Owner.Transform;
-
-            // If parented to the grid then give them a friction joint
-            if (body.BodyType == BodyType.Dynamic &&
-                _mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
-                grid.GridEntityId == transform.ParentUid &&
-                _entityManager.TryGetEntity(grid.GridEntityId, out var gridEntity) &&
-                gridEntity.TryGetComponent(out PhysicsComponent? gridBody))
-            {
-                // TODO: Need static helper class to easily create Joints
-                var friction = new FrictionJoint(body, gridBody) {NetSyncEnabled = false, PropagateIsland = false};
-                AddJoint(friction);
-                friction.MaxForce = 1000;
-                friction.MaxTorque = 1000;
-            }
         }
 
         private void ProcessRemoveQueue()
@@ -531,10 +517,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                     for (JointEdge? je = body.JointEdges; je != null; je = je.Next)
                     {
-                        // Robust code: Don't propagate island if it's a friction joint between dynamic body and a grid.
-                        // Kind of hacky TBH.
-                        // If you want a rope between 2 grids you'll need to fix this shiz.
-                        if (je.Joint.IslandFlag || !je.Joint.PropagateIsland)
+                        if (je.Joint.IslandFlag)
                         {
                             continue;
                         }
@@ -590,16 +573,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             _islandSet.Clear();
 
-            foreach (var body in AwakeBodies)
-            {
-                if (body.Deleted) continue;
-
-                foreach (var controller in body.GetControllers())
-                {
-                    controller.UpdateAfterProcessing();
-                }
-            }
-
             ContactManager.PostSolve();
         }
 
@@ -609,12 +582,6 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 body.Force = Vector2.Zero;
                 body.Torque = 0.0f;
-
-                foreach (var controller in body.GetControllers())
-                {
-                    controller.Impulse = Vector2.Zero;
-                    controller.LinearVelocity = Vector2.Zero;
-                }
             }
         }
     }

@@ -105,7 +105,7 @@ namespace Robust.Shared.Network
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
                         // In that case, the decrypt can fail here.
-                        connection.Disconnect("Token decryption failed./nPlease reconnect to this server from the launcher.");
+                        connection.Disconnect("Token decryption failed.\nPlease reconnect to this server from the launcher.");
                         return;
                     }
 

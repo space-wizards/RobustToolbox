@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Robust.Server.Reflection;
@@ -12,11 +11,13 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -39,6 +40,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IRobustSerializer, RobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.Register<IAuthManager, AuthManager>();
+            container.Register<IGameTiming, GameTiming>();
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();

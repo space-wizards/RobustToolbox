@@ -1,30 +1,20 @@
 using System;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Prototypes.DataClasses
 {
-    public abstract class DataClass : IExposeData
+    public abstract class DataClass
     {
-        /// <summary>
-        /// gets the mapped value of the given key. null if not mapped. exception if not in datadefinition (no corresponding [YamlField])
-        /// </summary>
-        public virtual object? GetValue(string tag)
+        public T GetValue<T>(string name)
         {
-            throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
-        }
+            if(IoCManager.Resolve<IDataClassManager>().TryGetDataClassField(this, name, out T? value))
+            {
+                return value;
+            }
 
-        /// <summary>
-        /// sets the mapped value of a given key. exception if not in datadefinition (no corresponsing [YamlField])
-        /// </summary>
-        public virtual void SetValue(string tag, object? value)
-        {
-            throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
-        }
-
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            //throw new NotImplementedException();
+            throw new ArgumentException("Cannot find supplied name.", nameof(name));
         }
     }
 }

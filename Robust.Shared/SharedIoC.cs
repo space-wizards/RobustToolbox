@@ -26,6 +26,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Random;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timers;
 using Robust.Shared.Timing;
 
@@ -62,6 +63,7 @@ namespace Robust.Shared
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<IDataClassManager, DataClassManager>();
+            IoCManager.Register<ISerializationManager, SerializationManager>();
         }
     }
 }

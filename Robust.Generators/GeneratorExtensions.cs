@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using System.Linq;
 
@@ -21,6 +22,18 @@ namespace Robust.Generators
             }
 
             return false;
+        }
+
+        public static IEnumerable<T> RemoveDuplicates<T>(this IEnumerable<T> enumerable)
+        {
+            var res = new List<T>();
+            foreach (var variable in enumerable)
+            {
+                if(!res.Contains(variable))
+                    res.Add(variable);
+            }
+
+            return res;
         }
     }
 }

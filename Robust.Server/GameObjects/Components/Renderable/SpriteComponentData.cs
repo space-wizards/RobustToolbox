@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Renderable;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
@@ -10,9 +11,8 @@ namespace Robust.Server.GameObjects
         [DataClassTarget("layers")]
         private List<SharedSpriteComponent.PrototypeLayerData>? Layers;
 
-        public override void ExposeData(ObjectSerializer serializer)
+        public void ExposeData(ObjectSerializer serializer)
         {
-            base.ExposeData(serializer);
 
             // TODO: Writing?
             if (!serializer.Reading)

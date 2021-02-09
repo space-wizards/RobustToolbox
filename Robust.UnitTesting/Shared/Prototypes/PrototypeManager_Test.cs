@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
             var mapping = prototype.Components["TestBasicPrototypeComponent"];
-            Assert.That(mapping.GetValue("foo"), Is.EqualTo("bar!"));
+            Assert.That(mapping.GetValue<string>("foo"), Is.EqualTo("bar!"));
         }
 
         [Test, Combinatorial]
@@ -51,7 +51,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             var componentData = prototype.Components["PointLight"];
 
-            Assert.That(componentData.GetValue("netsync"), Is.EqualTo(false));
+            Assert.That(componentData.GetValue<bool>("netsync"), Is.EqualTo(false));
         }
 
         [Test]
@@ -62,19 +62,19 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             var componentData = prototype.Components["TestBasicPrototypeComponent"];
 
-            Assert.That(componentData.GetValue("str"), Is.EqualTo("hi!"));
-            Assert.That(componentData.GetValue("int"), Is.EqualTo(10));
-            Assert.That(componentData.GetValue("float"), Is.EqualTo(10f));
-            Assert.That(componentData.GetValue("float2"), Is.EqualTo(10.5f));
-            Assert.That(componentData.GetValue("boolt"), Is.EqualTo(true));
-            Assert.That(componentData.GetValue("boolf"), Is.EqualTo(false));
-            Assert.That(componentData.GetValue("vec2"), Is.EqualTo(new Vector2(1.5f, 1.5f)));
+            Assert.That(componentData.GetValue<string>("str"), Is.EqualTo("hi!"));
+            Assert.That(componentData.GetValue<int>("int"), Is.EqualTo(10));
+            Assert.That(componentData.GetValue<float>("float"), Is.EqualTo(10f));
+            Assert.That(componentData.GetValue<float>("float2"), Is.EqualTo(10.5f));
+            Assert.That(componentData.GetValue<bool>("boolt"), Is.EqualTo(true));
+            Assert.That(componentData.GetValue<bool>("boolf"), Is.EqualTo(false));
+            Assert.That(componentData.GetValue<Vector2>("vec2"), Is.EqualTo(new Vector2(1.5f, 1.5f)));
             //todo Assert.That(componentData["vec2i"], Is.EqualTo(new Vector2i(1, 1)));
-            Assert.That(componentData.GetValue("vec3"), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData.GetValue("vec4"), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData.GetValue("color"), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
-            Assert.That(componentData.GetValue("enumf"), Is.EqualTo(YamlTestEnum.Foo));
-            Assert.That(componentData.GetValue("enumb"), Is.EqualTo(YamlTestEnum.Bar));
+            Assert.That(componentData.GetValue<Vector3>("vec3"), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData.GetValue<Vector4>("vec4"), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData.GetValue<Color>("color"), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
+            Assert.That(componentData.GetValue<YamlTestEnum>("enumf"), Is.EqualTo(YamlTestEnum.Foo));
+            Assert.That(componentData.GetValue<YamlTestEnum>("enumb"), Is.EqualTo(YamlTestEnum.Bar));
         }
 
         [Test]

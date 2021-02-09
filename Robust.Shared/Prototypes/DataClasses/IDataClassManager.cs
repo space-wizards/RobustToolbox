@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using JetBrains.Annotations;
 using Robust.Shared.Interfaces.GameObjects;
@@ -33,5 +34,7 @@ namespace Robust.Shared.Prototypes
         void PopulateObject(object obj, DataClass dataClass);
 
         void PopulateDataClass(object obj, DataClass dataClass);
+
+        public bool TryGetDataClassField<T>(DataClass dataClass, string name, [NotNullWhen(true)] out T? value);
     }
 }

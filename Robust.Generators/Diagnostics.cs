@@ -26,18 +26,18 @@ namespace Robust.Generators
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor InvalidMeansImplicitDataClassAttributeAssigment = new DiagnosticDescriptor(
+        public static DiagnosticDescriptor UnsupportedValue = new DiagnosticDescriptor(
             "RADC0002",
             "",
-            $"MeansImplicitDataClassAttribute should only be used on Attributes",
+            $"Unsupported Value used in YamlFieldAttribute.",
             "Usage",
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor InvalidYamlTag = new DiagnosticDescriptor(
+        public static DiagnosticDescriptor FailedYamlFieldResolve = new DiagnosticDescriptor(
             "RADC0003",
             "",
-            $"YamlFieldAttribute has an invalid tag.",
+            $"Failed resolving the SourceText of YamlField.",
             "Usage",
             DiagnosticSeverity.Error,
             true);

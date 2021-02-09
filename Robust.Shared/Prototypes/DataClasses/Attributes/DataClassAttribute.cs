@@ -3,7 +3,6 @@ using System;
 namespace Robust.Shared.Prototypes.DataClasses.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    [MeansImplicitDataClass]
     public class DataClassAttribute : Attribute
     {
         public readonly Type? ClassName;

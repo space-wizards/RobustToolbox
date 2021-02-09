@@ -129,7 +129,10 @@ namespace Robust.Client.Placement
                 {
                     PlacementOffset = value.PlacementOffset;
 
-                    if (value.Components.TryGetValue("Physics", out var physicsComp) && physicsComp is PhysicsComponent_AUTODATA physicsComponentAutodata && physicsComponentAutodata.shapes_field is { } shapes)
+
+                    if (value.Components.TryGetValue("Physics", out var physicsComp)
+                        && physicsComp is PhysicsComponent_AUTODATA physicsComponentAutodata
+                        && physicsComponentAutodata._physShapes is { } shapes)
                     {
                         _colliderAABB = shapes.FirstOrDefault()?.CalculateLocalBounds(0f) ?? new Box2(0f, 0f, 0f, 0f);
                         return;

@@ -822,14 +822,16 @@ namespace Robust.Server.Maps
                     return false;
                 }
 
-                var prototypeVal = compData.GetValue(field);
-
-                if (value == null)
+                if(IoCManager.Resolve<IDataClassManager>().TryGetDataClassField(compData, field, out T? prototypeVal))
                 {
-                    return prototypeVal == null;
+                    if (value == null)
+                    {
+                        return prototypeVal == null;
+                    }
+                    return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
                 }
 
-                return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
+                return false;
             }
 
             private bool IsMapSavable(IEntity entity)

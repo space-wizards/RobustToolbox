@@ -39,6 +39,7 @@ using Robust.Server.DataMetrics;
 using Robust.Server.Log;
 using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
 using Stopwatch = Robust.Shared.Timing.Stopwatch;
@@ -279,6 +280,9 @@ namespace Robust.Server
 
             _loc.AddLoadedToStringSerializer();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+            IoCManager.Resolve<IDataClassManager>().Initialize();
+
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
             IoCManager.Resolve<IPrototypeManager>().LoadedData +=
@@ -299,8 +303,6 @@ namespace Robust.Server
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             _entities.Initialize();
-
-            IoCManager.Resolve<IComponentDataManager>().RegisterCustomDataClasses();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared

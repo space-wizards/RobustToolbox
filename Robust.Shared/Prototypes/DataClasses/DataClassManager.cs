@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -27,14 +28,11 @@ namespace Robust.Shared.Prototypes
                 }
             }
 
-            foreach (var dataClassAttr in _reflectionManager.FindTypesWithAttribute<MeansImplicitDataClassAttribute>())
+            foreach (var type in _reflectionManager.FindTypesWithAttribute<DataClassAttribute>())
             {
-                foreach (var type in _reflectionManager.FindTypesWithAttribute(dataClassAttr))
-                {
-                    if(_dataClassLinks.ContainsKey(type)) continue;
-                    var dataClassLink = new DataClassLink(type, ResolveDataClass(type));
-                    _dataClassLinks.Add(type, dataClassLink);
-                }
+                if(_dataClassLinks.ContainsKey(type)) continue;
+                var dataClassLink = new DataClassLink(type, ResolveDataClass(type));
+                _dataClassLinks.Add(type, dataClassLink);
             }
         }
 
@@ -98,6 +96,21 @@ namespace Robust.Shared.Prototypes
         public DataClass GetEmptyComponentDataClass(string compName)
         {
             return GetEmptyDataClass(_componentFactory.GetRegistration(compName).Type);
+        }
+
+        public bool TryGetDataClassField<T>(DataClass dataClass, string name, [NotNullWhen(true)] out T? value)
+        {
+            foreach (var classLink in _dataClassLinks)
+            {
+                if (classLink.Value.DataClassType == dataClass.GetType())
+                {
+                    value = (T?) classLink.Value.GetFieldDelegate(dataClass, name);
+                    return value != null;
+                }
+            }
+
+            value = default;
+            return false;
         }
 
         public void PopulateObject(object obj, DataClass dataClass)

@@ -36,7 +36,7 @@ namespace Robust.Generators
             {
                 base.VisitClassDeclaration(node);
                 if (node.AttributeLists.Any(al =>
-                    al.Attributes.Any(a => a.Name.ToString() == "DataClassAttribute")))
+                    al.Attributes.Any(a => a.Name.ToString() == "DataClass")))
                 {
                     foundDataRegistrations.Add(node);
                 }

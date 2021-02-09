@@ -45,33 +45,15 @@ namespace Robust.Generators
                 .Select(ResolveRegistration)
                 .ToList();
 
-            var meansDataClassAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.MeansImplicitDataClassAttribute");
             var implicitDataClassForInheritorsAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.ImplicitDataClassForInheritorsAttribute");
             var dataClassAttribute =
                 comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.DataClassAttribute");
             var yamlFieldAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.YamlFieldAttribute");
 
-            var attributeSymbol = comp.GetTypeByMetadataName("System.Attribute");
-
-            var dataClassAttributes = new List<INamedTypeSymbol>();
-            foreach (var typeSymbol in allResolvedClasses)
-            {
-                var attr = typeSymbol.GetAttribute(meansDataClassAttribute);
-                if(attr == null) continue;
-                if (!attributeSymbol.AssignableFrom(typeSymbol))
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        Diagnostics.InvalidMeansImplicitDataClassAttributeAssigment,
-                        typeSymbol.Locations.First()));
-                    continue;
-                }
-
-                dataClassAttributes.Add(typeSymbol);
-            }
 
             bool IsAutoDataReg(INamedTypeSymbol namedTypeSymbol)
             {
-                return dataClassAttributes.Any(attr => namedTypeSymbol.GetAttribute(attr) != null) ||
+                return namedTypeSymbol.GetAttribute(dataClassAttribute) != null ||
                        HasAnnotatedBaseType(namedTypeSymbol);
             }
 
@@ -83,7 +65,7 @@ namespace Robust.Generators
             }
 
             //resolve autodata registrations (we need them to validate the customdataclasses)
-            var autoDataRegistrations = allResolvedClasses.Where(IsAutoDataReg).ToList();
+            var autoDataRegistrations = allResolvedClasses.Where(IsAutoDataReg).RemoveDuplicates().ToList();
 
             var customDataClassRegistrations = receiver.CustomDataClassRegistrations.Select(ResolveRegistration)
                 .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments.Length > 0)
@@ -122,16 +104,10 @@ namespace Robust.Generators
                         Encoding.UTF8));
             }
 
-
-            var enumarableSymbols = new INamedTypeSymbol[]
-            {
-                comp.GetTypeByMetadataName("System.Collections.Generic.List<T>")
-            };
-
             //generate all autodata classes
             foreach (var symbol in autoDataRegistrations)
             {
-                var fields = new List<FieldTemplate>();
+                var fields = new List<string>();
                 foreach (var member in symbol.GetMembers())
                 {
                     var attribute = member.GetAttribute(yamlFieldAttribute);
@@ -153,13 +129,104 @@ namespace Robust.Generators
                             continue;
                     }
 
-                    fields.Add(new FieldTemplate(member.Name, type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), ""));
+                    //absolute unit of a do not research moment
+                    var roslynDevUxWent = member.DeclaringSyntaxReferences.First();
+                    var rootnode = roslynDevUxWent.SyntaxTree.GetRoot()
+                        .FindToken(roslynDevUxWent.Span.Start).Parent?.Parent;
+
+                    if (member is IFieldSymbol) rootnode = rootnode?.Parent; //idk dont ask me
+
+                    /*var semanticModel = comp.GetSemanticModel(rootnode.SyntaxTree);
+                    switch (rootnode)
+                    {
+                        case FieldDeclarationSyntax fieldDeclarationSyntax:
+
+                            break;
+                        case PropertyDeclarationSyntax propertyDeclarationSyntax:
+                            fields.Add(rootnode.ToString());
+                            break;
+                        default:
+                            context.ReportDiagnostic(Diagnostic.Create(
+                                Diagnostics.FailedYamlFieldResolve,
+                                member.Locations.First()));
+                            continue;
+
+                    }*/
+
+
+                    var fieldStr = "[YamlField(";
+                    var parseFault = false;
+                    for (var i = 0; i < attribute.ConstructorArguments.Length; i++)
+                    {
+                        var typedConstant = attribute.ConstructorArguments[i];
+                        switch (typedConstant.Value)
+                        {
+                            case null:
+                                fieldStr += "null";
+                                break;
+                            case string strVal:
+                                fieldStr += $"\"{strVal}\"";
+                                break;
+                            case char charVal:
+                                fieldStr += $"'{charVal}'";
+                                break;
+                            case bool boolVal:
+                                fieldStr += boolVal ? "true" : "false";
+                                break;
+                            case int _:
+                            case uint _:
+                            case short _:
+                            case ushort _:
+                            case float _:
+                            case double _:
+                            case decimal _:
+                            case byte _:
+                            case sbyte _:
+                            case long _:
+                            case ulong _:
+                                fieldStr += typedConstant.Value.ToString();
+                                break;
+                            case INamedTypeSymbol typeVal:
+                                fieldStr +=
+                                    $"typeof({typeVal.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})";
+                                break;
+                            default:
+                                context.ReportDiagnostic(Diagnostic.Create(
+                                    Diagnostics.UnsupportedValue,
+                                    member.Locations.First()));
+                                parseFault = true;
+                                break;
+                        }
+                        if(parseFault) break;
+
+                        if(i < attribute.ConstructorArguments.Length - 1)
+                            fieldStr += ", ";
+                    }
+
+                    if(parseFault) continue;
+
+                    fieldStr += ")]\npublic ";
+                    switch (member)
+                    {
+                        case IFieldSymbol fieldSymbol:
+                            var ftypeStr = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            fieldStr += (ftypeStr.EndsWith("?") ? ftypeStr : ftypeStr+"?" )+" ";
+                            fieldStr += fieldSymbol.Name+";";
+                            break;
+                        case IPropertySymbol propertySymbol:
+                            var ptypeStr = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                            fieldStr += (ptypeStr.EndsWith("?") ? ptypeStr : ptypeStr+"?" )+" ";
+                            fieldStr += propertySymbol.Name+";";
+                            break;
+                    }
+
+                    fields.Add(fieldStr);
                 }
 
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                var inheriting = ResolveParentDataClass(symbol.BaseType) ?? "Robust.Shared.Prototypes.DataClass";
+                var inheriting = ResolveParentDataClass(symbol.BaseType) ?? "Robust.Shared.Prototypes.DataClasses.DataClass";
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
@@ -169,19 +236,17 @@ namespace Robust.Generators
         private string GenerateCustomDataClassInheritanceCode(string name, string @namespace, string inheriting)
         {
             return $@"namespace {@namespace} {{
-    public partial class {name} : {inheriting} {{}}
+    public partial class {name} : {inheriting}, Robust.Shared.Interfaces.Serialization.IExposeData {{}}
 }}
 ";
         }
 
         private string GetFieldName(string fieldname) => $"{fieldname}_field";
 
-        private string GenerateCode(string name, string @namespace, string inheriting, List<FieldTemplate> fields)
+        private string GenerateCode(string name, string @namespace, string inheriting, List<string> fields)
         {
             var code = $@"#nullable enable
-using System;
-using System.Linq;
-using Robust.Shared.Serialization;
+using Robust.Shared.Prototypes;
 namespace {@namespace} {{
     public class {name} : {inheriting} {{
 ";
@@ -195,20 +260,6 @@ namespace {@namespace} {{
     }
 }";
             return code;
-        }
-
-        private struct FieldTemplate
-        {
-            public readonly string Name;
-            public readonly string Type;
-            public readonly string AttributeText;
-
-            public FieldTemplate(string name, string type, string attributeText)
-            {
-                Name = name;
-                AttributeText = attributeText;
-                Type = type.EndsWith("?") ? type : $"{type}?";
-            }
         }
     }
 }

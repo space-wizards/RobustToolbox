@@ -19,6 +19,7 @@ namespace Robust.Shared.Prototypes.DataClasses
 
         public readonly Action<object, DataClass> PopulateObjectDelegate;
         public readonly Action<object, DataClass> PopulateDataclassDelegate;
+        public readonly Func<DataClass, string, object> GetFieldDelegate;
 
         public DataClassLink(Type type, Type dataClassType)
         {
@@ -43,6 +44,40 @@ namespace Robust.Shared.Prototypes.DataClasses
 
             PopulateObjectDelegate = EmitPopulateObjectDelegate();
             PopulateDataclassDelegate = EmitPopulateDataclassDelegate();
+            GetFieldDelegate = EmitGetFieldDelegate();
+        }
+
+        private Func<DataClass, string, object?> EmitGetFieldDelegate()
+        {
+            var dynamicMethod = new DynamicMethod(
+                $"_populateObjectFromDC<>{Type}<>{DataClassType}",
+                typeof(object),
+                new[] {typeof(DataClass), typeof(string)},
+                Type,
+                true);
+            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "dataClass");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "name");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.Out, "value");
+            var generator = dynamicMethod.GetILGenerator();
+
+            foreach (var dataclassField in _dataclassFields)
+            {
+                var notIt = new Label();
+                generator.Emit(OpCodes.Ldarg_1);
+                generator.Emit(OpCodes.Ldstr, dataclassField.DataFieldAttribute.Tag);
+                generator.Emit(OpCodes.Brfalse_S, notIt);
+
+                generator.Emit(OpCodes.Ldarg_0);
+                generator.EmitLdfld(dataclassField.FieldInfo);
+                generator.Emit(OpCodes.Ret);
+
+                generator.MarkLabel(notIt);
+            }
+
+            generator.Emit(OpCodes.Ldnull);
+            generator.Emit(OpCodes.Ret);
+
+            return dynamicMethod.CreateDelegate<Func<DataClass, string, object?>>();
         }
 
         private Action<object, DataClass> EmitPopulateObjectDelegate()

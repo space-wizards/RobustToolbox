@@ -33,6 +33,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -167,7 +168,8 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
-            IoCManager.Resolve<IComponentDataManager>().RegisterCustomDataClasses();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+            IoCManager.Resolve<IDataClassManager>().Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

@@ -26,10 +26,8 @@ namespace Robust.Client.GameObjects.Components.Renderable
         [DataClassTarget("layerDatums")]
         public List<SharedSpriteComponent.PrototypeLayerData>? LayerDatums;
 
-        public override void ExposeData(ObjectSerializer serializer)
+        public void ExposeData(ObjectSerializer serializer)
         {
-            base.ExposeData(serializer);
-
             var resourceCache = IoCManager.Resolve<IResourceCache>();
 
             {

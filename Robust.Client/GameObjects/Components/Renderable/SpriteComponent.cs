@@ -965,17 +965,19 @@ namespace Robust.Client.GameObjects
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
-        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation,
-            Direction? overrideDirection = null)
+        // Lobby SpriteView rendering path
+        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        {
+            RenderInternal(drawingHandle, worldRotation, overrideDirection, in Matrix3.Identity);
+        }
+
+        // Sprite rendering path
+        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation)
         {
             var angle = Rotation;
             if (Directional)
             {
                 angle -= worldRotation;
-            }
-            else
-            {
-                angle -= new Angle(MathHelper.PiOver2);
             }
 
             var mOffset = Matrix3.CreateTranslation(Offset);
@@ -983,22 +985,18 @@ namespace Robust.Client.GameObjects
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
             // Only apply scale if needed.
-            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
+            if(!Scale.EqualsApprox(Vector2.One))
+                transform.Multiply(Matrix3.CreateScale(Scale));
 
-            transform.Multiply(worldTransform);
+            transform.Multiply(in worldTransform);
 
-            RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
+            RenderInternal(drawingHandle, worldRotation, null, transform);
         }
-
-        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
-        {
-            RenderInternal(drawingHandle, worldRotation, overrideDirection, Matrix3.Identity);
-        }
-
+        
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection,
             in Matrix3 transform)
         {
-            drawingHandle.SetTransform(transform);
+            drawingHandle.SetTransform(in transform);
 
             foreach (var layer in Layers)
             {
@@ -1017,8 +1015,15 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(layer.Shader);
                 }
 
-                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter),
-                    color * layer.Color);
+                var layerColor =  color * layer.Color;
+
+                var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
+                var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
+                var quad = Box2.FromDimensions(position, textureSize);
+
+                // handle.Modulate changes the color
+                // drawingHandle.SetTransform(transform) is set above, turning the quad into local space vertices
+                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor, null);
 
                 if (layer.Shader != null)
                 {

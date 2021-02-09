@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Maths
@@ -10,6 +10,8 @@ namespace Robust.Shared.Maths
     public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>
     {
         public static Angle Zero { get; } = new();
+
+        [Obsolete("Use Angle.Zero")]
         public static Angle South { get; } = new(-MathHelper.PiOver2);
 
         /// <summary>

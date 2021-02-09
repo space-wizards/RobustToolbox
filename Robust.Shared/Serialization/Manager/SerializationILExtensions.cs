@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -14,7 +15,7 @@ namespace Robust.Shared.Serialization.Manager
         /// WARNING: This method assumes the object is at position 0 & the yamlobjectserializer is at position 1
         /// </summary>
         public static void EmitPopulateField(this ILGenerator generator,
-            SerializationDataDefinition.BaseFieldDefinition fieldDefinition)
+            SerializationDataDefinition.FieldDefinition fieldDefinition)
         {
             generator.Emit(OpCodes.Ldarg_0); //load object - needed for the stfld call later
 
@@ -50,27 +51,54 @@ namespace Robust.Shared.Serialization.Manager
 
             //setting the field
             generator.Emit(OpCodes.Ldloc_0);
-            generator.EmitStdlf(fieldDefinition);
+            generator.EmitStdlf(fieldDefinition.FieldInfo);
 
             generator.MarkLabel(isDefaultLabel);
         }
 
+        //TODO Paul nesting you numbnugget
         public static void EmitPushInheritanceField(this ILGenerator generator,
-            SerializationDataDefinition.BaseFieldDefinition fieldDefinition)
+            SerializationDataDefinition.FieldDefinition fieldDefinition)
         {
             var isDefaultValue = new Label();
 
             generator.Emit(OpCodes.Ldarg_0);
-            generator.EmitLdfld(fieldDefinition);
+            generator.EmitLdfld(fieldDefinition.FieldInfo);
             generator.Emit_LdInst(fieldDefinition.DefaultValue, true);
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultValue);
 
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.EmitLdfld(fieldDefinition);
-            generator.EmitStdlf(fieldDefinition);
+            generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
 
             generator.MarkLabel(isDefaultValue);
+        }
+
+        //TODO Paul nesting you numbnugget
+        public static void EmitCopy(this ILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg, AbstractFieldInfo toField, int mgrArg)
+        {
+            if (toField.FieldType.IsAssignableFrom(fromField.FieldType))
+                throw new InvalidOperationException("Mismatch of types in EmitCopy call");
+
+            if (toField.FieldType.IsPrimitive)
+            {
+                generator.Emit(OpCodes.Ldarg, toArg);
+
+                generator.Emit(OpCodes.Ldarg, fromArg);
+                generator.EmitLdfld(fromField);
+
+                generator.EmitStdlf(toField);
+            }
+            else
+            {
+                generator.Emit(OpCodes.Ldarg, mgrArg);
+                generator.Emit(OpCodes.Ldarg, fromArg);
+                generator.EmitLdfld(fromField);
+                generator.Emit(OpCodes.Ldarg, toArg);
+                generator.EmitLdfld(toField);
+
+                var copyMethod = typeof(SerializationManager).GetMethod(nameof(SerializationManager.Copy));
+                Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
+                generator.Emit(OpCodes.Call, copyMethod);
+            }
         }
 
         public static void EmitEquals(this ILGenerator generator, Type type, Label label)
@@ -89,35 +117,35 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         public static void EmitStdlf(this ILGenerator generator,
-            SerializationDataDefinition.BaseFieldDefinition fieldDefinition)
+            AbstractFieldInfo fieldDefinition)
         {
             switch (fieldDefinition)
             {
-                case SerializationDataDefinition.FieldDefinition field:
+                case SpecificFieldInfo field:
                     generator.Emit(OpCodes.Stfld, field.FieldInfo);
                     break;
-                case SerializationDataDefinition.PropertyDefinition property:
+                case SpecificPropertyInfo property:
                     generator.Emit(OpCodes.Call, property.PropertyInfo.SetMethod!); //todo paul enforce setter!!!
                     break;
             }
         }
 
         public static void EmitLdfld(this ILGenerator generator,
-            SerializationDataDefinition.BaseFieldDefinition fieldDefinition)
+            AbstractFieldInfo fieldDefinition)
         {
             switch (fieldDefinition)
             {
-                case SerializationDataDefinition.FieldDefinition field:
+                case SpecificFieldInfo field:
                     generator.Emit(OpCodes.Ldfld, field.FieldInfo);
                     break;
-                case SerializationDataDefinition.PropertyDefinition property:
+                case SpecificPropertyInfo property:
                     generator.Emit(OpCodes.Call, property.PropertyInfo.GetMethod!); //todo paul enforce getter!!!
                     break;
             }
         }
 
         public static void EmitSerializeField(this ILGenerator generator,
-            SerializationDataDefinition.BaseFieldDefinition fieldDefinition)
+            SerializationDataDefinition.FieldDefinition fieldDefinition)
         {
             if(fieldDefinition.Attribute.ReadOnly) return; //hehe ez pz
 
@@ -129,7 +157,7 @@ namespace Robust.Shared.Serialization.Manager
 
             //skip all of this if the value is default
             generator.Emit(OpCodes.Ldarg_0);
-            generator.EmitLdfld(fieldDefinition);
+            generator.EmitLdfld(fieldDefinition.FieldInfo);
             generator.Emit(OpCodes.Stloc_0); //also storing the value for later so we dont have to do ldfld again
             generator.Emit(OpCodes.Ldloc_0);
             generator.Emit_LdInst(fieldDefinition.DefaultValue);

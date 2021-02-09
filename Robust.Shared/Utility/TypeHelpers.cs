@@ -245,5 +245,77 @@ namespace Robust.Shared.Utility
             setType = default;
             return false;
         }
+
+        public static IEnumerable<AbstractFieldInfo> GetAllPropertiesAndFields(this Type type)
+        {
+            foreach (var field in type.GetAllFields())
+            {
+                yield return new SpecificFieldInfo(field);
+            }
+
+            foreach (var property in type.GetAllProperties())
+            {
+                yield return new SpecificPropertyInfo(property);
+            }
+        }
+
+        public static Type? FindCommonType(Type type1, Type type2)
+        {
+            Type? commonType = null;
+            if (type1.IsAssignableFrom(type2))
+            {
+                commonType = type1;
+            }else if (type2.IsAssignableFrom(type1))
+            {
+                commonType = type2;
+            }
+
+            return commonType;
+        }
+    }
+
+    public abstract class AbstractFieldInfo
+    {
+        public abstract Type FieldType { get; }
+
+        public abstract T? GetCustomAttribute<T>() where T : Attribute;
+    }
+
+    public class SpecificFieldInfo : AbstractFieldInfo
+    {
+        public readonly FieldInfo FieldInfo;
+        public override Type FieldType => FieldInfo.FieldType;
+
+        public SpecificFieldInfo(FieldInfo fieldInfo)
+        {
+            FieldInfo = fieldInfo;
+        }
+
+        public override T? GetCustomAttribute<T>() where T : class
+        {
+            return (T?)Attribute.GetCustomAttribute(FieldInfo, typeof(T));
+        }
+
+        public static implicit operator FieldInfo(SpecificFieldInfo f) => f.FieldInfo;
+        public static explicit operator SpecificFieldInfo(FieldInfo f) => new(f);
+    }
+
+    public class SpecificPropertyInfo : AbstractFieldInfo
+    {
+        public readonly PropertyInfo PropertyInfo;
+        public override Type FieldType => PropertyInfo.PropertyType;
+
+        public SpecificPropertyInfo(PropertyInfo propertyInfo)
+        {
+            PropertyInfo = propertyInfo;
+        }
+
+        public override T? GetCustomAttribute<T>() where T : class
+        {
+            return (T?)Attribute.GetCustomAttribute(PropertyInfo, typeof(T));
+        }
+
+        public static implicit operator PropertyInfo(SpecificPropertyInfo f) => f.PropertyInfo;
+        public static explicit operator SpecificPropertyInfo(PropertyInfo f) => new(f);
     }
 }

@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -113,7 +114,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
             public string Baz = "abc";
         }
 
-        [CustomDataClass(typeof(ACustomDataClassWithARandomName))]
+        [DataClass(typeof(ACustomDataClassWithARandomName))]
         private class TestCustomDataClassComponent : Component
         {
             public override string Name => "CustomTestComp";

@@ -20,6 +20,8 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Prototypes.DataClasses;
+using Robust.Shared.Serialization.Manager;
 using YamlDotNet.Core;
 
 namespace Robust.Server.Maps
@@ -621,7 +623,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
-                var dataMgr = IoCManager.Resolve<IComponentDataManager>();
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -642,11 +644,14 @@ namespace Robust.Server.Maps
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in entity.GetAllComponents())
                     {
-                        var compMapping = dataMgr.SerializeNonDefaultComponentData(component, this);
+                        var compMapping = new YamlMappingNode();
+                        serv3Mgr.Serialize(component.GetType(), component,
+                            YamlObjectSerializer.NewWriter(compMapping, this));
 
                         // Don't need to write it if nothing was written!
-                        if (compMapping != null)
+                        if (compMapping.Children.Count == 0)
                         {
+                            compMapping.Add("type", component.Name);
                             // Something actually got written!
                             components.Add(compMapping);
                         }
@@ -778,20 +783,21 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                var dataMgr = IoCManager.Resolve<IComponentDataManager>();
+                var dataMgr = IoCManager.Resolve<IDataClassManager>();
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
 
-                var data = dataMgr.GetEmptyComponentData(componentName);
+                var data = dataMgr.GetEmptyComponentDataClass(componentName);
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
                     //TODO Paul: maybe replace mapping with dict
-                    var contextData = dataMgr.ParseComponentData(componentName, mapping, this);
-                    dataMgr.PushInheritance(componentName, contextData, data);
+                    var ser = YamlObjectSerializer.NewReader(mapping, this);
+                    data = (DataClass)serv3Mgr.Populate(dataMgr.GetComponentDataClassType(componentName), ser);
                 }
 
                 if (protoData != null)
                 {
-                    dataMgr.PushInheritance(componentName, protoData, data);
+                    serv3Mgr.PushInheritance(protoData, data);
                 }
 
                 return data;

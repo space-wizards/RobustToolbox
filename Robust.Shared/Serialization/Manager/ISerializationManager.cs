@@ -14,6 +14,8 @@ namespace Robust.Shared.Serialization.Manager
 
         void PushInheritance(object source, object target);
 
+        void Copy(object source, object target);
+
         void Serialize(Type type, object obj, YamlObjectSerializer serializer, bool alwaysWrite = false);
 
         public static string GetAutoDataClassMetadataName(Type type)

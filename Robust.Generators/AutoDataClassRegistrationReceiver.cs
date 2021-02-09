@@ -8,28 +8,24 @@ namespace Robust.Generators
 {
     public class AutoDataClassRegistrationReceiver : ISyntaxReceiver
     {
-        public List<ClassDeclarationSyntax> Registrations = new List<ClassDeclarationSyntax>();
+        public List<ClassDeclarationSyntax> AllClasses = new List<ClassDeclarationSyntax>();
         public List<ClassDeclarationSyntax> CustomDataClassRegistrations = new List<ClassDeclarationSyntax>();
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             if (!(syntaxNode is ClassDeclarationSyntax classDeclarationSyntax)) return;
 
-            Registrations.AddRange(YamlFieldFinder.GetAutoDataRegistrations(classDeclarationSyntax));
+            AllClasses.Add(classDeclarationSyntax);
 
-            if (classDeclarationSyntax.AttributeLists.Any(al =>
-                al.Attributes.Any(a => a.Name.ToString() == "CustomDataClass")))
-            {
-                CustomDataClassRegistrations.Add(classDeclarationSyntax);
-            }
+            CustomDataClassRegistrations.AddRange(ExplicitRegFinder.GetAutoDataRegistrations(classDeclarationSyntax));
         }
 
-        public class YamlFieldFinder : CSharpSyntaxWalker
+        public class ExplicitRegFinder : CSharpSyntaxWalker
         {
-            private YamlFieldFinder() {}
+            private ExplicitRegFinder() {}
 
             public static ClassDeclarationSyntax[] GetAutoDataRegistrations(ClassDeclarationSyntax classDeclarationSyntax)
             {
-                var finder = new YamlFieldFinder();
+                var finder = new ExplicitRegFinder();
                 finder.Visit(classDeclarationSyntax);
                 return finder.foundDataRegistrations.ToArray();
             }
@@ -39,21 +35,10 @@ namespace Robust.Generators
             public override void VisitClassDeclaration(ClassDeclarationSyntax node)
             {
                 base.VisitClassDeclaration(node);
-            }
-
-            public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
-            {
-                if (node.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "YamlField")))
+                if (node.AttributeLists.Any(al =>
+                    al.Attributes.Any(a => a.Name.ToString() == "DataClassAttribute")))
                 {
-                    foundDataRegistrations.Add((ClassDeclarationSyntax)node.Parent);
-                }
-            }
-
-            public override void VisitFieldDeclaration(FieldDeclarationSyntax node)
-            {
-                if (node.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "YamlField")))
-                {
-                    foundDataRegistrations.Add((ClassDeclarationSyntax)node.Parent);
+                    foundDataRegistrations.Add(node);
                 }
             }
         }

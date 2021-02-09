@@ -9,8 +9,10 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes.DataClasses;
 using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -402,7 +404,7 @@ namespace Robust.Shared.GameObjects
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IDataClassManager>().Populate(component, data);
+            IoCManager.Resolve<IDataClassManager>().PopulateObject(component, data);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -434,7 +436,8 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var data = IoCManager.Resolve<IDataClassManager>().Parse(factory.GetRegistration(type).Type, copy);
+            var ser = YamlObjectSerializer.NewReader(copy);
+            var data = (DataClass)IoCManager.Resolve<ISerializationManager>().Populate(factory.GetRegistration(type).Type, ser);
 
             Components[type] = data;
         }

@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Prototypes
+namespace Robust.Shared.Prototypes.DataClasses
 {
     public abstract class DataClass : IExposeData
     {

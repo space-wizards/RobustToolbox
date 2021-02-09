@@ -4,6 +4,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Manager
@@ -16,12 +17,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public void Initialize()
         {
-            //generating all datadefinitions except exposedata
-            foreach (var type in _reflectionManager.FindTypesWithAttribute<YamlDefinition>())
-            {
-                _dataDefinitions.Add(type, new SerializationDataDefinition(type));
-            }
-
+            //generating all datadefinitions except pure exposedata inheritors
             foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansYamlDefinition>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
@@ -86,17 +82,8 @@ namespace Robust.Shared.Serialization.Manager
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
-            var sourceType = source.GetType();
-            var targetType = target.GetType();
-            Type? commonType;
-            if (sourceType.IsAssignableFrom(targetType))
-            {
-                commonType = sourceType;
-            }else if (targetType.IsAssignableFrom(sourceType))
-            {
-                commonType = targetType;
-            }
-            else
+            var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
+            if(commonType == null)
             {
                 throw new InvalidOperationException("Could not find common type in PushInheritance!");
             }
@@ -105,6 +92,25 @@ namespace Robust.Shared.Serialization.Manager
             {
                 var dataDef = GetDataDefinition(commonType);
                 dataDef?.PushInheritanceDelegate(source, target, this);
+                commonType = commonType.BaseType;
+            }
+        }
+
+        public void Copy(object source, object target)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+
+            var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
+            if(commonType == null)
+            {
+                throw new InvalidOperationException("Could not find common type in PushInheritance!");
+            }
+
+            while (commonType != null)
+            {
+                var dataDef = GetDataDefinition(commonType);
+                dataDef?.CopyDelegate(source, target);
                 commonType = commonType.BaseType;
             }
         }

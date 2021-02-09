@@ -7,13 +7,14 @@ using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    [CustomDataClass(typeof(SpriteComponentData))]
+    [DataClass(typeof(SpriteComponentData))]
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";

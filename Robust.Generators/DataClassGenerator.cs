@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Robust.Generators
@@ -12,48 +13,15 @@ namespace Robust.Generators
     [Generator]
     public class DataClassGenerator : ISourceGenerator
     {
-        private bool NeedsDataClass(ITypeSymbol symbol, ITypeSymbol[] enumarableSymbols)
+        private T GetCtorArg<T>(ImmutableArray<TypedConstant> ctorArgs, int i)
         {
-            if (symbol is INamedTypeSymbol nsym)
+            try
             {
-                if (nsym.IsSerializable) return false;
-                if (enumarableSymbols.Any(enS => SymbolEqualityComparer.Default.Equals(enS, nsym.ConstructedFrom)))
-                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
+                return (T) ctorArgs[i].Value;
             }
-
-            switch (symbol.BaseType?.SpecialType)
+            catch
             {
-                case SpecialType.System_Enum:
-                    return false;
-                case SpecialType.System_Nullable_T:
-                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
-            }
-
-            //TODO Paul: Make this work for dicts
-            switch (symbol.SpecialType)
-            {
-                case SpecialType.System_Boolean:
-                case SpecialType.System_Byte:
-                case SpecialType.System_SByte:
-                case SpecialType.System_Int16:
-                case SpecialType.System_Int32:
-                case SpecialType.System_Int64:
-                case SpecialType.System_UInt16:
-                case SpecialType.System_UInt32:
-                case SpecialType.System_UInt64:
-                case SpecialType.System_IntPtr:
-                case SpecialType.System_UIntPtr:
-                case SpecialType.System_Single:
-                case SpecialType.System_Double:
-                case SpecialType.System_Char:
-                case SpecialType.System_String:
-                case SpecialType.System_Decimal:
-                    return false;
-                case SpecialType.System_Collections_Generic_IList_T:
-                case SpecialType.System_Collections_Generic_IReadOnlyList_T:
-                    return NeedsDataClass(((INamedTypeSymbol) symbol).TypeArguments.First(), enumarableSymbols);
-                default:
-                    return true;
+                return default;
             }
         }
 
@@ -67,88 +35,93 @@ namespace Robust.Generators
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
             var comp = (CSharpCompilation)context.Compilation;
-            var serializableAttrSymbol = comp.GetTypeByMetadataName("System.SerializableAttribute");
-            //var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
-            //resolve autodata registrations (we need the to validate the customdataclasses)
-            var resolvedAutoDataRegistrations =
-                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
-
-            var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, ITypeSymbol>();
-
-            bool TryResolveCustomDataClass(ITypeSymbol typeSymbol, out ITypeSymbol customDataClass)
+            INamedTypeSymbol ResolveRegistration(ClassDeclarationSyntax cl)
             {
-                if (resolvedCustomDataClasses.TryGetValue(typeSymbol, out customDataClass))
-                    return true;
-
-                var arg = typeSymbol?.GetAttributes()
-                    .FirstOrDefault(a => a.AttributeClass?.Name == "CustomDataClassAttribute")?.ConstructorArguments.FirstOrDefault();
-                if (arg == null) return false;
-                customDataClass = arg.Value.Value as ITypeSymbol;
-                return customDataClass != null;
+                return comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl);
             }
 
-            //resolve all custom dataclasses
-            foreach (var classDeclarationSyntax in receiver.CustomDataClassRegistrations)
-            {
-                var symbol = comp.GetSemanticModel(classDeclarationSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(classDeclarationSyntax);
+            var allResolvedClasses = receiver.AllClasses
+                .Select(ResolveRegistration)
+                .ToList();
 
-                if (!TryResolveCustomDataClass(symbol, out var customDataClass))
+            var meansDataClassAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.MeansImplicitDataClassAttribute");
+            var implicitDataClassForInheritorsAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.ImplicitDataClassForInheritorsAttribute");
+            var dataClassAttribute =
+                comp.GetTypeByMetadataName("Robust.Shared.Prototypes.DataClasses.Attributes.DataClassAttribute");
+            var yamlFieldAttribute = comp.GetTypeByMetadataName("Robust.Shared.Prototypes.YamlFieldAttribute");
+
+            var attributeSymbol = comp.GetTypeByMetadataName("System.Attribute");
+
+            var dataClassAttributes = new List<INamedTypeSymbol>();
+            foreach (var typeSymbol in allResolvedClasses)
+            {
+                var attr = typeSymbol.GetAttribute(meansDataClassAttribute);
+                if(attr == null) continue;
+                if (!attributeSymbol.AssignableFrom(typeSymbol))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
-                        Diagnostics.FailedCustomDataClassAttributeResolve,
-                        classDeclarationSyntax.GetLocation()));
+                        Diagnostics.InvalidMeansImplicitDataClassAttributeAssigment,
+                        typeSymbol.Locations.First()));
                     continue;
                 }
 
-                string shouldInherit;
-                if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(symbol, r)))
-                {
-                    shouldInherit = $"{symbol}_AUTODATA";
-                }
-                else
-                {
-                    shouldInherit = ResolveParentDataClass(symbol, true) ?? "Robust.Shared.Prototypes.DataClass";
-                }
-                context.AddSource($"{customDataClass.Name}_INHERIT.g.cs", SourceText.From(GenerateCustomDataClassInheritanceCode(customDataClass.Name, customDataClass.ContainingNamespace.ToString(), shouldInherit), Encoding.UTF8));
-
-                resolvedCustomDataClasses.Add(symbol, customDataClass);
+                dataClassAttributes.Add(typeSymbol);
             }
 
-            string ResolveParentDataClass(ITypeSymbol typeS, bool forCustom = false)
+            bool IsAutoDataReg(INamedTypeSymbol namedTypeSymbol)
             {
-                var typeSymbol = typeS;
-                if (typeSymbol is INamedTypeSymbol tSym)
-                {
-                    typeSymbol = tSym.ConstructedFrom; //todo Paul: properly do generics
-                }
+                return dataClassAttributes.Any(attr => namedTypeSymbol.GetAttribute(attr) != null) ||
+                       HasAnnotatedBaseType(namedTypeSymbol);
+            }
 
-                if (!forCustom && TryResolveCustomDataClass(typeSymbol, out var customDataClass))
+            bool HasAnnotatedBaseType(INamedTypeSymbol namedTypeSymbol)
+            {
+                if (namedTypeSymbol == null) return false;
+                if (namedTypeSymbol.GetAttribute(implicitDataClassForInheritorsAttribute) != null) return true;
+                return HasAnnotatedBaseType(namedTypeSymbol.BaseType);
+            }
+
+            //resolve autodata registrations (we need them to validate the customdataclasses)
+            var autoDataRegistrations = allResolvedClasses.Where(IsAutoDataReg).ToList();
+
+            var customDataClassRegistrations = receiver.CustomDataClassRegistrations.Select(ResolveRegistration)
+                .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments.Length > 0)
+                .ToDictionary(sym => sym,
+                    sym => (INamedTypeSymbol) (sym.GetAttribute(dataClassAttribute).ConstructorArguments[0].Value));
+
+            string ResolveParentDataClass(INamedTypeSymbol typeS, bool skipFirstCustom = false)
+            {
+                typeS = typeS.ConstructedFrom;//todo Paul: properly do generics(?)
+
+                if (!skipFirstCustom && customDataClassRegistrations.TryGetValue(typeS, out var customDataClass))
                     return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
 
-                var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
-                var dataClass = comp.GetTypeByMetadataName(metaName);
-                if (dataClass != null || resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(r, typeSymbol))) return metaName;
+                var metadataName = $"{typeS.ContainingNamespace}.{typeS.Name}_AUTODATA";
+                if (autoDataRegistrations.Any(sym => SymbolEqualityComparer.Default.Equals(sym, typeS)) ||
+                    comp.GetTypeByMetadataName(metadataName) != null)
+                {
+                    return metadataName;
+                }
 
-                if(typeSymbol.BaseType == null)
+                if (typeS.BaseType == null)
                     return null;
 
-                return ResolveParentDataClass(typeSymbol.BaseType);
+                return ResolveParentDataClass(typeS.BaseType);
             }
 
-            T GetCtorArg<T>(ImmutableArray<TypedConstant> ctorArgs, int i)
+            //adding autoinheritance for custom data classes
+            foreach (var customDataClassRegistration in customDataClassRegistrations)
             {
-                try
-                {
-                    return (T) ctorArgs[i].Value;
+                string shouldInherit = ResolveParentDataClass(customDataClassRegistration.Key, true) ?? "Robust.Shared.Prototypes.DataClass";
 
-                }
-                catch
-                {
-                    return default;
-                }
+                context.AddSource($"{customDataClassRegistration.Value.Name}_INHERIT.g.cs",
+                    SourceText.From(
+                        GenerateCustomDataClassInheritanceCode(customDataClassRegistration.Value.Name,
+                            customDataClassRegistration.Value.ContainingNamespace.ToString(), shouldInherit),
+                        Encoding.UTF8));
             }
+
 
             var enumarableSymbols = new INamedTypeSymbol[]
             {
@@ -156,26 +129,13 @@ namespace Robust.Generators
             };
 
             //generate all autodata classes
-            foreach (var symbol in resolvedAutoDataRegistrations)
+            foreach (var symbol in autoDataRegistrations)
             {
                 var fields = new List<FieldTemplate>();
                 foreach (var member in symbol.GetMembers())
                 {
-                    var attribute = member.GetAttributes()
-                        .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
+                    var attribute = member.GetAttribute(yamlFieldAttribute);
                     if(attribute == null) continue;
-                    var fieldName = GetCtorArg<string>(attribute.ConstructorArguments, 0);
-                    if (fieldName == null || !SyntaxFacts.IsValidIdentifier(GetFieldName(fieldName)))
-                    {
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            Diagnostics.InvalidYamlTag,
-                            member.Locations.First()));
-                        continue;
-                    }
-
-                    var @readonly = GetCtorArg<bool>(attribute.ConstructorArguments, 1);
-                    var flagType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 2);
-                    var constType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 3);
 
                     ITypeSymbol type;
                     switch (member)
@@ -193,24 +153,7 @@ namespace Robust.Generators
                             continue;
                     }
 
-                    string typeString;
-                    if (NeedsDataClass(type, enumarableSymbols))
-                    {
-                        typeString = ResolveParentDataClass(type);
-                        if (typeString == null)
-                        {
-                            context.ReportDiagnostic(Diagnostic.Create(
-                                Diagnostics.DataClassNotFound,
-                                member.Locations.First()));
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        typeString = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                    }
-
-                    fields.Add(new FieldTemplate(fieldName, typeString, @readonly, flagType, constType));
+                    fields.Add(new FieldTemplate(member.Name, type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), ""));
                 }
 
                 var name = $"{symbol.Name}_AUTODATA";
@@ -241,84 +184,12 @@ using System.Linq;
 using Robust.Shared.Serialization;
 namespace {@namespace} {{
     public class {name} : {inheriting} {{
-
 ";
-
-            //generate fields
             foreach (var field in fields)
             {
                 code += $@"
-        public {field.Type} {GetFieldName(field.Name)};";
+        {field}";
             }
-
-            //generate exposedata
-            code += @"
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);";
-
-            foreach (var field in fields)
-            {
-                code += $@"
-            {(field.ReadOnly ? "if(serializer.Reading) " : "")}serializer.NullableDataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null";
-                if (field.FlagType != default)
-                {
-                    code +=
-                        $", withFormat: WithFormat.Flags<{field.FlagType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()";
-                }else if (field.ConstantsType != default)
-                {
-                    code +=
-                        $", withFormat: WithFormat.Constants<{field.ConstantsType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()";
-                }
-                code += ");";
-            }
-            code += @"
-        }";
-
-            //generate getvalue
-            code += @"
-
-        /// <inheritdoc />
-        public override object? GetValue(string tag)
-        {
-            return tag switch
-            {";
-
-            foreach (var field in fields)
-            {
-                code += $@"
-                ""{field.Name}"" => {GetFieldName(field.Name)},";
-            }
-
-            code += @"
-                _ => base.GetValue(tag)
-            };
-        }";
-
-            //generate setvalue
-            code += @"
-
-        /// <inheritdoc />
-        public override void SetValue(string tag, object? value)
-        {
-            switch (tag)
-            {";
-
-            foreach (var field in fields)
-            {
-                code += $@"
-                case ""{field.Name}"":
-                    {GetFieldName(field.Name)} = ({field.Type})value;
-                    break;";
-            }
-            code += @"
-                default:
-                    base.SetValue(tag, value);
-                    break;
-            }
-        }";
 
             code += @"
     }
@@ -330,16 +201,12 @@ namespace {@namespace} {{
         {
             public readonly string Name;
             public readonly string Type;
-            public readonly bool ReadOnly;
-            public readonly ITypeSymbol FlagType;
-            public readonly ITypeSymbol ConstantsType;
+            public readonly string AttributeText;
 
-            public FieldTemplate(string name, string type, bool readOnly, ITypeSymbol flagType, ITypeSymbol constantsType)
+            public FieldTemplate(string name, string type, string attributeText)
             {
                 Name = name;
-                ReadOnly = readOnly;
-                FlagType = flagType;
-                ConstantsType = constantsType;
+                AttributeText = attributeText;
                 Type = type.EndsWith("?") ? type : $"{type}?";
             }
         }

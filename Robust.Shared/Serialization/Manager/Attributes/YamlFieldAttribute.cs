@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Prototypes

@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public readonly Action<object, object, SerializationManager> PushInheritanceDelegate;
 
-        public readonly Action<object, object> CopyDelegate;
+        public readonly Action<object, object, SerializationManager> CopyDelegate;
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
@@ -148,16 +148,17 @@ namespace Robust.Shared.Serialization.Manager
             return dynamicMethod.CreateDelegate<Action<object, object, SerializationManager>>();
         }
 
-        private Action<object, object> EmitCopyDelegate()
+        private Action<object, object, SerializationManager> EmitCopyDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(void),
-                new[] {typeof(object), typeof(object)},
+                new[] {typeof(object), typeof(object), typeof(SerializationManager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serv3Mgr");
             var generator = dynamicMethod.GetILGenerator();
 
             if (typeof(IExposeData).IsAssignableFrom(Type))
@@ -171,12 +172,12 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {
-                generator.EmitCopy(fieldDefinition);
+                generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
             }
 
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, object>>();
+            return dynamicMethod.CreateDelegate<Action<object, object, SerializationManager>>();
         }
 
         public class FieldDefinition

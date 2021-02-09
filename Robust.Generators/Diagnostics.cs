@@ -26,6 +26,14 @@ namespace Robust.Generators
             DiagnosticSeverity.Error,
             true);
 
+        public static DiagnosticDescriptor InvalidMeansImplicitDataClassAttributeAssigment = new DiagnosticDescriptor(
+            "RADC0002",
+            "",
+            $"MeansImplicitDataClassAttribute should only be used on Attributes",
+            "Usage",
+            DiagnosticSeverity.Error,
+            true);
+
         public static DiagnosticDescriptor InvalidYamlTag = new DiagnosticDescriptor(
             "RADC0003",
             "",

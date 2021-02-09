@@ -17,10 +17,21 @@ namespace Robust.Shared.Prototypes
 
         public void Initialize()
         {
+            foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataClassForInheritorsAttribute>())
+            {
+                foreach (var child in _reflectionManager.GetAllChildren(baseType))
+                {
+                    if(_dataClassLinks.ContainsKey(child)) continue;
+                    var dataClassLink = new DataClassLink(child, ResolveDataClass(child));
+                    _dataClassLinks.Add(child, dataClassLink);
+                }
+            }
+
             foreach (var dataClassAttr in _reflectionManager.FindTypesWithAttribute<MeansImplicitDataClassAttribute>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(dataClassAttr))
                 {
+                    if(_dataClassLinks.ContainsKey(type)) continue;
                     var dataClassLink = new DataClassLink(type, ResolveDataClass(type));
                     _dataClassLinks.Add(type, dataClassLink);
                 }

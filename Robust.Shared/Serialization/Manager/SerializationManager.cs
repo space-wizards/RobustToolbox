@@ -110,7 +110,7 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 var dataDef = GetDataDefinition(commonType);
-                dataDef?.CopyDelegate(source, target);
+                dataDef?.CopyDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
         }

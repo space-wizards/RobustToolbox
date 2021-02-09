@@ -57,14 +57,11 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>",(shell, _, args) =>
+            RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>",(shell, argStr, _) =>
             {
-                string command = args[0];
-                var cArgs = args[1..].Select(CommandParsing.Escape).Select(c => $"\"{c}\"");
-
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);
-                ExecuteInShell(sudoShell, $"{command} {string.Join(' ', cArgs)}");
+                ExecuteInShell(sudoShell, argStr.Substring("sudo ".Length));
             });
             
             LoadConsoleCommands();

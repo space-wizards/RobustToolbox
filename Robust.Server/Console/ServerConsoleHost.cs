@@ -28,7 +28,12 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
-            //TODO: Server -> Client remote execute, just like how the client forwards the command
+            if (!NetManager.IsConnected || session is null)
+                return;
+
+            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            msg.Text = command;
+            NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
         }
 
         /// <inheritdoc />
@@ -61,7 +66,7 @@ namespace Robust.Server.Console
                 var sudoShell = new SudoShell(this, localShell, shell);
                 ExecuteInShell(sudoShell, $"{command} {string.Join(' ', cArgs)}");
             });
-
+            
             LoadConsoleCommands();
 
             // setup networking with clients

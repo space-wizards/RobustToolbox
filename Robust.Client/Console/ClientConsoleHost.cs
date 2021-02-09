@@ -36,7 +36,7 @@ namespace Robust.Client.Console
             Message = message;
         }
     }
-
+    
     /// <inheritdoc cref="IClientConsoleHost" />
     internal class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
@@ -47,10 +47,18 @@ namespace Robust.Client.Console
         {
             NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
             NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
+            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
 
             Reset();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
+        }
+
+        private void ProcessCommand(MsgConCmd message)
+        {
+            string? text = message.Text;
+            LogManager.GetSawmill(SawmillName).Info($"SERVER:{text}");
+
+            ExecuteCommand(null, text);
         }
 
         /// <inheritdoc />
@@ -104,14 +112,14 @@ namespace Robust.Client.Console
                 args.RemoveAt(0);
                 command1.Execute(new ConsoleShell(this, null), command, args.ToArray());
             }
-            else if (!NetManager.IsConnected)
+            else
                 WriteError(null, "Unknown command: " + commandName);
         }
 
         /// <inheritdoc />
         public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
-            if (!NetManager.IsConnected)
+            if (!NetManager.IsConnected) // we don't care about session on client
                 return;
 
             var msg = NetManager.CreateNetMessage<MsgConCmd>();

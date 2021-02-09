@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
@@ -169,9 +170,10 @@ namespace Robust.Shared.IoC
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
-
-            var instance = Activator.CreateInstance(type)!;
+            
+            object instance = FormatterServices.GetUninitializedObject(type);
             _dependencies.InjectDependencies(instance);
+            instance.GetType().GetConstructor(Type.EmptyTypes)!.Invoke(instance, null);
             return instance;
         }
 
@@ -180,16 +182,18 @@ namespace Robust.Shared.IoC
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            var instance = Activator.CreateInstance(type, args)!;
+            object instance = FormatterServices.GetUninitializedObject(type);
             _dependencies.InjectDependencies(instance);
+            instance.GetType().GetConstructors()[0]!.Invoke(instance, args); // hope you only have one
             return instance;
         }
 
         public T CreateInstanceUnchecked<T>() where T : new()
         {
-            var instance = new T();
+            object instance = FormatterServices.GetUninitializedObject(typeof(T));
             _dependencies.InjectDependencies(instance);
-            return instance;
+            instance.GetType().GetConstructor(Type.EmptyTypes)!.Invoke(instance, null);
+            return (T)instance;
         }
     }
 }

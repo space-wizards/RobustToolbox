@@ -5,7 +5,7 @@ namespace Robust.Shared.Interfaces.Serialization
     /// <summary>
     ///     Interface for the "expose data" system, which is basically our method of handling data serialization.
     /// </summary>
-    public interface IExposeData : IDeepClone
+    public interface IExposeData
     {
         /// <summary>
         ///     Will get called to either make this object read data from or provide data to write to/from a serialization format.

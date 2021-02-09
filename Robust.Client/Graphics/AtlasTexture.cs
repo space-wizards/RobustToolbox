@@ -1,5 +1,4 @@
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -10,7 +9,7 @@ namespace Robust.Client.Graphics
     ///     This can be a useful optimization in many cases.
     /// </summary>
     [PublicAPI]
-    public sealed class AtlasTexture : Texture, IDeepClone
+    public sealed class AtlasTexture : Texture
     {
         public AtlasTexture(Texture texture, UIBox2 subRegion) : base((Vector2i) subRegion.Size)
         {
@@ -32,10 +31,5 @@ namespace Robust.Client.Graphics
         ///     Our sub region within our source, in pixel coordinates.
         /// </summary>
         public UIBox2 SubRegion { get; }
-
-        public IDeepClone DeepClone()
-        {
-            return new AtlasTexture(SourceTexture, IDeepClone.CloneValue(SubRegion));
-        }
     }
 }

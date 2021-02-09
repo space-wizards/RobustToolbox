@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Animations;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Animations
@@ -135,7 +134,7 @@ namespace Robust.Client.Animations
             }
         }
 
-        public struct KeyFrame : IDeepClone
+        public struct KeyFrame
         {
             /// <summary>
             ///     The value of the property at this keyframe.
@@ -151,11 +150,6 @@ namespace Robust.Client.Animations
             {
                 Value = value;
                 KeyTime = keyTime;
-            }
-
-            public IDeepClone DeepClone()
-            {
-                return new KeyFrame(IDeepClone.CloneValue(Value)!, KeyTime);
             }
         }
     }

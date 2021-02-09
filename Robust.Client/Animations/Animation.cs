@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects.Components.Animations;
-using Robust.Shared.Interfaces.Serialization;
 
 namespace Robust.Client.Animations
 {
@@ -12,18 +11,10 @@ namespace Robust.Client.Animations
     ///     An animation is a collection of <see cref="AnimationTracks"/>, which are all executed in sync.
     /// </remarks>
     /// <seealso cref="AnimationPlayerComponent"/>
-    public sealed class Animation : IDeepClone
+    public sealed class Animation
     {
         public List<AnimationTrack> AnimationTracks { get; private set; } = new();
 
         public TimeSpan Length { get; set; }
-        public IDeepClone DeepClone()
-        {
-            return new Animation
-            {
-                AnimationTracks = IDeepClone.CloneValue(AnimationTracks)!,
-                Length = IDeepClone.CloneValue(Length)
-            };
-        }
     }
 }

@@ -28,7 +28,6 @@ using System.Linq;
 using Robust.Client.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -1619,7 +1618,7 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        public class Layer : ISpriteLayer, IDeepClone
+        public class Layer : ISpriteLayer
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 
@@ -1879,11 +1878,6 @@ namespace Robust.Client.GameObjects
                 Texture = texture;
 
                 _parent.UpdateIsInert();
-            }
-
-            public IDeepClone DeepClone()
-            {
-                return new Layer(this, null!);
             }
         }
 

@@ -26,14 +26,6 @@ namespace Robust.Generators
             DiagnosticSeverity.Error,
             true);
 
-        public static DiagnosticDescriptor InvalidDeepCloneImpl = new DiagnosticDescriptor(
-            "RADC0002",
-            "",
-            $"Invalid assignment found in DeepClone implementation",
-            "Usage",
-            DiagnosticSeverity.Error,
-            true);
-
         public static DiagnosticDescriptor InvalidYamlTag = new DiagnosticDescriptor(
             "RADC0003",
             "",

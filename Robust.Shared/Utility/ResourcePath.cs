@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
@@ -16,7 +15,7 @@ namespace Robust.Shared.Utility
     ///     ResourcePaths are immutable.
     /// </summary>
     [PublicAPI, Serializable, NetSerializable]
-    public sealed class ResourcePath : IEquatable<ResourcePath>, IDeepClone
+    public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>
         ///     The separator for the file system of the system we are compiling to.
@@ -715,11 +714,6 @@ namespace Robust.Shared.Utility
             }
 
             return array;
-        }
-
-        public IDeepClone DeepClone()
-        {
-            return new ResourcePath(IDeepClone.CloneValue(Segments)!, Separator);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -10,7 +9,7 @@ namespace Robust.Shared.GameObjects
     ///     This can be used by the EntityManager to reference an IEntity.
     /// </summary>
     [Serializable, NetSerializable]
-    public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>, IDeepClone
+    public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
         /// <summary>
         ///     If this bit is set on a UID, it's client sided.
@@ -140,11 +139,6 @@ namespace Robust.Shared.GameObjects
         public int CompareTo(EntityUid other)
         {
             return _uid.CompareTo(other._uid);
-        }
-
-        public IDeepClone DeepClone()
-        {
-            return new EntityUid(_uid);
         }
     }
 }

@@ -7,7 +7,6 @@ using Robust.Shared.GameObjects.Components.Appearance;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
@@ -138,11 +137,6 @@ namespace Robust.Client.GameObjects
                 Key = key;
                 SpriteLayer = spriteLayer;
             }
-
-            public override IDeepClone DeepClone()
-            {
-                return new SpriteLayerToggle(IDeepClone.CloneValue(Key)!, SpriteLayer);
-            }
         }
     }
 
@@ -150,7 +144,7 @@ namespace Robust.Client.GameObjects
     ///     Handles the visualization of data inside of an appearance component.
     ///     Implementations of this class are NOT bound to a specific entity, they are flyweighted across multiple.
     /// </summary>
-    public abstract class AppearanceVisualizer : IDeepClone
+    public abstract class AppearanceVisualizer
     {
         /// <summary>
         ///     Load data from the prototype declaring this visualizer, to configure settings and such.
@@ -175,8 +169,6 @@ namespace Robust.Client.GameObjects
         public virtual void OnChangeData(AppearanceComponent component)
         {
         }
-
-        public abstract IDeepClone DeepClone();
     }
 
     sealed class AppearanceTestComponent : Component

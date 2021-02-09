@@ -27,10 +27,5 @@ namespace Robust.Shared.Prototypes
         {
             //throw new NotImplementedException();
         }
-
-        public IDeepClone DeepClone()
-        {
-            throw new InvalidOperationException("DataClass cannot be cloned.");
-        }
     }
 }

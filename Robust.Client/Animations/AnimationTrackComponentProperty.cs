@@ -2,7 +2,6 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Serialization;
 
 namespace Robust.Client.Animations
 {
@@ -30,17 +29,6 @@ namespace Robust.Client.Animations
             {
                 AnimationHelper.SetAnimatableProperty(component, Property, value);
             }
-        }
-
-        public override IDeepClone DeepClone()
-        {
-            return new AnimationTrackComponentProperty
-            {
-                Property = IDeepClone.CloneValue(Property),
-                ComponentType = IDeepClone.CloneValue(ComponentType),
-                InterpolationMode = IDeepClone.CloneValue(InterpolationMode),
-                KeyFrames = IDeepClone.CloneValue(KeyFrames)!
-            };
         }
     }
 }

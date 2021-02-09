@@ -1,11 +1,9 @@
-using Robust.Shared.Interfaces.Serialization;
-
 namespace Robust.Client.Animations
 {
     /// <summary>
     ///     A single track of an <see cref="Animation"/>.
     /// </summary>
-    public abstract class AnimationTrack : IDeepClone
+    public abstract class AnimationTrack
     {
         /// <summary>
         ///     Return the values necessary to initialize a playback.
@@ -27,7 +25,5 @@ namespace Robust.Client.Animations
         /// </returns>
         public abstract (int KeyFrameIndex, float FramePlayingTime)
             AdvancePlayback(object context, int prevKeyFrameIndex, float prevPlayingTime, float frameTime);
-
-        public abstract IDeepClone DeepClone();
     }
 }

@@ -4,7 +4,6 @@ using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 using YamlDotNet.Core.Tokens;
@@ -48,15 +47,7 @@ namespace Robust.Client.Animations
             return (keyFrameIndex, playingTime);
         }
 
-        public override IDeepClone DeepClone()
-        {
-            return new AnimationTrackPlaySound
-            {
-                KeyFrames = IDeepClone.CloneValue(KeyFrames)!
-            };
-        }
-
-        public struct KeyFrame : IDeepClone
+        public struct KeyFrame
         {
             /// <summary>
             ///     The RSI state to play when this keyframe gets triggered.
@@ -80,11 +71,6 @@ namespace Robust.Client.Animations
                 Resource = resource;
                 KeyTime = keyTime;
                 AudioParamsFunc = audioParams ?? (() => AudioParams.Default);
-            }
-
-            public IDeepClone DeepClone()
-            {
-                return new KeyFrame(Resource, KeyTime, AudioParamsFunc);
             }
         }
     }

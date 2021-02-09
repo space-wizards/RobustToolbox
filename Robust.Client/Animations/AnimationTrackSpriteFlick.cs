@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations
@@ -70,16 +69,7 @@ namespace Robust.Client.Animations
             return (keyFrameIndex, playingTime);
         }
 
-        public override IDeepClone DeepClone()
-        {
-            return new AnimationTrackSpriteFlick
-            {
-                KeyFrames = IDeepClone.CloneValue(KeyFrames)!,
-                LayerKey = IDeepClone.CloneValue(LayerKey)
-            };
-        }
-
-        public struct KeyFrame : IDeepClone
+        public struct KeyFrame
         {
             /// <summary>
             ///     The RSI state to play when this keyframe gets triggered.
@@ -95,11 +85,6 @@ namespace Robust.Client.Animations
             {
                 State = state;
                 KeyTime = keyTime;
-            }
-
-            public IDeepClone DeepClone()
-            {
-                return new KeyFrame(IDeepClone.CloneValue(State), KeyTime);
             }
         }
     }

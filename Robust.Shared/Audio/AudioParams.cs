@@ -170,19 +170,6 @@ namespace Robust.Shared.Audio
             me.PlayOffsetSeconds = offset;
             return me;
         }
-
-        public IDeepClone DeepClone()
-        {
-            return new AudioParams(
-                Volume,
-                PitchScale,
-                BusName,
-                MaxDistance,
-                IDeepClone.CloneValue(Attenuation),
-                IDeepClone.CloneValue(MixTarget),
-                Loop,
-                PlayOffsetSeconds);
-        }
     }
 
     /// <summary>

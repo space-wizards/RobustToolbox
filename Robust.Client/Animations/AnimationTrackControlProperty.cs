@@ -1,7 +1,6 @@
 using System;
 using Robust.Client.Animations;
 using Robust.Shared.Animations;
-using Robust.Shared.Interfaces.Serialization;
 
 namespace Content.Client.Animations
 {
@@ -18,16 +17,6 @@ namespace Content.Client.Animations
 
             // TODO: Attached property support?
             AnimationHelper.SetAnimatableProperty(context, Property, value);
-        }
-
-        public override IDeepClone DeepClone()
-        {
-            return new AnimationTrackControlProperty
-            {
-                Property = IDeepClone.CloneValue(Property),
-                InterpolationMode = IDeepClone.CloneValue(InterpolationMode),
-                KeyFrames = IDeepClone.CloneValue(KeyFrames)!
-            };
         }
     }
 }

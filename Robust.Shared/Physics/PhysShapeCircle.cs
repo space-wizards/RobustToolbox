@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -85,16 +84,6 @@ namespace Robust.Shared.Physics
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(in Matrix3.Identity);
-        }
-
-        public IDeepClone DeepClone()
-        {
-            return new PhysShapeCircle
-            {
-                _radius = _radius,
-                _collisionLayer = _collisionLayer,
-                _collisionMask = _collisionMask
-            };
         }
     }
 }

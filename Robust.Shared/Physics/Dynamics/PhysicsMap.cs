@@ -184,7 +184,7 @@ namespace Robust.Shared.Physics.Dynamics
                 gridEntity.TryGetComponent(out PhysicsComponent? gridBody))
             {
                 // TODO: Need static helper class to easily create Joints
-                var friction = new FrictionJoint(body, gridBody);
+                var friction = new FrictionJoint(body, gridBody) {NetSyncEnabled = false, PropagateIsland = false};
                 AddJoint(friction);
                 friction.MaxForce = 1000;
                 friction.MaxTorque = 1000;
@@ -531,22 +531,15 @@ namespace Robust.Shared.Physics.Dynamics
 
                     for (JointEdge? je = body.JointEdges; je != null; je = je.Next)
                     {
-                        if (je.Joint.IslandFlag)
+                        // Robust code: Don't propagate island if it's a friction joint between dynamic body and a grid.
+                        // Kind of hacky TBH.
+                        // If you want a rope between 2 grids you'll need to fix this shiz.
+                        if (je.Joint.IslandFlag || !je.Joint.PropagateIsland)
                         {
                             continue;
                         }
 
                         PhysicsComponent other = je.Other;
-
-                        // Robust code: Don't propagate island if it's a friction joint between dynamic body and a grid.
-                        // Kind of hacky TBH.
-                        // If you want a rope between 2 grids you'll need to fix this shiz.
-                        if (body.Entity.HasComponent<MapGridComponent>() ||
-                            other.Entity.HasComponent<MapGridComponent>())
-                        {
-                            je.Joint.IslandFlag = true;
-                            continue;
-                        }
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;

@@ -250,6 +250,7 @@ namespace Robust.Shared.GameObjects.Components
             var joints = new List<Joint>();
             for (var je = JointEdges; je != null; je = je.Next)
             {
+                if (!je.Joint.NetSyncEnabled) continue;
                 joints.Add(je.Joint);
             }
 
@@ -288,7 +289,6 @@ namespace Robust.Shared.GameObjects.Components
             if (existingJoints.Count == newState.Joints.Count)
             {
                 var anyDiff = false;
-
                 for (var i = 0; i < existingJoints.Count; i++)
                 {
                     var existing = existingJoints[i];

@@ -55,7 +55,7 @@ namespace Robust.Server.Console
             RegisterCommand("sudo", "sudo make me a sandwich", "sudo <command>",(shell, _, args) =>
             {
                 string command = args[0];
-                var cArgs = args[1..].Select(CommandParsing.Escape);
+                var cArgs = args[1..].Select(CommandParsing.Escape).Select(c => $"\"{c}\"");
 
                 var localShell = shell.ConsoleHost.LocalShell;
                 var sudoShell = new SudoShell(this, localShell, shell);

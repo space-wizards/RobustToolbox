@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -478,8 +477,8 @@ namespace Robust.Shared.Serialization
             }
 
             // val enum
-            if (type.IsEnum)
-                return Enum.Parse(type, node.ToString());
+            if (underlyingType.IsEnum)
+                return Enum.Parse(underlyingType, node.ToString());
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
             if (TryGenericReadOnlyCollectionType(type, out var collectionType))
@@ -544,6 +543,33 @@ namespace Robust.Shared.Serialization
                 var newSet = Activator.CreateInstance(type, valuesArray)!;
 
                 return newSet;
+            }
+
+            // KeyValuePair<K, V>
+            if (TryGenericKeyValuePairType(type, out var kvpKeyType, out var kvpValType))
+            {
+                var pairType = typeof(KeyValuePair<,>).MakeGenericType(kvpKeyType, kvpValType);
+                var pairNode = (YamlMappingNode) node;
+
+                switch (pairNode.Children.Count)
+                {
+                    case 0:
+                        return Activator.CreateInstance(pairType)!;
+                    case 1:
+                    {
+                        using var enumerator = pairNode.GetEnumerator();
+                        enumerator.MoveNext();
+                        var yamlPair = enumerator.Current;
+                        var keyValue = NodeToType(kvpKeyType, yamlPair.Key);
+                        var valValue = NodeToType(kvpValType, yamlPair.Value);
+                        var pair = Activator.CreateInstance(pairType, keyValue, valValue)!;
+
+                        return pair;
+                    }
+                    default:
+                        throw new InvalidOperationException(
+                            $"Cannot read KeyValuePair from mapping node with more than one child.");
+                }
             }
 
             // Hand it to the context.
@@ -749,6 +775,21 @@ namespace Robust.Shared.Serialization
                 return node;
             }
 
+            if (TryGenericKeyValuePairType(type, out var kvpKeyType, out var kvpValType))
+            {
+                var node = new YamlMappingNode {Tag = TagSkipTag};
+                dynamic pair = obj;
+                var keyNode = TypeToNode(pair.Key);
+                var valNode = TypeToNode(pair.Value);
+
+                // write the concrete type tag
+                AssignTag<object?>(kvpValType, pair, null, valNode);
+
+                node.Add(keyNode, valNode);
+
+                return node;
+            }
+
             // Hand it to the context.
             if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {
@@ -896,6 +937,24 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
+            if (TryGenericKeyValuePairType(type!, out _, out _))
+            {
+                dynamic tupleA = a;
+                dynamic tupleB = b!;
+
+                if (!IsSerializedEqual(tupleA.Key, tupleB.Key))
+                {
+                    return false;
+                }
+
+                if (!IsSerializedEqual(tupleA.Value, tupleB.Value))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
                 // Serialize both, see if output matches.
@@ -1032,6 +1091,27 @@ namespace Robust.Shared.Serialization
             }
 
             setType = default;
+            return false;
+        }
+
+        private static bool TryGenericKeyValuePairType(
+            Type type,
+            [NotNullWhen(true)] out Type? keyType,
+            [NotNullWhen(true)] out Type? valType)
+        {
+            var isPair = type.GetTypeInfo().IsGenericType &&
+                         type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+
+            if (isPair)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
             return false;
         }
 

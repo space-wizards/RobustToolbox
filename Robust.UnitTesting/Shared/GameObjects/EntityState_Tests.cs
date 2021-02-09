@@ -38,6 +38,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, RobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            container.Register<IAuthManager, AuthManager>();
             container.BuildGraph();
 
             var cfg = container.Resolve<IConfigurationManagerInternal>();

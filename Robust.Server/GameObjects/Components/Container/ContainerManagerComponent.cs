@@ -289,7 +289,7 @@ namespace Robust.Server.GameObjects.Components.Container
                 Type = type;
             }
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 serializer.DataField(ref Entities, "entities", new List<EntityUid>());
                 serializer.DataField(ref Type, "type", null);

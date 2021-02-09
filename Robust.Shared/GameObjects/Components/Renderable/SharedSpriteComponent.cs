@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 };
             }
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 serializer.DataField(ref Shader, "shader", null);
                 serializer.DataField(ref TexturePath, "texture", null);

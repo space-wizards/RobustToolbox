@@ -1,13 +1,13 @@
 ﻿#if !FULL_RELEASE
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
@@ -39,9 +39,9 @@ namespace Robust.Client.Console.Commands
             var token = login.Token.Token;
             var userId = login.UserId;
 
-            var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
-            cfg.SetSecureCVar(CVars.AuthUserId, userId);
-            cfg.SetSecureCVar(CVars.AuthToken, token);
+            var cfg = IoCManager.Resolve<IAuthManager>();
+            cfg.Token = token;
+            cfg.UserId = new NetUserId(Guid.Parse(userId));
         }
 
         private sealed class LauncherConfig

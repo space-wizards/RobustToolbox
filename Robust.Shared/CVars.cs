@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 
 namespace Robust.Shared
 {
@@ -218,17 +219,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> AuthServerPubKey =
-            CVarDef.Create("auth.serverpubkey", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthToken =
-            CVarDef.Create("auth.token", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthUserId =
-            CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
-
+        // Only respected on server, client goes through IAuthManager for security.
         public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
+            CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
          * DISPLAY

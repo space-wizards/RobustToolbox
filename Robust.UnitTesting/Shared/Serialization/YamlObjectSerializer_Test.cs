@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Moq;
 using NUnit.Framework;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
@@ -326,6 +324,103 @@ namespace Robust.UnitTesting.Shared.Serialization
 
         private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
         private readonly HashSet<int> SerializableSet = new() { 1, 2, 3 };
+
+        [Test]
+        public void SerializePairTest()
+        {
+            var mapping = new YamlMappingNode();
+            var pair = SerializablePair;
+
+            var writer = YamlObjectSerializer.NewWriter(mapping);
+
+            writer.DataField(ref pair, "dataPair", new KeyValuePair<string, int>("val0", 0));
+
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedPairYaml));
+        }
+
+        [Test]
+        public void DeserializePairTest()
+        {
+            KeyValuePair<string, int> data = default;
+            var rootNode = YamlTextToNode(SerializedPairYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataPair", new KeyValuePair<string, int>("val0", 0));
+
+            Assert.That(data, Is.Not.EqualTo(default(KeyValuePair<string, int>)));
+            Assert.That(data.Key, Is.EqualTo(SerializablePair.Key));
+            Assert.That(data.Value, Is.EqualTo(SerializablePair.Value));
+        }
+
+        [Test]
+        public void SerializeDefaultPairTest()
+        {
+            var mapping = new YamlMappingNode();
+            var pair = SerializableDefaultPair;
+
+            var writer = YamlObjectSerializer.NewWriter(mapping);
+
+            writer.DataField(ref pair, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedDefaultPairYaml));
+        }
+
+        [Test]
+        public void DeserializeDefaultPairTest()
+        {
+            KeyValuePair<int, int> data = default;
+            var rootNode = YamlTextToNode(SerializedDefaultPairYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            Assert.That(data, Is.EqualTo(default(KeyValuePair<int, int>)));
+            Assert.That(data.Key, Is.EqualTo(SerializableDefaultPair.Key));
+            Assert.That(data.Value, Is.EqualTo(SerializableDefaultPair.Value));
+        }
+
+        [Test]
+        public void DeserializeNoPairTest()
+        {
+            KeyValuePair<int, int> data = default;
+            var rootNode = YamlTextToNode(SerializedNoPairYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataPair", new KeyValuePair<int, int>(0, 0));
+
+            Assert.That(data, Is.EqualTo(default(KeyValuePair<int, int>)));
+            Assert.That(data.Key, Is.EqualTo(SerializedNoPair.Key));
+            Assert.That(data.Value, Is.EqualTo(SerializedNoPair.Value));
+        }
+
+        [Test]
+        public void SerializedEqualPairTest()
+        {
+            var pair = new KeyValuePair<string, int>("val0", 0);
+            var pair2 = new KeyValuePair<string, int>("val0", 0);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(pair, pair2), Is.True);
+        }
+
+        [Test]
+        public void SerializedNotEqualPairTest()
+        {
+            var pair = new KeyValuePair<string, int>("val0", 0);
+            var pair2 = new KeyValuePair<string, int>("val0", 1);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(pair, pair2), Is.False);
+        }
+
+        private readonly string SerializedPairYaml = "dataPair:\n  val1: 1\n...\n";
+        private readonly KeyValuePair<string, int> SerializablePair = new("val1", 1);
+
+        private readonly string SerializedDefaultPairYaml = "{}\n...\n";
+        private readonly KeyValuePair<int, int> SerializableDefaultPair = new(0, 0);
+
+        private readonly string SerializedNoPairYaml = "dataPair: {}\n...\n";
+        private readonly KeyValuePair<int, int> SerializedNoPair = new(0, 0);
 
         [Test]
         public void NullablePrimitiveSerializeNullTest()

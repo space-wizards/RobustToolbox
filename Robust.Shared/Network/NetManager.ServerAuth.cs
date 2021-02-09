@@ -51,8 +51,7 @@ namespace Robust.Shared.Network
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
                 var needPk = msgLogin.NeedPubKey;
-                var authServer = _config.GetSecureCVar<string>("auth.server");
-
+                var authServer = _config.GetCVar(CVars.AuthServer);
 
                 if (Auth == AuthMode.Required && !isLocal)
                 {

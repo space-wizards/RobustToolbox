@@ -111,6 +111,7 @@ namespace Robust.Shared.Network
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
+        [Dependency] private readonly IAuthManager _authManager = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type

@@ -82,6 +82,7 @@ namespace Robust.Client
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();
+            IoCManager.Register<IAuthManager, AuthManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

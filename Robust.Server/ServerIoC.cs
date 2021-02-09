@@ -73,6 +73,7 @@ namespace Robust.Server
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();
+            IoCManager.Register<IAuthManager, AuthManager>();
         }
     }
 }

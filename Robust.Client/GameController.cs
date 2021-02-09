@@ -31,6 +31,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -67,6 +68,7 @@ namespace Robust.Client
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly IAuthManager _authManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -185,6 +187,8 @@ namespace Robust.Client
             {
                 _client.PlayerNameOverride = _commandLineArgs.Username;
             }
+
+            _authManager.LoadFromEnv();
 
             _clyde.Ready();
 

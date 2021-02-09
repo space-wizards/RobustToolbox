@@ -30,7 +30,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
-        public SerializationDataDefinition(Type type, IReflectionManager _reflectionManager)
+        public SerializationDataDefinition(Type type)
         {
             Type = type;
             var dummyObj = Activator.CreateInstance(type)!;
@@ -69,14 +69,14 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
             var generator = dynamicMethod.GetILGenerator();
 
-            if (typeof(IExposeData).IsAssignableFrom(Type))
-            {
-                generator.EmitExposeDataCall();
-            }
-
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {
                 generator.EmitPopulateField(fieldDefinition);
+            }
+
+            if (typeof(IExposeData).IsAssignableFrom(Type))
+            {
+                generator.EmitExposeDataCall();
             }
 
             generator.Emit(OpCodes.Ret);

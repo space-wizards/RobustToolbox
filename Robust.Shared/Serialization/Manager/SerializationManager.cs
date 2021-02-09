@@ -19,25 +19,25 @@ namespace Robust.Shared.Serialization.Manager
             //generating all datadefinitions except exposedata
             foreach (var type in _reflectionManager.FindTypesWithAttribute<YamlDefinition>())
             {
-                _dataDefinitions.Add(type, new SerializationDataDefinition(type, _reflectionManager));
+                _dataDefinitions.Add(type, new SerializationDataDefinition(type));
             }
 
             foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansYamlDefinition>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
                 {
-                    _dataDefinitions.Add(type, new SerializationDataDefinition(type, _reflectionManager));
+                    _dataDefinitions.Add(type, new SerializationDataDefinition(type));
                 }
             }
         }
 
-        private SerializationDataDefinition? GetDataDefinition(Type type)
+        public SerializationDataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
             if (!typeof(IExposeData).IsAssignableFrom(type)) return null;
 
-            dataDefinition = new SerializationDataDefinition(type, _reflectionManager);
+            dataDefinition = new SerializationDataDefinition(type);
             _dataDefinitions.Add(type, dataDefinition);
 
             return dataDefinition;

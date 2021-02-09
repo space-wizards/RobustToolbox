@@ -8,6 +8,8 @@ namespace Robust.Shared.Serialization.Manager
     {
         void Initialize();
 
+        SerializationDataDefinition? GetDataDefinition(Type type);
+
         object Populate(Type type, YamlObjectSerializer serializer);
 
         void PushInheritance(object source, object target);

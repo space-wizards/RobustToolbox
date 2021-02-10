@@ -1,8 +1,6 @@
 using System.Linq;
-using Robust.Shared;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands

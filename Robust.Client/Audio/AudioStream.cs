@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Clyde;
 
 namespace Robust.Client.Audio
 {

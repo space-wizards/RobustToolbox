@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Text;
 using Robust.Server.Player;
-using Robust.Shared;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.IoC;

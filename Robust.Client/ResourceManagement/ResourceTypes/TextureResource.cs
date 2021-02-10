@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.IO;
+﻿using System.IO;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared.IoC;

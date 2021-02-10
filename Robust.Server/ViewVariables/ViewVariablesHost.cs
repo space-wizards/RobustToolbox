@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Robust.Server.Console;
 using Robust.Server.Player;
-using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

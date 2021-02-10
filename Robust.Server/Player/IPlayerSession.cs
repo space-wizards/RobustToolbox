@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;

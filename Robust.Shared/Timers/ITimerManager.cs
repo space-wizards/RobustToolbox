@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using Robust.Shared.Timing;
-using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Shared.Timers
 {

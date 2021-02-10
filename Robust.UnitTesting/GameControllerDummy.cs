@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client;
 using Robust.Client.Input;
 using Robust.Shared.Log;
@@ -53,7 +53,7 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

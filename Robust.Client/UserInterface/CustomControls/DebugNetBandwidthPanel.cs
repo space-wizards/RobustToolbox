@@ -2,7 +2,6 @@
 using System.Linq;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;

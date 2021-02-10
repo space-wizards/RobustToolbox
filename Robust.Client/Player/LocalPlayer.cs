@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.GameObjects;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;

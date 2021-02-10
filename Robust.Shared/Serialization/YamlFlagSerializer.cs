@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization
 {

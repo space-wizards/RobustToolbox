@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands

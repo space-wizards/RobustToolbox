@@ -18,7 +18,6 @@ using Robust.Shared.Exceptions;
 using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;

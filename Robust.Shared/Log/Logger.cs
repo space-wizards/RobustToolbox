@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Log

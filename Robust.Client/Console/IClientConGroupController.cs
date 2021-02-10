@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Robust.Client.Console
+﻿namespace Robust.Client.Console
 {
     public interface IClientConGroupController : IClientConGroupImplementation
     {

@@ -5,7 +5,6 @@ using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.ResourceManagement;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;

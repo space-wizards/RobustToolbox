@@ -184,7 +184,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    System.IO.File.WriteAllText("error.glsl", vertexSource);
+                    File.WriteAllText("error.glsl", vertexSource);
                     throw new ShaderCompilationException(
                         "Failed to compile vertex shader, see inner for details (and error.glsl for formatted source).", e);
                 }
@@ -195,7 +195,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    System.IO.File.WriteAllText("error.glsl", fragmentSource);
+                    File.WriteAllText("error.glsl", fragmentSource);
                     throw new ShaderCompilationException(
                         "Failed to compile fragment shader, see inner for details (and error.glsl for formatted source).", e);
                 }

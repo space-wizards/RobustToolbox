@@ -8,7 +8,6 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {

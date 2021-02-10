@@ -4,7 +4,6 @@ using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics
 {

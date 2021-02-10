@@ -1,5 +1,4 @@
-﻿using Robust.Shared.IoC;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes

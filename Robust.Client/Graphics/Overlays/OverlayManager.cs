@@ -1,11 +1,8 @@
-﻿using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Overlays
 {

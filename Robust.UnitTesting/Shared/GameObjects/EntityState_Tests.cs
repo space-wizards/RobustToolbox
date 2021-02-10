@@ -2,7 +2,6 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Server.Reflection;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;

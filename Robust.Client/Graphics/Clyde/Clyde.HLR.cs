@@ -7,10 +7,8 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde

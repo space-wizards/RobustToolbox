@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;

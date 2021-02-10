@@ -1,7 +1,6 @@
 using System;
 using System.Runtime;
 using System.Text;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;

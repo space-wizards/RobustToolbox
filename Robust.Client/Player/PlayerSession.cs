@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.Enums;
+﻿using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 

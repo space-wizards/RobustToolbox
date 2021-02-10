@@ -75,7 +75,7 @@ namespace Robust.Shared.ContentPack
         public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
             bool recursive = true)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool IsDir(ResourcePath path)
@@ -189,7 +189,7 @@ namespace Robust.Shared.ContentPack
 
         public void Rename(ResourcePath oldPath, ResourcePath newPath)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         private bool TryGetNodeAt(ResourcePath path, [NotNullWhen(true)] out INode? node)

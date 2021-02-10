@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {

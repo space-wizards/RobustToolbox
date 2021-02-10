@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.State
@@ -7,8 +7,8 @@ namespace Robust.Client.State
     {
         event Action<StateChangedEventArgs> OnStateChanged;
 
-        Client.State.State CurrentState { get; }
-        void RequestStateChange<T>() where T : Client.State.State, new();
+        State CurrentState { get; }
+        void RequestStateChange<T>() where T : State, new();
         void Update(FrameEventArgs e);
         void FrameUpdate(FrameEventArgs e);
         void FormResize();

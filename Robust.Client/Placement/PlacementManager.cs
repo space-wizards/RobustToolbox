@@ -17,7 +17,6 @@ using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Network;

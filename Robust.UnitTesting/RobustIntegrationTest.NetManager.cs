@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Robust.Shared;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;

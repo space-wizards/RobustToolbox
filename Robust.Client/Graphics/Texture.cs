@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Interfaces.Graphics;
@@ -125,7 +125,7 @@ namespace Robust.Client.Graphics
 
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
-            var loadParams = TextureLoadParameters.Default;
+            var loadParams = Default;
             if (yaml.TryGetNode("sample", out YamlMappingNode? sampleNode))
             {
                 loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);

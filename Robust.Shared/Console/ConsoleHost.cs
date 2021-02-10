@@ -4,7 +4,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;

@@ -4,7 +4,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.ResourceManagement;
-using Robust.Shared;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;

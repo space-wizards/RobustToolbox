@@ -486,8 +486,8 @@ namespace Robust.Shared.Configuration
         }
     }
 
-    [System.Serializable]
-    public class InvalidConfigurationException : System.Exception
+    [Serializable]
+    public class InvalidConfigurationException : Exception
     {
         public InvalidConfigurationException()
         {
@@ -495,7 +495,7 @@ namespace Robust.Shared.Configuration
         public InvalidConfigurationException(string message) : base(message)
         {
         }
-        public InvalidConfigurationException(string message, System.Exception inner) : base(message, inner)
+        public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
         {
         }
         protected InvalidConfigurationException(

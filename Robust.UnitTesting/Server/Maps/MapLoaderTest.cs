@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Maps;
 using Robust.Shared.ContentPack;

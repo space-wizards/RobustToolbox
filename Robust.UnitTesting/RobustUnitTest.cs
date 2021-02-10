@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -9,7 +8,6 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting

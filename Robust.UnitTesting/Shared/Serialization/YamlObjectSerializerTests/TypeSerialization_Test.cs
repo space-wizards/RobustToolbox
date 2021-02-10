@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var mapping = new YamlMappingNode();
             var writer = YamlObjectSerializer.NewWriter(mapping);
 
-            writer.DataField(ref type, "type", null);
+            writer.DataField(ref type, "type", null!);
 
             Assert.IsNotEmpty(mapping.Children);
             Assert.IsInstanceOf<YamlScalarNode>(mapping.Children[0].Key);

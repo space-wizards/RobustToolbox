@@ -1,8 +1,7 @@
 using System;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 

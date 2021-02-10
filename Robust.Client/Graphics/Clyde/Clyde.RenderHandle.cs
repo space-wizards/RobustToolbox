@@ -3,9 +3,9 @@ using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde

@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.GameObjects;
+using Robust.Client.Input;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
@@ -14,11 +10,9 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

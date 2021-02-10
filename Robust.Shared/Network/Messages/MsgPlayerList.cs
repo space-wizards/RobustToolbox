@@ -2,7 +2,6 @@
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Players;
 
 #nullable disable

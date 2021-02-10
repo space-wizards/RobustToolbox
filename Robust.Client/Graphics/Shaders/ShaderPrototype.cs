@@ -1,12 +1,12 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement.ResourceTypes;
+﻿using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 

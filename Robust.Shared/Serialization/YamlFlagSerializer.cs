@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization

@@ -1,6 +1,6 @@
-﻿using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.Interfaces.GameObjects;
+﻿using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;

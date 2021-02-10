@@ -1,11 +1,9 @@
 ﻿using System;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Client.Interfaces;
 using Robust.Client.Utility;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;

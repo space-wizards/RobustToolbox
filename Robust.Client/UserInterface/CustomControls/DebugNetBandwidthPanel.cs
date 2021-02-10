@@ -2,9 +2,9 @@
 using System.Linq;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;

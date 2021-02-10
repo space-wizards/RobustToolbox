@@ -1,7 +1,6 @@
 ﻿using System.Linq;
+using Robust.Client.GameObjects;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;

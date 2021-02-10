@@ -1,10 +1,9 @@
 ﻿using System;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System.IO;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 #nullable disable

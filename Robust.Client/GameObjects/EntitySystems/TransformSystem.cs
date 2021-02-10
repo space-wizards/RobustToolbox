@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Handles interpolation of transform positions.

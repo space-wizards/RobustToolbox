@@ -2,10 +2,10 @@
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
+using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;

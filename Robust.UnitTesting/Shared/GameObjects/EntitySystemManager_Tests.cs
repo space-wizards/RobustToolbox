@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting.Shared.GameObjects

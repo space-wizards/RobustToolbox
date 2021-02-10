@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
 
 namespace Robust.Shared.Network
 {

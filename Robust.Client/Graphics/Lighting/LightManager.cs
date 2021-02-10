@@ -1,4 +1,4 @@
-﻿using Robust.Client.Interfaces.Graphics.Lighting;
+﻿using Robust.Client.Graphics.Interfaces.Graphics.Lighting;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Lighting

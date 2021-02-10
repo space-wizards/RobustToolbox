@@ -1,10 +1,10 @@
 ﻿using DiscordRPC;
 using DiscordRPC.Logging;
-using Robust.Client.Interfaces.Utility;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {

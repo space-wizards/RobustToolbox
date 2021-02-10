@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;

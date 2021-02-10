@@ -1,20 +1,17 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates

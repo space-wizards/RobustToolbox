@@ -1,8 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;

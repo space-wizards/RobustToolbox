@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders

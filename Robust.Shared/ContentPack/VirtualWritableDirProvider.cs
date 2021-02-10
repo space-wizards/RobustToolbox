@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack

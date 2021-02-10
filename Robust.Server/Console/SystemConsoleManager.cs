@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Server.Interfaces;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Con = System.Console;

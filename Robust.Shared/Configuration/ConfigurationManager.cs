@@ -1,5 +1,4 @@
 using Nett;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;

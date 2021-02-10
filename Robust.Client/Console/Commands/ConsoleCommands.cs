@@ -4,7 +4,6 @@
 
 using System;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Random;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 

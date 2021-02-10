@@ -1,7 +1,6 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.GameStates;
+﻿using Robust.Client.GameStates;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 

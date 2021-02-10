@@ -1,8 +1,7 @@
 ﻿using System;
 using Robust.Client;
 using Robust.Client.Input;
-using Robust.Client.Interfaces;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting

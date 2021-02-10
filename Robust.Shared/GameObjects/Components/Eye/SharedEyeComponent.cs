@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Eye
+namespace Robust.Shared.GameObjects
 {
     public class SharedEyeComponent : Component
     {

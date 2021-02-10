@@ -1,9 +1,8 @@
-using Robust.Server.Interfaces.Timing;
+using Robust.Server.Timing;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.IoC;
 
-namespace Robust.Server.GameObjects.Components
+namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedIgnorePauseComponent))]

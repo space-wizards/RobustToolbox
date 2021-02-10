@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System;
-using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects
 {

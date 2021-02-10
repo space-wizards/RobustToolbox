@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.GameStates

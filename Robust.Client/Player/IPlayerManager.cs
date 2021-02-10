@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 

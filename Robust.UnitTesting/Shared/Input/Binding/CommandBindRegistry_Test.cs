@@ -4,7 +4,6 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;

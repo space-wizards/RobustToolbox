@@ -5,7 +5,7 @@ using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
 using static Robust.Client.Animations.AnimationPlaybackShared;
 
-namespace Robust.Client.GameObjects.Components.Animations
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Plays back <see cref="Animation"/>s on entities.

@@ -6,8 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;

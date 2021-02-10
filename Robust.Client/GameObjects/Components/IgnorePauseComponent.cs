@@ -1,7 +1,6 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
 
-namespace Robust.Client.GameObjects.Components
+namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedIgnorePauseComponent))]

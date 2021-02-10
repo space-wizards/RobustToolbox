@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Interfaces.Log;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;

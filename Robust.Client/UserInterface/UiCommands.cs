@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.State;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 
 namespace Robust.Client.UserInterface
 {

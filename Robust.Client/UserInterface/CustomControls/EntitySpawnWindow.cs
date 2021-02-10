@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Robust.Client.GameObjects;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;

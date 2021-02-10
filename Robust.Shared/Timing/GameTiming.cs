@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing

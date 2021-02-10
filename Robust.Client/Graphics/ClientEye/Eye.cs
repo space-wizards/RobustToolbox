@@ -1,4 +1,4 @@
-﻿using Robust.Client.Interfaces.Graphics.ClientEye;
+﻿using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;

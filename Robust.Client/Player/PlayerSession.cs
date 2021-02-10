@@ -1,6 +1,6 @@
 ﻿using System;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 
 namespace Robust.Client.Player

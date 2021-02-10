@@ -1,4 +1,4 @@
-using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 

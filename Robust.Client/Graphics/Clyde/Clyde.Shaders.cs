@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = Robust.Client.Graphics.Shaders.StencilOp;
+using StencilOp = Robust.Client.Graphics.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {

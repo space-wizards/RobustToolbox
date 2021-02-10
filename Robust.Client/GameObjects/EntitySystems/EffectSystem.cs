@@ -1,15 +1,10 @@
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;

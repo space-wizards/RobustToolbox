@@ -3,13 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
 
 // ReSharper disable once IdentifierTypo
-using RTCF = Robust.Client.Graphics.Interfaces.Graphics.RenderTargetColorFormat;
+using RTCF = Robust.Client.Graphics.RenderTargetColorFormat;
 using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
 using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
 using PT = OpenToolkit.Graphics.OpenGL4.PixelType;

@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     internal sealed partial class ShaderParser
     {

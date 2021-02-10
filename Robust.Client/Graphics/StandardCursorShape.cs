@@ -1,4 +1,4 @@
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     OS-standard cursor shapes.

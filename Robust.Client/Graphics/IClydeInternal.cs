@@ -1,10 +1,9 @@
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     internal interface IClydeInternal : IClyde, IClipboardManager
     {

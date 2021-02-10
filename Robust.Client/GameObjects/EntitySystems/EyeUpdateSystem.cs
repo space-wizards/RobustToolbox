@@ -1,6 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+using Robust.Client.Graphics;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;

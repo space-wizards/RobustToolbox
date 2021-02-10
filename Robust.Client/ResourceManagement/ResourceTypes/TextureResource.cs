@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;

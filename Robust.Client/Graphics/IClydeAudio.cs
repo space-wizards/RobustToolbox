@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Robust.Client.Audio;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     public interface IClydeAudio
     {

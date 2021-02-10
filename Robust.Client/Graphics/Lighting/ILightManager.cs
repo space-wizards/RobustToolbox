@@ -1,6 +1,6 @@
-﻿using Robust.Shared.Maths;
+using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics.Lighting
+namespace Robust.Client.Graphics
 {
     public interface ILightManager
     {

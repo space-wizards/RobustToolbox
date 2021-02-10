@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
-using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Client.State;

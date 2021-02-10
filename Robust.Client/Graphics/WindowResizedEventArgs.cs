@@ -1,7 +1,7 @@
 using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     public class WindowResizedEventArgs : EventArgs
     {

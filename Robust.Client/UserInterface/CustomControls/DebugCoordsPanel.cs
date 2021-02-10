@@ -1,10 +1,8 @@
 ﻿using System.Text;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;

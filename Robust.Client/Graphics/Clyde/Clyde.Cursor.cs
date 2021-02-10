@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using OpenToolkit.GraphicsLibraryFramework;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;

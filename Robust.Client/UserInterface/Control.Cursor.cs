@@ -1,5 +1,5 @@
 using System;
-using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface
 {

@@ -1,13 +1,10 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
+using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Graphics.Overlays
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     An overlay is used for fullscreen drawing in the game, for example parallax.

@@ -1,4 +1,4 @@
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     A render target that represents the contents of an OS window.

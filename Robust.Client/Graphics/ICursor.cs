@@ -1,6 +1,6 @@
 using System;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Represents a handle to a cursor object.

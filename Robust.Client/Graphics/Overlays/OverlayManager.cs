@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Graphics.Overlays
+namespace Robust.Client.Graphics
 {
     internal class OverlayManager : IOverlayManagerInternal
     {

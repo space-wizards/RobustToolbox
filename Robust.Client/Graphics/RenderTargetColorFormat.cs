@@ -1,4 +1,4 @@
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Formats for the color component of a render target.

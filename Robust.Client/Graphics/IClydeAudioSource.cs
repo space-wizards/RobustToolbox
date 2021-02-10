@@ -2,7 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     public interface IClydeAudioSource : IDisposable
     {

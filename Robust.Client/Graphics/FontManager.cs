@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;

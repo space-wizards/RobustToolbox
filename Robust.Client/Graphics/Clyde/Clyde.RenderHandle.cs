@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Shaders;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 

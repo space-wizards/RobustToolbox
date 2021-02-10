@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;

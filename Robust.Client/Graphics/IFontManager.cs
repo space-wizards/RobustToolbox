@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     public interface IFontManager
     {

@@ -1,4 +1,4 @@
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     A render target that renders into a texture that can be re-used later.

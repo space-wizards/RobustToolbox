@@ -1,8 +1,7 @@
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     internal interface IRenderHandle
     {

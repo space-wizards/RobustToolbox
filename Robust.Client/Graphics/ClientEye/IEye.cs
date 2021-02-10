@@ -2,7 +2,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <summary>
     /// An Eye is a point through which the player can view the world.

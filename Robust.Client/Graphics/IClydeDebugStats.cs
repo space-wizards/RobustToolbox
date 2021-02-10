@@ -1,6 +1,4 @@
-using Robust.Client.Graphics.Drawing;
-
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Provides frame statistics about rendering.

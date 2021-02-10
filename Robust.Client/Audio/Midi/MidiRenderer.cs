@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Intrinsics.X86;
 using NFluidsynth;
-using Robust.Client.Graphics.Interfaces.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

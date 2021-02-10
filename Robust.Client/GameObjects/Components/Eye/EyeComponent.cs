@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects
         public override string Name => "Eye";
 
         [ViewVariables]
-        private Graphics.ClientEye.Eye? _eye = default!;
+        private Eye? _eye = default!;
 
         // Horrible hack to get around ordering issues.
         private bool _setCurrentOnInitialize;
@@ -115,7 +115,7 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            _eye = new Graphics.ClientEye.Eye
+            _eye = new Eye
             {
                 Position = Owner.Transform.MapPosition,
                 Zoom = _setZoomOnInitialize,

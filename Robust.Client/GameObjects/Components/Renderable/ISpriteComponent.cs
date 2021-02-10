@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;

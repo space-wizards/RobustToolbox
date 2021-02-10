@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;

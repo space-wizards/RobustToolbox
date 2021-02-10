@@ -1,8 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
-using Robust.Client.Graphics.Overlays;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;

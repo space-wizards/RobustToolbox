@@ -1,7 +1,7 @@
 ﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <summary>
     /// Keeps a reference to the current eye (camera) that the client is seeing though, and provides

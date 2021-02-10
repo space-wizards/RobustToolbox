@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Overlays;
 using Robust.Shared.Timing;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics.Overlays
+namespace Robust.Client.Graphics
 {
     [PublicAPI]
     public interface IOverlayManager

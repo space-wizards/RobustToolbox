@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;

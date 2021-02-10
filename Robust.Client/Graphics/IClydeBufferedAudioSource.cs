@@ -1,6 +1,6 @@
 using System;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     public interface IClydeBufferedAudioSource : IClydeAudioSource
     {

@@ -1,8 +1,7 @@
 using System;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Interfaces.Graphics
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     A viewport is an API for rendering a section of the game map centered around an eye,

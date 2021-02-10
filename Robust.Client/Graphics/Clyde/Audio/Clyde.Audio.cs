@@ -8,7 +8,6 @@ using System.Threading;
 using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Interfaces.Graphics;
 using Robust.Shared;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;

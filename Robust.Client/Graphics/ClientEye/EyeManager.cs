@@ -1,13 +1,11 @@
-﻿using Robust.Client.Graphics.Interfaces.Graphics;
-using Robust.Client.Graphics.Interfaces.Graphics.ClientEye;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 #nullable enable
 
-namespace Robust.Client.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
     public sealed class EyeManager : IEyeManager

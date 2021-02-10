@@ -2,9 +2,7 @@
 using Robust.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Interfaces.Graphics.Overlays;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Network;

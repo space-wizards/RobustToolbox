@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [Test]
         public void SerializeTypeTest()
         {
-            var type = new TestTypeOne();
+            ITestType? type = new TestTypeOne();
             var mapping = new YamlMappingNode();
             var writer = YamlObjectSerializer.NewWriter(mapping);
 

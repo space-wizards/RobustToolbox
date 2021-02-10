@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [Test]
         public void SerializeTypePropertiesTest()
         {
-            var type = new TestTypeTwo
+            ITestType? type = new TestTypeTwo
             {
                 TestPropertyOne = "B",
                 TestPropertyTwo = 10
@@ -89,7 +89,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     {
         public override string Name => "Test";
 
-        public ITestType TestType { get; } = default!;
+        public ITestType? TestType { get; set; }
 
         public override void ExposeData(ObjectSerializer serializer)
         {

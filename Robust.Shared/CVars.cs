@@ -314,8 +314,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> WarmStarting =
             CVarDef.Create("physics.warmstart", true);
 
+        /// <summary>
+        /// A velocity threshold for elastic collisions. Any collision with a relative linear
+        /// velocity below this threshold will be treated as inelastic.
+        /// </summary>
         public static readonly CVarDef<float> VelocityThreshold =
-            CVarDef.Create("physics.velocitythreshold", 1.0f);
+            CVarDef.Create("physics.velocitythreshold", 0.5f);
 
         // TODO: Copy Box2D's comments on baumgarte I think it's on the solver class.
         /// <summary>
@@ -328,7 +332,7 @@ namespace Robust.Shared
         ///     How much 2 bodies are allowed to overlap before we start to correct their positions.
         /// </summary>
         public static readonly CVarDef<float> LinearSlop =
-            CVarDef.Create("physics.linearslop", 0.05f);
+            CVarDef.Create("physics.linearslop", 0.005f);
 
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making

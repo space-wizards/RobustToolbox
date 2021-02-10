@@ -235,6 +235,16 @@ namespace Robust.Shared.GameObjects.Components
         private float _inertia;
 
         /// <summary>
+        ///     Indicates whether this body ignores gravity
+        /// </summary>
+        public bool IgnoreGravity { get; set; }
+
+        /// <summary>
+        ///     Scale of gravity applied to this body. Default is 1.
+        /// </summary>
+        public float GravityScale { get; set; } = 1.0f;
+
+        /// <summary>
         /// Inverse moment of inertia (1 / I).
         /// </summary>
         internal float InvI { get; set; }

@@ -16,6 +16,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         /// <summary>
         ///     Counter-clockwise (CCW) order.
         /// </summary>
+        [ViewVariables]
         public List<Vector2> Vertices
         {
             get => _vertices;
@@ -58,6 +59,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private List<Vector2> _vertices = new();
 
+        [ViewVariables]
         public List<Vector2> Normals => _normals;
 
         private List<Vector2> _normals = new();
@@ -81,6 +83,8 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         private float _radius;
 
         public ShapeType ShapeType => ShapeType.Polygon;
+
+        public PolygonShape() {}
 
         // You did dis remmiiieeeee
         // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
@@ -115,6 +119,9 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                         rect.Rectangle.TopRight,
                         rect.Rectangle.TopLeft,
                     };
+                    break;
+                case PolygonShape poly:
+                    Vertices = poly.Vertices;
                     break;
                 default:
                     throw new NotImplementedException();

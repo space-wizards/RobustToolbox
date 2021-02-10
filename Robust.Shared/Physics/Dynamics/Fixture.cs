@@ -146,8 +146,8 @@ namespace Robust.Shared.Physics.Dynamics
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(this, x => x.Shape, "shape", new PhysShapeAabb());
-            serializer.DataField(ref _friction, "friction", 0.2f);
-            serializer.DataField(ref _restitution, "restitution", 0.0f);
+            serializer.DataField(ref _friction, "friction", 0.4f);
+            serializer.DataField(ref _restitution, "restitution", 0f);
             serializer.DataField(ref _hard, "hard", true);
             serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());

@@ -102,7 +102,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox();
+            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox().Scale(1 + Radius);
         }
 
         public bool Equals(IPhysShape? other)

@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox();
+            return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
         }
 
         public bool Equals(IPhysShape? other)

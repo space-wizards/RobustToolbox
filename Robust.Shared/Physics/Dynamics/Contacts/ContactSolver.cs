@@ -2,6 +2,7 @@ using System;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Utility;

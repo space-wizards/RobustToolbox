@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -24,6 +23,11 @@ namespace Robust.Shared.Physics.Dynamics
         // AKA world.
 
         internal ContactManager ContactManager = new();
+
+        /// <summary>
+        ///     Change the global gravity vector.
+        /// </summary>
+        public Vector2 Gravity { get; set; }
 
         /// <summary>
         ///     All bodies present on this map.
@@ -168,7 +172,8 @@ namespace Robust.Shared.Physics.Dynamics
             if (Bodies.Contains(body)) return;
 
             // TODO: Kinda dodgy with this and wake shit.
-            if (body.Awake)
+            // Look at my note under ProcessWakeQueue
+            if (body.Awake && body.BodyType != BodyType.Static)
             {
                 _queuedWake.Remove(body);
                 AwakeBodies.Add(body);
@@ -192,7 +197,10 @@ namespace Robust.Shared.Physics.Dynamics
         {
             foreach (var body in _queuedWake)
             {
-                if (!Bodies.Contains(body) || !body.Awake) continue;
+                // Sloth note: So FPE doesn't seem to handle static bodies being woken gracefully as they never sleep
+                // (No static body's an island so can't increase their min sleep time).
+                // AFAIK not adding it to woken bodies shouldn't matter for anything tm...
+                if (!Bodies.Contains(body) || !body.Awake || body.BodyType == BodyType.Static) continue;
                 AwakeBodies.Add(body);
             }
 
@@ -407,7 +415,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var controller in _controllers)
             {
-                controller.UpdateBeforeSolve(frameTime);
+                controller.UpdateBeforeSolve(this, frameTime);
             }
 
             ContactManager.Collide();
@@ -427,7 +435,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var controller in _controllers)
             {
-                controller.UpdateAfterSolve(frameTime);
+                controller.UpdateAfterSolve(this, frameTime);
             }
 
             ClearForces();
@@ -542,7 +550,7 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
-                _island.Solve(frameTime, dtRatio, invDt,  prediction);
+                _island.Solve(Gravity, frameTime, dtRatio, invDt, prediction);
 
                 // Post-solve cleanup for island
                 for (var i = 0; i < _island.BodyCount; i++)

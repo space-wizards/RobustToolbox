@@ -37,15 +37,25 @@ namespace Robust.Shared.GameObjects.Systems
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            BuildControllerGraph();
+            Logger.DebugS("physics", $"Found {ControllerTypes.Count} physics controllers.");
+        }
 
+        private void BuildControllerGraph()
+        {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var allControllerTypes = new List<Type>();
+
             foreach (var type in reflectionManager.GetAllChildren(typeof(AetherController)))
             {
                 if (type.IsAbstract) continue;
-                ControllerTypes.Add(type);
+                allControllerTypes.Add(type);
             }
 
-            Logger.DebugS("physics", $"Found {ControllerTypes.Count} physics controllers.");
+            foreach (var type in allControllerTypes)
+            {
+                ControllerTypes.Add(type);
+            }
         }
 
         public override void Shutdown()

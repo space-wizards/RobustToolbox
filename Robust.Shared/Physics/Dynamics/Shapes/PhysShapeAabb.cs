@@ -78,7 +78,8 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return _localBounds;
+            // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
+            return _localBounds.Scale(1 + Radius);
         }
 
         /// <inheritdoc />

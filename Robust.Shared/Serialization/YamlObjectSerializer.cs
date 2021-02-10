@@ -585,29 +585,30 @@ namespace Robust.Shared.Serialization
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
-                if (!(node is YamlMappingNode mapNode))
-                {
-                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
-                }
-
                 var concreteType = type;
                 if (type.IsAbstract || type.IsInterface)
                 {
-                    var tag = node.Tag;
-                    if (string.IsNullOrWhiteSpace(tag))
-                        throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
+                    var typeName = node switch
+                    {
+                        var n when
+                            !string.IsNullOrEmpty(n.Tag) &&
+                            n.Tag.StartsWith("!type")
+                            => n.Tag["!type:".Length..],
+                        YamlScalarNode scalar => scalar.Value!,
+                        YamlMappingNode mapping => mapping["type"].AsString(),
+                        _ => throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping and non-scalar node. Type: '{type}'")
+                    };
 
-                    if (tag.StartsWith("!type:"))
-                    {
-                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
-                    }
-                    else
-                    {
-                        throw new YamlException("Malformed type tag.");
-                    }
+                    concreteType = ResolveConcreteType(type, typeName);
                 }
 
                 var instance = (IExposeData)Activator.CreateInstance(concreteType)!;
+
+                if (node is not YamlMappingNode mapNode)
+                {
+                    return instance;
+                }
+
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -640,7 +641,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
-        public T NodeToType<T>(YamlNode node)
+        public T NodeToType<T>(YamlNode node, string name)
         {
             return (T) NodeToType(typeof(T), node);
         }

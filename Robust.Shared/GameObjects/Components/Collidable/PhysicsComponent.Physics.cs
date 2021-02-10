@@ -184,13 +184,20 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public float Mass
         {
-            get => _mass;
+            get => BodyType == BodyType.Dynamic ? _mass : 0.0f;
             set
             {
                 if (MathHelper.CloseTo(_mass, value))
                     return;
 
+                // Box2D blocks it if it's dynamic but in case objects can flip-flop between dynamic and static easily via anchoring.
+                // So we may as well support it and just guard the InvMass get
                 _mass = value;
+
+                if (_mass <= 0.0f)
+                    _mass = 1.0f;
+
+                _invMass = 1.0f / _mass;
                 Dirty();
             }
         }
@@ -198,13 +205,11 @@ namespace Robust.Shared.GameObjects.Components
         private float _mass;
 
         /// <summary>
-        /// Inverse mass of the entity in kilograms (1 / Mass).
+        ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
-        public float InvMass
-        {
-            get => CanMove() ? 1.0f / Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
-            set => Mass = value > 0 ? 1f / value : 0f;
-        }
+        public float InvMass => BodyType == BodyType.Dynamic ? _invMass : 0.0f;
+
+        private float _invMass;
 
         /// <summary>
         /// Moment of inertia, or angular mass, in kg * m^2.

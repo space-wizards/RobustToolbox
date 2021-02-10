@@ -23,6 +23,8 @@
 
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.Physics
 {
@@ -36,8 +38,6 @@ namespace Robust.Server.Physics
         public string Help => $"{Command} <test>";
         public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
-            // TODO: Needs to aghost, showbb (somehow?) and teleport there and initiate.
-
             if (args.Length != 1)
             {
                 shell.SendText(player, "Only accept 1 arg for testbed!");
@@ -47,12 +47,16 @@ namespace Robust.Server.Physics
             switch (args[0])
             {
                 case "boxstack":
+                    SetupPlayer();
+                    CreateBoxStack();
                     break;
                 default:
                     shell.SendText(player, $"testbed {args[0]} not found!");
                     return;
             }
         }
+
+        // TODO: Try actually adding in SynchronizeFixtures and have it whenever the body is moved it's dirty???
 
         private void SetupPlayer()
         {
@@ -63,7 +67,10 @@ namespace Robust.Server.Physics
 
         private void CreateBoxStack()
         {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
 
+            // TODO: Need a blank entity we can spawn for testbed.
+            // var ground = entityManager.Sp
         }
     }
 }

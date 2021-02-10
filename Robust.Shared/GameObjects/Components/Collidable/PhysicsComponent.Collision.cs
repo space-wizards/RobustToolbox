@@ -224,6 +224,10 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _linearDamping, "linearDamping", 0.02f);
             serializer.DataField(ref _angularDamping, "angularDamping", 0.02f);
             serializer.DataField(ref _mass, "mass", 1.0f);
+            if (_mass > 0f && BodyType == BodyType.Dynamic)
+            {
+                _invMass = 1.0f / _mass;
+            }
             serializer.DataField(ref _awake, "awake", true);
             serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }

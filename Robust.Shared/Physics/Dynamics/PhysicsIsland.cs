@@ -347,14 +347,14 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var translation = linearVelocity * frameTime;
                 if (Vector2.Dot(translation, translation) > maxLinVelocity)
                 {
-                    var ratio = 4.0f / translation.Length;
+                    var ratio = maxLinVelocity / translation.Length;
                     linearVelocity *= ratio;
                 }
 
                 var rotation = angularVelocity * frameTime;
                 if (rotation * rotation > maxAngVelocity)
                 {
-                    var ratio = 2.0f / MathF.Abs(rotation);
+                    var ratio = maxAngVelocity / MathF.Abs(rotation);
                     angularVelocity *= ratio;
                 }
 
@@ -399,9 +399,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             for (var i = 0; i < BodyCount; i++)
             {
                 var body = Bodies[i];
-
-                // TODO: Do we need this? We shouldn't...?
-                if (body.BodyType == BodyType.Static) continue;
 
                 /*
                  * Handle new velocity

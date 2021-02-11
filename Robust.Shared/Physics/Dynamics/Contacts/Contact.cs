@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Utility;
@@ -13,6 +16,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     internal sealed class Contact
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         public ContactEdge NodeA = new();
         public ContactEdge NodeB = new();
 
@@ -104,6 +109,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public Contact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
+            _entityManager = IoCManager.Resolve<IEntityManager>();
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 
@@ -203,6 +209,19 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         }
 
         /// <summary>
+        /// Gets the world manifold.
+        /// </summary>
+        public void GetWorldManifold(out Vector2 normal, out Vector2[] points)
+        {
+            PhysicsComponent bodyA = FixtureA?.Body!;
+            PhysicsComponent bodyB = FixtureB?.Body!;
+            IPhysShape shapeA = FixtureA?.Shape!;
+            IPhysShape shapeB = FixtureB?.Shape!;
+
+            ContactSolver.InitializeManifold(Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, out points);
+        }
+
+        /// <summary>
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
@@ -215,7 +234,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (FixtureA == null || FixtureB == null)
                 return;
 
-            AetherManifold oldManifold = Manifold;
+            AetherManifold oldManifold = Manifold.Clone();
 
             // Re-enable this contact.
             Enabled = true;
@@ -327,10 +346,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (sensor)
                 return;
 
-            /*
-            if (contactManager.PreSolve != null)
-                contactManager.PreSolve(this, ref oldManifold);
-            */
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new PreSolveMessage(this, oldManifold));
         }
 
         /// <summary>

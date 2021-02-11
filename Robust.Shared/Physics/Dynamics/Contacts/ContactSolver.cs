@@ -36,6 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _angularVelocities = data.AngularVelocities;
 
             _positions = data.Positions;
+            _positions = data.Positions;
             _angles = data.Angles;
 
             _contactCount = contactCount;
@@ -689,7 +690,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// point count, impulses, etc. The radii must come from the Shapes
         /// that generated the manifold.
         /// </summary>
-        private static void InitializeManifold(
+        internal static void InitializeManifold(
             in AetherManifold manifold,
             in Transform xfA,
             in Transform xfB,

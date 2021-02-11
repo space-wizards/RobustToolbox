@@ -1,4 +1,6 @@
+using System;
 using System.Runtime.InteropServices;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics.Collision
@@ -61,6 +63,16 @@ namespace Robust.Shared.Physics.Collision
         /// </summary>
         [FieldOffset(0)]
         public uint Key;
+
+        public static bool operator ==(ContactID id, ContactID other)
+        {
+            return id.Key == other.Key;
+        }
+
+        public static bool operator !=(ContactID id, ContactID other)
+        {
+            return !(id == other);
+        }
     }
 
     // Originally this was a struct but it gets mutated all over the place so I just made it a class for now.
@@ -81,6 +93,23 @@ namespace Robust.Shared.Physics.Collision
         public ManifoldPoint[] Points = new ManifoldPoint[2];
 
         public ManifoldType Type;
+
+        public AetherManifold() {}
+
+        public AetherManifold(Vector2 localNormal, Vector2 localPoint, int pointCount, ManifoldPoint[] points, ManifoldType type)
+        {
+            LocalNormal = localNormal;
+            LocalPoint = localPoint;
+            PointCount = pointCount;
+            Array.Copy(points, Points, pointCount);
+            Type = type;
+        }
+
+        // TODO: Make a unittest for this real fucken bad.
+        public AetherManifold Clone()
+        {
+            return new(LocalNormal, LocalPoint, PointCount, Points, Type);
+        }
     }
 
     public struct ManifoldPoint
@@ -104,5 +133,18 @@ namespace Robust.Shared.Physics.Collision
         ///     Friction impulse.
         /// </summary>
         public float TangentImpulse;
+
+        public static bool operator ==(ManifoldPoint point, ManifoldPoint other)
+        {
+            return point.Id == other.Id &&
+                   point.LocalPoint.Equals(other.LocalPoint) &&
+                   point.NormalImpulse.Equals(other.NormalImpulse) &&
+                   point.TangentImpulse.Equals(other.TangentImpulse);
+        }
+
+        public static bool operator !=(ManifoldPoint point, ManifoldPoint other)
+        {
+            return !(point == other);
+        }
     }
 }

@@ -68,6 +68,53 @@ namespace Robust.Shared.Physics.Collision
         }
 
         /// <summary>
+        ///     Used for debugging contact points.
+        /// </summary>
+        /// <param name="state1"></param>
+        /// <param name="state2"></param>
+        /// <param name="manifold1"></param>
+        /// <param name="manifold2"></param>
+        public static void GetPointStates(out PointState[] state1, out PointState[] state2, AetherManifold manifold1, AetherManifold manifold2)
+        {
+            state1 = new PointState[2];
+            state2 = new PointState[2];
+
+            // Detect persists and removes.
+            for (int i = 0; i < manifold1.PointCount; ++i)
+            {
+                ContactID id = manifold1.Points[i].Id;
+
+                state1[i] = PointState.Remove;
+
+                for (int j = 0; j < manifold2.PointCount; ++j)
+                {
+                    if (manifold2.Points[j].Id.Key == id.Key)
+                    {
+                        state1[i] = PointState.Persist;
+                        break;
+                    }
+                }
+            }
+
+            // Detect persists and adds.
+            for (int i = 0; i < manifold2.PointCount; ++i)
+            {
+                ContactID id = manifold2.Points[i].Id;
+
+                state2[i] = PointState.Add;
+
+                for (int j = 0; j < manifold1.PointCount; ++j)
+                {
+                    if (manifold1.Points[j].Id.Key == id.Key)
+                    {
+                        state2[i] = PointState.Persist;
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Compute contact points for edge versus circle.
         /// This accounts for edge connectivity.
         /// </summary>
@@ -1077,8 +1124,11 @@ namespace Robust.Shared.Physics.Collision
                 float distance1 = normal.X * v1.V.X + normal.Y * v1.V.Y - offset;
 
                 // If the points are behind the plane
-                if (distance0 <= 0.0f) vOut[numOut++] = v0;
-                if (distance1 <= 0.0f) vOut[numOut++] = v1;
+                if (distance0 <= 0.0f)
+                    vOut[numOut++] = v0;
+
+                if (distance1 <= 0.0f)
+                    vOut[numOut++] = v1;
 
                 // If the points are on different sides of the plane
                 if (distance0 * distance1 < 0.0f)
@@ -1211,7 +1261,6 @@ namespace Robust.Shared.Physics.Collision
 
                 // Get the normal of the reference edge in poly2's frame.
                 Vector2 normal1 = Transform.MulT(xf2.Quaternion, Transform.Mul(xf1.Quaternion, normals1[edge1]));
-
 
                 // Find the incident edge on poly2.
                 int index = 0;

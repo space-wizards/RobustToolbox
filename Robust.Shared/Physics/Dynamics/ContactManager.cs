@@ -23,23 +23,17 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public BroadPhaseDelegate OnBroadPhaseCollision;
 
-        // Large parts of this will be deprecated as more stuff gets ported.
-        // For now it's more or less a straight port of the existing code.
-
-        // For now we'll just clear contacts every tick.
-        internal List<Contact> ContactList = new(128);
-
         /// <summary>
         /// The set of active contacts.
         /// </summary>
-        internal HashSet<Contact> ActiveContacts = new();
+        internal HashSet<Contact> ActiveContacts = new(128);
 
         /// <summary>
         /// A temporary copy of active contacts that is used during updates so
         /// the hash set can have members added/removed during the update.
         /// This list is cleared after every update.
         /// </summary>
-        private List<Contact> ActiveList = new();
+        private List<Contact> ActiveList = new(128);
 
         public ContactManager()
         {
@@ -121,7 +115,7 @@ namespace Robust.Shared.Physics.Dynamics
             PhysicsComponent bodyB = fixtureB.Body;
 
             // Are the fixtures on the same body?
-            if (bodyA == bodyB) return;
+            if (bodyA.Owner.Uid.Equals(bodyB.Owner.Uid)) return;
 
             // Does a contact already exist?
             var edge = bodyB.ContactEdges;
@@ -178,9 +172,7 @@ namespace Robust.Shared.Physics.Dynamics
             bodyB = fixtureB.Body;
 
             // Insert into the world.
-            ContactList.Add(c);
-
-			ActiveContacts.Add(c);
+            ActiveContacts.Add(c);
 
             // Connect to island graph.
 
@@ -245,9 +237,6 @@ namespace Robust.Shared.Physics.Dynamics
                 // EndContact(contact);
             }
 
-            // Remove from the world.
-            ContactList.Remove(contact);
-
             // Remove from body 1
             if (contact.NodeA.Previous != null)
             {
@@ -280,10 +269,7 @@ namespace Robust.Shared.Physics.Dynamics
                 bodyB.ContactEdges = contact.NodeB.Next;
             }
 
-			if (ActiveContacts.Contains(contact))
-			{
-				ActiveContacts.Remove(contact);
-			}
+            ActiveContacts.Remove(contact);
 
             contact.Destroy();
         }
@@ -392,7 +378,7 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
 
-            foreach (var contact in ContactList)
+            foreach (var contact in ActiveContacts)
             {
                 var bodyA = contact.FixtureA!.Body.Owner;
                 var bodyB = contact.FixtureB!.Body.Owner;

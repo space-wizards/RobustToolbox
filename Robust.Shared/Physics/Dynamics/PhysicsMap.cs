@@ -469,7 +469,7 @@ namespace Robust.Shared.Physics.Dynamics
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(Bodies.Count, ContactManager.ContactList.Count, Joints.Count);
+            _island.Reset(Bodies.Count, ContactManager.ActiveContacts.Count, Joints.Count);
 
             DebugTools.Assert(_islandSet.Count == 0);
 

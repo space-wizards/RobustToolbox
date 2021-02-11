@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -16,7 +14,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
@@ -47,6 +44,8 @@ namespace Robust.Shared.GameObjects.Components
     [ComponentReference(typeof(IPhysicsComponent))]
     public partial class PhysicsComponent : Component
     {
+        // TODO: Need to do all the stuff that changes contacts or w/e if like a BodyType is changed
+
         private BodyStatus _status;
 
         /// <inheritdoc />

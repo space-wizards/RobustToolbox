@@ -274,7 +274,7 @@ namespace Robust.Shared.Physics.Broadphase
                 oldMap.RemoveBodyDeferred(body);
             }
 
-            body.ClearProxies();
+            body.ClearProxies(message.OldMapId);
 
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.Entity.Transform.MapID, out var newMap))
             {
@@ -405,7 +405,7 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
-            fixture.ClearProxies(this);
+            fixture.ClearProxies(mapId, this);
             fixture.CreateProxies(_mapManager, this);
 
             // Need to update what broadphases are relevant.
@@ -492,7 +492,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             var mapId = body.Owner.Transform.MapID;
-            fixture.ClearProxies(this);
+            fixture.ClearProxies(mapId, this);
 
             if (mapId == MapId.Nullspace || body.Deleted)
             {

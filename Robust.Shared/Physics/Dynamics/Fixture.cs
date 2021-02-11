@@ -160,15 +160,16 @@ namespace Robust.Shared.Physics.Dynamics
         /// <remarks>
         ///     Broadphase system will also need cleaning up for the cached broadphases for the body.
         /// </remarks>
+        /// <param name="mapId"></param>
         /// <param name="broadPhaseSystem"></param>
-        public void ClearProxies(SharedBroadPhaseSystem? broadPhaseSystem = null)
+        public void ClearProxies(MapId? mapId = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
-            var mapId = Body.Owner.Transform.MapID;
+            mapId ??= Body.Owner.Transform.MapID;
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
 
             foreach (var (gridId, proxies) in Proxies)
             {
-                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId.Value, gridId);
                 if (broadPhase == null) continue;
 
                 foreach (var proxy in proxies)

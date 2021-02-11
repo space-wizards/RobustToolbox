@@ -182,7 +182,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             m.R0C2 = modelMatrix.R0C2;
             m.R1C2 = modelMatrix.R1C2;
             handle.SetTransform(m);
-            handle.DrawPolygonShape(_vertices, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
+            handle.DrawPolygonShape(_vertices.ToArray(), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 

@@ -27,7 +27,23 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Change the global gravity vector.
         /// </summary>
-        public Vector2 Gravity { get; set; }
+        public Vector2 Gravity
+        {
+            get => _gravity;
+            set
+            {
+                if (_gravity.EqualsApprox(value)) return;
+
+                // Force every body awake just in case.
+                foreach (var body in Bodies)
+                {
+                    if (body.BodyType != BodyType.Dynamic) continue;
+                    body.Awake = true;
+                }
+            }
+        }
+
+        private Vector2 _gravity = Vector2.Zero;
 
         /// <summary>
         ///     All bodies present on this map.

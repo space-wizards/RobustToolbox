@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
@@ -22,6 +23,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging
 {
@@ -251,18 +253,16 @@ namespace Robust.Client.Debugging
                     _handle.DrawCircle(origin, radius, color);
                 }
 
-                public override void DrawPolygonShape(List<Vector2> vertices, in Color color)
+                public override void DrawLine(Vector2 start, Vector2 end, in Color color)
                 {
-                    // As Box2D only supports convex shapes TriangleFan should be appropriate for drawing.
-                    var triangle = new Vector2[3];
-                    triangle[0] = vertices[0];
+                    _handle.DrawLine(start, end, color);
+                }
 
-                    for (var i = 1; i < vertices.Count - 1; ++i)
-                    {
-                        triangle[1] = vertices[i];
-                        triangle[2] = vertices[i + 1];
-                        _handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, triangle, color);
-                    }
+                public override void DrawPolygonShape(Vector2[] vertices, in Color color)
+                {
+                    DebugTools.Assert(vertices.Length >= 3);
+                    // As Box2D only supports convex shapes TriangleFan should be appropriate for drawing.
+                    _handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, vertices, color);
                 }
 
                 public override void SetTransform(in Matrix3 transform)

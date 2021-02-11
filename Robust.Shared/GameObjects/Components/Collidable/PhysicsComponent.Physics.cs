@@ -229,6 +229,8 @@ namespace Robust.Shared.GameObjects.Components
 
                 if (value > 0.0f && !_fixedRotation)
                 {
+                    // TODO: Suss out the rest of physics body to make sure that fucking shit is ported properly.
+                    throw new NotImplementedException();
                     _inertia = value - Mass * Vector2.Dot(CenterOfMass, CenterOfMass);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
@@ -653,16 +655,16 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Remove the proxies from all the broadphases.
         /// </summary>
-        public void ClearProxies()
+        public void ClearProxies(MapId? mapId = null)
         {
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-            var mapId = Owner.Transform.MapID;
+            mapId ??= Owner.Transform.MapID;
 
             foreach (var fixture in Fixtures)
             {
                 foreach (var (gridId, proxies) in fixture.Proxies)
                 {
-                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId.Value, gridId);
                     DebugTools.AssertNotNull(broadPhase);
                     if (broadPhase == null) continue; // TODO
 

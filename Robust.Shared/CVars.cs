@@ -329,10 +329,18 @@ namespace Robust.Shared
             CVarDef.Create("physics.baumgarte", 0.2f);
 
         /// <summary>
-        ///     How much 2 bodies are allowed to overlap before we start to correct their positions.
+        /// A small length used as a collision and constraint tolerance. Usually it is
+        /// chosen to be numerically significant, but visually insignificant.
         /// </summary>
         public static readonly CVarDef<float> LinearSlop =
             CVarDef.Create("physics.linearslop", 0.005f);
+
+        /// <summary>
+        /// A small angle used as a collision and constraint tolerance. Usually it is
+        /// chosen to be numerically significant, but visually insignificant.
+        /// </summary>
+        public static readonly CVarDef<float> AngularSlop =
+            CVarDef.Create("physics.angularslop", 2.0f / 180.0f * MathF.PI);
 
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making

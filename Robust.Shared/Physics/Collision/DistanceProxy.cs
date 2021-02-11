@@ -77,14 +77,11 @@ namespace Robust.Shared.Physics.Collision
                     break;
 
                 case ShapeType.Edge:
-                    throw new NotImplementedException();
-                    /*
                     EdgeShape edge = (EdgeShape) shape;
                     Vertices.Clear();
                     Vertices.Add(edge.Vertex1);
                     Vertices.Add(edge.Vertex2);
                     Radius = edge.Radius;
-                    */
 
                     break;
 

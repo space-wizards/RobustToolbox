@@ -352,12 +352,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     collisionManager.CollidePolygonAndCircle(ref manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndCircle:
-                    throw new NotImplementedException();
-                    // collisionManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) FixtureA.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, ref transformB);
+                    collisionManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndPolygon:
-                    throw new NotImplementedException();
-                    // collisionManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA.Shape, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
+                    collisionManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.ChainAndCircle:
                     throw new NotImplementedException();

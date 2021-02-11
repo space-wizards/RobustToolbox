@@ -432,9 +432,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                         if (grid.GridEntityId != body.Owner.Transform.ParentUid)
                         {
                             body.Owner.Transform.AttachParent(body.Owner.EntityManager.GetEntity(grid.GridEntityId));
-
-                            // TODO: Need to remove old grid friction joints and create new ones
-                            throw new NotImplementedException();
                         }
                     }
                     else

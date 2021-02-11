@@ -277,6 +277,10 @@ namespace Robust.Shared.Utility
     public abstract class AbstractFieldInfo
     {
         public abstract Type FieldType { get; }
+        public abstract Type? DeclaringType { get; }
+
+        public abstract object? GetValue(object? obj);
+        public abstract void SetValue(object? obj, object? value);
 
         public abstract T? GetCustomAttribute<T>() where T : Attribute;
     }
@@ -285,11 +289,15 @@ namespace Robust.Shared.Utility
     {
         public readonly FieldInfo FieldInfo;
         public override Type FieldType => FieldInfo.FieldType;
+        public override Type? DeclaringType => FieldInfo.DeclaringType;
 
         public SpecificFieldInfo(FieldInfo fieldInfo)
         {
             FieldInfo = fieldInfo;
         }
+
+        public override object? GetValue(object? obj) => FieldInfo.GetValue(obj);
+        public override void SetValue(object? obj, object? value) => FieldInfo.SetValue(obj, value);
 
         public override T? GetCustomAttribute<T>() where T : class
         {
@@ -304,11 +312,15 @@ namespace Robust.Shared.Utility
     {
         public readonly PropertyInfo PropertyInfo;
         public override Type FieldType => PropertyInfo.PropertyType;
+        public override Type? DeclaringType => PropertyInfo.DeclaringType;
 
         public SpecificPropertyInfo(PropertyInfo propertyInfo)
         {
             PropertyInfo = propertyInfo;
         }
+
+        public override object? GetValue(object? obj) => PropertyInfo.GetValue(obj);
+        public override void SetValue(object? obj, object? value) => PropertyInfo.SetValue(obj, value);
 
         public override T? GetCustomAttribute<T>() where T : class
         {

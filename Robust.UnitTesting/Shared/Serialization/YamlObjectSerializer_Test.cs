@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Shared.Serialization
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(YamlObjectSerializer))]
-    class YamlObjectSerializer_Test
+    public class YamlObjectSerializer_Test
     {
         [Test]
         public void SerializeListTest()

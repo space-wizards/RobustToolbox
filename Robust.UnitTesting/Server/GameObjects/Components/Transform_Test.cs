@@ -59,6 +59,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             MapManager.CreateMap();
 
+            IoCManager.Resolve<IDataClassManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();

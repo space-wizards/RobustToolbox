@@ -39,6 +39,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapManager.Initialize();
             mapManager.Startup();
 
+            IoCManager.Resolve<IDataClassManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

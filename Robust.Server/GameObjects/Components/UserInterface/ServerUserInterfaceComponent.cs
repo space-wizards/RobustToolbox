@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
 
-        [YamlField("interfaces")]
+        [YamlField("interfaces", readOnly: true)]
         private List<PrototypeData> interfaceReceiver
         {
             set
@@ -39,6 +39,10 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 {
                     _interfaces[data.UiKey] = new BoundUserInterface(data.UiKey, this);
                 }
+            }
+            get
+            {
+                return _interfaces.Keys.Select(d => new PrototypeData() {UiKey = d}).ToList();
             }
         }
 

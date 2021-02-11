@@ -42,20 +42,24 @@ namespace Robust.Shared.Serialization.Manager
             Type = type;
             var dummyObj = Activator.CreateInstance(type)!;
 
-            foreach (var field in type.GetAllFields())
+            foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
-                if(field.DeclaringType != type) continue;
-                var attr = (YamlFieldAttribute?)Attribute.GetCustomAttribute(field, typeof(YamlFieldAttribute));
+                if(abstractFieldInfo.DeclaringType != type) continue;
+                var attr = abstractFieldInfo.GetCustomAttribute<YamlFieldAttribute>();
                 if(attr == null) continue;
-                _baseFieldDefinitions.Add(new FieldDefinition(attr, field.GetValue(dummyObj), new SpecificFieldInfo(field)));
-            }
-
-            foreach (var property in type.GetAllProperties())
-            {
-                if(property.DeclaringType != type) continue;
-                var attr = (YamlFieldAttribute?)Attribute.GetCustomAttribute(property, typeof(YamlFieldAttribute));
-                if(attr == null) continue;
-                _baseFieldDefinitions.Add(new FieldDefinition(attr, property.GetValue(dummyObj), new SpecificPropertyInfo(property)));
+                if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
+                {
+                    if (propertyInfo.PropertyInfo.GetMethod == null)
+                    {
+                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with YamlFieldAttribute but has no getter");
+                        continue;
+                    }else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
+                    {
+                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with YamlFieldAttribute as non-readonly but has no setter");
+                        continue;
+                    }
+                }
+                _baseFieldDefinitions.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo));
             }
 
             PopulateDelegate = EmitPopulateDelegate();
@@ -79,7 +83,8 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {
-                generator.EmitPopulateField(fieldDefinition);
+                var idc = generator.DeclareLocal(fieldDefinition.FieldType).LocalIndex;
+                generator.EmitPopulateField(fieldDefinition, idc);
             }
 
             if (typeof(IExposeData).IsAssignableFrom(Type))

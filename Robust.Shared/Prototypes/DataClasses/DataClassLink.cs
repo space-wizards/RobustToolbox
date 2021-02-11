@@ -163,11 +163,12 @@ namespace Robust.Shared.Prototypes.DataClasses
             public LinkEntry(AbstractFieldInfo fieldInfo, BaseDataFieldAttribute dataFieldAttribute)
             {
                 FieldInfo = fieldInfo;
-                if (fieldInfo is SpecificPropertyInfo propertyInfo && (propertyInfo.PropertyInfo.GetMethod == null || propertyInfo.PropertyInfo.SetMethod == null))
-                {
-                    throw new InvalidOperationException(
-                        "Property without getter or setter was annotated with YamlfieldAttribute");
-                }
+                //TODO PAUL
+                // if (fieldInfo is SpecificPropertyInfo propertyInfo && (propertyInfo.PropertyInfo.GetMethod == null || propertyInfo.PropertyInfo.SetMethod == null))
+                // {
+                //     throw new InvalidOperationException(
+                //         "Property without getter or setter was annotated with YamlfieldAttribute");
+                // }
                 DataFieldAttribute = dataFieldAttribute;
             }
         }

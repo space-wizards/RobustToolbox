@@ -31,8 +31,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     [Serializable, NetSerializable]
     public sealed class EdgeShape : IPhysShape
     {
-        // Ported with newest Box2D features.
-
         /// <summary>
         ///     Edge start vertex
         /// </summary>
@@ -84,7 +82,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+
         }
 
         /// <summary>
@@ -95,6 +93,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         public EdgeShape(Vector2 start, Vector2 end)
         {
             Set(start, end);
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         /// <summary>

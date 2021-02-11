@@ -27,6 +27,11 @@ namespace Robust.Shared.GameObjects.Systems
         {
             base.Initialize();
 
+            // Having a nullspace map just makes a bunch of code easier, we just don't iterate on it.
+            var nullMap = new PhysicsMap(MapId.Nullspace);
+            _maps[MapId.Nullspace] = nullMap;
+            nullMap.Initialize();
+
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
 
@@ -149,7 +154,6 @@ namespace Robust.Shared.GameObjects.Systems
             if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
 
             var mapId = message.Container.Owner.Transform.MapID;
-            if (mapId == MapId.Nullspace) return;
 
             _maps[mapId].RemoveBodyDeferred(physicsComponent);
         }
@@ -159,7 +163,6 @@ namespace Robust.Shared.GameObjects.Systems
             if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
 
             var mapId = message.Container.Owner.Transform.MapID;
-            if (mapId == MapId.Nullspace) return;
 
             _maps[mapId].AddBody(physicsComponent);
         }

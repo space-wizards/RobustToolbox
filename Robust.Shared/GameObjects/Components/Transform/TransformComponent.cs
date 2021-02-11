@@ -266,6 +266,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_localPosition.EqualsApprox(value, 0.00001))
                     return;
 
+                DebugTools.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
 

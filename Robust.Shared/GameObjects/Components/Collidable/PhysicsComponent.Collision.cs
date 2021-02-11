@@ -14,6 +14,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
@@ -64,6 +65,14 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public int IslandIndex { get; set; }
 
+        // TODO: Actually implement after the initial pr dummy
+        /// <summary>
+        ///     Gets or sets where this body should be included in the CCD solver.
+        /// </summary>
+        public bool IsBullet { get; set; }
+
+        public bool IgnoreCCD { get; set; }
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
@@ -93,9 +102,48 @@ namespace Robust.Shared.GameObjects.Components
                 if (_bodyType == value)
                     return;
 
-                Awake = false;
-                var oldAnchored = _bodyType == BodyType.Static;
                 _bodyType = value;
+
+                ResetMassData();
+
+                if (_bodyType == BodyType.Static)
+                {
+                    _linVelocity = Vector2.Zero;
+                    _angVelocity = 0.0f;
+                    // SynchronizeFixtures(); TODO: When CCD
+                }
+
+                Awake = true;
+
+                Force = Vector2.Zero;
+                Torque = 0.0f;
+
+                var contactEdge = ContactEdges;
+                while (contactEdge != null)
+                {
+                    var contactEdge0 = contactEdge;
+                    contactEdge = contactEdge.Next;
+                    PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+                }
+
+                ContactEdges = null;
+                var broadphaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+
+                foreach (var fixture in Fixtures)
+                {
+                    var proxyCount = fixture.ProxyCount;
+                    foreach (var (gridId, proxies) in fixture.Proxies)
+                    {
+                        var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
+                        if (broadPhase == null) continue;
+                        for (var i = 0; i < proxyCount; i++)
+                        {
+                            broadPhase.TouchProxy(proxies[i].ProxyId);
+                        }
+                    }
+                }
+
+                var oldAnchored = _bodyType == BodyType.Static;
                 var anchored = _bodyType == BodyType.Static;
 
                 if (oldAnchored != anchored)
@@ -119,27 +167,36 @@ namespace Robust.Shared.GameObjects.Components
                 if (_awake == value)
                     return;
 
-                _awake = value;
-                _sleepTime = 0.0f;
-
-                if (_awake)
+                if (value)
                 {
-                    // TODO: Lot more farseer shit here
+                    if (!_awake)
+                    {
+                        _sleepTime = 0.0f;
+                        PhysicsMap.ContactManager.UpdateContacts(ContactEdges, true);
+                    }
+
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
                 else
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    ResetDynamics();
+                    _sleepTime = 0.0f;
+                    PhysicsMap.ContactManager.UpdateContacts(ContactEdges, false);
                 }
 
-                _linVelocity = Vector2.Zero;
-                _angVelocity = 0.0f;
+                _awake = value;
                 Dirty();
             }
         }
 
         private bool _awake;
 
+        /// <summary>
+        /// You can disable sleeping on this body. If you disable sleeping, the
+        /// body will be woken.
+        /// </summary>
+        /// <value><c>true</c> if sleeping is allowed; otherwise, <c>false</c>.</value>
         public bool SleepingAllowed
         {
             get => _sleepingAllowed;
@@ -148,10 +205,10 @@ namespace Robust.Shared.GameObjects.Components
                 if (_sleepingAllowed == value)
                     return;
 
-                _sleepingAllowed = value;
-
-                if (_sleepingAllowed)
+                if (!value)
                     Awake = true;
+
+                _sleepingAllowed = value;
             }
         }
 
@@ -162,6 +219,8 @@ namespace Robust.Shared.GameObjects.Components
             get => _sleepTime;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (MathHelper.CloseTo(value, _sleepTime))
                     return;
 
@@ -240,6 +299,7 @@ namespace Robust.Shared.GameObjects.Components
             // TODO: I'd really prefer to fix this before merge b
             if (!EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Entity.Transform.MapID, out var map))
             {
+                Logger.ErrorS("physics", $"Unable to find PhysicsMap for {Entity.Transform.MapID}");
                 return;
             }
 
@@ -379,6 +439,19 @@ namespace Robust.Shared.GameObjects.Components
             Predict = false;
         }
 
+        /// <summary>
+        /// Resets the dynamics of this body.
+        /// Sets torque, force and linear/angular velocity to 0
+        /// </summary>
+        public void ResetDynamics()
+        {
+            Torque = 0;
+            _angVelocity = 0;
+            Force = Vector2.Zero;
+            _linVelocity = Vector2.Zero;
+            Dirty();
+        }
+
         public Box2 GetWorldAABB(IMapManager? mapManager)
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
@@ -457,6 +530,9 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Enables or disabled collision processing of this component.
         /// </summary>
+        /// <remarks>
+        ///     Also known as Enabled in Box2D
+        /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool CanCollide
         {
@@ -466,9 +542,31 @@ namespace Robust.Shared.GameObjects.Components
                 if (_canCollide == value)
                     return;
 
+                if (value)
+                {
+                    // Create Proxies
+                    CreateProxies();
+
+                    // Contacts created next timestep
+                }
+                else
+                {
+                    ClearProxies();
+
+                    // Destroy contacts too
+                    ContactEdge? contactEdge = ContactEdges;
+                    while (contactEdge != null)
+                    {
+                        var contactEdge0 = contactEdge;
+                        contactEdge = contactEdge.Next;
+                        PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+                    }
+
+                    ContactEdges = null;
+                }
+
                 _canCollide = value;
 
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
                 Dirty();
             }
         }
@@ -587,14 +685,36 @@ namespace Robust.Shared.GameObjects.Components
 
         public void RemoveFixture(Fixture fixture)
         {
-            if (!_fixtures.Remove(fixture))
+            if (!_fixtures.Contains(fixture))
             {
                 Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
                 return;
             }
 
+            ContactEdge? edge = ContactEdges;
+            while (edge != null)
+            {
+                var contact = edge.Contact!;
+                edge = edge.Next;
+
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                if (fixture == fixtureA || fixture == fixtureB)
+                {
+                    PhysicsMap.ContactManager.Destroy(contact);
+                }
+            }
+
+            if (_canCollide)
+            {
+                fixture.ClearProxies();
+            }
+
+            _fixtures.Remove(fixture);
+            ResetMassData();
+
             Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
         }
 
         public void AddJoint(Joint joint)
@@ -611,10 +731,74 @@ namespace Robust.Shared.GameObjects.Components
         {
             base.OnRemove();
 
-            // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
-            // TODO: Suss out if this best way to do it; tl;dr is if we cache it then body is probably deleted by the time we get to it (and its MapId is no longer valid).
-            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveBody(this);
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+            CanCollide = false;
+        }
+
+        public void ResetMassData()
+        {
+            // _mass = 0.0f;
+            // _invMass = 0.0f;
+            _inertia = 0.0f;
+            InvI = 0.0f;
+            // Sweep
+
+            if (BodyType == BodyType.Kinematic)
+            {
+                return;
+            }
+
+            DebugTools.Assert(BodyType == BodyType.Dynamic || BodyType == BodyType.Static);
+
+            var localCenter = Vector2.Zero;
+
+            foreach (var fixture in Fixtures)
+            {
+                // TODO: Density
+                continue;
+                // if (fixture.Shape.Density == 0.0f)
+            }
+
+            if (BodyType == BodyType.Static)
+            {
+                return;
+            }
+
+            if (_mass > 0.0f)
+            {
+                _invMass = 1.0f / _mass;
+                localCenter *= _invMass;
+            }
+            else
+            {
+                // Always need positive mass.
+                _mass = 1.0f;
+                _invMass = 1.0f;
+            }
+
+            if (_inertia > 0.0f && !_fixedRotation)
+            {
+                // Center inertia about center of mass.
+                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
+
+                DebugTools.Assert(_inertia > 0.0f);
+                InvI = 1.0f / _inertia;
+            }
+            else
+            {
+                _inertia = 0.0f;
+                InvI = 0.0f;
+            }
+
+            /* TODO
+            // Move center of mass;
+            var oldCenter = _sweep.Center;
+            _sweep.LocalCenter = localCenter;
+            _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);
+
+            // Update center of mass velocity.
+            var a = _sweep.Center - oldCenter;
+            _linVelocity += new Vector2(-_angVelocity * a.y, _angVelocity * a.x);
+            */
         }
 
         /// <summary>

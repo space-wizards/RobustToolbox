@@ -17,6 +17,8 @@ namespace Robust.Shared.Physics {
 
         void RemoveProxy(DynamicTree.Proxy proxy);
 
+        void TouchProxy(DynamicTree.Proxy proxy);
+
         void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
             Box2 aabb,
             bool approx = false);

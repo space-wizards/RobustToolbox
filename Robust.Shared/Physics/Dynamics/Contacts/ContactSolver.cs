@@ -103,8 +103,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // TODO: Dis
                 // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
                 // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;
-                positionConstraint.LocalCenterA = bodyA.CenterOfMass;
-                positionConstraint.LocalCenterB = bodyB.CenterOfMass;
+                positionConstraint.LocalCenterA = bodyA.LocalCenter;
+                positionConstraint.LocalCenterB = bodyB.LocalCenter;
 
                 positionConstraint.InvIA = bodyA.InvI;
                 positionConstraint.InvIB = bodyB.InvI;

@@ -51,6 +51,9 @@ namespace Robust.Shared.Physics.Collision
                         case PhysShapeRect rect:
                             polygon = new PolygonShape(rect);
                             break;
+                        case PolygonShape poly:
+                            polygon = poly;
+                            break;
                         default:
                             throw new InvalidOperationException();
                     }
@@ -86,8 +89,7 @@ namespace Robust.Shared.Physics.Collision
                     break;
 
                 default:
-                    Debug.Assert(false);
-                    break;
+                    throw new InvalidOperationException($"Invalid shapetype specified {shape.ShapeType}");
             }
         }
 

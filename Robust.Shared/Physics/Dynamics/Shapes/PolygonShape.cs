@@ -84,13 +84,18 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
-        public PolygonShape() {}
+        public PolygonShape()
+        {
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        }
 
         // You did dis remmiiieeeee
         // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
         // I might fix it later
         public PolygonShape(IPhysShape shape)
         {
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+
             switch (shape)
             {
                 case PhysShapeAabb aabb:
@@ -128,10 +133,20 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             }
         }
 
+        public void SetAsBox(float width, float height)
+        {
+            Vertices = new List<Vector2>()
+            {
+                new(-width, -height),
+                new(width, -height),
+                new(width, height),
+                new(-width, height),
+            };
+        }
+
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(this, x => x.Vertices, "vertices", new List<Vector2>());
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
             // ComputeProperties();
         }
 

@@ -27,7 +27,19 @@ namespace Robust.Shared.Physics.Dynamics
         // For now it's more or less a straight port of the existing code.
 
         // For now we'll just clear contacts every tick.
-        public List<Contact> ContactList = new(128);
+        internal List<Contact> ContactList = new(128);
+
+        /// <summary>
+        /// The set of active contacts.
+        /// </summary>
+        internal HashSet<Contact> ActiveContacts = new();
+
+        /// <summary>
+        /// A temporary copy of active contacts that is used during updates so
+        /// the hash set can have members added/removed during the update.
+        /// This list is cleared after every update.
+        /// </summary>
+        private List<Contact> ActiveList = new();
 
         public ContactManager()
         {
@@ -48,9 +60,53 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
+        internal void UpdateContacts(ContactEdge? contactEdge, bool value)
+        {
+            if (value)
+            {
+                while (contactEdge != null)
+                {
+                    var contact = contactEdge.Contact!;
+
+                    if (!ActiveContacts.Contains(contact))
+                    {
+                        ActiveContacts.Add(contact);
+                    }
+
+                    contactEdge = contactEdge.Next;
+                }
+            }
+            else
+            {
+                while (contactEdge != null)
+                {
+                    var contact = contactEdge.Contact!;
+
+                    if (!contactEdge.Other!.Awake)
+                    {
+                        if (!ActiveContacts.Contains(contact))
+                        {
+                            ActiveContacts.Remove(contact);
+                        }
+                    }
+
+                    contactEdge = contactEdge.Next;
+                }
+            }
+        }
+
+        internal void RemoveActiveContact(Contact contact)
+        {
+            if (!ActiveContacts.Contains(contact))
+            {
+                ActiveContacts.Remove(contact);
+            }
+        }
+
         /// <summary>
         ///     Go through the cached broadphase movement and update contacts.
         /// </summary>
+        /// <param name="gridId"></param>
         /// <param name="proxyA"></param>
         /// <param name="proxyB"></param>
         private void AddPair(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB)
@@ -115,9 +171,6 @@ namespace Robust.Shared.Physics.Dynamics
             // Call the factory.
             Contact c = Contact.Create(gridId, fixtureA, indexA, fixtureB, indexB);
 
-            //if (c == null)
-            //    return;
-
             // Contact creation may swap fixtures.
             fixtureA = c.FixtureA!;
             fixtureB = c.FixtureB!;
@@ -127,7 +180,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Insert into the world.
             ContactList.Add(c);
 
-			// ActiveContacts.Add(c);
+			ActiveContacts.Add(c);
 
             // Connect to island graph.
 
@@ -172,7 +225,7 @@ namespace Robust.Shared.Physics.Dynamics
                      (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
         }
 
-        private void Destroy(Contact contact)
+        public void Destroy(Contact contact)
         {
             Fixture fixtureA = contact.FixtureA!;
             Fixture fixtureB = contact.FixtureB!;
@@ -227,23 +280,24 @@ namespace Robust.Shared.Physics.Dynamics
                 bodyB.ContactEdges = contact.NodeB.Next;
             }
 
-            /*
-#if USE_ACTIVE_CONTACT_SET
 			if (ActiveContacts.Contains(contact))
 			{
 				ActiveContacts.Remove(contact);
 			}
-#endif
-*/
+
             contact.Destroy();
         }
 
         internal void Collide()
         {
+            // TODO: We need to handle collisions during prediction but also handle the start / stop colliding shit during sim ONLY
+
+            // Update awake contacts
+            ActiveList.AddRange(ActiveContacts);
+
             // Can be changed while enumerating
-            for (var i = 0; i < ContactList.Count; i++)
+            foreach (var contact in ActiveList)
             {
-                var contact = ContactList[i];
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
                 int indexA = contact.ChildIndexA;
@@ -299,6 +353,7 @@ namespace Robust.Shared.Physics.Dynamics
                 // At least one body must be awake and it must be dynamic or kinematic.
                 if (!activeA && !activeB)
                 {
+                    ActiveContacts.Remove(contact);
                     continue;
                 }
 
@@ -328,6 +383,8 @@ namespace Robust.Shared.Physics.Dynamics
                 // The contact persists.
                 contact.Update(this);
             }
+
+            ActiveList.Clear();
         }
 
         public void PreSolve()

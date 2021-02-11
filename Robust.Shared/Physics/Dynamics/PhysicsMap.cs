@@ -40,10 +40,12 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType != BodyType.Dynamic) continue;
                     body.Awake = true;
                 }
+
+                _gravity = value;
             }
         }
 
-        private Vector2 _gravity = Vector2.Zero;
+        private Vector2 _gravity;
 
         /// <summary>
         ///     All bodies present on this map.
@@ -54,6 +56,11 @@ namespace Robust.Shared.Physics.Dynamics
         ///     All awake bodies on this map.
         /// </summary>
         public HashSet<PhysicsComponent> AwakeBodies = new();
+
+        /// <summary>
+        ///     Temporary body storage during solving.
+        /// </summary>
+        private List<PhysicsComponent> _awakeBodyList = new();
 
         /// <summary>
         ///     Get all the joints on this map
@@ -462,9 +469,11 @@ namespace Robust.Shared.Physics.Dynamics
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(AwakeBodies.Count, ContactManager.ContactList.Count, Joints.Count);
+            _island.Reset(Bodies.Count, ContactManager.ContactList.Count, Joints.Count);
 
-            foreach (var contact in ContactManager.ContactList)
+            DebugTools.Assert(_islandSet.Count == 0);
+
+            foreach (var contact in ContactManager.ActiveContacts)
             {
                 contact.IslandFlag = false;
             }
@@ -482,8 +491,10 @@ namespace Robust.Shared.Physics.Dynamics
                 Array.Resize(ref _stack, Math.Max(_stack.Length * 2, stackSize));
             }
 
+            _awakeBodyList.AddRange(AwakeBodies);
+
             // Build the relevant islands / graphs for all bodies.
-            foreach (var seed in AwakeBodies)
+            foreach (var seed in _awakeBodyList)
             {
                 // Sloth change: If client's running prediction we won't run physics for non-predicted bodies (that is unless a predicted body is in the same island).
                 if (prediction && !seed.Predict ||

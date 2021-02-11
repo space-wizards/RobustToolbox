@@ -187,6 +187,8 @@ namespace Robust.Shared.GameObjects.Components
             get => BodyType == BodyType.Dynamic ? _mass : 0.0f;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (MathHelper.CloseTo(_mass, value))
                     return;
 
@@ -223,15 +225,15 @@ namespace Robust.Shared.GameObjects.Components
             get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (_bodyType != BodyType.Dynamic) return;
 
                 if (MathHelper.CloseTo(_inertia, value)) return;
 
                 if (value > 0.0f && !_fixedRotation)
                 {
-                    // TODO: Suss out the rest of physics body to make sure that fucking shit is ported properly.
-                    throw new NotImplementedException();
-                    _inertia = value - Mass * Vector2.Dot(CenterOfMass, CenterOfMass);
+                    _inertia = value - Mass * Vector2.Dot(LocalCenter, LocalCenter);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
                     Dirty();
@@ -269,6 +271,7 @@ namespace Robust.Shared.GameObjects.Components
 
                 _fixedRotation = value;
                 _angVelocity = 0.0f;
+                ResetMassData();
                 // Dirty();
             }
         }
@@ -283,7 +286,19 @@ namespace Robust.Shared.GameObjects.Components
         ///     AKA Sweep.LocalCenter in Box2D.
         ///     Not currently in use as this is set after mass data gets set (when fixtures update).
         /// </remarks>
-        public Vector2 CenterOfMass => Vector2.Zero;
+        public Vector2 LocalCenter
+        {
+            get => _localCenter;
+            set
+            {
+                if (_bodyType != BodyType.Dynamic) return;
+                if (value.EqualsApprox(_localCenter)) return;
+
+                throw new NotImplementedException();
+            }
+        }
+
+        private Vector2 _localCenter;
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
@@ -335,6 +350,8 @@ namespace Robust.Shared.GameObjects.Components
             get => _linearDamping;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (MathHelper.CloseTo(value, _linearDamping))
                     return;
 
@@ -356,6 +373,8 @@ namespace Robust.Shared.GameObjects.Components
             get => _angularDamping;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (MathHelper.CloseTo(value, _angularDamping))
                     return;
 
@@ -380,12 +399,12 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
-                DebugTools.Assert(!float.IsNaN(value.Length));
+                DebugTools.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
 
                 if (BodyType == BodyType.Static)
                     return;
 
-                if (value != Vector2.Zero)
+                if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
                 if (_linVelocity.EqualsApprox(value, 0.0001))
@@ -407,10 +426,12 @@ namespace Robust.Shared.GameObjects.Components
             get => _angVelocity;
             set
             {
+                DebugTools.Assert(!float.IsNaN(value));
+
                 if (BodyType == BodyType.Static)
                     return;
 
-                if (value != 0.0f)
+                if (value * value > 0.0f)
                     Awake = true;
 
                 if (MathHelper.CloseTo(_angVelocity, value))

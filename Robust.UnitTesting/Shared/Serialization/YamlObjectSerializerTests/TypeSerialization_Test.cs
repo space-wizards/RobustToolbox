@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using NUnit.Framework;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 // ReSharper disable AccessToStaticMemberViaDerivedType

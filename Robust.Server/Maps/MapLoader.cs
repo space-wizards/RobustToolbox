@@ -644,6 +644,7 @@ namespace Robust.Server.Maps
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in entity.GetAllComponents())
                     {
+                        CurrentWritingComponent = component.Name;
                         var compMapping = new YamlMappingNode();
                         serv3Mgr.Serialize(component.GetType(), component,
                             YamlObjectSerializer.NewWriter(compMapping, this));

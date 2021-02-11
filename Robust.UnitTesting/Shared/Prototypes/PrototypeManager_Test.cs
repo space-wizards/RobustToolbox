@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
@@ -10,6 +11,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {
+    [UsedImplicitly]
     [TestFixture]
     public class PrototypeManager_Test : RobustUnitTest
     {

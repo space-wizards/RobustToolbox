@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.Network;
@@ -29,6 +30,10 @@ namespace Robust.Client.GameObjects.Components.UserInterface
                 {
                     _interfaceData[data.UiKey] = data;
                 }
+            }
+            get
+            {
+                return _interfaceData.Values.ToList();
             }
         }
 

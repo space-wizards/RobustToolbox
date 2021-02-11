@@ -6,6 +6,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Prototypes.DataClasses.Attributes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Shared.Prototypes
 {
@@ -13,6 +14,7 @@ namespace Robust.Shared.Prototypes
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private Dictionary<Type, DataClassLink> _dataClassLinks = new();
 
@@ -119,7 +121,7 @@ namespace Robust.Shared.Prototypes
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            link.PopulateObjectDelegate(obj, dataClass);
+            link.PopulateObjectDelegate(obj, dataClass, _serializationManager);
         }
 
         public void PopulateDataClass(object obj, DataClass dataClass)
@@ -128,7 +130,7 @@ namespace Robust.Shared.Prototypes
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            link.PopulateDataclassDelegate(obj, dataClass);
+            link.PopulateDataclassDelegate(obj, dataClass, _serializationManager);
         }
     }
 }

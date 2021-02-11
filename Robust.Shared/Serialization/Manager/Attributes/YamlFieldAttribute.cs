@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.Prototypes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [MeansImplicitAssignment]
     public class YamlFieldAttribute : BaseDataFieldAttribute
     {
         public readonly bool ReadOnly;
@@ -20,7 +21,7 @@ namespace Robust.Shared.Prototypes
             ConstantType = constType;
             Required = required;
             ServerOnly = serverOnly;
-            if (FlagType != null && constType != null)
+            if (flagType != null && constType != null)
                 throw new ArgumentException("Cannot have both a flagType and a constType specified");
         }
     }

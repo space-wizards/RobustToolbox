@@ -132,7 +132,7 @@ namespace Robust.Client.Placement
 
                     if (value.Components.TryGetValue("Physics", out var physicsComp)
                         && physicsComp is PhysicsComponent_AUTODATA physicsComponentAutodata
-                        && physicsComponentAutodata._physShapes is { } shapes)
+                        && physicsComponentAutodata._physShapes_field is { } shapes)
                     {
                         _colliderAABB = shapes.FirstOrDefault()?.CalculateLocalBounds(0f) ?? new Box2(0f, 0f, 0f, 0f);
                         return;

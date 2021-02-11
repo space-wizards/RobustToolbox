@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -17,8 +18,8 @@ namespace Robust.Shared.Prototypes.DataClasses
         private List<LinkEntry> _actualFields = new();
         private List<LinkEntry> _dataclassFields = new();
 
-        public readonly Action<object, DataClass> PopulateObjectDelegate;
-        public readonly Action<object, DataClass> PopulateDataclassDelegate;
+        public readonly Action<object, DataClass, ISerializationManager> PopulateObjectDelegate;
+        public readonly Action<object, DataClass, ISerializationManager> PopulateDataclassDelegate;
         public readonly Func<DataClass, string, object> GetFieldDelegate;
 
         public DataClassLink(Type type, Type dataClassType)
@@ -62,7 +63,7 @@ namespace Robust.Shared.Prototypes.DataClasses
 
             foreach (var dataclassField in _dataclassFields)
             {
-                var notIt = new Label();
+                var notIt = generator.DefineLabel();
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Ldstr, dataclassField.DataFieldAttribute.Tag);
                 generator.Emit(OpCodes.Brfalse_S, notIt);
@@ -80,12 +81,12 @@ namespace Robust.Shared.Prototypes.DataClasses
             return dynamicMethod.CreateDelegate<Func<DataClass, string, object?>>();
         }
 
-        private Action<object, DataClass> EmitPopulateObjectDelegate()
+        private Action<object, DataClass, ISerializationManager> EmitPopulateObjectDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateObjectFromDC<>{Type}<>{DataClassType}",
                 typeof(void),
-                new[] {typeof(object), typeof(DataClass), typeof(SerializationManager)},
+                new[] {typeof(object), typeof(DataClass), typeof(ISerializationManager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -109,20 +110,20 @@ namespace Robust.Shared.Prototypes.DataClasses
                     throw new InvalidOperationException(
                         "Could not find field-counterpart while generating PopulateObjectDelegate!");
 
-                generator.EmitCopy(1, counterPart.FieldInfo, 0, actualField.FieldInfo, 2);
+                generator.EmitCopy(1, counterPart.FieldInfo, 0, actualField.FieldInfo, 2, true);
             }
 
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, DataClass>>();
+            return dynamicMethod.CreateDelegate<Action<object, DataClass, ISerializationManager>>();
         }
 
-        private Action<object, DataClass> EmitPopulateDataclassDelegate()
+        private Action<object, DataClass, ISerializationManager> EmitPopulateDataclassDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateDCFromObject<>{Type}<>{DataClassType}",
                 typeof(void),
-                new[] {typeof(object), typeof(DataClass), typeof(SerializationManager)},
+                new[] {typeof(object), typeof(DataClass), typeof(ISerializationManager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -151,7 +152,7 @@ namespace Robust.Shared.Prototypes.DataClasses
 
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, DataClass>>();
+            return dynamicMethod.CreateDelegate<Action<object, DataClass, ISerializationManager>>();
         }
 
         private class LinkEntry
@@ -162,6 +163,11 @@ namespace Robust.Shared.Prototypes.DataClasses
             public LinkEntry(AbstractFieldInfo fieldInfo, BaseDataFieldAttribute dataFieldAttribute)
             {
                 FieldInfo = fieldInfo;
+                if (fieldInfo is SpecificPropertyInfo propertyInfo && (propertyInfo.PropertyInfo.GetMethod == null || propertyInfo.PropertyInfo.SetMethod == null))
+                {
+                    throw new InvalidOperationException(
+                        "Property without getter or setter was annotated with YamlfieldAttribute");
+                }
                 DataFieldAttribute = dataFieldAttribute;
             }
         }

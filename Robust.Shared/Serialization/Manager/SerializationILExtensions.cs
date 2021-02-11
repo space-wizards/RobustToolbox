@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.Emit(OpCodes.Ldloc_0);
             generator.Emit_LdInst(fieldDefinition.DefaultValue, true); //load default value
 
-            var isDefaultLabel = new Label();
+            var isDefaultLabel = generator.DefineLabel();
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultLabel); //checking if the value is default. if so, we skip setting the field
 
             //setting the field
@@ -60,7 +60,7 @@ namespace Robust.Shared.Serialization.Manager
         public static void EmitPushInheritanceField(this ILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition)
         {
-            var isDefaultValue = new Label();
+            var isDefaultValue = generator.DefineLabel();
 
             generator.Emit(OpCodes.Ldarg_0);
             generator.EmitLdfld(fieldDefinition.FieldInfo);
@@ -73,10 +73,25 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         //TODO Paul nesting you numbnugget
-        public static void EmitCopy(this ILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg, AbstractFieldInfo toField, int mgrArg)
+        public static void EmitCopy(this ILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
+            AbstractFieldInfo toField, int mgrArg, bool assumeNotNull = false)
         {
-            if (toField.FieldType.IsAssignableFrom(fromField.FieldType))
-                throw new InvalidOperationException("Mismatch of types in EmitCopy call");
+            if (assumeNotNull)
+            {
+                var type = fromField.FieldType;
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    type = type.GenericTypeArguments.First();
+                }
+                if (!toField.FieldType.IsAssignableFrom(type))
+                    throw new InvalidOperationException("Mismatch of types in EmitCopy call");
+            }
+            else
+            {
+                if (!toField.FieldType.IsAssignableFrom(fromField.FieldType))
+                    throw new InvalidOperationException("Mismatch of types in EmitCopy call");
+            }
+
 
             if (toField.FieldType.IsPrimitive)
             {
@@ -149,8 +164,8 @@ namespace Robust.Shared.Serialization.Manager
         {
             if(fieldDefinition.Attribute.ReadOnly) return; //hehe ez pz
 
-            var isDefaultLabel = new Label();
-            var alwaysWriteLabel = new Label();
+            var isDefaultLabel = generator.DefineLabel();
+            var alwaysWriteLabel = generator.DefineLabel();
 
             generator.Emit(OpCodes.Ldarg_3); //load alwaysWrite bool
             generator.Emit(OpCodes.Brtrue_S, alwaysWriteLabel); //skip defaultcheck if alwayswrite is true

@@ -7,8 +7,8 @@ namespace Robust.Generators
         public static Diagnostic DebugDiag(string msg, Location loc = null) => Diagnostic.Create(
             new DiagnosticDescriptor("RADC9999", "", msg, "Usage", DiagnosticSeverity.Error, true), loc ?? Location.None);
 
-        public static SuppressionDescriptor YamlMeansImplicitUse =>
-            new SuppressionDescriptor("RADC1000", "CS0649", "Used by ComponentDataManager.");
+        public static SuppressionDescriptor MeansImplicitAssignment =>
+            new SuppressionDescriptor("RADC1000", "CS0649", "Marked as implicitly assigned.");
 
         public static DiagnosticDescriptor InvalidYamlAttrTarget = new DiagnosticDescriptor(
             "RADC0000",

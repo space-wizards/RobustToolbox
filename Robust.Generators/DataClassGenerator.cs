@@ -68,7 +68,7 @@ namespace Robust.Generators
             var autoDataRegistrations = allResolvedClasses.Where(IsAutoDataReg).RemoveDuplicates().ToList();
 
             var customDataClassRegistrations = receiver.CustomDataClassRegistrations.Select(ResolveRegistration)
-                .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments.Length > 0)
+                .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments.Length > 0).RemoveDuplicates()
                 .ToDictionary(sym => sym,
                     sym => (INamedTypeSymbol) (sym.GetAttribute(dataClassAttribute).ConstructorArguments[0].Value));
 
@@ -211,12 +211,12 @@ namespace Robust.Generators
                         case IFieldSymbol fieldSymbol:
                             var ftypeStr = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             fieldStr += (ftypeStr.EndsWith("?") ? ftypeStr : ftypeStr+"?" )+" ";
-                            fieldStr += fieldSymbol.Name+";";
+                            fieldStr += fieldSymbol.Name+"_field;";
                             break;
                         case IPropertySymbol propertySymbol:
                             var ptypeStr = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             fieldStr += (ptypeStr.EndsWith("?") ? ptypeStr : ptypeStr+"?" )+" ";
-                            fieldStr += propertySymbol.Name+";";
+                            fieldStr += propertySymbol.Name+"_field;";
                             break;
                     }
 

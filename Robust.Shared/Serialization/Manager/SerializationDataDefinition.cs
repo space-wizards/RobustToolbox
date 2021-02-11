@@ -32,6 +32,11 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
+        private bool GetWarningSMethod(MethodInfo m)
+        {
+            return m.Name == nameof(Logger.WarningS) && m.GetParameters().Length == 2;
+        }
+
         public SerializationDataDefinition(Type type)
         {
             Type = type;
@@ -131,9 +136,9 @@ namespace Robust.Shared.Serialization.Manager
 
             if (typeof(IExposeData).IsAssignableFrom(Type))
             {
-                generator.Emit(OpCodes.Ldstr,"SERV3");
+                generator.Emit(OpCodes.Ldstr, "SERV3");
                 generator.Emit(OpCodes.Ldstr, $"PushInheritance is not supported for IExposeData (Type: {Type})");
-                var warnMethod = typeof(Logger).GetMethod(nameof(Logger.WarningS));
+                var warnMethod = typeof(Logger).GetMethods().First(GetWarningSMethod);
                 Debug.Assert(warnMethod != null, nameof(warnMethod) + " != null");
                 generator.Emit(OpCodes.Call, warnMethod);
             }
@@ -163,9 +168,9 @@ namespace Robust.Shared.Serialization.Manager
 
             if (typeof(IExposeData).IsAssignableFrom(Type))
             {
-                generator.Emit(OpCodes.Ldstr,"SERV3");
+                generator.Emit(OpCodes.Ldstr, "SERV3");
                 generator.Emit(OpCodes.Ldstr, $"Copy is not supported for IExposeData (Type: {Type})");
-                var warnMethod = typeof(Logger).GetMethod(nameof(Logger.WarningS));
+                var warnMethod = typeof(Logger).GetMethods().First(GetWarningSMethod);
                 Debug.Assert(warnMethod != null, nameof(warnMethod) + " != null");
                 generator.Emit(OpCodes.Call, warnMethod);
             }

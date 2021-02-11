@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.IoC;
+﻿using Robust.Shared.IoC;
 using System;
 using YamlDotNet.RepresentationModel;
 

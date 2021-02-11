@@ -1,9 +1,8 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console.Commands

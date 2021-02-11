@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting

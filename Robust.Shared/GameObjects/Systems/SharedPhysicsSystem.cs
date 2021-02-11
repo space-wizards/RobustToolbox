@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Random;
+using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedPhysicsSystem : EntitySystem
     {

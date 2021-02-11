@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.Console;
-using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using DenyReason = Robust.Shared.Network.Messages.MsgViewVariablesDenySession.DenyReason;
 

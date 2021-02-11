@@ -6,7 +6,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Timer = Robust.Shared.Timers.Timer;
 
-namespace Robust.Shared.GameObjects.Components.Timers
+namespace Robust.Shared.GameObjects
 {
     public class TimerComponent : Component
     {

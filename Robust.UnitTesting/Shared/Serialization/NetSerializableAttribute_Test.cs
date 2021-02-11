@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 
 namespace Robust.UnitTesting.Shared.Serialization

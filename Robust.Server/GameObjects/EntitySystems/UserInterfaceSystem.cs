@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.Components.UserInterface;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Server.Player;
+using Robust.Shared.GameObjects;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
     internal class UserInterfaceSystem : EntitySystem

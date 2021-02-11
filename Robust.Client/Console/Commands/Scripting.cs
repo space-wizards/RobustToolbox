@@ -1,7 +1,6 @@
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {

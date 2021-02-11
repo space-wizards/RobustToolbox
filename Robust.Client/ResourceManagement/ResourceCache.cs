@@ -1,5 +1,4 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.ContentPack;
+﻿using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using System;

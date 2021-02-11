@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random

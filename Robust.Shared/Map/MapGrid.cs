@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;

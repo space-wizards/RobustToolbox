@@ -1,7 +1,5 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls

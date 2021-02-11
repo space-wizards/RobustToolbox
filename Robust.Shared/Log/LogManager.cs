@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Shared.Interfaces.Log;
 using System.Collections.Generic;
 using System.Threading;
 

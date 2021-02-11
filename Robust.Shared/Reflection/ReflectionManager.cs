@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,11 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Utility;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -18,7 +13,7 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using StencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
+using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -438,7 +433,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
                 CheckGlError();
-                GL.StencilOp(StencilOp.Keep, StencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
                 CheckGlError();
             }
             else if (_isStencilling)
@@ -716,18 +711,18 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastBatches += 1;
         }
 
-        private static StencilOp ToGLStencilOp(Shaders.StencilOp op)
+        private static TKStencilOp ToGLStencilOp(StencilOp op)
         {
             return op switch
             {
-                Shaders.StencilOp.Keep => StencilOp.Keep,
-                Shaders.StencilOp.Zero => StencilOp.Zero,
-                Shaders.StencilOp.Replace => StencilOp.Replace,
-                Shaders.StencilOp.IncrementClamp => StencilOp.Incr,
-                Shaders.StencilOp.IncrementWrap => StencilOp.IncrWrap,
-                Shaders.StencilOp.DecrementClamp => StencilOp.Decr,
-                Shaders.StencilOp.DecrementWrap => StencilOp.DecrWrap,
-                Shaders.StencilOp.Invert => StencilOp.Invert,
+                StencilOp.Keep => TKStencilOp.Keep,
+                StencilOp.Zero => TKStencilOp.Zero,
+                StencilOp.Replace => TKStencilOp.Replace,
+                StencilOp.IncrementClamp => TKStencilOp.Incr,
+                StencilOp.IncrementWrap => TKStencilOp.IncrWrap,
+                StencilOp.DecrementClamp => TKStencilOp.Decr,
+                StencilOp.DecrementWrap => TKStencilOp.DecrWrap,
+                StencilOp.Invert => TKStencilOp.Invert,
                 _ => throw new NotSupportedException()
             };
         }

@@ -1,19 +1,15 @@
 ﻿using System;
-using Robust.Client.GameObjects.Components;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.GameStates;
+using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.

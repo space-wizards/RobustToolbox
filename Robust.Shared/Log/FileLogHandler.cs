@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Interfaces.Log;
-using System;
+﻿using System;
 using System.IO;
 using Robust.Shared.Utility;
 using Serilog.Events;

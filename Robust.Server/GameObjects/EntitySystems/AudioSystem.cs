@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using static Robust.Server.GameObjects.EntitySystems.AudioSystem;
+using static Robust.Server.GameObjects.AudioSystem;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     public class AudioSystem : EntitySystem
     {

@@ -1,4 +1,4 @@
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedIgnorePauseComponent : Component
     {

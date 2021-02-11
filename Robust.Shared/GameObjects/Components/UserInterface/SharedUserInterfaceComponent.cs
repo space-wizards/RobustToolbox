@@ -1,8 +1,7 @@
 using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.UserInterface
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedUserInterfaceComponent : Component
     {

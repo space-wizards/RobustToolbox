@@ -1,7 +1,6 @@
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
+using Robust.Server.GameObjects;
+using Robust.Server.Player;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands

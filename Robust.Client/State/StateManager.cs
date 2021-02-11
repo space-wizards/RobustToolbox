@@ -1,5 +1,4 @@
-﻿using Robust.Client.Interfaces.State;
-using Robust.Shared.Log;
+﻿using Robust.Shared.Log;
 using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;

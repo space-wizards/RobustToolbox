@@ -1,5 +1,4 @@
 ﻿using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using System;
 using Robust.Shared.Console;
 

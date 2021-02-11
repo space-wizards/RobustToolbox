@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Maps;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -14,12 +10,10 @@ using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.GameObjects;
 using System.Globalization;
-using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
 using Robust.Server.GameObjects;
-using Robust.Server.Interfaces.Timing;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.Serialization;
+using Robust.Server.Timing;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Prototypes;
 using YamlDotNet.Core;
 

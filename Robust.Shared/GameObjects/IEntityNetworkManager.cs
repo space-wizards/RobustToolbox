@@ -1,6 +1,5 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.GameObjects
 {

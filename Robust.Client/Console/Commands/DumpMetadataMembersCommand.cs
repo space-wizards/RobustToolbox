@@ -1,7 +1,6 @@
 ﻿using System;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {

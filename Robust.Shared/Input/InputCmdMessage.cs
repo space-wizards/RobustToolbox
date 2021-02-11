@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;

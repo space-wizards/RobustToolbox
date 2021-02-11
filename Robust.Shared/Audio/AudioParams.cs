@@ -1,7 +1,6 @@
 ﻿using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
-using Robust.Shared.Interfaces.Serialization;
 
 namespace Robust.Shared.Audio
 {

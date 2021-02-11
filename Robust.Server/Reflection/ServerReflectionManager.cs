@@ -1,5 +1,4 @@
-﻿using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
+﻿using Robust.Shared.Reflection;
 using System.Collections.Generic;
 
 namespace Robust.Server.Reflection

@@ -1,4 +1,3 @@
-using System;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables

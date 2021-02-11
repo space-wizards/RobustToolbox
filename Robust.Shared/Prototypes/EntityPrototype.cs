@@ -1,19 +1,18 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
-using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Prototypes
 {
     /// <summary>
     /// Prototype that represents game entities.

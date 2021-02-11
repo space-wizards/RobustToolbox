@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;

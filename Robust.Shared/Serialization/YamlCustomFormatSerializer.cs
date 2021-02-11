@@ -17,7 +17,7 @@ namespace Robust.Shared.Serialization
             _formatter = formatter;
         }
 
-        public override object NodeToType(Type _type, YamlNode node, YamlObjectSerializer serializer)
+        public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
         {
             return _formatter.FromCustomFormat(serializer.NodeToType(_formatter.Format, node));
         }

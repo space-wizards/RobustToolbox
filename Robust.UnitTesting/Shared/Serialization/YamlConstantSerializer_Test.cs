@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Serialization;
+using Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization

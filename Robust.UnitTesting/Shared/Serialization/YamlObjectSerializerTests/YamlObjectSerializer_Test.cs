@@ -8,9 +8,10 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
-namespace Robust.UnitTesting.Shared.Serialization
+namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]

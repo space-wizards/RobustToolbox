@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -217,7 +218,21 @@ namespace Robust.Shared.Reflection
             Type? found = null;
             foreach (var derivedType in GetAllChildren(baseType))
             {
-                if (derivedType.Name == typeName && (derivedType.IsPublic))
+                if (!derivedType.IsPublic)
+                {
+                    continue;
+                }
+
+                if (derivedType.Name == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+
+                var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                if (serializedAttribute != null &&
+                    serializedAttribute.SerializeName == typeName)
                 {
                     found = derivedType;
                     break;

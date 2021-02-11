@@ -607,6 +607,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             _islandSet.Clear();
+            _awakeBodyList.Clear();
 
             ContactManager.PostSolve();
         }

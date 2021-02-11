@@ -81,6 +81,9 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
+            // Server just creates nullspace map on its own but sends it to client hence we will just ignore it.
+            if (_maps.ContainsKey(eventArgs.Map)) return;
+
             var map = new PhysicsMap(eventArgs.Map);
             _maps.Add(eventArgs.Map, map);
             map.Initialize();

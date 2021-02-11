@@ -32,7 +32,9 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         public void DeserializeTypeTest()
         {
             ITestType? type = null;
-            var yaml = "type: test type one";
+            var yaml = @"
+test:
+  !type:testtype1";
 
             using var stream = new MemoryStream();
 
@@ -48,7 +50,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var reader = YamlObjectSerializer.NewReader(mapping);
-            reader.DataField(ref type, "type", null);
+            reader.DataField(ref type, "test", null);
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeOne>(type);
@@ -57,7 +59,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
     public interface ITestType : IExposeData { }
 
-    [SerializedType("test type one")]
+    [SerializedType("testtype1")]
     public class TestTypeOne : ITestType
     {
         void IExposeData.ExposeData(ObjectSerializer serializer) { }

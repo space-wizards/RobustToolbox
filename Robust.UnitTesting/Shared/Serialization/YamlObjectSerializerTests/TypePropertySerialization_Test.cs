@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             ITestType? type = null;
             var yaml = @"
 - test:
-    type: test type two
+    !type:testtype2
     testPropertyOne: A
     testPropertyTwo: 5
 ";
@@ -70,7 +70,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         }
     }
 
-    [SerializedType("test type two")]
+    [SerializedType("testtype2")]
     public class TestTypeTwo : ITestType
     {
         public string? TestPropertyOne { get; set; }

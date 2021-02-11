@@ -586,20 +586,21 @@ namespace Robust.Shared.Serialization
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
                 var concreteType = type;
+
                 if (type.IsAbstract || type.IsInterface)
                 {
-                    var typeName = node switch
-                    {
-                        var n when
-                            !string.IsNullOrEmpty(n.Tag) &&
-                            n.Tag.StartsWith("!type")
-                            => n.Tag["!type:".Length..],
-                        YamlScalarNode scalar => scalar.Value!,
-                        YamlMappingNode mapping => mapping["type"].AsString(),
-                        _ => throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping and non-scalar node. Type: '{type}'")
-                    };
+                    var tag = node.Tag;
+                    if (string.IsNullOrWhiteSpace(tag))
+                        throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
 
-                    concreteType = ResolveConcreteType(type, typeName);
+                    if (tag.StartsWith("!type:"))
+                    {
+                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
+                    }
+                    else
+                    {
+                        throw new YamlException("Malformed type tag.");
+                    }
                 }
 
                 var instance = (IExposeData)Activator.CreateInstance(concreteType)!;

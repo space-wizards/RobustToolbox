@@ -12,6 +12,7 @@ namespace Robust.Shared.GameObjects.Components
     public class PhysicsComponentState : ComponentState
     {
         public readonly bool CanCollide;
+        public readonly bool SleepingAllowed;
         public readonly bool FixedRotation;
         public readonly BodyStatus Status;
         public readonly List<Fixture> Fixtures;
@@ -29,6 +30,7 @@ namespace Robust.Shared.GameObjects.Components
         ///
         /// </summary>
         /// <param name="canCollide"></param>
+        /// <param name="sleepingAllowed"></param>
         /// <param name="fixedRotation"></param>
         /// <param name="status"></param>
         /// <param name="fixtures"></param>
@@ -36,10 +38,22 @@ namespace Robust.Shared.GameObjects.Components
         /// <param name="mass">Current Mass of the entity.</param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
-        public PhysicsComponentState(bool canCollide, bool fixedRotation, BodyStatus status, List<Fixture> fixtures, List<Joint> joints, float mass, Vector2 linearVelocity, float angularVelocity, BodyType bodyType)
+        /// <param name="bodyType"></param>
+        public PhysicsComponentState(
+            bool canCollide,
+            bool sleepingAllowed,
+            bool fixedRotation,
+            BodyStatus status,
+            List<Fixture> fixtures,
+            List<Joint> joints,
+            float mass,
+            Vector2 linearVelocity,
+            float angularVelocity,
+            BodyType bodyType)
             : base(NetIDs.PHYSICS)
         {
             CanCollide = canCollide;
+            SleepingAllowed = sleepingAllowed;
             FixedRotation = fixedRotation;
             Status = status;
             Fixtures = fixtures;

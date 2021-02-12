@@ -272,7 +272,7 @@ namespace Robust.Shared.GameObjects.Components
                 _fixedRotation = value;
                 _angVelocity = 0.0f;
                 ResetMassData();
-                // Dirty();
+                Dirty();
             }
         }
 

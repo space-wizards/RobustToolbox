@@ -158,7 +158,7 @@ namespace Robust.Shared.GameObjects.Components
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Awake
         {
             get => _awake;
@@ -197,6 +197,7 @@ namespace Robust.Shared.GameObjects.Components
         /// body will be woken.
         /// </summary>
         /// <value><c>true</c> if sleeping is allowed; otherwise, <c>false</c>.</value>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool SleepingAllowed
         {
             get => _sleepingAllowed;
@@ -209,11 +210,13 @@ namespace Robust.Shared.GameObjects.Components
                     Awake = true;
 
                 _sleepingAllowed = value;
+                Dirty();
             }
         }
 
         private bool _sleepingAllowed;
 
+        [ViewVariables]
         public float SleepTime
         {
             get => _sleepTime;
@@ -316,7 +319,7 @@ namespace Robust.Shared.GameObjects.Components
                 joints.Add(je.Joint);
             }
 
-            return new PhysicsComponentState(_canCollide, _fixedRotation, _status, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _status, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />

@@ -62,7 +62,7 @@ namespace Robust.Shared.Serialization.Manager
             //setting the field
             generator.Emit(OpCodes.Ldarg_0); //load object - needed for the stfld call later
             generator.Emit(OpCodes.Ldloc, localIdx);
-            generator.EmitStdlf(fieldDefinition.FieldInfo);
+            generator.EmitStfld(fieldDefinition.FieldInfo);
 
             generator.MarkLabel(isDefaultLabel);
         }
@@ -103,14 +103,14 @@ namespace Robust.Shared.Serialization.Manager
                     throw new InvalidOperationException("Mismatch of types in EmitCopy call");
             }
 
-            if (toField.FieldType.IsPrimitive)
+            if (toField.FieldType.IsPrimitive || toField.FieldType == typeof(string))
             {
                 generator.Emit(OpCodes.Ldarg, toArg);
 
                 generator.Emit(OpCodes.Ldarg, fromArg);
                 generator.EmitLdfld(fromField);
 
-                generator.EmitStdlf(toField);
+                generator.EmitStfld(toField);
             }
             else
             {
@@ -128,7 +128,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public static void EmitEquals(this ILGenerator generator, Type type, Label label)
         {
-            if (type.IsPrimitive)
+            if (type.IsPrimitive || type == typeof(string))
             {
                 generator.Emit(OpCodes.Beq_S, label);
             }
@@ -141,7 +141,7 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
-        public static void EmitStdlf(this ILGenerator generator,
+        public static void EmitStfld(this ILGenerator generator,
             AbstractFieldInfo fieldDefinition)
         {
             switch (fieldDefinition)
@@ -192,7 +192,7 @@ namespace Robust.Shared.Serialization.Manager
 
             generator.MarkLabel(alwaysWriteLabel);
 
-            if (fieldDefinition.FieldType.IsPrimitive)
+            if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string))
             {
                 generator.Emit(OpCodes.Ldarg_1); // loading serializer
                 generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading tag

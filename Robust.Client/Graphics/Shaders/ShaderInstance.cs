@@ -1,7 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     A shader instance is a wrapper around a shader that can be used for rendering.

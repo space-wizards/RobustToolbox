@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Maths;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console

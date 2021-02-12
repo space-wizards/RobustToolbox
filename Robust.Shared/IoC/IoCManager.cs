@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
@@ -34,7 +35,7 @@ namespace Robust.Shared.IoC
     /// (for example, server and client running in the same process, they have a different IoC instance).
     /// </para>
     /// </remarks>
-    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IReflectionManager"/>
     public static class IoCManager
     {
         private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";

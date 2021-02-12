@@ -1,7 +1,5 @@
 using System;
 using NFluidsynth;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Audio.Midi

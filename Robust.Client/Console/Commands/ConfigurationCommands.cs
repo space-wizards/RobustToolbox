@@ -3,9 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {

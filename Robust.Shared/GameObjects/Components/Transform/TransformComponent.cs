@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -16,7 +10,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Transform
+namespace Robust.Shared.GameObjects
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {

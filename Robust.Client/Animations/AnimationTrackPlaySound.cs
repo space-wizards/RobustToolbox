@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.GameObjects;
 using Robust.Shared.Audio;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Utility;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Animations
 {

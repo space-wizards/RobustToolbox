@@ -1,5 +1,4 @@
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 
 namespace Robust.Client.UserInterface
 {

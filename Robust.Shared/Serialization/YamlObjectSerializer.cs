@@ -5,12 +5,11 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -585,12 +584,8 @@ namespace Robust.Shared.Serialization
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
-                if (!(node is YamlMappingNode mapNode))
-                {
-                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
-                }
-
                 var concreteType = type;
+
                 if (type.IsAbstract || type.IsInterface)
                 {
                     var tag = node.Tag;
@@ -608,6 +603,12 @@ namespace Robust.Shared.Serialization
                 }
 
                 var instance = (IExposeData)Activator.CreateInstance(concreteType)!;
+
+                if (node is not YamlMappingNode mapNode)
+                {
+                    return instance;
+                }
+
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -640,7 +641,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
-        public T NodeToType<T>(YamlNode node)
+        public T NodeToType<T>(YamlNode node, string name)
         {
             return (T) NodeToType(typeof(T), node);
         }

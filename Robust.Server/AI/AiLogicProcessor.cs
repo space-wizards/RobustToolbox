@@ -1,5 +1,5 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Server.AI
 {

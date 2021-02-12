@@ -1,8 +1,7 @@
 using System;
-using Robust.Client.Animations;
 using Robust.Shared.Animations;
 
-namespace Content.Client.Animations
+namespace Robust.Client.Animations
 {
     public class AnimationTrackControlProperty : AnimationTrackProperty
     {

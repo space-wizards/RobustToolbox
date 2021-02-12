@@ -1,8 +1,6 @@
 using System;
-using Content.Client.Animations;
 using NUnit.Framework;
 using Robust.Client.Animations;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;

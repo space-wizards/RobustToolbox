@@ -1,5 +1,5 @@
-﻿using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls

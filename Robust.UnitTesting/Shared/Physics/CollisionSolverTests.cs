@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Is = Robust.UnitTesting.Is;
 
 namespace Robust.UnitTesting.Shared.Physics
 {

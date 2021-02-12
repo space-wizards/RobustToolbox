@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Text;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
 
 namespace Robust.Server.Console.Commands

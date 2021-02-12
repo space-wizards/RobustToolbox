@@ -1,5 +1,4 @@
 ﻿using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 

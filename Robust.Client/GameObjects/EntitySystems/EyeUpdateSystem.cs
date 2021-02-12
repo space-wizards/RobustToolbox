@@ -1,8 +1,8 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Client.Graphics;
 using Robust.Client.Physics;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 
 #nullable enable
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     /// Updates the position of every Eye every frame, so that the camera follows the player around.

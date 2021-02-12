@@ -1,5 +1,5 @@
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;

@@ -1,8 +1,8 @@
 using Robust.Client.Audio.Midi;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     public class MidiSystem : EntitySystem
     {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Initially based on Box2D by Erin Catto, license follows;
  *
  * Copyright (c) 2009 Erin Catto http://www.box2d.org
@@ -160,7 +160,7 @@ namespace Robust.Shared.Physics
         public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null) :
             base(aabbExtendSize, growthFunc)
         {
-            capacity = Math.Max(DynamicTree.MinimumCapacity, capacity);
+            capacity = Math.Max(MinimumCapacity, capacity);
 
             _root = Proxy.Free;
             _nodes = new Node[capacity];

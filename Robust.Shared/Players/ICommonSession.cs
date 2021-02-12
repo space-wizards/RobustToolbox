@@ -1,5 +1,5 @@
 ﻿using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Players
 {

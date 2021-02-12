@@ -1,5 +1,4 @@
-﻿using Robust.Server.Interfaces.Player;
-using Robust.Shared.Network;
+﻿using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Player

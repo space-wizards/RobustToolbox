@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
-namespace Robust.Server.GameObjects.EntitySystems.TileLookup
+namespace Robust.Server.GameObjects
 {
     internal sealed class GridTileLookupNode
     {

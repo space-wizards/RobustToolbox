@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects.ComponentDependencies
+namespace Robust.Shared.GameObjects
 {
     public class ComponentDependencyManager : IComponentDependencyManager
     {

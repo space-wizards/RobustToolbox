@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.Manager
     {
         private static bool IsReadDataField(MethodInfo method)
         {
-            return method.Name == nameof(YamlObjectSerializer.ReadDataField) && method.GetParameters().Length == 2;
+            return method.Name == nameof(ObjectSerializer.ReadDataField) && method.GetParameters().Length == 2;
         }
 
 
@@ -25,43 +25,64 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string))
             {
-                generator.Emit(OpCodes.Ldarg_1); //load serializer
-                generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); // load the yaml tag
+                //load serializer
+                generator.Emit(OpCodes.Ldarg_1);
+
+                // load the yaml tag
+                generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag);
+
+                //load the default value
                 generator.Emit(OpCodes.Ldarg_3);
                 generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
                 generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
+                //reading datafield using the objectserializer
                 var readDataFieldMethod =
-                    typeof(YamlObjectSerializer).GetMethods().First(IsReadDataField)?
+                    typeof(ObjectSerializer).GetMethods().First(IsReadDataField)?
                         .MakeGenericMethod(fieldDefinition.FieldType);
                 Debug.Assert(readDataFieldMethod != null, nameof(readDataFieldMethod) + " != null");
-                generator.Emit(OpCodes.Call, readDataFieldMethod); //reading datafield using the yamlobjectserializer
+                generator.Emit(OpCodes.Callvirt, readDataFieldMethod);
             }
             else
             {
-                generator.Emit(OpCodes.Ldarg_2); //load serv3manager
-                generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType); //load type
-                generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
-                //todo shouldn't this be a new serializer that has the subnode?
-                generator.Emit(OpCodes.Ldarg_1); //load serializer
+                //load serv3manager
+                generator.Emit(OpCodes.Ldarg_2);
 
-                var populateMethod = typeof(SerializationManager).GetMethod(nameof(ISerializationManager.Populate));
+                //load type
+                generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType);
+                generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
+
+                //todo shouldn't this be a new serializer that has the subnode?
+                //load serializer
+                generator.Emit(OpCodes.Ldarg_1);
+
+                //call populate(type, serializer)
+                var populateMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Populate));
                 Debug.Assert(populateMethod != null, nameof(populateMethod) + " != null");
-                generator.Emit(OpCodes.Call, populateMethod); //call populate(type, serializer)
+                generator.Emit(OpCodes.Callvirt, populateMethod);
             }
 
-            generator.Emit(OpCodes.Stloc, localIdx); //storing the return value so we can populate it into our field later
+            //storing the return value so we can populate it into our field later
+            generator.Emit(OpCodes.Stloc, localIdx);
+
+            //loading back our value
             generator.Emit(OpCodes.Ldloc, localIdx);
+
+            //loading default value
             generator.Emit(OpCodes.Ldarg_3);
             generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
             generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
-            var isDefaultLabel = generator.DefineLabel();
-            generator.EmitEquals(fieldDefinition.FieldType, isDefaultLabel); //checking if the value is default. if so, we skip setting the field
 
-            //setting the field
-            generator.Emit(OpCodes.Ldarg_0); //load object - needed for the stfld call later
+            //checking if the value is default. if so, we skip setting the field
+            var isDefaultLabel = generator.DefineLabel();
+            generator.EmitEquals(fieldDefinition.FieldType, isDefaultLabel);
+
+            //load object
+            generator.Emit(OpCodes.Ldarg_0);
+            //load value
             generator.Emit(OpCodes.Ldloc, localIdx);
+            //setting the field
             generator.EmitStfld(fieldDefinition.FieldInfo);
 
             generator.MarkLabel(isDefaultLabel);
@@ -114,15 +135,30 @@ namespace Robust.Shared.Serialization.Manager
             }
             else
             {
+                if (toField.FieldType.IsValueType)
+                {
+                    generator.Emit(OpCodes.Ldarg, toArg);
+                }
+
                 generator.Emit(OpCodes.Ldarg, mgrArg);
                 generator.Emit(OpCodes.Ldarg, fromArg);
                 generator.EmitLdfld(fromField);
                 generator.Emit(OpCodes.Ldarg, toArg);
                 generator.EmitLdfld(toField);
 
-                var copyMethod = typeof(SerializationManager).GetMethod(nameof(SerializationManager.Copy));
+                var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy));
                 Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
-                generator.Emit(OpCodes.Call, copyMethod);
+                generator.Emit(OpCodes.Callvirt, copyMethod);
+
+
+                if (toField.FieldType.IsValueType)
+                {
+                    generator.EmitStfld(toField);
+                }
+                else
+                {
+                    generator.Emit(OpCodes.Pop); //remove value return of serializationmanager
+                }
             }
         }
 
@@ -201,10 +237,10 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
                 generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
-                var writedatafieldmethod = typeof(YamlObjectSerializer)
-                    .GetMethod(nameof(YamlObjectSerializer.WriteDataField))?.MakeGenericMethod(fieldDefinition.FieldType);
+                var writedatafieldmethod = typeof(ObjectSerializer)
+                    .GetMethod(nameof(ObjectSerializer.WriteDataField))?.MakeGenericMethod(fieldDefinition.FieldType);
                 Debug.Assert(writedatafieldmethod != null, nameof(writedatafieldmethod) + " != null");
-                generator.Emit(OpCodes.Call, writedatafieldmethod); //calling writedatafield
+                generator.Emit(OpCodes.Callvirt, writedatafieldmethod); //calling writedatafield
             }
             else
             {
@@ -214,9 +250,9 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Ldarg_1); //loading serializer
                 generator.Emit(OpCodes.Ldarg, 4); //loading alwaysWrite flag
 
-                var serializeMethod = typeof(SerializationManager).GetMethod(nameof(SerializationManager.Serialize));
+                var serializeMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Serialize));
                 Debug.Assert(serializeMethod != null, nameof(serializeMethod) + " != null");
-                generator.Emit(OpCodes.Call, serializeMethod);
+                generator.Emit(OpCodes.Callvirt, serializeMethod);
             }
 
             generator.MarkLabel(isDefaultLabel);

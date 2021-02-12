@@ -106,7 +106,7 @@ namespace Robust.Shared.Prototypes
             {
                 if (classLink.Value.DataClassType == dataClass.GetType())
                 {
-                    value = (T?) classLink.Value.GetFieldDelegate(dataClass, name);
+                    value = (T?) classLink.Value.GetFieldDelegate(dataClass, name)!;
                     return value != null;
                 }
             }

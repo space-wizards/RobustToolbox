@@ -20,7 +20,7 @@ namespace Robust.Shared.Prototypes.DataClasses
 
         public readonly Action<object, DataClass, ISerializationManager> PopulateObjectDelegate;
         public readonly Action<object, DataClass, ISerializationManager> PopulateDataclassDelegate;
-        public readonly Func<DataClass, string, object> GetFieldDelegate;
+        public readonly Func<DataClass, string, object?> GetFieldDelegate;
 
         public DataClassLink(Type type, Type dataClassType)
         {

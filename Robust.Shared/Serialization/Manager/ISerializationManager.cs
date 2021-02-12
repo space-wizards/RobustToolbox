@@ -12,9 +12,9 @@ namespace Robust.Shared.Serialization.Manager
 
         object Populate(Type type, YamlObjectSerializer serializer);
 
-        void PushInheritance(object source, object target);
+        object PushInheritance(object source, object target);
 
-        void Copy(object source, object target);
+        object Copy(object source, object target);
 
         void Serialize(Type type, object obj, YamlObjectSerializer serializer, bool alwaysWrite = false);
 

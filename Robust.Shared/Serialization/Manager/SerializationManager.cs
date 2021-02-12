@@ -53,7 +53,8 @@ namespace Robust.Shared.Serialization.Manager
             while (currentType != null)
             {
                 dataDef = GetDataDefinition(currentType);
-                dataDef?.InvokePopulateDelegate(obj, serializer, this);
+                if(dataDef != null)
+                    obj = dataDef.InvokePopulateDelegate(obj, serializer, this);
 
                 currentType = currentType.BaseType;
             }
@@ -77,7 +78,7 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
-        public void PushInheritance(object source, object target)
+        public object PushInheritance(object source, object target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -91,12 +92,15 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 var dataDef = GetDataDefinition(commonType);
-                dataDef?.InvokePushInheritanceDelegate(source, target, this);
+                if(dataDef != null)
+                    target = dataDef.InvokePushInheritanceDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
+
+            return target;
         }
 
-        public void Copy(object source, object target)
+        public object Copy(object source, object target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -110,9 +114,12 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 var dataDef = GetDataDefinition(commonType);
-                dataDef?.CopyDelegate(source, target, this);
+                if(dataDef != null)
+                    target = dataDef.CopyDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
+
+            return target;
         }
     }
 }

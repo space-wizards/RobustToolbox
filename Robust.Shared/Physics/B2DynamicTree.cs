@@ -870,7 +870,7 @@ namespace Robust.Shared.Physics
 
         public void Query<TState>(ref TState state, QueryCallback<TState> callback, in Box2 aabb)
         {
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             stack.Push(_root);
 
             ref var baseRef = ref _nodes[0];
@@ -915,7 +915,7 @@ namespace Robust.Shared.Physics
         {
             // NOTE: This is not Box2D's normal ray cast function, since our rays have infinite length.
 
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
 
             stack.Push(_root);
 

@@ -21,13 +21,15 @@ namespace Robust.Shared.Serialization.Manager
         /// WARNING: This method assumes the object is at position 0 & the yamlobjectserializer is at position 1
         /// </summary>
         public static void EmitPopulateField(this ILGenerator generator,
-            SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx)
+            SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
             if (fieldDefinition.FieldType.IsPrimitive || fieldDefinition.FieldType == typeof(string))
             {
                 generator.Emit(OpCodes.Ldarg_1); //load serializer
                 generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); // load the yaml tag
-                generator.Emit_LdInst(fieldDefinition.DefaultValue, true); //load default value
+                generator.Emit(OpCodes.Ldarg_3);
+                generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
+                generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
                 var readDataFieldMethod =
                     typeof(YamlObjectSerializer).GetMethods().First(IsReadDataField)?
@@ -50,7 +52,9 @@ namespace Robust.Shared.Serialization.Manager
 
             generator.Emit(OpCodes.Stloc, localIdx); //storing the return value so we can populate it into our field later
             generator.Emit(OpCodes.Ldloc, localIdx);
-            generator.Emit_LdInst(fieldDefinition.DefaultValue, true); //load default value
+            generator.Emit(OpCodes.Ldarg_3);
+            generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
+            generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
             var isDefaultLabel = generator.DefineLabel();
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultLabel); //checking if the value is default. if so, we skip setting the field
@@ -63,15 +67,16 @@ namespace Robust.Shared.Serialization.Manager
             generator.MarkLabel(isDefaultLabel);
         }
 
-        //TODO Paul nesting you numbnugget
         public static void EmitPushInheritanceField(this ILGenerator generator,
-            SerializationDataDefinition.FieldDefinition fieldDefinition)
+            SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
             var isDefaultValue = generator.DefineLabel();
 
             generator.Emit(OpCodes.Ldarg_0);
             generator.EmitLdfld(fieldDefinition.FieldInfo);
-            generator.Emit_LdInst(fieldDefinition.DefaultValue, true);
+            generator.Emit(OpCodes.Ldarg_3);
+            generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
+            generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultValue);
 
             generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
@@ -79,11 +84,10 @@ namespace Robust.Shared.Serialization.Manager
             generator.MarkLabel(isDefaultValue);
         }
 
-        //TODO Paul nesting you numbnugget
         public static void EmitCopy(this ILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
-            AbstractFieldInfo toField, int mgrArg, bool assumeNotNull = false)
+            AbstractFieldInfo toField, int mgrArg, bool assumeValueNotNull = false)
         {
-            if (assumeNotNull)
+            if (assumeValueNotNull)
             {
                 var type = fromField.FieldType;
                 if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
@@ -98,7 +102,6 @@ namespace Robust.Shared.Serialization.Manager
                 if (!toField.FieldType.IsAssignableFrom(fromField.FieldType))
                     throw new InvalidOperationException("Mismatch of types in EmitCopy call");
             }
-
 
             if (toField.FieldType.IsPrimitive)
             {
@@ -161,22 +164,20 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Ldfld, field.FieldInfo);
                     break;
                 case SpecificPropertyInfo property:
-                    if(property.PropertyInfo.GetMethod == null)
-                        System.Console.Write("aa");
                     generator.Emit(OpCodes.Call, property.PropertyInfo.GetMethod!); //todo paul enforce getter!!!
                     break;
             }
         }
 
         public static void EmitSerializeField(this ILGenerator generator,
-            SerializationDataDefinition.FieldDefinition fieldDefinition)
+            SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
             if(fieldDefinition.Attribute.ReadOnly) return; //hehe ez pz
 
             var isDefaultLabel = generator.DefineLabel();
             var alwaysWriteLabel = generator.DefineLabel();
 
-            generator.Emit(OpCodes.Ldarg_3); //load alwaysWrite bool
+            generator.Emit(OpCodes.Ldarg, 4); //load alwaysWrite bool
             generator.Emit(OpCodes.Brtrue_S, alwaysWriteLabel); //skip defaultcheck if alwayswrite is true
 
             //skip all of this if the value is default
@@ -184,7 +185,9 @@ namespace Robust.Shared.Serialization.Manager
             generator.EmitLdfld(fieldDefinition.FieldInfo);
             generator.Emit(OpCodes.Stloc_0); //also storing the value for later so we dont have to do ldfld again
             generator.Emit(OpCodes.Ldloc_0);
-            generator.Emit_LdInst(fieldDefinition.DefaultValue, true);
+            generator.Emit(OpCodes.Ldarg_3);
+            generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
+            generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultLabel);
 
             generator.MarkLabel(alwaysWriteLabel);
@@ -194,7 +197,9 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Ldarg_1); // loading serializer
                 generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading tag
                 generator.Emit(OpCodes.Ldloc_0); //loading value
-                generator.Emit_LdInst(fieldDefinition.DefaultValue, true); //loading default value (altough this kinda doesn't matter)
+                generator.Emit(OpCodes.Ldarg_3);
+                generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
+                generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
 
                 var writedatafieldmethod = typeof(YamlObjectSerializer)
                     .GetMethod(nameof(YamlObjectSerializer.WriteDataField))?.MakeGenericMethod(fieldDefinition.FieldType);
@@ -207,7 +212,7 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Ldobj, fieldDefinition.FieldType); //loading type
                 generator.Emit(OpCodes.Ldloc_0); //loading object
                 generator.Emit(OpCodes.Ldarg_1); //loading serializer
-                generator.Emit(OpCodes.Ldarg_3); //loading alwaysWrite flag
+                generator.Emit(OpCodes.Ldarg, 4); //loading alwaysWrite flag
 
                 var serializeMethod = typeof(SerializationManager).GetMethod(nameof(SerializationManager.Serialize));
                 Debug.Assert(serializeMethod != null, nameof(serializeMethod) + " != null");
@@ -224,35 +229,6 @@ namespace Robust.Shared.Serialization.Manager
             generator.Emit(OpCodes.Ldarg_0);
             generator.Emit(OpCodes.Ldarg_1);
             generator.Emit(OpCodes.Callvirt, exposeDataMethod);
-        }
-
-        /// <summary>
-        /// Burn an reference to the specified runtime object instance into the DynamicMethod
-        /// taken from https://stackoverflow.com/questions/4989681/place-an-object-on-top-of-stack-in-ilgenerator
-        /// </summary>
-        public static void Emit_LdInst<T>(this ILGenerator il, T inst, bool free = false)
-            where T : class
-        {
-            if (inst == null)
-            {
-                il.Emit(OpCodes.Ldnull);
-                return;
-            }
-
-            var gch = GCHandle.Alloc(inst);
-
-            var ptr = GCHandle.ToIntPtr(gch);
-
-            if (IntPtr.Size == 4)
-                il.Emit(OpCodes.Ldc_I4, ptr.ToInt32());
-            else
-                il.Emit(OpCodes.Ldc_I8, ptr.ToInt64());
-
-            il.Emit(OpCodes.Ldobj, typeof(T));
-
-            /// Do this only if you can otherwise ensure that 'inst' outlives the DynamicMethod
-            //if(free)
-            //    gch.Free();
         }
     }
 }

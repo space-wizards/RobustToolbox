@@ -8,7 +8,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization
@@ -54,12 +53,13 @@ strField: foo
             var dynMethod = new DynamicMethod(
                 $"_testMethodPopulate",
                 typeof(void),
-                new[] {typeof(object), typeof(YamlObjectSerializer), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(YamlObjectSerializer), typeof(ISerializationManager), typeof(object?[])},
                 typeof(NestedTestClass),
                 true);
             dynMethod.DefineParameter(1, ParameterAttributes.In, "obj");
             dynMethod.DefineParameter(2, ParameterAttributes.In, "serializer");
             dynMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynMethod.GetILGenerator();
 
             var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
@@ -70,15 +70,15 @@ strField: foo
             var field = dataDef.FieldDefinitions.First();
             var localfield = generator.DeclareLocal(field.FieldType);
 
-            generator.EmitPopulateField(field, localfield.LocalIndex);
+            generator.EmitPopulateField(field, localfield.LocalIndex, 0);
 
             generator.Emit(OpCodes.Ret);
 
-            var @delegate = dynMethod.CreateDelegate<Action<object, YamlObjectSerializer, ISerializationManager>>();
+            var @delegate = dynMethod.CreateDelegate<Action<object, YamlObjectSerializer, ISerializationManager, object?[]>>();
 
             var test = new NestedTestClass();
             var mapping = YamlObjectSerializer_Test.YamlTextToNode(YAML);
-            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr);
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new [] {field.DefaultValue});
 
             Assert.That(test.primitiveStringField, Is.EqualTo("foo"));
         }
@@ -89,12 +89,13 @@ strField: foo
             var dynMethod = new DynamicMethod(
                 $"_testMethodPopulate",
                 typeof(void),
-                new[] {typeof(object), typeof(YamlObjectSerializer), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(YamlObjectSerializer), typeof(ISerializationManager), typeof(object?[])},
                 typeof(NestedTestClass),
                 true);
             dynMethod.DefineParameter(1, ParameterAttributes.In, "obj");
             dynMethod.DefineParameter(2, ParameterAttributes.In, "serializer");
             dynMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynMethod.GetILGenerator();
 
             var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
@@ -105,15 +106,15 @@ strField: foo
             var field = dataDef.FieldDefinitions.First();
             var localfield = generator.DeclareLocal(field.FieldType);
 
-            generator.EmitPopulateField(field, localfield.LocalIndex);
+            generator.EmitPopulateField(field, localfield.LocalIndex, 0);
 
             generator.Emit(OpCodes.Ret);
 
-            var @delegate = dynMethod.CreateDelegate<Action<object, YamlObjectSerializer, ISerializationManager>>();
+            var @delegate = dynMethod.CreateDelegate<Action<object, YamlObjectSerializer, ISerializationManager, object?[]>>();
 
             var test = new NestedTestClass();
             var mapping = new YamlMappingNode();
-            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr);
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new []{field.DefaultValue});
 
             Assert.That(test.primitiveStringField, Is.EqualTo("defaultTest2"));
         }

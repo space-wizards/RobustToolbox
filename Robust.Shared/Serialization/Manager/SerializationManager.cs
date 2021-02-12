@@ -53,7 +53,7 @@ namespace Robust.Shared.Serialization.Manager
             while (currentType != null)
             {
                 dataDef = GetDataDefinition(currentType);
-                dataDef?.PopulateDelegate(obj, serializer, this);
+                dataDef?.InvokePopulateDelegate(obj, serializer, this);
 
                 currentType = currentType.BaseType;
             }
@@ -72,7 +72,7 @@ namespace Robust.Shared.Serialization.Manager
                 var dataDef = GetDataDefinition(type);
                 if (dataDef?.CanCallWith(obj) != true)
                     throw new ArgumentException($"Supplied parameter does not fit with datadefinition of {type}.", nameof(obj));
-                dataDef?.SerializeDelegate(obj, serializer, this, alwaysWrite);
+                dataDef?.InvokeSerializeDelegate(obj, serializer, this, alwaysWrite);
                 currentType = currentType.BaseType;
             }
         }
@@ -91,7 +91,7 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 var dataDef = GetDataDefinition(commonType);
-                dataDef?.PushInheritanceDelegate(source, target, this);
+                dataDef?.InvokePushInheritanceDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
         }

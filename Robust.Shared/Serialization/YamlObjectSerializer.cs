@@ -514,16 +514,17 @@ namespace Robust.Shared.Serialization
             if (TryGenericImmutableListType(type, out var immutableListType))
             {
                 var listNode = (YamlSequenceNode) node;
-                var newList = new object[listNode.Children.Count];
+                var list = typeof(ImmutableList<>).MakeGenericType(immutableListType);
+                var immutableList = list.GetField("Empty")!.GetValue(null);
+                var add = list.GetMethod("Add")!;
 
-                for (var i = 0; i < listNode.Children.Count; i++)
+                foreach (var entryNode in listNode.Children)
                 {
-                    var entryNode = listNode.Children[i];
                     var value = NodeToType(immutableListType, entryNode);
-                    newList[i] = NodeToType(immutableListType, entryNode);
+                    immutableList = add.Invoke(immutableList, new[] {value});
                 }
 
-                return newList.ToImmutableList();
+                return immutableList!;
             }
 
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>

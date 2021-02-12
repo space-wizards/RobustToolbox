@@ -118,5 +118,39 @@ strField: foo
 
             Assert.That(test.primitiveStringField, Is.EqualTo("defaultTest2"));
         }
+
+        [Test]
+        public void CopyPrimitiveTest()
+        {
+            var dynMethod = new DynamicMethod(
+                $"_testMethodPopulate",
+                typeof(void),
+                new[] {typeof(object), typeof(object), typeof(ISerializationManager)},
+                typeof(NestedTestClass),
+                true);
+            dynMethod.DefineParameter(1, ParameterAttributes.In, "obj1");
+            dynMethod.DefineParameter(2, ParameterAttributes.In, "obj2");
+            dynMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            var generator = dynMethod.GetILGenerator();
+
+            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serv3Mgr.GetDataDefinition(typeof(NestedTestClass));
+            Assert.NotNull(dataDef);
+            Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(1));
+
+            var field = dataDef.FieldDefinitions.First();
+
+            generator.EmitCopy(0, field.FieldInfo, 1, field.FieldInfo, 2);
+
+            generator.Emit(OpCodes.Ret);
+
+            var @delegate = dynMethod.CreateDelegate<Action<object, Object, ISerializationManager>>();
+
+            var source = new NestedTestClass(){primitiveStringField = "copyTest"};
+            var target = new NestedTestClass();
+            @delegate(source, target, serv3Mgr);
+
+            Assert.That(target.primitiveStringField, Is.EqualTo("copyTest"));
+        }
     }
 }

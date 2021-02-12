@@ -318,7 +318,6 @@ namespace Robust.Shared.Prototypes
                 if (indexedPrototype != null)
                 {
                     var id = indexedPrototype.ID;
-                    if(id == null) System.Console.WriteLine("A");
                     if (indexedPrototypes[prototypeType].ContainsKey(id))
                     {
                         throw new PrototypeLoadException(string.Format("Duplicate ID: '{0}'", id));

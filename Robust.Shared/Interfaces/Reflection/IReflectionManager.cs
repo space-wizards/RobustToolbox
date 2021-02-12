@@ -71,7 +71,7 @@ namespace Robust.Shared.Interfaces.Reflection
         /// </summary>
         /// <typeparam name="T">Attribute to search for.</typeparam>
         /// <returns>Enumeration of all types with the specified attribute.</returns>
-        IEnumerable<Type> FindTypesWithAttribute<T>();
+        IEnumerable<Type> FindTypesWithAttribute<T>() where T : Attribute;
 
         /// <summary>
         /// Loads assemblies into the manager and get all the types.

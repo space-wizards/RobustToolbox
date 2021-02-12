@@ -159,7 +159,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public IEnumerable<Type> FindTypesWithAttribute<T>()
+        public IEnumerable<Type> FindTypesWithAttribute<T>() where T : Attribute
         {
             var types = new List<Type>();
 

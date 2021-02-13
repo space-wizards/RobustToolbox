@@ -126,8 +126,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_0);
-            if(Type.IsValueType)
-                generator.Emit(OpCodes.Box, typeof(object));
+            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();
@@ -194,6 +193,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_1);
+            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PushInheritanceDelegateSignature>();
@@ -227,6 +227,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_1);
+            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<CopyDelegateSignature>();

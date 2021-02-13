@@ -126,6 +126,8 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_0);
+            if(Type.IsValueType)
+                generator.Emit(OpCodes.Box, typeof(object));
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();
@@ -182,7 +184,7 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Ldstr, $"PushInheritance is not supported for IExposeData (Type: {Type})");
                 var warnMethod = typeof(Logger).GetMethods().First(GetWarningSMethod);
                 Debug.Assert(warnMethod != null, nameof(warnMethod) + " != null");
-                generator.Emit(OpCodes.Call, warnMethod);
+                generator.Emit(OpCodes.Callvirt, warnMethod);
             }
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)

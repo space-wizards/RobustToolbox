@@ -15,7 +15,8 @@ namespace Robust.Shared.Utility
         private static readonly Parser<char, char> ParseEscapeSequence =
             Char('\\').Then(OneOf(
                 Char('\\'),
-                Char(TagBegin)));
+                Char(TagBegin),
+                Char(TagEnd)));
 
         private static readonly Parser<char, TagText> ParseTagText =
             ParseEscapeSequence.Or(Token(c => c != TagBegin && c != '\\'))

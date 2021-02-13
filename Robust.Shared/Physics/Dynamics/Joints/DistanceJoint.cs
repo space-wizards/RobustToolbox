@@ -176,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// disables softness.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Frequency { get; set; } = 1.0f;
+        public float Frequency { get; set; }
 
         /// <summary>
         /// The damping ratio. 0 = no damping, 1 = critical damping.

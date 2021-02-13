@@ -756,7 +756,7 @@ namespace Robust.Shared.Serialization
                     var entryNode = TypeToNode(entry);
 
                     // write the concrete type tag
-                    AssignTag(immutableListType, entry, null, entryNode);
+                    AssignTag<object?>(immutableListType, entry, null, entryNode);
 
                     node.Add(entryNode);
                 }

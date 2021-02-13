@@ -41,7 +41,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// means it is still in the simulation, but inactive.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Enabled = true;
+        public bool Enabled { get; set; } = true;
 
         [NonSerialized] internal JointEdge EdgeA = new();
         [NonSerialized] internal JointEdge EdgeB = new();
@@ -51,8 +51,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         [NonSerialized] internal bool IslandFlag;
 
+        // For some reason in FPE this is settable?
         /// <summary>
-        ///     Gets or sets the type of the joint.
+        ///     Gets the type of the joint.
         /// </summary>
         /// <value>The type of the joint.</value>
         public abstract JointType JointType { get; }
@@ -105,8 +106,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
-        private float _breakpoint;
-        [NonSerialized] private double _breakpointSquared;
+        private float _breakpoint = float.MaxValue;
+        [NonSerialized] private double _breakpointSquared = Double.MaxValue;
 
         public virtual void ExposeData(ObjectSerializer serializer)
         {

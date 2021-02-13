@@ -1,13 +1,13 @@
-using Robust.Server.Timing;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects
 {
     [RegisterComponent]
-    [ComponentReference(typeof(SharedIgnorePauseComponent))]
-    public sealed class IgnorePauseComponent : SharedIgnorePauseComponent
+    public class IgnorePauseComponent : Component
     {
+        public override string Name => "IgnorePause";
+
         public override void OnAdd()
         {
             base.OnAdd();

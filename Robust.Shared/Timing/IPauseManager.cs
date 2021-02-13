@@ -1,7 +1,7 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 
-namespace Robust.Server.Timing
+namespace Robust.Shared.Timing
 {
     public interface IPauseManager
     {

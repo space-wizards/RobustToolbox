@@ -124,11 +124,6 @@ namespace Robust.Shared.Timing
         void StartFrame();
 
         /// <summary>
-        ///     Resets the real uptime of the server.
-        /// </summary>
-        void ResetRealTime();
-
-        /// <summary>
         /// Is this the first time CurTick has been predicted?
         /// </summary>
         bool IsFirstTimePredicted { get; }
@@ -162,5 +157,8 @@ namespace Robust.Shared.Timing
         /// Resets the simulation time. This should be called on round restarts.
         /// </summary>
         void ResetSimTime();
+
+        TimeSpan RealLocalToServer(TimeSpan local);
+        TimeSpan RealServerToLocal(TimeSpan server);
     }
 }

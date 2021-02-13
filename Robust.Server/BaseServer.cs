@@ -278,7 +278,7 @@ namespace Robust.Server
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
-            
+
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
 
             _stateManager.Initialize();

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -15,7 +14,7 @@ namespace Robust.Client.Graphics
     ///     Contains a texture used for drawing things.
     /// </summary>
     [PublicAPI]
-    public abstract class Texture : IDirectionalTextureProvider
+    public abstract class Texture : IRsiStateLike
     {
         /// <summary>
         ///     The width of the texture, in pixels.
@@ -85,6 +84,26 @@ namespace Robust.Client.Graphics
         {
             return this;
         }
+
+        RSI.State.DirectionType IRsiStateLike.Directions => RSI.State.DirectionType.Dir1;
+        bool IRsiStateLike.IsAnimated => false;
+        int IRsiStateLike.AnimationFrameCount => 0;
+
+        float IRsiStateLike.GetDelay(int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
+            return 0;
+        }
+
+        Texture IRsiStateLike.GetFrame(RSI.State.Direction dir, int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
+            return this;
+        }
     }
 
     /// <summary>
@@ -105,7 +124,7 @@ namespace Robust.Client.Graphics
 
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
-            var loadParams = TextureLoadParameters.Default;
+            var loadParams = Default;
             if (yaml.TryGetNode("sample", out YamlMappingNode? sampleNode))
             {
                 loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);

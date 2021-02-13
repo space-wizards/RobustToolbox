@@ -1,8 +1,7 @@
 using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.UserInterface
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedUserInterfaceComponent : Component
     {
@@ -14,7 +13,7 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
             public object UiKey { get; private set; } = default!;
             public string ClientType { get; private set; } = default!;
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 UiKey = serializer.ReadStringEnumKey("key");
                 ClientType = serializer.ReadDataField<string>("type");

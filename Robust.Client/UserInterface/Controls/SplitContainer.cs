@@ -31,8 +31,8 @@ namespace Robust.Client.UserInterface.Controls
         // min / max x and y extents in relative virtual pixels of where the split can go regardless
         // of anything else.
         private float SplitMin => SplitWidth + SplitEdgeSeparation;
-        private float SplitMax => Vertical ? this.Height - (SplitWidth + SplitEdgeSeparation) :
-            this.Width - (SplitWidth + SplitEdgeSeparation);
+        private float SplitMax => Vertical ? Height - (SplitWidth + SplitEdgeSeparation) :
+            Width - (SplitWidth + SplitEdgeSeparation);
 
         public SplitContainer()
         {

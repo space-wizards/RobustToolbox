@@ -4,18 +4,15 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using NFluidsynth;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -301,8 +298,7 @@ namespace Robust.Client.Audio.Midi
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                // TODO: Cache system
-                                occlusion = EntitySystem.Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

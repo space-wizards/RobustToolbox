@@ -77,7 +77,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // OpenGL ES capabilities.
                 CheckGLCap(ref _hasGLKhrDebug, "khr_debug", (3, 2), "GL_KHR_debug");
-                if (CompareVersion(3, 2, major, minor))
+                if (!CompareVersion(3, 2, major, minor))
                 {
                     // We're ES <3.2, KHR_debug is extension and needs KHR suffixes.
                     _isGLKhrDebugESExtension = true;

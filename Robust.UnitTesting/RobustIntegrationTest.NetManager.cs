@@ -4,8 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
@@ -14,6 +15,7 @@ namespace Robust.UnitTesting
     {
         internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
+            [Dependency] private readonly IGameTiming _gameTiming = default!;
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
             public bool IsRunning { get; private set; }
@@ -371,6 +373,8 @@ namespace Robust.UnitTesting
                 public NetUserId UserId { get; }
                 public string UserName { get; }
                 public LoginType AuthType => LoginType.GuestAssigned;
+                public TimeSpan RemoteTimeOffset => TimeSpan.Zero; // TODO: Fix this
+                public TimeSpan RemoteTime => _owner._gameTiming.RealTime + RemoteTimeOffset;
                 public short Ping => default;
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,

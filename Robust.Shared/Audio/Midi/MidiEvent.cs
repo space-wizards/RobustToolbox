@@ -1,7 +1,5 @@
 using System;
 using NFluidsynth;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Audio.Midi
@@ -66,9 +64,9 @@ namespace Robust.Shared.Audio.Midi
             return $"{base.ToString()} >> TYPE: {Type} || CHANNEL: {Channel} || CONTROL: {Control} || KEY: {Key} || VELOCITY: {Velocity} || PITCH: {Pitch} || PROGRAM: {Program} || VALUE: {Value} <<";
         }
 
-        public static implicit operator NFluidsynth.SequencerEvent(MidiEvent midiEvent)
+        public static implicit operator SequencerEvent(MidiEvent midiEvent)
         {
-            var @event = new NFluidsynth.SequencerEvent();
+            var @event = new SequencerEvent();
 
             switch (midiEvent.Type)
             {
@@ -85,9 +83,24 @@ namespace Robust.Shared.Audio.Midi
                         @event.NoteOff(midiEvent.Channel, midiEvent.Key);
                     break;
 
+                // After Touch
+                case 160:
+                    @event.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);
+                    break;
+
                 // CC
                 case 176:
                     @event.ControlChange(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                    break;
+
+                // Program Change
+                case 192:
+                    @event.ProgramChange(midiEvent.Channel, midiEvent.Program);
+                    break;
+
+                // Channel Pressure
+                case 208:
+                    @event.ChannelPressure(midiEvent.Channel, midiEvent.Value);
                     break;
 
                 // Pitch Bend

@@ -1,10 +1,9 @@
-﻿using Robust.Shared.Map;
+using System;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using System;
-using Robust.Shared.Interfaces.GameObjects;
 
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
     public class EffectSystemMessage : EntitySystemMessage
@@ -84,6 +83,11 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// Time after which the particle will "die"
         /// </summary>
         public TimeSpan DeathTime { get; set; } = TimeSpan.FromSeconds(1);
+
+        /// <summary>
+        /// How long the particle lasts.
+        /// </summary>
+        public TimeSpan LifeTime => DeathTime - Born;
 
         /// <summary>
         /// Effect's spin about its center in radians

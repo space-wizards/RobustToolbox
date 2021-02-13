@@ -1,6 +1,3 @@
-using Robust.Client.Graphics.ClientEye;
-using Robust.Shared.Maths;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
@@ -26,8 +23,6 @@ namespace Robust.Client.Graphics.Clyde
         private const string UniLightTexture = "lightMap";
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
-
-        private static readonly Color AmbientLightColor = Color.Black;
 
         private const int BindingIndexProjView = 0;
         private const int BindingIndexUniformConstants = 1;

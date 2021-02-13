@@ -61,7 +61,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             handle.SetTransform(Matrix3.Identity);
         }
 
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
 

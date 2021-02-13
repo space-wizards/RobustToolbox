@@ -2,7 +2,6 @@
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 

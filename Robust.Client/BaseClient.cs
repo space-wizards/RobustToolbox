@@ -1,20 +1,18 @@
 using System;
 using System.Net;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Debugging;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Utility;
+using Robust.Client.Debugging;
+using Robust.Client.GameObjects;
+using Robust.Client.GameStates;
 using Robust.Client.Player;
+using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client
@@ -53,7 +51,7 @@ namespace Robust.Client
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
 
-            _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged);
+            _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
             _debugDrawMan.Initialize();

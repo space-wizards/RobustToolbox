@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Server side processing of incoming user commands.

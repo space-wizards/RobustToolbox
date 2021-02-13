@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
+using Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization

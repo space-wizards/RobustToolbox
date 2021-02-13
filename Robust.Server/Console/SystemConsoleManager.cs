@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Con = System.Console;
@@ -11,7 +9,7 @@ namespace Robust.Server.Console
 {
     internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-        [Dependency] private readonly IConsoleShell _conShell = default!;
+        [Dependency] private readonly IServerConsoleHost _conShell = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IBaseServer _baseServer = default!;
 
@@ -66,7 +64,7 @@ namespace Robust.Server.Console
                             Con.WriteLine("> " + currentBuffer);
                             commandHistory.Add(commandHistory.Count, currentBuffer);
                             historyIndex = commandHistory.Count;
-                            ExecuteCommand(currentBuffer);
+                            _conShell.ExecuteCommand(currentBuffer);
                             currentBuffer = "";
                             internalCursor = 0;
                             break;
@@ -146,11 +144,6 @@ namespace Robust.Server.Console
             }
         }
 
-        private void ExecuteCommand(string commandLine)
-        {
-            _conShell.ExecuteCommand(commandLine);
-        }
-
         public void Print(string text)
         {
             Con.Write(text);
@@ -181,7 +174,7 @@ namespace Robust.Server.Console
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = _conShell.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = _conShell.RegisteredCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;

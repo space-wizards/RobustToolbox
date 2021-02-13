@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using Robust.Shared.Log;
 
 namespace Robust.Shared.Timing
 {
@@ -19,6 +18,8 @@ namespace Robust.Shared.Timing
         private readonly IStopwatch _realTimer = new Stopwatch();
         private readonly List<long> _realFrameTimes = new(NumFrames);
         private TimeSpan _lastRealTime;
+
+        [Dependency] private readonly INetManager _netManager = default!;
 
         /// <summary>
         ///     Default constructor.
@@ -86,6 +87,25 @@ namespace Robust.Shared.Timing
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
+
+        public TimeSpan ServerTime
+        {
+            get
+            {
+                if (_netManager.IsServer)
+                {
+                    return RealTime;
+                }
+
+                var clientNetManager = (IClientNetManager) _netManager;
+                if (clientNetManager.ServerChannel == null)
+                {
+                    return TimeSpan.Zero;
+                }
+
+                return clientNetManager.ServerChannel.RemoteTime;
+            }
+        }
 
         /// <summary>
         ///     The simulated time it took to render the last frame.

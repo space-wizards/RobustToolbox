@@ -1,29 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Debugging;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Player;
+using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
-using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging
 {
@@ -34,6 +18,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
@@ -56,7 +41,7 @@ namespace Robust.Client.Debugging
                 if (value)
                 {
                     _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
-                        _prototypeManager, _inputManager));
+                        _prototypeManager, _inputManager, _physicsManager));
                 }
                 else
                 {
@@ -94,6 +79,7 @@ namespace Robust.Client.Debugging
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
             private readonly IInputManager _inputManager;
+            private readonly IPhysicsManager _physicsManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
             private readonly ShaderInstance _shader;
@@ -102,12 +88,13 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new();
 
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
+            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
                 : base(nameof(PhysicsOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
                 _inputManager = inputManager;
+                _physicsManager = physicsManager;
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
@@ -167,30 +154,23 @@ namespace Robust.Client.Debugging
 
                 var viewport = _eyeManager.GetWorldViewport();
 
-                var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
-                var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity;
-                if (player == null) return;
-                foreach (var comp in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(player.Transform.MapID, viewport))
-                {
-                    var physBody = (IPhysBody) comp;
+                if (viewport.IsEmpty()) return;
 
+                var mapId = _eyeManager.CurrentMap;
+
+                foreach (var physBody in _physicsManager.GetCollidingEntities(mapId, viewport))
+                {
                     // all entities have a TransformComponent
                     var transform = physBody.Entity.Transform;
 
-                    // if not on the same map, continue
-                    if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
-                        continue;
+                    var worldBox = physBody.WorldAABB;
+                    if (worldBox.IsEmpty()) continue;
 
-                    var worldBox = physBody.GetWorldAABB();
                     var colorEdge = Color.Red.WithAlpha(0.33f);
 
-                    // if not on screen, or too small, continue
-                    if (!worldBox.Intersects(in viewport) || worldBox.IsEmpty())
-                        continue;
-
-                    foreach (var fixture in comp.Fixtures)
+                    foreach (var shape in physBody.PhysicsShapes)
                     {
-                        fixture.Shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, MathF.Max(0.0f, 1.0f - comp.SleepTime / sleepThreshold));
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))
@@ -251,18 +231,6 @@ namespace Robust.Client.Debugging
                 public override void DrawCircle(Vector2 origin, float radius, in Color color)
                 {
                     _handle.DrawCircle(origin, radius, color);
-                }
-
-                public override void DrawLine(Vector2 start, Vector2 end, in Color color)
-                {
-                    _handle.DrawLine(start, end, color);
-                }
-
-                public override void DrawPolygonShape(Vector2[] vertices, in Color color)
-                {
-                    DebugTools.Assert(vertices.Length >= 3);
-                    // As Box2D only supports convex shapes TriangleFan should be appropriate for drawing.
-                    _handle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, vertices, color);
                 }
 
                 public override void SetTransform(in Matrix3 transform)

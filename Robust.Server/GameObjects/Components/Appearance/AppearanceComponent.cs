@@ -1,5 +1,4 @@
 ﻿using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Appearance;
 using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;

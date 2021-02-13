@@ -1,4 +1,3 @@
-using Robust.Client.Graphics;
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -43,7 +42,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
             }
 
-            this.AddChild(_container);
+            AddChild(_container);
         }
 
         public int AddItem(string label, T value, Action<RadioOptionItemSelectedEventArgs<T>>? itemSelectedAction = null)
@@ -251,7 +250,7 @@ namespace Robust.Client.UserInterface.Controls
         public RadioOptionButtonData(string text, T value, Button button)
         {
             Text = text;
-            this.Button = button;
+            Button = button;
             Value = value;
         }
         public event Action<RadioOptionItemSelectedEventArgs<T>>? OnItemSelected;

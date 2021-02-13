@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using Newtonsoft.Json.Linq;
-using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
 
 namespace Robust.Server.ServerStatus

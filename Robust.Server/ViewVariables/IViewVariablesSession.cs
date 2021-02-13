@@ -1,6 +1,6 @@
 ﻿using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 
 namespace Robust.Server.ViewVariables
 {

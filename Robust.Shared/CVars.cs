@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 
 namespace Robust.Shared
 {
@@ -78,10 +79,10 @@ namespace Robust.Shared
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPVS =
-            CVarDef.Create("net.pvs", true, CVar.ARCHIVE);
+            CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
+            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
@@ -218,17 +219,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> AuthServerPubKey =
-            CVarDef.Create("auth.serverpubkey", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthToken =
-            CVarDef.Create("auth.token", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthUserId =
-            CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
-
+        // Only respected on server, client goes through IAuthManager for security.
         public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
+            CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
          * DISPLAY
@@ -248,6 +241,9 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> DisplayLightMapDivider =
             CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<int> DisplayMaxLightsPerScene =
+            CVarDef.Create("display.maxlightsperscene", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);

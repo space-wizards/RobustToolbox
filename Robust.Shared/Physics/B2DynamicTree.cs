@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Initially based on Box2D by Erin Catto, license follows;
  *
  * Copyright (c) 2009 Erin Catto http://www.box2d.org
@@ -17,6 +17,8 @@
  * misrepresented as being the original software.
  * 3. This notice may not be removed or altered from any source distribution.
  */
+
+// #define DEBUG_DYNAMIC_TREE
 
 using System;
 using System.Collections.Generic;
@@ -159,7 +161,7 @@ namespace Robust.Shared.Physics
         public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null) :
             base(aabbExtendSize, growthFunc)
         {
-            capacity = Math.Max(DynamicTree.MinimumCapacity, capacity);
+            capacity = Math.Max(MinimumCapacity, capacity);
 
             _root = Proxy.Free;
             _nodes = new Node[capacity];
@@ -269,6 +271,9 @@ namespace Robust.Shared.Physics
         /// </summary>
         public Proxy CreateProxy(in Box2 aabb, T userData)
         {
+            // Also catches NaN fuckery.
+            Assert(aabb.Right >= aabb.Left && aabb.Top >= aabb.Bottom);
+
             ref var proxy = ref AllocateNode(out var proxyId);
 
             // Fatten the aabb.
@@ -293,6 +298,8 @@ namespace Robust.Shared.Physics
         public bool MoveProxy(Proxy proxy, in Box2 aabb, Vector2 displacement)
         {
             Assert(0 <= proxy && proxy < Capacity);
+            // Also catches NaN fuckery.
+            Assert(aabb.Right >= aabb.Left && aabb.Top >= aabb.Bottom);
 
             ref var leafNode = ref _nodes[proxy];
 
@@ -875,7 +882,7 @@ namespace Robust.Shared.Physics
 
         public void Query<TState>(ref TState state, QueryCallback<TState> callback, in Box2 aabb)
         {
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             stack.Push(_root);
 
             ref var baseRef = ref _nodes[0];
@@ -920,7 +927,7 @@ namespace Robust.Shared.Physics
         {
             // NOTE: This is not Box2D's normal ray cast function, since our rays have infinite length.
 
-            using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
 
             stack.Push(_root);
 

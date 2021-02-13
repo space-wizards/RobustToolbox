@@ -83,7 +83,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
 

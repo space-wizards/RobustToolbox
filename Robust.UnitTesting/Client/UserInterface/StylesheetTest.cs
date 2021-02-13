@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Client.UserInterface.Controls;

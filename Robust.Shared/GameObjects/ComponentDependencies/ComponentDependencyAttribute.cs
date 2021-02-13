@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Robust.Shared.GameObjects.ComponentDependencies
+namespace Robust.Shared.GameObjects
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class ComponentDependencyAttribute : Attribute

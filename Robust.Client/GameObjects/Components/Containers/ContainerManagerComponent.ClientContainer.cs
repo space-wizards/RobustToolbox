@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.GameObjects.Components.Containers
+namespace Robust.Client.GameObjects
 {
     public sealed partial class ContainerManagerComponent
     {

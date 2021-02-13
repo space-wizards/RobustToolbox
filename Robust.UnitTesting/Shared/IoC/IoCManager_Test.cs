@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.IoC;
@@ -45,6 +45,18 @@ namespace Robust.UnitTesting.Shared.IoC
             Assert.That(IoCManager.Resolve<TestFieldInjection>(), Is.Not.Null);
 
             Assert.That(IoCManager.ResolveType(typeof(TestFieldInjection)), Is.Not.Null);
+        }
+
+        [Test]
+        public void IoCRegisterFactory()
+        {
+            var newInstance = new TestFieldInjection();
+            IoCManager.Register<TestFieldInjection, TestFieldInjection>(() => newInstance);
+
+            IoCManager.BuildGraph(); // Actually calls the factory
+
+            var result = IoCManager.Resolve<TestFieldInjection>();
+            Assert.That(result, Is.EqualTo(newInstance));
         }
 
         [Test]

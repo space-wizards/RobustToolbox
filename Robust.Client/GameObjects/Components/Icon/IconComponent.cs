@@ -1,9 +1,9 @@
 ﻿using Robust.Client.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -31,11 +31,11 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
+        private static IRsiStateLike TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
         {
             DebugTools.Assert(serializer.Reading);
 
-            if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
+            if (serializer.TryGetCacheData<IRsiStateLike>(SerializationCache, out var dirTex))
             {
                 return dirTex;
             }
@@ -93,7 +93,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IRsiStateLike? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var mapping))
             {

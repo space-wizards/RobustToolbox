@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _radius, "radius", DefaultRadius);
         }

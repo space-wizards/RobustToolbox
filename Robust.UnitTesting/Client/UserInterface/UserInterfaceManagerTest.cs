@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
-using Robust.Client.Input;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;

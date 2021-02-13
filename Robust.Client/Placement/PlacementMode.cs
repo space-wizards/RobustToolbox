@@ -3,15 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
@@ -236,7 +230,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            return EntitySystem.Get<SharedBroadPhaseSystem>().TryCollideRect(collisionBox, mapCoords.MapId);
+            return pManager.PhysicsManager.TryCollideRect(collisionBox, mapCoords.MapId);
         }
 
         protected Vector2 ScreenToWorld(Vector2 point)

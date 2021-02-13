@@ -1,4 +1,4 @@
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     public class CollisionChangeMessage : EntitySystemMessage
     {

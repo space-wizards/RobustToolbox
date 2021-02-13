@@ -1,12 +1,8 @@
-﻿using Robust.Shared.Interfaces.Log;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using NUnit.Framework;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 using Serilog.Events;
 
 namespace Robust.UnitTesting

@@ -1,5 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
+﻿using Robust.Client.Graphics;
 
 namespace Robust.Client.Placement
 {

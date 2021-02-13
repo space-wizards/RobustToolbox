@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Prototypes;
 using YamlDotNet.RepresentationModel;
 
@@ -9,6 +10,7 @@ namespace Robust.Shared.Serialization.Manager
         void Initialize();
 
         SerializationDataDefinition? GetDataDefinition(Type type);
+        bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition);
 
         object Populate(Type type, YamlObjectSerializer serializer);
 

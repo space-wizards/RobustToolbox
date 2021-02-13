@@ -126,7 +126,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Box, Type);
+            //generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();

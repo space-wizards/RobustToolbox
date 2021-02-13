@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -37,7 +38,12 @@ namespace Robust.Shared.Serialization.Manager
             _dataDefinitions.Add(type, dataDefinition);
 
             return dataDefinition;
+        }
 
+        public bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
+        {
+            dataDefinition = GetDataDefinition(type);
+            return dataDefinition != null;
         }
 
         public object Populate(Type type, YamlObjectSerializer serializer)

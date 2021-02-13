@@ -48,6 +48,42 @@ strField: foo
         }
 
         [Test]
+        public void PopulateFieldTest()
+        {
+            var dynMethod = new DynamicMethod(
+                $"_testMethodPopulate",
+                typeof(void),
+                new[] {typeof(object), typeof(YamlObjectSerializer), typeof(ISerializationManager), typeof(object?[])},
+                typeof(NestedTestClass),
+                true);
+            dynMethod.DefineParameter(1, ParameterAttributes.In, "obj");
+            dynMethod.DefineParameter(2, ParameterAttributes.In, "serializer");
+            dynMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
+            var generator = dynMethod.GetILGenerator();
+
+            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serv3Mgr.GetDataDefinition(typeof(TestClass));
+            Assert.NotNull(dataDef);
+            Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(2));
+
+            var field = dataDef.FieldDefinitions.First(f => f.Attribute.Tag == "nested");
+            var localfield = generator.DeclareLocal(field.FieldType);
+
+            generator.EmitPopulateField(field, localfield.LocalIndex, 0);
+
+            generator.Emit(OpCodes.Ret);
+
+            var @delegate = dynMethod.CreateDelegate<Action<object, YamlObjectSerializer, ISerializationManager, object?[]>>();
+
+            var test = new TestClass();
+            var mapping = YamlObjectSerializer_Test.YamlTextToNode(YAMLNESTED);
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new [] {field.DefaultValue});
+
+            Assert.That(test.nestedField.primitiveStringField, Is.EqualTo("bar"));
+        }
+
+        [Test]
         public void PopulateFieldPrimitiveOnlyTest()
         {
             var dynMethod = new DynamicMethod(

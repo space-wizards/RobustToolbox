@@ -968,68 +968,99 @@ namespace Robust.Client.GameObjects
         // Lobby SpriteView rendering path
         internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
         {
-            RenderInternal(drawingHandle, worldRotation, overrideDirection, in Matrix3.Identity);
-        }
-
-        // Sprite rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation)
-        {
-            var angle = Rotation;
-            if (Directional)
-            {
-                angle -= worldRotation;
-            }
-
-            var mOffset = Matrix3.CreateTranslation(Offset);
-            var mRotation = Matrix3.CreateRotation(angle);
-            Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
-
-            // Only apply scale if needed.
-            if(!Scale.EqualsApprox(Vector2.One))
-                transform.Multiply(Matrix3.CreateScale(Scale));
-
-            transform.Multiply(in worldTransform);
-
-            RenderInternal(drawingHandle, worldRotation, null, transform);
+            RenderInternal(drawingHandle, Matrix3.Identity, worldRotation, overrideDirection);
         }
         
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection,
-            in Matrix3 transform)
-        {
-            drawingHandle.SetTransform(in transform);
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool DScreenLock = false;
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Direction DOverrideDirection = Direction.South;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool DEnableOverride = false;
+
+        // Sprite rendering path
+        internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
+        {
+            var angle = Rotation;
+
+            if (DScreenLock)
+            {
+                angle = Angle.Zero;
+            }
+            else
+            {
+                angle = CalcRectWorldAngle(worldRotation, 4);
+            }
+
+            Direction? overrideDir = null;
+            if (DEnableOverride)
+            {
+                overrideDir = DOverrideDirection;
+            }
+
+            var sWorldRotation = angle;
+
+            var modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
+            RenderInternal(drawingHandle, modelMatrix, worldRotation, overrideDir);
+        }
+
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Matrix3 modelMatrix, Angle worldRotation, Direction? overrideDirection)
+        {
+            var localMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
+            Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
+            drawingHandle.SetTransform(in transformMatrix);
+            
             foreach (var layer in Layers)
             {
-                if (!layer.Visible)
-                {
-                    continue;
-                }
-
-                // TODO: Implement layer-specific rotation and scale.
-                // Oh and when you do update Layer.LocalToLayer so content doesn't break.
-
-                var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
-
-                if (layer.Shader != null)
-                {
-                    drawingHandle.UseShader(layer.Shader);
-                }
-
-                var layerColor =  color * layer.Color;
-
-                var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
-                var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
-                var quad = Box2.FromDimensions(position, textureSize);
-
-                // handle.Modulate changes the color
-                // drawingHandle.SetTransform(transform) is set above, turning the quad into local space vertices
-                drawingHandle.DrawTextureRectRegion(texture, quad, layerColor, null);
-
-                if (layer.Shader != null)
-                {
-                    drawingHandle.UseShader(null);
-                }
+                RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
             }
+        }
+
+        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
+        {
+            if (!layer.Visible)
+            {
+                return;
+            }
+
+            var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
+
+            if (layer.Shader != null)
+            {
+                drawingHandle.UseShader(layer.Shader);
+            }
+
+            var layerColor = color * layer.Color;
+
+            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
+            var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
+            var quad = Box2.FromDimensions(position, textureSize);
+            
+            // TODO: Implement layer-specific rotation and scale.
+            // Apply these directly to the box.
+            // Oh and when you do update Layer.LocalToLayer so content doesn't break.
+            
+            // handle.Modulate changes the color
+            // drawingHandle.SetTransform() is set above, turning the quad into local space vertices
+            drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+
+            if (layer.Shader != null)
+            {
+                drawingHandle.UseShader(null);
+            }
+        }
+
+        private static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
+        {
+            var theta = worldAngle.Theta;
+            var segSize = (MathF.PI*2) / (numDirections * 2);
+            var segments = (int)(theta / segSize);
+            var odd = segments % 2;
+            var result = theta - (segments * segSize) - (odd * segSize);
+
+            return result;
         }
 
         private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
@@ -1376,16 +1407,33 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType type, Angle worldRotation)
+        private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
         {
             if (!Directional)
-
             {
                 return RSI.State.Direction.South;
             }
 
-            var angle = new Angle(worldRotation);
-            return angle.GetDir().Convert(type);
+            var dir = rsiDirectionType switch
+            {
+                RSI.State.DirectionType.Dir1 => Direction.South,
+                RSI.State.DirectionType.Dir4 => worldRotation.GetCardinalDir(),
+                RSI.State.DirectionType.Dir8 => worldRotation.GetDir(),
+                _ => throw new ArgumentException($"Unknown RSI DirectionType: {rsiDirectionType}.", nameof(rsiDirectionType))
+            };
+
+            return dir switch
+            {
+                Direction.North => RSI.State.Direction.North,
+                Direction.South => RSI.State.Direction.South,
+                Direction.East => RSI.State.Direction.East,
+                Direction.West => RSI.State.Direction.West,
+                Direction.SouthEast => RSI.State.Direction.SouthEast,
+                Direction.SouthWest => RSI.State.Direction.SouthWest,
+                Direction.NorthEast => RSI.State.Direction.NorthEast,
+                Direction.NorthWest => RSI.State.Direction.NorthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
+            };
         }
 
         private void UpdateIsInert()

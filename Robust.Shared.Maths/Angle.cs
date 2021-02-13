@@ -258,6 +258,12 @@ namespace Robust.Shared.Maths
             return new(theta);
         }
 
+        public static Angle operator +(Angle a, Angle b)
+            => new(a.Theta + b.Theta);
+        
+        public static Angle operator -(Angle a, Angle b)
+            => new(a.Theta - b.Theta);
+
         public override string ToString()
         {
             return $"{Theta} rad";

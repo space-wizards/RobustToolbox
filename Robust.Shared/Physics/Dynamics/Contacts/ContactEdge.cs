@@ -1,4 +1,4 @@
-using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {

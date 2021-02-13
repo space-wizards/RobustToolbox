@@ -11,6 +11,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -141,7 +142,7 @@ namespace Robust.Client.GameObjects
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = EntitySystem.Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

@@ -1,5 +1,4 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Physics;
 
 namespace Robust.Shared.Physics
 {

@@ -1,6 +1,5 @@
 using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics.Dynamics.Joints

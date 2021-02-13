@@ -1,15 +1,13 @@
 using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
-    public enum JointType : ushort
+    public enum JointType : byte
     {
         Unknown,
         Revolute,

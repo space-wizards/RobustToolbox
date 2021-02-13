@@ -1,6 +1,6 @@
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces.Console;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Client.GameObjects;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Console.Commands
 {
@@ -9,10 +9,9 @@ namespace Robust.Client.Console.Commands
         public string Command => "showvelocities";
         public string Description => "Displays your angular and linear velocities";
         public string Help => $"{Command}";
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             EntitySystem.Get<VelocityDebugSystem>().Enabled ^= true;
-            return false;
         }
     }
 }

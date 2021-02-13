@@ -1,4 +1,4 @@
-using Robust.Server.GameObjects.EntitySystems;
+using Robust.Server.GameObjects;
 using Robust.Shared.Physics.Broadphase;
 
 namespace Robust.Server.Physics

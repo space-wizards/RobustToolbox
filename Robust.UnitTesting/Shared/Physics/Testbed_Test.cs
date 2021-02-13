@@ -26,10 +26,7 @@ These tests are derived from box2d's testbed tests but done in a way as to be au
 
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;

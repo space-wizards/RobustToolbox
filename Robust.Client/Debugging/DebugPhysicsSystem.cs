@@ -1,8 +1,6 @@
 using System;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Client.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;

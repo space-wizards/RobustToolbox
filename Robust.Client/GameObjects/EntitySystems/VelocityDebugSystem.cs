@@ -1,13 +1,12 @@
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Graphics;
 using Robust.Client.Player;
+using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     public class VelocityDebugSystem : EntitySystem
     {

@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -14,7 +11,7 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     public partial interface IPhysicsComponent
     {

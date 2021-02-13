@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -12,6 +8,7 @@ using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
+using PhysicsComponent = Robust.Shared.GameObjects.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -484,44 +481,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
-        }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public Box2 AABB
-        {
-            get
-            {
-                var mapManager = IoCManager.Resolve<IMapManager>();
-                var worldPos = Owner.Transform.WorldPosition;
-                var bounds = new Box2();
-
-                foreach (var fixture in _fixtures)
-                {
-                    foreach (var (gridId, proxies) in fixture.Proxies)
-                    {
-                        Vector2 offset;
-
-                        if (gridId == GridId.Invalid)
-                        {
-                            offset = Vector2.Zero;
-                        }
-                        else
-                        {
-                            offset = mapManager.GetGrid(gridId).WorldPosition;
-                        }
-
-                        foreach (var proxy in proxies)
-                        {
-                            var shapeBounds = proxy.AABB.Translated(offset);
-                            bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
-                        }
-                    }
-                }
-
-                // Get it back in local-space.
-                return bounds.Translated(-worldPos);
-            }
         }
 
         /// <inheritdoc />

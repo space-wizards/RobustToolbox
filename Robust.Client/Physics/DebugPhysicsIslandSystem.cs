@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Client.Graphics;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics
 {
@@ -20,16 +15,15 @@ namespace Robust.Client.Physics
         public string Command => "showislands";
         public string Description => "Shows the current physics bodies involved in each physics island.";
         public string Help => "showislands";
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 0)
             {
-                console.AddLine("This command doesn't take args!");
-                return false;
+                shell.WriteLine("This command doesn't take args!");
+                return;
             }
 
             EntitySystem.Get<DebugPhysicsIslandSystem>().Mode ^= DebugPhysicsIslandMode.Solve;
-            return false;
         }
     }
 

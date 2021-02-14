@@ -113,6 +113,8 @@ namespace Robust.Client.ViewVariables.Instances
         {
             base.Close();
 
+            _refreshCancelToken.Cancel();
+
             if (Session != null && !Session.Closed)
             {
                 ViewVariablesManager.CloseSession(Session);

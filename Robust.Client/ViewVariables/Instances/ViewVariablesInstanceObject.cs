@@ -78,7 +78,7 @@ namespace Robust.Client.ViewVariables.Instances
                 name.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;
                 headBox.AddChild(name);
 
-                _refreshButton = new Button {Text = "Refresh"};
+                _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};
                 _refreshButton.OnPressed += _ => _refresh();
                 _refreshButton.OnKeyBindDown += OnButtonKeybindDown;
                 headBox.AddChild(_refreshButton);

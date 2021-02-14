@@ -325,6 +325,8 @@ namespace Robust.Shared.GameObjects
             if (curState is not PhysicsComponentState newState)
                 return;
 
+            SleepingAllowed = newState.SleepingAllowed;
+            FixedRotation = newState.FixedRotation;
             CanCollide = newState.CanCollide;
             Status = newState.Status;
 

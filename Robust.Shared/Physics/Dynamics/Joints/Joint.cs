@@ -41,7 +41,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// means it is still in the simulation, but inactive.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Enabled { get; set; } = true;
+        public bool Enabled
+        {
+            get => _enabled;
+            set
+            {
+                if (_enabled == value) return;
+
+                _enabled = value;
+                Dirty();
+            }
+        }
+
+        private bool _enabled;
 
         [NonSerialized] internal JointEdge EdgeA = new();
         [NonSerialized] internal JointEdge EdgeB = new();
@@ -88,7 +100,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     Set this flag to true if the attached bodies should collide.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool CollideConnected { get; set; }
+        public bool CollideConnected
+        {
+            get => _collideConnected;
+            set
+            {
+                if (_collideConnected == value) return;
+                _collideConnected = value;
+                Dirty();
+            }
+        }
+
+        private bool _collideConnected;
 
         /// <summary>
         ///     The Breakpoint simply indicates the maximum Value the JointError can be before it breaks.
@@ -103,6 +126,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 if (MathHelper.CloseTo(_breakpoint, value)) return;
                 _breakpoint = value;
                 _breakpointSquared = _breakpoint * _breakpoint;
+                Dirty();
             }
         }
 
@@ -116,6 +140,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
             // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
             serializer.DataField(this, x => x.CollideConnected, "collideConnected", false);
+        }
+
+        protected void Dirty()
+        {
+            BodyA.Dirty();
+            BodyB.Dirty();
         }
 
         protected Joint(PhysicsComponent bodyA, PhysicsComponent bodyB)

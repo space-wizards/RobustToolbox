@@ -17,8 +17,8 @@ namespace Robust.Shared.Physics.Controllers
         }
 
         // Look I know doing it per map is pretty damn inefficient but I'll deal wit it later.
-        public virtual void UpdateBeforeSolve(PhysicsMap map, float frameTime) {}
+        public virtual void UpdateBeforeSolve(bool prediction, PhysicsMap map, float frameTime) {}
 
-        public virtual void UpdateAfterSolve(PhysicsMap map, float frameTime) {}
+        public virtual void UpdateAfterSolve(bool prediction, PhysicsMap map, float frameTime) {}
     }
 }

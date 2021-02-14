@@ -428,6 +428,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
+            // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
             ContactManager.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
@@ -435,7 +436,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var controller in _controllers)
             {
-                controller.UpdateBeforeSolve(this, frameTime);
+                controller.UpdateBeforeSolve(prediction, this, frameTime);
             }
 
             ContactManager.Collide();
@@ -451,11 +452,11 @@ namespace Robust.Shared.Physics.Dynamics
             // Integrate velocities, solve velocity constraints, and do integration.
             Solve(frameTime, dtRatio, invDt, prediction);
 
-            // SolveTOI
+            // TODO: SolveTOI
 
             foreach (var controller in _controllers)
             {
-                controller.UpdateAfterSolve(this, frameTime);
+                controller.UpdateAfterSolve(prediction, this, frameTime);
             }
 
             ClearForces();
@@ -493,8 +494,9 @@ namespace Robust.Shared.Physics.Dynamics
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
             {
-                // Sloth change: If client's running prediction we won't run physics for non-predicted bodies (that is unless a predicted body is in the same island).
-                if (prediction && !seed.Predict ||
+                // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
+                // when contact broke so if you want to try that then GOOD LUCK.
+                if (// prediction && !seed.Predict ||
                     seed.Island ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static) continue;

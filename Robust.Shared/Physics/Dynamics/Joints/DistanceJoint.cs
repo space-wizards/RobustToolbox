@@ -66,6 +66,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [NonSerialized] private float _bias;
         [NonSerialized] private float _gamma;
         [NonSerialized] private float _impulse;
+        [NonSerialized] private float _lowerImpulse;
+        [NonSerialized] private float _upperImpulse;
 
         // Solver temp
         [NonSerialized] private int _indexA;
@@ -80,6 +82,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [NonSerialized] private float _invIA;
         [NonSerialized] private float _invIB;
         [NonSerialized] private float _mass;
+        [NonSerialized] private float _currentLength;
+        [NonSerialized] private float _softMass;
 
         public override JointType JointType => JointType.Distance;
 
@@ -95,35 +99,51 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="bodyB">The second body</param>
         /// <param name="anchorA">The first body anchor</param>
         /// <param name="anchorB">The second body anchor</param>
-        /// <param name="useWorldCoordinates">Set to true if you are using world coordinates as anchors.</param>
-        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB, bool useWorldCoordinates = false)
+        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA, bodyB)
         {
-            if (useWorldCoordinates)
-            {
-                LocalAnchorA = bodyA.GetLocalPoint(anchorA);
-                LocalAnchorB = bodyB.GetLocalPoint(anchorB);
-                Length = (anchorB - anchorA).Length;
-            }
-            else
-            {
-                LocalAnchorA = anchorA;
-                LocalAnchorB = anchorB;
-                Length = (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length;
-            }
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
+            Length = MathF.Max(IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            _minLength = _length;
+            _maxLength = _length;
         }
 
         /// <summary>
         /// The local anchor point relative to bodyA's origin.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorA { get; set; }
+        public Vector2 LocalAnchorA
+        {
+            get => _localAnchorA;
+            set
+            {
+                if (_localAnchorA.EqualsApprox(value)) return;
+
+                _localAnchorA = value;
+                Dirty();
+            }
+        }
+
+        private Vector2 _localAnchorA;
 
         /// <summary>
         /// The local anchor point relative to bodyB's origin.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorB { get; set; }
+        public Vector2 LocalAnchorB
+        {
+            get => _localAnchorB;
+            set
+            {
+                if (_localAnchorB.EqualsApprox(value)) return;
+
+                _localAnchorB = value;
+                Dirty();
+            }
+        }
+
+        private Vector2 _localAnchorB;
 
         public override Vector2 WorldAnchorA
         {
@@ -147,42 +167,83 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _length;
             set
             {
-                // TODO: Impulse = 0f
+                if (MathHelper.CloseTo(value, _length)) return;
+
+                _impulse = 0.0f;
                 _length = MathF.Max(IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), _length);
+                Dirty();
             }
         }
 
         private float _length;
 
+        /// <summary>
+        ///     The upper limit allowed between the 2 bodies.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float MaxLength { get; set; }
+        public float MaxLength
+        {
+            get => _maxLength;
+            set
+            {
+                if (MathHelper.CloseTo(value, _maxLength)) return;
 
+                _upperImpulse = 0.0f;
+                _maxLength = MathF.Max(value, _minLength);
+                Dirty();
+            }
+        }
+
+        private float _maxLength;
+
+        /// <summary>
+        ///     The lower limit allowed between the 2 bodies.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float MinLength
         {
             get => _minLength;
             set
             {
-                // TODO: LowerImpulse;
-                Length = Math.Clamp(_minLength, IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop),
-                    MaxLength);
+                if (MathHelper.CloseTo(value, _minLength)) return;
+
+                _lowerImpulse = 0.0f;
+                _minLength = Math.Clamp(_minLength, IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), MaxLength);
+                Dirty();
             }
         }
 
         private float _minLength;
 
-        /// <summary>
-        /// The mass-spring-damper frequency in Hertz. A value of 0
-        /// disables softness.
-        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Frequency { get; set; }
+        public float Stiffness
+        {
+            get => _stiffness;
+            set
+            {
+                if (MathHelper.CloseTo(_stiffness, value)) return;
 
-        /// <summary>
-        /// The damping ratio. 0 = no damping, 1 = critical damping.
-        /// </summary>
+                _stiffness = value;
+                Dirty();
+            }
+        }
+
+        private float _stiffness;
+
         [ViewVariables(VVAccess.ReadWrite)]
-        public float DampingRatio { get; set; }
+        public float Damping
+        {
+            get => _damping;
+            set
+            {
+                if (MathHelper.CloseTo(_damping, value)) return;
+
+                _damping = value;
+                Dirty();
+            }
+        }
+
+        private float _damping;
 
         /// <summary>
         /// Get the reaction force given the inverse time step. Unit is N.
@@ -191,8 +252,32 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <returns></returns>
         public override Vector2 GetReactionForce(float invDt)
         {
-            Vector2 F = _u * (invDt * _impulse);
+            Vector2 F = _u * invDt * (_impulse + _lowerImpulse - _upperImpulse);
             return F;
+        }
+
+        public void LinearStiffness(float frequency, float dampingRatio)
+        {
+            var massA = BodyA.Mass;
+            var massB = BodyB.Mass;
+            float mass;
+
+            if (massA > 0.0f && massB > 0.0f)
+            {
+                mass = massA * massB / (massA + massB);
+            }
+            else if (massA > 0.0f)
+            {
+                mass = massA;
+            }
+            else
+            {
+                mass = massB;
+            }
+
+            var omega = 2.0f * MathF.PI * frequency;
+            Stiffness = mass * omega * omega;
+            Damping = 2.0f * mass * dampingRatio * omega;
         }
 
         /// <summary>
@@ -209,160 +294,235 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         internal override void InitVelocityConstraints(SolverData data)
         {
             _indexA = BodyA.IslandIndex;
-            _indexB = BodyB.IslandIndex;
-            _localCenterA = Vector2.Zero; // BodyA._sweep.LocalCenter;
-            _localCenterB = Vector2.Zero; // BodyB._sweep.LocalCenter;
-            _invMassA = BodyA.InvMass;
-            _invMassB = BodyB.InvMass;
-            _invIA = BodyA.InvI;
-            _invIB = BodyB.InvI;
+	        _indexB = BodyB.IslandIndex;
+            _localCenterA = Vector2.Zero; //BodyA->m_sweep.localCenter;
+            _localCenterB = Vector2.Zero; //BodyB->m_sweep.localCenter;
+	        _invMassA = BodyA.InvMass;
+	        _invMassB = BodyB.InvMass;
+	        _invIA = BodyA.InvI;
+	        _invIB = BodyB.InvI;
 
-            Vector2 cA = data.Positions[_indexA];
-            float aA = data.Angles[_indexA];
-            Vector2 vA = data.LinearVelocities[_indexA];
-            float wA = data.AngularVelocities[_indexA];
+	        var cA = data.Positions[_indexA];
+	        float aA = data.Angles[_indexA];
+	        var vA = data.LinearVelocities[_indexA];
+	        float wA = data.AngularVelocities[_indexA];
 
-            Vector2 cB = data.Positions[_indexB];
-            float aB = data.Angles[_indexB];
-            Vector2 vB = data.LinearVelocities[_indexB];
-            float wB = data.AngularVelocities[_indexB];
+	        var cB = data.Positions[_indexB];
+	        float aB = data.Angles[_indexB];
+	        var vB = data.LinearVelocities[_indexB];
+	        float wB = data.AngularVelocities[_indexB];
 
-            Quaternion qA = new(aA), qB = new(aB);
+	        Quaternion qA = new(aA), qB = new(aB);
 
-            _rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
-            _rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
-            _u = cB + _rB - cA - _rA;
+	        _rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
+	        _rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
+	        _u = cB + _rB - cA - _rA;
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
+            var linearSlop = configManager.GetCVar(CVars.LinearSlop);
 
-            // Handle singularity.
-            float length = _u.Length;
-            if (length > configManager.GetCVar(CVars.LinearSlop))
-            {
-                _u *= 1.0f / length;
-            }
-            else
-            {
-                _u = Vector2.Zero;
-            }
+	        // Handle singularity.
+	        _currentLength = _u.Length;
+	        if (_currentLength > linearSlop)
+	        {
+		        _u *= 1.0f / _currentLength;
+	        }
+	        else
+	        {
+		        _u = Vector2.Zero;
+		        _mass = 0.0f;
+		        _impulse = 0.0f;
+		        _lowerImpulse = 0.0f;
+		        _upperImpulse = 0.0f;
+	        }
 
-            float crAu = Vector2.Cross(_rA, _u);
-            float crBu = Vector2.Cross(_rB, _u);
-            float invMass = _invMassA + _invIA * crAu * crAu + _invMassB + _invIB * crBu * crBu;
+	        float crAu = Vector2.Cross(_rA, _u);
+	        float crBu = Vector2.Cross(_rB, _u);
+	        float invMass = _invMassA + _invIA * crAu * crAu + _invMassB + _invIB * crBu * crBu;
+	        _mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
 
-            // Compute the effective mass matrix.
-            _mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
+	        if (Stiffness > 0.0f && _minLength < _maxLength)
+	        {
+		        // soft
+		        float C = _currentLength - _length;
 
-            if (Frequency > 0.0f)
-            {
-                float C = length - Length;
+		        float d = Damping;
+		        float k = Stiffness;
 
-                // Frequency
-                float omega = 2.0f * MathF.PI * Frequency;
+		        // magic formulas
+		        float h = data.FrameTime;
 
-                // Damping coefficient
-                float d = 2.0f * _mass * DampingRatio * omega;
+		        // gamma = 1 / (h * (d + h * k))
+		        // the extra factor of h in the denominator is since the lambda is an impulse, not a force
+		        _gamma = h * (d + h * k);
+		        _gamma = _gamma != 0.0f ? 1.0f / _gamma : 0.0f;
+		        _bias = C * h * k * _gamma;
 
-                // Spring stiffness
-                float k = _mass * omega * omega;
+		        invMass += _gamma;
+		        _softMass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
+	        }
+	        else
+	        {
+		        // rigid
+		        _gamma = 0.0f;
+		        _bias = 0.0f;
+		        _softMass = _mass;
+	        }
 
-                // magic formulas
-                float h = data.FrameTime;
-                _gamma = h * (d + h * k);
-                _gamma = _gamma != 0.0f ? 1.0f / _gamma : 0.0f;
-                _bias = C * h * k * _gamma;
+	        if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting))
+	        {
+		        // Scale the impulse to support a variable time step.
+		        _impulse *= data.DtRatio;
+		        _lowerImpulse *= data.DtRatio;
+		        _upperImpulse *= data.DtRatio;
 
-                invMass += _gamma;
-                _mass = invMass != 0.0f ? 1.0f / invMass : 0.0f;
-            }
-            else
-            {
-                _gamma = 0.0f;
-                _bias = 0.0f;
-            }
+		        var P = _u * (_impulse + _lowerImpulse - _upperImpulse);
+		        vA -= P * _invMassA;
+		        wA -= _invIA * Vector2.Cross(_rA, P);
+		        vB += P * _invMassB;
+		        wB += _invIB * Vector2.Cross(_rB, P);
+	        }
+	        else
+	        {
+		        _impulse = 0.0f;
+	        }
 
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (configManager.GetCVar(CVars.WarmStarting))
-            {
-                // Scale the impulse to support a variable time step.
-                _impulse *= data.DtRatio;
-
-                Vector2 P = _u * _impulse;
-                vA -= P * _invMassA;
-                wA -= _invIA * Vector2.Cross(_rA, P);
-                vB += P * _invMassB;
-                wB += _invIB * Vector2.Cross(_rB, P);
-            }
-            else
-            {
-                _impulse = 0.0f;
-            }
-
-            data.LinearVelocities[_indexA] = vA;
-            data.AngularVelocities[_indexA] = wA;
-            data.LinearVelocities[_indexB] = vB;
-            data.AngularVelocities[_indexB] = wB;
+	        data.LinearVelocities[_indexA] = vA;
+	        data.AngularVelocities[_indexA] = wA;
+	        data.LinearVelocities[_indexB] = vB;
+	        data.AngularVelocities[_indexB] = wB;
         }
 
         internal override void SolveVelocityConstraints(SolverData data)
         {
-            Vector2 vA = data.LinearVelocities[_indexA];
-            float wA = data.AngularVelocities[_indexA];
-            Vector2 vB = data.LinearVelocities[_indexB];
-            float wB = data.AngularVelocities[_indexB];
+            var vA = data.LinearVelocities[_indexA];
+	        float wA = data.AngularVelocities[_indexA];
+	        var vB = data.LinearVelocities[_indexB];
+	        float wB = data.AngularVelocities[_indexB];
 
-            // Cdot = dot(u, v + cross(w, r))
-            Vector2 vpA = vA + Vector2.Cross(wA, _rA);
-            Vector2 vpB = vB + Vector2.Cross(wB, _rB);
-            float Cdot = Vector2.Dot(_u, vpB - vpA);
+	        if (_minLength < _maxLength)
+	        {
+		        if (Stiffness > 0.0f)
+		        {
+			        // Cdot = dot(u, v + cross(w, r))
+			        var vpA = vA + Vector2.Cross(wA, _rA);
+			        var vpB = vB + Vector2.Cross(wB, _rB);
+			        float Cdot = Vector2.Dot(_u, vpB - vpA);
 
-            float impulse = -_mass * (Cdot + _bias + _gamma * _impulse);
-            _impulse += impulse;
+			        float impulse = -_softMass * (Cdot + _bias + _gamma * _impulse);
+			        _impulse += impulse;
 
-            Vector2 P = _u * impulse;
-            vA -= P * _invMassA;
-            wA -= _invIA * Vector2.Cross(_rA, P);
-            vB += P * _invMassB;
-            wB += _invIB * Vector2.Cross(_rB, P);
+                    // TODO: Ability to make this one-sided.
+			        var P = _u * impulse;
+			        vA -= P * _invMassA;
+			        wA -= _invIA * Vector2.Cross(_rA, P);
+			        vB += P * _invMassB;
+			        wB += _invIB * Vector2.Cross(_rB, P);
+		        }
 
-            data.LinearVelocities[_indexA] = vA;
-            data.AngularVelocities[_indexA] = wA;
-            data.LinearVelocities[_indexB] = vB;
-            data.AngularVelocities[_indexB] = wB;
+		        // lower
+		        {
+			        float C = _currentLength - _minLength;
+			        float bias = MathF.Max(0.0f, C) * data.InvDt;
+
+			        var vpA = vA + Vector2.Cross(wA, _rA);
+			        var vpB = vB + Vector2.Cross(wB, _rB);
+			        float Cdot = Vector2.Dot(_u, vpB - vpA);
+
+			        float impulse = -_mass * (Cdot + bias);
+			        float oldImpulse = _lowerImpulse;
+			        _lowerImpulse = MathF.Max(0.0f, _lowerImpulse + impulse);
+			        impulse = _lowerImpulse - oldImpulse;
+			        var P = _u * impulse;
+
+			        vA -= P * _invMassA;
+			        wA -= _invIA * Vector2.Cross(_rA, P);
+			        vB += P * _invMassB;
+			        wB += _invIB * Vector2.Cross(_rB, P);
+		        }
+
+		        // upper
+		        {
+			        float C = _maxLength - _currentLength;
+			        float bias = MathF.Max(0.0f, C) * data.InvDt;
+
+			        var vpA = vA + Vector2.Cross(wA, _rA);
+			        var vpB = vB + Vector2.Cross(wB, _rB);
+			        float Cdot = Vector2.Dot(_u, vpA - vpB);
+
+			        float impulse = -_mass * (Cdot + bias);
+			        float oldImpulse = _upperImpulse;
+			        _upperImpulse = MathF.Max(0.0f, _upperImpulse + impulse);
+			        impulse = _upperImpulse - oldImpulse;
+			        var P = _u * -impulse;
+
+			        vA -= P * _invMassA;
+			        wA -= _invIA * Vector2.Cross(_rA, P);
+			        vB += P * _invMassB;
+			        wB += _invIB * Vector2.Cross(_rB, P);
+		        }
+	        }
+	        else
+	        {
+		        // Equal limits
+
+		        // Cdot = dot(u, v + cross(w, r))
+		        var vpA = vA + Vector2.Cross(wA, _rA);
+		        var vpB = vB + Vector2.Cross(wB, _rB);
+		        float Cdot = Vector2.Dot(_u, vpB - vpA);
+
+		        float impulse = -_mass * Cdot;
+		        _impulse += impulse;
+
+		        var P = _u * impulse;
+		        vA -= P * _invMassA;
+		        wA -= _invIA * Vector2.Cross(_rA, P);
+		        vB += P * _invMassB;
+		        wB += _invIB * Vector2.Cross(_rB, P);
+	        }
+
+	        data.LinearVelocities[_indexA] = vA;
+	        data.AngularVelocities[_indexA] = wA;
+	        data.LinearVelocities[_indexB] = vB;
+	        data.AngularVelocities[_indexB] = wB;
 
         }
 
         internal override bool SolvePositionConstraints(SolverData data)
         {
-            if (Frequency > 0.0f)
-            {
-                // There is no position correction for soft distance constraints.
-                return true;
-            }
-
-            Vector2 cA = data.Positions[_indexA];
+            var cA = data.Positions[_indexA];
             float aA = data.Angles[_indexA];
-            Vector2 cB = data.Positions[_indexB];
+            var cB = data.Positions[_indexB];
             float aB = data.Angles[_indexB];
 
             Quaternion qA = new(aA), qB = new(aB);
 
-            Vector2 rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
-            Vector2 rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
-            Vector2 u = cB + rB - cA - rA;
+            var rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
+            var rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
+            var u = cB + rB - cA - rA;
 
             float length = u.Length;
             u = u.Normalized;
-            float C = length - Length;
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            var maxLinearCorrection = configManager.GetCVar(CVars.MaxLinearCorrection);
-            var linearSlop = configManager.GetCVar(CVars.LinearSlop);
-
-            C = Math.Clamp(C, -maxLinearCorrection, maxLinearCorrection);
+            float C;
+            if (MathHelper.CloseTo(_minLength, _maxLength))
+            {
+                C = length - _minLength;
+            }
+            else if (length < _minLength)
+            {
+                C = length - _minLength;
+            }
+            else if (_maxLength < length)
+            {
+                C = length - _maxLength;
+            }
+            else
+            {
+                return true;
+            }
 
             float impulse = -_mass * C;
-            Vector2 P = u * impulse;
+            var P = u * impulse;
 
             cA -= P * _invMassA;
             aA -= _invIA * Vector2.Cross(rA, P);
@@ -374,7 +534,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Positions[_indexB] = cB;
             data.Angles[_indexB] = aB;
 
-            return Math.Abs(C) < linearSlop;
+            return MathF.Abs(C) < IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
         }
 
         public bool Equals(DistanceJoint? other)
@@ -384,8 +544,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
                    LocalAnchorB.EqualsApprox(other.LocalAnchorB) &&
                    MathHelper.CloseTo(Length, other.Length) &&
-                   MathHelper.CloseTo(Frequency, other.Frequency) &&
-                   MathHelper.CloseTo(DampingRatio, other.DampingRatio);
+                   MathHelper.CloseTo(Stiffness, other.Stiffness) &&
+                   MathHelper.CloseTo(Damping, other.Damping) &&
+                   MathHelper.CloseTo(MaxLength, other.MaxLength) &&
+                   MathHelper.CloseTo(MinLength, other.MinLength);
         }
     }
 }

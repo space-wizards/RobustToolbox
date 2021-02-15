@@ -53,7 +53,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
-        private bool _enabled;
+        private bool _enabled = true;
 
         [NonSerialized] internal JointEdge EdgeA = new();
         [NonSerialized] internal JointEdge EdgeB = new();
@@ -131,7 +131,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         private float _breakpoint = float.MaxValue;
-        [NonSerialized] private double _breakpointSquared = Double.MaxValue;
+        private double _breakpointSquared = Double.MaxValue;
 
         public virtual void ExposeData(ObjectSerializer serializer)
         {

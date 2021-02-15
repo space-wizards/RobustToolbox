@@ -262,7 +262,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.OldMapId, out var oldMap))
             {
-                oldMap.RemoveBodyDeferred(body);
+                oldMap.RemoveBody(body);
             }
 
             body.ClearProxies(message.OldMapId);

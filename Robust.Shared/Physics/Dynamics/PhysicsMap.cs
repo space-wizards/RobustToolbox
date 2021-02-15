@@ -74,15 +74,13 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private List<AetherController> _controllers = new();
 
-        // Queued map changes
-        private HashSet<PhysicsComponent> _queuedBodyAdd = new();
-        private HashSet<PhysicsComponent> _queuedBodyRemove = new();
-
         private HashSet<Joint> _queuedJointAdd = new();
         private HashSet<Joint> _queuedJointRemove = new();
 
         private HashSet<PhysicsComponent> _queuedWake = new();
         private HashSet<PhysicsComponent> _queuedSleep = new();
+
+        private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
         /// <summary>
         ///     We'll re-use contacts where possible to save on allocations.
@@ -131,21 +129,16 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         #region AddRemove
-        public void AddBodyDeferred(PhysicsComponent body)
-        {
-            // DebugTools.Assert(!_queuedBodyAdd.Contains(body));
-            _queuedBodyAdd.Add(body);
-        }
-
         public void AddAwakeBody(PhysicsComponent body)
         {
             _queuedWake.Add(body);
         }
 
-        public void RemoveBodyDeferred(PhysicsComponent body)
+        public void RemoveBody(PhysicsComponent body)
         {
-            // DebugTools.Assert(!_queuedBodyRemove.Contains(body));
-            _queuedBodyRemove.Add(body);
+            Bodies.Remove(body);
+            AwakeBodies.Remove(body);
+            body.DestroyContacts();
         }
 
         public void RemoveSleepBody(PhysicsComponent body)
@@ -169,22 +162,28 @@ namespace Robust.Shared.Physics.Dynamics
         #region Queue
         private void ProcessChanges()
         {
-            ProcessAddQueue();
-            ProcessRemoveQueue();
+            ProcessBodyChanges();
             ProcessWakeQueue();
             ProcessSleepQueue();
             ProcessAddedJoints();
             ProcessRemovedJoints();
         }
 
-        private void ProcessAddQueue()
+        private void ProcessBodyChanges()
         {
-            foreach (var body in _queuedBodyAdd)
+            while (_queuedCollisionMessages.Count > 0)
             {
-                AddBody(body);
-            }
+                var message = _queuedCollisionMessages.Dequeue();
 
-            _queuedBodyAdd.Clear();
+                if (!message.Body.Deleted && message.Body.CanCollide)
+                {
+                    AddBody(message.Body);
+                }
+                else
+                {
+                    RemoveBody(message.Body);
+                }
+            }
         }
 
         public void AddBody(PhysicsComponent body)
@@ -198,19 +197,9 @@ namespace Robust.Shared.Physics.Dynamics
                 _queuedWake.Remove(body);
                 AwakeBodies.Add(body);
             }
+
             Bodies.Add(body);
             body.PhysicsMap = this;
-        }
-
-        private void ProcessRemoveQueue()
-        {
-            foreach (var body in _queuedBodyRemove)
-            {
-                Bodies.Remove(body);
-                AwakeBodies.Remove(body);
-            }
-
-            _queuedBodyRemove.Clear();
         }
 
         private void ProcessWakeQueue()

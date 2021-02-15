@@ -290,22 +290,6 @@ namespace Robust.Shared.GameObjects
             serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }
 
-        public override void OnAdd()
-        {
-            base.OnAdd();
-            // Doing this here because we need all of our shit set before HandleComponentState so we can't defer this.
-            // If someone fixes transform state so its state is ACTUALLY applied with the correct MapId you can dump this shit.
-
-            // TODO: I'd really prefer to fix this before merge b
-            if (!EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Entity.Transform.MapID, out var map))
-            {
-                Logger.ErrorS("physics", $"Unable to find PhysicsMap for {Entity.Transform.MapID}");
-                return;
-            }
-
-            map.AddBody(this);
-        }
-
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
@@ -506,31 +490,10 @@ namespace Robust.Shared.GameObjects
                 if (_canCollide == value)
                     return;
 
-                if (value)
-                {
-                    // Create Proxies
-                    CreateProxies();
-
-                    // Contacts created next timestep
-                }
-                else
-                {
-                    ClearProxies();
-
-                    // Destroy contacts too
-                    ContactEdge? contactEdge = ContactEdges;
-                    while (contactEdge != null)
-                    {
-                        var contactEdge0 = contactEdge;
-                        contactEdge = contactEdge.Next;
-                        PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
-                    }
-
-                    ContactEdges = null;
-                }
-
                 _canCollide = value;
 
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
         }
@@ -618,15 +581,21 @@ namespace Robust.Shared.GameObjects
 
             if (CanCollide)
             {
-                if (!Owner.IsInContainer())
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                }
-                else
+                if (Owner.IsInContainer())
                 {
                     _canCollide = false;
                 }
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                else
+                {
+                    // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                }
+            }
+
+            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
+            {
+                PhysicsMap = map;
             }
         }
 

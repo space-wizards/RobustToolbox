@@ -8,6 +8,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -174,6 +175,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
         private Dictionary<Type, VirtualController> _controllers = new();
+
+        [ViewVariables]
+        public bool HasProxies { get; set; }
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -675,6 +679,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void ClearProxies(MapId? mapId = null)
         {
+            if (!HasProxies) return;
+
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             mapId ??= Owner.Transform.MapID;
 
@@ -694,6 +700,8 @@ namespace Robust.Shared.GameObjects
 
                 fixture.Proxies.Clear();
             }
+
+            HasProxies = false;
         }
 
         public void FixtureChanged(Fixture fixture)
@@ -736,7 +744,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="mapManager"></param>
         public void CreateProxies(IMapManager? mapManager = null)
         {
-            DebugTools.Assert(Fixtures.Count(fix => fix.Proxies.Count != 0) == 0);
+            if (HasProxies) return;
 
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             mapManager ??= IoCManager.Resolve<IMapManager>();
@@ -781,6 +789,21 @@ namespace Robust.Shared.GameObjects
                     }
                 }
             }
+
+            HasProxies = true;
+        }
+
+        public void DestroyContacts()
+        {
+            ContactEdge? contactEdge = ContactEdges;
+            while (contactEdge != null)
+            {
+                var contactEdge0 = contactEdge;
+                contactEdge = contactEdge.Next;
+                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+            }
+
+            ContactEdges = null;
         }
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)

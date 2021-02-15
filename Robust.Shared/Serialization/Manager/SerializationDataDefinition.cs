@@ -83,12 +83,12 @@ namespace Robust.Shared.Serialization.Manager
             CopyDelegate = EmitCopyDelegate();
         }
 
-        public object InvokePopulateDelegate(object obj, YamlObjectSerializer serializer, SerializationManager serv3Mgr)
+        public object InvokePopulateDelegate(object obj, ObjectSerializer serializer, SerializationManager serv3Mgr)
         {
             return _populateDelegate(obj, serializer, serv3Mgr, _defaultValues);
         }
 
-        public void InvokeSerializeDelegate(object obj, YamlObjectSerializer ser, SerializationManager serv3Mgr,
+        public void InvokeSerializeDelegate(object obj, ObjectSerializer ser, SerializationManager serv3Mgr,
             bool alwaysWrite)
         {
             _serializeDelegate(obj, ser, serv3Mgr, _defaultValues, alwaysWrite);

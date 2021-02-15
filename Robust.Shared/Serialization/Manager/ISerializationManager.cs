@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
         SerializationDataDefinition? GetDataDefinition(Type type);
         bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition);
 
-        object Populate(Type type, YamlObjectSerializer serializer);
+        object Populate(Type type, ObjectSerializer serializer);
 
         object PushInheritance(object source, object target);
 

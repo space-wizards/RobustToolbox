@@ -56,6 +56,12 @@ namespace Robust.Shared.Serialization.Manager
                 //load serializer
                 generator.Emit(OpCodes.Ldarg_1);
 
+                generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag);
+                var readforkmethod = typeof(ObjectSerializer).GetMethod(nameof(ObjectSerializer.ReadDataFieldFork))?
+                    .MakeGenericMethod(fieldDefinition.FieldType);
+                Debug.Assert(readforkmethod != null, nameof(readforkmethod) + " != null");
+                generator.Emit(OpCodes.Call, readforkmethod);
+
                 //call populate(type, serializer)
                 var populateMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Populate));
                 Debug.Assert(populateMethod != null, nameof(populateMethod) + " != null");

@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public object Populate(Type type, YamlObjectSerializer serializer)
+        public object Populate(Type type, ObjectSerializer serializer)
         {
             if (!serializer.Reading) throw new InvalidOperationException();
 

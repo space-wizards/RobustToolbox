@@ -503,5 +503,9 @@ namespace Robust.Shared.Serialization
 
             return keyString;
         }
+
+        public abstract ObjectSerializer ReadDataFieldFork<T>(string name);
+
+        public abstract ObjectSerializer WriteDataFieldFork<T>(string name, T value) where T : notnull;
     }
 }

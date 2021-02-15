@@ -435,6 +435,52 @@ namespace Robust.Shared.Serialization
             WriteMap!.Add(key, val);
         }
 
+        public override ObjectSerializer ReadDataFieldFork<T>(string name)
+        {
+            YamlMappingNode? node = null;
+            foreach (var map in ReadMaps!)
+            {
+                map.TryGetNode(name, out node);
+            }
+
+            if (node == null) throw new ArgumentNullException();
+
+            if (_context != null)
+            {
+                _context.StackDepth++;
+            }
+            var fork = NewReader(node, _context);
+            fork.CurrentType = typeof(T);
+            if (_context != null)
+            {
+                _context.StackDepth--;
+            }
+
+            return fork;
+        }
+
+        public override ObjectSerializer WriteDataFieldFork<T>(string name, T value)
+        {
+            var node = new YamlMappingNode();
+
+            if (_context != null)
+            {
+                _context.StackDepth++;
+            }
+            var fork = NewReader(node, _context);
+            fork.CurrentType = typeof(T);
+            if (_context != null)
+            {
+                _context.StackDepth--;
+            }
+
+            AssignTag(typeof(T), value, value, node);
+
+            WriteMap!.Add(name, node);
+
+            return fork;
+        }
+
         /// <inheritdoc />
         public override void SetCacheData(string key, object value)
         {

@@ -152,27 +152,21 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            try
+            var path = PathHelpers.ExecutableRelativeFile("build.json");
+            if (!File.Exists(path))
             {
-                var path = PathHelpers.ExecutableRelativeFile("build.json");
-                if (!File.Exists(path))
-                {
-                    return;
-                }
-
-                var buildInfo = File.ReadAllText(path);
-                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
-
-                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
-                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
-                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
-                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
-                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
-                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
+                return;
             }
-            catch (FileNotFoundException)
-            {
-            }
+
+            var buildInfo = File.ReadAllText(path);
+            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+
+            // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+            SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+            SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+            SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+            SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+            SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {

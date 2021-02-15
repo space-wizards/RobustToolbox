@@ -90,7 +90,7 @@ namespace Robust.Shared.ContentPack
                     {
                         var prevDir = new DirectoryInfo(prevPath);
                         var found = false;
-                        foreach (var info in prevDir.GetFileSystemInfos())
+                        foreach (var info in prevDir.EnumerateFileSystemInfos())
                         {
                             if (!string.Equals(info.Name, segment, StringComparison.InvariantCultureIgnoreCase))
                             {

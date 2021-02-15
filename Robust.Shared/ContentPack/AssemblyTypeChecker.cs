@@ -770,6 +770,12 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         var path = Path.Combine(diskLoadPath, dllName);
+
+                        if (!File.Exists(path))
+                        {
+                            continue;
+                        }
+
                         return new PEReader(File.OpenRead(path));
                     }
                     catch (FileNotFoundException)

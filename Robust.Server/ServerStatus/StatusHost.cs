@@ -154,7 +154,13 @@ namespace Robust.Server.ServerStatus
         {
             try
             {
-                var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
+                var path = PathHelpers.ExecutableRelativeFile("build.json");
+                if (!File.Exists(path))
+                {
+                    return;
+                }
+
+                var buildInfo = File.ReadAllText(path);
                 var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
 
                 // Don't replace cvars with contents of build.json if overriden by --cvar or such.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -510,6 +511,24 @@ namespace Robust.Shared.Serialization
                 return newList;
             }
 
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var listNode = (YamlSequenceNode) node;
+                var elems = listNode.Children;
+
+                var newList = Array.CreateInstance(immutableListType, elems.Count);
+
+                for (var i = 0; i < elems.Count; i++)
+                {
+                    newList.SetValue(NodeToType(immutableListType, elems[i]), i);
+                }
+
+                var list = typeof(ImmutableList);
+                var add = list.GetMethod("CreateRange")!.MakeGenericMethod(immutableListType);
+
+                return add.Invoke(null, new object?[] {newList})!;
+            }
+
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
             if (TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
             {
@@ -725,6 +744,28 @@ namespace Robust.Shared.Serialization
                 return node;
             }
 
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var node = new YamlSequenceNode {Tag = TagSkipTag};
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside list.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(immutableListType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
             // Dictionary<K,V>
             if (TryGenericDictType(type, out var keyType, out var valType)
                 || TryGenericReadOnlyDictType(type, out keyType, out valType))
@@ -863,7 +904,8 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericListType(type!, out _))
+            if (TryGenericListType(type!, out _) ||
+                TryGenericImmutableListType(type!, out _))
             {
                 var listA = (IList) a;
                 var listB = (IList) b!;
@@ -1016,6 +1058,21 @@ namespace Robust.Shared.Serialization
             var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
 
             if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        private static bool TryGenericImmutableListType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            var isImmutableList = type.GetTypeInfo().IsGenericType &&
+                                  type.GetGenericTypeDefinition() == typeof(ImmutableList<>);
+
+            if (isImmutableList)
             {
                 listType = type.GetGenericArguments()[0];
                 return true;

@@ -39,6 +39,7 @@ namespace Robust.Shared.Serialization
             {
                 { typeof(Color), new ColorSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
+                { typeof(Vector2i), new Vector2iSerializer() },
                 { typeof(Vector3), new Vector3Serializer() },
                 { typeof(Vector4), new Vector4Serializer() },
                 { typeof(Angle), new AngleSerializer() },
@@ -1342,6 +1343,20 @@ namespace Robust.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        class Vector2iSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return node.AsVector2i();
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var vec = (Vector2i)obj;
                 return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
             }
         }

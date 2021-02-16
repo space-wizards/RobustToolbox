@@ -179,9 +179,23 @@ namespace Robust.Shared.Network
                 // Well they're in. Kick a connected client with the same GUID if we have to.
                 if (_assignedUserIds.TryGetValue(userId, out var existing))
                 {
-                    existing.Disconnect("Another connection has been made with your account.");
-                    // Have to wait until they're properly off the server to avoid any collisions.
-                    await AwaitDisconnectAsync(existing);
+                    if (_awaitingDisconnectToConnect.Contains(userId))
+                    {
+                        connection.Disconnect("Stop trying to connect multiple times at once.");
+                        return;
+                    }
+
+                    _awaitingDisconnectToConnect.Add(userId);
+                    try
+                    {
+                        existing.Disconnect("Another connection has been made with your account.");
+                        // Have to wait until they're properly off the server to avoid any collisions.
+                        await AwaitDisconnectAsync(existing);
+                    }
+                    finally
+                    {
+                        _awaitingDisconnectToConnect.Remove(userId);
+                    }
                 }
 
                 var msg = peer.Peer.CreateMessage();
@@ -242,8 +256,12 @@ namespace Robust.Shared.Network
 
         private Task AwaitDisconnectAsync(NetConnection connection)
         {
-            var tcs = new TaskCompletionSource<object?>();
-            _awaitingDisconnect.Add(connection, tcs);
+            if (!_awaitingDisconnect.TryGetValue(connection, out var tcs))
+            {
+                tcs = new TaskCompletionSource<object?>();
+                _awaitingDisconnect.Add(connection, tcs);
+            }
+
             return tcs.Task;
         }
 

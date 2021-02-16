@@ -2,23 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Prototypes.DataClasses.Attributes;
-using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Shared.Prototypes
+namespace Robust.Shared.Serialization.Manager
 {
-    public class DataClassManager : IDataClassManager
+    public partial class Serv3Manager
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private Dictionary<Type, DataClassLink> _dataClassLinks = new();
 
-        public void Initialize()
+        private void InitializeDataClasses()
         {
             foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataClassForInheritorsAttribute>())
             {
@@ -115,22 +112,24 @@ namespace Robust.Shared.Prototypes
             return false;
         }
 
-        public void PopulateObject(object obj, DataClass dataClass)
+        public object DataClass2Object(DataClass dataClass, object obj)
         {
             var link = GetDataClassLink(obj.GetType());
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            link.PopulateObjectDelegate(obj, dataClass, _serializationManager);
+            //todo paul: return link.PopulateObjectDelegate(obj, dataClass, this);
+            throw new NotImplementedException();
         }
 
-        public void PopulateDataClass(object obj, DataClass dataClass)
+        public void Object2DataClass(object obj, DataClass dataClass)
         {
             var link = GetDataClassLink(obj.GetType());
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            link.PopulateDataclassDelegate(obj, dataClass, _serializationManager);
+            //link.PopulateDataclassDelegate(obj, dataClass, this);
+            throw new NotImplementedException();
         }
     }
 }

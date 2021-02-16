@@ -19,5 +19,20 @@ namespace Robust.Shared.Serialization.Markdown.YAML
                     throw new ArgumentOutOfRangeException(nameof(node));
             }
         }
+
+        public static YamlNode ToYamlNode(this IDataNode node)
+        {
+            switch (node)
+            {
+                case YamlValueDataNode valueDataNode:
+                    return new YamlScalarNode(valueDataNode.Value);
+                case YamlMappingDataNode mappingDataNode:
+                    return mappingDataNode.ToMappingNode();
+                case YamlSequenceDataNode sequenceNode:
+                    return sequenceNode.ToSequenceNode();
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(node));
+            }
+        }
     }
 }

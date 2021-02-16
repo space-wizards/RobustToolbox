@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects

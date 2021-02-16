@@ -1,4 +1,7 @@
 namespace Robust.Shared.Serialization.Markdown
 {
-    public interface IDataNode{ }
+    public interface IDataNode
+    {
+        IDataNode Copy();
+    }
 }

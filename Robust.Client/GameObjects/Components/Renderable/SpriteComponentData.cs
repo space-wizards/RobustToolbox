@@ -14,6 +14,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using SharpFont;
 
 namespace Robust.Client.GameObjects.Components.Renderable

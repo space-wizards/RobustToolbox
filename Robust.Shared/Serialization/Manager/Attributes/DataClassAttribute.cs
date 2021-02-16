@@ -1,6 +1,6 @@
 using System;
 
-namespace Robust.Shared.Prototypes.DataClasses.Attributes
+namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class DataClassAttribute : Attribute

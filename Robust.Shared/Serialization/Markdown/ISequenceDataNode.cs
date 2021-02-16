@@ -4,6 +4,7 @@ namespace Robust.Shared.Serialization.Markdown
 {
     public interface ISequenceDataNode : IDataNode
     {
-        public abstract IReadOnlyList<IDataNode> Sequence { get; }
+        IReadOnlyList<IDataNode> Sequence { get; }
+        void Add(IDataNode node);
     }
 }

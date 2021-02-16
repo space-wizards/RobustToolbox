@@ -1,15 +1,14 @@
 using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
+using Robust.Shared.Prototypes;
 
-namespace Robust.Shared.Prototypes.DataClasses
+namespace Robust.Shared.Serialization.Manager
 {
     public abstract class DataClass
     {
         public T GetValue<T>(string name)
         {
-            if(IoCManager.Resolve<IDataClassManager>().TryGetDataClassField(this, name, out T? value))
+            if(IoCManager.Resolve<IServ3Manager>().TryGetDataClassField(this, name, out T? value))
             {
                 return value;
             }

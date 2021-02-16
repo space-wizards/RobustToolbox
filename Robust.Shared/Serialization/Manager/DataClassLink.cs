@@ -18,8 +18,10 @@ namespace Robust.Shared.Prototypes.DataClasses
         private List<LinkEntry> _actualFields = new();
         private List<LinkEntry> _dataclassFields = new();
 
-        public readonly Action<object, DataClass, ISerializationManager> PopulateObjectDelegate;
-        public readonly Action<object, DataClass, ISerializationManager> PopulateDataclassDelegate;
+        //todo paul: make this return the object
+        public readonly Action<object, DataClass, IServ3Manager> PopulateObjectDelegate;
+
+        public readonly Action<object, DataClass, IServ3Manager> PopulateDataclassDelegate;
         public readonly Func<DataClass, string, object?> GetFieldDelegate;
 
         public DataClassLink(Type type, Type dataClassType)
@@ -81,12 +83,12 @@ namespace Robust.Shared.Prototypes.DataClasses
             return dynamicMethod.CreateDelegate<Func<DataClass, string, object?>>();
         }
 
-        private Action<object, DataClass, ISerializationManager> EmitPopulateObjectDelegate()
+        private Action<object, DataClass, IServ3Manager> EmitPopulateObjectDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateObjectFromDC<>{Type}<>{DataClassType}",
                 typeof(void),
-                new[] {typeof(object), typeof(DataClass), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(DataClass), typeof(IServ3Manager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -115,15 +117,15 @@ namespace Robust.Shared.Prototypes.DataClasses
 
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, DataClass, ISerializationManager>>();
+            return dynamicMethod.CreateDelegate<Action<object, DataClass, IServ3Manager>>();
         }
 
-        private Action<object, DataClass, ISerializationManager> EmitPopulateDataclassDelegate()
+        private Action<object, DataClass, IServ3Manager> EmitPopulateDataclassDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateDCFromObject<>{Type}<>{DataClassType}",
                 typeof(void),
-                new[] {typeof(object), typeof(DataClass), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(DataClass), typeof(IServ3Manager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -152,7 +154,7 @@ namespace Robust.Shared.Prototypes.DataClasses
 
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, DataClass, ISerializationManager>>();
+            return dynamicMethod.CreateDelegate<Action<object, DataClass, IServ3Manager>>();
         }
 
         private class LinkEntry

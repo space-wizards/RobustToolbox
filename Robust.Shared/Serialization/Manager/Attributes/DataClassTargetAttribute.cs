@@ -1,8 +1,7 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Shared.Prototypes
+namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     [MeansImplicitAssignment]

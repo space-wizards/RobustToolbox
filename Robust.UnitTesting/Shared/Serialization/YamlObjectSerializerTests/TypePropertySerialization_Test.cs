@@ -77,7 +77,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
         public int TestPropertyTwo { get; set; }
 
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(this, x => TestPropertyOne, "testPropertyOne", null);
             serializer.DataField(this, x => TestPropertyTwo, "testPropertyTwo", 0);

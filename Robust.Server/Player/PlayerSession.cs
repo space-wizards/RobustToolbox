@@ -88,7 +88,7 @@ namespace Robust.Server.Player
             {
                 return;
             }
-
+            a.EntityManager.ComponentManager.CullRemovedComponents();
             var actorComponent = a.AddComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
             AttachedEntity = a;

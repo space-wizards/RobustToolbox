@@ -56,6 +56,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void LoadDirectory(ResourcePath path);
         void LoadFromStream(TextReader stream);
+        void LoadString(string str);
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
         /// </summary>
@@ -271,6 +272,11 @@ namespace Robust.Shared.Prototypes
             }
 
             LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
+        }
+
+        public void LoadString(string str)
+        {
+            LoadFromStream(new StreamReader(str));
         }
 
         #endregion IPrototypeManager members

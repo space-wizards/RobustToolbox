@@ -198,6 +198,16 @@ namespace Robust.Shared.Network
                     }
                 }
 
+                if (connection.Status == NetConnectionStatus.Disconnecting ||
+                    connection.Status == NetConnectionStatus.Disconnected)
+                {
+                    Logger.InfoS("net",
+                        "{ConnectionEndpoint} disconnected during handshake",
+                        connection.RemoteEndPoint, userName, userId);
+
+                    return;
+                }
+
                 var msg = peer.Peer.CreateMessage();
                 var msgResp = new MsgLoginSuccess
                 {

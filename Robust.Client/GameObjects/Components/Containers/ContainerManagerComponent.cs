@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
     public sealed partial class ContainerManagerComponent : SharedContainerManagerComponent
     {
         [ViewVariables]
-        private readonly Dictionary<string, ClientContainer> _containers = new();
+        private readonly Dictionary<string, IContainer> _containers = new();
 
         public override T MakeContainer<T>(string id)
         {
@@ -121,7 +121,7 @@ namespace Robust.Client.GameObjects
 
                 // Remove gone entities.
                 List<IEntity>? toRemove = null;
-                foreach (var entity in container.Entities)
+                foreach (var entity in container.ContainedEntities)
                 {
                     if (!data.ContainedEntities.Contains(entity.Uid))
                     {
@@ -134,7 +134,7 @@ namespace Robust.Client.GameObjects
                 {
                     foreach (var goner in toRemove)
                     {
-                        container.DoRemove(goner);
+                        container.Remove(goner);
                     }
                 }
 
@@ -143,12 +143,16 @@ namespace Robust.Client.GameObjects
                 {
                     var entity = Owner.EntityManager.GetEntity(uid);
 
-                    if (!container.Entities.Contains(entity))
+                    if (!container.ContainedEntities.Contains(entity))
                     {
-                        container.DoInsert(entity);
+                        container.Insert(entity);
                     }
                 }
             }
+        }
+
+        public override void InternalContainerShutdown(IContainer container)
+        {
         }
 
         protected override void Shutdown()
@@ -158,7 +162,7 @@ namespace Robust.Client.GameObjects
             // On shutdown we won't get to process remove events in the containers so this has to be manually done.
             foreach (var container in _containers.Values)
             {
-                foreach (var containerEntity in container.Entities)
+                foreach (var containerEntity in container.ContainedEntities)
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                         new UpdateContainerOcclusionMessage(containerEntity));

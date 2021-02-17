@@ -91,14 +91,4 @@ namespace Robust.Client.GameObjects
             }
         }
     }
-
-    internal readonly struct UpdateContainerOcclusionMessage
-    {
-        public UpdateContainerOcclusionMessage(IEntity entity)
-        {
-            Entity = entity;
-        }
-
-        public IEntity Entity { get; }
-    }
 }

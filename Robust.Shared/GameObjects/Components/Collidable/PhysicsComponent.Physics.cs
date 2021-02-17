@@ -521,6 +521,11 @@ namespace Robust.Shared.GameObjects
 
         private bool _predict;
 
+        /// <summary>
+        ///     As we defer updates need to store the MapId we used for broadphase.
+        /// </summary>
+        public MapId BroadphaseMapId { get; set; }
+
         Dictionary<Type, VirtualController> IPhysicsComponent.Controllers
         {
             get => _controllers;
@@ -677,18 +682,18 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Remove the proxies from all the broadphases.
         /// </summary>
-        public void ClearProxies(MapId? mapId = null)
+        public void ClearProxies()
         {
             if (!HasProxies) return;
 
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-            mapId ??= Owner.Transform.MapID;
+            var mapId = BroadphaseMapId;
 
             foreach (var fixture in Fixtures)
             {
                 foreach (var (gridId, proxies) in fixture.Proxies)
                 {
-                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId.Value, gridId);
+                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
                     DebugTools.AssertNotNull(broadPhase);
                     if (broadPhase == null) continue; // TODO
 
@@ -745,6 +750,14 @@ namespace Robust.Shared.GameObjects
         public void CreateProxies(IMapManager? mapManager = null)
         {
             if (HasProxies) return;
+
+            BroadphaseMapId = Owner.Transform.MapID;
+
+            if (BroadphaseMapId == MapId.Nullspace)
+            {
+                HasProxies = true;
+                return;
+            }
 
             var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             mapManager ??= IoCManager.Resolve<IMapManager>();

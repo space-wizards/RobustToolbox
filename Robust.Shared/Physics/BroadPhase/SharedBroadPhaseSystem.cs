@@ -265,7 +265,7 @@ namespace Robust.Shared.Physics.Broadphase
                 oldMap.RemoveBody(body);
             }
 
-            body.ClearProxies(message.OldMapId);
+            body.ClearProxies();
 
             if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.Entity.Transform.MapID, out var newMap))
             {

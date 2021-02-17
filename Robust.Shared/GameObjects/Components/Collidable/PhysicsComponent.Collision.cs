@@ -755,6 +755,16 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
+            foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
+            {
+                if (comp.PreventCollide(other)) return false;
+            }
+
+            foreach (var comp in other.Owner.GetAllComponents<ICollideSpecial>())
+            {
+                if (comp.PreventCollide(this)) return false;
+            }
+
             return true;
         }
 

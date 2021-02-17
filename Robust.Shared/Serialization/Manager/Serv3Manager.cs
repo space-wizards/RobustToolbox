@@ -83,21 +83,24 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = currentType.BaseType;
             }
 
-            if (obj is IAfterSerialization afterSerialization)
-                afterSerialization.AfterSerialization();
+            if (obj is ISerializationHooks serHooks)
+                serHooks.AfterDeserialization();
 
             return obj;
         }
 
         public IDataNode WriteValue<T>(T value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null) where T : notnull
         {
-            throw new System.NotImplementedException();
+            return WriteValue(typeof(T), value, nodeFactory, alwaysWrite, context);
         }
 
         public IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
+            if (value is ISerializationHooks serHook)
+                serHook.BeforeSerialization();
+
             if (TryWriteWithTypeSerializers(type, value, nodeFactory, out var node, alwaysWrite, context))
             {
                 return node;

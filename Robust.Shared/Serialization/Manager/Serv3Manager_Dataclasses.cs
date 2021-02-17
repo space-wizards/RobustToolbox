@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes.DataClasses;
-using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Serialization.Manager

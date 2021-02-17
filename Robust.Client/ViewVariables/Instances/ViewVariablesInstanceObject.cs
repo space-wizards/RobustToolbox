@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
 
@@ -19,8 +19,8 @@ namespace Robust.Client.ViewVariables.Instances
         public ViewVariablesRemoteSession? Session { get; private set; }
         public object? Object { get; private set; }
 
-        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IResourceCache resCache)
-            : base(vvm, resCache) { }
+        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
+            : base(vvm, robustSerializer) { }
 
         public override void Initialize(SS14Window window, object obj)
         {
@@ -113,7 +113,7 @@ namespace Robust.Client.ViewVariables.Instances
             var list = new List<ViewVariablesTrait>(traitData.Count);
             if (traitData.Contains(ViewVariablesTraits.Members))
             {
-                list.Add(new ViewVariablesTraitMembers(ViewVariablesManager, _resourceCache));
+                list.Add(new ViewVariablesTraitMembers(ViewVariablesManager, _robustSerializer));
             }
 
             if (traitData.Contains(ViewVariablesTraits.Enumerable))

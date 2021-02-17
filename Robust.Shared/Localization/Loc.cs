@@ -1,6 +1,8 @@
 using System.Globalization;
 using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization.Macros;
 
 namespace Robust.Shared.Localization
 {
@@ -87,10 +89,12 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Load data for a culture.
         /// </summary>
+        /// <param name="resourceManager"></param>
+        /// <param name="macroFactory"></param>
         /// <param name="culture"></param>
-        public static void LoadCulture(CultureInfo culture)
+        public static void LoadCulture(IResourceManager resourceManager, ITextMacroFactory macroFactory, CultureInfo culture)
         {
-            LocalizationManager.LoadCulture(culture);
+            LocalizationManager.LoadCulture(resourceManager, macroFactory, culture);
         }
     }
 }

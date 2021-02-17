@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects
 {

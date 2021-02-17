@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects.Components
+namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     public class VisibilityComponent : Component

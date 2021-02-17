@@ -1,7 +1,6 @@
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     public readonly struct EntMapIdChangedMessage
     {

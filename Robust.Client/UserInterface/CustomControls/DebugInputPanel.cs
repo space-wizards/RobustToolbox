@@ -1,5 +1,5 @@
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -30,6 +30,11 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
+
+            if (!VisibleInTree)
+            {
+                return;
+            }
 
             _label.Text = string.Join("\n", _inputManager.DownKeyFunctions);
         }

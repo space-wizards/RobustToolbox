@@ -1,20 +1,8 @@
-﻿using Robust.Shared.Asynchronous;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.ComponentDependencies;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Interfaces.Timers;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Localization.Macros;
@@ -37,8 +25,9 @@ namespace Robust.Shared
         public static void RegisterIoC()
         {
             IoCManager.Register<IComponentManager, ComponentManager>();
-            IoCManager.Register<IConfigurationManager, ConfigurationManager>();
-            IoCManager.Register<IConfigurationManagerInternal, ConfigurationManager>();
+            IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
+            IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
+            IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             IoCManager.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();

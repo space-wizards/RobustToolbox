@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Globalization;
-using System.Reflection;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ViewVariables.Editors
@@ -13,48 +10,32 @@ namespace Robust.Client.ViewVariables.Editors
         protected override Control MakeUI(object? value)
         {
             DebugTools.Assert(value!.GetType().IsEnum);
-            var enumVal = (Enum)value;
             var enumType = value.GetType();
-            var enumStorageType = enumType.GetEnumUnderlyingType();
+            var enumList = Enum.GetValues(enumType);
 
-            var hBox = new HBoxContainer
+            var optionButton = new OptionButton();
+            foreach (var val in enumList)
             {
-                CustomMinimumSize = new Vector2(200, 0)
-            };
+                var label = val?.ToString();
+                if (label == null)
+                    continue;
+                optionButton.AddItem(label, Convert.ToInt32(val));
+            }
 
-            var lineEdit = new LineEdit
-            {
-                Text = enumVal.ToString(),
-                Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
-            };
+            optionButton.SelectId(Convert.ToInt32(value));
+            optionButton.Disabled = ReadOnly;
 
             if (!ReadOnly)
             {
-                lineEdit.OnTextEntered += e =>
+                var underlyingType = Enum.GetUnderlyingType(value.GetType());
+                optionButton.OnItemSelected += e =>
                 {
-                    var parseSig = new []{typeof(string), typeof(NumberStyles), typeof(CultureInfo), enumStorageType.MakeByRefType()};
-                    var parseMethod = enumStorageType.GetMethod("TryParse", parseSig);
-                    DebugTools.AssertNotNull(parseMethod);
-
-                    var parameters = new object?[] {e.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, null};
-                    var parseWorked = (bool)parseMethod!.Invoke(null, parameters)!;
-
-                    if (parseWorked) // textbox was the underlying type
-                    {
-                        DebugTools.AssertNotNull(parameters[3]);
-                        ValueChanged(parameters[3]);
-                    }
-                    else if(Enum.TryParse(enumType, e.Text, true, out var enumValue))
-                    {
-                        var underlyingVal = Convert.ChangeType(enumValue, enumStorageType);
-                        ValueChanged(underlyingVal);
-                    }
+                    optionButton.SelectId(e.Id);
+                    ValueChanged(Convert.ChangeType(e.Id, underlyingType));
                 };
             }
 
-            hBox.AddChild(lineEdit);
-            return hBox;
+            return optionButton;
         }
     }
 }

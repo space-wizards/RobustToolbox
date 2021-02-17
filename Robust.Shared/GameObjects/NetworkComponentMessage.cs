@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Interfaces.Network;
+﻿using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;

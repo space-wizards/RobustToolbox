@@ -6,8 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Graphics;
 using Robust.Shared;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -179,7 +178,17 @@ namespace Robust.Client.UserInterface
             return tcs.Task;
 #else
             // Luckily, GTK Linux and COM Windows are both happily threaded. Yay!
-            return Task.Run(action);
+            // * Actual attempts to have multiple file dialogs up at the same time, and the resulting crashes,
+            // have shown that at least for GTK+ (Linux), just because it can handle being on any thread doesn't mean it handle being on two at the same time.
+            // Testing system was Ubuntu 20.04.
+            // COM on Windows might handle this, but honestly, who exactly wants to risk it?
+            // In particular this could very well be an swnfd issue.
+            return Task.Run(() =>
+            {
+                lock (this) {
+                    return action();
+                }
+            });
 #endif
         }
 

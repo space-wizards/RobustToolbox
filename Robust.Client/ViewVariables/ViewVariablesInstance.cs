@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -19,12 +18,12 @@ namespace Robust.Client.ViewVariables
     internal abstract class ViewVariablesInstance
     {
         public readonly IViewVariablesManagerInternal ViewVariablesManager;
-        protected readonly IResourceCache _resourceCache;
+        protected readonly IRobustSerializer _robustSerializer;
 
-        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IResourceCache resCache)
+        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
         {
             ViewVariablesManager = vvm;
-            _resourceCache = resCache;
+            _robustSerializer = robustSerializer;
         }
 
         /// <summary>
@@ -54,7 +53,7 @@ namespace Robust.Client.ViewVariables
         }
 
         protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
-            IResourceCache resCache)
+            IRobustSerializer robustSerializer)
         {
             var styleOther = false;
             var type = obj.GetType();
@@ -104,7 +103,7 @@ namespace Robust.Client.ViewVariables
                         Value = value
                     };
 
-                    var propertyEdit = new ViewVariablesPropertyControl(vvm, resCache);
+                    var propertyEdit = new ViewVariablesPropertyControl(vvm, robustSerializer);
                     propertyEdit.SetStyle(styleOther = !styleOther);
                     var editor = propertyEdit.SetProperty(data);
                     editor.OnValueChanged += onValueChanged;

@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Map;
-using Robust.Shared.Utility;
+﻿using Robust.Shared.Utility;
 using System;
 
 namespace Robust.Shared.Maths

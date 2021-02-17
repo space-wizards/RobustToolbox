@@ -1,6 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
+﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {

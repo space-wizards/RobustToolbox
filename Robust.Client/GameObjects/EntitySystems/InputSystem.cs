@@ -1,19 +1,15 @@
 ﻿using System;
-using Robust.Client.GameObjects.Components;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.GameStates;
+using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
@@ -44,7 +40,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -128,7 +124,8 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             if (!entity.TryGetComponent(out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
 
@@ -138,7 +135,8 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
 

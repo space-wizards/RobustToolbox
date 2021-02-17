@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -91,7 +90,7 @@ namespace Robust.Shared.ContentPack
                     {
                         var prevDir = new DirectoryInfo(prevPath);
                         var found = false;
-                        foreach (var info in prevDir.GetFileSystemInfos())
+                        foreach (var info in prevDir.EnumerateFileSystemInfos())
                         {
                             if (!string.Equals(info.Name, segment, StringComparison.InvariantCultureIgnoreCase))
                             {

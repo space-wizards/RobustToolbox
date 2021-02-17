@@ -1,9 +1,8 @@
-﻿using System.Diagnostics;
-using Robust.Server.Interfaces.Debugging;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
+using System.Diagnostics;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.Debugging
 {

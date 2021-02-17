@@ -1,11 +1,6 @@
 using NUnit.Framework;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Client.Utility;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.IoC;
-using Robust.Shared.Utility;
 using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Client.UserInterface.Controls

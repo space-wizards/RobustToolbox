@@ -1,5 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
+    <!-- Avoid MSBuild adding a None entry for XAML files because they'd show up TWICE in the project view. -->
+    <DefaultItemExcludes>**/*.xaml</DefaultItemExcludes>
     <RobustUseExternalMSBuild>true</RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild>$(RobustUseExternalMSBuild)</_RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild Condition="'$(_RobustForceInternalMSBuild)' == 'true'">false</_RobustUseExternalMSBuild>
@@ -53,8 +55,11 @@
       DelaySign="$(DelaySign)"
       UpdateBuildIndicator="$(IntermediateOutputPath)XAML/doot"/>
 
+    <PropertyGroup>
+      <DOTNET_HOST_PATH Condition="'$(DOTNET_HOST_PATH)' == ''">dotnet</DOTNET_HOST_PATH>
+    </PropertyGroup>
     <Exec
       Condition="'$(_RobustUseExternalMSBuild)' == 'true'"
-      Command="dotnet msbuild /nodereuse:false $(MSBuildProjectFile) /t:CompileRobustXaml /p:_RobustForceInternalMSBuild=true /p:Configuration=$(Configuration) /p:TargetFramework=$(TargetFramework) /p:BuildProjectReferences=false"/>
+      Command="&quot;$(DOTNET_HOST_PATH)&quot; msbuild /nodereuse:false $(MSBuildProjectFile) /t:CompileRobustXaml /p:_RobustForceInternalMSBuild=true /p:Configuration=$(Configuration) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:TargetFramework=$(TargetFramework) /p:BuildProjectReferences=false"/>
   </Target>
 </Project>

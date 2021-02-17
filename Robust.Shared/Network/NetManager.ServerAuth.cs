@@ -6,7 +6,6 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -51,8 +50,7 @@ namespace Robust.Shared.Network
                 var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
                 var needPk = msgLogin.NeedPubKey;
-                var authServer = _config.GetSecureCVar<string>("auth.server");
-
+                var authServer = _config.GetCVar(CVars.AuthServer);
 
                 if (Auth == AuthMode.Required && !isLocal)
                 {
@@ -106,7 +104,7 @@ namespace Robust.Shared.Network
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
                         // In that case, the decrypt can fail here.
-                        connection.Disconnect("Token decryption failed./nPlease reconnect to this server from the launcher.");
+                        connection.Disconnect("Token decryption failed.\nPlease reconnect to this server from the launcher.");
                         return;
                     }
 
@@ -181,9 +179,23 @@ namespace Robust.Shared.Network
                 // Well they're in. Kick a connected client with the same GUID if we have to.
                 if (_assignedUserIds.TryGetValue(userId, out var existing))
                 {
-                    existing.Disconnect("Another connection has been made with your account.");
-                    // Have to wait until they're properly off the server to avoid any collisions.
-                    await AwaitDisconnectAsync(existing);
+                    if (_awaitingDisconnectToConnect.Contains(userId))
+                    {
+                        connection.Disconnect("Stop trying to connect multiple times at once.");
+                        return;
+                    }
+
+                    _awaitingDisconnectToConnect.Add(userId);
+                    try
+                    {
+                        existing.Disconnect("Another connection has been made with your account.");
+                        // Have to wait until they're properly off the server to avoid any collisions.
+                        await AwaitDisconnectAsync(existing);
+                    }
+                    finally
+                    {
+                        _awaitingDisconnectToConnect.Remove(userId);
+                    }
                 }
 
                 var msg = peer.Peer.CreateMessage();
@@ -244,8 +256,12 @@ namespace Robust.Shared.Network
 
         private Task AwaitDisconnectAsync(NetConnection connection)
         {
-            var tcs = new TaskCompletionSource<object?>();
-            _awaitingDisconnect.Add(connection, tcs);
+            if (!_awaitingDisconnect.TryGetValue(connection, out var tcs))
+            {
+                tcs = new TaskCompletionSource<object?>();
+                _awaitingDisconnect.Add(connection, tcs);
+            }
+
             return tcs.Task;
         }
 

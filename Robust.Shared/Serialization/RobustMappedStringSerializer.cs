@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 using NetSerializer;
 using Newtonsoft.Json.Linq;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;

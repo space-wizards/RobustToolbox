@@ -1,5 +1,3 @@
-using Robust.Shared.Interfaces.Log;
-
 namespace Robust.Shared.Log
 {
     public sealed class ProxyLogManager : ILogManager

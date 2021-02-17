@@ -1,4 +1,4 @@
-﻿namespace Robust.Client.Graphics.Shaders
+﻿namespace Robust.Client.Graphics
 {
     public enum ShaderParamType : byte
     {

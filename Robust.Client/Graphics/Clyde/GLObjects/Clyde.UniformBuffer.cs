@@ -1,8 +1,5 @@
-using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {

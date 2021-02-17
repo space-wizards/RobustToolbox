@@ -1,6 +1,8 @@
-﻿using System;
+using System;
+using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 
 namespace Robust.Shared
 {
@@ -59,17 +61,28 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetPredict =
             CVarDef.Create("net.predict", true, CVar.ARCHIVE);
 
-        public static readonly CVarDef<int> NetPredictSize =
-            CVarDef.Create("net.predict_size", 1, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetPredictTickBias =
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.ARCHIVE);
+
+        // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
+        // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
+        // BUT! Lidgren's latency calculation *never* measures this due to how it works.
+        // This broke some prediction calculations quite badly so we bias them to mask it.
+        // This is not necessary on Linux because Linux, for better or worse,
+        // just has the Lidgren thread go absolute brr polling.
+        public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
+                "net.predict_lag_bias",
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.016f : 0,
+                CVar.ARCHIVE);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPVS =
-            CVarDef.Create("net.pvs", true, CVar.ARCHIVE);
+            CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
+            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
@@ -77,6 +90,8 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<int> SysWinTickPeriod =
+            CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
@@ -151,10 +166,10 @@ namespace Robust.Shared
          */
 
         public static readonly CVarDef<int> GameMaxPlayers =
-            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<string> GameHostName =
-            CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /*
          * LOG
@@ -204,17 +219,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> AuthServerPubKey =
-            CVarDef.Create("auth.serverpubkey", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthToken =
-            CVarDef.Create("auth.token", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthUserId =
-            CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
-
+        // Only respected on server, client goes through IAuthManager for security.
         public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
+            CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
          * DISPLAY
@@ -234,6 +241,9 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> DisplayLightMapDivider =
             CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<int> DisplayMaxLightsPerScene =
+            CVarDef.Create("display.maxlightsperscene", 128, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);

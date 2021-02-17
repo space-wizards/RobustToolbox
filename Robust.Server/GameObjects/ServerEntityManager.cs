@@ -3,21 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Prometheus;
-using Robust.Server.GameObjects.Components;
-using Robust.Server.GameObjects.Components.Container;
-using Robust.Server.GameObjects.EntitySystemMessages;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
-using Robust.Server.Interfaces.Timing;
+using Robust.Server.Player;
+using Robust.Server.Timing;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -419,7 +412,7 @@ namespace Robust.Server.GameObjects
                                 var oldState =
                                     (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                                 var newState = new TransformComponent.TransformComponentState(Vector2NaN,
-                                    oldState.Rotation, oldState.ParentID);
+                                    oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                                 state.ComponentStates[idx] = newState;
                                 seenMovers.Remove(uid);
                                 ClearLastSeenTick(lSeen, uid);
@@ -457,7 +450,7 @@ namespace Robust.Server.GameObjects
                             new ComponentState[]
                             {
                                 new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                                    oldState.ParentID)
+                                    oldState.ParentID, oldState.NoLocalRotation)
                             }));
 
                         seenMovers.Remove(uid);
@@ -608,7 +601,7 @@ namespace Robust.Server.GameObjects
 
                 var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                 var newState =
-                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                 state.ComponentStates[idx] = newState;
 
 
@@ -661,7 +654,7 @@ namespace Robust.Server.GameObjects
                     var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
                     var newState =
                         new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                            oldState.ParentID);
+                            oldState.ParentID, oldState.NoLocalRotation);
                     state.ComponentStates[idx] = newState;
                     seenMovers.Remove(uid);
 

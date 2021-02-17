@@ -1,6 +1,5 @@
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Server.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Server.Player
 {

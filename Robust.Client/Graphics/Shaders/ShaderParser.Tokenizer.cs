@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     internal partial class ShaderParser
     {

@@ -4,21 +4,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Map;
+using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Shared;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -63,6 +56,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLShaderProgram? _currentProgram;
 
         private int _lightmapDivider = 2;
+        private int _maxLightsPerScene = 128;
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
@@ -133,6 +127,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReadConfig();
             _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
             _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 

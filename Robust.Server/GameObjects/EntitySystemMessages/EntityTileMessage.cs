@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Server.GameObjects.EntitySystemMessages
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Event for when the intersecting Vector2i of an entity changes.

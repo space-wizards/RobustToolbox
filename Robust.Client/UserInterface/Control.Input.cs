@@ -33,6 +33,7 @@ namespace Robust.Client.UserInterface
         }
 
         public event Action<GUIBoundKeyEventArgs>? OnKeyBindDown;
+        public event Action<GUIBoundKeyEventArgs>? OnKeyBindUp;
 
         protected internal virtual void KeyBindDown(GUIBoundKeyEventArgs args)
         {
@@ -41,6 +42,7 @@ namespace Robust.Client.UserInterface
 
         protected internal virtual void KeyBindUp(GUIBoundKeyEventArgs args)
         {
+            OnKeyBindUp?.Invoke(args);
         }
 
         protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)

@@ -4,8 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -216,7 +215,13 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool ContentFileExists(ResourcePath path)
         {
-            return TryContentFileRead(path, out var _);
+            if (TryContentFileRead(path, out var stream))
+            {
+                stream.Dispose();
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc />

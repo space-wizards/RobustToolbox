@@ -1,24 +1,16 @@
 
-// xy: A, zw: B
-varying highp vec4 fragPos;
-// x: actual angle, y: horizontal (1) / vertical (-1)
-varying highp vec2 fragAngle;
+// x: Angle being queried, y: Angle of closest point of line (is of 90-degree angle to line angle), z: Distance at y
+varying highp vec3 fragControl;
 
 void main()
 {
-    // Stuff that needs to be inferred to avoid interpolation issues.
-    highp vec2 rayNormal = vec2(cos(fragAngle.x), -sin(fragAngle.x));
-
-    // Depth calculation accounting for interpolation.
-    highp float dist;
-
-    if (fragAngle.y > 0.0) {
-        // Line is horizontal
-        dist = abs(fragPos.y / rayNormal.y);
-    } else {
-        // Line is vertical
-        dist = abs(fragPos.x / rayNormal.x);
-    }
+    // Thanks to Radrark for finding this for me. There's also a useful diagram, but this is text, so:
+    // r = p / cos(theta - phi)
+    // r: Distance to line *given angle theta*
+    // p: Distance to closest point of line
+    // theta: Angle being queried
+    // phi: Angle of closest point of line - inherently on 90-degree angle to line angle
+    highp float dist = abs(fragControl.z / cos(fragControl.x - fragControl.y));
 
     // Main body.
 #ifdef HAS_DFDX

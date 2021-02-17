@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -76,9 +72,21 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
-        
+
         [ViewVariables]
-        public bool Paused { get; set; }
+        public bool Paused
+        {
+            get => _paused;
+            set
+            {
+                if (_paused == value || value && HasComponent<SharedIgnorePauseComponent>())
+                    return;
+
+                _paused = value;
+            }
+        }
+
+        private bool _paused;
 
         private ITransformComponent? _transform;
 

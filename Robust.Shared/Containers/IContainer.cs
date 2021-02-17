@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Containers
 {
     /// <summary>
     /// A container is a way to "contain" entities inside other entities, in a logical way.

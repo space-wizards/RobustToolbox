@@ -1,7 +1,7 @@
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.Containers
 {
     [PublicAPI]
     public abstract class ContainerModifiedMessage : EntitySystemMessage

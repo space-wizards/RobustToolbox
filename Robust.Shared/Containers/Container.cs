@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.Containers
 {
     /// <summary>
     /// Default implementation for containers,

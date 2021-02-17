@@ -330,6 +330,7 @@ Types:
   System.Globalization:
     CompareOptions: { }
     CultureInfo: { All: True }
+    DateTimeStyles: { All: True } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"

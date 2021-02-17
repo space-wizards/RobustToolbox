@@ -21,7 +21,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
 
         private Dictionary<object, PrototypeData> _interfaceData = new();
 
-        [YamlField("interfaces")]
+        [DataField("interfaces")]
         private List<PrototypeData> _dataReceiver
         {
             set

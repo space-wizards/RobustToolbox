@@ -58,7 +58,7 @@ namespace Test{
             Assert.That(members, Has.Length.EqualTo(4));
 
             var memberDictionary = members.ToDictionary(m => m.Name, m => m);
-            var yamlFieldNamespace = typeof(YamlFieldAttribute).FullName;
+            var yamlFieldNamespace = typeof(DataFieldAttribute).FullName;
 
             Assert.NotNull(yamlFieldNamespace);
 

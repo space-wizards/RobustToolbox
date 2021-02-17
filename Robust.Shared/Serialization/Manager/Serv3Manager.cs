@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.Manager
             InitializeDataClasses();
 
             //generating all datadefinitions except pure exposedata inheritors
-            foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansYamlDefinition>())
+            foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
                 {

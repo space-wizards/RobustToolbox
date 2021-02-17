@@ -113,13 +113,13 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             public override string Name => "TestComp";
 
-            [YamlField("foo")]
+            [DataField("foo")]
             public int Foo = -1;
 
-            [YamlField("bar")]
+            [DataField("bar")]
             public int Bar = -1;
 
-            [YamlField("baz")]
+            [DataField("baz")]
             public string Baz = "abc";
         }
 

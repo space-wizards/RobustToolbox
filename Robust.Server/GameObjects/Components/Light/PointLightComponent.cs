@@ -9,13 +9,13 @@ namespace Robust.Server.GameObjects
 {
     public class PointLightComponent : Component
     {
-        [YamlField("color")]
+        [DataField("color")]
         private Color _color = new(200, 200, 200);
-        [YamlField("enabled")]
+        [DataField("enabled")]
         private bool _enabled = true;
-        [YamlField("radius")]
+        [DataField("radius")]
         private float _radius = 10;
-        [YamlField("offset")]
+        [DataField("offset")]
         private Vector2 _offset = Vector2.Zero;
 
         public override string Name => "PointLight";

@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects.Components
 
         private bool _proper;
 
-        [YamlField("proper")]
+        [DataField("proper")]
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Proper
         {

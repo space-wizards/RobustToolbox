@@ -28,14 +28,14 @@ namespace Robust.Shared.GameObjects
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
-        [YamlField("id")]
+        [DataField("id")]
         public string ID { get; private set; } = default!;
 
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables, CanBeNull]
-        [YamlField("name")]
+        [DataField("name")]
         public string Name {
             get => _name;
             private set
@@ -55,7 +55,7 @@ namespace Robust.Shared.GameObjects
         ///     to provide additional info without ruining the Name property itself.
         /// </summary>
         [ViewVariables]
-        [YamlField("suffix")]
+        [DataField("suffix")]
         public string? EditorSuffix
         {
             get => _editorSuffix;
@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
-        [YamlField("description")]
+        [DataField("description")]
         public string Description
         {
             get => _description;
@@ -84,10 +84,10 @@ namespace Robust.Shared.GameObjects
         ///     If true, this object should not show up in the entity spawn panel.
         /// </summary>
         [ViewVariables]
-        [YamlField("abstract")]
+        [DataField("abstract")]
         public bool Abstract { get; private set; }
 
-        [YamlField("placement")]
+        [DataField("placement")]
         private EntityPlacementProperties PlacementProperties = new();
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace Robust.Shared.GameObjects
         /// True if this entity will be saved by the map loader.
         /// </summary>
         [ViewVariables]
-        [YamlField("save")]
+        [DataField("save")]
         public bool MapSavable { get; protected set; } = true;
 
         /// <summary>
@@ -149,13 +149,13 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Used to store the parent id until we sync when all templates are done loading.
         /// </summary>
-        [YamlField("parent")]
+        [DataField("parent")]
         private string? parentTemp;
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        [YamlField("components")]
+        [DataField("components")]
         public ComponentRegistry Components { get; } = new();
 
         private readonly HashSet<Type> ReferenceTypes = new();
@@ -449,7 +449,7 @@ namespace Robust.Shared.GameObjects
 
         public class ComponentRegistry : Dictionary<string, DataClass>{}
 
-        [YamlDefinition]
+        [DataDefinition]
         public class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
@@ -457,7 +457,7 @@ namespace Robust.Shared.GameObjects
             private string _placementMode = "PlaceFree";
             private Vector2i _placementOffset;
 
-            [YamlField("mode")]
+            [DataField("mode")]
             public string PlacementMode
             {
                 get => _placementMode;
@@ -468,7 +468,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            [YamlField("offset")]
+            [DataField("offset")]
             public Vector2i PlacementOffset
             {
                 get => _placementOffset;
@@ -479,12 +479,12 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            [YamlField("nodes")] public List<int>? MountingPoints;
+            [DataField("nodes")] public List<int>? MountingPoints;
 
-            [YamlField("range")] public int PlacementRange = DEFAULT_RANGE;
+            [DataField("range")] public int PlacementRange = DEFAULT_RANGE;
             private HashSet<string> _snapFlags = new ();
 
-            [YamlField("snap")]
+            [DataField("snap")]
             public HashSet<string> SnapFlags
             {
                 get => _snapFlags;

@@ -46,15 +46,15 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
-        [YamlField("on")]
+        [DataField("on")]
         private bool _canCollide = true;
-        [YamlField("hard")]
+        [DataField("hard")]
         private bool _isHard = true;
-        [YamlField("status")]
+        [DataField("status")]
         private BodyStatus _status = BodyStatus.OnGround;
-        [YamlField("bodyType")]
+        [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
-        [YamlField("shapes")]
+        [DataField("shapes")]
         private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />

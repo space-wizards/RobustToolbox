@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
-        [YamlField("netsync")]
+        [DataField("netsync")]
         private bool _netSyncEnabled = true;
         /// <inheritdoc />
         [ViewVariables]

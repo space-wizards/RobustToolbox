@@ -126,18 +126,18 @@ namespace Robust.Client.Graphics.Shaders
             if (StencilDataHolder != null) _stencilEnabled = true;
         }
 
-        [YamlDefinition]
+        [DataDefinition]
         public class StencilData
         {
-            [YamlField("ref")] public int StencilRef;
+            [DataField("ref")] public int StencilRef;
 
-            [YamlField("op")] public StencilOp StencilOp;
+            [DataField("op")] public StencilOp StencilOp;
 
-            [YamlField("func")] public StencilFunc StencilFunc;
+            [DataField("func")] public StencilFunc StencilFunc;
 
-            [YamlField("readMask")] public int ReadMask;
+            [DataField("readMask")] public int ReadMask;
 
-            [YamlField("writeMask")] public int WriteMask;
+            [DataField("writeMask")] public int WriteMask;
 
             public void CopyTo(StencilData data)
             {

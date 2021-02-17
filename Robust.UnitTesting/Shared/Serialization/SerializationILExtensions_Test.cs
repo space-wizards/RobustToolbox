@@ -24,19 +24,19 @@ nested:
 strField: foo
 ";
 
-        [YamlDefinition]
+        [DataDefinition]
         private class TestClass
         {
-            [YamlField("intField")]
+            [DataField("intField")]
             public int primitiveField = 2;
-            [YamlField("nested")]
+            [DataField("nested")]
             public NestedTestClass nestedField = new(){primitiveStringField = "defaultTest"};
         }
 
-        [YamlDefinition]
+        [DataDefinition]
         private class NestedTestClass
         {
-            [YamlField("strField")]
+            [DataField("strField")]
             public string primitiveStringField { get; set; } = "defaultTest2";
         }
 

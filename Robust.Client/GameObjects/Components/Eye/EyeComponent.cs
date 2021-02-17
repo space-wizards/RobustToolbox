@@ -25,9 +25,9 @@ namespace Robust.Client.GameObjects
 
         // Horrible hack to get around ordering issues.
         private bool _setCurrentOnInitialize;
-        [YamlField("drawFov")]
+        [DataField("drawFov")]
         private bool _setDrawFovOnInitialize = true;
-        [YamlField("zoom")]
+        [DataField("zoom")]
         private Vector2 _setZoomOnInitialize = Vector2.One/2f;
         private Vector2 _offset = Vector2.Zero;
 

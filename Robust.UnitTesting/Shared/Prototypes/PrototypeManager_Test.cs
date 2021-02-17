@@ -167,32 +167,32 @@ namespace Robust.UnitTesting.Shared.Prototypes
     {
         public override string Name => "TestBasicPrototypeComponent";
 
-        [YamlField("foo")] public string Foo = null!;
+        [DataField("foo")] public string Foo = null!;
 
-        [YamlField("str")] public string Str = null!;
+        [DataField("str")] public string Str = null!;
 
-        [YamlField("anint")] public int? @int = null!;
+        [DataField("anint")] public int? @int = null!;
 
-        [YamlField("anfloat")] public float? @float = null!;
+        [DataField("anfloat")] public float? @float = null!;
 
-        [YamlField("float2")] public float? @float2 = null!;
+        [DataField("float2")] public float? @float2 = null!;
 
-        [YamlField("boolt")] public bool? @boolt = null!;
+        [DataField("boolt")] public bool? @boolt = null!;
 
-        [YamlField("boolf")] public bool? @boolf = null!;
+        [DataField("boolf")] public bool? @boolf = null!;
 
-        [YamlField("vec2")] public Vector2 vec2 = default;
+        [DataField("vec2")] public Vector2 vec2 = default;
 
         //todo [YamlField("vec2i")] public Vector2i vec2i = default;
 
-        [YamlField("vec3")] public Vector3 vec3 = default;
+        [DataField("vec3")] public Vector3 vec3 = default;
 
-        [YamlField("vec4")] public Vector4 vec4 = default;
+        [DataField("vec4")] public Vector4 vec4 = default;
 
-        [YamlField("color")] public Color color = default;
+        [DataField("color")] public Color color = default;
 
-        [YamlField("enumf")] public PrototypeManager_Test.YamlTestEnum enumf = default;
+        [DataField("enumf")] public PrototypeManager_Test.YamlTestEnum enumf = default;
 
-        [YamlField("enumb")] public PrototypeManager_Test.YamlTestEnum enumb = default;
+        [DataField("enumb")] public PrototypeManager_Test.YamlTestEnum enumb = default;
     }
 }

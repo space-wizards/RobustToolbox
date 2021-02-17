@@ -23,21 +23,21 @@ namespace Robust.Server.GameObjects
         [DataClassTarget("layers")]
         private List<PrototypeLayerData> Layers = new();
 
-        [YamlField("visible")]
+        [DataField("visible")]
         private bool _visible = true;
-        [YamlField("drawdepth", constType:typeof(DrawDepthTag))]
+        [DataField("drawdepth", constType:typeof(DrawDepthTag))]
         private int _drawDepth = DrawDepthTag.Default;
-        [YamlField("scale")]
+        [DataField("scale")]
         private Vector2 _scale = Vector2.One;
-        [YamlField("offset")]
+        [DataField("offset")]
         private Vector2 _offset = Vector2.Zero;
-        [YamlField("color")]
+        [DataField("color")]
         private Color _color = Color.White;
-        [YamlField("directional")]
+        [DataField("directional")]
         private bool _directional = true;
-        [YamlField("sprite")]
+        [DataField("sprite")]
         private string? _baseRSIPath;
-        [YamlField("rotation")]
+        [DataField("rotation")]
         private Angle _rotation = Angle.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]

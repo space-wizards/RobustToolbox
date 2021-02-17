@@ -170,13 +170,13 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        [YamlField("mass")]
+        [DataField("mass")]
         private float _mass = 1.0f;
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
-        [YamlField("anchored")]
+        [DataField("anchored")]
         private bool _anchored = true;
         private float _friction = 1;
 

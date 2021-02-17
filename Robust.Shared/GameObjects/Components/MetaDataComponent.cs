@@ -68,9 +68,9 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IPrototypeManager _prototypes = default!;
 
-        [YamlField("name")]
+        [DataField("name")]
         private string? _entityName;
-        [YamlField("desc")]
+        [DataField("desc")]
         private string? _entityDescription;
         private EntityPrototype? _entityPrototype;
 

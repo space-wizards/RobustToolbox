@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public sealed override string Name => "SnapGrid";
 
         private bool IsSet;
-        [YamlField("offset")]
+        [DataField("offset")]
         private SnapGridOffset _offset = SnapGridOffset.Center;
         [Dependency] private readonly IMapManager _mapManager = default!;
 

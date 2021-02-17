@@ -41,7 +41,7 @@ namespace Robust.Shared.Serialization.Manager
                 m.GetParameters().First().ParameterType == typeof(string));
             switch (fieldDefinition.Attribute)
             {
-                case YamlFieldWithConstantAttribute constantAttribute:
+                case DataFieldWithConstantAttribute constantAttribute:
                     if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
                     // getting the type //
@@ -57,7 +57,7 @@ namespace Robust.Shared.Serialization.Manager
                     Debug.Assert(readConstMethod != null, nameof(readConstMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, readConstMethod);
                     break;
-                case YamlFieldWithFlagAttribute flagAttribute:
+                case DataFieldWithFlagAttribute flagAttribute:
                     if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
                     // getting the type //
@@ -172,7 +172,7 @@ public readonly bool ServerOnly;
 
             switch (fieldDefinition.Attribute)
             {
-                case YamlFieldWithConstantAttribute constantAttribute:
+                case DataFieldWithConstantAttribute constantAttribute:
                     if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
                     // load type //
@@ -187,7 +187,7 @@ public readonly bool ServerOnly;
                     Debug.Assert(writeConstantMethod != null, nameof(writeConstantMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, writeConstantMethod);
                     break;
-                case YamlFieldWithFlagAttribute flagAttribute:
+                case DataFieldWithFlagAttribute flagAttribute:
                     if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
                     // load type //

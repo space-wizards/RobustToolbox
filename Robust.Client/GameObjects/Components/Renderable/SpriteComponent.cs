@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
-        [YamlField("visible")]
+        [DataField("visible")]
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -50,7 +50,7 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        [YamlField("drawdepth", constType: typeof(DrawDepthTag))]
+        [DataField("drawdepth", constType: typeof(DrawDepthTag))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace Robust.Client.GameObjects
             set => drawDepth = value;
         }
 
-        [YamlField("scale")]
+        [DataField("scale")]
         private Vector2 scale = Vector2.One;
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Robust.Client.GameObjects
             set => scale = value;
         }
 
-        [YamlField("rotation")]
+        [DataField("rotation")]
         private Angle rotation = Angle.Zero;
 
         [Animatable]
@@ -88,7 +88,7 @@ namespace Robust.Client.GameObjects
             set => rotation = value;
         }
 
-        [YamlField("offset")]
+        [DataField("offset")]
         private Vector2 offset = Vector2.Zero;
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Robust.Client.GameObjects
             set => offset = value;
         }
 
-        [YamlField("color")]
+        [DataField("color")]
         private Color color = Color.White;
 
         [Animatable]
@@ -126,7 +126,7 @@ namespace Robust.Client.GameObjects
             set => _directional = value;
         }
 
-        [YamlField("directional")]
+        [DataField("directional")]
         private bool _directional = true;
 
         [DataClassTarget("layerDatums", 2)]

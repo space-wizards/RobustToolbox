@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]
-        [YamlField("index")]
+        [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
 
         /// <inheritdoc />

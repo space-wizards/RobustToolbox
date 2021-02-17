@@ -10,9 +10,9 @@ namespace Robust.Server.GameObjects.Components.Eye
 {
     public class EyeComponent : SharedEyeComponent
     {
-        [YamlField("drawFov")]
+        [DataField("drawFov")]
         private bool _drawFov = true;
-        [YamlField("zoom")]
+        [DataField("zoom")]
         private Vector2 _zoom = Vector2.One/2f;
         private Vector2 _offset;
         private Angle _rotation;

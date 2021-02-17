@@ -20,7 +20,7 @@ namespace Robust.Client.GameObjects.Components
         ///     The context that will be made active for a client that attaches to this entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [YamlField("context")]
+        [DataField("context")]
         public string ContextName { get; set; } = InputContextContainer.DefaultContextName;
     }
 }

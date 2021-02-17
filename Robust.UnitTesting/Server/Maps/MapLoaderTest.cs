@@ -105,9 +105,9 @@ entities:
         {
             public override string Name => "MapDeserializeTest";
 
-            [YamlField("foo")] public int Foo { get; set; } = -1;
-            [YamlField("bar")] public int Bar { get; set; } = -1;
-            [YamlField("baz")] public int Baz { get; set; } = -1;
+            [DataField("foo")] public int Foo { get; set; } = -1;
+            [DataField("bar")] public int Bar { get; set; } = -1;
+            [DataField("baz")] public int Baz { get; set; } = -1;
         }
     }
 }

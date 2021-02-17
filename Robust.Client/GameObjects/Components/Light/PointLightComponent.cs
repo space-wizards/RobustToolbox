@@ -121,23 +121,23 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [YamlField("radius")]
+        [DataField("radius")]
         private float _radius = 5f;
-        [YamlField("nestedvisible")]
+        [DataField("nestedvisible")]
         private bool _visibleNested = true;
         private bool _lightOnParent = false;
-        [YamlField("color")]
+        [DataField("color")]
         private Color _color = Color.White;
-        [YamlField("offset")]
+        [DataField("offset")]
         private Vector2 _offset = Vector2.Zero;
-        [YamlField("enabled")]
+        [DataField("enabled")]
         private bool _enabled = true;
-        [YamlField("autoRot")]
+        [DataField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
-        [YamlField("energy")]
+        [DataField("energy")]
         private float _energy = 1f;
-        [YamlField("softness")]
+        [DataField("softness")]
         private float _softness = 1f;
 
         /// <summary>

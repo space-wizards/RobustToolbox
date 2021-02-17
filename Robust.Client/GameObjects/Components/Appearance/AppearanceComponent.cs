@@ -22,7 +22,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables]
         private Dictionary<object, object> data = new();
         [ViewVariables]
-        [YamlField("visuals")]
+        [DataField("visuals")]
         internal List<AppearanceVisualizer> Visualizers = new();
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

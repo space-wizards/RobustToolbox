@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
-        [YamlField("index")]
+        [DataField("index")]
         private GridId _gridIndex = GridId.Invalid;
 
         /// <inheritdoc />

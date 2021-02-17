@@ -63,17 +63,17 @@ namespace Robust.Shared.Serialization.Manager
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
                 if(abstractFieldInfo.DeclaringType != type) continue;
-                var attr = abstractFieldInfo.GetCustomAttribute<YamlFieldAttribute>();
+                var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
                 if(attr == null) continue;
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
                 {
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
-                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with YamlFieldAttribute but has no getter");
+                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
                     {
-                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with YamlFieldAttribute as non-readonly but has no setter");
+                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
                         continue;
                     }
                 }
@@ -204,11 +204,11 @@ namespace Robust.Shared.Serialization.Manager
 
         public class FieldDefinition
         {
-            public readonly YamlFieldAttribute Attribute;
+            public readonly DataFieldAttribute Attribute;
             public readonly object? DefaultValue;
             public readonly AbstractFieldInfo FieldInfo;
 
-            public FieldDefinition(YamlFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo)
+            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo)
             {
                 Attribute = attr;
                 DefaultValue = defaultValue;

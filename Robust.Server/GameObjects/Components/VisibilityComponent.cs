@@ -9,7 +9,7 @@ namespace Robust.Server.GameObjects.Components
     [RegisterComponent]
     public class VisibilityComponent : Component
     {
-        [YamlField("layer")]
+        [DataField("layer")]
         private int _layer = 1;
         public override string Name => "Visibility";
 

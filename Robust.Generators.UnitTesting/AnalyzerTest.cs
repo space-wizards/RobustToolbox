@@ -33,7 +33,7 @@ namespace Robust.Generators.UnitTesting
                 MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(Enumerable).GetTypeInfo().Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(Dictionary<,>).GetTypeInfo().Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(YamlFieldAttribute).GetTypeInfo().Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(DataFieldAttribute).GetTypeInfo().Assembly.Location),
                 MetadataReference.CreateFromFile(coreDir.FullName + Path.DirectorySeparatorChar + "mscorlib.dll"),
                 MetadataReference.CreateFromFile(coreDir.FullName + Path.DirectorySeparatorChar +
                                                  "System.Runtime.dll"),

@@ -30,7 +30,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
 
-        [YamlField("interfaces", readOnly: true)]
+        [DataField("interfaces", readOnly: true)]
         private List<PrototypeData> interfaceReceiver
         {
             set

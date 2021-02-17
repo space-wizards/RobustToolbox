@@ -22,11 +22,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
-        [YamlField("parent")]
+        [DataField("parent")]
         private EntityUid _parent;
-        [YamlField("pos")]
+        [DataField("pos")]
         private Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
-        [YamlField("rot")]
+        [DataField("rot")]
         private Angle _localRotation; // local rotation
 
         private Matrix3 _localMatrix = Matrix3.Identity;

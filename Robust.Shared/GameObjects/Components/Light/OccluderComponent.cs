@@ -14,9 +14,9 @@ namespace Robust.Shared.GameObjects
         public sealed override string Name => "Occluder";
         public sealed override uint? NetID => NetIDs.OCCLUDER;
 
-        [YamlField("enabled")]
+        [DataField("enabled")]
         private bool _enabled = true;
-        [YamlField("boundingBox")]
+        [DataField("boundingBox")]
         private Box2 _boundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
         [ViewVariables(VVAccess.ReadWrite)]

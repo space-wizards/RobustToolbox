@@ -1,12 +1,12 @@
 using System;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.GameObjects
 {
+    // TODO PAUL SERV3
     public class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using Robust.Client.GameObjects.Components.Renderable;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
@@ -16,16 +17,11 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using System.Linq;
-using Robust.Client.GameObjects.Components.Renderable;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Prototypes.DataClasses.Attributes;
-using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -45,7 +41,7 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        [DataField("drawdepth", constType: typeof(DrawDepthTag))]
+        [DataFieldWithFlag("drawdepth", typeof(DrawDepthTag))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -2027,8 +2023,9 @@ namespace Robust.Client.GameObjects
 
             public T AddComponent<T>() where T : Component, new()
             {
+                // TODO PAUL SERV3
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var dataMgr = IoCManager.Resolve<IDataClassManager>();
+                var serManager = IoCManager.Resolve<IServ3Manager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2040,7 +2037,8 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    dataMgr.PopulateObject(comp, node);
+                    var value = serManager.ReadValue<T>(new YamlMappingDataNode());
+                    value = (T) serManager.DataClass2Object(node, value);
                 }
 
                 return comp;

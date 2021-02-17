@@ -6,13 +6,17 @@ namespace Robust.Shared.Serialization
     public interface ISerializationHooks
     {
         /// <summary>
-        /// Gets executed after deserialization is complete
-        /// </summary>
-        void AfterDeserialization();
-
-        /// <summary>
         /// Gets executed before serialization
         /// </summary>
-        void BeforeSerialization();
+        void BeforeSerialization()
+        {
+        }
+
+        /// <summary>
+        /// Gets executed after deserialization is complete
+        /// </summary>
+        void AfterDeserialization()
+        {
+        }
     }
 }

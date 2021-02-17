@@ -1,21 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using SharpFont;
 
 namespace Robust.Client.GameObjects.Components.Renderable
 {

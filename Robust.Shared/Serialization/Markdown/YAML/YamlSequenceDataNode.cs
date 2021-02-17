@@ -34,6 +34,11 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             nodes.Add(node);
         }
 
+        public void Remove(IDataNode node)
+        {
+            nodes.Remove(node);
+        }
+
         public IDataNode Copy()
         {
             var newSequence = new YamlSequenceDataNode();

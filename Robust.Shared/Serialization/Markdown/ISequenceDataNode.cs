@@ -6,5 +6,6 @@ namespace Robust.Shared.Serialization.Markdown
     {
         IReadOnlyList<IDataNode> Sequence { get; }
         void Add(IDataNode node);
+        void Remove(IDataNode node);
     }
 }

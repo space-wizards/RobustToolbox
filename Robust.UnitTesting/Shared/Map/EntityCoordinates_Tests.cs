@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Is = Robust.UnitTesting.Is;
 
 // ReSharper disable InconsistentNaming
@@ -39,7 +40,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapManager.Initialize();
             mapManager.Startup();
 
-            IoCManager.Resolve<IDataClassManager>().Initialize();
+            IoCManager.Resolve<IServ3Manager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

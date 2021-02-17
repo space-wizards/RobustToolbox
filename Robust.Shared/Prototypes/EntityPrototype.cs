@@ -14,6 +14,7 @@ using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -436,10 +437,10 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var ser = YamlObjectSerializer.NewReader(copy);
-            var data = (DataClass)IoCManager.Resolve<ISerializationManager>().Populate(factory.GetRegistration(type).Type, ser);
+            var dataClassType =
+                IoCManager.Resolve<IServ3Manager>().GetDataClassType(factory.GetRegistration(type).Type);
 
-            Components[type] = data;
+            Components[type] = (DataClass) IoCManager.Resolve<IServ3Manager>().ReadValue(dataClassType, copy.ToDataNode());
         }
 
         public override string ToString()

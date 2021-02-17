@@ -15,6 +15,8 @@ namespace Robust.Shared.Serialization.Manager
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
+        private List<Type> _copyByRefRegistrations = new();
+
         public void Initialize()
         {
             InitializeFlagsAndConstants();
@@ -27,6 +29,11 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     _dataDefinitions.Add(type, new SerializationDataDefinition(type));
                 }
+            }
+
+            foreach (var type in _reflectionManager.FindTypesWithAttribute<CopyByRefAttribute>())
+            {
+                _copyByRefRegistrations.Add(type);
             }
         }
 
@@ -74,6 +81,9 @@ namespace Robust.Shared.Serialization.Manager
             if (dataDef == null) return Activator.CreateInstance(type)!;
 
             var obj = Activator.CreateInstance(dataDef.Type)!;
+
+            if(obj is IPopulateDefaultValues populateDefaultValues)
+                populateDefaultValues.PopulateDefaultValues();
 
             while (currentType != null)
             {
@@ -145,6 +155,12 @@ namespace Robust.Shared.Serialization.Manager
             {
                 throw new InvalidOperationException("Could not find common type in PushInheritance!");
             }
+
+            if (_copyByRefRegistrations.Contains(commonType))
+            {
+                return source;
+            }
+
 
             while (commonType != null)
             {

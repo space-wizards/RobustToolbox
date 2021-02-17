@@ -117,8 +117,7 @@ namespace Robust.Shared.Serialization.Manager
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            //todo paul: return link.PopulateObjectDelegate(obj, dataClass, this);
-            throw new NotImplementedException();
+            return link.PopulateObjectDelegate(obj, dataClass, this);
         }
 
         public void Object2DataClass(object obj, DataClass dataClass)
@@ -127,8 +126,7 @@ namespace Robust.Shared.Serialization.Manager
             if (!link.DataClassType.IsInstanceOfType(dataClass))
                 throw new ArgumentException("Invalid Dataclass supplied in PopulateObject!", nameof(dataClass));
 
-            //link.PopulateDataclassDelegate(obj, dataClass, this);
-            throw new NotImplementedException();
+            link.PopulateDataclassDelegate(obj, dataClass, this);
         }
     }
 }

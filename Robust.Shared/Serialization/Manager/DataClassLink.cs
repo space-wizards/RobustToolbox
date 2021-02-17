@@ -18,8 +18,7 @@ namespace Robust.Shared.Prototypes.DataClasses
         private List<LinkEntry> _actualFields = new();
         private List<LinkEntry> _dataclassFields = new();
 
-        //todo paul: make this return the object
-        public readonly Action<object, DataClass, IServ3Manager> PopulateObjectDelegate;
+        public readonly Func<object, DataClass, IServ3Manager, object> PopulateObjectDelegate;
 
         public readonly Action<object, DataClass, IServ3Manager> PopulateDataclassDelegate;
         public readonly Func<DataClass, string, object?> GetFieldDelegate;
@@ -83,7 +82,7 @@ namespace Robust.Shared.Prototypes.DataClasses
             return dynamicMethod.CreateDelegate<Func<DataClass, string, object?>>();
         }
 
-        private Action<object, DataClass, IServ3Manager> EmitPopulateObjectDelegate()
+        private Func<object, DataClass, IServ3Manager, object> EmitPopulateObjectDelegate()
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateObjectFromDC<>{Type}<>{DataClassType}",
@@ -112,12 +111,20 @@ namespace Robust.Shared.Prototypes.DataClasses
                     throw new InvalidOperationException(
                         "Could not find field-counterpart while generating PopulateObjectDelegate!");
 
+                var isNullLabel = generator.DefineLabel();
+                generator.Emit(OpCodes.Ldarg_1);
+                generator.EmitLdfld(counterPart.FieldInfo);
+                generator.Emit(OpCodes.Brfalse_S, isNullLabel);
+
                 generator.EmitCopy(1, counterPart.FieldInfo, 0, actualField.FieldInfo, 2, true);
+
+                generator.MarkLabel(isNullLabel);
             }
 
+            generator.Emit(OpCodes.Ldarg_0);
             generator.Emit(OpCodes.Ret);
 
-            return dynamicMethod.CreateDelegate<Action<object, DataClass, IServ3Manager>>();
+            return dynamicMethod.CreateDelegate<Func<object, DataClass, IServ3Manager, object>>();
         }
 
         private Action<object, DataClass, IServ3Manager> EmitPopulateDataclassDelegate()
@@ -148,6 +155,7 @@ namespace Robust.Shared.Prototypes.DataClasses
                 if (counterPart == null)
                     throw new InvalidOperationException(
                         "Could not find field-counterpart while generating PopulateDataclassDelegate!");
+                //todo paul compare to default value
 
                 generator.EmitCopy(0, actualField.FieldInfo, 1, counterPart.FieldInfo, 2);
             }
@@ -165,12 +173,6 @@ namespace Robust.Shared.Prototypes.DataClasses
             public LinkEntry(AbstractFieldInfo fieldInfo, BaseDataFieldAttribute dataFieldAttribute)
             {
                 FieldInfo = fieldInfo;
-                //TODO PAUL
-                // if (fieldInfo is SpecificPropertyInfo propertyInfo && (propertyInfo.PropertyInfo.GetMethod == null || propertyInfo.PropertyInfo.SetMethod == null))
-                // {
-                //     throw new InvalidOperationException(
-                //         "Property without getter or setter was annotated with YamlfieldAttribute");
-                // }
                 DataFieldAttribute = dataFieldAttribute;
             }
         }

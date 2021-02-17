@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Container
@@ -279,21 +280,24 @@ namespace Robust.Server.GameObjects.Components.Container
             };
         }
 
-        private struct ContainerPrototypeData : IExposeData
+        [DataDefinition]
+        private class ContainerPrototypeData
         {
+            [DataField("entities")]
             public List<EntityUid> Entities;
+            [DataField("type")]
             public string? Type;
+
+            public ContainerPrototypeData()
+            {
+                Entities = new();
+                Type = null;
+            }
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
                 Entities = entities;
                 Type = type;
-            }
-
-            public void ExposeData(ObjectSerializer serializer)
-            {
-                serializer.DataField(ref Entities, "entities", new List<EntityUid>());
-                serializer.DataField(ref Type, "type", null);
             }
         }
 

@@ -16,12 +16,13 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Client.Graphics.Shaders
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype, IExposeData
+    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype, ISerializationHooks
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public string ID { get; private set; } = default!;
+        [field: DataField("id")]
+        public string ID { get; } = default!;
 
         private ShaderKind Kind;
 
@@ -41,6 +42,7 @@ namespace Robust.Client.Graphics.Shaders
         private StencilFunc _stencilFunc => StencilDataHolder?.StencilFunc ?? StencilFunc.Always;
         private StencilOp _stencilOp => StencilDataHolder?.StencilOp ?? StencilOp.Keep;
 
+        [DataField("stencil")]
         private StencilData? StencilDataHolder;
 
         /// <summary>
@@ -101,28 +103,93 @@ namespace Robust.Client.Graphics.Shaders
             return Instance().Duplicate();
         }
 
-        public void ExposeData(ObjectSerializer serializer)
+        [DataField("kind", readOnly: true, required: true)] private string _rawKind = default!;
+        [DataField("path", readOnly: true)] private ResourcePath? path;
+        [DataField("params", readOnly: true)] private Dictionary<string, string>? paramMapping;
+        [DataField("light_mode", readOnly: true)] private string? rawMode;
+        [DataField("blend_mode", readOnly: true)] private string? rawBlendMode;
+
+        public void AfterDeserialization()
         {
-            serializer.DataField(this, x => x.ID, "id", string.Empty);
-            string kind = "";
-            serializer.DataField(ref kind, "kind", "");
-            switch (kind)
+            switch (_rawKind)
             {
                 case "source":
                     Kind = ShaderKind.Source;
-                    ReadSourceKind(serializer);
+                    if (path == null) throw new InvalidOperationException();
+                    Source = _resourceCache.GetResource<ShaderSourceResource>(path);
+
+                    if (paramMapping != null)
+                    {
+                        ShaderParams = new Dictionary<string, object>();
+                        foreach (var item in paramMapping!)
+                        {
+                            var name = item.Key;
+                            if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
+                            {
+                                Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
+                                continue;
+                            }
+
+                            var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
+                            ShaderParams.Add(name, value);
+                        }
+                    }
                     break;
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    ReadCanvasKind(serializer);
+                    var source = "";
+
+                    if(rawMode != null)
+                    {
+                        switch (rawMode)
+                        {
+                            case "normal":
+                                break;
+
+                            case "unshaded":
+                                source += "light_mode unshaded;\n";
+                                break;
+
+                            default:
+                                throw new InvalidOperationException($"Invalid light mode: '{rawMode}'");
+                        }
+                    }
+
+                    if(rawBlendMode != null){
+                        switch (rawBlendMode)
+                        {
+                            case "mix":
+                                source += "blend_mode mix;\n";
+                                break;
+
+                            case "add":
+                                source += "blend_mode add;\n";
+                                break;
+
+                            case "subtract":
+                                source += "blend_mode subtract;\n";
+                                break;
+
+                            case "multiply":
+                                source += "blend_mode multiply;\n";
+                                break;
+
+                            default:
+                                throw new InvalidOperationException($"Invalid blend mode: '{rawBlendMode}'");
+                        }
+                    }
+
+                    source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
+
+                    var preset = ShaderParser.Parse(source, _resourceCache);
+                    CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Invalid shader kind: '{kind}'");
+                    throw new InvalidOperationException($"Invalid shader kind: '{_rawKind}'");
             }
 
-            serializer.DataField(ref StencilDataHolder, "stencil", null);
             if (StencilDataHolder != null) _stencilEnabled = true;
         }
 
@@ -147,79 +214,6 @@ namespace Robust.Client.Graphics.Shaders
                 data.WriteMask = WriteMask;
                 data.ReadMask = ReadMask;
             }
-        }
-
-        private void ReadSourceKind(ObjectSerializer serializer)
-        {
-            ResourcePath path = serializer.ReadDataField<ResourcePath>("path");
-            Source = _resourceCache.GetResource<ShaderSourceResource>(path);
-
-            if (serializer.TryReadDataField("params", out Dictionary<string, string>? paramMapping))
-            {
-                ShaderParams = new Dictionary<string, object>();
-                foreach (var item in paramMapping!)
-                {
-                    var name = item.Key;
-                    if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
-                    {
-                        Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
-                        continue;
-                    }
-
-                    var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
-                    ShaderParams.Add(name, value);
-                }
-            }
-        }
-
-        private void ReadCanvasKind(ObjectSerializer serializer)
-        {
-            var source = "";
-
-            if(serializer.TryReadDataField("light_mode", out string? mode))
-            {
-                switch (mode)
-                {
-                    case "normal":
-                        break;
-
-                    case "unshaded":
-                        source += "light_mode unshaded;\n";
-                        break;
-
-                    default:
-                        throw new InvalidOperationException($"Invalid light mode: '{mode}'");
-                }
-            }
-
-            if(serializer.TryReadDataField("blend_mode", out string? blendMode)){
-                switch (blendMode)
-                {
-                    case "mix":
-                        source += "blend_mode mix;\n";
-                        break;
-
-                    case "add":
-                        source += "blend_mode add;\n";
-                        break;
-
-                    case "subtract":
-                        source += "blend_mode subtract;\n";
-                        break;
-
-                    case "multiply":
-                        source += "blend_mode multiply;\n";
-                        break;
-
-                    default:
-                        throw new InvalidOperationException($"Invalid blend mode: '{blendMode}'");
-                }
-            }
-
-            source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
-
-            var preset = ShaderParser.Parse(source, _resourceCache);
-            CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");
         }
 
         private static object _parseUniformValue(YamlNode node, ShaderDataType dataType)

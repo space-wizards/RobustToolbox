@@ -168,8 +168,7 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
-            IoCManager.Resolve<ISerializationManager>().Initialize();
-            IoCManager.Resolve<IDataClassManager>().Initialize();
+            IoCManager.Resolve<IServ3Manager>().Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

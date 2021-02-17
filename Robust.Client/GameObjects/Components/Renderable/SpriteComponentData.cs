@@ -19,7 +19,7 @@ using SharpFont;
 
 namespace Robust.Client.GameObjects.Components.Renderable
 {
-    public partial class SpriteComponentData
+    public partial class SpriteComponentData : ISerializationHooks
     {
         [DataClassTarget("rsi")]
         public RSI? RSI;
@@ -27,12 +27,17 @@ namespace Robust.Client.GameObjects.Components.Renderable
         [DataClassTarget("layerDatums")]
         public List<SharedSpriteComponent.PrototypeLayerData>? LayerDatums;
 
-        public void ExposeData(ObjectSerializer serializer)
+        [DataField("sprite", readOnly: true)] private string? rsi;
+        [DataField("layers", readOnly: true)] private List<SharedSpriteComponent.PrototypeLayerData> layerDatums = new ();
+
+        [DataField("state", readOnly: true)] private string? state;
+        [DataField("texture", readOnly: true)] private string? texture;
+
+        public void AfterDeserialization()
         {
             var resourceCache = IoCManager.Resolve<IResourceCache>();
 
             {
-                var rsi = serializer.ReadDataField<string?>("sprite", null);
                 if (!string.IsNullOrWhiteSpace(rsi))
                 {
                     var rsiPath = SpriteComponent.TextureRoot / rsi;
@@ -48,19 +53,13 @@ namespace Robust.Client.GameObjects.Components.Renderable
                 }
             }
 
-            LayerDatums =
-                serializer.ReadDataField("layers", new List<SharedSpriteComponent.PrototypeLayerData>());
-
-            if(LayerDatums.Count == 0){
-                var baseState = serializer.ReadDataField<string?>("state", null);
-                var texturePath = serializer.ReadDataField<string?>("texture", null);
-
-                if (baseState != null || texturePath != null)
+            if(layerDatums.Count == 0){
+                if (state != null || texture != null)
                 {
-                    LayerDatums.Insert(0, new SharedSpriteComponent.PrototypeLayerData
+                    layerDatums.Insert(0, new SharedSpriteComponent.PrototypeLayerData
                     {
-                        TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
-                        State = string.IsNullOrWhiteSpace(baseState) ? null : baseState,
+                        TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
+                        State = string.IsNullOrWhiteSpace(state) ? null : state,
                         Color = Color.White,
                         Scale = Vector2.One,
                         Visible = true,
@@ -68,8 +67,8 @@ namespace Robust.Client.GameObjects.Components.Renderable
                 }
             }
 
-            if (LayerDatums.Count == 0)
-                LayerDatums = null;
+            if (layerDatums.Count != 0)
+                LayerDatums = layerDatums;
         }
     }
 }

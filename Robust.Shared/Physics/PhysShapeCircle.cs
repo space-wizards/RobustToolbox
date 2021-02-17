@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -14,8 +15,11 @@ namespace Robust.Shared.Physics
     {
         private const float DefaultRadius = 0.5f;
 
+        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
         private int _collisionLayer;
+        [DataFieldWithFlag("mask", typeof(CollisionMask))]
         private int _collisionMask;
+        [DataField("radius")]
         private float _radius = DefaultRadius;
 
         /// <inheritdoc />
@@ -58,14 +62,6 @@ namespace Robust.Shared.Physics
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
-        }
-
-        /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-            serializer.DataField(ref _radius, "radius", DefaultRadius);
         }
 
         /// <inheritdoc />

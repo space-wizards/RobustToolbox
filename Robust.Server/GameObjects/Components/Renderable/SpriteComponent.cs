@@ -24,7 +24,7 @@ namespace Robust.Server.GameObjects
 
         [DataField("visible")]
         private bool _visible = true;
-        [DataField("drawdepth", constType:typeof(DrawDepthTag))]
+        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
         private int _drawDepth = DrawDepthTag.Default;
         [DataField("scale")]
         private Vector2 _scale = Vector2.One;

@@ -28,6 +28,7 @@ using System.Linq;
 using Robust.Client.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
@@ -49,7 +50,7 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        [DataField("drawdepth", constType: typeof(DrawDepthTag))]
+        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -2029,7 +2030,7 @@ namespace Robust.Client.GameObjects
             public T AddComponent<T>() where T : Component, new()
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var dataMgr = IoCManager.Resolve<IDataClassManager>();
+                var dataMgr = IoCManager.Resolve<IServ3Manager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2041,7 +2042,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    dataMgr.PopulateObject(comp, node);
+                    dataMgr.DataClass2Object(node, comp);
                 }
 
                 return comp;

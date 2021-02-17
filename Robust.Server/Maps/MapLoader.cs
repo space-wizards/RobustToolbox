@@ -22,6 +22,8 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.Core;
 
 namespace Robust.Server.Maps
@@ -206,7 +208,7 @@ namespace Robust.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : YamlObjectSerializer.Context, IEntityLoadContext
+        private class MapContext : ISerializationContext, IEntityLoadContext, ITypeSerializer<GridId>, ITypeSerializer<EntityUid>, ITypeSerializer<IEntity>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -623,7 +625,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
-                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -645,16 +647,16 @@ namespace Robust.Server.Maps
                     foreach (var component in entity.GetAllComponents())
                     {
                         CurrentWritingComponent = component.Name;
-                        var compMapping = new YamlMappingNode();
-                        serv3Mgr.Serialize(component.GetType(), component,
-                            YamlObjectSerializer.NewWriter(compMapping, this));
+                        var dataClass = serv3Mgr.GetEmptyComponentDataClass(component.Name);
+                        serv3Mgr.Object2DataClass(component, dataClass);
+                        var compMapping = (IMappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory(), context: this);
 
                         // Don't need to write it if nothing was written!
-                        if (compMapping.Children.Count == 0)
+                        if (compMapping.Children.Count != 0)
                         {
-                            compMapping.Add("type", component.Name);
+                            compMapping.AddNode("type", new YamlValueDataNode(component.Name));
                             // Something actually got written!
-                            components.Add(compMapping);
+                            components.Add(compMapping.ToYamlNode());
                         }
                     }
 
@@ -666,6 +668,107 @@ namespace Robust.Server.Maps
                     entities.Add(mapping);
                 }
             }
+
+            // Create custom object serializers that will correctly allow data to be overriden by the map file.
+            DataClass IEntityLoadContext.GetComponentData(string componentName,
+                DataClass? protoData)
+            {
+                if (CurrentReadingEntityComponents == null)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+
+                var data = serv3Mgr.GetEmptyComponentDataClass(componentName);
+
+                if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
+                {
+                    var dataClassType = serv3Mgr.GetComponentDataClassType(componentName);
+                    data = (DataClass)serv3Mgr.ReadValue(dataClassType, mapping.ToDataNode(), this);
+                }
+
+                if (protoData != null)
+                {
+                    serv3Mgr.PushInheritance(protoData, data);
+                }
+
+                return data;
+            }
+
+            public IEnumerable<string> GetExtraComponentTypes()
+            {
+                return CurrentReadingEntityComponents!.Keys;
+            }
+
+            private bool IsMapSavable(IEntity entity)
+            {
+                if (entity.Prototype?.MapSavable == false || !GridIDMap.ContainsKey(entity.Transform.GridID))
+                {
+                    return false;
+                }
+
+                // Don't serialize things parented to un savable things.
+                // For example clothes inside a person.
+                var current = entity.Transform;
+                while (current.Parent != null)
+                {
+                    if (current.Parent.Owner.Prototype?.MapSavable == false)
+                    {
+                        return false;
+                    }
+
+                    current = current.Parent;
+                }
+
+                return true;
+            }
+
+            public Dictionary<Type, object> TypeSerializers { get; }
+
+            public GridId NodeToType(IDataNode node, ISerializationContext? context = null)
+            {
+                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if(valueDataNode.GetValue() == "null") return GridId.Invalid;
+
+                var val = int.Parse(valueDataNode.GetValue());
+                if (val >= Grids.Count)
+                {
+                    Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
+                }
+                else
+                {
+                    return Grids[val].Index;
+                }
+                return GridId.Invalid;
+            }
+
+            public IDataNode TypeToNode(IEntity value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IDataNode TypeToNode(EntityUid value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IDataNode TypeToNode(GridId value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                if (!GridIDMap.TryGetValue(value, out var gridMapped))
+                {
+                    Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridId);
+                    return nodeFactory.GetValueNode("");
+                }
+                else
+                {
+                    return new YamlValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+
 
             public override bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
             {
@@ -775,88 +878,40 @@ namespace Robust.Server.Maps
                 return false;
             }
 
-            // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            DataClass IEntityLoadContext.GetComponentData(string componentName,
-                DataClass? protoData)
+            EntityUid ITypeSerializer<EntityUid>.NodeToType(IDataNode node, ISerializationContext? context)
             {
-                if (CurrentReadingEntityComponents == null)
+                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if (valueDataNode.GetValue() == "null")
                 {
-                    throw new InvalidOperationException();
+                    return EntityUid.Invalid;
                 }
 
-                var dataMgr = IoCManager.Resolve<IDataClassManager>();
-                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
-
-                var data = dataMgr.GetEmptyComponentDataClass(componentName);
-
-                if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
+                var val = int.Parse(valueDataNode.GetValue());
+                if (val >= Entities.Count)
                 {
-                    //TODO Paul: maybe replace mapping with dict
-                    var ser = YamlObjectSerializer.NewReader(mapping, this);
-                    data = (DataClass)serv3Mgr.Populate(dataMgr.GetComponentDataClassType(componentName), ser);
+                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                 }
-
-                if (protoData != null)
+                else
                 {
-                    serv3Mgr.PushInheritance(protoData, data);
+                    return UidEntityMap[val];
                 }
-
-                return data;
+                return EntityUid.Invalid;
             }
 
-            public IEnumerable<string> GetExtraComponentTypes()
+            IEntity ITypeSerializer<IEntity>.NodeToType(IDataNode node, ISerializationContext? context)
             {
-                return CurrentReadingEntityComponents!.Keys;
-            }
+                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
 
-            public override bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
-            {
-                if (CurrentWritingEntity!.Prototype == null)
+                var val = int.Parse(valueDataNode.GetValue());
+                if (val >= Entities.Count)
                 {
-                    // No prototype, can't be default.
-                    return false;
+                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                 }
-
-                if (!CurrentWritingEntity.Prototype.Components.TryGetValue(CurrentWritingComponent!, out var compData))
+                else
                 {
-                    // This component was added mid-game.
-                    return false;
-                }
-
-                if(IoCManager.Resolve<IDataClassManager>().TryGetDataClassField(compData, field, out T? prototypeVal))
-                {
-                    if (value == null)
-                    {
-                        return prototypeVal == null;
-                    }
-                    return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
-                }
-
-                return false;
-            }
-
-            private bool IsMapSavable(IEntity entity)
-            {
-                if (entity.Prototype?.MapSavable == false || !GridIDMap.ContainsKey(entity.Transform.GridID))
-                {
-                    return false;
-                }
-
-                // Don't serialize things parented to un savable things.
-                // For example clothes inside a person.
-                var current = entity.Transform;
-                while (current.Parent != null)
-                {
-                    if (current.Parent.Owner.Prototype?.MapSavable == false)
-                    {
-                        return false;
-                    }
-
-                    current = current.Parent;
-                }
-
-                return true;
-            }
+                    obj = Entities[val];
+                    return true;
+                }            }
         }
 
         /// <summary>

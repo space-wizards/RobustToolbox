@@ -19,9 +19,9 @@ namespace Robust.Shared.Serialization.Manager
         IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
-        T Copy<T>(T source, T target);
+        object Copy(object source, object target);
+        object PushInheritance(object source, object target);
 
-        T PushInheritance<T>(T source, T target);
         #endregion
 
         #region DataClasses
@@ -48,6 +48,11 @@ namespace Robust.Shared.Serialization.Manager
         void Object2DataClass(object obj, DataClass dataClass);
 
         public bool TryGetDataClassField<T>(DataClass dataClass, string name, [NotNullWhen(true)] out T? value);
+
+        public static string GetAutoDataClassMetadataName(Type type)
+        {
+            return $"{type.Namespace}.{type.Name}_AUTODATA";
+        }
         #endregion
     }
 }

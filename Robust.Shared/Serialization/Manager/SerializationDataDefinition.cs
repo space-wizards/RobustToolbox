@@ -10,25 +10,23 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate object PopulateDelegateSignature(object target, ObjectSerializer serializer,
-            ISerializationManager serializationManager, object?[] defaultValues);
-        private delegate void SerializeDelegateSignature(object obj, ObjectSerializer serializer,
-            ISerializationManager serializationManager, object?[] defaultValues, bool alwaysWrite);
+        private delegate object PopulateDelegateSignature(object target, IMappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+            ISerializationContext? context, object?[] defaultValues);
+        private delegate IMappingDataNode SerializeDelegateSignature(object obj, IServ3Manager serv3Manager,
+            IDataNodeFactory nodeFactory, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
         private delegate object PushInheritanceDelegateSignature(object source, object target,
-            ISerializationManager serializationManager, object?[] defaultValues);
+            IServ3Manager serv3Manager, object?[] defaultValues);
         public delegate object CopyDelegateSignature(object source, object target,
-            ISerializationManager serializationManager);
-
+            IServ3Manager serv3Manager);
 
         public readonly Type Type;
-
-        public IReadOnlyList<FieldDefinition> FieldDefinitions => _baseFieldDefinitions;
 
         private readonly FieldDefinition[] _baseFieldDefinitions;
         private readonly object?[] _defaultValues;
@@ -39,14 +37,22 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly PushInheritanceDelegateSignature _pushInheritanceDelegate;
 
-        public readonly CopyDelegateSignature CopyDelegate;
+        public readonly CopyDelegateSignature InvokeCopyDelegate;
+
+        public object InvokePopulateDelegate(object target, IMappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+            ISerializationContext? context) =>
+            _populateDelegate(target, mappingDataNode, serv3Manager, context, _defaultValues);
+
+        public IMappingDataNode InvokeSerializeDelegate(object obj, IServ3Manager serv3Manager,
+            IDataNodeFactory nodeFactory, ISerializationContext? context, bool alwaysWrite) =>
+            _serializeDelegate(obj, serv3Manager, nodeFactory, context, alwaysWrite, _defaultValues);
+
+        public object InvokePushInheritanceDelegate(object source, object target,
+            IServ3Manager serv3Manager) =>
+            _pushInheritanceDelegate(source, target, serv3Manager, _defaultValues);
+
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
-
-        private bool GetWarningSMethod(MethodInfo m)
-        {
-            return m.Name == nameof(Logger.WarningS) && m.GetParameters().Length == 2;
-        }
 
         public SerializationDataDefinition(Type type)
         {
@@ -80,23 +86,7 @@ namespace Robust.Shared.Serialization.Manager
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
             _pushInheritanceDelegate = EmitPushInheritanceDelegate();
-            CopyDelegate = EmitCopyDelegate();
-        }
-
-        public object InvokePopulateDelegate(object obj, ObjectSerializer serializer, SerializationManager serv3Mgr)
-        {
-            return _populateDelegate(obj, serializer, serv3Mgr, _defaultValues);
-        }
-
-        public void InvokeSerializeDelegate(object obj, ObjectSerializer ser, SerializationManager serv3Mgr,
-            bool alwaysWrite)
-        {
-            _serializeDelegate(obj, ser, serv3Mgr, _defaultValues, alwaysWrite);
-        }
-
-        public object InvokePushInheritanceDelegate(object obj1, object obj2, SerializationManager serv3Mgr)
-        {
-            return _pushInheritanceDelegate(obj1, obj2, serv3Mgr, _defaultValues);
+            InvokeCopyDelegate = EmitCopyDelegate();
         }
 
         private PopulateDelegateSignature EmitPopulateDelegate()
@@ -104,12 +94,12 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(ObjectSerializer), typeof(ISerializationManager), typeof(object?[])},
+                new[] {typeof(object), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializer");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializationManager");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationContext");
             dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynamicMethod.GetILGenerator();
 
@@ -120,13 +110,7 @@ namespace Robust.Shared.Serialization.Manager
                 generator.EmitPopulateField(fieldDefinition, idc, i);
             }
 
-            if (typeof(IExposeData).IsAssignableFrom(Type))
-            {
-                generator.EmitExposeDataCall();
-            }
-
             generator.Emit(OpCodes.Ldarg_0);
-            //generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();
@@ -136,21 +120,25 @@ namespace Robust.Shared.Serialization.Manager
         {
             var dynamicMethod = new DynamicMethod(
                 $"_serializeDelegate<>{Type}",
-                typeof(void),
-                new[] {typeof(object), typeof(ObjectSerializer), typeof(ISerializationManager), typeof(object?[]), typeof(bool)},
+                typeof(IMappingDataNode),
+                new[] {typeof(object), typeof(IServ3Manager), typeof(IDataNodeFactory), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializer");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializationManager");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "nodeFactory");
+            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
             dynamicMethod.DefineParameter(5, ParameterAttributes.In, "alwaysWrite");
+            dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
             var generator = dynamicMethod.GetILGenerator();
 
-            if (typeof(IExposeData).IsAssignableFrom(Type))
-            {
-                generator.EmitExposeDataCall();
-            }
+            var loc = generator.DeclareLocal(typeof(IMappingDataNode));
+            Debug.Assert(loc.LocalIndex == 0);
+            generator.Emit(OpCodes.Ldarg_2);
+            var newMappingNodeMethod = typeof(IDataNodeFactory).GetMethod(nameof(IDataNodeFactory.GetMappingNode));
+            Debug.Assert(newMappingNodeMethod != null, nameof(newMappingNodeMethod) + " != null");
+            generator.Emit(OpCodes.Callvirt, newMappingNodeMethod);
+            generator.Emit(OpCodes.Stloc_0);
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)
             {
@@ -158,6 +146,7 @@ namespace Robust.Shared.Serialization.Manager
                 generator.EmitSerializeField(fieldDefinition, i);
             }
 
+            generator.Emit(OpCodes.Ldloc_0);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<SerializeDelegateSignature>();
@@ -168,7 +157,7 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_serializeDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(object), typeof(ISerializationManager), typeof(object?[])},
+                new[] {typeof(object), typeof(object), typeof(IServ3Manager), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
@@ -177,15 +166,6 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynamicMethod.GetILGenerator();
 
-            if (typeof(IExposeData).IsAssignableFrom(Type))
-            {
-                generator.Emit(OpCodes.Ldstr, "SERV3");
-                generator.Emit(OpCodes.Ldstr, $"PushInheritance is not supported for IExposeData (Type: {Type})");
-                var warnMethod = typeof(Logger).GetMethods().First(GetWarningSMethod);
-                Debug.Assert(warnMethod != null, nameof(warnMethod) + " != null");
-                generator.Emit(OpCodes.Callvirt, warnMethod);
-            }
-
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = _baseFieldDefinitions[i];
@@ -193,7 +173,6 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PushInheritanceDelegateSignature>();
@@ -204,22 +183,13 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(object), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(object), typeof(IServ3Manager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serv3Mgr");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
             var generator = dynamicMethod.GetILGenerator();
-
-            if (typeof(IExposeData).IsAssignableFrom(Type))
-            {
-                generator.Emit(OpCodes.Ldstr, "SERV3");
-                generator.Emit(OpCodes.Ldstr, $"Copy is not supported for IExposeData (Type: {Type})");
-                var warnMethod = typeof(Logger).GetMethods().First(GetWarningSMethod);
-                Debug.Assert(warnMethod != null, nameof(warnMethod) + " != null");
-                generator.Emit(OpCodes.Call, warnMethod);
-            }
 
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {
@@ -227,7 +197,6 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<CopyDelegateSignature>();

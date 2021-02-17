@@ -89,6 +89,18 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             RemoveNode(_getFetchNode(key));
         }
 
+        public IMappingDataNode Merge(IMappingDataNode otherMapping)
+        {
+            var newMapping = (Copy() as IMappingDataNode)!;
+            foreach (var (key, val) in otherMapping.Children)
+            {
+                //intentionally provokes argumentexception
+                newMapping.AddNode(key.Copy(), val.Copy());
+            }
+
+            return newMapping;
+        }
+
         public IDataNode Copy()
         {
             var newMapping = new YamlMappingDataNode();

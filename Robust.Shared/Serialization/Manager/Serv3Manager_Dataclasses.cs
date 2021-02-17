@@ -51,7 +51,7 @@ namespace Robust.Shared.Serialization.Manager
                     nonGenericType = nonGenericType.GetGenericTypeDefinition();
                 }
 
-                var classType = _reflectionManager.GetType($"{nonGenericType.Namespace}.{nonGenericType.Name}_AUTODATA");
+                var classType = _reflectionManager.GetType(IServ3Manager.GetAutoDataClassMetadataName(nonGenericType));
                 if (classType == null)
                 {
                     if (nonGenericType.BaseType == null)

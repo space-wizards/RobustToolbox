@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers(Type type, IDataNode node, out object? obj)
+        private bool TryReadWithTypeSerializers(Type type, IDataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
             throw new NotImplementedException();
@@ -84,13 +84,20 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryReadWithTypeSerializers<T>(IDataNode node, out T? obj, ISerializationContext? context = null)
         {
             obj = default;
+
+            if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
+            {
+                obj = genericTypeSer.NodeToType(node, context);
+                return true;
+            }
+
             if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
             var ser = (ITypeSerializer<T>) rawTypeSer;
             obj = ser.NodeToType(node, context);
             return true;
         }
 
-        private bool TryWriteWithTypeSerializers(object obj, IDataNodeFactory nodeFactory, [NotNullWhen(true)] out IDataNode? node, bool alwaysWrite = false,
+        private bool TryWriteWithTypeSerializers(Type type, object obj, IDataNodeFactory nodeFactory, [NotNullWhen(true)] out IDataNode? node, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
@@ -102,6 +109,13 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
         {
             node = default;
+
+            if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
+            {
+                node = genericTypeSer.TypeToNode(obj, nodeFactory, alwaysWrite, context);
+                return true;
+            }
+
             if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
             var ser = (ITypeSerializer<T>) rawTypeSer;
             node = ser.TypeToNode(obj, nodeFactory, alwaysWrite, context);

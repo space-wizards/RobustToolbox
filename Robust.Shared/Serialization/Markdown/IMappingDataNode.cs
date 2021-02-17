@@ -17,5 +17,6 @@ namespace Robust.Shared.Serialization.Markdown
         void AddNode(string key, IDataNode node);
         void RemoveNode(IDataNode key);
         void RemoveNode(string key);
+        IMappingDataNode Merge(IMappingDataNode otherMapping);
     }
 }

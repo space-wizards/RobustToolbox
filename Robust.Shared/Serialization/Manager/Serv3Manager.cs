@@ -58,6 +58,15 @@ namespace Robust.Shared.Serialization.Manager
                 return serializedObj;
             }
 
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            {
+                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+
+                var selfSerObj = (ISelfSerialize) Activator.CreateInstance(type)!;
+                selfSerObj.Deserialize(valueDataNode.GetValue());
+                return selfSerObj;
+            }
+
             if (node is not IMappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
             var currentType = type;
@@ -89,6 +98,12 @@ namespace Robust.Shared.Serialization.Manager
             if (TryWriteWithTypeSerializers(type, value, nodeFactory, out var node, alwaysWrite, context))
             {
                 return node;
+            }
+
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            {
+                var selfSerObj = (ISelfSerialize)value;
+                return nodeFactory.GetValueNode(selfSerObj.Serialize());
             }
 
             var currentType = type;

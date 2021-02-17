@@ -2,6 +2,7 @@
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Serialization;
 using System;
+using Robust.Shared.Serialization;
 
 namespace Robust.Client.ViewVariables.Editors
 {

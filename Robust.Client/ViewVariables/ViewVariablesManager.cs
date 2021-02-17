@@ -15,6 +15,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
 

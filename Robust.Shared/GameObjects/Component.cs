@@ -2,7 +2,6 @@
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;

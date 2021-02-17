@@ -5,7 +5,6 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -23,7 +22,7 @@ namespace Robust.Server.GameObjects
 
         [DataField("visible")]
         private bool _visible = true;
-        [DataField("drawdepth", constType:typeof(DrawDepthTag))]
+        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
         private int _drawDepth = DrawDepthTag.Default;
         [DataField("scale")]
         private Vector2 _scale = Vector2.One;

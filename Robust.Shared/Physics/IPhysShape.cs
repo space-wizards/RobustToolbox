@@ -7,7 +7,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// A primitive physical shape that is used by a <see cref="IPhysBody"/>.
     /// </summary>
-    public interface IPhysShape : IExposeData
+    public interface IPhysShape
     {
         /// <summary>
         ///     Raised when any of the parameters on this physics shape change.

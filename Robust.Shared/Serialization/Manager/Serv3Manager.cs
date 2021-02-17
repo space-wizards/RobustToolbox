@@ -15,6 +15,8 @@ namespace Robust.Shared.Serialization.Manager
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
+        private List<Type> _copyByRefRegistrations = new();
+
         public void Initialize()
         {
             InitializeFlagsAndConstants();
@@ -27,6 +29,11 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     _dataDefinitions.Add(type, new SerializationDataDefinition(type));
                 }
+            }
+
+            foreach (var type in _reflectionManager.FindTypesWithAttribute<CopyByRefAttribute>())
+            {
+                _copyByRefRegistrations.Add(type);
             }
         }
 
@@ -75,6 +82,9 @@ namespace Robust.Shared.Serialization.Manager
 
             var obj = Activator.CreateInstance(dataDef.Type)!;
 
+            if(obj is IPopulateDefaultValues populateDefaultValues)
+                populateDefaultValues.PopulateDefaultValues();
+
             while (currentType != null)
             {
                 if(TryGetDataDefinition(currentType, out dataDef))
@@ -83,21 +93,24 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = currentType.BaseType;
             }
 
-            if (obj is IAfterSerialization afterSerialization)
-                afterSerialization.AfterSerialization();
+            if (obj is ISerializationHooks serHooks)
+                serHooks.AfterDeserialization();
 
             return obj;
         }
 
         public IDataNode WriteValue<T>(T value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null) where T : notnull
         {
-            throw new System.NotImplementedException();
+            return WriteValue(typeof(T), value, nodeFactory, alwaysWrite, context);
         }
 
         public IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
+            if (value is ISerializationHooks serHook)
+                serHook.BeforeSerialization();
+
             if (TryWriteWithTypeSerializers(type, value, nodeFactory, out var node, alwaysWrite, context))
             {
                 return node;
@@ -142,6 +155,12 @@ namespace Robust.Shared.Serialization.Manager
             {
                 throw new InvalidOperationException("Could not find common type in PushInheritance!");
             }
+
+            if (_copyByRefRegistrations.Contains(commonType))
+            {
+                return source;
+            }
+
 
             while (commonType != null)
             {

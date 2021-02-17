@@ -13,6 +13,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -107,7 +108,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly IReflectionManager ReflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
         [Dependency] private readonly IResourceManager _resources = default!;
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
+        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new();
 
@@ -311,7 +312,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = (IPrototype)_serializationManager.Populate(prototypeType, YamlObjectSerializer.NewReader(node));
+                var prototype = (IPrototype) _serv3Manager.ReadValue(prototypeType, node.ToDataNode());
                 prototypes[prototypeType].Add(prototype);
                 var indexedPrototype = prototype as IIndexedPrototype;
                 if (indexedPrototype != null)

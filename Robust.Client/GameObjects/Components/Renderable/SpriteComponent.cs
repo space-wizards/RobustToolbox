@@ -2,26 +2,35 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using Robust.Client.GameObjects.Components.Renderable;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics;
+using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Shaders;
+using Robust.Client.Interfaces.GameObjects.Components;
+using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Renderable;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
+using System.Linq;
+using Robust.Client.GameObjects.Components.Renderable;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -41,7 +50,7 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        [DataFieldWithFlag("drawdepth", typeof(DrawDepthTag))]
+        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -331,34 +340,34 @@ namespace Robust.Client.GameObjects
         public void CopyFrom(SpriteComponent other)
         {
             //deep copying things to avoid entanglement
-            _baseRsi = other._baseRsi;
-            _directional = other._directional;
-            _visible = other._visible;
-            _layerMapShared = other._layerMapShared;
-            color = other.color;
-            offset = other.offset;
-            rotation = other.rotation;
-            scale = other.scale;
-            drawDepth = other.drawDepth;
-            Layers = new List<Layer>(other.Layers.Count);
+            this._baseRsi = other._baseRsi;
+            this._directional = other._directional;
+            this._visible = other._visible;
+            this._layerMapShared = other._layerMapShared;
+            this.color = other.color;
+            this.offset = other.offset;
+            this.rotation = other.rotation;
+            this.scale = other.scale;
+            this.drawDepth = other.drawDepth;
+            this.Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
-                Layers.Add(new Layer(otherLayer, this));
+                this.Layers.Add(new Layer(otherLayer, this));
             }
-            IsInert = other.IsInert;
-            LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
+            this.IsInert = other.IsInert;
+            this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
                 entry => entry.Value);
             if (other.PostShader != null)
             {
                 // only need to copy the shader if it's mutable
-                PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
+                this.PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
             }
             else
             {
-                PostShader = null;
+                this.PostShader = null;
             }
 
-            RenderOrder = other.RenderOrder;
+            this.RenderOrder = other.RenderOrder;
         }
 
         /// <inheritdoc />
@@ -1125,9 +1134,6 @@ namespace Robust.Client.GameObjects
             var mRotation = Matrix3.CreateRotation(angle);
             Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
 
-            // Only apply scale if needed.
-            if(!Scale.EqualsApprox(Vector2.One)) transform.Multiply(Matrix3.CreateScale(Scale));
-
             transform.Multiply(worldTransform);
 
             RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
@@ -1180,7 +1186,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = GetFallbackState();
                 }
 
                 var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
@@ -1373,7 +1379,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = GetFallbackState();
                 }
 
                 if (!state.IsAnimated)
@@ -1501,7 +1507,7 @@ namespace Robust.Client.GameObjects
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = GetFallbackState();
                 }
 
                 if (state.IsAnimated)
@@ -1512,9 +1518,9 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        internal static RSI.State GetFallbackState(IResourceCache cache)
+        private RSI.State GetFallbackState()
         {
-            var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
+            var rsi = resourceCache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
             return rsi["error"];
         }
 
@@ -1848,14 +1854,14 @@ namespace Robust.Client.GameObjects
                 var rsi = ActualRsi;
                 if (rsi == null)
                 {
-                    state = GetFallbackState(_parent.resourceCache);
+                    state = _parent.GetFallbackState();
                     Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
                 }
                 else
                 {
                     if (!rsi.TryGetState(stateId, out state))
                     {
-                        state = GetFallbackState(_parent.resourceCache);
+                        state = _parent.GetFallbackState();
                         Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                             Environment.StackTrace);
                     }
@@ -1906,7 +1912,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public IRsiStateLike? Icon
+        public IDirectionalTextureProvider? Icon
         {
             get
             {
@@ -1916,13 +1922,13 @@ namespace Robust.Client.GameObjects
 
                 var texture = layer.Texture;
 
-                if (!layer.State.IsValid) return texture;
+                if (!layer.State.IsValid) return null;
 
                 // Pull texture from RSI state instead.
                 var rsi = layer.RSI ?? BaseRSI;
                 if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    state = GetFallbackState(resourceCache);
+                    state = GetFallbackState();
                 }
 
                 return state;
@@ -1980,21 +1986,21 @@ namespace Robust.Client.GameObjects
 
         }
 
-        public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             if (icon != null) return icon;
 
-            if (!prototype.Components.ContainsKey("Sprite"))
+            if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
             {
-                return GetFallbackState(resourceCache);
+                return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
+            var dummy = new DummyIconEntity() {Prototype = prototype};
             var spriteComponent = dummy.AddComponent<SpriteComponent>();
             dummy.Delete();
 
-            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            return spriteComponent?.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
 
         #region DummyIconEntity
@@ -2023,9 +2029,8 @@ namespace Robust.Client.GameObjects
 
             public T AddComponent<T>() where T : Component, new()
             {
-                // TODO PAUL SERV3
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serManager = IoCManager.Resolve<IServ3Manager>();
+                var dataMgr = IoCManager.Resolve<IServ3Manager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2037,8 +2042,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    var value = serManager.ReadValue<T>(new YamlMappingDataNode());
-                    value = (T) serManager.DataClass2Object(node, value);
+                    dataMgr.DataClass2Object(node, comp);
                 }
 
                 return comp;

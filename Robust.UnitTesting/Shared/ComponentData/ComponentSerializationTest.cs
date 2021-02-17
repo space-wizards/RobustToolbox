@@ -5,10 +5,11 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses.Attributes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.ComponentData
@@ -45,8 +46,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
             IoCManager.Resolve<IComponentFactory>().Register<TestCustomDataClassInheritorComponent>();
             IoCManager.Resolve<IComponentManager>().Initialize();
 
-            IoCManager.Resolve<IDataClassManager>().Initialize();
-            IoCManager.Resolve<ISerializationManager>().Initialize();
+            IoCManager.Resolve<IServ3Manager>().Initialize();
 
             IoCManager.Resolve<IPrototypeManager>().LoadFromStream(new StringReader(prototype));
             IoCManager.Resolve<IPrototypeManager>().Resync();
@@ -80,17 +80,16 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             var entity = IoCManager.Resolve<IEntityManager>().CreateEntityUninitialized("TestEntity");
             var comp = entity.GetComponent<SerializationTestComponent>();
-            var dataclass = IoCManager.Resolve<IDataClassManager>().GetEmptyDataClass(comp.GetType())!;
 
-            var mapping = new YamlMappingNode();
-            IoCManager.Resolve<ISerializationManager>()
-                .Serialize(dataclass.GetType(), comp, YamlObjectSerializer.NewWriter(mapping));
+            var dataClass = IoCManager.Resolve<IServ3Manager>().GetEmptyComponentDataClass(comp.Name);
+            IoCManager.Resolve<IServ3Manager>().Object2DataClass(comp, dataClass);
+            var mapping = IoCManager.Resolve<IServ3Manager>().WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory()) as IMappingDataNode;
             Assert.That(mapping, Is.Not.Null);
-            Assert.That(mapping!.Children.ContainsKey("foo"));
-            Assert.That(mapping.Children["foo"], Is.EqualTo(new YamlScalarNode("1")));
-            Assert.That(mapping!.Children.ContainsKey("baz"));
-            Assert.That(mapping.Children["baz"], Is.EqualTo(new YamlScalarNode("Testing")));
-            Assert.That(!mapping!.Children.ContainsKey("bar"));
+            Assert.That(mapping!.HasNode("foo"));
+            Assert.That(mapping.GetNode("foo"), Is.EqualTo(new YamlValueDataNode("1")));
+            Assert.That(mapping!.HasNode("baz"));
+            Assert.That(mapping.GetNode("baz"), Is.EqualTo(new YamlValueDataNode("Testing")));
+            Assert.That(!mapping!.HasNode("bar"));
         }
 
         [Test]
@@ -141,11 +140,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
     public partial class ACustomDataClassWithARandomName
     {
         [DataClassTarget("abc")]
+        [DataField("abc")]
         public string? Abc;
-
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref Abc, "abc", null);
-        }
     }
 }

@@ -1,10 +1,12 @@
+﻿using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes.DataClasses;
@@ -12,11 +14,10 @@ using YamlDotNet.RepresentationModel;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
+using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Prototypes
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     /// Prototype that represents game entities.
@@ -24,8 +25,6 @@ namespace Robust.Shared.Prototypes
     [Prototype("entity")]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-
         /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
@@ -239,7 +238,7 @@ namespace Robust.Shared.Prototypes
 
                     foreach (var target in targetList)
                     {
-                        PushInheritance(_componentFactory, source, target);
+                        PushInheritance(source, target);
                     }
 
                     newSources.AddRange(targetList);
@@ -260,7 +259,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void PushInheritance(IComponentFactory factory, EntityPrototype source, EntityPrototype target)
+        private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
             /*var dataMgr = IoCManager.Resolve<IDataClassManager>();
             // Copy component data over.
@@ -275,7 +274,8 @@ namespace Robust.Shared.Prototypes
                 {
                     // Copy component into the target, since it doesn't have it yet.
                     // Unless it'd cause a conflict.
-                    foreach (var refType in factory.GetRegistration(component.Key).References)
+                    var factory = IoCManager.Resolve<IComponentFactory>();
+                    foreach (var refType in factory.GetRegistration(type).References)
                     {
                         if (target.ReferenceTypes.Contains(refType))
                         {
@@ -437,10 +437,10 @@ namespace Robust.Shared.Prototypes
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var ser = YamlObjectSerializer.NewReader(copy);
-            var data = (DataClass)IoCManager.Resolve<ISerializationManager>().Populate(factory.GetRegistration(type).Type, ser);
+            var dataClassType =
+                IoCManager.Resolve<IServ3Manager>().GetDataClassType(factory.GetRegistration(type).Type);
 
-            Components[type] = data;
+            Components[type] = (DataClass) IoCManager.Resolve<IServ3Manager>().ReadValue(dataClassType, copy.ToDataNode());
         }
 
         public override string ToString()

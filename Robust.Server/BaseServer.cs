@@ -272,8 +272,7 @@ namespace Robust.Server
 
             _loc.AddLoadedToStringSerializer(_stringSerializer);
 
-            IoCManager.Resolve<ISerializationManager>().Initialize();
-            IoCManager.Resolve<IDataClassManager>().Initialize();
+            IoCManager.Resolve<IServ3Manager>().Initialize();
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;

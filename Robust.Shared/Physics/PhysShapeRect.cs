@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -13,9 +14,12 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public class PhysShapeRect : IPhysShape
     {
+        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
         private int _collisionLayer;
+        [DataFieldWithFlag("mask", typeof(CollisionMask))]
         private int _collisionMask;
 
+        [DataField("bounds")]
         private Box2 _rectangle = Box2.UnitCentered;
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 Rectangle
@@ -62,13 +66,6 @@ namespace Robust.Shared.Physics
             handle.SetTransform(rotationMatrix * modelMatrix);
             handle.DrawRect(_rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
-        }
-
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-            serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
         }
 
         [field: NonSerialized]

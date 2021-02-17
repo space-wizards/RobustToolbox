@@ -1,15 +1,20 @@
+﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Containers;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Server.GameObjects.Components.Container
 {
     public sealed class ContainerManagerComponent : SharedContainerManagerComponent
     {
@@ -275,21 +280,24 @@ namespace Robust.Server.GameObjects
             };
         }
 
-        private struct ContainerPrototypeData : IExposeData
+        [DataDefinition]
+        private class ContainerPrototypeData
         {
+            [DataField("entities")]
             public List<EntityUid> Entities;
+            [DataField("type")]
             public string? Type;
+
+            public ContainerPrototypeData()
+            {
+                Entities = new();
+                Type = null;
+            }
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
                 Entities = entities;
                 Type = type;
-            }
-
-            void IExposeData.ExposeData(ObjectSerializer serializer)
-            {
-                serializer.DataField(ref Entities, "entities", new List<EntityUid>());
-                serializer.DataField(ref Type, "type", null);
             }
         }
 

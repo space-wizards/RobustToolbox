@@ -1,33 +1,32 @@
+﻿using Robust.Client.Input;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
+using YamlDotNet.Serialization;
 
-namespace Robust.Client.Input
+namespace Robust.Client.Interfaces.Input
 {
-    public struct KeyBindingRegistration : IExposeData
+    [DataDefinition]
+    public class KeyBindingRegistration
     {
+        [DataField("function")]
         public BoundKeyFunction Function;
-        public KeyBindingType Type;
+        [DataField("type")]
+        public KeyBindingType Type = KeyBindingType.State;
+        [DataField("key")]
         public Keyboard.Key BaseKey;
+        [DataField("mod1")]
         public Keyboard.Key Mod1;
+        [DataField("mod2")]
         public Keyboard.Key Mod2;
+        [DataField("mod3")]
         public Keyboard.Key Mod3;
+        [DataField("priority")]
         public int Priority;
+        [DataField("canFocus")]
         public bool CanFocus;
+        [DataField("canRepeat")]
         public bool CanRepeat;
-        public bool AllowSubCombs;
-
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref Function, "function", default);
-            serializer.DataField(ref Type, "type", KeyBindingType.State);
-            serializer.DataField(ref BaseKey, "key", default);
-            serializer.DataField(ref Mod1, "mod1", default);
-            serializer.DataField(ref Mod2, "mod2", default);
-            serializer.DataField(ref Mod3, "mod3", default);
-            serializer.DataField(ref Priority, "priority", 0);
-            serializer.DataField(ref CanFocus, "canFocus", false);
-            serializer.DataField(ref CanRepeat, "canRepeat", false);
-            serializer.DataField(ref AllowSubCombs, "allowSubCombs", false);
-        }
     }
 }

@@ -42,7 +42,6 @@ namespace Robust.Shared
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
-            IoCManager.Register<ICustomFormatManager, CustomFormatManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
@@ -51,8 +50,7 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<IDataClassManager, DataClassManager>();
-            IoCManager.Register<ISerializationManager, SerializationManager>();
+            IoCManager.Register<IServ3Manager, Serv3Manager>();
         }
     }
 }

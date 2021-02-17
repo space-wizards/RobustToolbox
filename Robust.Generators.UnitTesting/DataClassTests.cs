@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Generators.UnitTesting
 {

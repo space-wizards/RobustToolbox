@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
 namespace Robust.Client.GameObjects.Components.UserInterface

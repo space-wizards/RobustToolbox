@@ -21,7 +21,6 @@ namespace Robust.Shared.Serialization.Manager
             InitializeTypeSerializers();
             InitializeDataClasses();
 
-            //generating all datadefinitions except pure exposedata inheritors
             foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
@@ -83,6 +82,9 @@ namespace Robust.Shared.Serialization.Manager
 
                 currentType = currentType.BaseType;
             }
+
+            if (obj is IAfterSerialization afterSerialization)
+                afterSerialization.AfterSerialization();
 
             return obj;
         }

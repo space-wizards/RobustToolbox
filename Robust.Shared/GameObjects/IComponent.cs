@@ -32,7 +32,7 @@ namespace Robust.Shared.GameObjects
         ///     Whether the Owner has been paused.
         /// </summary>
         bool Paused { get; }
-        
+
         /// <summary>
         ///     Whether the client should synchronize component additions and removals.
         ///     If this is false and the component gets added or removed server side, the client will not do the same.
@@ -125,8 +125,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Get the component's state for replicating on the client.
         /// </summary>
+        /// <param name="player"></param>
         /// <returns>ComponentState object</returns>
-        ComponentState GetComponentState();
+        ComponentState GetComponentState(ICommonSession player);
 
         /// <summary>
         ///     Handles an incoming component state from the server.

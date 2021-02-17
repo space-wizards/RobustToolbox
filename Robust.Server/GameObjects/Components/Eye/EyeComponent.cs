@@ -1,5 +1,6 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 
 namespace Robust.Server.GameObjects
@@ -63,7 +64,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new EyeComponentState(DrawFov, Zoom, Offset, Rotation);
         }

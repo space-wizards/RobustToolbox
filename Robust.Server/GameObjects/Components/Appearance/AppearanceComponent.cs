@@ -3,6 +3,7 @@ using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Players;
 
 namespace Robust.Server.GameObjects
 {
@@ -61,7 +62,7 @@ namespace Robust.Server.GameObjects
             return false;
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new AppearanceComponentState(data);
         }

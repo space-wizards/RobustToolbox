@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
@@ -17,9 +19,7 @@ namespace Robust.Shared.Serialization.Manager
         public static void EmitPopulateField(this ILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
-            /* todo
-        public readonly Type? FlagType;
-        public readonly Type? ConstantType;
+            /* todo paul
         public readonly bool ServerOnly;
              */
 
@@ -36,23 +36,63 @@ namespace Robust.Shared.Serialization.Manager
 
             generator.Emit(OpCodes.Ldarg_2); //load serv3mgr
 
-            // getting the type //
-            generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType);
-            generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
-
-            // getting the node //
-            generator.Emit(OpCodes.Ldarg_1); //load mappingnode
-            generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
             var getNodeMethod = typeof(IMappingDataNode).GetMethods().First(m =>
                 m.Name == nameof(IMappingDataNode.GetNode) &&
                 m.GetParameters().First().ParameterType == typeof(string));
-            generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
+            switch (fieldDefinition.Attribute)
+            {
+                case YamlFieldWithConstantAttribute constantAttribute:
+                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
-            generator.Emit(OpCodes.Ldarg_3); //loading context
+                    // getting the type //
+                    generator.Emit(OpCodes.Ldtoken, constantAttribute.ConstantTag);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
 
-            var readValueMethod = typeof(IServ3Manager).GetMethods().First(m =>
-                m.Name == nameof(IServ3Manager.ReadValue) && m.GetParameters().Length == 3);
-            generator.Emit(OpCodes.Callvirt, readValueMethod); //reads node into our desired value
+                    // getting the node //
+                    generator.Emit(OpCodes.Ldarg_1); //load mappingnode
+                    generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
+                    generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
+
+                    var readConstMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.ReadConstant));
+                    Debug.Assert(readConstMethod != null, nameof(readConstMethod) + " != null");
+                    generator.Emit(OpCodes.Callvirt, readConstMethod);
+                    break;
+                case YamlFieldWithFlagAttribute flagAttribute:
+                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
+
+                    // getting the type //
+                    generator.Emit(OpCodes.Ldtoken, flagAttribute.FlagTag);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
+
+                    // getting the node //
+                    generator.Emit(OpCodes.Ldarg_1); //load mappingnode
+                    generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
+                    generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
+
+                    var readFlagMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.ReadFlag));
+                    Debug.Assert(readFlagMethod != null, nameof(readFlagMethod) + " != null");
+                    generator.Emit(OpCodes.Callvirt, readFlagMethod);
+                    break;
+                default:
+                    // getting the type //
+                    generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
+
+                    // getting the node //
+                    generator.Emit(OpCodes.Ldarg_1); //load mappingnode
+                    generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
+                    generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
+
+                    generator.Emit(OpCodes.Ldarg_3); //loading context
+
+                    var readValueMethod = typeof(IServ3Manager).GetMethods().First(m =>
+                        m.Name == nameof(IServ3Manager.ReadValue) && m.GetParameters().Length == 3);
+                    generator.Emit(OpCodes.Callvirt, readValueMethod); //reads node into our desired value
+
+                    //unbox the value if necessary since ReadValue returns a object
+                    generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                    break;
+            }
 
             //storing the return value so we can populate it into our field later
             generator.Emit(OpCodes.Stloc, localIdx);
@@ -92,18 +132,18 @@ namespace Robust.Shared.Serialization.Manager
         {
             if(fieldDefinition.Attribute.ReadOnly) return; //hehe ez pz
 
-            /*
-public readonly Type? FlagType;
-public readonly Type? ConstantType;
+            /* todo paul
 public readonly bool ServerOnly;
  */
 
+            var locIdx = generator.DeclareLocal(fieldDefinition.FieldType).LocalIndex;
+
             var endLabel = generator.DefineLabel();
 
-            // loading value into loc0
+            // loading value into loc_idx
             generator.Emit(OpCodes.Ldarg_0);
             generator.EmitLdfld(fieldDefinition.FieldInfo);
-            generator.Emit(OpCodes.Stloc_0);
+            generator.Emit(OpCodes.Stloc, locIdx);
 
             //only do defaultcheck if we aren't required
             if (!fieldDefinition.Attribute.Required)
@@ -114,7 +154,7 @@ public readonly bool ServerOnly;
                 generator.Emit(OpCodes.Brtrue_S, skipDefaultCheckLabel); //skip defaultcheck if alwayswrite is true
 
                 //skip all of this if the value is default
-                generator.Emit(OpCodes.Ldloc_0); //load val
+                generator.Emit(OpCodes.Ldloc, locIdx); //load val
                 //load default value
                 generator.Emit(OpCodes.Ldarg, 5);
                 generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
@@ -125,33 +165,66 @@ public readonly bool ServerOnly;
                 generator.MarkLabel(skipDefaultCheckLabel);
             }
 
-            generator.Emit(OpCodes.Ldloc_0); //loading mappingnode for calling merge
-
+            generator.Emit(OpCodes.Ldloc_0); //loading mappingnode for calling addnode
+            generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading tag for addnode
 
             generator.Emit(OpCodes.Ldarg_1); //load serv3mgr
 
-            generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType);
-            generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
+            switch (fieldDefinition.Attribute)
+            {
+                case YamlFieldWithConstantAttribute constantAttribute:
+                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
-            generator.Emit(OpCodes.Ldloc_0); //load value
+                    // load type //
+                    generator.Emit(OpCodes.Ldtoken, constantAttribute.ConstantTag);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
 
-            generator.Emit(OpCodes.Ldarg_2); //load nodeFactory
+                    generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-            generator.Emit(OpCodes.Ldarg, 4); //load alwaysWrite bool
+                    generator.Emit(OpCodes.Ldarg_2); //load nodefactory
 
-            generator.Emit(OpCodes.Ldarg_3); //load context
+                    var writeConstantMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteConstant));
+                    Debug.Assert(writeConstantMethod != null, nameof(writeConstantMethod) + " != null");
+                    generator.Emit(OpCodes.Callvirt, writeConstantMethod);
+                    break;
+                case YamlFieldWithFlagAttribute flagAttribute:
+                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
 
-            var writeDataFieldMethod = typeof(IServ3Manager).GetMethods().First(m =>
-                m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 5);
-            generator.Emit(OpCodes.Callvirt, writeDataFieldMethod); //get new node
+                    // load type //
+                    generator.Emit(OpCodes.Ldtoken, flagAttribute.FlagTag);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
 
-            generator.Emit(OpCodes.Castclass, typeof(IMappingDataNode)); //cast our idatanode to a mappingnode
+                    generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-            var mergeMethod = typeof(IMappingDataNode).GetMethod(nameof(IMappingDataNode.Merge));
-            Debug.Assert(mergeMethod != null, nameof(mergeMethod) + " != null");
-            generator.Emit(OpCodes.Callvirt, mergeMethod); //merge em
+                    generator.Emit(OpCodes.Ldarg_2); //load nodefactory
 
-            generator.Emit(OpCodes.Stloc_0); //store updated node in loc0
+                    var writeFlagMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteFlag));
+                    Debug.Assert(writeFlagMethod != null, nameof(writeConstantMethod) + " != null");
+                    generator.Emit(OpCodes.Callvirt, writeFlagMethod);
+                    break;
+                default:
+                    // load type //
+                    generator.Emit(OpCodes.Ldtoken, fieldDefinition.FieldType);
+                    generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
+
+                    generator.Emit(OpCodes.Ldloc, locIdx); //load value
+
+                    generator.Emit(OpCodes.Ldarg_2); //load nodeFactory
+
+                    generator.Emit(OpCodes.Ldarg, 4); //load alwaysWrite bool
+
+                    generator.Emit(OpCodes.Ldarg_3); //load context
+
+                    var writeDataFieldMethod = typeof(IServ3Manager).GetMethods().First(m =>
+                        m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 5);
+                    generator.Emit(OpCodes.Callvirt, writeDataFieldMethod); //get new node
+                    break;
+            }
+
+            var addMethod = typeof(IMappingDataNode).GetMethods().First(m =>
+                m.Name == nameof(IMappingDataNode.AddNode) &&
+                m.GetParameters().First().ParameterType == typeof(string));
+            generator.Emit(OpCodes.Callvirt, addMethod); //add it
 
             generator.MarkLabel(endLabel);
         }

@@ -17,6 +17,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public void Initialize()
         {
+            InitializeFlagsAndConstants();
             InitializeTypeSerializers();
             InitializeDataClasses();
 

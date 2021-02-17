@@ -54,5 +54,15 @@ namespace Robust.Shared.Serialization.Manager
             return $"{type.Namespace}.{type.Name}_AUTODATA";
         }
         #endregion
+
+        #region Flags And Constants
+
+        int ReadFlag(Type tagType, IDataNode node);
+        int ReadConstant(Type tagType, IDataNode node);
+
+        IDataNode WriteFlag(Type tagType, int flag, IDataNodeFactory nodeFactory);
+        IDataNode WriteConstant(Type tagType, int constant, IDataNodeFactory nodeFactory);
+
+        #endregion
     }
 }

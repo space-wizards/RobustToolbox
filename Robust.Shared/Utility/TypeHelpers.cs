@@ -283,6 +283,7 @@ namespace Robust.Shared.Utility
         public abstract void SetValue(object? obj, object? value);
 
         public abstract T? GetCustomAttribute<T>() where T : Attribute;
+        public abstract IEnumerable<T> GetCustomAttributes<T>() where T : Attribute;
     }
 
     public class SpecificFieldInfo : AbstractFieldInfo
@@ -302,6 +303,11 @@ namespace Robust.Shared.Utility
         public override T? GetCustomAttribute<T>() where T : class
         {
             return (T?)Attribute.GetCustomAttribute(FieldInfo, typeof(T));
+        }
+
+        public override IEnumerable<T> GetCustomAttributes<T>()
+        {
+            return FieldInfo.GetCustomAttributes<T>();
         }
 
         public static implicit operator FieldInfo(SpecificFieldInfo f) => f.FieldInfo;
@@ -325,6 +331,11 @@ namespace Robust.Shared.Utility
         public override T? GetCustomAttribute<T>() where T : class
         {
             return (T?)Attribute.GetCustomAttribute(PropertyInfo, typeof(T));
+        }
+
+        public override IEnumerable<T> GetCustomAttributes<T>()
+        {
+            return PropertyInfo.GetCustomAttributes<T>();
         }
 
         public static implicit operator PropertyInfo(SpecificPropertyInfo f) => f.PropertyInfo;

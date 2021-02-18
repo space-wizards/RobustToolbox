@@ -179,7 +179,7 @@ namespace Robust.Generators
 
                         if(parseFault) continue;
 
-                        fieldStr += ")]\npublic ";
+                        fieldStr += ")]\npublic readonly ";
                         switch (member)
                         {
                             case IFieldSymbol fieldSymbol:

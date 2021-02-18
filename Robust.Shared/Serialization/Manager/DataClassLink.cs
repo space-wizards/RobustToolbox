@@ -35,10 +35,10 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var abstractFieldInfo in dataClassType.GetAllPropertiesAndFields())
             {
-                var attr = abstractFieldInfo.GetCustomAttribute<BaseDataFieldAttribute>();
-                if(attr == null) continue;
-
-                _dataclassFields.Add(new LinkEntry(abstractFieldInfo, attr));
+                foreach (var attr in abstractFieldInfo.GetCustomAttributes<BaseDataFieldAttribute>())
+                {
+                    _dataclassFields.Add(new LinkEntry(abstractFieldInfo, attr));
+                }
             }
 
             PopulateObjectDelegate = EmitPopulateObjectDelegate();

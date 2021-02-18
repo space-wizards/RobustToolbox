@@ -2,6 +2,7 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
@@ -14,8 +15,14 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    public class ImmutableListSerializationTest
+    public class ImmutableListSerializationTest : RobustUnitTest
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IServ3Manager>().Initialize();
+        }
+
         [Test]
         public void SerializeListTest()
         {

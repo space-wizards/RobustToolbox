@@ -141,13 +141,15 @@ namespace Robust.Shared.Serialization.Manager
 
         public object Copy(object source, object target)
         {
-            if (target.GetType().IsPrimitive || source.GetType().IsPrimitive)
+            if (target.GetType().IsPrimitive == source.GetType().IsPrimitive)
             {
-                if (!target.GetType().IsPrimitive || !source.GetType().IsPrimitive)
-                    throw new InvalidOperationException();
-
-                //todo paul copy primitive
+                //todo does this work
+                //todo validate we can assign source
+                return source;
             }
+
+            if (target.GetType().IsPrimitive != source.GetType().IsPrimitive)
+                throw new InvalidOperationException();
 
             var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
             if(commonType == null)

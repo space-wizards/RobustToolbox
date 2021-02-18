@@ -15,6 +15,12 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     [TestFixture]
     public class TypePropertySerialization_Test : RobustUnitTest
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IServ3Manager>().Initialize();
+        }
+
         [Test]
         public void SerializeTypePropertiesTest()
         {

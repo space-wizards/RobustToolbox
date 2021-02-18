@@ -76,7 +76,10 @@ namespace Robust.Shared.Serialization.Manager
                 fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo));
             }
 
-            _baseFieldDefinitions = fieldDefs.ToArray();
+            var fields = fieldDefs;
+            //todo paul write a test for this
+            fields.Sort((a, b) => a.Attribute.Priority.CompareTo(a.Attribute.Priority));
+            _baseFieldDefinitions = fields.ToArray();
             _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
             _populateDelegate = EmitPopulateDelegate();
@@ -133,7 +136,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.Emit(OpCodes.Newobj, typeof(MappingDataNode));
             generator.Emit(OpCodes.Stloc_0);
 
-            for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+            for (var i = _baseFieldDefinitions.Length-1; i >= 0; i--)
             {
                 var fieldDefinition = _baseFieldDefinitions[i];
                 generator.EmitSerializeField(fieldDefinition, i);

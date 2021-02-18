@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -32,6 +33,8 @@ namespace Robust.Shared.Serialization.Manager
 
                 _actualFields.Add(new LinkEntry(abstractFieldInfo, attr));
             }
+            //todo paul write a test for this
+            _actualFields.Sort((a,b) => a.DataFieldAttribute.Priority.CompareTo(b.DataFieldAttribute.Priority));
 
             foreach (var abstractFieldInfo in dataClassType.GetAllPropertiesAndFields())
             {
@@ -40,6 +43,8 @@ namespace Robust.Shared.Serialization.Manager
                     _dataclassFields.Add(new LinkEntry(abstractFieldInfo, attr));
                 }
             }
+            //todo paul write a test for this
+            _dataclassFields.Sort((a,b) => a.DataFieldAttribute.Priority.CompareTo(b.DataFieldAttribute.Priority));
 
             PopulateObjectDelegate = EmitPopulateObjectDelegate();
             PopulateDataclassDelegate = EmitPopulateDataclassDelegate();

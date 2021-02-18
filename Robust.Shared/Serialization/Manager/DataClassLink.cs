@@ -69,6 +69,10 @@ namespace Robust.Shared.Serialization.Manager
                 var notIt = generator.DefineLabel();
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Ldstr, dataclassField.DataFieldAttribute.Tag);
+                var stringEqualsMethod = typeof(string).GetMethods().First(m =>
+                    m.Name == nameof(string.Equals) && m.GetParameters().Length == 1 &&
+                    m.GetParameters()[0].ParameterType == typeof(string));
+                generator.Emit(OpCodes.Call, stringEqualsMethod);
                 generator.Emit(OpCodes.Brfalse_S, notIt);
 
                 generator.Emit(OpCodes.Ldarg_0);

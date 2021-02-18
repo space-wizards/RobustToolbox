@@ -106,7 +106,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 if (counterPart == null)
                     throw new InvalidOperationException(
-                        "Could not find field-counterpart while generating PopulateObjectDelegate!");
+                        $"Could not find field-counterpart while generating PopulateObjectDelegate for {Type}!");
 
                 var isNullLabel = generator.DefineLabel();
                 generator.Emit(OpCodes.Ldarg_1);

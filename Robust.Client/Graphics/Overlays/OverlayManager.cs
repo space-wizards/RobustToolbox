@@ -38,7 +38,7 @@ namespace Robust.Client.Graphics
             return _overlays.Remove(overlayClass);
         }
 
-        public bool RemoveOverlay<T>(){
+        public bool RemoveOverlay<T>() where T : Overlay{
             return RemoveOverlay(typeof(T));
         }
 
@@ -54,15 +54,39 @@ namespace Robust.Client.Graphics
         {
             overlay = null;
             if (!overlayClass.IsSubclassOf(typeof(Overlay))){
-                Logger.Error("GetOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
+                Logger.Error("TryGetOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
                 return false;
             }
             return _overlays.TryGetValue(overlayClass, out overlay);
         }
 
-        public bool TryGetOverlay<T>(out Overlay overlay){
-            return TryGetOverlay(typeof(T), out overlay);
+        public bool TryGetOverlay<T>(out T overlay) where T : Overlay {
+            overlay = null;
+            if(_overlays.TryGetValue(typeof(T), out Overlay toReturn)){
+                overlay = (T)toReturn;
+                return true;
+            }
+            return false;
         }
+
+
+
+
+        public Overlay GetOverlay(Type overlayClass) {
+            if (!overlayClass.IsSubclassOf(typeof(Overlay))) {
+                Logger.Error("GetOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
+                return null;
+            }
+            _overlays.TryGetValue(overlayClass, out Overlay toReturn);
+            return toReturn;
+        }
+
+        public T GetOverlay<T>() where T : Overlay {
+            _overlays.TryGetValue(typeof(T), out Overlay toReturn);
+            return (T)toReturn;
+        }
+
+
 
 
 
@@ -72,10 +96,9 @@ namespace Robust.Client.Graphics
             return _overlays.Remove(overlayClass);
         }
 
-        public bool HasOverlay<T>() {
-            if (!typeof(T).IsSubclassOf(typeof(Overlay)))
-                Logger.Error("HasOverlay was called with arg: " + typeof(T).ToString() + ", which is not a subclass of Overlay!");
+        public bool HasOverlay<T>() where T : Overlay  {
             return _overlays.Remove(typeof(T));
         }
+
     }
 }

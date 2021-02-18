@@ -14,13 +14,16 @@ namespace Robust.Client.Graphics
 
         bool RemoveOverlay(Overlay overlay);
         bool RemoveOverlay(Type overlayClass);
-        bool RemoveOverlay<T>();
+        bool RemoveOverlay<T>() where T : Overlay;
 
         bool TryGetOverlay(Type overlayClass, out Overlay overlay);
-        bool TryGetOverlay<T>(out Overlay overlay);
+        bool TryGetOverlay<T>(out T overlay) where T : Overlay;
+
+        Overlay GetOverlay(Type overlayClass);
+        T GetOverlay<T>() where T : Overlay;
 
         bool HasOverlay(Type overlayClass);
-        bool HasOverlay<T>();
+        bool HasOverlay<T>() where T : Overlay;
 
         IEnumerable<Overlay> AllOverlays { get; }
     }

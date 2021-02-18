@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -448,7 +449,8 @@ namespace Robust.Shared.Physics.Dynamics
                 controller.UpdateAfterSolve(prediction, this, frameTime);
             }
 
-            ClearForces();
+            if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.AutoClearForces))
+                ClearForces();
 
             _invDt0 = invDt;
         }

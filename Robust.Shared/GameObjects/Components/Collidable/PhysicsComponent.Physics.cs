@@ -716,9 +716,33 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
-        internal Physics.Transform GetTransform()
+        internal Transform GetTransform()
         {
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
+        }
+
+        public void ApplyLinearImpulse(in Vector2 impulse)
+        {
+            if (_bodyType != BodyType.Dynamic) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+        }
+
+        public void ApplyAngularImpulse(float impulse)
+        {
+            if (_bodyType != BodyType.Dynamic) return;
+            Awake = true;
+
+            AngularVelocity += impulse * InvI;
+        }
+
+        public void ApplyForce(in Vector2 force)
+        {
+            if (_bodyType != BodyType.Dynamic) return;
+
+            Awake = true;
+            Force += force;
         }
 
         /// <summary>

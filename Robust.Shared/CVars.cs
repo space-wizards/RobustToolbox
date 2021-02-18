@@ -310,6 +310,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> WarmStarting =
             CVarDef.Create("physics.warmstart", true);
 
+        public static readonly CVarDef<bool> AutoClearForces =
+            CVarDef.Create("physics.autoclearforces", true);
+
         /// <summary>
         /// A velocity threshold for elastic collisions. Any collision with a relative linear
         /// velocity below this threshold will be treated as inelastic.

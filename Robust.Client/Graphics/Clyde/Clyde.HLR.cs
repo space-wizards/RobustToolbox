@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -118,27 +118,28 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 FlushRenderQueue();
                 list.Sort(OverlayComparer.Instance);
-                for (OverlayPriority i = OverlayPriority.P1; i <= OverlayPriority.P9; i++) {
-                    foreach (var overlay in list) {
-                        if (i == overlay.Priority) {
-                            if (overlay.RequestScreenTexture) {
-                                FlushRenderQueue();
-                                UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
-                            }
-                            if (overlay.OverwriteTargetFrameBuffer) {
-                                ClearFramebuffer(default);
-                            }
-                            overlay.ClydeRender(_renderHandle, space);
-                            FlushRenderQueue();
-                        }
+                foreach (var overlay in list) {
+                    if (overlay.RequestScreenTexture) {
+                        FlushRenderQueue();
+                        UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
                     }
+                    if (overlay.OverwriteTargetFrameBuffer) {
+                        ClearFramebuffer(default);
+                    }
+                    overlay.ClydeRender(_renderHandle, space);
+                    FlushRenderQueue();
                 }
             }
         }
 
         private ClydeTexture? ScreenBufferTexture;
         private GLHandle screenBufferHandle;
+        private Vector2 lastFrameSize;
+        /// <summary>
+        ///    Sends SCREEN_TEXTURE to all overlays in the given OverlaySpace that request it.
+        /// </summary>
         private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
+            //This currently does NOT consider viewports. This will need to be improved upon in the future.
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
                 if (overlay.RequestScreenTexture && overlay.Space == space) {
@@ -146,11 +147,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
             if (oTargets.Count > 0 && ScreenBufferTexture != null) {
-
-                GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
-                    PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero); //Need to do this every frame in case the screen/framebuffer size changes. Small optimization: just do a vec2 check instead? 
-                                                                            //I don't think TexImage2D is very costly but I could be wrong.
+                if (lastFrameSize != _framebufferSize) { 
+                    GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
+                        PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+                }
+                lastFrameSize = _framebufferSize;
                 CopyRenderTextureToTexture(texture, ScreenBufferTexture);
                 foreach (Overlay overlay in oTargets) {
                     overlay.ScreenTexture = ScreenBufferTexture;
@@ -382,6 +384,7 @@ namespace Robust.Client.Graphics.Clyde
                         GL.StencilMask(0xFF);
                         ApplyFovToBuffer(viewport, eye);
                         GL.StencilMask(0x00);
+                        GL.Disable(EnableCap.StencilTest);
                     }
                 }
 

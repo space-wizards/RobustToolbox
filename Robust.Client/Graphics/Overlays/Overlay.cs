@@ -13,19 +13,16 @@ using Robust.Shared.Enums;
 namespace Robust.Client.Graphics.Overlays
 {
     /// <summary>
-    ///     An overlay is used for fullscreen drawing in the game, for example parallax.
+    ///     An overlay is used for fullscreen drawing in the game. This can range from drawing parallax to a full screen shader.
     /// </summary>
     [PublicAPI]
     public abstract class Overlay
     {
 
-        public virtual bool AlwaysDirty => false;
-        public bool IsDirty => AlwaysDirty || _isDirty;
-        public bool Drawing { get; private set; }
-
+        /// <summary>
+        ///     Determines when this overlay is drawn in the rendering queue.
+        /// </summary>
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
-
-        public virtual OverlayPriority Priority => OverlayPriority.P5;
 
         /// <summary>
         ///     If set to true, <see cref="ScreenTexture"/> will be set to the current frame. This can be costly to performance, but
@@ -39,47 +36,20 @@ namespace Robust.Client.Graphics.Overlays
         public Texture? ScreenTexture = null;
 
         /// <summary>
-        ///     If set to true, the results of this shader will entirely overwrite the framebuffer it being overlayed onto. 
+        ///     If set to true, the results of this overlay will entirely overwrite the framebuffer it being overlayed onto. 
         /// </summary>
         public virtual bool OverwriteTargetFrameBuffer => false;
 
-        protected IOverlayManager OverlayManager { get; }
-
+        /// <summary>
+        ///    Overlays on the same OverlaySpace will be drawn from lowest ZIndex to highest ZIndex. As an example, ZIndex -1 will be drawn before ZIndex 2. 0 by default. Overlays with same ZIndex will be drawn in 
+        /// </summary>
         public int? ZIndex { get; set; }
 
-        public virtual bool SubHandlesUseMainShader { get; } = true;
-
-        private bool _isDirty = true;
-
-        private readonly List<DrawingHandleBase> TempHandles = new();
-
-        private bool Disposed;
+        protected IOverlayManager OverlayManager { get; }
 
         protected Overlay()
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
-        }
-
-        public void Dispose()
-        {
-            if (Disposed)
-            {
-                return;
-            }
-
-            Dispose(true);
-            Disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        ~Overlay()
-        {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            ScreenTexture = null;
         }
 
         /// <summary>
@@ -88,11 +58,6 @@ namespace Robust.Client.Graphics.Overlays
         /// <param name="handle">Current drawing handle that the overlay should be drawing with. Do not hold a reference to this in the overlay.</param>
         /// <param name="currentSpace">Current space that is being drawn. This function is called for every space that was set up in initialization.</param>
         protected abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
-
-        public void Dirty()
-        {
-            _isDirty = true;
-        }
 
         protected internal virtual void FrameUpdate(FrameEventArgs args) { }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
@@ -7,23 +7,24 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.Graphics.Overlays
 {
+
     [PublicAPI]
     public interface IOverlayManager
     {
-        void AddOverlay(Guid id, Overlay overlay);
-        void RemoveOverlay(Guid id);
+        void AddOverlay(string id, Overlay overlay);
+        void RemoveOverlay(string id);
         void RemoveOverlaysOfClass(string className);
-        bool HasOverlay(Guid id);
+        bool HasOverlay(string id);
         bool HasOverlayOfClass(string className);
         bool HasOverlayOfType<T>();
 
-        Overlay GetOverlay(Guid id);
+        Overlay GetOverlay(string id);
         bool TryGetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay;
         bool TryGetOverlaysOfClass(string className, out List<Overlay> overlays);
         int GetOverlayTypeCount<T>() where T : Overlay;
 
-        bool TryGetOverlay(Guid id, [NotNullWhen(true)] out Overlay? overlay);
-        bool TryGetOverlay<T>(Guid id, [NotNullWhen(true)] out T? overlay) where T : Overlay;
+        bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay);
+        bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay;
 
         IEnumerable<Overlay> AllOverlays { get; }
     }

@@ -12,7 +12,7 @@ namespace Robust.Client.Graphics.Overlays
 {
     internal class OverlayManager : IOverlayManagerInternal
     {
-        private readonly Dictionary<Guid, Overlay> _overlays = new Dictionary<Guid, Overlay>();
+        private readonly Dictionary<String, Overlay> _overlays = new Dictionary<String, Overlay>();
         public IEnumerable<Overlay> AllOverlays => _overlays.Values;
 
         public void FrameUpdate(FrameEventArgs args)
@@ -23,32 +23,29 @@ namespace Robust.Client.Graphics.Overlays
             }
         }
 
-        public void AddOverlay(Guid id, Overlay overlay) {
+        public void AddOverlay(string id, Overlay overlay) {
             if (_overlays.ContainsKey(id)) {
                 throw new InvalidOperationException($"We already have an overlay with guid '{id}'!");
             }
 
             _overlays.Add(id, overlay);
         }
-        public void RemoveOverlay(Guid id) {
+        public void RemoveOverlay(string id) {
             if (!_overlays.TryGetValue(id, out var overlay)) {
                 return;
             }
-
-            overlay.Dispose();
             _overlays.Remove(id);
         }
         public void RemoveOverlaysOfClass(string className) {
-            var overlaysCopy = new Dictionary<Guid, Overlay>(_overlays);
+            var overlaysCopy = new Dictionary<string, Overlay>(_overlays);
             foreach (var (id, overlay) in overlaysCopy) {
                 if (nameof(overlay) == className) {
-                    overlay.Dispose();
                     _overlays.Remove(id);
                 }
             }
 
         }
-        public bool HasOverlay(Guid id) {
+        public bool HasOverlay(string id) {
             return _overlays.ContainsKey(id);
         }
         public bool HasOverlayOfClass(string className) {
@@ -68,7 +65,7 @@ namespace Robust.Client.Graphics.Overlays
             return false;
         }
 
-        public Overlay GetOverlay(Guid id)
+        public Overlay GetOverlay(string id)
         {
             return _overlays[id];
         }
@@ -111,12 +108,12 @@ namespace Robust.Client.Graphics.Overlays
 
 
 
-        public bool TryGetOverlay(Guid id, [NotNullWhen(true)] out Overlay? overlay)
+        public bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay)
         {
             return _overlays.TryGetValue(id, out overlay);
         }
 
-        public bool TryGetOverlay<T>(Guid id, [NotNullWhen(true)] out T? overlay) where T : Overlay
+        public bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay
         {
             if (_overlays.TryGetValue(id, out var value))
             {
@@ -127,5 +124,9 @@ namespace Robust.Client.Graphics.Overlays
             overlay = default;
             return false;
         }
+    }
+
+    class OverlayID {
+        public int ID;
     }
 }

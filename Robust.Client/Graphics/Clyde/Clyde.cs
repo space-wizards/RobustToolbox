@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -328,7 +328,7 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _framebufferSize, true, null);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _framebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private void CreateMainViewport()

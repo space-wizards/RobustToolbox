@@ -6,20 +6,19 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ColorSerializer : ITypeSerializer<Color>
+    public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
-        public Color NodeToType(DataNode node, ISerializationContext? context = null)
+        public Color Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            if (Color.TryFromName(valueDataNode.GetValue(), out var color))
+            if (Color.TryFromName(node.Value, out var color))
             {
                 return color;
             }
 
-            return Color.FromHex(valueDataNode.GetValue());
+            return Color.FromHex(node.Value);
         }
 
-        public DataNode TypeToNode(Color value, bool alwaysWrite = false,
+        public DataNode Write(Color value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToHex());

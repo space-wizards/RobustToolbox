@@ -7,16 +7,15 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class MapIdSerializer : ITypeSerializer<MapId>
+    public class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
     {
-        public MapId NodeToType(DataNode node, ISerializationContext? context = null)
+        public MapId Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            var val = int.Parse(valueDataNode.GetValue(), CultureInfo.InvariantCulture);
+            var val = int.Parse(node.Value, CultureInfo.InvariantCulture);
             return new MapId(val);
         }
 
-        public DataNode TypeToNode(MapId value, bool alwaysWrite = false,
+        public DataNode Write(MapId value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var val = (int)value;

@@ -4,26 +4,26 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
+using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ComponentRegistrySerializer : ITypeSerializer<EntityPrototype.ComponentRegistry>
+    public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        public EntityPrototype.ComponentRegistry NodeToType(DataNode node, ISerializationContext? context = null)
+        public ComponentRegistry Read(SequenceDataNode node, ISerializationContext? context = null)
         {
-            if (node is not SequenceDataNode componentsequence) return new EntityPrototype.ComponentRegistry();
-            var components = new EntityPrototype.ComponentRegistry();
-            foreach (var componentMapping in componentsequence.Sequence.Cast<MappingDataNode>())
+            var components = new ComponentRegistry();
+
+            foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
-                string compType = ((ValueDataNode)componentMapping.GetNode("type")).GetValue();
+                string compType = ((ValueDataNode)componentMapping.GetNode("type")).Value;
                 // See if type exists to detect errors.
                 switch (_componentFactory.GetComponentAvailability(compType))
                 {
@@ -74,14 +74,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return components;
         }
 
-        public DataNode TypeToNode(EntityPrototype.ComponentRegistry value,
+        public DataNode Write(ComponentRegistry value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
-                var node = _serv3Manager.WriteValue(component.GetType(), component, nodeFactory, alwaysWrite, context);
+                var node = _serv3Manager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
                 if (mapping.Children.Count != 0)
                 {

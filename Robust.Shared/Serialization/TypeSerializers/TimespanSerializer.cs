@@ -7,16 +7,15 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class TimespanSerializer : ITypeSerializer<TimeSpan>
+    public class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
     {
-        public TimeSpan NodeToType(DataNode node, ISerializationContext? context = null)
+        public TimeSpan Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            var seconds = double.Parse(valueDataNode.GetValue(), CultureInfo.InvariantCulture);
+            var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
             return TimeSpan.FromSeconds(seconds);
         }
 
-        public DataNode TypeToNode(TimeSpan value, bool alwaysWrite = false,
+        public DataNode Write(TimeSpan value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));

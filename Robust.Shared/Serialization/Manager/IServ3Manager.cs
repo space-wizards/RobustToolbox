@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.Manager
 
         object ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null) where T : notnull;
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null);
 
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null);

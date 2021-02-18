@@ -9,16 +9,19 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
     [TypeSerializer]
-    public class ListSerializers<T> : ITypeSerializer<List<T>>, ITypeSerializer<IReadOnlyList<T>>, ITypeSerializer<IReadOnlyCollection<T>>, ITypeSerializer<ImmutableList<T>>
+    public class ListSerializers<T> :
+        ITypeSerializer<List<T>, SequenceDataNode>,
+        ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
+        ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
+        ITypeSerializer<ImmutableList<T>, SequenceDataNode>
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        public List<T> NodeToType(DataNode node, ISerializationContext? context = null)
+        public List<T> Read(SequenceDataNode node, ISerializationContext? context = null)
         {
-            if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
-
             var list = new List<T>();
-            foreach (var dataNode in sequenceDataNode.Sequence)
+
+            foreach (var dataNode in node.Sequence)
             {
                 list.Add(_serv3Manager.ReadValue<T>(dataNode, context));
             }
@@ -26,49 +29,49 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return list;
         }
 
-        public DataNode TypeToNode(ImmutableList<T> value, bool alwaysWrite = false,
+        public DataNode Write(ImmutableList<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), alwaysWrite, context);
+            return Write(value.ToList(), alwaysWrite, context);
         }
 
-        public DataNode TypeToNode(List<T> value, bool alwaysWrite = false,
+        public DataNode Write(List<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();
             foreach (var elem in value)
             {
-                sequence.Add(_serv3Manager.WriteValue(elem, nodeFactory, alwaysWrite, context));
+                sequence.Add(_serv3Manager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;
         }
 
-        public DataNode TypeToNode(IReadOnlyCollection<T> value, bool alwaysWrite = false,
+        public DataNode Write(IReadOnlyCollection<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), alwaysWrite, context);
+            return Write(value.ToList(), alwaysWrite, context);
         }
 
-        public DataNode TypeToNode(IReadOnlyList<T> value, bool alwaysWrite = false,
+        public DataNode Write(IReadOnlyList<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), alwaysWrite, context);
+            return Write(value.ToList(), alwaysWrite, context);
         }
 
-        IReadOnlyList<T> ITypeSerializer<IReadOnlyList<T>>.NodeToType(DataNode node, ISerializationContext? context)
+        IReadOnlyList<T> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return NodeToType(node, context);
+            return Read(node, context);
         }
 
-        IReadOnlyCollection<T> ITypeSerializer<IReadOnlyCollection<T>>.NodeToType(DataNode node, ISerializationContext? context)
+        IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return NodeToType(node, context);
+            return Read(node, context);
         }
 
-        ImmutableList<T> ITypeSerializer<ImmutableList<T>>.NodeToType(DataNode node, ISerializationContext? context)
+        ImmutableList<T> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return NodeToType(node, context).ToImmutableList();
+            return Read(node, context).ToImmutableList();
         }
     }
 }

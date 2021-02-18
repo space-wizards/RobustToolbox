@@ -16,7 +16,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 2)
             {
-                shell.WriteLine($"Invalid amount of arguments.\n{Help}");
+                shell.WriteLine($"Invalid amount of arguments.\n{Help}.");
                 return;
             }
 
@@ -30,7 +30,7 @@ namespace Robust.Server.Console.Commands
 
             if (!entityManager.TryGetEntity(uid, out var entity))
             {
-                shell.WriteLine($"No entity found with id {uid}");
+                shell.WriteLine($"No entity found with id {uid}.");
                 return;
             }
 
@@ -41,13 +41,19 @@ namespace Robust.Server.Console.Commands
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
             {
-                shell.WriteLine($"No component found with name {componentName}");
+                shell.WriteLine($"No component found with name {componentName}.");
+                return;
+            }
+
+            if (!entity.HasComponent(registration.Type))
+            {
+                shell.WriteLine($"No {componentName} component found on entity {entity.Name}.");
                 return;
             }
 
             compManager.RemoveComponent(uid, registration.Type);
 
-            shell.WriteLine($"Removed component with name {componentName} from entity {entity.Name}");
+            shell.WriteLine($"Removed {componentName} component from entity {entity.Name}.");
         }
     }
 }

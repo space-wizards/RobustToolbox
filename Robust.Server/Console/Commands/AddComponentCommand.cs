@@ -30,7 +30,7 @@ namespace Robust.Server.Console.Commands
 
             if (!entityManager.TryGetEntity(uid, out var entity))
             {
-                shell.WriteLine($"No entity found with id {uid}");
+                shell.WriteLine($"No entity found with id {uid}.");
                 return;
             }
 
@@ -41,8 +41,13 @@ namespace Robust.Server.Console.Commands
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
             {
-                shell.WriteLine($"No component found with name {componentName}");
+                shell.WriteLine($"No component found with name {componentName}.");
                 return;
+            }
+
+            if (entity.HasComponent(registration.Type))
+            {
+                shell.WriteLine($"Entity {entity.Name} already has a {componentName} component.");
             }
 
             var component = (Component) compFactory.GetComponent(registration.Type);
@@ -50,7 +55,7 @@ namespace Robust.Server.Console.Commands
             component.Owner = entity;
             compManager.AddComponent(entity, component);
 
-            shell.WriteLine($"Component {componentName} added to entity {entity.Name}");
+            shell.WriteLine($"Added {componentName} component to entity {entity.Name}.");
         }
     }
 }

@@ -72,6 +72,7 @@ namespace Robust.Shared.Serialization.Manager
                 generator.Emit(OpCodes.Brfalse_S, notIt);
 
                 generator.Emit(OpCodes.Ldarg_0);
+                generator.Emit(OpCodes.Castclass, DataClassType);
                 generator.EmitLdfld(dataclassField.FieldInfo);
                 generator.Emit(OpCodes.Box, dataclassField.FieldInfo.FieldType);
                 generator.Emit(OpCodes.Ret);

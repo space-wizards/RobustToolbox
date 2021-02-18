@@ -68,7 +68,7 @@ namespace Robust.Shared.Utility
         public virtual void MarkLabel(Label loc)
         {
             _generator.MarkLabel(loc);
-            Log("MarkLabel", loc);
+            Log("MarkLabel", loc.GetHashCode());
         }
 
         public virtual void Emit(OpCode opcode)
@@ -159,7 +159,7 @@ namespace Robust.Shared.Utility
         public virtual void Emit(OpCode opcode, Label label)
         {
             _generator.Emit(opcode, label);
-            Log(opcode, label);
+            Log(opcode, label.GetHashCode());
         }
 
         public virtual void Emit(OpCode opcode, Label[] labels)

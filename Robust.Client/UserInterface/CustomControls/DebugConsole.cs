@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Robust.Client.Console;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -94,13 +94,18 @@ namespace Robust.Client.UserInterface.CustomControls
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnHistoryChanged += OnHistoryChanged;
 
-            _consoleHost.AddString += (_, args) => AddLine(args.Text, args.Color);
+            _consoleHost.AddString += (_, args) => AddLine(args.Text, DetermineColor(args.Local, args.Error));
             _consoleHost.AddFormatted += (_, args) => AddFormattedLine(args.Message);
             _consoleHost.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
 
             searchResults = new List<string>();
+        }
+
+        private Color DetermineColor(bool local, bool error)
+        {
+            return Color.White;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

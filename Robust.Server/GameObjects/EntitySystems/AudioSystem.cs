@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using static Robust.Server.GameObjects.AudioSystem;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     public class AudioSystem : EntitySystem
     {
@@ -43,13 +42,15 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
 
-            if(sessions == null)
+            if (sessions == null)
                 RaiseNetworkEvent(msg);
             else
+            {
                 foreach (var session in sessions)
                 {
                     RaiseNetworkEvent(msg, session.ConnectedClient);
                 }
+            }
         }
 
         private uint CacheIdentifier()
@@ -90,7 +91,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     players.RemoveAt(i);
                     continue;
                 }
-                   
+
                 RaiseNetworkEvent(msg, player.ConnectedClient);
             }
 
@@ -135,7 +136,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     players.RemoveAt(i);
                     continue;
                 }
-                   
+
                 RaiseNetworkEvent(msg, player.ConnectedClient);
             }
 
@@ -177,7 +178,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     players.RemoveAt(i);
                     continue;
                 }
-                   
+
                 RaiseNetworkEvent(msg, player.ConnectedClient);
             }
 
@@ -222,5 +223,50 @@ namespace Robust.Server.GameObjects.EntitySystems
         }
 
         #endregion
+    }
+
+    public static class AudioSystemExtensions
+    {
+        /// <summary>
+        ///     Play an audio file following an entity.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="range">The max range at which the audio will be heard. Less than or equal to 0 to send to every player.</param>
+        /// <param name="excludedSession">Sessions that won't receive the audio message.</param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static void PlaySoundFrom(
+            this IEntity entity,
+            string filename,
+            AudioParams? audioParams = null,
+            int range = AudioDistanceRange,
+            IPlayerSession? excludedSession = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            audioSystem.PlayFromEntity(filename, entity, audioParams, range, excludedSession);
+        }
+
+        /// <summary>
+        ///     Play an audio file at a static position.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="range">The max range at which the audio will be heard. Less than or equal to 0 to send to every player.</param>
+        /// <param name="excludedSession">Session that won't receive the audio message.</param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static void PlaySoundFrom(
+            this EntityCoordinates coordinates,
+            string filename,
+            AudioParams? audioParams = null,
+            int range = AudioDistanceRange,
+            IPlayerSession? excludedSession = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            audioSystem.PlayAtCoords(filename, coordinates, audioParams, range, excludedSession);
+        }
     }
 }

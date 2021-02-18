@@ -1,8 +1,4 @@
-﻿using Robust.Shared.IoC;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes

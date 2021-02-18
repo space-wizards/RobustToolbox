@@ -1,5 +1,4 @@
 ﻿using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using System;
 using Robust.Shared.Console;
 
@@ -17,7 +16,7 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 2)
             {
-                shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                shell.WriteError("Invalid argument amount. Expected 2 arguments.");
                 return;
             }
 
@@ -54,7 +53,7 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 3)
             {
-                shell.WriteLine("Invalid argument amount. Expected 3 arguments.", Color.Red);
+                shell.WriteError("Invalid argument amount. Expected 3 arguments.");
                 return;
             }
 

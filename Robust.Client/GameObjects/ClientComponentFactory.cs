@@ -1,18 +1,4 @@
-﻿using Robust.Client.GameObjects.Components;
-using Robust.Client.GameObjects.Components.Animations;
-using Robust.Client.GameObjects.Components.Containers;
-using Robust.Client.GameObjects.Components.UserInterface;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Appearance;
-using Robust.Shared.GameObjects.Components.Eye;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.GameObjects.Components.Timers;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.Interfaces.GameObjects.Components;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects

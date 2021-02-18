@@ -47,27 +47,27 @@ namespace Robust.Shared.Localization
 
         public override string GetString(string text, params object[] args)
         {
-            return string.Format(GetFormatProviderOrDefault(), this.GetStringDefault(text, text), args);
+            return string.Format(GetFormatProviderOrDefault(), GetStringDefault(text, text), args);
         }
 
         public override string GetPluralString(string text, string pluralText, long n, params object[] args)
         {
-            return string.Format(GetFormatProviderOrDefault(), this.GetPluralStringDefault(text, text, pluralText, n), args);
+            return string.Format(GetFormatProviderOrDefault(), GetPluralStringDefault(text, text, pluralText, n), args);
         }
 
         public override string GetParticularString(string context, string text, params object[] args)
         {
-            return string.Format(GetFormatProviderOrDefault(), this.GetStringDefault(context + CONTEXT_GLUE + text, text), args);
+            return string.Format(GetFormatProviderOrDefault(), GetStringDefault(context + CONTEXT_GLUE + text, text), args);
         }
 
         public override string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args)
         {
-            return string.Format(GetFormatProviderOrDefault(), this.GetPluralStringDefault(context + CONTEXT_GLUE + text, text, pluralText, n), args);
+            return string.Format(GetFormatProviderOrDefault(), GetPluralStringDefault(context + CONTEXT_GLUE + text, text, pluralText, n), args);
         }
 
         private IFormatProvider GetFormatProviderOrDefault()
         {
-            return this.CustomFormatProvider ?? this.CultureInfo;
+            return CustomFormatProvider ?? CultureInfo;
         }
     }
 }

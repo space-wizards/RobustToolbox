@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
@@ -123,8 +122,6 @@ namespace Robust.Shared.Timing
 
             FrameEventArgs realFrameEvent;
             FrameEventArgs simFrameEvent;
-
-            _timing.ResetRealTime();
 
             while (Running)
             {

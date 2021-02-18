@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
 {

@@ -1,16 +1,11 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Console;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
@@ -77,7 +72,7 @@ namespace Robust.Client.GameStates
             {
                 if (args.Length != 1)
                 {
-                    shell.WriteLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
                     return;
                 }
 

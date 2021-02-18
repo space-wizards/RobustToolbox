@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Serilog.Events;
 
 namespace Robust.UnitTesting

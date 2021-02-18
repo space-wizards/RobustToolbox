@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Robust.Shared.Localization.Macros
+﻿namespace Robust.Shared.Localization.Macros
 {
     public interface ITextMacro
     {

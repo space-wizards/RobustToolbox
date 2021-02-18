@@ -1,4 +1,4 @@
-﻿using Robust.Server.Interfaces.Player;
+﻿using Robust.Server.Player;
 
 namespace Robust.Server.Console
 {

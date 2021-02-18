@@ -1,8 +1,7 @@
 using System.Linq;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
+using Robust.Shared.Network;
 
 namespace Robust.Client.Console.Commands
 {
@@ -27,7 +26,7 @@ namespace Robust.Client.Console.Commands
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            shell.WriteLine("Unknown command: " + commandname, Color.Red);
+                            shell.WriteError("Unknown command: " + commandname);
                             return;
                         }
                         // TODO: Maybe have a server side help?
@@ -39,7 +38,7 @@ namespace Robust.Client.Console.Commands
                     break;
 
                 default:
-                    shell.WriteLine("Invalid amount of arguments.", Color.Red);
+                    shell.WriteError("Invalid amount of arguments.");
                     break;
             }
         }

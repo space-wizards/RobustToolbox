@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Pidgin;
 using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
@@ -70,7 +71,7 @@ namespace Robust.Build.Tasks
             {
                 XmlnsAttributes =
                 {
-                    typeSystem.GetType("Robust.Client.UserInterface.XAML.XmlnsDefinitionAttribute"),
+                    typeSystem.GetType("Avalonia.Metadata.XmlnsDefinitionAttribute"),
 
                 },
                 ContentAttributes =
@@ -98,7 +99,7 @@ namespace Robust.Build.Tasks
                 typeSystem,
                 typeSystem.TargetAssembly,
                 xamlLanguage,
-                XamlXmlnsMappings.Resolve(typeSystem, xamlLanguage));
+                XamlXmlnsMappings.Resolve(typeSystem, xamlLanguage), CustomValueConverter);
 
             var contextDef = new TypeDefinition("CompiledRobustXaml", "XamlIlContext",
                 TypeAttributes.Class, asm.MainModule.TypeSystem.Object);
@@ -295,6 +296,41 @@ namespace Robust.Build.Tasks
             loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
             loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             return true;
+        }
+
+        private static bool CustomValueConverter(
+            AstTransformationContext context,
+            IXamlAstValueNode node,
+            IXamlType type,
+            out IXamlAstValueNode result)
+        {
+            if (!(node is XamlAstTextNode textNode))
+            {
+                result = null;
+                return false;
+            }
+
+            var text = textNode.Text;
+            var types = context.GetRobustTypes();
+
+            if (type.Equals(types.Vector2))
+            {
+                var foo = MathParsing.Single2.Parse(text);
+
+                if (!foo.Success)
+                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Vector2", node);
+
+                var (x, y) = foo.Value;
+
+                result = new RXamlSingleVecLikeConstAstNode(
+                    node,
+                    types.Vector2, types.Vector2ConstructorFull,
+                    types.Single, new[] {x, y});
+                return true;
+            }
+
+            result = null;
+            return false;
         }
 
         public const string ContextNameScopeFieldName = "RobustNameScope";

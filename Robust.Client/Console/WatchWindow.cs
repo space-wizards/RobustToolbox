@@ -7,10 +7,10 @@ using Microsoft.CodeAnalysis.Scripting;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Timing;
 

@@ -1,2 +1,3 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <Import Project="Robust.Analyzers.targets" />
 </Project>

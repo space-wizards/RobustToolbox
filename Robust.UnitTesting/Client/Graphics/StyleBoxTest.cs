@@ -1,7 +1,6 @@
 using NUnit.Framework;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using Robust.Client.Graphics.Drawing;
-
 
 namespace Robust.UnitTesting.Client.Graphics
 {

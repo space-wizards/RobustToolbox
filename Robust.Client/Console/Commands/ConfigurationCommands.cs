@@ -3,9 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {
@@ -16,7 +14,7 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length < 1 || args.Length > 2)
             {
-                shell.WriteLine("Must provide exactly one or two arguments.", Color.Red);
+                shell.WriteError("Must provide exactly one or two arguments.");
                 return;
             }
 
@@ -32,7 +30,7 @@ namespace Robust.Client.Console.Commands
 
             if (!configManager.IsCVarRegistered(name))
             {
-                shell.WriteLine($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.", Color.Red);
+                shell.WriteError($"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.");
                 return;
             }
 

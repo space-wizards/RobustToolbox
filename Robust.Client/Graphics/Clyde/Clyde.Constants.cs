@@ -1,6 +1,3 @@
-using Robust.Client.Graphics.ClientEye;
-using Robust.Shared.Maths;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde

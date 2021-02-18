@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using NetSerializer;
 using Newtonsoft.Json.Linq;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 

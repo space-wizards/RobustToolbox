@@ -1,6 +1,5 @@
 using System.IO;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.UserInterface;
 
 namespace Robust.Client.UserInterface
 {

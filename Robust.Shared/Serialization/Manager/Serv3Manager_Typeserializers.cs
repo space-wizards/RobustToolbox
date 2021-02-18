@@ -4,82 +4,110 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using NFluidsynth;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public partial class Serv3Manager
     {
-        private readonly Dictionary<Type, object> _typeSerializers = new();
-        private readonly Dictionary<Type, Type> _genericSerializersTypes = new();
+        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
+        private readonly Dictionary<Type, object> _typeWriters = new();
+
+        private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericReaderTypes = new();
+        private readonly Dictionary<Type, Type> _genericWriterTypes = new();
 
         private void InitializeTypeSerializers()
         {
-            var typeSerializer = typeof(ITypeSerializer<>);
             foreach (var type in _reflectionManager.FindTypesWithAttribute<TypeSerializerAttribute>())
             {
-                var interfaces = type.GetInterfaces()
-                    .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeSerializer);
-                foreach (var @interface in interfaces)
-                {
-                    var typeToSerialize = @interface.GetGenericArguments().First();
-
-                    if (type.IsGenericTypeDefinition)
-                    {
-                        _genericSerializersTypes.Add(typeToSerialize, type);
-                    }
-                    else
-                    {
-                        CreateSerializer(typeToSerialize, type);
-                    }
-                }
+                RegisterSerializer(type);
             }
         }
 
-        private object CreateSerializer(Type typeToSerialize, Type serializerType)
+        private object? RegisterSerializer(Type type)
         {
-            var serializer = Activator.CreateInstance(serializerType)!;
-            IoCManager.InjectDependencies(serializer);
-            _typeSerializers.Add(typeToSerialize,serializer);
-            return serializer;
+            var writerInterfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeWriter<>)).ToArray();
+            var readerInterfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeReader<,>)).ToArray();
+
+            if (readerInterfaces.Length == 0 && writerInterfaces.Length == 0)
+                throw new InvalidOperationException(
+                    "Tried to register TypeReader/Writer that had none of the interfaces inherited.");
+
+            if (type.IsGenericTypeDefinition)
+            {
+                foreach (var writerInterface in writerInterfaces)
+                {
+                    if(!_genericWriterTypes.TryAdd(writerInterface.GetGenericArguments()[0], type))
+                        Logger.Error($"Tried registering generic writer for type {writerInterface.GetGenericArguments()[0]} twice");
+                }
+
+                foreach (var readerInterface in readerInterfaces)
+                {
+                    if(!_genericReaderTypes.TryAdd((readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]), type))
+                        Logger.Error($"Tried registering generic reader for type {readerInterface.GetGenericArguments()[0]} and datanode {readerInterface.GetGenericArguments()[1]} twice");
+                }
+                return null;
+            }
+            else
+            {
+                var serializer = Activator.CreateInstance(type)!;
+                IoCManager.InjectDependencies(serializer);
+
+                foreach (var writerInterface in writerInterfaces)
+                {
+                    if(!_typeWriters.TryAdd(writerInterface.GetGenericArguments()[0], serializer))
+                        Logger.Error($"Tried registering writer for type {writerInterface.GetGenericArguments()[0]} twice");
+                }
+
+                foreach (var readerInterface in readerInterfaces)
+                {
+                    if(!_typeReaders.TryAdd((readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]), serializer))
+                        Logger.Error($"Tried registering reader for type {readerInterface.GetGenericArguments()[0]} and datanode {readerInterface.GetGenericArguments()[1]} twice");
+                }
+
+                return serializer;
+            }
         }
 
-        //TODO do with delegates?
-        private bool TryGetGenericTypeSerializer(Type type, [NotNullWhen(true)] out object? rawTypeSer)
+        private bool TryGetGenericReader<T, TNode>([NotNullWhen(true)] out ITypeReader<T, TNode>? rawReader)
+            where TNode : DataNode where T : notnull
         {
-            rawTypeSer = null;
-            if (type.IsGenericType)
+            rawReader = null;
+            if (typeof(T).IsGenericType)
             {
-                var typeDef = type.GetGenericTypeDefinition();
+                var typeDef = typeof(T).GetGenericTypeDefinition();
                 Type? serializerTypeDef = null;
-                foreach (var (key, val) in _genericSerializersTypes)
+                foreach (var (key, val) in _genericReaderTypes)
                 {
-                    if (typeDef.HasSameMetadataDefinitionAs(key))
+                    if (typeDef.HasSameMetadataDefinitionAs(key.Type) && key.DataNodeType.IsAssignableFrom(typeof(TNode)))
                     {
                         serializerTypeDef = val;
                         break;
                     }
                 }
                 if (serializerTypeDef == null) return false;
-                //if (!_genericSerializersTypes.TryGetValue(typeDef, out var serializerTypeDef)) return false;
-                var serializerType = serializerTypeDef.MakeGenericType(type.GetGenericArguments());
-                rawTypeSer = CreateSerializer(type, serializerType);
+                var serializerType = serializerTypeDef.MakeGenericType(typeof(T).GetGenericArguments());
+                rawReader = (ITypeReader<T, TNode>)RegisterSerializer(serializerType)!;
                 return true;
             }
 
             return false;
         }
 
-        private bool TryGetGenericTypeSerializer<T>([NotNullWhen(true)] out ITypeSerializer<T>? rawTypeSer)
+        private bool TryGetGenericWriter<T>([NotNullWhen(true)] out ITypeWriter<T>? rawWriter) where T : notnull
         {
-            rawTypeSer = null;
+            rawWriter = null;
             if (typeof(T).IsGenericType)
             {
                 var typeDef = typeof(T).GetGenericTypeDefinition();
                 Type? serializerTypeDef = null;
-                foreach (var (key, val) in _genericSerializersTypes)
+                foreach (var (key, val) in _genericWriterTypes)
                 {
                     if (typeDef.HasSameMetadataDefinitionAs(key))
                     {
@@ -89,7 +117,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 if (serializerTypeDef == null) return false;
                 var serializerType = serializerTypeDef.MakeGenericType(typeof(T).GetGenericArguments());
-                rawTypeSer = (ITypeSerializer<T>)CreateSerializer(typeof(T), serializerType);
+                rawWriter = (ITypeWriter<T>)RegisterSerializer(serializerType)!;
                 return true;
             }
 
@@ -100,7 +128,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(Serv3Manager.TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type);
+                m.Name == nameof(Serv3Manager.TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
             obj = null;
             var arr = new object?[]
             {
@@ -118,18 +146,18 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers<T>(DataNode node, out T? obj, ISerializationContext? context = null)
+        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out T? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
         {
             obj = default;
 
-            if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
+            if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
             {
-                obj = genericTypeSer.Read(node, context);
+                obj = genericTypeReader.Read(node, context);
                 return true;
             }
 
-            if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
-            var ser = (ITypeSerializer<T>) rawTypeSer;
+            if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader)) return false;
+            var ser = (ITypeSerializer<T, TNode>) rawTypeReader;
             obj = ser.Read(node, context);
             return true;
         }
@@ -139,7 +167,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(Serv3Manager.TryWriteWithTypeSerializers) && m.GetParameters().Length == 5).MakeGenericMethod(type);
+                m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
             node = null;
             var arr = new object?[]
             {
@@ -151,7 +179,7 @@ namespace Robust.Shared.Serialization.Manager
             var res = method.Invoke(this, arr);
             if ((res is bool ? (bool) res : false))
             {
-                node = (DataNode?)arr[2];
+                node = (DataNode?)arr[1];
                 return true;
             }
 
@@ -160,18 +188,18 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool TryWriteWithTypeSerializers<T>(T obj, [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null) where T : notnull
         {
             node = default;
 
-            if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
+            if (TryGetGenericWriter(out ITypeWriter<T>? genericTypeWriter))
             {
-                node = genericTypeSer.Write(obj, alwaysWrite, context);
+                node = genericTypeWriter.Write(obj, alwaysWrite, context);
                 return true;
             }
 
-            if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
-            var ser = (ITypeSerializer<T>) rawTypeSer;
+            if (!_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter)) return false;
+            var ser = (ITypeWriter<T>) rawTypeWriter;
             node = ser.Write(obj, alwaysWrite, context);
             return true;
         }

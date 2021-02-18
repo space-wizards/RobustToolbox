@@ -23,6 +23,11 @@ namespace Robust.Shared.Utility
             return type;
         }
 
+        public static Type EnsureNotNullableType(this Type type)
+        {
+            return Nullable.GetUnderlyingType(type) ?? type;
+        }
+
         /// <summary>
         /// Checks if the field has a nullable annotation [?]
         /// </summary>

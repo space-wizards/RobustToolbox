@@ -1,9 +1,11 @@
 using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Serialization.Manager
 {
+    [ImplicitDataDefinitionForInheritors]
     public abstract class DataClass
     {
         public T GetValue<T>(string name)

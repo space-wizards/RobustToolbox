@@ -226,7 +226,10 @@ namespace Robust.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : ISerializationContext, IEntityLoadContext, ITypeSerializer<GridId>, ITypeSerializer<EntityUid>, ITypeSerializer<IEntity>
+        private class MapContext : ISerializationContext, IEntityLoadContext,
+            ITypeSerializer<GridId, ValueDataNode>,
+            ITypeSerializer<EntityUid, ValueDataNode>,
+            ITypeSerializer<IEntity, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -734,12 +737,12 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = component.Name;
                         var dataClass = serv3Mgr.GetEmptyComponentDataClass(component.Name);
                         serv3Mgr.Object2DataClass(component, dataClass);
-                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory(), context: this);
+                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
-                            compMapping.AddNode("type", new YamlValueDataNode(component.Name));
+                            compMapping.AddNode("type", new ValueDataNode(component.Name));
                             // Something actually got written!
                             components.Add(compMapping.ToYamlNode());
                         }
@@ -809,12 +812,11 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public GridId NodeToType(DataNode node, ISerializationContext? context = null)
+            public GridId Read(ValueDataNode node, ISerializationContext? context = null)
             {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                if(valueDataNode.GetValue() == "null") return GridId.Invalid;
+                if(node.Value == "null") return GridId.Invalid;
 
-                var val = int.Parse(valueDataNode.GetValue());
+                var val = int.Parse(node.Value);
                 if (val >= Grids.Count)
                 {
                     Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
@@ -826,7 +828,7 @@ namespace Robust.Server.Maps
                 return GridId.Invalid;
             }
 
-            public DataNode TypeToNode(IEntity value, bool alwaysWrite = false,
+            public DataNode Write(IEntity value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value.Uid, out var entityMapped))
@@ -840,7 +842,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public DataNode TypeToNode(EntityUid value, bool alwaysWrite = false,
+            public DataNode Write(EntityUid value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
@@ -860,7 +862,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public DataNode TypeToNode(GridId value, bool alwaysWrite = false,
+            public DataNode Write(GridId value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!GridIDMap.TryGetValue(value, out var gridMapped))
@@ -870,19 +872,18 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return new YamlValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
+                    return new ValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
                 }
             }
 
-            EntityUid ITypeSerializer<EntityUid>.NodeToType(DataNode node, ISerializationContext? context)
+            EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
             {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                if (valueDataNode.GetValue() == "null")
+                if (node.Value == "null")
                 {
                     return EntityUid.Invalid;
                 }
 
-                var val = int.Parse(valueDataNode.GetValue());
+                var val = int.Parse(node.Value);
                 if (val >= Entities.Count)
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
@@ -894,11 +895,9 @@ namespace Robust.Server.Maps
                 return EntityUid.Invalid;
             }
 
-            IEntity ITypeSerializer<IEntity>.NodeToType(DataNode node, ISerializationContext? context)
+            IEntity ITypeReader<IEntity, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
             {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-
-                var val = int.Parse(valueDataNode.GetValue());
+                var val = int.Parse(node.Value);
                 if (val >= Entities.Count)
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);

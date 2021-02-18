@@ -37,7 +37,7 @@ namespace Robust.Shared.Serialization.Manager
             switch (fieldDefinition.Attribute)
             {
                 case DataFieldWithConstantAttribute constantAttribute:
-                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
+                    if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
 
                     // getting the type //
                     generator.Emit(OpCodes.Ldtoken, constantAttribute.ConstantTag);
@@ -53,7 +53,7 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Callvirt, readConstMethod);
                     break;
                 case DataFieldWithFlagAttribute flagAttribute:
-                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
+                    if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
 
                     // getting the type //
                     generator.Emit(OpCodes.Ldtoken, flagAttribute.FlagTag);
@@ -99,6 +99,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.Emit(OpCodes.Ldarg, 4);
             generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
             generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
+            //generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
 
             //checking if the value is default. if so, we skip setting the field
             generator.EmitEquals(fieldDefinition.FieldType, endLabel);
@@ -168,7 +169,7 @@ public readonly bool ServerOnly;
             switch (fieldDefinition.Attribute)
             {
                 case DataFieldWithConstantAttribute constantAttribute:
-                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
+                    if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
 
                     // load type //
                     generator.Emit(OpCodes.Ldtoken, constantAttribute.ConstantTag);
@@ -181,7 +182,7 @@ public readonly bool ServerOnly;
                     generator.Emit(OpCodes.Callvirt, writeConstantMethod);
                     break;
                 case DataFieldWithFlagAttribute flagAttribute:
-                    if (fieldDefinition.FieldType != typeof(int)) throw new InvalidOperationException();
+                    if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
 
                     // load type //
                     generator.Emit(OpCodes.Ldtoken, flagAttribute.FlagTag);
@@ -206,7 +207,7 @@ public readonly bool ServerOnly;
                     generator.Emit(OpCodes.Ldarg, 2); //load context
 
                     var writeDataFieldMethod = typeof(IServ3Manager).GetMethods().First(m =>
-                        m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 5);
+                        m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 4);
                     generator.Emit(OpCodes.Callvirt, writeDataFieldMethod); //get new node
                     break;
             }

@@ -120,7 +120,7 @@ namespace Robust.Client.Input
 
         public void SaveToUserData()
         {
-            var mapping = new YamlMappingDataNode();
+            var mapping = new MappingDataNode();
             var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
 
             var modifiedBindings = _modifiedKeyFunctions
@@ -144,9 +144,9 @@ namespace Robust.Client.Input
                 .Where(p => _bindingsByFunction[p].Count == 0)
                 .ToArray();
 
-            mapping.AddNode("version", new YamlValueDataNode("1"));
-            mapping.AddNode("binds", serv3Mgr.WriteValue(modifiedBindings, new YamlDataNodeFactory()));
-            mapping.AddNode("leaveEmpty", serv3Mgr.WriteValue(leaveEmpty, new YamlDataNodeFactory()));
+            mapping.AddNode("version", new ValueDataNode("1"));
+            mapping.AddNode("binds", serv3Mgr.WriteValue(modifiedBindings));
+            mapping.AddNode("leaveEmpty", serv3Mgr.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));

@@ -133,7 +133,7 @@ namespace Robust.Shared.Serialization.Manager
 
             var loc = generator.DeclareLocal(typeof(MappingDataNode));
             Debug.Assert(loc.LocalIndex == 0);
-            generator.Emit(OpCodes.Newobj, typeof(MappingDataNode));
+            generator.Emit(OpCodes.Newobj, typeof(MappingDataNode).GetConstructor(new Type[0])!);
             generator.Emit(OpCodes.Stloc_0);
 
             for (var i = _baseFieldDefinitions.Length-1; i >= 0; i--)

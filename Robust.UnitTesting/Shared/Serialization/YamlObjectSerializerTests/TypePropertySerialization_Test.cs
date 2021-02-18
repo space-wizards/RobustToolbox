@@ -31,21 +31,17 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
                 TestPropertyOne = "B",
                 TestPropertyTwo = 10
             };
-            var factory = new YamlDataNodeFactory();
             var serMan = IoCManager.Resolve<IServ3Manager>();
-            var mapping = (YamlMappingDataNode) serMan.WriteValue(type, factory);
+            var mapping = (MappingDataNode) serMan.WriteValue(type);
 
             Assert.IsNotEmpty(mapping.Children);
 
-            var typenode = mapping.GetNode("!type") as ValueDataNode;
             var testPropertyOne = mapping.GetNode("testPropertyOne") as ValueDataNode;
             var testPropertyTwo = mapping.GetNode("testPropertyTwo") as ValueDataNode;
 
-            Assert.NotNull(typenode);
             Assert.NotNull(testPropertyOne);
             Assert.NotNull(testPropertyTwo);
-            Assert.That(typenode!.GetValue(), Is.EqualTo("TestTypeTwo"));
-            Assert.That(testPropertyOne!.GetValue(), Is.EqualTo("B"));
+            Assert.That(testPropertyOne!.Value, Is.EqualTo("B"));
             Assert.That(testPropertyTwo!.Value, Is.EqualTo("10"));
         }
 

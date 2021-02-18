@@ -30,6 +30,8 @@ namespace Robust.Shared.Serialization.Markdown
             {
                 _mapping.Add(key.ToDataNode(), val.ToDataNode());
             }
+
+            Tag = mapping.Tag;
         }
 
         public YamlMappingNode ToMappingNode()
@@ -45,7 +47,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public DataNode GetNode(DataNode key)
         {
-            return _mapping.First(n => n.Key.Equals(key)).Value;
+            return _mapping[key];
         }
 
         public DataNode GetNode(string key)
@@ -108,6 +110,8 @@ namespace Robust.Shared.Serialization.Markdown
                 //intentionally provokes argumentexception
                 newMapping.AddNode(key.Copy(), val.Copy());
             }
+
+            newMapping.Tag = Tag;
 
             return newMapping;
         }

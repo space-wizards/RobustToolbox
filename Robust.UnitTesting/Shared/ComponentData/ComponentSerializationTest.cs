@@ -79,12 +79,12 @@ namespace Robust.UnitTesting.Shared.ComponentData
 
             var dataClass = IoCManager.Resolve<IServ3Manager>().GetEmptyComponentDataClass(comp.Name);
             IoCManager.Resolve<IServ3Manager>().Object2DataClass(comp, dataClass);
-            var mapping = IoCManager.Resolve<IServ3Manager>().WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory()) as MappingDataNode;
+            var mapping = IoCManager.Resolve<IServ3Manager>().WriteValue(dataClass.GetType(), dataClass) as MappingDataNode;
             Assert.That(mapping, Is.Not.Null);
             Assert.That(mapping!.HasNode("foo"));
-            Assert.That(mapping.GetNode("foo"), Is.EqualTo(new YamlValueDataNode("1")));
+            Assert.That(mapping.GetNode("foo"), Is.EqualTo(new ValueDataNode("1")));
             Assert.That(mapping!.HasNode("baz"));
-            Assert.That(mapping.GetNode("baz"), Is.EqualTo(new YamlValueDataNode("Testing")));
+            Assert.That(mapping.GetNode("baz"), Is.EqualTo(new ValueDataNode("Testing")));
             Assert.That(!mapping!.HasNode("bar"));
         }
 

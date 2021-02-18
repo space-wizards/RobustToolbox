@@ -152,7 +152,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        [DataField("components")]
+        [field:DataField("components")]
         public ComponentRegistry Components { get; } = new();
 
         private readonly HashSet<Type> ReferenceTypes = new();

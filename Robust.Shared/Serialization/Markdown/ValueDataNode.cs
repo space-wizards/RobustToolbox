@@ -14,6 +14,7 @@ namespace Robust.Shared.Serialization.Markdown
         public ValueDataNode(YamlScalarNode node)
         {
             Value = node.Value ?? "";
+            Tag = node.Tag;
         }
 
         public string Value { get; set; }
@@ -27,6 +28,11 @@ namespace Robust.Shared.Serialization.Markdown
         {
             if(obj is not ValueDataNode node) return base.Equals(obj);
             return node.Value == Value;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -22,12 +23,28 @@ namespace Robust.Shared.Serialization.Manager
             InitializeTypeSerializers();
             InitializeDataClasses();
 
+            //var registrations = _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>().ToHashSet();
+            var registrations = new HashSet<Type>();
+
+            foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
+            {
+                foreach (var child in _reflectionManager.GetAllChildren(baseType))
+                {
+                    registrations.Add(child);
+                }
+            }
+
             foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
                 {
-                    _dataDefinitions.Add(type, new SerializationDataDefinition(type));
+                    registrations.Add(type);
                 }
+            }
+
+            foreach (var type in registrations)
+            {
+                _dataDefinitions.Add(type, new SerializationDataDefinition(type));
             }
 
             foreach (var type in _reflectionManager.FindTypesWithAttribute<CopyByRefAttribute>())
@@ -56,11 +73,12 @@ namespace Robust.Shared.Serialization.Manager
 
         public object ReadValue(Type type, DataNode node, ISerializationContext? context = null)
         {
-            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+            var underlyingType = type.EnsureNotNullableType();
 
-            if (node is MappingDataNode mapping && mapping.TryGetNode("!type", out var typeNode) && typeNode is ValueDataNode typeValueDataNode)
+            if (node.Tag?.StartsWith("!type:") == true)
             {
-                underlyingType = ResolveConcreteType(underlyingType, typeValueDataNode.Value);
+                var typeString = node.Tag.Substring(6);
+                underlyingType = ResolveConcreteType(underlyingType, typeString);
             }
 
             if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
@@ -77,23 +95,23 @@ namespace Robust.Shared.Serialization.Manager
                 return selfSerObj;
             }
 
-            if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
+            //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
             var currentType = underlyingType;
-            var dataDef = GetDataDefinition(underlyingType);
-            if (dataDef == null) return Activator.CreateInstance(underlyingType)!;
-
-            var obj = Activator.CreateInstance(dataDef.Type)!;
+            var obj = Activator.CreateInstance(underlyingType)!;
 
             if(obj is IPopulateDefaultValues populateDefaultValues)
                 populateDefaultValues.PopulateDefaultValues();
 
-            while (currentType != null)
+            if(node is MappingDataNode mappingDataNode)
             {
-                if(TryGetDataDefinition(currentType, out dataDef))
-                    obj = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
+                while (currentType != null)
+                {
+                    if(TryGetDataDefinition(currentType, out var dataDef))
+                        obj = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
 
-                currentType = currentType.BaseType;
+                    currentType = currentType.BaseType;
+                }
             }
 
             if (obj is ISerializationHooks serHooks)
@@ -134,7 +152,7 @@ namespace Robust.Shared.Serialization.Manager
             var mapping = new MappingDataNode();
             if (type != value.GetType() && (type.IsAbstract || type.IsInterface))
             {
-                mapping.AddNode("!type", new ValueDataNode(value.GetType().Name));
+                mapping.Tag = $"!type:{value.GetType().Name}";
                 currentType = value.GetType();
             }
 
@@ -150,7 +168,7 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = currentType.BaseType;
             }
 
-            return mapping;
+            return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
         public object Copy(object source, object target)

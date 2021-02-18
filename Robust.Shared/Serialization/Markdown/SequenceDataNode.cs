@@ -18,6 +18,8 @@ namespace Robust.Shared.Serialization.Markdown
             {
                 nodes.Add(node.ToDataNode());
             }
+
+            Tag = sequenceNode.Tag;
         }
 
         public YamlSequenceNode ToSequenceNode()

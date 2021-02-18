@@ -50,9 +50,6 @@ namespace Robust.Client.GameObjects
 
             Register<AnimationPlayerComponent>();
 
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
-
             Register<TimerComponent>();
 
 #if DEBUG

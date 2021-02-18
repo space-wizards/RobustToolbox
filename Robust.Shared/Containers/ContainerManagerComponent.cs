@@ -14,6 +14,8 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
+    [RegisterComponent]
+    [ComponentReference(typeof(IContainerManager))]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [ViewVariables] private readonly Dictionary<string, IContainer> _containers = new();

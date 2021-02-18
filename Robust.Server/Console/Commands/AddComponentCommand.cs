@@ -16,18 +16,28 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 2)
             {
-                shell.WriteLine("Wrong number of arguments");
+                shell.WriteLine($"Invalid amount of arguments.\n{Help}");
                 return;
             }
 
-            var entityUid = EntityUid.Parse(args[0]);
+            if (!EntityUid.TryParse(args[0], out var uid))
+            {
+                shell.WriteLine($"{uid} is not a valid entity uid.");
+                return;
+            }
+
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            if (!entityManager.TryGetEntity(uid, out var entity))
+            {
+                shell.WriteLine($"No entity found with id {uid}");
+                return;
+            }
+
             var componentName = args[1];
 
             var compManager = IoCManager.Resolve<IComponentManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
-            var entity = entityManager.GetEntity(entityUid);
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
             {
@@ -38,8 +48,9 @@ namespace Robust.Server.Console.Commands
             var component = (Component) compFactory.GetComponent(registration.Type);
 
             component.Owner = entity;
-
             compManager.AddComponent(entity, component);
+
+            shell.WriteLine($"Component {componentName} added to entity {entity.Name}");
         }
     }
 }

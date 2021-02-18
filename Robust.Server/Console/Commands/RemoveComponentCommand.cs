@@ -1,7 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
@@ -17,11 +16,24 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 2)
             {
-                shell.WriteLine("Wrong number of arguments");
+                shell.WriteLine($"Invalid amount of arguments.\n{Help}");
                 return;
             }
 
-            var entityUid = EntityUid.Parse(args[0]);
+            if (!EntityUid.TryParse(args[0], out var uid))
+            {
+                shell.WriteLine($"{uid} is not a valid entity uid.");
+                return;
+            }
+
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            if (!entityManager.TryGetEntity(uid, out var entity))
+            {
+                shell.WriteLine($"No entity found with id {uid}");
+                return;
+            }
+
             var componentName = args[1];
 
             var compManager = IoCManager.Resolve<IComponentManager>();
@@ -33,7 +45,9 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            compManager.RemoveComponent(entityUid, registration.Type);
+            compManager.RemoveComponent(uid, registration.Type);
+
+            shell.WriteLine($"Removed component with name {componentName} from entity {entity.Name}");
         }
     }
 }

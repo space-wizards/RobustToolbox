@@ -12,6 +12,7 @@ using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -37,6 +38,7 @@ namespace Robust.Server
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
+            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityNetworkManager>();

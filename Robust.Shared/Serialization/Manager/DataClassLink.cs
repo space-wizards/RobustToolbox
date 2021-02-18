@@ -61,7 +61,7 @@ namespace Robust.Shared.Serialization.Manager
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "dataClass");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "name");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.Out, "value");
+            dynamicMethod.DefineParameter(0, ParameterAttributes.Out, "value");
             var generator = dynamicMethod.GetILGenerator();
 
             foreach (var dataclassField in _dataclassFields)
@@ -73,6 +73,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.EmitLdfld(dataclassField.FieldInfo);
+                generator.Emit(OpCodes.Box, dataclassField.FieldInfo.FieldType);
                 generator.Emit(OpCodes.Ret);
 
                 generator.MarkLabel(notIt);

@@ -23,7 +23,6 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         bool ITypeReader<bool, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
         {
-
             return bool.Parse(node.Value);
         }
 

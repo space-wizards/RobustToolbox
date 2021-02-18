@@ -85,6 +85,7 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Callvirt, readValueMethod); //reads node into our desired value
 
                     //unbox the value if necessary since ReadValue returns a object
+                    //if(fieldDefinition.FieldType.IsValueType)
                     generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
                     break;
             }
@@ -94,12 +95,16 @@ namespace Robust.Shared.Serialization.Manager
 
             //loading back our value
             generator.Emit(OpCodes.Ldloc, localIdx);
+            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
 
             //loading default value
             generator.Emit(OpCodes.Ldarg, 4);
             generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
             generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
-            //generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
+            //generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType.EnsureNotNullableType());
 
             //checking if the value is default. if so, we skip setting the field
             generator.EmitEquals(fieldDefinition.FieldType, endLabel);

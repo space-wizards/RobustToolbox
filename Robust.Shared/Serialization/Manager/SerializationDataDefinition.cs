@@ -101,7 +101,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
             dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
             dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)
             {
@@ -129,7 +129,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationContext");
             dynamicMethod.DefineParameter(4, ParameterAttributes.In, "alwaysWrite");
             dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             var loc = generator.DeclareLocal(typeof(MappingDataNode));
             Debug.Assert(loc.LocalIndex == 0);
@@ -160,7 +160,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
             dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)
             {
@@ -185,7 +185,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {

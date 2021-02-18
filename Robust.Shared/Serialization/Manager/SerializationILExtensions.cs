@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.Manager
     public static class SerializationILExtensions
     {
         // object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager, ISerializationContext? context, object?[] defaultValues
-        public static void EmitPopulateField(this ILGenerator generator,
+        public static void EmitPopulateField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
             /* todo paul
@@ -128,7 +128,7 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         // object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
-        public static void EmitSerializeField(this ILGenerator generator,
+        public static void EmitSerializeField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
             if(fieldDefinition.Attribute.ReadOnly) return; //hehe ez pz
@@ -225,7 +225,7 @@ public readonly bool ServerOnly;
             generator.MarkLabel(endLabel);
         }
 
-        public static void EmitPushInheritanceField(this ILGenerator generator,
+        public static void EmitPushInheritanceField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
             var isDefaultValue = generator.DefineLabel();
@@ -246,7 +246,7 @@ public readonly bool ServerOnly;
             generator.MarkLabel(isDefaultValue);
         }
 
-        public static void EmitCopy(this ILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
+        public static void EmitCopy(this RobustILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
             AbstractFieldInfo toField, int mgrArg, bool assumeValueNotNull = false)
         {
             if (assumeValueNotNull)
@@ -281,7 +281,7 @@ public readonly bool ServerOnly;
             generator.EmitStfld(toField);
         }
 
-        public static void EmitEquals(this ILGenerator generator, Type type, Label label)
+        public static void EmitEquals(this RobustILGenerator generator, Type type, Label label)
         {
             if (type.IsPrimitive || type == typeof(string))
             {
@@ -296,7 +296,7 @@ public readonly bool ServerOnly;
             }
         }
 
-        public static void EmitStfld(this ILGenerator generator,
+        public static void EmitStfld(this RobustILGenerator generator,
             AbstractFieldInfo fieldDefinition)
         {
             switch (fieldDefinition)
@@ -310,7 +310,7 @@ public readonly bool ServerOnly;
             }
         }
 
-        public static void EmitLdfld(this ILGenerator generator,
+        public static void EmitLdfld(this RobustILGenerator generator,
             AbstractFieldInfo fieldDefinition)
         {
             switch (fieldDefinition)

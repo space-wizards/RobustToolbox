@@ -62,7 +62,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "dataClass");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "name");
             dynamicMethod.DefineParameter(0, ParameterAttributes.Out, "value");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             foreach (var dataclassField in _dataclassFields)
             {
@@ -96,7 +96,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "dataclass");
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serv3Mgr");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             foreach (var actualField in _actualFields)
             {
@@ -141,7 +141,7 @@ namespace Robust.Shared.Serialization.Manager
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "dataclass");
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serv3Mgr");
-            var generator = dynamicMethod.GetILGenerator();
+            var generator = dynamicMethod.GetRobustGen();
 
             foreach (var actualField in _actualFields)
             {

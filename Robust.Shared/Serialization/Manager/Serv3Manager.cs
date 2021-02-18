@@ -40,10 +40,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
-            dataDefinition = new SerializationDataDefinition(type);
-            _dataDefinitions.Add(type, dataDefinition);
-
-            return dataDefinition;
+            return null;
         }
 
         private bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
@@ -59,25 +56,32 @@ namespace Robust.Shared.Serialization.Manager
 
         public object ReadValue(Type type, IDataNode node, ISerializationContext? context = null)
         {
-            if (TryReadWithTypeSerializers(type, node, out var serializedObj, context))
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+            if (node is IMappingDataNode mapping && mapping.TryGetNode("!type", out var typeNode) && typeNode is IValueDataNode typeValueDataNode)
+            {
+                underlyingType = ResolveConcreteType(underlyingType, typeValueDataNode.GetValue());
+            }
+
+            if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
             {
                 return serializedObj;
             }
 
-            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
             {
                 if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
 
-                var selfSerObj = (ISelfSerialize) Activator.CreateInstance(type)!;
+                var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
                 selfSerObj.Deserialize(valueDataNode.GetValue());
                 return selfSerObj;
             }
 
             if (node is not IMappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
-            var currentType = type;
-            var dataDef = GetDataDefinition(type);
-            if (dataDef == null) return Activator.CreateInstance(type)!;
+            var currentType = underlyingType;
+            var dataDef = GetDataDefinition(underlyingType);
+            if (dataDef == null) return Activator.CreateInstance(underlyingType)!;
 
             var obj = Activator.CreateInstance(dataDef.Type)!;
 
@@ -107,6 +111,11 @@ namespace Robust.Shared.Serialization.Manager
         public IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
+            //todo paul
+            //var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+            if (value == null) return nodeFactory.GetMappingNode();
+
             if (value is ISerializationHooks serHook)
                 serHook.BeforeSerialization();
 
@@ -123,10 +132,15 @@ namespace Robust.Shared.Serialization.Manager
 
             var currentType = type;
             var mapping = nodeFactory.GetMappingNode();
+            if (type != value.GetType() && (type.IsAbstract || type.IsInterface))
+            {
+                mapping.AddNode("!type", nodeFactory.GetValueNode(value.GetType().Name));
+                currentType = value.GetType();
+            }
 
             while (currentType != null)
             {
-                if (TryGetDataDefinition(type, out var dataDef))
+                if (TryGetDataDefinition(currentType, out var dataDef))
                 {
                     if (dataDef.CanCallWith(value) != true)
                         throw new ArgumentException($"Supplied parameter does not fit with datadefinition of {type}.", nameof(value));
@@ -191,6 +205,18 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             return target;
+        }
+
+        private static Type ResolveConcreteType(Type baseType, string typeName)
+        {
+            var reflection = IoCManager.Resolve<IReflectionManager>();
+            var type = reflection.YamlTypeTagLookup(baseType, typeName);
+            if (type == null)
+            {
+                throw new InvalidOperationException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
+            }
+
+            return type;
         }
     }
 }

@@ -90,13 +90,14 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
+                new[] {typeof(object), typeof(IMappingDataNode), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationContext");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
+            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "mapping");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
+            dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
             var generator = dynamicMethod.GetILGenerator();
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)

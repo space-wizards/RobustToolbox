@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -7,6 +8,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
+using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -35,11 +37,16 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
             Assert.IsNotEmpty(mapping.Children);
 
-            var testPropertyOne = (IValueDataNode) ((IMappingDataNode) mapping["test"])["testPropertyOne"];
-            var testPropertyTwo = (IValueDataNode) ((IMappingDataNode) mapping["test"])["testPropertyTwo"];
+            var typenode = mapping.GetNode("!type") as IValueDataNode;
+            var testPropertyOne = mapping.GetNode("testPropertyOne") as IValueDataNode;
+            var testPropertyTwo = mapping.GetNode("testPropertyTwo") as IValueDataNode;
 
-            Assert.That(testPropertyOne.GetValue(), Is.EqualTo("B"));
-            Assert.That(testPropertyTwo.Value, Is.EqualTo("10"));
+            Assert.NotNull(typenode);
+            Assert.NotNull(testPropertyOne);
+            Assert.NotNull(testPropertyTwo);
+            Assert.That(typenode!.GetValue(), Is.EqualTo("TestTypeTwo"));
+            Assert.That(testPropertyOne!.GetValue(), Is.EqualTo("B"));
+            Assert.That(testPropertyTwo!.Value, Is.EqualTo("10"));
         }
 
         [Test]
@@ -66,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode[0];
 
             var serMan = IoCManager.Resolve<IServ3Manager>();
-            var type = serMan.ReadValue<ITestType>(new YamlMappingDataNode(mapping));
+            var type = serMan.ReadValue<ITestType>(mapping["test"].ToDataNode());
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeTwo>(type);

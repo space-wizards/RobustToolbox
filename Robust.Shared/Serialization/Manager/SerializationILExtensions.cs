@@ -203,6 +203,7 @@ public readonly bool ServerOnly;
                     generator.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle))!);
 
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
+                    generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
 
                     generator.Emit(OpCodes.Ldarg_2); //load nodeFactory
 

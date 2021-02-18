@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -13,7 +14,6 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
-    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     public class ImmutableListSerializationTest : RobustUnitTest
     {
@@ -30,7 +30,9 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var data = _serializableList;
             var factory = new YamlDataNodeFactory();
             var serMan = IoCManager.Resolve<IServ3Manager>();
-            var mapping = (IMappingDataNode) serMan.WriteValue(data, factory);
+            var sequence = (ISequenceDataNode) serMan.WriteValue(data, factory);
+            var mapping = new YamlMappingDataNode();
+            mapping.AddNode("datalist", sequence);
 
             // Assert
             var result = NodeToYamlText(mapping);
@@ -45,7 +47,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var rootNode = YamlTextToNode(_serializedListYaml);
 
             // Act
-            var data = serMan.ReadValue<ImmutableList<int>>(new YamlMappingDataNode(rootNode));
+            var data = serMan.ReadValue<ImmutableList<int>>(new YamlSequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
 
             // Assert
             Assert.That(data, Is.Not.Null);

@@ -44,7 +44,7 @@ namespace Robust.Shared.Serialization.Markdown.YAML
 
         public IDataNode GetNode(IDataNode key)
         {
-            return _mapping[key];
+            return _mapping.First(n => n.Key.Equals(key)).Value;
         }
 
         public IDataNode GetNode(string key)
@@ -85,7 +85,8 @@ namespace Robust.Shared.Serialization.Markdown.YAML
 
         public void AddNode(string key, IDataNode node)
         {
-            AddNode(_getFetchNode(key), node);
+            //todo paul yes yes i'll rework it
+            AddNode(new YamlValueDataNode(key), node);
         }
 
         public void RemoveNode(IDataNode key)

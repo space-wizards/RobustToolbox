@@ -11,31 +11,29 @@ namespace Robust.Generators.UnitTesting
         public void DCTest()
         {
             const string source = @"
-using Robust.Shared.Prototypes.DataClasses.Attributes;
 using System.Collections.Generic;
 using Robust.Shared.Prototypes;
 //using Robust.Shared.Serialization;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Test{
-        public class TestClassData {
-            //public override void ExposeData(ObjectSerializer serializer)
-            //{}
-        }
-
-        [DataClass(typeof(TestClassData))]
+        [DataClass]
         public class TestClass{
-        [YamlField(""myList"")]
+        [DataFieldWithConstant(""drawdepth"", typeof(DrawDepthTag))]
+        private int _drawDepth = DrawDepthTag.Default;
+        [DataField(""myList"")]
         public List<TestClass> testList;
-        [YamlField(""myList"")]
+        [DataField(""myList"")]
         public string abc = ""testing"";
-        [YamlField(""drawdepth"", constType: typeof(TestClass))]
+        [DataField(""drawdepth"", constType: typeof(TestClass))]
         public int test;
     }
 }
 ";
             var comp = CreateCompilation(source);
 
-            Assert.IsEmpty(comp.GetDiagnostics());
+            //Assert.IsEmpty(comp.GetDiagnostics());
 
             var (newcomp, generatorDiags) = RunGenerators(comp, new DataClassGenerator());
 

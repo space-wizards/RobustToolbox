@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
@@ -20,5 +21,9 @@ namespace Robust.Shared.Serialization.Markdown
         void RemoveNode(IDataNode key);
         void RemoveNode(string key);
         IMappingDataNode Merge(IMappingDataNode otherMapping);
+        bool IEquatable<IDataNode>.Equals(IDataNode? other)
+        {
+            return this == other;
+        }
     }
 }

@@ -61,7 +61,7 @@ namespace Robust.Generators
             var autoDataRegistrations = allResolvedClasses.Where(IsAutoDataReg).RemoveDuplicates().ToList();
 
             var customDataClassRegistrations = receiver.CustomDataClassRegistrations.Select(ResolveRegistration)
-                .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments.Length > 0).RemoveDuplicates()
+                .Where(sym => sym.GetAttribute(dataClassAttribute)?.ConstructorArguments[0].Value != null).RemoveDuplicates()
                 .ToDictionary(sym => sym,
                     sym => (INamedTypeSymbol) (sym.GetAttribute(dataClassAttribute).ConstructorArguments[0].Value));
 
@@ -90,7 +90,7 @@ namespace Robust.Generators
             {
                 string shouldInherit = ResolveParentDataClass(customDataClassRegistration.Key, true) ?? "Robust.Shared.Serialization.Manager.DataClass";
 
-                context.AddSource($"{customDataClassRegistration.Value.Name}_INHERIT.g.cs",
+                context.AddSource($"{customDataClassRegistration.Value.ContainingNamespace.ToString()}.{customDataClassRegistration.Value.Name}_INHERIT.g.cs",
                     SourceText.From(
                         GenerateCustomDataClassInheritanceCode(customDataClassRegistration.Value.Name,
                             customDataClassRegistration.Value.ContainingNamespace.ToString(), shouldInherit),
@@ -106,10 +106,9 @@ namespace Robust.Generators
                     foreach (var dataFieldAttributeSymbol in dataFieldAttribute)
                     {
                         var attribute = member.GetAttribute(dataFieldAttributeSymbol);
-                        if(attribute == null) break;
+                        if(attribute == null) continue;
 
                         ITypeSymbol type;
-                        bool failed = false;
                         switch (member)
                         {
                             case IFieldSymbol fieldSymbol:
@@ -122,11 +121,8 @@ namespace Robust.Generators
                                 context.ReportDiagnostic(Diagnostic.Create(
                                     Diagnostics.InvalidYamlAttrTarget,
                                     member.Locations.First()));
-                                failed = true;
-                                break;
+                                continue;
                         }
-
-                        if (failed) break;
 
                         var fieldStr = $"[{dataFieldAttributeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}(";
                         var parseFault = false;
@@ -203,7 +199,7 @@ namespace Robust.Generators
 
                 var inheriting = ResolveParentDataClass(symbol.BaseType) ?? "Robust.Shared.Serialization.Manager.DataClass";
 
-                context.AddSource($"{name}.g.cs",
+                context.AddSource($"{@namespace}.{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
             }
         }

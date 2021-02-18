@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Serialization.Markdown
 {
@@ -7,5 +9,9 @@ namespace Robust.Shared.Serialization.Markdown
         IReadOnlyList<IDataNode> Sequence { get; }
         void Add(IDataNode node);
         void Remove(IDataNode node);
+        bool IEquatable<IDataNode>.Equals(IDataNode? other)
+        {
+            return this == other;
+        }
     }
 }

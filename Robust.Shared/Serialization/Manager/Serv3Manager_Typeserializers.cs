@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -51,7 +53,17 @@ namespace Robust.Shared.Serialization.Manager
             if (type.IsGenericType)
             {
                 var typeDef = type.GetGenericTypeDefinition();
-                if (!_genericSerializersTypes.TryGetValue(typeDef, out var serializerTypeDef)) return false;
+                Type? serializerTypeDef = null;
+                foreach (var (key, val) in _genericSerializersTypes)
+                {
+                    if (typeDef.HasSameMetadataDefinitionAs(key))
+                    {
+                        serializerTypeDef = val;
+                        break;
+                    }
+                }
+                if (serializerTypeDef == null) return false;
+                //if (!_genericSerializersTypes.TryGetValue(typeDef, out var serializerTypeDef)) return false;
                 var serializerType = serializerTypeDef.MakeGenericType(type.GetGenericArguments());
                 rawTypeSer = CreateSerializer(type, serializerType);
                 return true;
@@ -66,7 +78,16 @@ namespace Robust.Shared.Serialization.Manager
             if (typeof(T).IsGenericType)
             {
                 var typeDef = typeof(T).GetGenericTypeDefinition();
-                if (!_genericSerializersTypes.TryGetValue(typeDef, out var serializerTypeDef)) return false;
+                Type? serializerTypeDef = null;
+                foreach (var (key, val) in _genericSerializersTypes)
+                {
+                    if (typeDef.HasSameMetadataDefinitionAs(key))
+                    {
+                        serializerTypeDef = val;
+                        break;
+                    }
+                }
+                if (serializerTypeDef == null) return false;
                 var serializerType = serializerTypeDef.MakeGenericType(typeof(T).GetGenericArguments());
                 rawTypeSer = (ITypeSerializer<T>)CreateSerializer(typeof(T), serializerType);
                 return true;
@@ -78,7 +99,23 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryReadWithTypeSerializers(Type type, IDataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
-            throw new NotImplementedException();
+            var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
+                m.Name == nameof(Serv3Manager.TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type);
+            obj = null;
+            var arr = new object?[]
+            {
+                node,
+                obj,
+                context
+            };
+            var res = method.Invoke(this, arr);
+            if ((res is bool ? (bool) res : false))
+            {
+                obj = arr[1];
+                return true;
+            }
+
+            return false;
         }
 
         private bool TryReadWithTypeSerializers<T>(IDataNode node, out T? obj, ISerializationContext? context = null)
@@ -101,7 +138,25 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
-            throw new NotImplementedException();
+            var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
+                m.Name == nameof(Serv3Manager.TryWriteWithTypeSerializers) && m.GetParameters().Length == 5).MakeGenericMethod(type);
+            node = null;
+            var arr = new object?[]
+            {
+                obj,
+                nodeFactory,
+                node,
+                alwaysWrite,
+                context
+            };
+            var res = method.Invoke(this, arr);
+            if ((res is bool ? (bool) res : false))
+            {
+                node = (IDataNode?)arr[2];
+                return true;
+            }
+
+            return false;
         }
 
         private bool TryWriteWithTypeSerializers<T>(T obj, IDataNodeFactory nodeFactory, [NotNullWhen(true)] out IDataNode? node,

@@ -7,9 +7,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
 {
     public class Box2Serializer : ITypeSerializer<Box2>
     {
-        public Box2 NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Box2 NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var args = valueDataNode.GetValue().Split(',');
 
             var b = float.Parse(args[0], CultureInfo.InvariantCulture);
@@ -20,10 +20,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new Box2(l, b, r, t);
         }
 
-        public IDataNode TypeToNode(Box2 value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Box2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode($"{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
         }
     }
 }

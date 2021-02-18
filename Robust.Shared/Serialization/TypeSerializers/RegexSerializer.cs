@@ -8,9 +8,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class RegexSerializer : ITypeSerializer<Regex>
     {
-        public Regex NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Regex NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueNode)
+            if (node is not ValueDataNode valueNode)
             {
                 throw new InvalidNodeTypeException();
             }
@@ -18,10 +18,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new Regex(valueNode.GetValue(), RegexOptions.Compiled);
         }
 
-        public IDataNode TypeToNode(Regex value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Regex value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode(value.ToString());
+            return new ValueDataNode(value.ToString());
         }
     }
 }

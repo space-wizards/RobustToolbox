@@ -13,9 +13,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        HashSet<T> NormalNodeToType(IDataNode node, ISerializationContext? context)
+        HashSet<T> NormalNodeToType(DataNode node, ISerializationContext? context)
         {
-            if (node is not ISequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
+            if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
             var hashset = new HashSet<T>();
             foreach (var dataNode in sequenceDataNode.Sequence)
             {
@@ -25,21 +25,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return hashset;
         }
 
-        HashSet<T> ITypeSerializer<HashSet<T>>.NodeToType(IDataNode node, ISerializationContext? context)
+        HashSet<T> ITypeSerializer<HashSet<T>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NormalNodeToType(node, context);
         }
 
-        public IDataNode TypeToNode(ImmutableHashSet<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(ImmutableHashSet<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToHashSet(), nodeFactory, alwaysWrite, context);
+            return TypeToNode(value.ToHashSet(), alwaysWrite, context);
         }
 
-        public IDataNode TypeToNode(HashSet<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(HashSet<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var sequence = nodeFactory.GetSequenceNode();
+            var sequence = new SequenceDataNode();
             foreach (var elem in value)
             {
                 sequence.Add(_serv3Manager.WriteValue(elem, nodeFactory, alwaysWrite, context));
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return sequence;
         }
 
-        ImmutableHashSet<T> ITypeSerializer<ImmutableHashSet<T>>.NodeToType(IDataNode node, ISerializationContext? context)
+        ImmutableHashSet<T> ITypeSerializer<ImmutableHashSet<T>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NormalNodeToType(node, context).ToImmutableHashSet();
         }

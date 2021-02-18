@@ -6,9 +6,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
 {
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage>
     {
-        public FormattedMessage NodeToType(IDataNode node, ISerializationContext? context = null)
+        public FormattedMessage NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueNode)
+            if (node is not ValueDataNode valueNode)
             {
                 throw new InvalidNodeTypeException();
             }
@@ -16,10 +16,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return FormattedMessage.FromMarkup(valueNode.GetValue());
         }
 
-        public IDataNode TypeToNode(FormattedMessage value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(FormattedMessage value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode(value.ToString());
+            return new ValueDataNode(value.ToString());
         }
     }
 }

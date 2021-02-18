@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        private IDataNode InterfaceTypeToNode(IDictionary<TKey, TValue> value, IDataNodeFactory nodeFactory,
+        private DataNode InterfaceTypeToNode(IDictionary<TKey, TValue> value, IDataNodeFactory nodeFactory,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -27,9 +27,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return mappingNode;
         }
 
-        private Dictionary<TKey, TValue> NormalNodeToType(IDataNode node, ISerializationContext? context = null)
+        private Dictionary<TKey, TValue> NormalNodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IMappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
+            if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
             var dict = new Dictionary<TKey, TValue>();
             foreach (var (key, value) in mappingDataNode.Children)
@@ -43,35 +43,35 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return dict;
         }
 
-        Dictionary<TKey, TValue> ITypeSerializer<Dictionary<TKey, TValue>>.NodeToType(IDataNode node, ISerializationContext? context)
+        Dictionary<TKey, TValue> ITypeSerializer<Dictionary<TKey, TValue>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NormalNodeToType(node, context);
         }
 
-        public IDataNode TypeToNode(Dictionary<TKey, TValue> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Dictionary<TKey, TValue> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return InterfaceTypeToNode(value, nodeFactory, alwaysWrite, context);
         }
 
-        public IDataNode TypeToNode(SortedDictionary<TKey, TValue> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(SortedDictionary<TKey, TValue> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return InterfaceTypeToNode(value, nodeFactory, alwaysWrite, context);
         }
 
-        public IDataNode TypeToNode(IReadOnlyDictionary<TKey, TValue> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(IReadOnlyDictionary<TKey, TValue> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return InterfaceTypeToNode(value.ToDictionary(k => k.Key, v => v.Value), nodeFactory, alwaysWrite, context);
         }
 
-        IReadOnlyDictionary<TKey, TValue> ITypeSerializer<IReadOnlyDictionary<TKey, TValue>>.NodeToType(IDataNode node, ISerializationContext? context)
+        IReadOnlyDictionary<TKey, TValue> ITypeSerializer<IReadOnlyDictionary<TKey, TValue>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NormalNodeToType(node, context);
         }
 
-        SortedDictionary<TKey, TValue> ITypeSerializer<SortedDictionary<TKey, TValue>>.NodeToType(IDataNode node, ISerializationContext? context)
+        SortedDictionary<TKey, TValue> ITypeSerializer<SortedDictionary<TKey, TValue>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return new(NormalNodeToType(node, context));
         }

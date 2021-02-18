@@ -7,16 +7,16 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class StringSerializer : ITypeSerializer<string>
     {
-        public string NodeToType(IDataNode node, ISerializationContext? context = null)
+        public string NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             return valueDataNode.GetValue();
         }
 
-        public IDataNode TypeToNode(string value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(string value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode(value);
+            return new ValueDataNode(value);
         }
     }
 }

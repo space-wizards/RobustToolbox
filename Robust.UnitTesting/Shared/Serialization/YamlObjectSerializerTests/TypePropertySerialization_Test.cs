@@ -37,9 +37,9 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
             Assert.IsNotEmpty(mapping.Children);
 
-            var typenode = mapping.GetNode("!type") as IValueDataNode;
-            var testPropertyOne = mapping.GetNode("testPropertyOne") as IValueDataNode;
-            var testPropertyTwo = mapping.GetNode("testPropertyTwo") as IValueDataNode;
+            var typenode = mapping.GetNode("!type") as ValueDataNode;
+            var testPropertyOne = mapping.GetNode("testPropertyOne") as ValueDataNode;
+            var testPropertyTwo = mapping.GetNode("testPropertyTwo") as ValueDataNode;
 
             Assert.NotNull(typenode);
             Assert.NotNull(testPropertyOne);

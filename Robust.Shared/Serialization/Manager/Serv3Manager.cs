@@ -49,18 +49,18 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public T ReadValue<T>(IDataNode node, ISerializationContext? context = null)
+        public T ReadValue<T>(DataNode node, ISerializationContext? context = null)
         {
             return (T)ReadValue(typeof(T), node, context);
         }
 
-        public object ReadValue(Type type, IDataNode node, ISerializationContext? context = null)
+        public object ReadValue(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (node is IMappingDataNode mapping && mapping.TryGetNode("!type", out var typeNode) && typeNode is IValueDataNode typeValueDataNode)
+            if (node is MappingDataNode mapping && mapping.TryGetNode("!type", out var typeNode) && typeNode is ValueDataNode typeValueDataNode)
             {
-                underlyingType = ResolveConcreteType(underlyingType, typeValueDataNode.GetValue());
+                underlyingType = ResolveConcreteType(underlyingType, typeValueDataNode.Value);
             }
 
             if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
@@ -70,14 +70,14 @@ namespace Robust.Shared.Serialization.Manager
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
             {
-                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
 
                 var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
-                selfSerObj.Deserialize(valueDataNode.GetValue());
+                selfSerObj.Deserialize(valueDataNode.Value);
                 return selfSerObj;
             }
 
-            if (node is not IMappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
+            if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
             var currentType = underlyingType;
             var dataDef = GetDataDefinition(underlyingType);
@@ -102,24 +102,24 @@ namespace Robust.Shared.Serialization.Manager
             return obj;
         }
 
-        public IDataNode WriteValue<T>(T value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {
-            return WriteValue(typeof(T), value, nodeFactory, alwaysWrite, context);
+            return WriteValue(typeof(T), value, alwaysWrite, context);
         }
 
-        public IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             //todo paul
             //var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (value == null) return nodeFactory.GetMappingNode();
+            if (value == null) return new MappingDataNode();
 
             if (value is ISerializationHooks serHook)
                 serHook.BeforeSerialization();
 
-            if (TryWriteWithTypeSerializers(type, value, nodeFactory, out var node, alwaysWrite, context))
+            if (TryWriteWithTypeSerializers(type, value, out var node, alwaysWrite, context))
             {
                 return node;
             }
@@ -127,14 +127,14 @@ namespace Robust.Shared.Serialization.Manager
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
                 var selfSerObj = (ISelfSerialize)value;
-                return nodeFactory.GetValueNode(selfSerObj.Serialize());
+                return new ValueDataNode(selfSerObj.Serialize());
             }
 
             var currentType = type;
-            var mapping = nodeFactory.GetMappingNode();
+            var mapping = new MappingDataNode();
             if (type != value.GetType() && (type.IsAbstract || type.IsInterface))
             {
-                mapping.AddNode("!type", nodeFactory.GetValueNode(value.GetType().Name));
+                mapping.AddNode("!type", new ValueDataNode(value.GetType().Name));
                 currentType = value.GetType();
             }
 
@@ -144,7 +144,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     if (dataDef.CanCallWith(value) != true)
                         throw new ArgumentException($"Supplied parameter does not fit with datadefinition of {type}.", nameof(value));
-                    var newMapping = dataDef.InvokeSerializeDelegate(value, this, nodeFactory, context, alwaysWrite);
+                    var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
                     mapping = mapping.Merge(newMapping);
                 }
                 currentType = currentType.BaseType;

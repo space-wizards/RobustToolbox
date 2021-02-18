@@ -9,9 +9,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class UIBox2Serializer : ITypeSerializer<UIBox2>
     {
-        public UIBox2 NodeToType(IDataNode node, ISerializationContext? context = null)
+        public UIBox2 NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var args = valueDataNode.GetValue().Split(',');
 
             var t = float.Parse(args[0], CultureInfo.InvariantCulture);
@@ -23,10 +23,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         }
 
-        public IDataNode TypeToNode(UIBox2 value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(UIBox2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode($"{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public static class SerializationILExtensions
     {
-        // object target, IMappingDataNode mappingDataNode, IServ3Manager serv3Manager, ISerializationContext? context, object?[] defaultValues
+        // object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager, ISerializationContext? context, object?[] defaultValues
         public static void EmitPopulateField(this ILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
@@ -22,8 +22,8 @@ namespace Robust.Shared.Serialization.Manager
 
             generator.Emit(OpCodes.Ldarg_1); //load mappingnode
             generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //load tag
-            var hasNodeMethod = typeof(IMappingDataNode).GetMethods().First(m =>
-                m.Name == nameof(IMappingDataNode.HasNode) &&
+            var hasNodeMethod = typeof(MappingDataNode).GetMethods().First(m =>
+                m.Name == nameof(MappingDataNode.HasNode) &&
                 m.GetParameters().First().ParameterType == typeof(string));
             generator.Emit(OpCodes.Callvirt, hasNodeMethod); //checking if our node is mapped
             var notMappedLabel = generator.DefineLabel();
@@ -31,8 +31,8 @@ namespace Robust.Shared.Serialization.Manager
 
             generator.Emit(OpCodes.Ldarg_2); //load serv3mgr
 
-            var getNodeMethod = typeof(IMappingDataNode).GetMethods().First(m =>
-                m.Name == nameof(IMappingDataNode.GetNode) &&
+            var getNodeMethod = typeof(MappingDataNode).GetMethods().First(m =>
+                m.Name == nameof(MappingDataNode.GetNode) &&
                 m.GetParameters().First().ParameterType == typeof(string));
             switch (fieldDefinition.Attribute)
             {
@@ -121,7 +121,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.MarkLabel(endLabel);
         }
 
-        // object obj, IServ3Manager serv3Manager, IDataNodeFactory nodeFactory, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
+        // object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
         public static void EmitSerializeField(this ILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
@@ -145,13 +145,13 @@ public readonly bool ServerOnly;
             {
                 var skipDefaultCheckLabel = generator.DefineLabel();
 
-                generator.Emit(OpCodes.Ldarg, 4); //load alwaysWrite bool
+                generator.Emit(OpCodes.Ldarg, 3); //load alwaysWrite bool
                 generator.Emit(OpCodes.Brtrue_S, skipDefaultCheckLabel); //skip defaultcheck if alwayswrite is true
 
                 //skip all of this if the value is default
                 generator.Emit(OpCodes.Ldloc, locIdx); //load val
                 //load default value
-                generator.Emit(OpCodes.Ldarg, 5);
+                generator.Emit(OpCodes.Ldarg, 4);
                 generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
                 generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
                 //check if value is default
@@ -176,8 +176,6 @@ public readonly bool ServerOnly;
 
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-                    generator.Emit(OpCodes.Ldarg_2); //load nodefactory
-
                     var writeConstantMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteConstant));
                     Debug.Assert(writeConstantMethod != null, nameof(writeConstantMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, writeConstantMethod);
@@ -191,8 +189,6 @@ public readonly bool ServerOnly;
 
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-                    generator.Emit(OpCodes.Ldarg_2); //load nodefactory
-
                     var writeFlagMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteFlag));
                     Debug.Assert(writeFlagMethod != null, nameof(writeConstantMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, writeFlagMethod);
@@ -205,11 +201,9 @@ public readonly bool ServerOnly;
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
                     generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
 
-                    generator.Emit(OpCodes.Ldarg_2); //load nodeFactory
+                    generator.Emit(OpCodes.Ldarg, 3); //load alwaysWrite bool
 
-                    generator.Emit(OpCodes.Ldarg, 4); //load alwaysWrite bool
-
-                    generator.Emit(OpCodes.Ldarg_3); //load context
+                    generator.Emit(OpCodes.Ldarg, 2); //load context
 
                     var writeDataFieldMethod = typeof(IServ3Manager).GetMethods().First(m =>
                         m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 5);
@@ -217,8 +211,8 @@ public readonly bool ServerOnly;
                     break;
             }
 
-            var addMethod = typeof(IMappingDataNode).GetMethods().First(m =>
-                m.Name == nameof(IMappingDataNode.AddNode) &&
+            var addMethod = typeof(MappingDataNode).GetMethods().First(m =>
+                m.Name == nameof(MappingDataNode.AddNode) &&
                 m.GetParameters().First().ParameterType == typeof(string));
             generator.Emit(OpCodes.Callvirt, addMethod); //add it
 

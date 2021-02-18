@@ -734,7 +734,7 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = component.Name;
                         var dataClass = serv3Mgr.GetEmptyComponentDataClass(component.Name);
                         serv3Mgr.Object2DataClass(component, dataClass);
-                        var compMapping = (IMappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory(), context: this);
+                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, new YamlDataNodeFactory(), context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
@@ -809,9 +809,9 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public GridId NodeToType(IDataNode node, ISerializationContext? context = null)
+            public GridId NodeToType(DataNode node, ISerializationContext? context = null)
             {
-                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
                 if(valueDataNode.GetValue() == "null") return GridId.Invalid;
 
                 var val = int.Parse(valueDataNode.GetValue());
@@ -826,21 +826,21 @@ namespace Robust.Server.Maps
                 return GridId.Invalid;
             }
 
-            public IDataNode TypeToNode(IEntity value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+            public DataNode TypeToNode(IEntity value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value.Uid, out var entityMapped))
                 {
                     Logger.WarningS("map", "Cannot write entity UID '{0}'.", value.Uid);
-                    return nodeFactory.GetValueNode("");
+                    return new ValueDataNode("");
                 }
                 else
                 {
-                    return nodeFactory.GetValueNode(entityMapped.ToString(CultureInfo.InvariantCulture));
+                    return new ValueDataNode(entityMapped.ToString(CultureInfo.InvariantCulture));
                 }
             }
 
-            public IDataNode TypeToNode(EntityUid value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+            public DataNode TypeToNode(EntityUid value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
@@ -852,21 +852,21 @@ namespace Robust.Server.Maps
                         Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
                     }
 
-                    return nodeFactory.GetValueNode("null");
+                    return new ValueDataNode("null");
                 }
                 else
                 {
-                    return nodeFactory.GetValueNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
+                    return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
                 }
             }
 
-            public IDataNode TypeToNode(GridId value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+            public DataNode TypeToNode(GridId value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!GridIDMap.TryGetValue(value, out var gridMapped))
                 {
                     Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridMapped);
-                    return nodeFactory.GetValueNode("");
+                    return new ValueDataNode("");
                 }
                 else
                 {
@@ -874,9 +874,9 @@ namespace Robust.Server.Maps
                 }
             }
 
-            EntityUid ITypeSerializer<EntityUid>.NodeToType(IDataNode node, ISerializationContext? context)
+            EntityUid ITypeSerializer<EntityUid>.NodeToType(DataNode node, ISerializationContext? context)
             {
-                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
                 if (valueDataNode.GetValue() == "null")
                 {
                     return EntityUid.Invalid;
@@ -894,9 +894,9 @@ namespace Robust.Server.Maps
                 return EntityUid.Invalid;
             }
 
-            IEntity ITypeSerializer<IEntity>.NodeToType(IDataNode node, ISerializationContext? context)
+            IEntity ITypeSerializer<IEntity>.NodeToType(DataNode node, ISerializationContext? context)
             {
-                if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
 
                 var val = int.Parse(valueDataNode.GetValue());
                 if (val >= Entities.Count)

@@ -13,10 +13,11 @@ namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate object PopulateDelegateSignature(object target, IMappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+        private delegate object PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
             ISerializationContext? context, object?[] defaultValues);
-        private delegate IMappingDataNode SerializeDelegateSignature(object obj, IServ3Manager serv3Manager,
-            IDataNodeFactory nodeFactory, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
+
+        private delegate MappingDataNode SerializeDelegateSignature(object obj, IServ3Manager serv3Manager,
+            ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
         private delegate object PushInheritanceDelegateSignature(object source, object target,
             IServ3Manager serv3Manager, object?[] defaultValues);
         public delegate object CopyDelegateSignature(object source, object target,
@@ -35,13 +36,12 @@ namespace Robust.Shared.Serialization.Manager
 
         public readonly CopyDelegateSignature InvokeCopyDelegate;
 
-        public object InvokePopulateDelegate(object target, IMappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+        public object InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
             ISerializationContext? context) =>
             _populateDelegate(target, mappingDataNode, serv3Manager, context, _defaultValues);
 
-        public IMappingDataNode InvokeSerializeDelegate(object obj, IServ3Manager serv3Manager,
-            IDataNodeFactory nodeFactory, ISerializationContext? context, bool alwaysWrite) =>
-            _serializeDelegate(obj, serv3Manager, nodeFactory, context, alwaysWrite, _defaultValues);
+        public MappingDataNode InvokeSerializeDelegate(object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite) =>
+            _serializeDelegate(obj, serv3Manager, context, alwaysWrite, _defaultValues);
 
         public object InvokePushInheritanceDelegate(object source, object target,
             IServ3Manager serv3Manager) =>
@@ -90,7 +90,7 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(IMappingDataNode), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
+                new[] {typeof(object), typeof(MappingDataNode), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -117,24 +117,20 @@ namespace Robust.Shared.Serialization.Manager
         {
             var dynamicMethod = new DynamicMethod(
                 $"_serializeDelegate<>{Type}",
-                typeof(IMappingDataNode),
-                new[] {typeof(object), typeof(IServ3Manager), typeof(IDataNodeFactory), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
+                typeof(MappingDataNode),
+                new[] {typeof(object), typeof(IServ3Manager), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "nodeFactory");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
-            dynamicMethod.DefineParameter(5, ParameterAttributes.In, "alwaysWrite");
+            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationContext");
+            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "alwaysWrite");
             dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
             var generator = dynamicMethod.GetILGenerator();
 
-            var loc = generator.DeclareLocal(typeof(IMappingDataNode));
+            var loc = generator.DeclareLocal(typeof(MappingDataNode));
             Debug.Assert(loc.LocalIndex == 0);
-            generator.Emit(OpCodes.Ldarg_2);
-            var newMappingNodeMethod = typeof(IDataNodeFactory).GetMethod(nameof(IDataNodeFactory.GetMappingNode));
-            Debug.Assert(newMappingNodeMethod != null, nameof(newMappingNodeMethod) + " != null");
-            generator.Emit(OpCodes.Callvirt, newMappingNodeMethod);
+            generator.Emit(OpCodes.Newobj, typeof(MappingDataNode));
             generator.Emit(OpCodes.Stloc_0);
 
             for (var i = 0; i < _baseFieldDefinitions.Length; i++)

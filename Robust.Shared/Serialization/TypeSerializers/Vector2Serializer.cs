@@ -10,9 +10,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class Vector2Serializer : ITypeSerializer<Vector2>
     {
-        public Vector2 NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Vector2 NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             string raw = valueDataNode.GetValue();
             string[] args = raw.Split(',');
             if (args.Length != 2)
@@ -24,10 +24,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
-        public IDataNode TypeToNode(Vector2 value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Vector2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
     }
 }

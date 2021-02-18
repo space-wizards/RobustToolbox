@@ -9,9 +9,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class AngleSerializer : ITypeSerializer<Angle>
     {
-        public Angle NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Angle NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var nodeContents = valueDataNode.GetValue();
             if (nodeContents.EndsWith("rad"))
             {
@@ -21,10 +21,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         }
 
-        public IDataNode TypeToNode(Angle value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Angle value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode($"{value.Theta.ToString(CultureInfo.InvariantCulture)} rad");
+            return new ValueDataNode($"{value.Theta.ToString(CultureInfo.InvariantCulture)} rad");
         }
     }
 }

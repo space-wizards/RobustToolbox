@@ -13,9 +13,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        public List<T> NodeToType(IDataNode node, ISerializationContext? context = null)
+        public List<T> NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not ISequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
+            if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
 
             var list = new List<T>();
             foreach (var dataNode in sequenceDataNode.Sequence)
@@ -26,16 +26,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return list;
         }
 
-        public IDataNode TypeToNode(ImmutableList<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(ImmutableList<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), nodeFactory, alwaysWrite, context);
+            return TypeToNode(value.ToList(), alwaysWrite, context);
         }
 
-        public IDataNode TypeToNode(List<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(List<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var sequence = nodeFactory.GetSequenceNode();
+            var sequence = new SequenceDataNode();
             foreach (var elem in value)
             {
                 sequence.Add(_serv3Manager.WriteValue(elem, nodeFactory, alwaysWrite, context));
@@ -44,29 +44,29 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return sequence;
         }
 
-        public IDataNode TypeToNode(IReadOnlyCollection<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(IReadOnlyCollection<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), nodeFactory, alwaysWrite, context);
+            return TypeToNode(value.ToList(), alwaysWrite, context);
         }
 
-        public IDataNode TypeToNode(IReadOnlyList<T> value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(IReadOnlyList<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToList(), nodeFactory, alwaysWrite, context);
+            return TypeToNode(value.ToList(), alwaysWrite, context);
         }
 
-        IReadOnlyList<T> ITypeSerializer<IReadOnlyList<T>>.NodeToType(IDataNode node, ISerializationContext? context)
+        IReadOnlyList<T> ITypeSerializer<IReadOnlyList<T>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NodeToType(node, context);
         }
 
-        IReadOnlyCollection<T> ITypeSerializer<IReadOnlyCollection<T>>.NodeToType(IDataNode node, ISerializationContext? context)
+        IReadOnlyCollection<T> ITypeSerializer<IReadOnlyCollection<T>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NodeToType(node, context);
         }
 
-        ImmutableList<T> ITypeSerializer<ImmutableList<T>>.NodeToType(IDataNode node, ISerializationContext? context)
+        ImmutableList<T> ITypeSerializer<ImmutableList<T>>.NodeToType(DataNode node, ISerializationContext? context)
         {
             return NodeToType(node, context).ToImmutableList();
         }

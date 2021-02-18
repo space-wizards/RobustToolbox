@@ -96,7 +96,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers(Type type, IDataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
+        private bool TryReadWithTypeSerializers(Type type, DataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
@@ -118,7 +118,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers<T>(IDataNode node, out T? obj, ISerializationContext? context = null)
+        private bool TryReadWithTypeSerializers<T>(DataNode node, out T? obj, ISerializationContext? context = null)
         {
             obj = default;
 
@@ -134,7 +134,7 @@ namespace Robust.Shared.Serialization.Manager
             return true;
         }
 
-        private bool TryWriteWithTypeSerializers(Type type, object obj, IDataNodeFactory nodeFactory, [NotNullWhen(true)] out IDataNode? node, bool alwaysWrite = false,
+        private bool TryWriteWithTypeSerializers(Type type, object obj, [NotNullWhen(true)] out DataNode? node, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
@@ -144,7 +144,6 @@ namespace Robust.Shared.Serialization.Manager
             var arr = new object?[]
             {
                 obj,
-                nodeFactory,
                 node,
                 alwaysWrite,
                 context
@@ -152,14 +151,14 @@ namespace Robust.Shared.Serialization.Manager
             var res = method.Invoke(this, arr);
             if ((res is bool ? (bool) res : false))
             {
-                node = (IDataNode?)arr[2];
+                node = (DataNode?)arr[2];
                 return true;
             }
 
             return false;
         }
 
-        private bool TryWriteWithTypeSerializers<T>(T obj, IDataNodeFactory nodeFactory, [NotNullWhen(true)] out IDataNode? node,
+        private bool TryWriteWithTypeSerializers<T>(T obj, [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -167,13 +166,13 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
             {
-                node = genericTypeSer.TypeToNode(obj, nodeFactory, alwaysWrite, context);
+                node = genericTypeSer.TypeToNode(obj, alwaysWrite, context);
                 return true;
             }
 
             if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
             var ser = (ITypeSerializer<T>) rawTypeSer;
-            node = ser.TypeToNode(obj, nodeFactory, alwaysWrite, context);
+            node = ser.TypeToNode(obj, alwaysWrite, context);
             return true;
         }
     }

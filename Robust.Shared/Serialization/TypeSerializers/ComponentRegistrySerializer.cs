@@ -17,13 +17,13 @@ namespace Robust.Shared.Serialization.TypeSerializers
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        public EntityPrototype.ComponentRegistry NodeToType(IDataNode node, ISerializationContext? context = null)
+        public EntityPrototype.ComponentRegistry NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not ISequenceDataNode componentsequence) return new EntityPrototype.ComponentRegistry();
+            if (node is not SequenceDataNode componentsequence) return new EntityPrototype.ComponentRegistry();
             var components = new EntityPrototype.ComponentRegistry();
-            foreach (var componentMapping in componentsequence.Sequence.Cast<IMappingDataNode>())
+            foreach (var componentMapping in componentsequence.Sequence.Cast<MappingDataNode>())
             {
-                string compType = ((IValueDataNode)componentMapping.GetNode("type")).GetValue();
+                string compType = ((ValueDataNode)componentMapping.GetNode("type")).GetValue();
                 // See if type exists to detect errors.
                 switch (_componentFactory.GetComponentAvailability(compType))
                 {
@@ -45,7 +45,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     continue;
                 }
 
-                var copy = (componentMapping.Copy() as IMappingDataNode)!;
+                var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
                 var dataClassType = _serv3Manager.GetDataClassType(_componentFactory.GetRegistration(compType).Type);
@@ -74,18 +74,18 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return components;
         }
 
-        public IDataNode TypeToNode(EntityPrototype.ComponentRegistry value, IDataNodeFactory nodeFactory,
+        public DataNode TypeToNode(EntityPrototype.ComponentRegistry value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var compSequence = nodeFactory.GetSequenceNode();
+            var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
                 var node = _serv3Manager.WriteValue(component.GetType(), component, nodeFactory, alwaysWrite, context);
-                if (node is not IMappingDataNode mapping) throw new InvalidNodeTypeException();
+                if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
                 if (mapping.Children.Count != 0)
                 {
-                    mapping.AddNode("type", nodeFactory.GetValueNode(type));
+                    mapping.AddNode("type", new ValueDataNode(type));
                     compSequence.Add(mapping);
                 }
             }

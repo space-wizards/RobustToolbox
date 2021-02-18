@@ -75,20 +75,20 @@ namespace Robust.Shared.Serialization.Manager
             return _constantsMapping[tagType];
         }
 
-        public int ReadFlag(Type tagType, IDataNode node)
+        public int ReadFlag(Type tagType, DataNode node)
         {
             var flagType = GetFlagTypeFromTag(tagType);
             switch (node)
             {
-                case IValueDataNode valueDataNode:
-                    return int.Parse(valueDataNode.GetValue());
-                case ISequenceDataNode sequenceDataNode:
+                case ValueDataNode valueDataNode:
+                    return int.Parse(valueDataNode.Value);
+                case SequenceDataNode sequenceDataNode:
                     var flags = 0;
 
                     foreach (var elem in sequenceDataNode.Sequence)
                     {
-                        if (elem is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                        flags |= (int)Enum.Parse(flagType, valueDataNode.GetValue());
+                        if (elem is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                        flags |= (int)Enum.Parse(flagType, valueDataNode.Value);
                     }
 
                     return flags;
@@ -97,16 +97,16 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
-        public int ReadConstant(Type tagType, IDataNode node)
+        public int ReadConstant(Type tagType, DataNode node)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var constType = GetConstantTypeFromTag(tagType);
-            return (int) Enum.Parse(constType, valueDataNode.GetValue());
+            return (int) Enum.Parse(constType, valueDataNode.Value);
         }
 
-        public IDataNode WriteFlag(Type tagType, int flag, IDataNodeFactory nodeFactory)
+        public DataNode WriteFlag(Type tagType, int flag)
         {
-            var sequenceNode = nodeFactory.GetSequenceNode();
+            var sequenceNode = new SequenceDataNode();
             var flagType = GetFlagTypeFromTag(tagType);
 
             // Assumption: a bitflag enum has a constructor for every bit value such that
@@ -128,14 +128,14 @@ namespace Robust.Shared.Serialization.Manager
                         throw new InvalidOperationException($"No bitflag corresponding to bit {bitIndex} in {flagType}, but it was set anyways.");
                     }
 
-                    sequenceNode.Add(nodeFactory.GetValueNode(flagName));
+                    sequenceNode.Add(new ValueDataNode(flagName));
                 }
             }
 
             return sequenceNode;
         }
 
-        public IDataNode WriteConstant(Type tagType, int constant, IDataNodeFactory nodeFactory)
+        public DataNode WriteConstant(Type tagType, int constant)
         {
             var constType = GetConstantTypeFromTag(tagType);
             var constantName = Enum.GetName(constType, constant);
@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException($"No constant corresponding to value {constant} in {constType}.");
             }
 
-            return nodeFactory.GetValueNode(constantName);
+            return new ValueDataNode(constantName);
         }
     }
 }

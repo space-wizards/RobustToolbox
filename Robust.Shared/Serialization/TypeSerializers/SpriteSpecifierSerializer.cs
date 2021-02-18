@@ -12,24 +12,24 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        public SpriteSpecifier NodeToType(IDataNode node, ISerializationContext? context = null)
+        public SpriteSpecifier NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is IValueDataNode valueDataNode)
+            if (node is ValueDataNode valueDataNode)
             {
                 return new SpriteSpecifier.Texture(_serv3Manager.ReadValue<ResourcePath>(valueDataNode, context));
             }
 
-            if (node is IMappingDataNode mapping
+            if (node is MappingDataNode mapping
                 && mapping.TryGetNode("sprite", out var spriteNode)
                 && mapping.TryGetNode("state", out var rawStateNode)
-                && rawStateNode is IValueDataNode stateNode)
+                && rawStateNode is ValueDataNode stateNode)
             {
                 return new SpriteSpecifier.Rsi(_serv3Manager.ReadValue<ResourcePath>(spriteNode, context), stateNode.GetValue());
             }
             throw new InvalidNodeTypeException();
         }
 
-        public IDataNode TypeToNode(SpriteSpecifier value, IDataNodeFactory nodeFactory,
+        public DataNode TypeToNode(SpriteSpecifier value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 case SpriteSpecifier.Rsi rsi:
                     var mapping = nodeFactory.GetMappingNode();
                     mapping.AddNode("sprite", _serv3Manager.WriteValue(rsi.RsiPath, nodeFactory, alwaysWrite, context));
-                    mapping.AddNode("state", nodeFactory.GetValueNode(rsi.RsiState));
+                    mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
                     return mapping;
             }
             throw new NotImplementedException();

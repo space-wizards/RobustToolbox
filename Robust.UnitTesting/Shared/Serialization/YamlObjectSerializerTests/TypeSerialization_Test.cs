@@ -26,12 +26,12 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             ITestType type = new TestTypeOne();
             var factory = new YamlDataNodeFactory();
             var serMan = IoCManager.Resolve<IServ3Manager>();
-            var mapping = (IMappingDataNode) serMan.WriteValue(type, factory);
+            var mapping = (MappingDataNode) serMan.WriteValue(type, factory);
 
             Assert.IsNotEmpty(mapping.Children);
             Assert.IsInstanceOf<YamlScalarNode>(mapping[0]);
 
-            var scalar = (IValueDataNode) mapping[0].Key;
+            var scalar = (ValueDataNode) mapping[0].Key;
 
             Assert.That(scalar.Value, Is.EqualTo("type"));
         }

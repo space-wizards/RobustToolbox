@@ -1,29 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Serialization.Markdown.YAML
+namespace Robust.Shared.Serialization.Markdown
 {
-    public class YamlMappingDataNode : IMappingDataNode
+    public class MappingDataNode : DataNode
     {
-        private Dictionary<IDataNode, IDataNode> _mapping = new();
+        private Dictionary<DataNode, DataNode> _mapping = new();
+        public IReadOnlyDictionary<DataNode, DataNode> Children => _mapping;
 
-        public IReadOnlyDictionary<IDataNode, IDataNode> Children => _mapping;
+        public MappingDataNode() { }
 
-        public YamlMappingDataNode() { }
+        public KeyValuePair<DataNode, DataNode> this[int key] => Children.ElementAt(key);
 
-        public KeyValuePair<IDataNode, IDataNode> this[int key] => Children.ElementAt(key);
-
-        public IDataNode this[string index]
+        public DataNode this[string index]
         {
             get => GetNode(index);
             set => AddNode(index, value);
         }
 
-        public YamlMappingDataNode(YamlMappingNode mapping)
+        public MappingDataNode(YamlMappingNode mapping)
         {
             foreach (var (key, val) in mapping.Children)
             {
@@ -42,17 +43,17 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             return mapping;
         }
 
-        public IDataNode GetNode(IDataNode key)
+        public DataNode GetNode(DataNode key)
         {
             return _mapping.First(n => n.Key.Equals(key)).Value;
         }
 
-        public IDataNode GetNode(string key)
+        public DataNode GetNode(string key)
         {
             return GetNode(_getFetchNode(key));
         }
 
-        public bool TryGetNode(IDataNode key, [NotNullWhen(true)] out IDataNode? node)
+        public bool TryGetNode(DataNode key, [NotNullWhen(true)] out DataNode? node)
         {
             if (_mapping.TryGetValue(key, out node))
             {
@@ -63,12 +64,12 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             return false;
         }
 
-        public bool TryGetNode(string key, [NotNullWhen(true)] out IDataNode? node)
+        public bool TryGetNode(string key, [NotNullWhen(true)] out DataNode? node)
         {
             return TryGetNode(_getFetchNode(key), out node);
         }
 
-        public bool HasNode(IDataNode key)
+        public bool HasNode(DataNode key)
         {
             return _mapping.ContainsKey(key);
         }
@@ -78,18 +79,18 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             return HasNode(_getFetchNode(key));
         }
 
-        public void AddNode(IDataNode key, IDataNode node)
+        public void AddNode(DataNode key, DataNode node)
         {
             _mapping.Add(key, node);
         }
 
-        public void AddNode(string key, IDataNode node)
+        public void AddNode(string key, DataNode node)
         {
             //todo paul yes yes i'll rework it
-            AddNode(new YamlValueDataNode(key), node);
+            AddNode(new ValueDataNode(key), node);
         }
 
-        public void RemoveNode(IDataNode key)
+        public void RemoveNode(DataNode key)
         {
             _mapping.Remove(key);
         }
@@ -99,9 +100,9 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             RemoveNode(_getFetchNode(key));
         }
 
-        public IMappingDataNode Merge(IMappingDataNode otherMapping)
+        public MappingDataNode Merge(MappingDataNode otherMapping)
         {
-            var newMapping = (Copy() as IMappingDataNode)!;
+            var newMapping = (Copy() as MappingDataNode)!;
             foreach (var (key, val) in otherMapping.Children)
             {
                 //intentionally provokes argumentexception
@@ -111,9 +112,9 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             return newMapping;
         }
 
-        public IDataNode Copy()
+        public override DataNode Copy()
         {
-            var newMapping = new YamlMappingDataNode();
+            var newMapping = new MappingDataNode();
             foreach (var (key, val) in _mapping)
             {
                 newMapping.AddNode(key.Copy(), val.Copy());
@@ -125,10 +126,10 @@ namespace Robust.Shared.Serialization.Markdown.YAML
         // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.
         // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
         // Obviously thread local to avoid threading issues.
-        private static readonly ThreadLocal<YamlValueDataNode> FetchNode =
-            new(() => new YamlValueDataNode(""));
+        private static readonly ThreadLocal<ValueDataNode> FetchNode =
+            new(() => new ValueDataNode(""));
 
-        private static YamlValueDataNode _getFetchNode(string key)
+        private static ValueDataNode _getFetchNode(string key)
         {
             var node = FetchNode.Value!;
             node.Value = key;

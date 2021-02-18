@@ -9,13 +9,13 @@ namespace Robust.Shared.Serialization.Manager
         #region Serialization
         void Initialize();
 
-        T ReadValue<T>(IDataNode node, ISerializationContext? context = null);
+        T ReadValue<T>(DataNode node, ISerializationContext? context = null);
 
-        object ReadValue(Type type, IDataNode node, ISerializationContext? context = null);
+        object ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        IDataNode WriteValue<T>(T value, IDataNodeFactory nodeFactory, bool alwaysWrite = false, ISerializationContext? context = null) where T : notnull;
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null) where T : notnull;
 
-        IDataNode WriteValue(Type type, object value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
         object Copy(object source, object target);
@@ -56,11 +56,11 @@ namespace Robust.Shared.Serialization.Manager
 
         #region Flags And Constants
 
-        int ReadFlag(Type tagType, IDataNode node);
-        int ReadConstant(Type tagType, IDataNode node);
+        int ReadFlag(Type tagType, DataNode node);
+        int ReadConstant(Type tagType, DataNode node);
 
-        IDataNode WriteFlag(Type tagType, int flag, IDataNodeFactory nodeFactory);
-        IDataNode WriteConstant(Type tagType, int constant, IDataNodeFactory nodeFactory);
+        DataNode WriteFlag(Type tagType, int flag);
+        DataNode WriteConstant(Type tagType, int constant);
 
         #endregion
     }

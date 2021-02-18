@@ -9,17 +9,17 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class TimespanSerializer : ITypeSerializer<TimeSpan>
     {
-        public TimeSpan NodeToType(IDataNode node, ISerializationContext? context = null)
+        public TimeSpan NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var seconds = double.Parse(valueDataNode.GetValue(), CultureInfo.InvariantCulture);
             return TimeSpan.FromSeconds(seconds);
         }
 
-        public IDataNode TypeToNode(TimeSpan value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(TimeSpan value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+            return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
         }
     }
 }

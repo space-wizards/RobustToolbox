@@ -1,15 +1,18 @@
+using System;
 using System.Collections.Generic;
+using Robust.Shared.Serialization.Markdown.YAML;
+using YamlDotNet.Core.Tokens;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Serialization.Markdown.YAML
+namespace Robust.Shared.Serialization.Markdown
 {
-    public class YamlSequenceDataNode : ISequenceDataNode
+    public class SequenceDataNode : DataNode
     {
-        private List<IDataNode> nodes = new();
+        private List<DataNode> nodes = new();
 
-        public YamlSequenceDataNode() { }
+        public SequenceDataNode() { }
 
-        public YamlSequenceDataNode(YamlSequenceNode sequenceNode)
+        public SequenceDataNode(YamlSequenceNode sequenceNode)
         {
             foreach (var node in sequenceNode.Children)
             {
@@ -28,20 +31,20 @@ namespace Robust.Shared.Serialization.Markdown.YAML
             return node;
         }
 
-        public IReadOnlyList<IDataNode> Sequence => nodes;
-        public void Add(IDataNode node)
+        public IReadOnlyList<DataNode> Sequence => nodes;
+        public void Add(DataNode node)
         {
             nodes.Add(node);
         }
 
-        public void Remove(IDataNode node)
+        public void Remove(DataNode node)
         {
             nodes.Remove(node);
         }
 
-        public IDataNode Copy()
+        public override DataNode Copy()
         {
-            var newSequence = new YamlSequenceDataNode();
+            var newSequence = new SequenceDataNode();
             foreach (var node in Sequence)
             {
                 newSequence.Add(node.Copy());

@@ -10,9 +10,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class Vector4Serializer : ITypeSerializer<Vector4>
     {
-        public Vector4 NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Vector4 NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             string raw = valueDataNode.GetValue();
             string[] args = raw.Split(',');
             if (args.Length != 4)
@@ -27,10 +27,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         }
 
-        public IDataNode TypeToNode(Vector4 value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Vector4 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)},{value.Z.ToString(CultureInfo.InvariantCulture)},{value.W.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)},{value.Z.ToString(CultureInfo.InvariantCulture)},{value.W.ToString(CultureInfo.InvariantCulture)}");
         }
     }
 }

@@ -8,9 +8,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ColorSerializer : ITypeSerializer<Color>
     {
-        public Color NodeToType(IDataNode node, ISerializationContext? context = null)
+        public Color NodeToType(DataNode node, ISerializationContext? context = null)
         {
-            if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             if (Color.TryFromName(valueDataNode.GetValue(), out var color))
             {
                 return color;
@@ -19,10 +19,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return Color.FromHex(valueDataNode.GetValue());
         }
 
-        public IDataNode TypeToNode(Color value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
+        public DataNode TypeToNode(Color value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return nodeFactory.GetValueNode(value.ToHex());
+            return new ValueDataNode(value.ToHex());
         }
     }
 }

@@ -418,7 +418,7 @@ namespace Robust.Client.Input
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var serv3Mgr = IoCManager.Resolve<Serv3Manager>();
-            var robustMapping = mapping.ToDataNode() as IMappingDataNode;
+            var robustMapping = mapping.ToDataNode() as MappingDataNode;
             if (robustMapping == null) throw new InvalidOperationException();
 
             if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))

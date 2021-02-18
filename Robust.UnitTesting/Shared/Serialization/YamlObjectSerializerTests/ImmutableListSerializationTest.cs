@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var data = _serializableList;
             var factory = new YamlDataNodeFactory();
             var serMan = IoCManager.Resolve<IServ3Manager>();
-            var sequence = (ISequenceDataNode) serMan.WriteValue(data, factory);
+            var sequence = (SequenceDataNode) serMan.WriteValue(data, factory);
             var mapping = new YamlMappingDataNode();
             mapping.AddNode("datalist", sequence);
 
@@ -63,7 +63,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         private readonly ImmutableList<int> _serializableList = ImmutableList.Create<int>(1, 2, 3);
 
         // serializes a node tree into text
-        internal static string NodeToYamlText(IDataNode root)
+        internal static string NodeToYamlText(DataNode root)
         {
             var document = new YamlDocument(root.ToYamlNode());
 

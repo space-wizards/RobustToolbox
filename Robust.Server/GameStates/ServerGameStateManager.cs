@@ -135,7 +135,7 @@ namespace Robust.Server.GameStates
                 }
 
                 var entStates = lastAck == GameTick.Zero || !PvsEnabled
-                    ? _entityManager.GetEntityStates(lastAck)
+                    ? _entityManager.GetEntityStates(lastAck, session)
                     : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);

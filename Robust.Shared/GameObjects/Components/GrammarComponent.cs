@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Localization.Macros;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -33,7 +34,7 @@ namespace Robust.Shared.GameObjects
             serializer.DataField(this, x => x.Proper, "proper", false);
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new GrammarComponentState(Proper);
         }

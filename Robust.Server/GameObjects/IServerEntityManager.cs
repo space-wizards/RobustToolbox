@@ -10,7 +10,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        List<EntityState>? GetEntityStates(GameTick fromTick);
+        List<EntityState>? GetEntityStates(GameTick fromTick, IPlayerSession player);
 
         /// <summary>
         ///     Gets all entity states within an AABB that have been modified after and including the provided tick.

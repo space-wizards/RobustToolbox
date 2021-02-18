@@ -1,9 +1,7 @@
-﻿using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Systems;
-using System.Linq;
-using Robust.Shared.GameObjects.Components;
+using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
     public class PhysicsSystem : SharedPhysicsSystem

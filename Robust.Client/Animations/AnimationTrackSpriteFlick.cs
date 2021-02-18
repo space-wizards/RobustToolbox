@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations

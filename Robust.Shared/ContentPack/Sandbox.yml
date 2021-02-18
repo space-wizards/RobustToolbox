@@ -330,6 +330,7 @@ Types:
   System.Globalization:
     CompareOptions: { }
     CultureInfo: { All: True }
+    DateTimeStyles: { All: True } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"
@@ -442,6 +443,7 @@ Types:
     IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
+    PreserveBaseOverridesAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
     RuntimeHelpers: { All: True }
     TaskAwaiter: { All: True }
@@ -893,6 +895,7 @@ Types:
     MidpointRounding: { } # Enum
     MulticastDelegate:
       Inherit: Allow
+    NotImplementedException: { All: True }
     NotSupportedException: { All: True }
     Nullable: { All: True }
     Nullable`1: { All: True }

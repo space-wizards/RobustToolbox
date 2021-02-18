@@ -2,8 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 

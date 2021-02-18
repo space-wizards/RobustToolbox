@@ -1,16 +1,10 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -172,18 +166,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -192,15 +186,13 @@ namespace Robust.Client.GameStates
                 if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
-                    console.AddLine("Enabled network overlay.");
+                    shell.WriteLine("Enabled network overlay.");
                 }
                 else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
-                    console.AddLine("Disabled network overlay.");
+                    shell.WriteLine("Disabled network overlay.");
                 }
-
-                return false;
             }
         }
     }

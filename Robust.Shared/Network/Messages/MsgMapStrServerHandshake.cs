@@ -1,7 +1,6 @@
 using System;
 using JetBrains.Annotations;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages

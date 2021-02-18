@@ -3,13 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
 
 // ReSharper disable once IdentifierTypo
-using RTCF = Robust.Client.Interfaces.Graphics.RenderTargetColorFormat;
+using RTCF = Robust.Client.Graphics.RenderTargetColorFormat;
 using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
 using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
 using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
@@ -140,7 +139,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
 
                 // Check on original format is NOT a bug, this is so srgb emulation works
-                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color");
+                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color", TexturePixelType.RenderTarget);
             }
 
             // Depth/stencil buffers.

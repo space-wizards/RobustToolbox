@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -17,7 +17,11 @@ namespace Robust.Client.Graphics
 {
     internal sealed class FontManager : IFontManagerInternal
     {
+        private const int SheetWidth = 256;
+        private const int SheetHeight = 256;
+
         [Dependency] private readonly IConfigurationManager _configuration = default!;
+        [Dependency] private readonly IClyde _clyde = default!;
 
         private uint BaseFontDPI;
 
@@ -51,8 +55,7 @@ namespace Robust.Client.Graphics
                 return instance;
             }
 
-            var glyphMap = _generateGlyphMap(fontFaceHandle.Face);
-            instance = new FontInstanceHandle(this, size, glyphMap, fontFaceHandle);
+            instance = new FontInstanceHandle(this, size, fontFaceHandle);
 
             _loadedInstances.Add((fontFaceHandle, size), instance);
             return instance;
@@ -67,135 +70,128 @@ namespace Robust.Client.Graphics
             var descent = -ftFace.Size.Metrics.Descender.ToInt32();
             var lineHeight = ftFace.Size.Metrics.Height.ToInt32();
 
-            var (atlas, metricsMap) = _generateAtlas(instance, scale);
+            var data = new ScaledFontData(ascent, descent, ascent + descent, lineHeight);
 
-            return new ScaledFontData(metricsMap, ascent, descent, ascent + descent, lineHeight, atlas);
+
+            return data;
         }
 
-        private (FontTextureAtlas, Dictionary<uint, CharMetrics> metricsMap)
-            _generateAtlas(FontInstanceHandle instance, float scale)
+        private void CacheGlyph(FontInstanceHandle instance, ScaledFontData scaled, float scale, uint glyph)
         {
-            // TODO: This could use a better box packing algorithm.
-            // Right now we treat each glyph bitmap as having the max size among all glyphs.
-            // So we can divide the atlas into equal-size rectangles.
-            // This wastes a lot of space though because there's a lot of tiny glyphs.
+            // Check if already cached.
+            if (scaled.AtlasData.ContainsKey(glyph))
+                return;
 
             var face = instance.FaceHandle.Face;
+            face.SetCharSize(0, instance.Size, 0, (uint) (BaseFontDPI * scale));
+            face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
+            face.Glyph.RenderGlyph(RenderMode.Normal);
 
-            var maxGlyphSize = Vector2i.Zero;
-            var count = 0;
+            var glyphMetrics = face.Glyph.Metrics;
+            var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
+                glyphMetrics.HorizontalBearingY.ToInt32(),
+                glyphMetrics.HorizontalAdvance.ToInt32(),
+                glyphMetrics.Width.ToInt32(),
+                glyphMetrics.Height.ToInt32());
 
-            var metricsMap = new Dictionary<uint, CharMetrics>();
-
-            foreach (var glyph in instance.GlyphMap.Values)
+            using var bitmap = face.Glyph.Bitmap;
+            if (bitmap.Pitch < 0)
             {
-                if (metricsMap.ContainsKey(glyph))
-                {
-                    continue;
-                }
-
-                face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
-                face.Glyph.RenderGlyph(RenderMode.Normal);
-
-                var glyphMetrics = face.Glyph.Metrics;
-                var metrics = new CharMetrics(glyphMetrics.HorizontalBearingX.ToInt32(),
-                    glyphMetrics.HorizontalBearingY.ToInt32(),
-                    glyphMetrics.HorizontalAdvance.ToInt32(),
-                    glyphMetrics.Width.ToInt32(),
-                    glyphMetrics.Height.ToInt32());
-                metricsMap.Add(glyph, metrics);
-
-                maxGlyphSize = Vector2i.ComponentMax(maxGlyphSize,
-                    new Vector2i(face.Glyph.Bitmap.Width, face.Glyph.Bitmap.Rows));
-
-                count += 1;
+                throw new NotImplementedException();
             }
 
-            // Make atlas.
-            // This is the same algorithm used for RSIs. Tries to keep width and height as close as possible,
-            //  but preferring to increase width if necessary.
-            var atlasEntriesHorizontal = (int) Math.Ceiling(Math.Sqrt(count));
-            var atlasEntriesVertical =
-                (int) Math.Ceiling(count / (float) atlasEntriesHorizontal);
-            var atlasDimX =
-                (int) Math.Ceiling(atlasEntriesHorizontal * maxGlyphSize.X / 4f) * 4;
-            var atlasDimY =
-                (int) Math.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
-
-            using (var atlas = new Image<A8>(atlasDimX, atlasDimY))
+            if (bitmap.Pitch != 0)
             {
-                var atlasRegions = new Dictionary<uint, UIBox2>();
-                count = 0;
-                foreach (var glyph in metricsMap.Keys)
+                Image<A8> img;
+                switch (bitmap.PixelMode)
                 {
-                    face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
-                    face.Glyph.RenderGlyph(RenderMode.Normal);
-
-                    var bitmap = face.Glyph.Bitmap;
-                    if (bitmap.Pitch == 0)
+                    case PixelMode.Mono:
                     {
-                        count += 1;
-                        continue;
+                        img = MonoBitMapToImage(bitmap);
+                        break;
                     }
 
-                    if (bitmap.Pitch < 0)
+                    case PixelMode.Gray:
                     {
+                        ReadOnlySpan<A8> span;
+                        unsafe
+                        {
+                            span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                        }
+
+                        img = new Image<A8>(bitmap.Width, bitmap.Rows);
+
+                        span.Blit(
+                            bitmap.Pitch,
+                            UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows),
+                            img,
+                            (0, 0));
+
+                        break;
+                    }
+
+                    case PixelMode.Gray2:
+                    case PixelMode.Gray4:
+                    case PixelMode.Lcd:
+                    case PixelMode.VerticalLcd:
+                    case PixelMode.Bgra:
                         throw new NotImplementedException();
-                    }
-
-                    var column = count % atlasEntriesHorizontal;
-                    var row = count / atlasEntriesVertical;
-                    var offsetX = column * maxGlyphSize.X;
-                    var offsetY = row * maxGlyphSize.Y;
-                    count += 1;
-                    atlasRegions.Add(glyph, UIBox2i.FromDimensions(offsetX, offsetY, bitmap.Width, bitmap.Rows));
-
-                    switch (bitmap.PixelMode)
-                    {
-                        case PixelMode.Mono:
-                        {
-                            using (var bitmapImage = MonoBitMapToImage(bitmap))
-                            {
-                                bitmapImage.Blit(new UIBox2i(0, 0, bitmapImage.Width, bitmapImage.Height), atlas,
-                                    (offsetX, offsetY));
-                            }
-
-                            break;
-                        }
-
-                        case PixelMode.Gray:
-                        {
-                            ReadOnlySpan<A8> span;
-                            unsafe
-                            {
-                                span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
-                            }
-
-                            span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
-                                (offsetX, offsetY));
-                            break;
-                        }
-
-                        case PixelMode.Gray2:
-                        case PixelMode.Gray4:
-                        case PixelMode.Lcd:
-                        case PixelMode.VerticalLcd:
-                        case PixelMode.Bgra:
-                            throw new NotImplementedException();
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
 
-                var atlasDictionary = new Dictionary<uint, AtlasTexture>();
-                var texture = Texture.LoadFromImage(atlas, $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}");
+                OwnedTexture sheet;
+                if (scaled.AtlasTextures.Count == 0)
+                    sheet = GenSheet();
+                else
+                    sheet = scaled.AtlasTextures[^1];
 
-                foreach (var (glyph, region) in atlasRegions)
+                var (sheetW, sheetH) = sheet.Size;
+
+                if (sheetW - scaled.CurSheetX < img.Width)
                 {
-                    atlasDictionary.Add(glyph, new AtlasTexture(texture, region));
+                    scaled.CurSheetX = 0;
+                    scaled.CurSheetY = scaled.CurSheetMaxY;
                 }
 
-                return (new FontTextureAtlas(texture, atlasDictionary), metricsMap);
+                if (sheetH - scaled.CurSheetY < img.Height)
+                {
+                    // Make new sheet.
+                    scaled.CurSheetY = 0;
+                    scaled.CurSheetX = 0;
+                    scaled.CurSheetMaxY = 0;
+
+                    sheet = GenSheet();
+                }
+
+                sheet.SetSubImage((scaled.CurSheetX, scaled.CurSheetY), img);
+
+                var atlasTexture = new AtlasTexture(
+                    sheet,
+                    UIBox2.FromDimensions(
+                        scaled.CurSheetX,
+                        scaled.CurSheetY,
+                        bitmap.Width,
+                        bitmap.Rows));
+
+                scaled.AtlasData.Add(glyph, atlasTexture);
+
+                scaled.CurSheetMaxY = Math.Max(scaled.CurSheetMaxY, scaled.CurSheetY + bitmap.Rows);
+                scaled.CurSheetX += bitmap.Width;
+            }
+            else
+            {
+                scaled.AtlasData.Add(glyph, null);
+            }
+
+            scaled.MetricsMap.Add(glyph, metrics);
+
+            OwnedTexture GenSheet()
+            {
+                var sheet = _clyde.CreateBlankTexture<A8>((SheetWidth, SheetHeight),
+                    $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}-sheet{scaled.AtlasTextures.Count}");
+                scaled.AtlasTextures.Add(sheet);
+                return sheet;
             }
         }
 
@@ -226,46 +222,6 @@ namespace Robust.Client.Graphics
             return bitmapImage;
         }
 
-        private Dictionary<char, uint> _generateGlyphMap(Face face)
-        {
-            var map = new Dictionary<char, uint>();
-
-            // TODO: Render more than extended ASCII, Cyrillic and Greek. somehow.
-            // Does it make sense to just render every glyph in the font?
-
-            // Render all the extended ASCII characters.
-            // Yeah I know "extended ASCII" isn't a real thing get off my back.
-            for (var i = 32u; i <= 255; i++)
-            {
-                _addGlyph(i, face, map);
-            }
-
-            // Render basic cyrillic.
-            for (var i = 0x0410u; i <= 0x044F; i++)
-            {
-                _addGlyph(i, face, map);
-            }
-
-            // Render greek.
-            for (var i = 0x03B1u; i <= 0x03C9; i++)
-            {
-                _addGlyph(i, face, map);
-            }
-
-            return map;
-        }
-
-        private static void _addGlyph(uint codePoint, Face face, Dictionary<char, uint> map)
-        {
-            var glyphIndex = face.GetCharIndex(codePoint);
-            if (glyphIndex == 0)
-            {
-                return;
-            }
-
-            map.Add((char) codePoint, glyphIndex);
-        }
-
         private class FontFaceHandle : IFontFaceHandle
         {
             public Face Face { get; }
@@ -282,78 +238,84 @@ namespace Robust.Client.Graphics
             public FontFaceHandle FaceHandle { get; }
             public int Size { get; }
             private readonly Dictionary<float, ScaledFontData> _scaledData = new();
-            public readonly IReadOnlyDictionary<char, uint> GlyphMap;
             private readonly FontManager _fontManager;
+            public readonly Dictionary<Rune, uint> GlyphMap;
 
-            public FontInstanceHandle(FontManager fontManager, int size, IReadOnlyDictionary<char, uint> glyphMap,
-                FontFaceHandle faceHandle)
+            public FontInstanceHandle(FontManager fontManager, int size, FontFaceHandle faceHandle)
             {
+                GlyphMap = new Dictionary<Rune, uint>();
                 _fontManager = fontManager;
                 Size = size;
-                GlyphMap = glyphMap;
                 FaceHandle = faceHandle;
             }
 
-            public Texture? GetCharTexture(char chr, float scale)
+            public Texture? GetCharTexture(Rune codePoint, float scale)
             {
-                var glyph = _getGlyph(chr);
+                var glyph = GetGlyph(codePoint);
                 if (glyph == 0)
-                {
                     return null;
-                }
 
-                var scaled = _getScaleDatum(scale);
-                scaled.Atlas.AtlasData.TryGetValue(glyph, out var texture);
+                var scaled = GetScaleDatum(scale);
+                _fontManager.CacheGlyph(this, scaled, scale, glyph);
+
+                scaled.AtlasData.TryGetValue(glyph, out var texture);
                 return texture;
             }
 
-            public CharMetrics? GetCharMetrics(char chr, float scale)
+            public CharMetrics? GetCharMetrics(Rune codePoint, float scale)
             {
-                var glyph = _getGlyph(chr);
+                var glyph = GetGlyph(codePoint);
                 if (glyph == 0)
                 {
                     return null;
                 }
 
-                var scaled = _getScaleDatum(scale);
+                var scaled = GetScaleDatum(scale);
+                _fontManager.CacheGlyph(this, scaled, scale, glyph);
+
                 return scaled.MetricsMap[glyph];
             }
 
             public int GetAscent(float scale)
             {
-                var scaled = _getScaleDatum(scale);
+                var scaled = GetScaleDatum(scale);
                 return scaled.Ascent;
             }
 
             public int GetDescent(float scale)
             {
-                var scaled = _getScaleDatum(scale);
+                var scaled = GetScaleDatum(scale);
                 return scaled.Descent;
             }
 
             public int GetHeight(float scale)
             {
-                var scaled = _getScaleDatum(scale);
+                var scaled = GetScaleDatum(scale);
                 return scaled.Height;
             }
 
             public int GetLineHeight(float scale)
             {
-                var scaled = _getScaleDatum(scale);
+                var scaled = GetScaleDatum(scale);
                 return scaled.LineHeight;
             }
 
-            private uint _getGlyph(char chr)
+            private uint GetGlyph(Rune chr)
             {
                 if (GlyphMap.TryGetValue(chr, out var glyph))
                 {
                     return glyph;
                 }
 
-                return 0;
+                // Check FreeType to see if it exists.
+                var index = FaceHandle.Face.GetCharIndex((uint) chr.Value);
+
+                GlyphMap.Add(chr, index);
+
+                return index;
             }
 
-            private ScaledFontData _getScaleDatum(float scale)
+            private ScaledFontData GetScaleDatum(float scale)
             {
                 if (_scaledData.TryGetValue(scale, out var datum))
                 {
@@ -368,37 +330,25 @@ namespace Robust.Client.Graphics
 
         private class ScaledFontData
         {
-            public ScaledFontData(IReadOnlyDictionary<uint, CharMetrics> metricsMap, int ascent, int descent,
-                int height, int lineHeight, FontTextureAtlas atlas)
+            public ScaledFontData(int ascent, int descent, int height, int lineHeight)
             {
-                MetricsMap = metricsMap;
                 Ascent = ascent;
                 Descent = descent;
                 Height = height;
                 LineHeight = lineHeight;
-                Atlas = atlas;
             }
 
-            public IReadOnlyDictionary<uint, CharMetrics> MetricsMap { get; }
-            public int Ascent { get; }
-            public int Descent { get; }
-            public int Height { get; }
-            public int LineHeight { get; }
-            public FontTextureAtlas Atlas { get; }
-        }
+            public readonly List<OwnedTexture> AtlasTextures = new();
+            public readonly Dictionary<uint, AtlasTexture?> AtlasData = new();
+            public readonly Dictionary<uint, CharMetrics> MetricsMap = new();
+            public readonly int Ascent;
+            public readonly int Descent;
+            public readonly int Height;
+            public readonly int LineHeight;
 
-        private class FontTextureAtlas
-        {
-            public FontTextureAtlas(Texture mainTexture, Dictionary<uint, AtlasTexture> atlasData)
-            {
-                MainTexture = mainTexture;
-                AtlasData = atlasData;
-            }
-
-            public Texture MainTexture { get; }
-
-            // Maps glyph index to atlas.
-            public Dictionary<uint, AtlasTexture> AtlasData { get; }
+            public int CurSheetX;
+            public int CurSheetY;
+            public int CurSheetMaxY;
         }
     }
 }

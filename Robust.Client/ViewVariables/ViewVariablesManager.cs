@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -24,7 +21,7 @@ namespace Robust.Client.ViewVariables
     internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private uint _nextReqId = 1;
@@ -215,11 +212,11 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (obj is IEntity entity && !entity.Deleted)
             {
-                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _resourceCache);
+                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
             var window = new SS14Window {Title = "View Variables"};
@@ -256,11 +253,11 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(IEntity).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _resourceCache);
+                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
             loadingLabel.Dispose();

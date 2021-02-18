@@ -1,13 +1,11 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -23,14 +21,14 @@ namespace Robust.Client.ViewVariables
         private readonly Label _bottomLabel;
 
         private readonly IViewVariablesManagerInternal _viewVariablesManager;
-        private readonly IResourceCache _resourceCache;
+        private readonly IRobustSerializer _robustSerializer;
 
-        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IResourceCache resourceCache)
+        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IRobustSerializer robustSerializer)
         {
             MouseFilter = MouseFilterMode.Pass;
 
             _viewVariablesManager = viewVars;
-            _resourceCache = resourceCache;
+            _robustSerializer = robustSerializer;
 
             MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
@@ -68,11 +66,11 @@ namespace Robust.Client.ViewVariables
 
             _bottomLabel.Text = $"Type: {member.TypePretty}";
             VVPropEditor editor;
-            if (type == null)
+            if (type == null || !_robustSerializer.CanSerialize(type))
             {
                 // Type is server-side only.
                 // Info whether it's reference or value type can be figured out from the sent value.
-                if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
+                if (type?.IsValueType == true || member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
                 {
                     // Value type, just display it stringified read-only.
                     editor = new VVPropEditorDummy();
@@ -80,7 +78,7 @@ namespace Robust.Client.ViewVariables
                 else
                 {
                     // Has to be a reference type at this point.
-                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null);
+                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null || type?.IsClass == true || type?.IsInterface == true);
                     editor = _viewVariablesManager.PropertyFor(typeof(object));
                 }
             }

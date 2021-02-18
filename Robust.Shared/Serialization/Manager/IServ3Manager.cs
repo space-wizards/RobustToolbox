@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager

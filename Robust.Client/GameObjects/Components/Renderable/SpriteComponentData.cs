@@ -1,23 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using SharpFont;
+using static Robust.Shared.GameObjects.SharedSpriteComponent;
 
-namespace Robust.Client.GameObjects.Components.Renderable
+namespace Robust.Client.GameObjects
 {
     public partial class SpriteComponentData : ISerializationHooks
     {
@@ -25,10 +17,10 @@ namespace Robust.Client.GameObjects.Components.Renderable
         public RSI? RSI;
 
         [DataClassTarget("layerDatums")]
-        public List<SharedSpriteComponent.PrototypeLayerData>? LayerDatums;
+        public List<PrototypeLayerData>? LayerDatums;
 
         [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<SharedSpriteComponent.PrototypeLayerData> layerDatums = new ();
+        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new ();
 
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
@@ -56,7 +48,7 @@ namespace Robust.Client.GameObjects.Components.Renderable
             if(layerDatums.Count == 0){
                 if (state != null || texture != null)
                 {
-                    layerDatums.Insert(0, new SharedSpriteComponent.PrototypeLayerData
+                    layerDatums.Insert(0, new PrototypeLayerData
                     {
                         TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
                         State = string.IsNullOrWhiteSpace(state) ? null : state,

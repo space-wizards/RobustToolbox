@@ -1,12 +1,10 @@
 using System;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using YamlDotNet.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.UserInterface
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedUserInterfaceComponent : Component
     {

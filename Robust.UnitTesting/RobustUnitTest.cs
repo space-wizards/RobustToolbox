@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
-using Robust.Shared.Timing;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
@@ -52,15 +48,26 @@ namespace Robust.UnitTesting
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
+            var configurationManager = IoCManager.Resolve<IConfigurationManagerInternal>();
+
+            configurationManager.Initialize(Project == UnitTestProject.Server);
+
             foreach (var assembly in assemblies)
             {
-                IoCManager.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
+                configurationManager.LoadCVarsFromAssembly(assembly);
+            }
+
+            var contentAssemblies = GetContentAssemblies();
+
+            foreach (var assembly in contentAssemblies)
+            {
+                configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
             var modLoader = IoCManager.Resolve<TestingModLoader>();
-            modLoader.Assemblies = GetContentAssemblies();
+            modLoader.Assemblies = contentAssemblies;
             modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 
             // Required components for the engine to work

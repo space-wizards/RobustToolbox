@@ -2,10 +2,7 @@
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -49,6 +46,7 @@ namespace Robust.Client.Graphics.Clyde
         public string GetKeyName(Keyboard.Key key) => string.Empty;
         public string GetKeyNameScanCode(int scanCode) => string.Empty;
         public int GetKeyScanCode(Keyboard.Key key) => default;
+
         public void Shutdown()
         {
             // Nada.
@@ -77,8 +75,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public override event Action<WindowResizedEventArgs> OnWindowResized
         {
-            add {}
-            remove {}
+            add { }
+            remove { }
         }
 
         public void Render()
@@ -109,6 +107,15 @@ namespace Robust.Client.Graphics.Clyde
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
+        }
+
+        public OwnedTexture CreateBlankTexture<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
+        {
+            return new DummyTexture(size);
         }
 
         public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
@@ -174,7 +181,7 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
         {
             return DummyBufferedAudioSource.Instance;
         }
@@ -295,6 +302,11 @@ namespace Robust.Client.Graphics.Clyde
         {
             public DummyTexture(Vector2i size) : base(size)
             {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+                // Just do nothing on mutate.
             }
         }
 
@@ -434,7 +446,8 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            public IRenderTexture RenderTarget { get; } = new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+            public IRenderTexture RenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }

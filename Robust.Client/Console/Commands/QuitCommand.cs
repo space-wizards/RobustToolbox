@@ -1,5 +1,5 @@
-using Robust.Client.Interfaces.Console;
 using System;
+using Robust.Shared.Console;
 
 namespace Robust.Client.Console.Commands
 {
@@ -9,10 +9,9 @@ namespace Robust.Client.Console.Commands
         public string Description => "Kills the game client instantly.";
         public string Help => "Kills the game client instantly, leaving no traces. No telling the server goodbye";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             Environment.Exit(0);
-            return false;
         }
     }
 }

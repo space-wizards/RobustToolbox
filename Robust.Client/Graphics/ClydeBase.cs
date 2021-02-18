@@ -1,8 +1,6 @@
 using System;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -34,6 +32,7 @@ namespace Robust.Client.Graphics
             _configurationManager.OnValueChanged(CVars.DisplayVSync, _vSyncChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplayWindowMode, _windowModeChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
+            _configurationManager.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
 
             return true;
@@ -73,6 +72,10 @@ namespace Robust.Client.Graphics
         }
 
         protected virtual void LightmapDividerChanged(int newValue)
+        {
+        }
+
+        protected virtual void MaxLightsPerSceneChanged(int newValue)
         {
         }
 

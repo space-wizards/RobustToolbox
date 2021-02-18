@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -9,7 +8,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     public partial interface IPhysicsComponent
     {
@@ -43,6 +42,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         bool Anchored { get; set; }
 
+        [Obsolete("Use AnchoredChangedMessage instead")]
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
@@ -348,11 +348,15 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _anchored = value;
+#pragma warning disable 618
                 AnchoredChanged?.Invoke();
+#pragma warning restore 618
+                SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
             }
         }
 
+        [Obsolete("Use AnchoredChangedMessage instead")]
         public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -520,6 +524,16 @@ namespace Robust.Shared.GameObjects.Components
         public bool CanMove()
         {
             return !Anchored && Mass > 0;
+        }
+    }
+
+    public class AnchoredChangedMessage : ComponentMessage
+    {
+        public readonly bool Anchored;
+
+        public AnchoredChangedMessage(bool anchored)
+        {
+            Anchored = anchored;
         }
     }
 }

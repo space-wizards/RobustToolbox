@@ -1,4 +1,4 @@
-﻿using Robust.Client.Input;
+using Robust.Client.Input;
 
 namespace Robust.Client
 {

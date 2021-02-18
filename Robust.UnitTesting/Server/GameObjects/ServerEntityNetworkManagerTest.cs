@@ -2,7 +2,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;

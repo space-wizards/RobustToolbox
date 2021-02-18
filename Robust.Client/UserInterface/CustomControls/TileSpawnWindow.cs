@@ -1,17 +1,13 @@
-﻿using Robust.Client.Interfaces.Placement;
-using Robust.Client.UserInterface.Controls;
+﻿using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.Map;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {

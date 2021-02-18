@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -207,7 +206,7 @@ namespace Robust.Shared.Map
 
                     // locate the entity that represents this map that was just sent to us
                     IEntity? sharedMapEntity = null;
-                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
+                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
                     foreach (var mapComp in mapComps)
                     {
                         if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
@@ -257,7 +256,7 @@ namespace Robust.Shared.Map
                     cGridComp.ClearGridId();
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
-                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>();
+                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true);
                     foreach (var gridComp in gridComps)
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)

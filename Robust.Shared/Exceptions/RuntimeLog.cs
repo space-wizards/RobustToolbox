@@ -5,8 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
-
 
 namespace Robust.Shared.Exceptions
 {

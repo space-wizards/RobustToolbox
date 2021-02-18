@@ -2,13 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Threading.Tasks;
-using System.Timers;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
 using Robust.Shared.Input;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Timer = Robust.Shared.Timers.Timer;
 
@@ -433,7 +428,7 @@ namespace Robust.Client.UserInterface.Controls
                 if (item.Region == null)
                     continue;
 
-                if (!item.Region.Value.Contains(args.RelativePosition))
+                if (!item.Region.Value.Contains(args.RelativePixelPosition))
                     continue;
 
                 if (item.Selectable && !item.Disabled)

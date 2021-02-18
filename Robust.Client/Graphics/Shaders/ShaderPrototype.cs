@@ -1,19 +1,16 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement.ResourceTypes;
+﻿using System;
+using System.Collections.Generic;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
     public sealed class ShaderPrototype : IPrototype, IIndexedPrototype, ISerializationHooks

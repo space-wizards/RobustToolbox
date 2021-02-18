@@ -1,22 +1,19 @@
-using Robust.Client.Interfaces.Console;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {
 #if CLIENT_SCRIPTING
-    internal sealed class ScriptConsoleCommand : IConsoleCommand
+    internal sealed class ScriptCommand : IConsoleCommand
     {
         public string Command => "csi";
         public string Description => "Opens a C# interactive console.";
         public string Help => "csi";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             new ScriptConsoleClient().OpenCentered();
-
-            return false;
         }
     }
 
@@ -26,33 +23,29 @@ namespace Robust.Client.Console.Commands
         public string Description => "Opens a variable watch window.";
         public string Help => "watch";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             new WatchWindow().OpenCentered();
-
-            return false;
         }
     }
 #endif
 
-    internal sealed class ServerScriptConsoleCommand : IConsoleCommand
+    internal sealed class ServerScriptCommand : IConsoleCommand
     {
         public string Command => "scsi";
         public string Description => "Opens a C# interactive console on the server.";
         public string Help => "scsi";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IScriptClient>();
             if (!mgr.CanScript)
             {
-                console.AddLine(Loc.GetString("You do not have server side scripting permission."), Color.Red);
-                return false;
+                shell.WriteError(Loc.GetString("You do not have server side scripting permission."));
+                return;
             }
 
             mgr.StartSession();
-
-            return false;
         }
     }
 }

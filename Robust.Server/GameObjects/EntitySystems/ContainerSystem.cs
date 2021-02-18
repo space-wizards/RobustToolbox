@@ -1,8 +1,6 @@
-﻿using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     internal sealed class ContainerSystem : EntitySystem
     {

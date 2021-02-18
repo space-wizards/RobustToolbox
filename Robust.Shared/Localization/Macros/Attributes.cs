@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Localization.Macros
 {

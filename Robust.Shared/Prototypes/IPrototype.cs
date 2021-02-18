@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Localization;
-using YamlDotNet.RepresentationModel;
+﻿using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -7,18 +7,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
@@ -137,7 +136,8 @@ namespace Robust.Client.Input
                     Priority = p.Priority,
                     Type = p.BindingType,
                     CanFocus = p.CanFocus,
-                    CanRepeat = p.CanRepeat
+                    CanRepeat = p.CanRepeat,
+                    AllowSubCombs = p.AllowSubCombs
                 }).ToArray();
 
             var leaveEmpty = _modifiedKeyFunctions
@@ -204,6 +204,7 @@ namespace Robust.Client.Input
 
             var bindsDown = new List<KeyBinding>();
             var hasCanFocus = false;
+            var hasAllowSubCombs = false;
 
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
@@ -222,12 +223,22 @@ namespace Robust.Client.Input
                         matchedCombo = binding.PackedKeyCombo;
 
                         bindsDown.Add(binding);
+
                         hasCanFocus |= binding.CanFocus;
+                        hasAllowSubCombs |= binding.AllowSubCombs;
+
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
-                        // kill any lower level matches
-                        UpBind(binding);
+                        if (hasAllowSubCombs)
+                        {
+                            bindsDown.Add(binding);
+                        }
+                        else
+                        {
+                            // kill any lower level matches
+                            UpBind(binding);
+                        }
                     }
                 }
             }
@@ -379,8 +390,8 @@ namespace Robust.Client.Input
         {
             for (var i = 0; i < 32; i += 8)
             {
-                var key = (Key) (subPackedCombo.Packed >> i);
-                if (!PackedContainsKey(packedCombo, key))
+                var key = (Key) ((subPackedCombo.Packed >> i) & 0b_1111_1111);
+                if (key != Key.Unknown && !PackedContainsKey(packedCombo, key))
                 {
                     return false;
                 }
@@ -456,7 +467,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
-            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false,
+            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false, false,
                 0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
@@ -467,7 +478,7 @@ namespace Robust.Client.Input
         public IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified = true)
         {
             var binding = new KeyBinding(this, reg.Function, reg.Type, reg.BaseKey, reg.CanFocus, reg.CanRepeat,
-                reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
+                reg.AllowSubCombs, reg.Priority, reg.Mod1, reg.Mod2, reg.Mod3);
 
             RegisterBinding(binding, markModified);
 
@@ -622,12 +633,18 @@ namespace Robust.Client.Input
             [ViewVariables]
             public bool CanRepeat { get; internal set; }
 
+            /// <summary>
+            ///     Whether the Bound Key Combination allows Sub Combinations of it to trigger.
+            /// </summary>
+            [ViewVariables]
+            public bool AllowSubCombs { get; internal set; }
+
             [ViewVariables] public int Priority { get; internal set; }
 
             public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
                 Key baseKey,
-                bool canFocus, bool canRepeat, int priority, Key mod1 = Key.Unknown,
+                bool canFocus, bool canRepeat, bool allowSubCombs, int priority, Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
             {
@@ -635,6 +652,7 @@ namespace Robust.Client.Input
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
+                AllowSubCombs = allowSubCombs;
                 Priority = priority;
                 _inputManager = inputManager;
 
@@ -796,34 +814,34 @@ namespace Robust.Client.Input
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
-                console.AddLine("Too few arguments.");
-                return false;
+                shell.WriteLine("Too few arguments.");
+                return;
             }
 
             if (args.Length > 3)
             {
-                console.AddLine("Too many arguments.");
-                return false;
+                shell.WriteLine("Too many arguments.");
+                return;
             }
 
             var keyName = args[0];
 
             if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
             {
-                console.AddLine($"Key '{keyName}' is unrecognized.");
-                return false;
+                shell.WriteLine($"Key '{keyName}' is unrecognized.");
+                return;
             }
 
             var keyId = (Key) keyIdObj!;
 
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
-                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
-                return false;
+                shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
+                return;
             }
 
             var keyMode = (KeyBindingType) keyModeObj!;
@@ -840,8 +858,6 @@ namespace Robust.Client.Input
             };
 
             inputMan.RegisterBinding(registration);
-
-            return false;
         }
     }
 
@@ -852,12 +868,10 @@ namespace Robust.Client.Input
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();
-
-            return false;
         }
     }
 }

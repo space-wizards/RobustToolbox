@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
-using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
-namespace Robust.Client.GameObjects.Components.UserInterface
+namespace Robust.Client.GameObjects
 {
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {

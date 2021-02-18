@@ -1,9 +1,9 @@
-﻿using Robust.Shared.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.Appearance
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     The appearance component allows game logic to be more detached from the actual visuals of an entity such as 2D sprites, 3D, particles, lights...
@@ -22,8 +22,8 @@ namespace Robust.Shared.GameObjects.Components.Appearance
         public abstract T GetData<T>(string key);
         public abstract T GetData<T>(Enum key);
 
-        public abstract bool TryGetData<T>(string key, [MaybeNullWhen(false)] out T data);
-        public abstract bool TryGetData<T>(Enum key, [MaybeNullWhen(false)] out T data);
+        public abstract bool TryGetData<T>(string key, [NotNullWhen(true)] out T data);
+        public abstract bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data);
 
         [Serializable, NetSerializable]
         protected class AppearanceComponentState : ComponentState

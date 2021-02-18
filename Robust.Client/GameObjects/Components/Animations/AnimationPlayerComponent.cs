@@ -5,7 +5,7 @@ using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
 using static Robust.Client.Animations.AnimationPlaybackShared;
 
-namespace Robust.Client.GameObjects.Components.Animations
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Plays back <see cref="Animation"/>s on entities.
@@ -48,11 +48,21 @@ namespace Robust.Client.GameObjects.Components.Animations
                 return;
             }
 
+            List<string>? toRemove = null;
             // TODO: Get rid of this ToArray() allocation.
             foreach (var (key, playback) in _playingAnimations.ToArray())
             {
                 var keep = UpdatePlayback(Owner, playback, frameTime);
                 if (!keep)
+                {
+                    toRemove ??= new List<string>();
+                    toRemove.Add(key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                foreach (var key in toRemove)
                 {
                     _playingAnimations.Remove(key);
                     AnimationCompleted?.Invoke(key);

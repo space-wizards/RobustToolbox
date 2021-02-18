@@ -4,16 +4,15 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using NFluidsynth;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -379,9 +378,16 @@ namespace Robust.Client.Audio.Midi
 
             public override IntPtr Open(string filename)
             {
+                if (string.IsNullOrEmpty(filename))
+                {
+                    return IntPtr.Zero;
+                }
+
                 Stream? stream;
                 var resourceCache = IoCManager.Resolve<IResourceCache>();
-                if (resourceCache.ContentFileExists(filename))
+                var resourcePath = new ResourcePath(filename);
+
+                if (resourcePath.IsRooted && resourceCache.ContentFileExists(filename))
                 {
                     if (!resourceCache.TryContentFileRead(filename, out stream))
                         return IntPtr.Zero;

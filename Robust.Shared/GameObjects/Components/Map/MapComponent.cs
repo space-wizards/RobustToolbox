@@ -1,13 +1,11 @@
 ﻿using System;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a world map inside the ECS system.

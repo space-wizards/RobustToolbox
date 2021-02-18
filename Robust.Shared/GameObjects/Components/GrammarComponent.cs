@@ -5,7 +5,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     /// Holds the necessary information to generate text related to the entity.

@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Appearance;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -57,17 +53,17 @@ namespace Robust.Client.GameObjects
             return (T) data[key];
         }
 
-        public override bool TryGetData<T>(Enum key, [MaybeNullWhen(false)] out T data)
+        public override bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        public override bool TryGetData<T>(string key, [MaybeNullWhen(false)] out T data)
+        public override bool TryGetData<T>(string key, [NotNullWhen(true)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        internal bool TryGetData<T>(object key, [MaybeNullWhen(false)] out T data)
+        internal bool TryGetData<T>(object key, [NotNullWhen(true)] out T data)
         {
             if (this.data.TryGetValue(key, out var dat))
             {
@@ -75,12 +71,14 @@ namespace Robust.Client.GameObjects
                 return true;
             }
 
-            data = default;
+            data = default!;
             return false;
         }
 
         private void SetData(object key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value)) return;
+
             data[key] = value;
 
             MarkDirty();
@@ -88,10 +86,9 @@ namespace Robust.Client.GameObjects
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not AppearanceComponentState actualState)
                 return;
 
-            var actualState = (AppearanceComponentState) curState;
             data = actualState.Data;
             MarkDirty();
         }

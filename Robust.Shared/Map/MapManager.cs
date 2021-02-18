@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -235,7 +230,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
+                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -423,7 +418,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>())
+                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true))
                 {
                     if (comp.GridIndex != actualID)
                         continue;

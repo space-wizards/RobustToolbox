@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var bg = _getBackground();
-            bg?.Draw(handle, SizeBox);
+            bg?.Draw(handle, PixelSizeBox);
 
             var fg = _getForeground();
             if (fg == null)
@@ -69,10 +69,10 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
             var minSize = fg.MinimumSize;
-            var size = Width * GetAsRatio() - minSize.X;
+            var size = PixelWidth * GetAsRatio() - minSize.X;
             if (size > 0)
             {
-                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, Height));
+                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight));
             }
         }
 

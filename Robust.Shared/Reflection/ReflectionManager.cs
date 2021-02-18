@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -30,6 +30,8 @@ namespace Robust.Shared.Reflection
         private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
 
         private readonly Dictionary<string, Type> _looseTypeCache = new();
+
+        private readonly Dictionary<string, Enum> _enumCache = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
@@ -157,7 +159,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public IEnumerable<Type> FindTypesWithAttribute<T>()
+        public IEnumerable<Type> FindTypesWithAttribute<T>() where T : Attribute
         {
             return FindTypesWithAttribute(typeof(T));
         }
@@ -185,8 +187,13 @@ namespace Robust.Shared.Reflection
             }
 
             reference = reference.Substring(5);
+
+            if (_enumCache.TryGetValue(reference, out @enum))
+                return true;
+
             var dotIndex = reference.LastIndexOf('.');
             var typeName = reference.Substring(0, dotIndex);
+
             var value = reference.Substring(dotIndex + 1);
 
             foreach (var assembly in assemblies)
@@ -199,6 +206,7 @@ namespace Robust.Shared.Reflection
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
+                    _enumCache[reference] = @enum;
                     return true;
                 }
             }
@@ -216,7 +224,21 @@ namespace Robust.Shared.Reflection
             Type? found = null;
             foreach (var derivedType in GetAllChildren(baseType))
             {
-                if (derivedType.Name == typeName && (derivedType.IsPublic))
+                if (!derivedType.IsPublic)
+                {
+                    continue;
+                }
+
+                if (derivedType.Name == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+
+                var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                if (serializedAttribute != null &&
+                    serializedAttribute.SerializeName == typeName)
                 {
                     found = derivedType;
                     break;

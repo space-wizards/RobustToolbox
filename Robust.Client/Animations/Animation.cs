@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.Components.Animations;
+using Robust.Client.GameObjects;
 
 namespace Robust.Client.Animations
 {

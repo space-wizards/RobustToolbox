@@ -2,7 +2,6 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Resources

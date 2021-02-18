@@ -1,23 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.EntitySystems;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Server.GameObjects.Components.UserInterface
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Contains a collection of entity-bound user interfaces that can be opened per client.
@@ -266,6 +260,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);
+            session.PlayerStatusChanged -= OnSessionOnPlayerStatusChanged;
 
             if (_subscribedSessions.Count == 0)
             {

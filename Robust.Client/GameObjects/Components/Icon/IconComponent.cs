@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
@@ -26,12 +25,12 @@ namespace Robust.Client.GameObjects
 
         //TODO Paul: fix dis, also dont forget about exposedata to set the icon
         //TODO actually, do we even need this now?
-        private static IDirectionalTextureProvider TextureForConfig(DataClass compData, IResourceCache resourceCache)
+        private static IRsiStateLike TextureForConfig(DataClass compData, IResourceCache resourceCache)
         {
             /*IDirectionalTextureProvider dirTex;
 
             //var tex = compData.ReadDataField<string?>("texture", null);
-            if (compData.TryGetValue("texture", out var texObj) && !string.IsNullOrWhiteSpace((string?)texObj))
+            if (serializer.TryGetCacheData<IRsiStateLike>(SerializationCache, out var dirTex))
             {
                 dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / (string)texObj).Texture;
                 //todo compData.SetCacheData(SerializationCache, dirTex);
@@ -82,7 +81,7 @@ namespace Robust.Client.GameObjects
             return resourceCache.GetFallback<TextureResource>().Texture;
         }
 
-        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IRsiStateLike? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var compData))
             {

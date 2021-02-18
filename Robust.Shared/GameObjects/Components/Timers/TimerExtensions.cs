@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.GameObjects;
 using Timer = Robust.Shared.Timers.Timer;
 
-namespace Robust.Shared.GameObjects.Components.Timers
+namespace Robust.Shared.GameObjects
 {
     public static class TimerExtensions
     {
@@ -55,9 +54,6 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="cancellationToken"></param>
         public static void SpawnTimer(this IEntity entity, int milliseconds, Action onFired, CancellationToken cancellationToken = default)
         {
-            if (entity.Deleted)
-                return;
-
             entity
                 .EnsureComponent<TimerComponent>()
                 .Spawn(milliseconds, onFired, cancellationToken);
@@ -89,7 +85,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         {
             entity
                 .EnsureComponent<TimerComponent>()
-                .Spawn(milliseconds, onFired, cancellationToken);
+                .SpawnRepeating(milliseconds, onFired, cancellationToken);
         }
 
         /// <summary>
@@ -103,7 +99,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         {
             entity
                 .EnsureComponent<TimerComponent>()
-                .Spawn(duration, onFired, cancellationToken);
+                .SpawnRepeating(duration, onFired, cancellationToken);
         }
     }
 }

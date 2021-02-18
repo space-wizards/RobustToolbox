@@ -1,9 +1,8 @@
 using System;
 using System.Diagnostics;
-using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Used for doing direct drawing without sprite components, existing GUI controls, etc...

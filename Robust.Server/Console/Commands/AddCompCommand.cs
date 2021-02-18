@@ -12,7 +12,7 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "addcomp";
         public string Description => "Adds a component to an entity";
-        public string Help => "addcomp <uid> <componentName>";
+        public string Help => $"{Command} <uid> <componentName>";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -30,7 +30,14 @@ namespace Robust.Server.Console.Commands
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var entity = entityManager.GetEntity(entityUid);
-            var component = (Component) compFactory.GetComponent(componentName);
+
+            if (!compFactory.TryGetRegistration(componentName, out var registration, true))
+            {
+                shell.WriteLine($"No component found with name {componentName}");
+                return;
+            }
+
+            var component = (Component) compFactory.GetComponent(registration.Type);
 
             component.Owner = entity;
 
@@ -43,7 +50,8 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "rmcomp";
         public string Description => "Removes a component from an entity.";
-        public string Help => "rmcomp <uid> <componentName>";
+        public string Help => $"{Command} <uid> <componentName>";
+
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
@@ -58,7 +66,11 @@ namespace Robust.Server.Console.Commands
             var compManager = IoCManager.Resolve<IComponentManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
-            var registration = compFactory.GetRegistration(componentName);
+            if (!compFactory.TryGetRegistration(componentName, out var registration, true))
+            {
+                shell.WriteLine($"No component found with name {componentName}");
+                return;
+            }
 
             compManager.RemoveComponent(entityUid, registration.Type);
         }

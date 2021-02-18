@@ -3,6 +3,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -33,7 +34,7 @@ namespace Robust.Client.GameStates
         private readonly int _lineHeight;
         private readonly List<NetEntity> _netEnts = new();
 
-        public NetEntityOverlay() : base(nameof(NetEntityOverlay))
+        public NetEntityOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -179,11 +180,10 @@ namespace Robust.Client.GameStates
             return Color.Green; // Entity in PVS, but not updated recently.
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
-
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
 
         private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str, Color textColor)
@@ -238,14 +238,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
                     overlayMan.AddOverlay(new NetEntityOverlay());
                     shell.WriteLine("Enabled network entity report overlay.");
                 }
-                else if(!bValue && overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                else if(!bValue && overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetEntityOverlay));
+                    overlayMan.RemoveOverlay(typeof(NetEntityOverlay));
                     shell.WriteLine("Disabled network entity report overlay.");
                 }
             }

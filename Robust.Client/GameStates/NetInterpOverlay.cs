@@ -87,14 +87,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (bValue && !overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
+                if (bValue && !overlayMan.HasOverlay<NetInterpOverlay>())
                 {
                     overlayMan.AddOverlay(new NetInterpOverlay());
                     shell.WriteLine("Enabled network interp overlay.");
                 }
-                else if (overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
+                else if (overlayMan.HasOverlay<NetInterpOverlay>())
                 {
-                    overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
+                    overlayMan.RemoveOverlay<NetInterpOverlay>();
                     shell.WriteLine("Disabled network interp overlay.");
                 }
             }

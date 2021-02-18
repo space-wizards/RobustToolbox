@@ -39,14 +39,14 @@ namespace Robust.Client.Debugging
 
                 _debugColliders = value;
 
-                if (value && !_overlayManager.HasOverlayOfType<PhysicsOverlay>())
+                if (value && !_overlayManager.HasOverlay<PhysicsOverlay>())
                 {
                     _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager, _physicsManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlaysOfClass(nameof(PhysicsOverlay));
+                    _overlayManager.RemoveOverlay<PhysicsOverlay>();
                 }
             }
         }
@@ -64,13 +64,13 @@ namespace Robust.Client.Debugging
 
                 _debugPositions = value;
 
-                if (value && !_overlayManager.HasOverlayOfType<EntityPositionOverlay>())
+                if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
-                    _overlayManager.AddOverlay(Guid.NewGuid(), new EntityPositionOverlay(_entityManager, _eyeManager));
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(_entityManager, _eyeManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlaysOfClass(nameof(EntityPositionOverlay));
+                    _overlayManager.RemoveOverlay<EntityPositionOverlay>();
                 }
             }
         }
@@ -91,8 +91,6 @@ namespace Robust.Client.Debugging
 
 
             public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
-                : base(nameof(PhysicsOverlay))
-
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;

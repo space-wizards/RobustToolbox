@@ -36,14 +36,14 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
             var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager, _entityManager);
-            overlayManager.AddOverlay(Guid.NewGuid(), overlay);
+            overlayManager.AddOverlay(overlay);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
 
-            overlayManager.RemoveOverlaysOfClass("EffectSystem");
+            overlayManager.RemoveOverlay(typeof(EffectOverlay));
         }
 
         public void CreateEffect(EffectSystemMessage message)
@@ -330,7 +330,6 @@ namespace Robust.Client.GameObjects
         {
             private readonly IPlayerManager _playerManager;
 
-            public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             private readonly ShaderInstance _unshadedShader;

@@ -144,14 +144,12 @@ namespace Robust.Client.GameStates
             DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
-        /* //Dispose was removed (for now?)
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
 
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
-        */
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
         {
@@ -187,15 +185,15 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlayOfClass(nameof(NetGraphOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
                     shell.WriteLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlayOfClass(nameof(NetGraphOverlay)))
+                else if(overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
-                    overlayMan.RemoveOverlaysOfClass(nameof(NetGraphOverlay));
-                    console.AddLine("Disabled network overlay.");
+                    overlayMan.RemoveOverlay(typeof(NetGraphOverlay));
+                    shell.WriteLine("Disabled network overlay.");
                 }
             }
         }

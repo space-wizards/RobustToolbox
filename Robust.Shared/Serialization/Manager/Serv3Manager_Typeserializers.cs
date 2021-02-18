@@ -124,13 +124,13 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
             {
-                obj = genericTypeSer.NodeToType(node, context);
+                obj = genericTypeSer.Read(node, context);
                 return true;
             }
 
             if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
             var ser = (ITypeSerializer<T>) rawTypeSer;
-            obj = ser.NodeToType(node, context);
+            obj = ser.Read(node, context);
             return true;
         }
 
@@ -166,13 +166,13 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryGetGenericTypeSerializer(out ITypeSerializer<T>? genericTypeSer))
             {
-                node = genericTypeSer.TypeToNode(obj, alwaysWrite, context);
+                node = genericTypeSer.Write(obj, alwaysWrite, context);
                 return true;
             }
 
             if (!_typeSerializers.TryGetValue(typeof(T), out var rawTypeSer)) return false;
             var ser = (ITypeSerializer<T>) rawTypeSer;
-            node = ser.TypeToNode(obj, alwaysWrite, context);
+            node = ser.Write(obj, alwaysWrite, context);
             return true;
         }
     }

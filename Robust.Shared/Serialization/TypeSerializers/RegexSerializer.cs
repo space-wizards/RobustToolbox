@@ -6,19 +6,14 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class RegexSerializer : ITypeSerializer<Regex>
+    public class RegexSerializer : ITypeSerializer<Regex, ValueDataNode>
     {
-        public Regex NodeToType(DataNode node, ISerializationContext? context = null)
+        public Regex Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueNode)
-            {
-                throw new InvalidNodeTypeException();
-            }
-
-            return new Regex(valueNode.GetValue(), RegexOptions.Compiled);
+            return new Regex(node.Value, RegexOptions.Compiled);
         }
 
-        public DataNode TypeToNode(Regex value, bool alwaysWrite = false,
+        public DataNode Write(Regex value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());

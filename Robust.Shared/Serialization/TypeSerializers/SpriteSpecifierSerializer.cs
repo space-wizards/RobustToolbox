@@ -8,38 +8,40 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class SpriteSpecifierSerializer : ITypeSerializer<SpriteSpecifier>
+    public class SpriteSpecifierSerializer :
+        ITypeSerializer<SpriteSpecifier, ValueDataNode>,
+        ITypeSerializer<SpriteSpecifier, MappingDataNode>
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        public SpriteSpecifier NodeToType(DataNode node, ISerializationContext? context = null)
+        public SpriteSpecifier Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is ValueDataNode valueDataNode)
-            {
-                return new SpriteSpecifier.Texture(_serv3Manager.ReadValue<ResourcePath>(valueDataNode, context));
-            }
+            return new SpriteSpecifier.Texture(_serv3Manager.ReadValue<ResourcePath>(node, context));
+        }
 
-            if (node is MappingDataNode mapping
-                && mapping.TryGetNode("sprite", out var spriteNode)
-                && mapping.TryGetNode("state", out var rawStateNode)
+        public SpriteSpecifier Read(MappingDataNode node, ISerializationContext? context = null)
+        {
+            if (node.TryGetNode("sprite", out var spriteNode)
+                && node.TryGetNode("state", out var rawStateNode)
                 && rawStateNode is ValueDataNode stateNode)
             {
-                return new SpriteSpecifier.Rsi(_serv3Manager.ReadValue<ResourcePath>(spriteNode, context), stateNode.GetValue());
+                return new SpriteSpecifier.Rsi(_serv3Manager.ReadValue<ResourcePath>(spriteNode, context), stateNode.Value);
             }
+
             throw new InvalidNodeTypeException();
         }
 
-        public DataNode TypeToNode(SpriteSpecifier value,
+        public DataNode Write(SpriteSpecifier value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             switch (value)
             {
                 case SpriteSpecifier.Texture tex:
-                    return _serv3Manager.WriteValue(tex.TexturePath, nodeFactory, alwaysWrite, context);
+                    return _serv3Manager.WriteValue(tex.TexturePath, alwaysWrite, context);
                 case SpriteSpecifier.Rsi rsi:
-                    var mapping = nodeFactory.GetMappingNode();
-                    mapping.AddNode("sprite", _serv3Manager.WriteValue(rsi.RsiPath, nodeFactory, alwaysWrite, context));
+                    var mapping = new MappingDataNode();
+                    mapping.AddNode("sprite", _serv3Manager.WriteValue(rsi.RsiPath, alwaysWrite, context));
                     mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
                     return mapping;
             }

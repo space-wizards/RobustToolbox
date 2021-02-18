@@ -4,19 +4,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
-    public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage>
+    public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
-        public FormattedMessage NodeToType(DataNode node, ISerializationContext? context = null)
+        public FormattedMessage Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueNode)
-            {
-                throw new InvalidNodeTypeException();
-            }
-
-            return FormattedMessage.FromMarkup(valueNode.GetValue());
+            return FormattedMessage.FromMarkup(node.Value);
         }
 
-        public DataNode TypeToNode(FormattedMessage value, bool alwaysWrite = false,
+        public DataNode Write(FormattedMessage value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());

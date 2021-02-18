@@ -9,15 +9,17 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
     [TypeSerializer]
-    public class HashSetSerializer<T> : ITypeSerializer<HashSet<T>>, ITypeSerializer<ImmutableHashSet<T>>
+    public class HashSetSerializer<T> :
+        ITypeSerializer<HashSet<T>, SequenceDataNode>,
+        ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
         [Dependency] private readonly IServ3Manager _serv3Manager = default!;
 
-        HashSet<T> NormalNodeToType(DataNode node, ISerializationContext? context)
+        private HashSet<T> NormalRead(SequenceDataNode node, ISerializationContext? context)
         {
-            if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
             var hashset = new HashSet<T>();
-            foreach (var dataNode in sequenceDataNode.Sequence)
+
+            foreach (var dataNode in node.Sequence)
             {
                 hashset.Add(_serv3Manager.ReadValue<T>(dataNode, context));
             }
@@ -25,32 +27,35 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return hashset;
         }
 
-        HashSet<T> ITypeSerializer<HashSet<T>>.NodeToType(DataNode node, ISerializationContext? context)
+        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+            ISerializationContext? context)
         {
-            return NormalNodeToType(node, context);
+            return NormalRead(node, context);
         }
 
-        public DataNode TypeToNode(ImmutableHashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(ImmutableHashSet<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return TypeToNode(value.ToHashSet(), alwaysWrite, context);
+            return Write(value.ToHashSet(), alwaysWrite, context);
         }
 
-        public DataNode TypeToNode(HashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(HashSet<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();
+
             foreach (var elem in value)
             {
-                sequence.Add(_serv3Manager.WriteValue(elem, nodeFactory, alwaysWrite, context));
+                sequence.Add(_serv3Manager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;
         }
 
-        ImmutableHashSet<T> ITypeSerializer<ImmutableHashSet<T>>.NodeToType(DataNode node, ISerializationContext? context)
+        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+            ISerializationContext? context)
         {
-            return NormalNodeToType(node, context).ToImmutableHashSet();
+            return NormalRead(node, context).ToImmutableHashSet();
         }
     }
 }

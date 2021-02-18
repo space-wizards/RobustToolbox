@@ -8,12 +8,11 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class Vector2Serializer : ITypeSerializer<Vector2>
+    public class Vector2Serializer : ITypeSerializer<Vector2, ValueDataNode>
     {
-        public Vector2 NodeToType(DataNode node, ISerializationContext? context = null)
+        public Vector2 Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            string raw = valueDataNode.GetValue();
+            string raw = node.Value;
             string[] args = raw.Split(',');
             if (args.Length != 2)
             {
@@ -24,7 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 float.Parse(args[1], CultureInfo.InvariantCulture));
         }
 
-        public DataNode TypeToNode(Vector2 value, bool alwaysWrite = false,
+        public DataNode Write(Vector2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");

@@ -5,15 +5,14 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class StringSerializer : ITypeSerializer<string>
+    public class StringSerializer : ITypeSerializer<string, ValueDataNode>
     {
-        public string NodeToType(DataNode node, ISerializationContext? context = null)
+        public string Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return valueDataNode.GetValue();
+            return node.Value;
         }
 
-        public DataNode TypeToNode(string value, bool alwaysWrite = false,
+        public DataNode Write(string value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value);

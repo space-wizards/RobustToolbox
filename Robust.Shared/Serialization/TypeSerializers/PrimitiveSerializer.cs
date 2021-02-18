@@ -6,161 +6,171 @@ using Robust.Shared.Serialization.Markdown;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class PrimitiveSerializer : ITypeSerializer<bool>, ITypeSerializer<byte>, ITypeSerializer<sbyte>, ITypeSerializer<char>, ITypeSerializer<decimal>, ITypeSerializer<double>, ITypeSerializer<float>, ITypeSerializer<int>, ITypeSerializer<uint>, ITypeSerializer<long>, ITypeSerializer<ulong>, ITypeSerializer<short>, ITypeSerializer<ushort>
+    public class PrimitiveSerializer :
+        ITypeSerializer<bool, ValueDataNode>,
+        ITypeSerializer<byte, ValueDataNode>,
+        ITypeSerializer<sbyte, ValueDataNode>,
+        ITypeSerializer<char, ValueDataNode>,
+        ITypeSerializer<decimal, ValueDataNode>,
+        ITypeSerializer<double, ValueDataNode>,
+        ITypeSerializer<float, ValueDataNode>,
+        ITypeSerializer<int, ValueDataNode>,
+        ITypeSerializer<uint, ValueDataNode>,
+        ITypeSerializer<long, ValueDataNode>,
+        ITypeSerializer<ulong, ValueDataNode>,
+        ITypeSerializer<short, ValueDataNode>,
+        ITypeSerializer<ushort, ValueDataNode>
     {
-        bool ITypeSerializer<bool>.NodeToType(DataNode node, ISerializationContext? context)
+        bool ITypeReader<bool, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return bool.Parse(valueDataNode.GetValue());
+
+            return bool.Parse(node.Value);
         }
 
-        public DataNode TypeToNode(ushort value, bool alwaysWrite = false,
+        byte ITypeReader<byte, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return byte.Parse(node.Value);
+        }
+
+        sbyte ITypeReader<sbyte, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return sbyte.Parse(node.Value);
+        }
+
+        char ITypeReader<char, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return char.Parse(node.Value);        }
+
+        decimal ITypeReader<decimal, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return decimal.Parse(node.Value);
+        }
+
+        double ITypeReader<double, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+            return double.Parse(node.Value);
+        }
+
+        float ITypeReader<float, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+            return float.Parse(node.Value);
+        }
+
+        int ITypeReader<int, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+            return int.Parse(node.Value);
+        }
+
+        uint ITypeReader<uint, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return uint.Parse(node.Value);
+        }
+
+        long ITypeReader<long, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return long.Parse(node.Value);
+        }
+
+        ulong ITypeReader<ulong, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return ulong.Parse(node.Value);
+        }
+
+        short ITypeReader<short, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return short.Parse(node.Value);
+        }
+
+        ushort ITypeReader<ushort, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+        {
+
+            return ushort.Parse(node.Value);
+        }
+
+        public DataNode Write(ushort value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(short value, bool alwaysWrite = false,
+        public DataNode Write(short value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(ulong value, bool alwaysWrite = false,
+        public DataNode Write(ulong value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(long value, bool alwaysWrite = false,
+        public DataNode Write(long value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(uint value, bool alwaysWrite = false,
+        public DataNode Write(uint value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(int value, bool alwaysWrite = false,
+        public DataNode Write(int value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(float value, bool alwaysWrite = false,
+        public DataNode Write(float value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public DataNode TypeToNode(double value, bool alwaysWrite = false,
+        public DataNode Write(double value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public DataNode TypeToNode(decimal value, bool alwaysWrite = false,
+        public DataNode Write(decimal value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString(CultureInfo.InvariantCulture));
         }
 
-        public DataNode TypeToNode(char value, bool alwaysWrite = false,
+        public DataNode Write(char value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(sbyte value, bool alwaysWrite = false,
+        public DataNode Write(sbyte value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(byte value, bool alwaysWrite = false,
+        public DataNode Write(byte value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
         }
 
-        public DataNode TypeToNode(bool value, bool alwaysWrite = false,
+        public DataNode Write(bool value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
-        }
-
-        byte ITypeSerializer<byte>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return byte.Parse(valueDataNode.GetValue());
-        }
-
-        sbyte ITypeSerializer<sbyte>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return sbyte.Parse(valueDataNode.GetValue());
-        }
-
-        char ITypeSerializer<char>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return char.Parse(valueDataNode.GetValue());        }
-
-        decimal ITypeSerializer<decimal>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return decimal.Parse(valueDataNode.GetValue());
-        }
-
-        double ITypeSerializer<double>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return double.Parse(valueDataNode.GetValue());
-        }
-
-        float ITypeSerializer<float>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return float.Parse(valueDataNode.GetValue());
-        }
-
-        int ITypeSerializer<int>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return int.Parse(valueDataNode.GetValue());
-        }
-
-        uint ITypeSerializer<uint>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return uint.Parse(valueDataNode.GetValue());
-        }
-
-        long ITypeSerializer<long>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return long.Parse(valueDataNode.GetValue());
-        }
-
-        ulong ITypeSerializer<ulong>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return ulong.Parse(valueDataNode.GetValue());
-        }
-
-        short ITypeSerializer<short>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return short.Parse(valueDataNode.GetValue());
-        }
-
-        ushort ITypeSerializer<ushort>.NodeToType(DataNode node, ISerializationContext? context)
-        {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return ushort.Parse(valueDataNode.GetValue());
         }
     }
 }

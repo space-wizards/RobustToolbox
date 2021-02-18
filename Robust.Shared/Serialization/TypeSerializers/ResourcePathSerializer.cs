@@ -6,15 +6,14 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ResourcePathSerializer : ITypeSerializer<ResourcePath>
+    public class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
     {
-        public ResourcePath NodeToType(DataNode node, ISerializationContext? context = null)
+        public ResourcePath Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-            return new(valueDataNode.GetValue());
+            return new(node.Value);
         }
 
-        public DataNode TypeToNode(ResourcePath value,
+        public DataNode Write(ResourcePath value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

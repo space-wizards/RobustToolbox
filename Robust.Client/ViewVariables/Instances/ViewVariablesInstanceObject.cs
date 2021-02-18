@@ -1,20 +1,26 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
+using Robust.Shared.Input;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
+using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Client.ViewVariables.Instances
 {
     internal class ViewVariablesInstanceObject : ViewVariablesInstance
     {
         private TabContainer _tabs = default!;
+        private Button _refreshButton = default!;
         private int _tabCount;
 
         private readonly List<ViewVariablesTrait> _traits = new();
+
+        private CancellationTokenSource _refreshCancelToken = new();
 
         public ViewVariablesRemoteSession? Session { get; private set; }
         public object? Object { get; private set; }
@@ -72,9 +78,10 @@ namespace Robust.Client.ViewVariables.Instances
                 name.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;
                 headBox.AddChild(name);
 
-                var button = new Button {Text = "Refresh"};
-                button.OnPressed += _ => _refresh();
-                headBox.AddChild(button);
+                _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};
+                _refreshButton.OnPressed += _ => _refresh();
+                _refreshButton.OnKeyBindDown += OnButtonKeybindDown;
+                headBox.AddChild(_refreshButton);
                 vBoxContainer.AddChild(headBox);
             }
 
@@ -82,9 +89,31 @@ namespace Robust.Client.ViewVariables.Instances
             vBoxContainer.AddChild(_tabs);
         }
 
+        private void OnButtonKeybindDown(GUIBoundKeyEventArgs eventArgs)
+        {
+            if (eventArgs.Function == EngineKeyFunctions.UIRightClick)
+            {
+                _refreshButton.ToggleMode = !_refreshButton.ToggleMode;
+                _refreshButton.Pressed = !_refreshButton.Pressed;
+
+                _refreshCancelToken.Cancel();
+
+                if (!_refreshButton.Pressed) return;
+
+                _refreshCancelToken = new CancellationTokenSource();
+                Timer.SpawnRepeating(500, _refresh, _refreshCancelToken.Token);
+
+            } else if (eventArgs.Function == EngineKeyFunctions.UIClick)
+            {
+                _refreshButton.ToggleMode = false;
+            }
+        }
+
         public override void Close()
         {
             base.Close();
+
+            _refreshCancelToken.Cancel();
 
             if (Session != null && !Session.Closed)
             {

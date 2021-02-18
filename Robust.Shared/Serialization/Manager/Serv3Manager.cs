@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -75,6 +78,36 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = type.EnsureNotNullableType();
 
+            // val primitives
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
+            {
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                var foo = TypeDescriptor.GetConverter(type);
+                return foo.ConvertFromInvariantString(valueDataNode.Value);
+            }
+
+            // array
+            if (type.IsArray)
+            {
+                if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
+                var newArray = (Array)Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
+
+                var idx = 0;
+                foreach (var entryNode in sequenceDataNode.Sequence)
+                {
+                    var value = ReadValue(type.GetElementType()!, entryNode, context);
+                    newArray.SetValue(value, idx++);
+                }
+
+                return newArray;
+            }
+
+            if (underlyingType.IsEnum)
+            {
+                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
+                return Enum.Parse(underlyingType, valueDataNode.Value);
+            }
+
             if (node.Tag?.StartsWith("!type:") == true)
             {
                 var typeString = node.Tag.Substring(6);
@@ -133,6 +166,14 @@ namespace Robust.Shared.Serialization.Manager
             //var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
             if (value == null) return new MappingDataNode();
+
+            if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
+            {
+                // All primitives and enums implement IConvertible.
+                // Need it for the culture overload.
+                var convertible = (IConvertible) value;
+                return new ValueDataNode(convertible.ToString(CultureInfo.InvariantCulture));
+            }
 
             if (value is ISerializationHooks serHook)
                 serHook.BeforeSerialization();

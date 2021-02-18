@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
     [DebuggerDisplay("ClientContainer {Owner.Uid}/{ID}")]
-    public sealed class ClientContainer : IContainer
+    [SerializedType("ClientContainer")]
+    public sealed class ClientContainer : IContainer, IExposeData
     {
-        public List<IEntity> Entities { get; } = new();
+        private List<IEntity> _entities = new();
 
         public ClientContainer(string id, IContainerManager manager)
         {
@@ -21,7 +23,7 @@ namespace Robust.Shared.Containers
         [ViewVariables] public string ID { get; }
         [ViewVariables] public IEntity Owner => Manager.Owner;
         [ViewVariables] public bool Deleted { get; private set; }
-        [ViewVariables] public IReadOnlyList<IEntity> ContainedEntities => Entities;
+        [ViewVariables] public IReadOnlyList<IEntity> ContainedEntities => _entities;
         [ViewVariables]
         public bool ShowContents { get; set; }
         [ViewVariables]
@@ -54,12 +56,20 @@ namespace Robust.Shared.Containers
 
         public bool Contains(IEntity contained)
         {
-            return Entities.Contains(contained);
+            return _entities.Contains(contained);
         }
 
         public void Shutdown()
         {
             Deleted = true;
+        }
+
+        /// <inheritdoc />
+        public void ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
+            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            serializer.DataField(ref _entities, "ents", new List<IEntity>());
         }
     }
 }

@@ -1,25 +1,25 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
-    public class ContainerSlot : BaseContainer
+    [SerializedType("ContainerSlot")]
+    public class ContainerSlot : BaseContainer, IExposeData
     {
         [ViewVariables]
-        public IEntity ContainedEntity
+        public IEntity? ContainedEntity
         {
             get => _containedEntity;
             private set
             {
                 _containedEntity = value;
-                _containedArray[0] = value;
             }
         }
-
-        private readonly IEntity[] _containedArray = new IEntity[1];
-        private IEntity _containedEntity;
+        
+        private IEntity? _containedEntity;
 
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities
@@ -31,7 +31,7 @@ namespace Robust.Shared.Containers
                     return Array.Empty<IEntity>();
                 }
 
-                return _containedArray;
+                return new[] {ContainedEntity};
             }
         }
 
@@ -74,6 +74,13 @@ namespace Robust.Shared.Containers
             base.Shutdown();
 
             ContainedEntity?.Delete();
+        }
+
+        public void ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
+            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            serializer.DataField(ref _containedEntity, "ent", default);
         }
     }
 }

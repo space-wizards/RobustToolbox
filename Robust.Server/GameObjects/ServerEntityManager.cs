@@ -358,14 +358,6 @@ namespace Robust.Server.GameObjects
             EntitySystemManager.Initialize();
             _lookupSystem = EntitySystem.Get<EntityLookupSystem>();
             Started = true;
-            EventBus.SubscribeEvent<PlayerAttachSystemMessage>(EventSource.Local, this, msg =>
-            {
-                // Force sync player-specific states.
-                foreach (var comp in msg.Entity.GetAllComponents())
-                {
-                    if (comp.PlayerOnlyState) comp.Dirty();
-                }
-            });
         }
 
         /// <summary>
@@ -384,19 +376,9 @@ namespace Robust.Server.GameObjects
 
             var lastTick = newEntity ? GameTick.Zero : fromTick;
 
-            IPlayerSession? entitySession = null;
-
-            if (TryGetEntity(entityUid, out var entity))
-            {
-                entitySession = entity.PlayerSession();
-            }
-
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(comp.Initialized);
-
-                // If only the relevant person gets the state then we'll filter it out.
-                if (comp.PlayerOnlyState && entitySession != session) continue;
 
                 // TODO: This comment is a lie as A) It's being set to Tick 1 and B) Client throws
 

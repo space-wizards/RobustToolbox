@@ -3,10 +3,10 @@ using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public interface ITypeSerializer<T>
+    public interface ITypeSerializer<TType, TNode> where TNode : DataNode
     {
-        T NodeToType(DataNode node, ISerializationContext? context = null);
-        DataNode TypeToNode(T value, bool alwaysWrite = false,
+        TType NodeToType(DataNode node, ISerializationContext? context = null);
+        DataNode TypeToNode(TType value, bool alwaysWrite = false,
             ISerializationContext? context = null);
     }
 }

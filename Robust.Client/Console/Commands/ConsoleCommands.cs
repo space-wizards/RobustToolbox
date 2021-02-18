@@ -2,11 +2,7 @@
 // Not some generic console command type.
 // Couldn't think of a better name sorry.
 
-using System;
 using Robust.Shared.Console;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {

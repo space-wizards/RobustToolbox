@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects.Components.Renderable
+namespace Robust.Shared.GameObjects
 {
     public class SharedSpriteComponent : Component
     {

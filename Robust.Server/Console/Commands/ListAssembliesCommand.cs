@@ -1,7 +1,6 @@
 using System.Runtime.Loader;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
 
 namespace Robust.Server.Console.Commands

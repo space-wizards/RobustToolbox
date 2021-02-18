@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timers

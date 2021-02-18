@@ -1,9 +1,9 @@
+using System;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using System;
 
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
     public class EffectSystemMessage : EntitySystemMessage

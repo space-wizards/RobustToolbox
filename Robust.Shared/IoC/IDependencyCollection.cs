@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Reflection;
 
 namespace Robust.Shared.IoC
 {
@@ -23,7 +24,7 @@ namespace Robust.Shared.IoC
     /// These implementations can then be fetched with <see cref="Resolve{T}"/>, or through field injection with <see cref="DependencyAttribute" />.
     /// </para>
     /// </remarks>
-    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IReflectionManager"/>
     public interface IDependencyCollection
     {
         /// <summary>

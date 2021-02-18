@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.GameObjects;
 using Timer = Robust.Shared.Timers.Timer;
 
-namespace Robust.Shared.GameObjects.Components.Timers
+namespace Robust.Shared.GameObjects
 {
     public static class TimerExtensions
     {

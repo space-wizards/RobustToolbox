@@ -1,6 +1,6 @@
-﻿using Robust.Shared.GameObjects.Systems;
+﻿using Robust.Shared.GameObjects;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     class AppearanceTestSystem : EntitySystem
     {

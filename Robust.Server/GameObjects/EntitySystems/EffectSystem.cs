@@ -1,13 +1,12 @@
-﻿using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using System.Collections.Generic;
-using Robust.Server.Interfaces.Player;
+﻿using System.Collections.Generic;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     /// An entity system that displays temporary effects to the user

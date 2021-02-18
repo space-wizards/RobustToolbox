@@ -11,8 +11,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Threading.Tasks;
 using ILVerify;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 // psst
@@ -768,14 +767,14 @@ namespace Robust.Shared.ContentPack
                 var dllName = $"{simpleName}.dll";
                 foreach (var diskLoadPath in _diskLoadPaths)
                 {
-                    try
+                    var path = Path.Combine(diskLoadPath, dllName);
+
+                    if (!File.Exists(path))
                     {
-                        var path = Path.Combine(diskLoadPath, dllName);
-                        return new PEReader(File.OpenRead(path));
+                        continue;
                     }
-                    catch (FileNotFoundException)
-                    {
-                    }
+
+                    return new PEReader(File.OpenRead(path));
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);

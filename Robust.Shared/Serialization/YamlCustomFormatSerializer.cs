@@ -1,10 +1,5 @@
-﻿using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.IoC;
+﻿using Robust.Shared.IoC;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization
@@ -22,7 +17,7 @@ namespace Robust.Shared.Serialization
             _formatter = formatter;
         }
 
-        public override object NodeToType(Type _type, YamlNode node, YamlObjectSerializer serializer)
+        public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
         {
             return _formatter.FromCustomFormat(serializer.NodeToType(_formatter.Format, node));
         }

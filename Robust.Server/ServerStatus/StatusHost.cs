@@ -10,16 +10,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Robust.Server.Interfaces.Player;
-using Robust.Server.Interfaces.ServerStatus;
+using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
 using HttpListener = ManagedHttpListener.HttpListener;
 using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
@@ -155,21 +152,21 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            try
+            var path = PathHelpers.ExecutableRelativeFile("build.json");
+            if (!File.Exists(path))
             {
-                var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
-                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+                return;
+            }
 
-                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
-                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
-                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
-                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
-                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
-                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
-            }
-            catch (FileNotFoundException)
-            {
-            }
+            var buildInfo = File.ReadAllText(path);
+            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+
+            // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+            SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+            SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+            SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+            SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+            SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {

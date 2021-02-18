@@ -1,7 +1,7 @@
 using System;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -74,7 +74,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new OccluderComponentState(Enabled, BoundingBox);
         }

@@ -1,9 +1,8 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.UserInterface;
+﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Instances;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 

@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -73,7 +74,7 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new PointLightComponentState(Enabled, Color, Radius, Offset);
         }

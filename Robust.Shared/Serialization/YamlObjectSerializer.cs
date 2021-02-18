@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -39,6 +39,7 @@ namespace Robust.Shared.Serialization
             {
                 { typeof(Color), new ColorSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
+                { typeof(Vector2i), new Vector2iSerializer() },
                 { typeof(Vector3), new Vector3Serializer() },
                 { typeof(Vector4), new Vector4Serializer() },
                 { typeof(Angle), new AngleSerializer() },
@@ -511,6 +512,24 @@ namespace Robust.Shared.Serialization
                 return newList;
             }
 
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var listNode = (YamlSequenceNode) node;
+                var elems = listNode.Children;
+
+                var newList = Array.CreateInstance(immutableListType, elems.Count);
+
+                for (var i = 0; i < elems.Count; i++)
+                {
+                    newList.SetValue(NodeToType(immutableListType, elems[i]), i);
+                }
+
+                var list = typeof(ImmutableList);
+                var add = list.GetMethod("CreateRange")!.MakeGenericMethod(immutableListType);
+
+                return add.Invoke(null, new object?[] {newList})!;
+            }
+
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
             if (TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
             {
@@ -585,12 +604,8 @@ namespace Robust.Shared.Serialization
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
-                if (!(node is YamlMappingNode mapNode))
-                {
-                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
-                }
-
                 var concreteType = type;
+
                 if (type.IsAbstract || type.IsInterface)
                 {
                     var tag = node.Tag;
@@ -608,6 +623,12 @@ namespace Robust.Shared.Serialization
                 }
 
                 var instance = (IExposeData)Activator.CreateInstance(concreteType)!;
+
+                if (node is not YamlMappingNode mapNode)
+                {
+                    return instance;
+                }
+
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -640,7 +661,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
-        public T NodeToType<T>(YamlNode node)
+        public T NodeToType<T>(YamlNode node, string name)
         {
             return (T) NodeToType(typeof(T), node);
         }
@@ -717,6 +738,28 @@ namespace Robust.Shared.Serialization
 
                     // write the concrete type tag
                     AssignTag<object?>(listType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var node = new YamlSequenceNode {Tag = TagSkipTag};
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside list.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(immutableListType, entry, null, entryNode);
 
                     node.Add(entryNode);
                 }
@@ -862,7 +905,8 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericListType(type!, out _))
+            if (TryGenericListType(type!, out _) ||
+                TryGenericImmutableListType(type!, out _))
             {
                 var listA = (IList) a;
                 var listB = (IList) b!;
@@ -1015,6 +1059,21 @@ namespace Robust.Shared.Serialization
             var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
 
             if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        private static bool TryGenericImmutableListType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            var isImmutableList = type.GetTypeInfo().IsGenericType &&
+                                  type.GetGenericTypeDefinition() == typeof(ImmutableList<>);
+
+            if (isImmutableList)
             {
                 listType = type.GetGenericArguments()[0];
                 return true;
@@ -1284,6 +1343,20 @@ namespace Robust.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        class Vector2iSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return node.AsVector2i();
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var vec = (Vector2i)obj;
                 return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
             }
         }

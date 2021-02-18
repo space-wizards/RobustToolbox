@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using Robust.Shared.Input;
 
 namespace Robust.Client.UserInterface.Controls
@@ -49,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (!this.HasKeyboardFocus())
+            if (!HasKeyboardFocus())
             {
                 return;
             }

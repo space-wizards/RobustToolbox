@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.IoC;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -137,8 +138,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }

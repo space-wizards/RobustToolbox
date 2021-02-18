@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack

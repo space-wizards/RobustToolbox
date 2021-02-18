@@ -83,7 +83,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var dynamicMethod = new DynamicMethod(
                 $"_populateObjectFromDC<>{Type}<>{DataClassType}",
-                typeof(void),
+                typeof(object),
                 new[] {typeof(object), typeof(DataClass), typeof(IServ3Manager)},
                 Type,
                 true);

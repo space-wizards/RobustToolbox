@@ -260,6 +260,8 @@ namespace Robust.Server.Maps
 
             public bool MapIsPostInit { get; private set; }
 
+            public Dictionary<Type, object> TypeSerializers { get; }
+
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager,
                 IPrototypeManager prototypeManager)
@@ -272,6 +274,12 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
+                TypeSerializers = new()
+                {
+                    {typeof(IEntity), this},
+                    {typeof(GridId), this},
+                    {typeof(EntityUid), this}
+                };
             }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
@@ -289,6 +297,12 @@ namespace Robust.Server.Maps
                 RootNode = node;
                 TargetMap = targetMapId;
                 _prototypeManager = prototypeManager;
+                TypeSerializers = new()
+                {
+                    {typeof(IEntity), this},
+                    {typeof(GridId), this},
+                    {typeof(EntityUid), this}
+                };
             }
 
             // Deserialization
@@ -795,8 +809,6 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public Dictionary<Type, object> TypeSerializers { get; } = new();
-
             public GridId NodeToType(IDataNode node, ISerializationContext? context = null)
             {
                 if (node is not IValueDataNode valueDataNode) throw new InvalidNodeTypeException();
@@ -817,13 +829,35 @@ namespace Robust.Server.Maps
             public IDataNode TypeToNode(IEntity value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
-                throw new NotImplementedException();
+                if (!EntityUidMap.TryGetValue(value.Uid, out var entityMapped))
+                {
+                    Logger.WarningS("map", "Cannot write entity UID '{0}'.", value.Uid);
+                    return nodeFactory.GetValueNode("");
+                }
+                else
+                {
+                    return nodeFactory.GetValueNode(entityMapped.ToString(CultureInfo.InvariantCulture));
+                }
             }
 
             public IDataNode TypeToNode(EntityUid value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
-                throw new NotImplementedException();
+                if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
+                {
+                    // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
+                    if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
+                        CurrentWritingComponent != "Transform")
+                    {
+                        Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
+                    }
+
+                    return nodeFactory.GetValueNode("null");
+                }
+                else
+                {
+                    return nodeFactory.GetValueNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
+                }
             }
 
             public IDataNode TypeToNode(GridId value, IDataNodeFactory nodeFactory, bool alwaysWrite = false,
@@ -838,120 +872,6 @@ namespace Robust.Server.Maps
                 {
                     return new YamlValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
                 }
-            }
-
-            public override bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
-            {
-                if (type == typeof(GridId))
-                {
-                    if (node.AsString() == "null")
-                    {
-                        obj = GridId.Invalid;
-                        return true;
-                    }
-
-                    var val = node.AsInt();
-                    if (val >= Grids.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
-                    }
-                    else
-                    {
-                        obj = Grids[val].Index;
-                        return true;
-                    }
-                }
-
-                if (type == typeof(EntityUid))
-                {
-                    if (node.AsString() == "null")
-                    {
-                        obj = EntityUid.Invalid;
-                        return true;
-                    }
-
-                    var val = node.AsInt();
-                    if (val >= Entities.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
-                            val);
-                    }
-                    else
-                    {
-                        obj = UidEntityMap[val];
-                        return true;
-                    }
-                }
-
-                if (typeof(IEntity).IsAssignableFrom(type))
-                {
-                    var val = node.AsInt();
-                    if (val >= Entities.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
-                            val);
-                    }
-                    else
-                    {
-                        obj = Entities[val];
-                        return true;
-                    }
-                }
-
-                obj = null;
-                return false;
-            }
-
-            public override bool TryTypeToNode(object obj, [NotNullWhen(true)] out YamlNode? node)
-            {
-                switch (obj)
-                {
-                    case GridId gridId:
-                        if (!GridIDMap.TryGetValue(gridId, out var gridMapped))
-                        {
-                            Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridId);
-                            break;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(gridMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-
-                    case EntityUid entityUid:
-                        if (!EntityUidMap.TryGetValue(entityUid, out var entityUidMapped))
-                        {
-                            // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                            if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
-                                CurrentWritingComponent != "Transform")
-                            {
-                                Logger.WarningS("map", "Cannot write entity UID '{0}'.", entityUid);
-                            }
-
-                            node = new YamlScalarNode("null");
-                            return true;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-
-                    case IEntity entity:
-                        if (!EntityUidMap.TryGetValue(entity.Uid, out var entityMapped))
-                        {
-                            Logger.WarningS("map", "Cannot write entity UID '{0}'.", entity.Uid);
-                            break;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(entityMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-                }
-
-                node = null;
-                return false;
             }
 
             EntityUid ITypeSerializer<EntityUid>.NodeToType(IDataNode node, ISerializationContext? context)
@@ -982,11 +902,11 @@ namespace Robust.Server.Maps
                 if (val >= Entities.Count)
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                    return null!;
                 }
                 else
                 {
-                    obj = Entities[val];
-                    return true;
+                    return Entities[val];
                 }
             }
         }

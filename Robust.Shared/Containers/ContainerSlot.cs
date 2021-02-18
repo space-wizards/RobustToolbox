@@ -31,7 +31,7 @@ namespace Robust.Shared.Containers
                     return Array.Empty<IEntity>();
                 }
 
-                return new[] {ContainedEntity};
+                return new List<IEntity>{ContainedEntity};
             }
         }
 
@@ -50,7 +50,7 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public override bool Contains(IEntity contained)
         {
-            if (contained != null && contained == ContainedEntity)
+            if (contained == ContainedEntity)
                 return true;
             return false;
         }
@@ -69,6 +69,7 @@ namespace Robust.Shared.Containers
             base.InternalRemove(toremove);
         }
 
+        /// <inheritdoc />
         public override void Shutdown()
         {
             base.Shutdown();
@@ -76,6 +77,7 @@ namespace Robust.Shared.Containers
             ContainedEntity?.Delete();
         }
 
+        /// <inheritdoc />
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);

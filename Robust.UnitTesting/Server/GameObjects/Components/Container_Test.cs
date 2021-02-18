@@ -1,20 +1,28 @@
 using System.Collections.Generic;
-using System.IO;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Prototypes;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
     [TestFixture]
-    public class ContainerTest : RobustUnitTest
+    public class ContainerTest
     {
-        private IServerEntityManager EntityManager = default!;
+        private static ISimulation SimulationFactory()
+        {
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); })
+                .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
+                .InitializeInstance();
 
+            // Adds the map with id 1, and spawns entity 1 as the map entity.
+            sim.AddMap(1);
+
+            return sim;
+        }
+        
         const string PROTOTYPES = @"
 - type: entity
   name: dummy
@@ -23,28 +31,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Transform
 ";
 
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-            EntityManager = IoCManager.Resolve<IServerEntityManager>();
-
-            var mapManager = IoCManager.Resolve<IMapManager>();
-            mapManager.Initialize();
-            mapManager.Startup();
-
-            mapManager.CreateMap();
-
-            var manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.LoadFromStream(new StringReader(PROTOTYPES));
-            manager.Resync();
-        }
-
         [Test]
         public void TestCreation()
         {
-            var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var sim = SimulationFactory();
+
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
             var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
 
@@ -81,8 +73,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestInsertion()
         {
-            var owner = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
-            var inserted = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var sim = SimulationFactory();
+
+            var owner = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var inserted = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var transform = inserted.Transform;
 
             var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
@@ -107,10 +101,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestNestedRemoval()
         {
-            var owner = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
-            var inserted = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var sim = SimulationFactory();
+
+            var owner = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var inserted = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var transform = inserted.Transform;
-            var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
             var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
@@ -131,11 +127,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestNestedRemovalWithDenial()
         {
+            var sim = SimulationFactory();
+
             var coordinates = new EntityCoordinates(new EntityUid(1), (0, 0));
-            var entityOne = EntityManager.SpawnEntity("dummy", coordinates);
-            var entityTwo = EntityManager.SpawnEntity("dummy", coordinates);
-            var entityThree = EntityManager.SpawnEntity("dummy", coordinates);
-            var entityItem = EntityManager.SpawnEntity("dummy", coordinates);
+            var entityOne = sim.SpawnEntity("dummy", coordinates);
+            var entityTwo = sim.SpawnEntity("dummy", coordinates);
+            var entityThree = sim.SpawnEntity("dummy", coordinates);
+            var entityItem = sim.SpawnEntity("dummy", coordinates);
 
             var container = ContainerHelpers.CreateContainer<Container>(entityOne, "dummy");
             var container2 = ContainerHelpers.CreateContainer<ContainerOnlyContainer>(entityTwo, "dummy");

@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Moq;
 using Robust.Server.GameObjects;
 using Robust.Server.Timing;
@@ -17,6 +18,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
 {
+    [PublicAPI]
     internal interface ISimulationFactory
     {
         ISimulationFactory RegisterComponents(CompRegistrationDelegate factory);
@@ -26,6 +28,7 @@ namespace Robust.UnitTesting.Server
         ISimulation InitializeInstance();
     }
 
+    [PublicAPI]
     internal interface ISimulation
     {
         IDependencyCollection Collection { get; }
@@ -33,9 +36,15 @@ namespace Robust.UnitTesting.Server
         /// <summary>
         /// Resolves a dependency directly out of IoC collection.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         T Resolve<T>();
+
+        /// <summary>
+        /// Adds a new map directly to the map manager.
+        /// </summary>
+        EntityUid AddMap(int mapId);
+        EntityUid AddMap(MapId mapId);
+        IEntity SpawnEntity(string protoId, EntityCoordinates coordinates);
+        IEntity SpawnEntity(string protoId, MapCoordinates coordinates);
     }
 
     internal delegate void DiContainerDelegate(IDependencyCollection diContainer);
@@ -58,6 +67,32 @@ namespace Robust.UnitTesting.Server
         public T Resolve<T>()
         {
             return Collection.Resolve<T>();
+        }
+
+        public EntityUid AddMap(int mapId)
+        {
+            var mapMan = Collection.Resolve<IMapManager>();
+            mapMan.CreateMap(new MapId(mapId));
+            return mapMan.GetMapEntityId(new MapId(mapId));
+        }
+
+        public EntityUid AddMap(MapId mapId)
+        {
+            var mapMan = Collection.Resolve<IMapManager>();
+            mapMan.CreateMap(mapId);
+            return mapMan.GetMapEntityId(mapId);
+        }
+
+        public IEntity SpawnEntity(string protoId, EntityCoordinates coordinates)
+        {
+            var entMan = Collection.Resolve<IEntityManager>();
+            return entMan.SpawnEntity(protoId, coordinates);
+        }
+
+        public IEntity SpawnEntity(string protoId, MapCoordinates coordinates)
+        {
+            var entMan = Collection.Resolve<IEntityManager>();
+            return entMan.SpawnEntity(protoId, coordinates);
         }
 
         private RobustServerSimulation() { }
@@ -90,35 +125,42 @@ namespace Robust.UnitTesting.Server
         {
             var container = new DependencyCollection();
             Collection = container;
-
+            
             IoCManager.InitThread(container, true);
 
-            // System
+            //TODO: This is a long term project that should eventually have parity with the actual server/client/SP IoC registration.
+            // The goal is to be able to pull out all networking and frontend dependencies, and only have a core simulation running.
+            // This does NOT replace the full RobustIntegrationTest, or regular unit testing. This simulation sits in the middle
+            // and allows you to run integration testing only on the simulation.
+
+            //Tier 1: System
             container.Register<ILogManager, LogManager>();
             container.Register<IConfigurationManager, ConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             container.Register<ILocalizationManager, LocalizationManager>();
+            container.RegisterInstance<ITextMacroFactory>(new Mock<ITextMacroFactory>().Object);
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
-            container.RegisterInstance<IReflectionManager>(new Mock<IReflectionManager>().Object);
-            container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object);
-            container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object);
+            container.RegisterInstance<IReflectionManager>(new Mock<IReflectionManager>().Object); // tests should not be searching for types
+            container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
+            container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
-            // Simulation
+            //Tier 2: Simulation
             container.Register<IServerEntityManager, ServerEntityManager>();
             container.Register<IEntityManager, ServerEntityManager>();
             container.Register<IComponentManager, ComponentManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
+            container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
-            container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object);
-            
-            // Networking
+            container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
+
+            //Tier 3: Networking
+            //TODO: Try to remove these
             container.RegisterInstance<IEntityNetworkManager>(new Mock<IEntityNetworkManager>().Object);
-            container.RegisterInstance<ITextMacroFactory>( new Mock<ITextMacroFactory>().Object);
             container.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
             
             _diFactory?.Invoke(container);
@@ -128,7 +170,7 @@ namespace Robust.UnitTesting.Server
             logMan.RootSawmill.AddHandler(new TestLogHandler("SIM"));
 
             var compFactory = container.Resolve<IComponentFactory>();
-
+            
             compFactory.Register<MetaDataComponent>();
             compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
 
@@ -142,6 +184,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterReference<MapGridComponent, IMapGridComponent>();
 
             compFactory.Register<PhysicsComponent>();
+            compFactory.RegisterReference<PhysicsComponent, IPhysicsComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

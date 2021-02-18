@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -72,7 +73,7 @@ namespace Robust.Shared.Containers
             List<string>? toDelete = null;
             foreach (var (id, container) in _containers)
             {
-                if (!cast.Containers.ContainsKey(id))
+                if (!cast.ContainerSet.Any(data => data.Id == id))
                 {
                     container.Shutdown();
                     toDelete ??= new List<string>();
@@ -89,23 +90,24 @@ namespace Robust.Shared.Containers
             }
 
             // Add new containers and update existing contents.
-            foreach (var (id, data) in cast.Containers)
+            foreach (var (id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
             {
                 if (!_containers.TryGetValue(id, out var container))
                 {
-                    container = new ClientContainer(id, this);
+                    //TODO: Get type from server
+                    container = new Container(id, this);
                     _containers.Add(id, container);
                 }
 
                 // sync show flag
-                container.ShowContents = data.ShowContents;
-                container.OccludesLight = data.OccludesLight;
+                container.ShowContents = showEnts;
+                container.OccludesLight = occludesLight;
 
                 // Remove gone entities.
                 List<IEntity>? toRemove = null;
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!data.ContainedEntities.Contains(entity.Uid))
+                    if (!entityUids.Contains(entity.Uid))
                     {
                         toRemove ??= new List<IEntity>();
                         toRemove.Add(entity);
@@ -121,7 +123,7 @@ namespace Robust.Shared.Containers
                 }
 
                 // Add new entities.
-                foreach (var uid in data.ContainedEntities)
+                foreach (var uid in entityUids)
                 {
                     var entity = Owner.EntityManager.GetEntity(uid);
 
@@ -175,15 +177,24 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new ContainerManagerComponentState(
-                _containers.Values.ToDictionary(
-                    c => c.ID,
-                    container => (ContainerManagerComponentState.ContainerData) new()
-                    {
-                        ContainedEntities = container.ContainedEntities.Select(e => e.Uid).ToArray(),
-                        ShowContents = container.ShowContents,
-                        OccludesLight = container.OccludesLight
-                    }));
+            // naive implementation that just sends the full state of the component
+            List<ContainerManagerComponentState.ContainerData> containerSet = new();
+
+            foreach (var container in _containers.Values)
+            {
+                var uidArr = new EntityUid[container.ContainedEntities.Count];
+
+                for (var index = 0; index < container.ContainedEntities.Count; index++)
+                {
+                    var iEntity = container.ContainedEntities[index];
+                    uidArr[index] = iEntity.Uid;
+                }
+
+                var sContainer = new ContainerManagerComponentState.ContainerData(container.ID, container.ShowContents, container.OccludesLight, uidArr);
+                containerSet.Add(sContainer);
+            }
+
+            return new ContainerManagerComponentState(containerSet);
         }
 
         /// <inheritdoc />
@@ -298,21 +309,38 @@ namespace Robust.Shared.Containers
         }
 
         [Serializable, NetSerializable]
-        protected class ContainerManagerComponentState : ComponentState
+        public class ContainerManagerComponentState : ComponentState
         {
-            public Dictionary<string, ContainerData> Containers { get; }
+            public List<ContainerData> ContainerSet;
 
-            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(List<ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
             {
-                Containers = containers;
+                ContainerSet = containers;
             }
 
             [Serializable, NetSerializable]
-            public struct ContainerData
+            public readonly struct ContainerData
             {
-                public bool ShowContents;
-                public bool OccludesLight;
-                public EntityUid[] ContainedEntities;
+                public readonly string Id;
+                public readonly bool ShowContents;
+                public readonly bool OccludesLight;
+                public readonly EntityUid[] ContainedEntities;
+
+                public ContainerData(string id, bool showContents, bool occludesLight, EntityUid[] containedEntities)
+                {
+                    Id = id;
+                    ShowContents = showContents;
+                    OccludesLight = occludesLight;
+                    ContainedEntities = containedEntities;
+                }
+
+                public void Deconstruct(out string id, out bool showEnts, out bool occludesLight, out EntityUid[] ents)
+                {
+                    id = Id;
+                    showEnts = ShowContents;
+                    occludesLight = OccludesLight;
+                    ents = ContainedEntities;
+                }
             }
         }
 

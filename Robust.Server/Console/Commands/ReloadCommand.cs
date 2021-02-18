@@ -14,9 +14,13 @@ namespace Robust.Server.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+#if !FULL_RELEASE
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
             prototypeManager.ReloadPrototypes();
+#else
+            shell.WriteLine("Not supported on full release.");
+#endif
         }
     }
 }

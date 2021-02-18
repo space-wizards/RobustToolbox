@@ -163,6 +163,7 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _consoleHost.Initialize();
+            _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

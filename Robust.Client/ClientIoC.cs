@@ -10,6 +10,7 @@ using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
@@ -33,7 +34,7 @@ namespace Robust.Client
         {
             SharedIoC.RegisterIoC();
 
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
+            IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();

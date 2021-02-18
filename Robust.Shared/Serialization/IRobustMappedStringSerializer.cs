@@ -14,6 +14,8 @@ namespace Robust.Shared.Serialization
     [PublicAPI]
     internal interface IRobustMappedStringSerializer
     {
+        bool Locked { get; }
+
         /// <summary>
         ///     The type serializer to register with NetSerializer.
         /// </summary>

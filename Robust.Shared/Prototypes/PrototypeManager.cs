@@ -5,11 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -22,6 +25,8 @@ namespace Robust.Shared.Prototypes
     /// </summary>
     public interface IPrototypeManager
     {
+        void Initialize();
+
         /// <summary>
         /// Return an IEnumerable to iterate all prototypes of a certain type.
         /// </summary>
@@ -84,7 +89,6 @@ namespace Robust.Shared.Prototypes
         void RegisterType(Type protoClass);
 
         event Action<YamlStream, string>? LoadedData;
-
     }
 
     /// <summary>
@@ -108,22 +112,31 @@ namespace Robust.Shared.Prototypes
     {
         [Dependency] private readonly IReflectionManager ReflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
-        [Dependency] private readonly IResourceManager _resources = default!;
-        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] public readonly IResourceManager Resources = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] public readonly ITaskManager TaskManager = default!;
+        [Dependency] public readonly INetManager NetManager = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new();
 
+        private bool _initialized;
         private bool _hasEverBeenReloaded;
-
-        private List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
-
-        private DateTime timeSinceLastReload = DateTime.Now;
 
         #region IPrototypeManager members
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new();
         private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new();
 
         private readonly HashSet<string> IgnoredPrototypeTypes = new();
+
+        public virtual void Initialize()
+        {
+            if (_initialized)
+            {
+                throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
+            }
+
+            _initialized = true;
+        }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
@@ -175,9 +188,9 @@ namespace Robust.Shared.Prototypes
             indexedPrototypes.Clear();
         }
 
-        public void ReloadPrototypes()
+        public virtual void ReloadPrototypes()
         {
-            Logger.Info("Reloading all prototypes...");
+#if !FULL_RELEASE
             // Clear all prototypes
             Clear();
             ReloadPrototypeTypes();
@@ -188,9 +201,10 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var entity in _entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype.ID)))
                 {
-                    prototype.UpdateEntity(entity as Entity);
+                    prototype.UpdateEntity((Entity) entity);
                 }
             }
+#endif
         }
 
         public void Resync()
@@ -239,15 +253,14 @@ namespace Robust.Shared.Prototypes
         public void LoadDirectory(ResourcePath path)
         {
             var sawmill = Logger.GetSawmill("eng");
-            if (!_hasEverBeenReloaded) WatchResources();
             _hasEverBeenReloaded = true;
-            var yamlStreams = _resources.ContentFindFiles(path).ToList().AsParallel()
+            var yamlStreams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
                 .Select(filePath =>
                 {
                     try
                     {
-                        using var reader = new StreamReader(_resources.ContentFileRead(filePath), EncodingHelpers.UTF8);
+                        using var reader = new StreamReader(Resources.ContentFileRead(filePath), EncodingHelpers.UTF8);
                         var yamlStream = new YamlStream();
                         yamlStream.Load(reader);
 
@@ -312,32 +325,8 @@ namespace Robust.Shared.Prototypes
 
         public void PostInject()
         {
-            ReflectionManager.OnAssemblyAdded += (_, __) => ReloadPrototypeTypes();
+            ReflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
             ReloadPrototypeTypes();
-        }
-
-        private void WatchResources()
-        {
-            foreach (var path in _resources.GetContentRoots().Select(r => r.ToString())
-                .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
-            {
-                var watcher = new FileSystemWatcher(path, "*.yml")
-                {
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.LastWrite
-                };
-
-                watcher.Changed += (a, b) =>
-                {
-                    Logger.Debug("Reloading");
-                    // Wait at least two seconds before changing again!
-                    if ((DateTime.Now - timeSinceLastReload).TotalSeconds < 2.0) return;
-                    timeSinceLastReload = DateTime.Now;
-                    //ReloadPrototypes();
-                };
-                watcher.EnableRaisingEvents = true;
-                _watchers.Add(watcher);
-            }
         }
 
         private void ReloadPrototypeTypes()

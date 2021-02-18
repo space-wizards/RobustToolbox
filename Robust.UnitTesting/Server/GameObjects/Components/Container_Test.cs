@@ -46,7 +46,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
-            var container = ContainerManagerComponent.Create<Container>("dummy", entity);
+            var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
 
             Assert.That(container.ID, Is.EqualTo("dummy"));
             Assert.That(container.Owner, Is.EqualTo(entity));
@@ -54,10 +54,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var manager = entity.GetComponent<IContainerManager>();
 
             Assert.That(container.Manager, Is.EqualTo(manager));
-            Assert.That(() => ContainerManagerComponent.Create<Container>("dummy", entity), Throws.ArgumentException);
+            Assert.That(() => ContainerHelpers.CreateContainer<Container>(entity, "dummy"), Throws.ArgumentException);
 
             Assert.That(manager.HasContainer("dummy2"), Is.False);
-            var container2 = ContainerManagerComponent.Create<Container>("dummy2", entity);
+            var container2 = ContainerHelpers.CreateContainer<Container>(entity, "dummy2");
 
             Assert.That(container2.Manager, Is.EqualTo(manager));
             Assert.That(container2.Owner, Is.EqualTo(entity));
@@ -85,11 +85,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var inserted = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var transform = inserted.Transform;
 
-            var container = ContainerManagerComponent.Create<Container>("dummy", owner);
+            var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
             Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
 
-            var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
+            var container2 = ContainerHelpers.CreateContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(owner), Is.False);
 
             var success = container.Remove(inserted);
@@ -112,11 +112,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var transform = inserted.Transform;
             var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
-            var container = ContainerManagerComponent.Create<Container>("dummy", owner);
+            var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
             Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
 
-            var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
+            var container2 = ContainerHelpers.CreateContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(entity), Is.True);
             Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(inserted));
 
@@ -137,9 +137,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var entityThree = EntityManager.SpawnEntity("dummy", coordinates);
             var entityItem = EntityManager.SpawnEntity("dummy", coordinates);
 
-            var container = ContainerManagerComponent.Create<Container>("dummy", entityOne);
-            var container2 = ContainerManagerComponent.Create<ContainerOnlyContainer>("dummy", entityTwo);
-            var container3 = ContainerManagerComponent.Create<Container>("dummy", entityThree);
+            var container = ContainerHelpers.CreateContainer<Container>(entityOne, "dummy");
+            var container2 = ContainerHelpers.CreateContainer<ContainerOnlyContainer>(entityTwo, "dummy");
+            var container3 = ContainerHelpers.CreateContainer<Container>(entityThree, "dummy");
 
             Assert.That(container.Insert(entityTwo), Is.True);
             Assert.That(entityTwo.Transform.Parent!.Owner, Is.EqualTo(entityOne));

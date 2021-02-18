@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -203,6 +204,51 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
+        }
+
+        /// <summary>
+        /// Shortcut method to make creation of containers easier.
+        /// Creates a new container on the entity and gives it back to you.
+        /// </summary>
+        /// <param name="entity">The entity to create the container for.</param>
+        /// <param name="containerId"></param>
+        /// <returns>The new container.</returns>
+        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
+        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        public static T CreateContainer<T>(this IEntity entity, string containerId)
+            where T : IContainer
+        {
+            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
+                containermanager = entity.AddComponent<ContainerManagerComponent>();
+
+            return containermanager.MakeContainer<T>(containerId);
+        }
+
+        public static T EnsureContainer<T>(this IEntity entity, string containerId)
+            where T : IContainer
+        {
+            return EnsureContainer<T>(entity, containerId, out _);
+        }
+
+        public static T EnsureContainer<T>(this IEntity entity, string containerId, out bool alreadyExisted)
+            where T : IContainer
+        {
+            var containerManager = entity.EnsureComponent<ContainerManagerComponent>();
+
+            if (!containerManager.TryGetContainer(containerId, out var existing))
+            {
+                alreadyExisted = false;
+                return containerManager.MakeContainer<T>(containerId);
+            }
+
+            if (!(existing is T container))
+            {
+                throw new InvalidOperationException(
+                    $"The container exists but is of a different type: {existing.GetType()}");
+            }
+
+            alreadyExisted = true;
+            return container;
         }
     }
 }

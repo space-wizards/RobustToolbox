@@ -1,11 +1,9 @@
-﻿using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.Map
 {

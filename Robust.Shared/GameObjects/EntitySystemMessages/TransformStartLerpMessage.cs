@@ -1,6 +1,4 @@
-using Robust.Shared.GameObjects.Components.Transform;
-
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     internal sealed class TransformStartLerpMessage : EntitySystemMessage
     {

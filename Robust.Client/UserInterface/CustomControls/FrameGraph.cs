@@ -1,5 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Shared.Interfaces.Timing;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 

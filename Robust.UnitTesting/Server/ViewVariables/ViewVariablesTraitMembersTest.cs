@@ -3,7 +3,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Server.ViewVariables;
 using Robust.Server.ViewVariables.Traits;
-using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.UnitTesting.Server.ViewVariables

@@ -2,23 +2,18 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
     public class AudioSystem : EntitySystem
@@ -56,12 +51,12 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
         {
-            var gridId = ev.Coordinates.GetGridId(_entityManager);
-            
-            if (!_mapManager.GridExists(gridId))
+            var mapId = ev.Coordinates.GetMapId(_entityManager);
+
+            if (!_mapManager.MapExists(mapId))
             {
                 Logger.Error(
-                    $"Server tried to play sound on grid {gridId}, which does not exist. Ignoring.");
+                    $"Server tried to play sound on map {mapId}, which does not exist. Ignoring.");
                 return;
             }
 
@@ -111,13 +106,13 @@ namespace Robust.Client.GameObjects.EntitySystems
                     if (stream.TrackingCoordinates != null)
                     {
                         var coords = stream.TrackingCoordinates.Value;
-                        if (_mapManager.GridExists(coords.GetGridId(_entityManager)))
+                        if (_mapManager.MapExists(coords.GetMapId(_entityManager)))
                         {
                             mapPos = stream.TrackingCoordinates.Value.ToMap(_entityManager);
                         }
                         else
                         {
-                            // Grid no longer exists, delete stream.
+                            // Map no longer exists, delete stream.
                             StreamDone(stream);
                             continue;
                         }
@@ -355,5 +350,77 @@ namespace Robust.Client.GameObjects.EntitySystems
         void Stop();
 
         event Action PlaybackDone;
+    }
+
+    public static class AudioSystemExtensions
+    {
+
+        /// <summary>
+        ///     Play an audio file following an entity.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this IEntity entity,
+            string filename,
+            AudioParams? audioParams,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(filename, entity, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio stream following an entity.
+        /// </summary>
+        /// <param name="stream">The audio stream to play.</param>
+        /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this IEntity entity,
+            AudioStream stream,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(stream, entity, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio file at a static position.
+        /// </summary>
+        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
+        /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this EntityCoordinates coordinates,
+            string filename,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(filename, coordinates, audioParams);
+        }
+
+        /// <summary>
+        ///     Play an audio stream at a static position.
+        /// </summary>
+        /// <param name="stream">The audio stream to play.</param>
+        /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="audioParams"></param>
+        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
+        public static IPlayingAudioStream? Play(
+            this EntityCoordinates coordinates,
+            AudioStream stream,
+            AudioParams? audioParams = null,
+            AudioSystem? audioSystem = null)
+        {
+            audioSystem ??= EntitySystem.Get<AudioSystem>();
+            return audioSystem.Play(stream, coordinates, audioParams);
+        }
     }
 }

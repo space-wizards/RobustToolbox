@@ -1,28 +1,24 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Transform
+namespace Robust.Shared.GameObjects
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
+        private bool _noLocalRotation;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
@@ -86,12 +82,30 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        public bool NoLocalRotation
+        {
+            get => _noLocalRotation;
+            set
+            {
+                if (value)
+                    LocalRotation = Angle.South;
+
+                _noLocalRotation = value;
+                Dirty();
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
         public Angle LocalRotation
         {
             get => _localRotation;
             set
             {
+                if(_noLocalRotation)
+                    return;
+
                 if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
@@ -203,6 +217,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Vector2 WorldPosition
         {
             get
@@ -681,12 +696,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             serializer.DataField(ref _parent, "parent", new EntityUid());
             serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
             serializer.DataField(ref _localRotation, "rot", new Angle());
+            serializer.DataField(ref _noLocalRotation, "noRot", false);
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new TransformComponentState(_localPosition, LocalRotation, _parent);
+            return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation);
         }
 
         /// <inheritdoc />
@@ -852,17 +869,23 @@ namespace Robust.Shared.GameObjects.Components.Transform
             public readonly Angle Rotation;
 
             /// <summary>
+            /// Is the transform able to be locally rotated?
+            /// </summary>
+            public readonly bool NoLocalRotation;
+
+            /// <summary>
             ///     Constructs a new state snapshot of a TransformComponent.
             /// </summary>
             /// <param name="localPosition">Current position offset of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
-            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId)
+            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation)
                 : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;
                 ParentID = parentId;
+                NoLocalRotation = noLocalRotation;
             }
         }
     }

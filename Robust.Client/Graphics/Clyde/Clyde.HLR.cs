@@ -3,19 +3,11 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Log;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
-using System.IO;
 using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde

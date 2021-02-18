@@ -7,18 +7,17 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -812,34 +811,34 @@ namespace Robust.Client.Input
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
-                console.AddLine("Too few arguments.");
-                return false;
+                shell.WriteLine("Too few arguments.");
+                return;
             }
 
             if (args.Length > 3)
             {
-                console.AddLine("Too many arguments.");
-                return false;
+                shell.WriteLine("Too many arguments.");
+                return;
             }
 
             var keyName = args[0];
 
             if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
             {
-                console.AddLine($"Key '{keyName}' is unrecognized.");
-                return false;
+                shell.WriteLine($"Key '{keyName}' is unrecognized.");
+                return;
             }
 
             var keyId = (Key) keyIdObj!;
 
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
-                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
-                return false;
+                shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
+                return;
             }
 
             var keyMode = (KeyBindingType) keyModeObj!;
@@ -856,8 +855,6 @@ namespace Robust.Client.Input
             };
 
             inputMan.RegisterBinding(registration);
-
-            return false;
         }
     }
 
@@ -868,12 +865,10 @@ namespace Robust.Client.Input
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();
-
-            return false;
         }
     }
 }

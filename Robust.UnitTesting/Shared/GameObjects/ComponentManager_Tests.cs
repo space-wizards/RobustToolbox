@@ -5,9 +5,6 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.ComponentDependencies;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -210,7 +207,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             manager.AddComponent(entity, component);
 
             // Act
-            var result = manager.EntityQuery<DummyComponent>();
+            var result = manager.EntityQuery<DummyComponent>(true);
 
             // Assert
             var list = result.ToList();

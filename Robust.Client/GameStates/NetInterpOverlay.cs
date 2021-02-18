@@ -1,18 +1,13 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Timing;
+﻿using Robust.Client.Graphics;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using System;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
@@ -36,7 +31,7 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
+            foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>(true))
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;
@@ -75,18 +70,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -94,16 +89,14 @@ namespace Robust.Client.GameStates
 
                 if (bValue && !overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
                 {
-                    overlayMan.AddOverlay(Guid.NewGuid(), new NetInterpOverlay());
-                    console.AddLine("Enabled network interp overlay.");
+                    overlayMan.AddOverlay(new NetInterpOverlay());
+                    shell.WriteLine("Enabled network interp overlay.");
                 }
                 else if (overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
                 {
-                    overlayMan.RemoveOverlaysOfClass(nameof(NetInterpOverlay));
-                    console.AddLine("Disabled network interp overlay.");
+                    overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
+                    shell.WriteLine("Disabled network interp overlay.");
                 }
-
-                return false;
             }
         }
     }

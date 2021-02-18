@@ -1,10 +1,9 @@
-﻿using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Eye;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
-using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects.Components.Eye
+namespace Robust.Server.GameObjects
 {
     public class EyeComponent : SharedEyeComponent
     {
@@ -65,7 +64,7 @@ namespace Robust.Server.GameObjects.Components.Eye
             }
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new EyeComponentState(DrawFov, Zoom, Offset, Rotation);
         }

@@ -1,13 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Robust.Shared.Exceptions;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -469,7 +465,7 @@ namespace Robust.Shared.GameObjects
         #region Join Functions
 
         /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>(bool includePaused = true)
+        public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
         {
             var comps = _entTraitDict[typeof(T)];
             foreach (var comp in comps.Values)
@@ -481,7 +477,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = true)
+        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
@@ -502,7 +498,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = true)
+        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -528,7 +524,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = true)
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -562,7 +558,7 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = true)
+        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
         {
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)

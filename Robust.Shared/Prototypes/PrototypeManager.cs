@@ -5,13 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
-using Robust.Shared.Serialization;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -58,6 +56,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void LoadDirectory(ResourcePath path);
         void LoadFromStream(TextReader stream);
+        void LoadString(string str);
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
         /// </summary>
@@ -273,6 +272,11 @@ namespace Robust.Shared.Prototypes
             }
 
             LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
+        }
+
+        public void LoadString(string str)
+        {
+            LoadFromStream(new StreamReader(str));
         }
 
         #endregion IPrototypeManager members

@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -83,7 +82,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _gridId, "grid", GridId.Invalid);
 

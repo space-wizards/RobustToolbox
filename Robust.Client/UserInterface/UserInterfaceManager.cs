@@ -1,26 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
+using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
+using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
@@ -29,7 +24,7 @@ namespace Robust.Client.UserInterface
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -97,7 +92,7 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_console, _resourceManager);
+            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,

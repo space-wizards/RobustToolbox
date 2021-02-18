@@ -1,13 +1,12 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a map grid inside the ECS system.
@@ -63,8 +62,9 @@ namespace Robust.Shared.GameObjects.Components.Map
             base.OnRemove();
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MapGridComponentState(_gridIndex, Grid.HasGravity);
         }

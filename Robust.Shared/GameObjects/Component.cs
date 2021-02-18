@@ -1,6 +1,5 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -203,8 +202,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public virtual ComponentState GetComponentState()
+        public virtual ComponentState GetComponentState(ICommonSession player)
         {
             if (NetID == null)
                 throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");

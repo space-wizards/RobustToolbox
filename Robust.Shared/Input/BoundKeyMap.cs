@@ -1,7 +1,7 @@
-﻿using Robust.Shared.Interfaces.Reflection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Input

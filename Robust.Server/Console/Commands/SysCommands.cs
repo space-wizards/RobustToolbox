@@ -1,61 +1,58 @@
-﻿using System;
+using System;
 using System.Runtime;
 using System.Text;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
-    class RestartCommand : IClientCommand
+    class RestartCommand : IConsoleCommand
     {
         public string Command => "restart";
         public string Description => "Gracefully restarts the server (not just the round).";
         public string Help => "restart";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Restart();
         }
     }
 
-    class ShutdownCommand : IClientCommand
+    class ShutdownCommand : IConsoleCommand
     {
         public string Command => "shutdown";
         public string Description => "Gracefully shuts down the server.";
         public string Help => "shutdown";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
     }
 
-    public class SaveConfig : IClientCommand
+    public class SaveConfig : IConsoleCommand
     {
         public string Command => "saveconfig";
         public string Description => "Saves the server configuration to the config file";
         public string Help => "saveconfig";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
     }
 
-    class NetworkAuditCommand : IClientCommand
+    class NetworkAuditCommand : IConsoleCommand
     {
         public string Command => "netaudit";
         public string Description => "Prints into about NetMsg security.";
         public string Help => "netaudit";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var network = (NetManager) IoCManager.Resolve<INetManager>();
 
@@ -71,11 +68,11 @@ namespace Robust.Server.Console.Commands
                 sb.AppendLine($"Type: {msgType.Name.PadRight(16)} Call:{call.Target}");
             }
 
-            shell.SendText(player, sb.ToString());
+            shell.WriteLine(sb.ToString());
         }
     }
 
-    class HelpCommand : IClientCommand
+    class HelpCommand : IConsoleCommand
     {
         public string Command => "help";
 
@@ -84,54 +81,52 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Help";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             switch (args.Length)
             {
                 case 0:
-                    shell.SendText(player,
-                        "To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
+                    shell.WriteLine("To display help for a specific command, write 'help <command>'. To list all available commands, write 'list'.");
                     break;
 
                 case 1:
                     var commandName = args[0];
-                    if (!shell.AvailableCommands.TryGetValue(commandName, out var cmd))
+                    if (!shell.ConsoleHost.RegisteredCommands.TryGetValue(commandName, out var cmd))
                     {
-                        shell.SendText(player, $"Unknown command: {commandName}");
+                        shell.WriteLine($"Unknown command: {commandName}");
                         return;
                     }
 
-                    shell.SendText(player, $"Use: {cmd.Help}\n{cmd.Description}");
+                    shell.WriteLine($"Use: {cmd.Help}\n{cmd.Description}");
                     break;
 
                 default:
-                    shell.SendText(player, "Invalid amount of arguments.");
+                    shell.WriteLine("Invalid amount of arguments.");
                     break;
             }
         }
     }
 
-    class ShowTimeCommand : IClientCommand
+    class ShowTimeCommand : IConsoleCommand
     {
         public string Command => "showtime";
         public string Description => "Shows the server time.";
         public string Help => "showtime";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var timing = IoCManager.Resolve<IGameTiming>();
-            shell.SendText(player,
-                $"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
+            shell.WriteLine($"Paused: {timing.Paused}, CurTick: {timing.CurTick}, CurTime: {timing.CurTime}, RealTime: {timing.RealTime}");
         }
     }
 
-    internal class GcCommand : IClientCommand
+    internal class GcCommand : IConsoleCommand
     {
         public string Command => "gc";
         public string Description => "Run the GC.";
         public string Help => "gc [generation]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length == 0)
             {
@@ -142,12 +137,12 @@ namespace Robust.Server.Console.Commands
                 if(int.TryParse(args[0], out int result))
                     GC.Collect(result);
                 else
-                    shell.SendText(player, "Failed to parse argument.");
+                    shell.WriteLine("Failed to parse argument.");
             }
         }
     }
 
-    internal class GcModeCommand : IClientCommand
+    internal class GcModeCommand : IConsoleCommand
     {
 
         public string Command => "gc_mode";
@@ -156,16 +151,16 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "gc_mode [type]";
 
-        public void Execute(IConsoleShell console, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell console, string argStr, string[] args)
         {
             var prevMode = GCSettings.LatencyMode;
             if (args.Length == 0)
             {
-                console.SendText(player,$"current gc latency mode: {(int) prevMode} ({prevMode})");
-                console.SendText(player,"possible modes:");
+                console.WriteLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
+                console.WriteLine("possible modes:");
                 foreach (var mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
                 {
-                    console.SendText(player,$" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
+                    console.WriteLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
                 }
             }
             else
@@ -177,13 +172,13 @@ namespace Robust.Server.Console.Commands
                 }
                 else if (!Enum.TryParse(args[0], true, out mode))
                 {
-                    console.SendText(player,$"unknown gc latency mode: {args[0]}");
+                    console.WriteLine($"unknown gc latency mode: {args[0]}");
                     return;
                 }
 
-                console.SendText(player,$"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
+                console.WriteLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
                 GCSettings.LatencyMode = mode;
-                console.SendText(player,$"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
+                console.WriteLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
             }
 
             return;
@@ -191,7 +186,7 @@ namespace Robust.Server.Console.Commands
 
     }
 
-    internal class SerializeStatsCommand : IClientCommand
+    internal class SerializeStatsCommand : IConsoleCommand
     {
 
         public string Command => "szr_stats";
@@ -200,31 +195,31 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "szr_stats";
 
-        public void Execute(IConsoleShell console, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell console, string argStr, string[] args)
         {
 
-            console.SendText(player,$"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
-            console.SendText(player,$"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
-            console.SendText(player,$"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
-            console.SendText(player,$"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
+            console.WriteLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
+            console.WriteLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
+            console.WriteLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
+            console.WriteLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
         }
 
     }
 
-    internal sealed class MemCommand : IClientCommand
+    internal sealed class MemCommand : IConsoleCommand
     {
         public string Command => "mem";
         public string Description => "prints memory info";
         public string Help => "mem";
 
-        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
 #if !NETCOREAPP
             shell.SendText(player, "Memory info is only available on .NET Core");
 #else
             var info = GC.GetGCMemoryInfo();
 
-            shell.SendText(player, $@"Heap Size: {FormatBytes(info.HeapSizeBytes)} Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}");
+            shell.WriteLine($@"Heap Size: {FormatBytes(info.HeapSizeBytes)} Total Allocated: {FormatBytes(GC.GetTotalMemory(false))}");
 #endif
         }
 

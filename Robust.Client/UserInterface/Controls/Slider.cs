@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
@@ -23,6 +23,8 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _foregroundStyleBoxOverride;
         private StyleBox? _fillStyleBoxOverride;
         private StyleBox? _grabberStyleBoxOverride;
+
+        public bool Grabbed => _grabbed;
 
         public StyleBox? ForegroundStyleBoxOverride
         {
@@ -97,6 +99,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public override void SetValueWithoutEvent(float newValue)
+        {
+            base.SetValueWithoutEvent(newValue);
+            UpdateValue();
+        }
+
         private void UpdateValue()
         {
             var ratio = GetAsRatio();
@@ -131,10 +139,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Function == EngineKeyFunctions.UIClick)
-            {
-                _grabbed = false;
-            }
+            if (args.Function != EngineKeyFunctions.UIClick) return;
+
+            _grabbed = false;
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)

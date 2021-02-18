@@ -1,12 +1,11 @@
-﻿using Robust.Shared.Interfaces.Log;
-using System;
+﻿using System;
 using System.IO;
 using Robust.Shared.Utility;
 using Serilog.Events;
 
 namespace Robust.Shared.Log
 {
-    public sealed class FileLogHandler : ILogHandler, IDisposable
+    internal sealed class FileLogHandler : ILogHandler, IDisposable
     {
         private readonly TextWriter writer;
 

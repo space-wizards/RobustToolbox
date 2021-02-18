@@ -1,7 +1,6 @@
-﻿using Robust.Client.Interfaces.Console;
-using Robust.Shared.Log;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Log;
 using System;
+using Robust.Shared.Console;
 
 namespace Robust.Client.Console.Commands
 {
@@ -13,12 +12,12 @@ namespace Robust.Client.Console.Commands
                             + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 2)
             {
-                console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                return false;
+                shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                return;
             }
 
             var name = args[0];
@@ -32,13 +31,12 @@ namespace Robust.Client.Console.Commands
             {
                 if (!Enum.TryParse<LogLevel>(levelname, out var result))
                 {
-                    console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
-                    return false;
+                    shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                    return;
                 }
                 level = result;
             }
             Logger.GetSawmill(name).Level = level;
-            return false;
         }
     }
 
@@ -51,12 +49,12 @@ namespace Robust.Client.Console.Commands
                             + "\n    level: The log level. Must match one of the values of the LogLevel enum."
                             + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 3)
             {
-                console.AddLine("Invalid argument amount. Expected 3 arguments.", Color.Red);
-                return false;
+                shell.WriteError("Invalid argument amount. Expected 3 arguments.");
+                return;
             }
 
             var name = args[0];
@@ -64,13 +62,12 @@ namespace Robust.Client.Console.Commands
             var message = args[2]; // yes this doesn't support spaces idgaf.
             if (!Enum.TryParse<LogLevel>(levelname, out var result))
             {
-                console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
-                return false;
+                shell.WriteLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                return;
             }
             var level = result;
 
             Logger.LogS(level, name, message);
-            return false;
         }
     }
 }

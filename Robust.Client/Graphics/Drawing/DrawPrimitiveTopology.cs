@@ -1,4 +1,4 @@
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Determines the type of primitives drawn and how they are laid out from vertices.

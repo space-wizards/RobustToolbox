@@ -85,6 +85,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public virtual void SetValueWithoutEvent(float newValue)
+        {
+            newValue = ClampValue(newValue);
+            _value = newValue;
+        }
+
         private void _ensureValueClamped()
         {
             var newValue = ClampValue(_value);

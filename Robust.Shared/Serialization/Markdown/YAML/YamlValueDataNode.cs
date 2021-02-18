@@ -4,8 +4,6 @@ namespace Robust.Shared.Serialization.Markdown.YAML
 {
     public class YamlValueDataNode : IValueDataNode
     {
-        public string Value;
-
         public YamlValueDataNode(string value)
         {
             Value = value;
@@ -15,6 +13,8 @@ namespace Robust.Shared.Serialization.Markdown.YAML
         {
             Value = node.Value ?? "";
         }
+
+        public string Value { get; set; }
 
         public string GetValue() => Value;
         public IDataNode Copy()

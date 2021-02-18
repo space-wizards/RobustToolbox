@@ -1,17 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
+using System.IO;
 using NUnit.Framework;
-using Robust.Shared.Serialization;
+using Robust.Shared.IoC;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.YAML;
+using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using static Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests.YamlObjectSerializer_Test;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    [TestOf(typeof(YamlObjectSerializer))]
     public class ImmutableListSerializationTest
     {
         [Test]
@@ -19,11 +21,9 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             // Arrange
             var data = _serializableList;
-            var mapping = new YamlMappingNode();
-            var serializer = YamlObjectSerializer.NewWriter(mapping);
-
-            // Act
-            serializer.DataField(ref data, "datalist", ImmutableList<int>.Empty);
+            var factory = new YamlDataNodeFactory();
+            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var mapping = (IMappingDataNode) serMan.WriteValue(data, factory);
 
             // Assert
             var result = NodeToYamlText(mapping);
@@ -34,12 +34,11 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         public void DeserializeListTest()
         {
             // Arrange
-            ImmutableList<int> data = null!;
+            var serMan = IoCManager.Resolve<IServ3Manager>();
             var rootNode = YamlTextToNode(_serializedListYaml);
-            var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
-            serializer.DataField(ref data, "datalist", ImmutableList<int>.Empty);
+            var data = serMan.ReadValue<ImmutableList<int>>(new YamlMappingDataNode(rootNode));
 
             // Assert
             Assert.That(data, Is.Not.Null);
@@ -53,5 +52,41 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
         private readonly string _serializedListYaml = "datalist:\n- 1\n- 2\n- 3\n...\n";
         private readonly ImmutableList<int> _serializableList = ImmutableList.Create<int>(1, 2, 3);
+
+        // serializes a node tree into text
+        internal static string NodeToYamlText(IDataNode root)
+        {
+            var document = new YamlDocument(root.ToYamlNode());
+
+            using var stream = new MemoryStream();
+            using var writer = new StreamWriter(stream) {NewLine = "\n"};
+
+            var yamlStream = new YamlStream(document);
+            yamlStream.Save(writer);
+            writer.Flush();
+            return EncodingHelpers.UTF8.GetString(stream.ToArray());
+        }
+
+        // deserializes yaml text, loads the first document, and returns the first entity
+        internal static YamlMappingNode YamlTextToNode(string text)
+        {
+            using var stream = new MemoryStream();
+
+            // create a stream for testing
+            var writer = new StreamWriter(stream);
+            writer.Write(text);
+            writer.Flush();
+            stream.Position = 0;
+
+            // deserialize stream
+            var reader = new StreamReader(stream);
+            var yamlStream = new YamlStream();
+            yamlStream.Load(reader);
+
+            // read first document
+            var firstDoc = yamlStream.Documents[0];
+
+            return (YamlMappingNode)firstDoc.RootNode;
+        }
     }
 }

@@ -3,7 +3,6 @@ using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.Components.Renderable;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Clyde;

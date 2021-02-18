@@ -1,28 +1,31 @@
 ﻿using System.IO;
 using NUnit.Framework;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    [TestOf(typeof(YamlObjectSerializer))]
     public class TypeSerialization_Test : RobustUnitTest
     {
         [Test]
         public void SerializeTypeTest()
         {
-            ITestType? type = new TestTypeOne();
-            var mapping = new YamlMappingNode();
-            var writer = YamlObjectSerializer.NewWriter(mapping);
-
-            writer.DataField(ref type, "type", null!);
+            ITestType type = new TestTypeOne();
+            var factory = new YamlDataNodeFactory();
+            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var mapping = (IMappingDataNode) serMan.WriteValue(type, factory);
 
             Assert.IsNotEmpty(mapping.Children);
-            Assert.IsInstanceOf<YamlScalarNode>(mapping.Children[0].Key);
+            Assert.IsInstanceOf<YamlScalarNode>(mapping[0]);
 
-            var scalar = (YamlScalarNode) mapping.Children[0].Key;
+            var scalar = (IValueDataNode) mapping[0].Key;
 
             Assert.That(scalar.Value, Is.EqualTo("type"));
         }
@@ -30,7 +33,6 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [Test]
         public void DeserializeTypeTest()
         {
-            ITestType? type = null;
             var yaml = @"
 test:
   !type:testtype1";
@@ -47,20 +49,19 @@ test:
             yamlStream.Load(streamReader);
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
-
-            var reader = YamlObjectSerializer.NewReader(mapping);
-            reader.DataField(ref type, "test", null);
+            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var type = serMan.ReadValue<ITestType>(new YamlMappingDataNode(mapping));
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeOne>(type);
         }
     }
 
-    public interface ITestType : IExposeData { }
+    public interface ITestType { }
 
     [SerializedType("testtype1")]
+    [DataDefinition]
     public class TestTypeOne : ITestType
     {
-        void IExposeData.ExposeData(ObjectSerializer serializer) { }
     }
 }

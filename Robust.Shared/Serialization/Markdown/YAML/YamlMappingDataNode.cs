@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
 using YamlDotNet.RepresentationModel;
 
@@ -13,6 +14,14 @@ namespace Robust.Shared.Serialization.Markdown.YAML
         public IReadOnlyDictionary<IDataNode, IDataNode> Children => _mapping;
 
         public YamlMappingDataNode() { }
+
+        public KeyValuePair<IDataNode, IDataNode> this[int key] => Children.ElementAt(key);
+
+        public IDataNode this[string index]
+        {
+            get => GetNode(index);
+            set => AddNode(index, value);
+        }
 
         public YamlMappingDataNode(YamlMappingNode mapping)
         {

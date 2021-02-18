@@ -1,17 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.ResourceManagement;
-using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using YamlDotNet.RepresentationModel;

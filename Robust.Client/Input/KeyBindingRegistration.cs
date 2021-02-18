@@ -1,11 +1,7 @@
-﻿using Robust.Client.Input;
-using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Serialization;
+﻿using Robust.Shared.Input;
 using Robust.Shared.Serialization.Manager.Attributes;
-using YamlDotNet.Serialization;
 
-namespace Robust.Client.Interfaces.Input
+namespace Robust.Client.Input
 {
     [DataDefinition]
     public class KeyBindingRegistration
@@ -28,5 +24,7 @@ namespace Robust.Client.Interfaces.Input
         public bool CanFocus;
         [DataField("canRepeat")]
         public bool CanRepeat;
+        [DataField("allowSubCombs")]
+        public bool AllowSubCombs;
     }
 }

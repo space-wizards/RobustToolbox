@@ -7,6 +7,8 @@ namespace Robust.Shared.Serialization.Markdown
     public interface IMappingDataNode : IDataNode
     {
         IReadOnlyDictionary<IDataNode, IDataNode> Children { get; }
+        KeyValuePair<IDataNode, IDataNode> this[int key] { get; }
+        IDataNode this[string key] { get; set; }
         IDataNode GetNode(IDataNode key);
         IDataNode GetNode(string key);
         bool TryGetNode(IDataNode key, [NotNullWhen(true)] out IDataNode? node);

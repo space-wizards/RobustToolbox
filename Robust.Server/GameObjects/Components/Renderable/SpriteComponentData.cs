@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Prototypes;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 

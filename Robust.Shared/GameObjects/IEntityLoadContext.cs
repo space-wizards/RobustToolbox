@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using YamlDotNet.RepresentationModel;

@@ -13,15 +13,12 @@ using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Player;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Reflection;
-using Robust.Shared.Physics;
 using Robust.Shared.Utility;
-using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Placement

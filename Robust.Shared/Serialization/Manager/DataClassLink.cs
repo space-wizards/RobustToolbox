@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Robust.Shared.Log;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Prototypes.DataClasses
+namespace Robust.Shared.Serialization.Manager
 {
     public class DataClassLink
     {

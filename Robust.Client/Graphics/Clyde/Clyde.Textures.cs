@@ -5,7 +5,6 @@ using System.IO;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Utility;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;

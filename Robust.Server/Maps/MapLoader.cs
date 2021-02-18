@@ -15,7 +15,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Timing;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes.DataClasses;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
@@ -796,7 +795,7 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public Dictionary<Type, object> TypeSerializers { get; }
+            public Dictionary<Type, object> TypeSerializers { get; } = new();
 
             public GridId NodeToType(IDataNode node, ISerializationContext? context = null)
             {
@@ -832,7 +831,7 @@ namespace Robust.Server.Maps
             {
                 if (!GridIDMap.TryGetValue(value, out var gridMapped))
                 {
-                    Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridId);
+                    Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridMapped);
                     return nodeFactory.GetValueNode("");
                 }
                 else
@@ -840,7 +839,6 @@ namespace Robust.Server.Maps
                     return new YamlValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
                 }
             }
-
 
             public override bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
             {
@@ -989,7 +987,8 @@ namespace Robust.Server.Maps
                 {
                     obj = Entities[val];
                     return true;
-                }            }
+                }
+            }
         }
 
         /// <summary>

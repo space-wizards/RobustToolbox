@@ -1,16 +1,15 @@
-﻿using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
 #nullable enable
 
-namespace Robust.Client.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
     public class Eye : IEye
     {
-        private Vector2 _scale = Vector2.One;
+        private Vector2 _scale = Vector2.One/2f;
         private Angle _rotation = Angle.Zero;
         private MapCoordinates _coords;
 
@@ -38,7 +37,7 @@ namespace Robust.Client.Graphics.ClientEye
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Zoom
         {
-            get => new Vector2(1 / _scale.X, 1 / _scale.Y);
+            get => new(1 / _scale.X, 1 / _scale.Y);
             set => _scale = new Vector2(1 / value.X, 1 / value.Y);
         }
 
@@ -53,8 +52,6 @@ namespace Robust.Client.Graphics.ClientEye
         /// <inheritdoc />
         public void GetViewMatrix(out Matrix3 viewMatrix)
         {
-            //TODO: Something is funky with this, matrices are being multiplied backwards, Position is negative
-            //Should this be a normal transform that is inverted?
             var scaleMat = Matrix3.CreateScale(_scale.X, _scale.Y);
             var rotMat = Matrix3.CreateRotation(_rotation);
             var transMat = Matrix3.CreateTranslation(-_coords.Position);

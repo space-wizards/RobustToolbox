@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timers
@@ -66,7 +65,7 @@ namespace Robust.Shared.Timers
 
                     if (IsRepeating)
                     {
-                        _timeCounter = Time;
+                        _timeCounter += Time;
                     }
                     else
                     {
@@ -85,7 +84,7 @@ namespace Robust.Shared.Timers
         /// <returns>The task that can be awaited.</returns>
         public static Task Delay(int milliseconds, CancellationToken cancellationToken = default)
         {
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object?>();
             Spawn(milliseconds, () => tcs.SetResult(null), cancellationToken);
             return tcs.Task;
         }

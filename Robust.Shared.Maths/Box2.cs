@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
 {
@@ -8,107 +9,166 @@ namespace Robust.Shared.Maths
     ///     Uses a right-handed coordinate system. This means that X+ is to the right and Y+ up.
     /// </summary>
     [Serializable]
-    public readonly struct Box2 : IEquatable<Box2>
+    [StructLayout(LayoutKind.Explicit)]
+    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
         /// </summary>
-        public readonly float Left;
-
-        /// <summary>
-        ///     The X coordinate of the right edge of the box.
-        /// </summary>
-        public readonly float Right;
-
-        /// <summary>
-        ///     The Y coordinate of the top edge of the box.
-        /// </summary>
-        public readonly float Top;
+        [FieldOffset(sizeof(float) * 0)] public float Left;
 
         /// <summary>
         ///     The Y coordinate of the bottom of the box.
         /// </summary>
-        public readonly float Bottom;
+        [FieldOffset(sizeof(float) * 1)] public float Bottom;
 
-        public Vector2 BottomRight => new Vector2(Right, Bottom);
-        public Vector2 TopLeft => new Vector2(Left, Top);
-        public Vector2 TopRight => new Vector2(Right, Top);
-        public Vector2 BottomLeft => new Vector2(Left, Bottom);
-        public float Width => Math.Abs(Right - Left);
-        public float Height => Math.Abs(Bottom - Top);
-        public Vector2 Size => new Vector2(Width, Height);
-        public Vector2 Center => BottomLeft + Size / 2;
+        /// <summary>
+        ///     The X coordinate of the right edge of the box.
+        /// </summary>
+        [FieldOffset(sizeof(float) * 2)] public float Right;
+
+        /// <summary>
+        ///     The Y coordinate of the top edge of the box.
+        /// </summary>
+        [FieldOffset(sizeof(float) * 3)] public float Top;
+
+        [FieldOffset(sizeof(float) * 0)] public Vector2 BottomLeft;
+        [FieldOffset(sizeof(float) * 2)] public Vector2 TopRight;
+
+        public readonly Vector2 BottomRight
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Right, Bottom);
+        }
+
+        public readonly Vector2 TopLeft
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Left, Top);
+        }
+
+        public readonly float Width
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Abs(Right - Left);
+        }
+
+        public readonly float Height
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Abs(Bottom - Top);
+        }
+
+        public readonly Vector2 Size
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Width, Height);
+        }
+
+        public readonly Vector2 Center
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BottomLeft + Size * .5f;
+        }
+
+        public readonly Vector2 Extents
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (TopRight - BottomLeft) * 0.5f;
+        }
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
         /// </summary>
-        public static readonly Box2 UnitCentered = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+        public static readonly Box2 UnitCentered = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
-        public Box2(Vector2 bottomLeft, Vector2 topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
+        public Box2(Vector2 bottomLeft, Vector2 topRight)
         {
+            Unsafe.SkipInit(out this);
+
+            BottomLeft = bottomLeft;
+            TopRight = topRight;
         }
 
         public Box2(float left, float bottom, float right, float top)
         {
+            Unsafe.SkipInit(out this);
+
             Left = left;
             Right = right;
             Top = top;
             Bottom = bottom;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 FromDimensions(float left, float bottom, float width, float height)
         {
-            return new Box2(left, bottom, left + width, bottom + height);
+            return new(left, bottom, left + width, bottom + height);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 FromDimensions(Vector2 bottomLeft, Vector2 size)
         {
             return FromDimensions(bottomLeft.X, bottomLeft.Y, size.X, size.Y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 CenteredAround(Vector2 center, Vector2 size)
         {
             return FromDimensions(center - size / 2, size);
         }
 
-        public bool Intersects(in Box2 other)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool Intersects(in Box2 other)
         {
             return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Box2 Enlarged(float size)
+        public readonly Box2 Enlarged(float size)
         {
-            return new Box2(Left - size, Bottom - size, Right + size, Top + size);
+            return new(Left - size, Bottom - size, Right + size, Top + size);
         }
 
         /// <summary>
         ///     Returns the intersection box created when two Boxes overlap.
         /// </summary>
-        public Box2 Intersect(in Box2 other)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Box2 Intersect(in Box2 other)
         {
-            var left = Math.Max(Left, other.Left);
-            var right = Math.Min(Right, other.Right);
-            var bottom = Math.Max(Bottom, other.Bottom);
-            var top = Math.Min(Top, other.Top);
+            var left = MathF.Max(Left, other.Left);
+            var right = MathF.Min(Right, other.Right);
+            var bottom = MathF.Max(Bottom, other.Bottom);
+            var top = MathF.Min(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
 
             return new Box2();
+        }
+
+        /// <summary>
+        ///     Returns how much two Boxes overlap from 0 to 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly float IntersectPercentage(in Box2 other)
+        {
+            var surfaceIntersect = Area(Intersect(other));
+
+            return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Box2 Union(in Box2 other)
+        public readonly Box2 Union(in Box2 other)
         {
-            var left = Math.Min(Left, other.Left);
-            var right = Math.Max(Right, other.Right);
-            var bottom = Math.Min(Bottom, other.Bottom);
-            var top = Math.Max(Top, other.Top);
+            var left = MathF.Min(Left, other.Left);
+            var right = MathF.Max(Right, other.Right);
+            var bottom = MathF.Min(Bottom, other.Bottom);
+            var top = MathF.Max(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -117,33 +177,33 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsEmpty()
+        public readonly bool IsEmpty()
         {
-            return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
+            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Encloses(in Box2 inner)
+        public readonly bool Encloses(in Box2 inner)
         {
             return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right &&
                    this.Top > inner.Top;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(in Box2 inner)
+        public readonly bool Contains(in Box2 inner)
             => Left <= inner.Left
                && Bottom <= inner.Bottom
                && Right >= inner.Right
                && Top >= inner.Top;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(float x, float y)
+        public readonly bool Contains(float x, float y)
         {
             return Contains(new Vector2(x, y));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Contains(Vector2 point, bool closedRegion = true)
+        public readonly bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOk = closedRegion
                 ? point.X >= Left ^ point.X > Right
@@ -161,7 +221,8 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="scalar">Value to scale the box by.</param>
         /// <returns>Scaled box.</returns>
-        public Box2 Scale(float scalar)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Box2 Scale(float scalar)
         {
             if (scalar < 0)
             {
@@ -176,24 +237,28 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>Returns a Box2 translated by the given amount.</summary>
-        public Box2 Translated(Vector2 point)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Box2 Translated(Vector2 point)
         {
-            return new Box2(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
+            return new(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
         }
 
-        public bool Equals(Box2 other)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool Equals(Box2 other)
         {
             return Left.Equals(other.Left) && Right.Equals(other.Right) && Top.Equals(other.Top) &&
                    Bottom.Equals(other.Bottom);
         }
 
-        public override bool Equals(object? obj)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override readonly bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is Box2 box2 && Equals(box2);
         }
 
-        public override int GetHashCode()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -208,14 +273,16 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Compares two objects for equality by value.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Box2 a, Box2 b)
         {
-            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
-                   FloatMath.CloseTo(a.Right, b.Right) &&
-                   FloatMath.CloseTo(a.Top, b.Top) &&
-                   FloatMath.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseTo(a.Right, b.Right) &&
+                   MathHelper.CloseTo(a.Top, b.Top) &&
+                   MathHelper.CloseTo(a.Left, b.Left);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(Box2 a, Box2 b)
         {
             return !(a == b);
@@ -236,7 +303,7 @@ namespace Robust.Shared.Maths
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 Union(in Vector2 a, in Vector2 b)
-            => new Box2(
+            => new(
                 MathF.Min(a.X, b.X),
                 MathF.Min(a.Y, b.Y),
                 MathF.Max(a.X, b.X),
@@ -246,15 +313,44 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns this box enlarged to also contain the specified position.
         /// </summary>
-        public Box2 ExtendToContain(Vector2 vec)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Box2 ExtendToContain(Vector2 vec)
         {
             var (x, y) = vec;
 
             return new Box2(
-                Math.Min(x, Left),
-                Math.Min(y, Bottom),
-                Math.Max(x, Right),
-                Math.Max(y, Top));
+                MathF.Min(x, Left),
+                MathF.Min(y, Bottom),
+                MathF.Max(x, Right),
+                MathF.Max(y, Top));
+        }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        public readonly Vector2 ClosestPoint(in Vector2 position)
+        {
+            // clamp the point to the border of the box
+            var cx = MathHelper.Clamp(position.X, Left, Right);
+            var cy = MathHelper.Clamp(position.Y, Bottom, Top);
+
+            return new Vector2(cx, cy);
+        }
+
+        public bool EqualsApprox(Box2 other)
+        {
+            return MathHelper.CloseTo(Left, other.Left)
+                   && MathHelper.CloseTo(Bottom, other.Bottom)
+                   && MathHelper.CloseTo(Right, other.Right)
+                   && MathHelper.CloseTo(Top, other.Top);
+        }
+
+        public bool EqualsApprox(Box2 other, double tolerance)
+        {
+            return MathHelper.CloseTo(Left, other.Left, tolerance)
+                   && MathHelper.CloseTo(Bottom, other.Bottom, tolerance)
+                   && MathHelper.CloseTo(Right, other.Right, tolerance)
+                   && MathHelper.CloseTo(Top, other.Top, tolerance);
         }
     }
 }

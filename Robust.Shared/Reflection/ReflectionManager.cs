@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -19,12 +20,18 @@ namespace Robust.Shared.Reflection
         /// </remarks>
         protected abstract IEnumerable<string> TypePrefixes { get; }
 
-        private readonly List<Assembly> assemblies = new List<Assembly>();
+        private readonly List<Assembly> assemblies = new();
 
-        public event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+        public event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 
         [ViewVariables]
         public IReadOnlyList<Assembly> Assemblies => assemblies;
+
+        private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
+
+        private readonly Dictionary<string, Type> _looseTypeCache = new();
+
+        private readonly Dictionary<string, Enum> _enumCache = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
@@ -49,9 +56,15 @@ namespace Robust.Shared.Reflection
             catch (ReflectionTypeLoadException e)
             {
                 Logger.Error("Caught ReflectionTypeLoadException! Dumping child exceptions:");
-                foreach (var inner in e.LoaderExceptions)
+                if (e.LoaderExceptions != null)
                 {
-                    Logger.Error(inner.ToString());
+                    foreach (var inner in e.LoaderExceptions)
+                    {
+                        if (inner != null)
+                        {
+                            Logger.Error(inner.ToString());
+                        }
+                    }
                 }
 
                 throw;
@@ -66,7 +79,7 @@ namespace Robust.Shared.Reflection
                         continue;
                     }
 
-                    var attribute = (ReflectAttribute) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
+                    var attribute = (ReflectAttribute?) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
 
                     if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
                     {
@@ -92,7 +105,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <seealso cref="TypePrefixes"/>
-        public Type GetType(string name)
+        public Type? GetType(string name)
         {
             // The priority in which types are retrieved is based on the TypePrefixes list.
             // This is an implementation detail. If you need it: make a better API.
@@ -123,15 +136,19 @@ namespace Robust.Shared.Reflection
             throw new ArgumentException("Unable to find type.");
         }
 
-        public bool TryLooseGetType(string name, out Type type)
+        public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
         {
+            if (_looseTypeCache.TryGetValue(name, out type))
+                return true;
+
             foreach (var assembly in assemblies)
             {
                 foreach (var tryType in assembly.DefinedTypes)
                 {
-                    if (tryType.FullName.EndsWith(name))
+                    if (tryType.FullName!.EndsWith(name))
                     {
                         type = tryType;
+                        _looseTypeCache[name] = type;
                         return true;
                     }
                 }
@@ -142,7 +159,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public IEnumerable<Type> FindTypesWithAttribute<T>()
+        public IEnumerable<Type> FindTypesWithAttribute<T>() where T : Attribute
         {
             var types = new List<Type>();
 
@@ -155,7 +172,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, out Enum @enum)
+        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum)
         {
             if (!reference.StartsWith("enum."))
             {
@@ -164,25 +181,66 @@ namespace Robust.Shared.Reflection
             }
 
             reference = reference.Substring(5);
+
+            if (_enumCache.TryGetValue(reference, out @enum))
+                return true;
+
             var dotIndex = reference.LastIndexOf('.');
             var typeName = reference.Substring(0, dotIndex);
+
             var value = reference.Substring(dotIndex + 1);
 
             foreach (var assembly in assemblies)
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !type.FullName.EndsWith(typeName))
+                    if (!type.IsEnum || !type.FullName!.EndsWith(typeName))
                     {
                         continue;
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
+                    _enumCache[reference] = @enum;
                     return true;
                 }
             }
 
             throw new ArgumentException("Could not resolve enum reference.");
+        }
+
+        public Type? YamlTypeTagLookup(Type baseType, string typeName)
+        {
+            if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
+            {
+                return type;
+            }
+
+            Type? found = null;
+            foreach (var derivedType in GetAllChildren(baseType))
+            {
+                if (!derivedType.IsPublic)
+                {
+                    continue;
+                }
+
+                if (derivedType.Name == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+
+                var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                if (serializedAttribute != null &&
+                    serializedAttribute.SerializeName == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+            }
+
+            _yamlTypeTagCache.Add((baseType, typeName), found);
+            return found;
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Log;
+﻿using System;
 using Robust.Shared.IoC;
 
 namespace Robust.Shared.Log
@@ -36,11 +35,19 @@ namespace Robust.Shared.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        [StringFormatMethod("message")]
-        public static void LogS(LogLevel logLevel, string sawmillname, string message, params object[] args)
+        public static void LogS(LogLevel logLevel, string sawmillname, string message, params object?[] args)
         {
             var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
             sawmill.Log(logLevel, message, args);
+        }
+
+        /// <summary>
+        ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
+        /// </summary>
+        public static void LogS(LogLevel logLevel, string sawmillname, Exception? exception, string message, params object?[] args)
+        {
+            var sawmill = LogManagerSingleton.GetSawmill(sawmillname);
+            sawmill.Log(logLevel, exception, message, args);
         }
 
         /// <summary>
@@ -55,8 +62,12 @@ namespace Robust.Shared.Log
         /// <summary>
         /// Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        [StringFormatMethod("message")]
-        public static void Log(LogLevel logLevel, string message, params object[] args)
+        public static void Log(LogLevel logLevel, string message, params object?[] args)
+        {
+            LogManagerSingleton.RootSawmill.Log(logLevel, message, args);
+        }
+
+        public static void Log(LogLevel logLevel, Exception exception, string message, params object?[] args)
         {
             LogManagerSingleton.RootSawmill.Log(logLevel, message, args);
         }
@@ -73,8 +84,7 @@ namespace Robust.Shared.Log
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void DebugS(string sawmill, string message, params object[] args) => LogS(LogLevel.Debug, sawmill, message, args);
+        public static void DebugS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Debug, sawmill, message, args);
 
         /// <summary>
         /// Log a message as debug.
@@ -86,8 +96,7 @@ namespace Robust.Shared.Log
         /// Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void Debug(string message, params object[] args) => Log(LogLevel.Debug, message, args);
+        public static void Debug(string message, params object?[] args) => Log(LogLevel.Debug, message, args);
 
         /// <summary>
         /// Log a message as debug.
@@ -99,8 +108,7 @@ namespace Robust.Shared.Log
         /// Log a message as info, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void InfoS(string sawmill, string message, params object[] args) => LogS(LogLevel.Info, sawmill, message, args);
+        public static void InfoS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Info, sawmill, message, args);
 
         /// <summary>
         /// Log a message as info.
@@ -112,8 +120,7 @@ namespace Robust.Shared.Log
         /// Log a message as info, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void Info(string message, params object[] args) => Log(LogLevel.Info, message, args);
+        public static void Info(string message, params object?[] args) => Log(LogLevel.Info, message, args);
 
         /// <summary>
         /// Log a message as info.
@@ -125,8 +132,7 @@ namespace Robust.Shared.Log
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void WarningS(string sawmill, string message, params object[] args) => LogS(LogLevel.Warning, sawmill, message, args);
+        public static void WarningS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Warning, sawmill, message, args);
 
         /// <summary>
         /// Log a message as warning.
@@ -138,8 +144,7 @@ namespace Robust.Shared.Log
         /// Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void Warning(string message, params object[] args) => Log(LogLevel.Warning, message, args);
+        public static void Warning(string message, params object?[] args) => Log(LogLevel.Warning, message, args);
 
         /// <summary>
         /// Log a message as warning.
@@ -151,8 +156,13 @@ namespace Robust.Shared.Log
         /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void ErrorS(string sawmill, string message, params object[] args) => LogS(LogLevel.Error, sawmill, message, args);
+        public static void ErrorS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Error, sawmill, message, args);
+
+        /// <summary>
+        /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
+        /// </summary>
+        /// <seealso cref="Log" />
+        public static void ErrorS(string sawmill, Exception exception, string message, params object?[] args) => LogS(LogLevel.Error, sawmill, exception, message, args);
 
         /// <summary>
         /// Log a message as error.
@@ -164,8 +174,7 @@ namespace Robust.Shared.Log
         /// Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void Error(string message, params object[] args) => Log(LogLevel.Error, message, args);
+        public static void Error(string message, params object?[] args) => Log(LogLevel.Error, message, args);
 
         /// <summary>
         /// Log a message as error.
@@ -177,8 +186,7 @@ namespace Robust.Shared.Log
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void FatalS(string sawmill, string message, params object[] args) => LogS(LogLevel.Fatal, sawmill, message, args);
+        public static void FatalS(string sawmill, string message, params object?[] args) => LogS(LogLevel.Fatal, sawmill, message, args);
 
         /// <summary>
         /// Log a message as fatal.
@@ -190,8 +198,7 @@ namespace Robust.Shared.Log
         /// Log a message as fatal, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        public static void Fatal(string message, params object[] args) => Log(LogLevel.Fatal, message, args);
+        public static void Fatal(string message, params object?[] args) => Log(LogLevel.Fatal, message, args);
 
         /// <summary>
         /// Log a message as fatal.

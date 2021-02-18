@@ -1,27 +1,21 @@
-﻿using Robust.Client.Interfaces.Debugging;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
+﻿using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Timing;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Network;
 
 namespace Robust.Client.Debugging
 {
     internal class DebugDrawingManager : IDebugDrawingManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _net;
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IGameTiming _gameTimer;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _net = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IGameTiming _gameTimer = default!;
 
-        private readonly List<RayWithLifetime> raysWithLifeTime = new List<RayWithLifetime>();
+        private readonly List<RayWithLifetime> raysWithLifeTime = new();
         private bool _debugDrawRays;
 
         private struct RayWithLifetime
@@ -92,7 +86,7 @@ namespace Robust.Client.Debugging
                 _owner = owner;
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 foreach (var ray in _owner.raysWithLifeTime)
                 {
@@ -103,7 +97,7 @@ namespace Robust.Client.Debugging
                 }
             }
 
-            internal override void FrameUpdate(FrameEventArgs args)
+            protected internal override void FrameUpdate(FrameEventArgs args)
             {
                 base.FrameUpdate(args);
 

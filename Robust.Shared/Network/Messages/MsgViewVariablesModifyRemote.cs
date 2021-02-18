@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+
+#nullable disable
 
 namespace Robust.Shared.Network.Messages
 {
@@ -40,19 +39,13 @@ namespace Robust.Shared.Network.Messages
             SessionId = buffer.ReadUInt32();
             {
                 var length = buffer.ReadInt32();
-                var bytes = buffer.ReadBytes(length);
-                using (var stream = new MemoryStream(bytes))
-                {
-                    PropertyIndex = serializer.Deserialize<object[]>(stream);
-                }
+                using var stream = buffer.ReadAlignedMemory(length);
+                PropertyIndex = serializer.Deserialize<object[]>(stream);
             }
             {
                 var length = buffer.ReadInt32();
-                var bytes = buffer.ReadBytes(length);
-                using (var stream = new MemoryStream(bytes))
-                {
-                    Value = serializer.Deserialize(stream);
-                }
+                using var stream = buffer.ReadAlignedMemory(length);
+                Value = serializer.Deserialize(stream);
             }
         }
 
@@ -64,13 +57,15 @@ namespace Robust.Shared.Network.Messages
             {
                 serializer.Serialize(stream, PropertyIndex);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
             using (var stream = new MemoryStream())
             {
                 serializer.Serialize(stream, Value);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

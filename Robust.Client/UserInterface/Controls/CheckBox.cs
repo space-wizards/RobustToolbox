@@ -65,6 +65,6 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text displayed by the button.
         /// </summary>
         [ViewVariables]
-        public string Text { get => Label.Text; set => Label.Text = value; }
+        public string? Text { get => Label.Text; set => Label.Text = value; }
     }
 }

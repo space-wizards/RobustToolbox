@@ -83,13 +83,23 @@ namespace Robust.Client.UserInterface.Controls
             var (cWidth, cHeight) = maxChildMinSize;
             var hBarSize = _hScrollBar.CombinedMinimumSize.Y;
             var vBarSize = _vScrollBar.CombinedMinimumSize.X;
-            var sSize = Size - new Vector2(hBarSize, vBarSize);
-            var (sWidth, sHeight) = sSize;
+
+            var (sWidth, sHeight) = Size;
 
             try
             {
                 // Suppress events to avoid weird recursion.
                 _suppressScrollValueChanged = true;
+
+                if (Width < cWidth)
+                {
+                    sHeight -= hBarSize;
+                }
+
+                if (Height < cHeight)
+                {
+                    sWidth -= vBarSize;
+                }
 
                 if (sWidth < cWidth)
                 {
@@ -118,6 +128,8 @@ namespace Robust.Client.UserInterface.Controls
                 // I really don't think this can throw an exception but oh well let's finally it.
                 _suppressScrollValueChanged = false;
             }
+
+            var sSize = (sWidth, sHeight);
 
             FitChildInPixelBox(_vScrollBar, PixelSizeBox);
             FitChildInPixelBox(_hScrollBar, PixelSizeBox);

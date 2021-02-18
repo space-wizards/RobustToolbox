@@ -12,6 +12,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Maths
 {
@@ -25,7 +26,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the value of Pi as a <see cref="System.Single"/>.
         /// </summary>
-        public const float Pi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930382f;
+        public const float Pi = MathF.PI;
 
         /// <summary>
         /// Defines the value of Pi divided by two as a <see cref="System.Single"/>.
@@ -60,7 +61,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the value of E as a <see cref="System.Single"/>.
         /// </summary>
-        public const float E = 2.71828182845904523536f;
+        public const float E = MathF.E;
 
         /// <summary>
         /// Defines the base-10 logarithm of E.
@@ -83,10 +84,11 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long NextPowerOfTwo(long n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long)NextPowerOfTwo((double) n);
+            return (long) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -94,10 +96,11 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextPowerOfTwo(int n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int)NextPowerOfTwo((double) n);
+            return (int) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -105,11 +108,13 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float NextPowerOfTwo(float n)
         {
-            if (float.IsNaN(n) || float.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (float.IsNaN(n) || float.IsInfinity(n))
+                throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float)NextPowerOfTwo((double) n);
+            return (float) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -117,9 +122,11 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NextPowerOfTwo(double n)
         {
-            if (double.IsNaN(n) || double.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (double.IsNaN(n) || double.IsInfinity(n))
+                throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
 
             // Don't return negative powers of two, that's nonsense.
@@ -130,12 +137,65 @@ namespace Robust.Shared.Maths
 
         #endregion NextPowerOfTwo
 
+        #region NextMultipleOf
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double NextMultipleOf(double value, double of)
+        {
+            return Math.Ceiling(value / of) * of;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float NextMultipleOf(float value, float of)
+        {
+            return MathF.Ceiling(value / of) * of;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long NextMultipleOf(long value, long of)
+        {
+            return ((value - 1) | (of - 1)) + 1;
+        }
+
+        /// <summary>
+        ///     Returns the next closest multiple of a number.
+        /// </summary>
+        /// <param name="value">Closest value</param>
+        /// <param name="of">Returns the multiple of this number.</param>
+        /// <returns>The next closest multiple of a number.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int NextMultipleOf(int value, int of)
+        {
+            return ((value - 1) | (of - 1)) + 1;
+        }
+
+        #endregion
+
         #region Factorial
 
         /// <summary>Calculates the factorial of a given natural number.
         /// </summary>
         /// <param name="n">The number.</param>
         /// <returns>n!</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Factorial(int n)
         {
             long result = 1;
@@ -156,6 +216,7 @@ namespace Robust.Shared.Maths
         /// <param name="n">The n.</param>
         /// <param name="k">The k.</param>
         /// <returns>n! / (k! * (n - k)!)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BinomialCoefficient(int n, int k)
         {
             return Factorial(n) / (Factorial(k) * Factorial(n - k));
@@ -170,9 +231,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="degrees">An angle in degrees</param>
         /// <returns>The angle expressed in radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float) Math.PI / 180.0f;
+            const float degToRad = Pi / 180.0f;
             return degrees * degToRad;
         }
 
@@ -181,9 +243,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="radians">An angle in radians</param>
         /// <returns>The angle expressed in degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float) Math.PI;
+            const float radToDeg = 180.0f / Pi;
             return radians * radToDeg;
         }
 
@@ -192,6 +255,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="degrees">An angle in degrees</param>
         /// <returns>The angle expressed in radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double DegreesToRadians(double degrees)
         {
             const double degToRad = Math.PI / 180.0;
@@ -203,6 +267,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="radians">An angle in radians</param>
         /// <returns>The angle expressed in degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiansToDegrees(double radians)
         {
             const double radToDeg = 180.0 / Math.PI;
@@ -218,6 +283,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="a">The first value.</param>
         /// <param name="b">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Swap(ref double a, ref double b)
         {
             var temp = a;
@@ -230,6 +296,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="a">The first value.</param>
         /// <param name="b">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Swap(ref float a, ref float b)
         {
             var temp = a;
@@ -241,26 +308,37 @@ namespace Robust.Shared.Maths
 
         #region MinMax
 
+        /// <summary>
+        /// Returns the minimum of 4 values
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Min(float a, float b, float c, float d)
         {
-            return Math.Min(a, Math.Min(b, Math.Min(c, d)));
+            return MathF.Min(a, MathF.Min(b, MathF.Min(c, d)));
         }
 
+        /// <summary>
+        /// Returns the maximum of 4 values
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Max(float a, float b, float c, float d)
         {
-            return Math.Max(a, Math.Max(b, Math.Max(c, d)));
+            return MathF.Max(a, MathF.Max(b, MathF.Max(c, d)));
         }
 
         /// <summary>
         /// Returns the median value out of a, b and c.
         /// </summary>
-        /// <returns>THe median.</returns>
+        /// <returns>The median.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Median(float a, float b, float c)
         {
-            return Math.Max(Math.Min(a, b), Math.Min(Math.Max(a, b), c));
+            return MathF.Max(MathF.Min(a, b), MathF.Min(MathF.Max(a, b), c));
         }
 
         #endregion MinMax
+
+        #region Mod
 
         /// <summary>
         ///     This method provides floored modulus.
@@ -270,6 +348,7 @@ namespace Robust.Shared.Maths
         /// <param name="d">The divisor.</param>
         /// <returns>The remainder.</returns>
         [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Mod(double n, double d)
         {
             return n - Math.Floor(n / d) * d;
@@ -283,11 +362,235 @@ namespace Robust.Shared.Maths
         /// <param name="d">The divisor.</param>
         /// <returns>The remainder.</returns>
         [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Mod(float n, float d)
+        {
+            return n - MathF.Floor(n / d) * d;
+        }
+
+        /// <summary>
+        ///     This method provides floored modulus.
+        ///     C-like languages use truncated modulus for their '%' operator.
+        /// </summary>
+        /// <param name="n">The dividend.</param>
+        /// <param name="d">The divisor.</param>
+        /// <returns>The remainder.</returns>
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Mod(int n, int d)
         {
             var r = n % d;
             return r < 0 ? r + d : r;
         }
+
+        #endregion Mod
+
+        #region Clamp
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Clamp<T>(T val, T min, T max)
+            where T : IComparable<T>
+        {
+            if (val.CompareTo(min) < 0) return min;
+            if (val.CompareTo(max) > 0) return max;
+            return val;
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Clamp(sbyte val, sbyte min, sbyte max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte Clamp(byte val, byte min, byte max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short Clamp(short val, short min, short max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort Clamp(ushort val, ushort min, ushort max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Clamp(int val, int min, int max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint Clamp(uint val, uint min, uint max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long Clamp(long val, long min, long max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong Clamp(ulong val, ulong min, ulong max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp(float val, float min, float max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Clamp(double val, double min, double max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        ///     Clamps <paramref name="val"/> between 0 and 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp01(float val)
+        {
+            return Clamp(val, 0, 1);
+        }
+
+        #endregion Clamp
+
+        #region CloseTo
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(float a, float b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(float a, double b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(double a, float b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(double a, double b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        #endregion CloseTo
+
+        #region Lerp
+
+        /// <summary>
+        /// Linearly interpolates between <paramref name="a"/> to <paramref name="b"/>, returning the value at <paramref name="blend"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Lerp(double a, double b, double blend)
+        {
+            return a + (b - a) * blend;
+        }
+
+        /// <summary>
+        /// Linearly interpolates between <paramref name="a"/> to <paramref name="b"/>, returning the value at <paramref name="blend"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Lerp(float a, float b, float blend)
+        {
+            return a + (b - a) * blend;
+        }
+
+        #endregion Lerp
+
+        #region InterpolateCubic
+
+        /// <summary>
+        /// Cubic interpolates form <paramref name="a"/> to <paramref name="b"/>, where <paramref name="preA"/> and <paramref name="postB"/> are handles and returns the position at <paramref name="t"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float InterpolateCubic(float preA, float a, float b, float postB, float t)
+        {
+            return a + 0.5f * t * (b - preA + t * (2.0f * preA - 5.0f * a + 4.0f * b - postB + t * (3.0f * (a - b) + postB - preA)));
+        }
+
+        /// <summary>
+        /// Cubic interpolates form <paramref name="a"/> to <paramref name="b"/>, where <paramref name="preA"/> and <paramref name="postB"/> are handles and returns the position at <paramref name="t"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double InterpolateCubic(double preA, double a, double b, double postB, double t)
+        {
+            return a + 0.5 * t * (b - preA + t * (2.0 * preA - 5.0 * a + 4.0 * b - postB + t * (3.0 * (a - b) + postB - preA)));
+        }
+
+        #endregion InterpolateCubic
 
         #endregion Public Members
     }

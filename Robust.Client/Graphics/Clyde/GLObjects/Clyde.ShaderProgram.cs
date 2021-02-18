@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -16,15 +16,15 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private class GLShaderProgram
         {
-            private readonly sbyte?[] _uniformIntCache = new sbyte?[Clyde.UniCount];
-            private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
+            private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
+            private readonly Dictionary<string, int> _uniformCache = new();
             private uint _handle = 0;
-            private GLShader _fragmentShader;
-            private GLShader _vertexShader;
-            public string Name { get; }
+            private GLShader? _fragmentShader;
+            private GLShader? _vertexShader;
+            public string? Name { get; }
             private readonly Clyde _clyde;
 
-            public GLShaderProgram(Clyde clyde, string name = null)
+            public GLShaderProgram(Clyde clyde, string? name = null)
             {
                 _clyde = clyde;
                 Name = name;
@@ -46,10 +46,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void Link()
+            public void Link((string, uint)[] attribLocations)
             {
                 ClearCaches();
                 _handle = (uint) GL.CreateProgram();
+                _clyde.CheckGlError();
                 if (Name != null)
                 {
                     _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
@@ -58,16 +59,30 @@ namespace Robust.Client.Graphics.Clyde
                 if (_vertexShader != null)
                 {
                     GL.AttachShader(_handle, _vertexShader.ObjectHandle);
+                    _clyde.CheckGlError();
                 }
 
                 if (_fragmentShader != null)
                 {
                     GL.AttachShader(_handle, _fragmentShader.ObjectHandle);
+                    _clyde.CheckGlError();
+                }
+
+                foreach (var (varName, loc) in attribLocations)
+                {
+                    // OpenGL 3.1 is ass and doesn't allow you to specify layout(location = X) in shaders.
+                    // So we have to manually do it here.
+                    // Ugh.
+
+                    GL.BindAttribLocation(_handle, loc, varName);
+                    _clyde.CheckGlError();
                 }
 
                 GL.LinkProgram(_handle);
+                _clyde.CheckGlError();
 
                 GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out var compiled);
+                _clyde.CheckGlError();
                 if (compiled != 1)
                 {
                     throw new ShaderCompilationException(GL.GetProgramInfoLog((int) _handle));
@@ -85,6 +100,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 _clyde._currentProgram = this;
                 GL.UseProgram(_handle);
+                _clyde.CheckGlError();
             }
 
             public void Delete()
@@ -95,6 +111,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 GL.DeleteProgram(_handle);
+                _clyde.CheckGlError();
                 _handle = 0;
             }
 
@@ -102,7 +119,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(name, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform(name);
                 }
 
                 return result;
@@ -112,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(id, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform($"[id {id}]");
                 }
 
                 return result;
@@ -128,6 +145,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 index = GL.GetUniformLocation(_handle, name);
+                _clyde.CheckGlError();
                 _uniformCache.Add(name, index);
                 return index != -1;
             }
@@ -175,6 +193,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 index = GL.GetUniformLocation(_handle, name);
+                _clyde.CheckGlError();
                 _uniformIntCache[id] = (sbyte)index;
                 return index != -1;
             }
@@ -185,16 +204,26 @@ namespace Robust.Client.Graphics.Clyde
             public void BindBlock(string blockName, uint blockBinding)
             {
                 var index = (uint) GL.GetUniformBlockIndex(_handle, blockName);
+                _clyde.CheckGlError();
                 GL.UniformBlockBinding(_handle, index, blockBinding);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, int integer)
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, integer);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, float single)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, single);
+                _clyde.CheckGlError();
+            }
+
+            public void SetUniform(int uniformName, float single)
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, single);
@@ -213,12 +242,16 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static unsafe void SetUniformDirect(int slot, in Matrix3 value)
+            private unsafe void SetUniformDirect(int slot, in Matrix3 value, bool transpose=true)
             {
-                fixed (Matrix3* ptr = &value)
+                Matrix3 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix3(slot, 1, true, (float*) ptr);
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix3(slot, 1, false, (float*) &tmpTranspose);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)
@@ -228,12 +261,16 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
+            private unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
             {
-                fixed (Matrix4* ptr = &value)
+                Matrix4 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix4(uniformId, 1, transpose, (float*) ptr);
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix4(uniformId, 1, false, (float*) &tmpTranspose);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, in Vector4 vector)
@@ -249,13 +286,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetUniformDirect(int slot, in Vector4 vector)
+            private void SetUniformDirect(int slot, in Vector4 vector)
             {
                 unsafe
                 {
                     fixed (Vector4* ptr = &vector)
                     {
                         GL.Uniform4(slot, 1, (float*)ptr);
+                        _clyde.CheckGlError();
                     }
                 }
             }
@@ -273,7 +311,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetUniformDirect(int slot, in Color color, bool convertToLinear=true)
+            private void SetUniformDirect(int slot, in Color color, bool convertToLinear=true)
             {
                 var converted = color;
                 if (convertToLinear)
@@ -284,6 +322,7 @@ namespace Robust.Client.Graphics.Clyde
                 unsafe
                 {
                     GL.Uniform4(slot, 1, (float*) &converted);
+                    _clyde.CheckGlError();
                 }
             }
 
@@ -294,13 +333,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetUniformDirect(int slot, in Vector3 vector)
+            private void SetUniformDirect(int slot, in Vector3 vector)
             {
                 unsafe
                 {
                     fixed (Vector3* ptr = &vector)
                     {
                         GL.Uniform3(slot, 1, (float*)ptr);
+                        _clyde.CheckGlError();
                     }
                 }
             }
@@ -311,14 +351,21 @@ namespace Robust.Client.Graphics.Clyde
                 SetUniformDirect(uniformId, vector);
             }
 
+            public void SetUniform(int uniformName, in Vector2 vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetUniformDirect(int slot, in Vector2 vector)
+            private void SetUniformDirect(int slot, in Vector2 vector)
             {
                 unsafe
                 {
                     fixed (Vector2* ptr = &vector)
                     {
                         GL.Uniform2(slot, 1, (float*)ptr);
+                        _clyde.CheckGlError();
                     }
                 }
             }
@@ -330,9 +377,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetUniformTextureDirect(int slot, TextureUnit value)
+            private void SetUniformTextureDirect(int slot, TextureUnit value)
             {
                 GL.Uniform1(slot, value - TextureUnit.Texture0);
+                _clyde.CheckGlError();
             }
 
             public void SetUniformTextureMaybe(string uniformName, TextureUnit value)
@@ -436,6 +484,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (TryGetUniform(uniformName, out var slot))
                 {
                     GL.Uniform1(slot, value);
+                    _clyde.CheckGlError();
                 }
             }
 
@@ -444,6 +493,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (TryGetUniform(uniformName, out var slot))
                 {
                     GL.Uniform1(slot, value);
+                    _clyde.CheckGlError();
                 }
             }
 
@@ -456,9 +506,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private static void ThrowCouldNotGetUniform()
+            private static void ThrowCouldNotGetUniform(string name)
             {
-                throw new ArgumentException("Could not get uniform!");
+                throw new ArgumentException($"Could not get uniform \"{name}\"!");
             }
         }
     }

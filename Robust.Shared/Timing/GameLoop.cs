@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Prometheus;
 
 namespace Robust.Shared.Timing
 {
@@ -48,14 +48,22 @@ namespace Robust.Shared.Timing
     /// </summary>
     public class GameLoop : IGameLoop
     {
+        private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
+            "robust_game_loop_frametime",
+            "Histogram of frametimes in ms",
+            new HistogramConfiguration
+            {
+                Buckets = Histogram.ExponentialBuckets(.001, 1.5, 10)
+            });
+
         private readonly IGameTiming _timing;
         private TimeSpan _lastTick; // last wall time tick
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
 
-        public event EventHandler<FrameEventArgs> Input;
-        public event EventHandler<FrameEventArgs> Tick;
-        public event EventHandler<FrameEventArgs> Update;
-        public event EventHandler<FrameEventArgs> Render;
+        public event EventHandler<FrameEventArgs>? Input;
+        public event EventHandler<FrameEventArgs>? Tick;
+        public event EventHandler<FrameEventArgs>? Update;
+        public event EventHandler<FrameEventArgs>? Render;
 
         /// <summary>
         ///     Enables single step mode. If this is enabled, after every tick the GameTime will pause.
@@ -78,6 +86,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public bool DetectSoftLock { get; set; }
 
+        public bool EnableMetrics { get; set; } = false;
+
         /// <summary>
         ///     The method currently being used to limit the Update rate.
         /// </summary>
@@ -89,9 +99,9 @@ namespace Robust.Shared.Timing
 
 #if EXCEPTION_TOLERANCE
         private int _tickExceptions;
-#endif
 
         private const int MaxSoftLockExceptions = 10;
+#endif
 
         public GameLoop(IGameTiming timing)
         {
@@ -112,8 +122,6 @@ namespace Robust.Shared.Timing
 
             FrameEventArgs realFrameEvent;
             FrameEventArgs simFrameEvent;
-
-            _timing.ResetRealTime();
 
             while (Running)
             {
@@ -177,7 +185,17 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
-                    Tick?.Invoke(this, simFrameEvent);
+                        if (EnableMetrics)
+                        {
+                            using (_frameTimeHistogram.NewTimer())
+                            {
+                                Tick?.Invoke(this, simFrameEvent);
+                            }
+                        }
+                        else
+                        {
+                            Tick?.Invoke(this, simFrameEvent);
+                        }
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception exp)
@@ -214,12 +232,11 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
-                simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
-                    Update?.Invoke(this, simFrameEvent);
+                    Update?.Invoke(this, realFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)
@@ -253,7 +270,7 @@ namespace Robust.Shared.Timing
         private TimeSpan CalcTickPeriod()
         {
             // ranges from -1 to 1, with 0 being 'default'
-            var ratio = FloatMath.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var ratio = MathHelper.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
             var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
             return _timing.TickPeriod - diff;
         }
@@ -262,7 +279,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Methods the GameLoop can use to limit the Update rate.
     /// </summary>
-    public enum SleepMode
+    public enum SleepMode : sbyte
     {
         /// <summary>
         ///     Thread will not yield to the scheduler or sleep, and consume 100% cpu. Use this if you are

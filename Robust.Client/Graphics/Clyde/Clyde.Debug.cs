@@ -1,26 +1,22 @@
-using System;
-using Robust.Client.Interfaces.Graphics;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private ClydeDebugStats _debugStats;
+        private readonly ClydeDebugStats _debugStats = new();
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {
-            public ClydeDebugInfo(Version openGLVersion, Version minimumVersion, string renderer, string vendor,
-                string versionString)
+            public ClydeDebugInfo(OpenGLVersion openGLVersion, string renderer, string vendor, string versionString, bool overriding)
             {
                 OpenGLVersion = openGLVersion;
-                MinimumVersion = minimumVersion;
                 Renderer = renderer;
                 Vendor = vendor;
                 VersionString = versionString;
+                Overriding = overriding;
             }
 
-            public Version OpenGLVersion { get; }
-            public Version MinimumVersion { get; }
+            public OpenGLVersion OpenGLVersion { get; }
+            public bool Overriding { get; }
             public string Renderer { get; }
             public string Vendor { get; }
             public string VersionString { get; }
@@ -34,6 +30,7 @@ namespace Robust.Client.Graphics.Clyde
             public (int vertices, int indices) LargestBatchSize => (LargestBatchVertices, LargestBatchIndices);
             public int LargestBatchVertices { get; set; }
             public int LargestBatchIndices { get; set; }
+            public int TotalLights { get; set; }
 
             public void Reset()
             {
@@ -42,6 +39,7 @@ namespace Robust.Client.Graphics.Clyde
                 LastBatches = 0;
                 LargestBatchVertices = 0;
                 LargestBatchIndices = 0;
+                TotalLights = 0;
             }
         }
     }

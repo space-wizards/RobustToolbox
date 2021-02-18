@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -11,6 +11,22 @@ namespace Robust.Client.Graphics.Clyde
     {
         static Clyde()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                RuntimeInformation.ProcessArchitecture == Architecture.X64)
+            {
+                try
+                {
+                    // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
+                    // This is 100x easier than nvidia's documented approach of NvOptimusEnablement,
+                    // and works while developing.
+                    NativeLibrary.Load("nvapi64.dll");
+                }
+                catch (Exception)
+                {
+                    // If this fails whatever.
+                }
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return;
@@ -35,7 +51,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, string> _dllMapLinux = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _dllMapLinux = new()
         {
             {"opengl32.dll", "libGL.so.1"},
             {"glu32.dll", "libGLU.so.1"},
@@ -48,7 +64,7 @@ namespace Robust.Client.Graphics.Clyde
         };
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, string> _dllMapMacOS = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _dllMapMacOS = new()
         {
             {"opengl32.dll", "/System/Library/Frameworks/OpenGL.framework/OpenGL"},
             {"openal32.dll", "/System/Library/Frameworks/OpenAL.framework/OpenAL"},

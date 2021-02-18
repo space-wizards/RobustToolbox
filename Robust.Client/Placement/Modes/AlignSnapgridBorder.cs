@@ -1,6 +1,5 @@
 ﻿using System;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -24,9 +23,11 @@ namespace Robust.Client.Placement.Modes
             {
                 const int ppm = EyeManager.PixelsPerMeter;
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
-                var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
-                var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
-                var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+
+                var position = pManager.eyeManager.ScreenToMap(Vector2.Zero);
+
+                var gridstartx = (float) MathF.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+                var gridstarty = (float) MathF.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstart = pManager.eyeManager.WorldToScreen(
                     new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                         gridstartx,
@@ -56,21 +57,32 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            snapSize = pManager.MapManager.GetGrid(MouseCoords.GridID).SnapSize; //Find snap size.
+            snapSize = 1f;
+
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            if (gridId.IsValid())
+            {
+                snapSize = pManager.MapManager.GetGrid(gridId).SnapSize; //Find snap size for the grid.
+                onGrid = true;
+            }
+            else
+            {
+                onGrid = false;
+            }
+
             GridDistancing = snapSize;
-            onGrid = true;
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float) Math.Round(MouseCoords.X / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize,
-                (float) Math.Round(MouseCoords.Y / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize);
+                (float) MathF.Round(MouseCoords.X / snapSize, MidpointRounding.AwayFromZero) * snapSize,
+                (float) MathF.Round(MouseCoords.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize);
 
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords =
-                new GridCoordinates(
-                    mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y), MouseCoords.GridID);
+                new EntityCoordinates(
+                    MouseCoords.EntityId, mouselocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             if (!RangeCheck(position))
             {

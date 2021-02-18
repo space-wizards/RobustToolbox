@@ -1,6 +1,4 @@
-using Robust.Shared.GameObjects.Components.Transform;
-
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public class SnapGridSystem : EntitySystem
     {
@@ -13,7 +11,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void OnMoveEvent(MoveEvent @event)
         {
-            if (@event.Sender.TryGetComponent(out SnapGridComponent snapGrid))
+            if (@event.Sender.TryGetComponent(out SnapGridComponent? snapGrid))
             {
                 snapGrid.UpdatePosition();
             }

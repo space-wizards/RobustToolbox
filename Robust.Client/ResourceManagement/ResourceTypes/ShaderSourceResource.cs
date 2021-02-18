@@ -1,9 +1,6 @@
 ﻿using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -16,7 +13,7 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
     internal class ShaderSourceResource : BaseResource
     {
         internal ClydeHandle ClydeHandle { get; private set; }
-        internal ParsedShader ParsedShader { get; private set; }
+        internal ParsedShader ParsedShader { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {

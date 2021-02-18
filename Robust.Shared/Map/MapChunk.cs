@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -11,7 +11,7 @@ namespace Robust.Shared.Map
     internal class MapChunk : IMapChunkInternal
     {
         private readonly IMapGridInternal _grid;
-        private readonly MapIndices _gridIndices;
+        private readonly Vector2i _gridIndices;
 
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
@@ -35,7 +35,7 @@ namespace Robust.Shared.Map
         {
             _grid = grid;
             LastModifiedTick = grid.CurTick;
-            _gridIndices = new MapIndices(x, y);
+            _gridIndices = new Vector2i(x, y);
             ChunkSize = chunkSize;
 
             _tiles = new Tile[ChunkSize, ChunkSize];
@@ -53,7 +53,7 @@ namespace Robust.Shared.Map
         public int Y => _gridIndices.Y;
 
         /// <inheritdoc />
-        public MapIndices Indices => _gridIndices;
+        public Vector2i Indices => _gridIndices;
 
         /// <inheritdoc />
         public TileRef GetTileRef(ushort xIndex, ushort yIndex)
@@ -64,12 +64,12 @@ namespace Robust.Shared.Map
             if (yIndex >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
-            var indices = ChunkTileToGridTile(new MapIndices(xIndex, yIndex));
+            var indices = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             return new TileRef(_grid.ParentMapId, _grid.Index, indices, _tiles[xIndex, yIndex]);
         }
 
         /// <inheritdoc />
-        public TileRef GetTileRef(MapIndices indices)
+        public TileRef GetTileRef(Vector2i indices)
         {
             if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
                 throw new ArgumentOutOfRangeException(nameof(indices), "Tile indices out of bounds.");
@@ -100,7 +100,7 @@ namespace Robust.Shared.Map
                     if (ignoreEmpty && _tiles[x, y].IsEmpty)
                         continue;
 
-                    var indices = ChunkTileToGridTile(new MapIndices(x, y));
+                    var indices = ChunkTileToGridTile(new Vector2i(x, y));
                     yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
                 }
             }
@@ -119,7 +119,7 @@ namespace Robust.Shared.Map
             if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
                 return;
 
-            var gridTile = ChunkTileToGridTile(new MapIndices(xIndex, yIndex));
+            var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
             LastModifiedTick = _grid.CurTick;
@@ -147,7 +147,7 @@ namespace Robust.Shared.Map
                     if (_tiles[x, y].IsEmpty)
                         continue;
 
-                    var gridTile = ChunkTileToGridTile(new MapIndices(x, y));
+                    var gridTile = ChunkTileToGridTile(new Vector2i(x, y));
                     yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
                 }
             }
@@ -159,16 +159,16 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices GridTileToChunkTile(MapIndices gridTile)
+        public Vector2i GridTileToChunkTile(Vector2i gridTile)
         {
             var size = ChunkSize;
             var x = MathHelper.Mod(gridTile.X, size);
             var y = MathHelper.Mod(gridTile.Y, size);
-            return new MapIndices(x, y);
+            return new Vector2i(x, y);
         }
 
         /// <inheritdoc />
-        public MapIndices ChunkTileToGridTile(MapIndices chunkTile)
+        public Vector2i ChunkTileToGridTile(Vector2i chunkTile)
         {
             return chunkTile + _gridIndices * ChunkSize;
         }
@@ -247,6 +247,7 @@ namespace Robust.Shared.Map
         {
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, ref _colBoxes, out _cachedBounds);
+            _grid.NotifyChunkCollisionRegenerated();
         }
 
         /// <inheritdoc />
@@ -271,7 +272,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool CollidesWithChunk(MapIndices localIndices)
+        public bool CollidesWithChunk(Vector2i localIndices)
         {
             return _tiles[localIndices.X, localIndices.Y].TypeId != Tile.Empty.TypeId;
         }

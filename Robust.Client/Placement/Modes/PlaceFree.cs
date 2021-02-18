@@ -9,10 +9,10 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            CurrentTile = pManager.MapManager.GetGrid(MouseCoords.GridID).GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             return true;
         }

@@ -1,17 +1,17 @@
 using System;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
         private CursorShape _cursorShape;
-        private ICursor _customCursor;
+        private ICursor? _customCursor;
 
         /// <summary>
         ///     Default common cursor shapes available in the UI.
         /// </summary>
-        public enum CursorShape
+        public enum CursorShape: byte
         {
             Arrow,
             IBeam,
@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Custom cursor shape to use.
         /// </summary>
-        public ICursor CustomCursorShape
+        public ICursor? CustomCursorShape
         {
             get => _customCursor;
             set

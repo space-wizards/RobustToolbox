@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     internal sealed class ParsedShader
     {
@@ -35,7 +35,7 @@ namespace Robust.Client.Graphics.Shaders
 
     internal sealed class ShaderFunctionDefinition
     {
-        public ShaderFunctionDefinition(string name, ShaderDataType returnType,
+        public ShaderFunctionDefinition(string name, ShaderDataTypeFull returnType,
             IReadOnlyList<ShaderFunctionParameter> parameters, string body)
         {
             Name = name;
@@ -45,14 +45,14 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType ReturnType { get; }
+        public ShaderDataTypeFull ReturnType { get; }
         public IReadOnlyList<ShaderFunctionParameter> Parameters { get; }
         public string Body { get; }
     }
 
     internal sealed class ShaderFunctionParameter
     {
-        public ShaderFunctionParameter(string name, ShaderDataType type, ShaderParameterQualifiers qualifiers)
+        public ShaderFunctionParameter(string name, ShaderDataTypeFull type, ShaderParameterQualifiers qualifiers)
         {
             Name = name;
             Type = type;
@@ -60,25 +60,25 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
         public ShaderParameterQualifiers Qualifiers { get; }
     }
 
     internal sealed class ShaderVaryingDefinition
     {
-        public ShaderVaryingDefinition(string name, ShaderDataType type)
+        public ShaderVaryingDefinition(string name, ShaderDataTypeFull type)
         {
             Name = name;
             Type = type;
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
     }
 
     internal sealed class ShaderUniformDefinition
     {
-        public ShaderUniformDefinition(string name, ShaderDataType type, string defaultValue)
+        public ShaderUniformDefinition(string name, ShaderDataTypeFull type, string? defaultValue)
         {
             Name = name;
             Type = type;
@@ -86,13 +86,13 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
-        public string DefaultValue { get; }
+        public ShaderDataTypeFull Type { get; }
+        public string? DefaultValue { get; }
     }
 
     internal sealed class ShaderConstantDefinition
     {
-        public ShaderConstantDefinition(string name, ShaderDataType type, string value)
+        public ShaderConstantDefinition(string name, ShaderDataTypeFull type, string value)
         {
             Name = name;
             Type = type;
@@ -100,13 +100,13 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
         public string Value { get; }
     }
 
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
-    internal enum ShaderDataType
+    internal enum ShaderDataType : byte
     {
         Void,
         Bool,
@@ -133,6 +133,40 @@ namespace Robust.Client.Graphics.Shaders
         USampler2D,
     }
 
+    internal sealed class ShaderDataTypeFull
+    {
+        public ShaderDataTypeFull(ShaderDataType type, ShaderPrecisionQualifier prec)
+        {
+            Type = type;
+            Precision = prec;
+        }
+
+        public ShaderDataType Type { get; }
+        public ShaderPrecisionQualifier Precision { get; }
+
+        public string GetNativeType()
+        {
+            if (Precision == ShaderPrecisionQualifier.Low)
+            {
+                return "lowp " + Type.GetNativeType();
+            }
+            else if (Precision == ShaderPrecisionQualifier.Medium)
+            {
+                return "mediump " + Type.GetNativeType();
+            }
+            else if (Precision == ShaderPrecisionQualifier.High)
+            {
+                return "highp " + Type.GetNativeType();
+            }
+            return Type.GetNativeType();
+        }
+
+        public bool TypePrecisionConsistent()
+        {
+            return Type.TypeHasPrecision() == (Precision != ShaderPrecisionQualifier.None);
+        }
+    }
+
     internal static class ShaderEnumExt
     {
         public static string GetNativeType(this ShaderDataType type)
@@ -157,8 +191,20 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
+        public static bool TypeHasPrecision(this ShaderDataType type)
+        {
+            return
+                (type == ShaderDataType.Float) ||
+                (type == ShaderDataType.Vec2) ||
+                (type == ShaderDataType.Vec3) ||
+                (type == ShaderDataType.Vec4) ||
+                (type == ShaderDataType.Mat2) ||
+                (type == ShaderDataType.Mat3) ||
+                (type == ShaderDataType.Mat4);
+        }
+
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new Dictionary<ShaderDataType, string>
+        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new()
         {
             {ShaderDataType.Void, "void"},
             {ShaderDataType.Bool, "bool"},
@@ -186,13 +232,13 @@ namespace Robust.Client.Graphics.Shaders
         };
     }
 
-    internal enum ShaderLightMode
+    internal enum ShaderLightMode : byte
     {
         Default = 0,
         Unshaded = 1,
     }
 
-    internal enum ShaderBlendMode
+    internal enum ShaderBlendMode : byte
     {
         None,
         Mix,
@@ -201,7 +247,7 @@ namespace Robust.Client.Graphics.Shaders
         Multiply
     }
 
-    internal enum ShaderPreset
+    internal enum ShaderPreset : byte
     {
         Default,
         Raw
@@ -209,11 +255,19 @@ namespace Robust.Client.Graphics.Shaders
 
     // Yeah I had no idea what to name this.
     [Flags]
-    internal enum ShaderParameterQualifiers
+    internal enum ShaderParameterQualifiers : byte
     {
         None = 0,
         In = 1,
         Out = 2,
         Inout = 3,
+    }
+
+    internal enum ShaderPrecisionQualifier : byte
+    {
+        None = 0,
+        Low = 1,
+        Medium = 2,
+        High = 3
     }
 }

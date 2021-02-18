@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Utility
 {
@@ -19,7 +18,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="value">The object to represent.</param>
         /// <returns>A readable representation of the object.</returns>
-        public static string PrintUserFacing(object value)
+        public static string? PrintUserFacing(object value)
         {
            return PrintUserFacingWithType(value, out _);
         }
@@ -40,20 +39,20 @@ namespace Robust.Shared.Utility
         ///   returned value. Otherwise, <c>""</c>.
         /// </param>
         /// <returns>A readable representation of the object.</returns>
-        public static string PrintUserFacingWithType(object value, out string typeRep)
+        public static string PrintUserFacingWithType(object? value, out string typeRep)
         {
             if (value == null) {
                 typeRep = string.Empty;
                 return "null";
             }
 
-            string stringRep;
+            string? stringRep;
             // Make best effort to guess whether or not this needs an abbreviated
             // type representation - if the type doesn't overwrite the default
             // `Object` `ToString`, then it will just print a type - so we instead
             // print the abbreviated version. Otherwise let the type print whatever
             // it wants
-            if (value.GetType().GetMethod("ToString", new Type[0], new ParameterModifier[0]).DeclaringType == typeof(Object)) {
+            if (value.GetType().GetMethod("ToString", new Type[0], new ParameterModifier[0])!.DeclaringType == typeof(Object)) {
                 stringRep = TypeAbbreviation.Abbreviate(value.GetType());
                 typeRep = string.Empty;
             } else {
@@ -61,7 +60,7 @@ namespace Robust.Shared.Utility
                 typeRep = TypeAbbreviation.Abbreviate(value.GetType());
             }
 
-            return stringRep;
+            return stringRep!;
         }
     }
 }

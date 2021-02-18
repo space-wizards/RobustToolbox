@@ -1,5 +1,5 @@
-﻿using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public ISpriteComponent Sprite { get; set; }
+        public ISpriteComponent? Sprite { get; set; }
 
         /// <summary>
         ///     Overrides the direction used to render the sprite.

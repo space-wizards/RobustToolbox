@@ -1,5 +1,3 @@
-using Robust.Shared.Map;
-using Robust.Shared.Utility;
 using System;
 
 namespace Robust.Shared.Maths
@@ -60,7 +58,7 @@ namespace Robust.Shared.Maths
         ///     Determines if this ray and another object is equivalent.
         /// </summary>
         /// <param name="obj">Object to compare to.</param>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is CollisionRay ray && Equals(ray);

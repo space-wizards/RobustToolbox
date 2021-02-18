@@ -1,15 +1,16 @@
 ﻿using DiscordRPC;
 using DiscordRPC.Logging;
-using Robust.Client.Interfaces.Utility;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using LogLevel = DiscordRPC.Logging.LogLevel;
 
 namespace Robust.Client.Utility
 {
-    internal sealed class DiscordRichPresence : IDiscordRichPresence, IPostInjectInit
+    internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
-        private static readonly RichPresence _defaultPresence = new RichPresence
+        private static readonly RichPresence _defaultPresence = new()
         {
             Details = "In Main Menu",
             State = "In Main Menu",
@@ -21,20 +22,38 @@ namespace Robust.Client.Utility
             }
         };
 
-        private RichPresence _activePresence;
+        private RichPresence? _activePresence;
 
-        private DiscordRpcClient _client;
+        private DiscordRpcClient? _client;
 
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly ILogManager _logManager;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private bool _initialized;
 
         public void Initialize()
         {
-            if (_configurationManager.GetCVar<bool>("discord.enabled"))
+            _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
+            {
+                if (!_initialized)
+                {
+                    return;
+                }
+
+                if (newValue)
+                {
+                    if (_client == null || _client.IsDisposed)
+                    {
+                        _start();
+                    }
+                }
+                else
+                {
+                    _stop();
+                }
+            });
+            
+            if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();
             }
@@ -98,29 +117,6 @@ namespace Robust.Client.Utility
         public void Dispose()
         {
             _stop();
-        }
-
-        public void PostInject()
-        {
-            _configurationManager.RegisterCVar("discord.enabled", true, onValueChanged: newValue =>
-            {
-                if (!_initialized)
-                {
-                    return;
-                }
-
-                if (newValue)
-                {
-                    if (_client == null || _client.IsDisposed)
-                    {
-                        _start();
-                    }
-                }
-                else
-                {
-                    _stop();
-                }
-            });
         }
 
         private sealed class NativeLogger : ILogger

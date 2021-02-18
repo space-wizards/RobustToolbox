@@ -22,7 +22,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     An empty tile that can be compared against.
         /// </summary>
-        public static readonly Tile Empty = new Tile(0);
+        public static readonly Tile Empty = new(0);
 
         /// <summary>
         ///     Is this tile space (empty)?
@@ -57,7 +57,7 @@ namespace Robust.Shared.Map
         /// </summary>
         public static explicit operator Tile(uint tile)
         {
-            return new Tile(
+            return new(
                 (ushort)(tile >> 16),
                 (ushort)tile
             );
@@ -95,7 +95,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
                 return false;

@@ -1,18 +1,15 @@
-﻿using System.Diagnostics;
-using Robust.Server.Interfaces.Debugging;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
+using System.Diagnostics;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.Debugging
 {
     internal class DebugDrawingManager : IDebugDrawingManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IServerNetManager _net;
-        [Dependency] private readonly IPhysicsManager _physics;
-#pragma warning restore 649
+        [Dependency] private readonly IServerNetManager _net = default!;
+        [Dependency] private readonly IPhysicsManager _physics = default!;
 
         public void Initialize()
         {
@@ -25,10 +22,10 @@ namespace Robust.Server.Debugging
         {
             var msg = _net.CreateNetMessage<MsgRay>();
             msg.RayOrigin = data.Ray.Position;
-            if (data.Results.DidHitObject)
+            if (data.Results != null)
             {
                 msg.DidHit = true;
-                msg.RayHit = data.Results.HitPos;
+                msg.RayHit = data.Results.Value.HitPos;
             }
             else
             {

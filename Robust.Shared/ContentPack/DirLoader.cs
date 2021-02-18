@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -37,7 +38,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var path = GetPath(relPath);
                 if (!File.Exists(path))
@@ -89,7 +90,7 @@ namespace Robust.Shared.ContentPack
                     {
                         var prevDir = new DirectoryInfo(prevPath);
                         var found = false;
-                        foreach (var info in prevDir.GetFileSystemInfos())
+                        foreach (var info in prevDir.EnumerateFileSystemInfos())
                         {
                             if (!string.Equals(info.Name, segment, StringComparison.InvariantCultureIgnoreCase))
                             {
@@ -123,6 +124,38 @@ namespace Robust.Shared.ContentPack
                                         "and should be corrected.", path, diskPath);
                     }
                 });
+            }
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                return GetRelativeFilePaths(_directory);
+            }
+
+            private IEnumerable<string> GetRelativeFilePaths(DirectoryInfo dir)
+            {
+                foreach (var file in dir.EnumerateFiles())
+                {
+                    if ((file.Attributes & FileAttributes.Hidden) != 0 || file.Name[0] == '.')
+                    {
+                        continue;
+                    }
+
+                    var filePath = file.FullName;
+                    var relPath = filePath.Substring(_directory.FullName.Length);
+                    yield return ResourcePath.FromRelativeSystemPath(relPath).ToRootedPath().ToString();
+                }
+
+                foreach (var subDir in dir.EnumerateDirectories())
+                {
+                    if (((subDir.Attributes & FileAttributes.Hidden) != 0) || subDir.Name[0] == '.')
+                    {
+                        continue;
+                    }
+
+                    foreach (var relPath in GetRelativeFilePaths(subDir))
+                    {
+                        yield return relPath;
+                    }
+                }
             }
         }
     }

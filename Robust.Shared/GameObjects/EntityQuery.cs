@@ -1,9 +1,7 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -82,7 +80,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.ComponentManager.GetAllComponents(ComponentType).Select(component => component.Owner);
+            return entityMan.ComponentManager.GetAllComponents(ComponentType, true).Select(component => component.Owner);
         }
     }
 
@@ -98,7 +96,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.ComponentManager.GetAllComponents<T>().Select(component => component.Owner);
+            return entityMan.ComponentManager.EntityQuery<T>(true).Select(component => component.Owner);
         }
     }
 
@@ -122,9 +120,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool Match(IEntity entity)
         {
-            if(Entity.TryGetComponent<ICollidableComponent>(out var collidable))
+            if(Entity.TryGetComponent<IPhysicsComponent>(out var physics))
             {
-                return collidable.MapID == entity.Transform.MapID && collidable.WorldAABB.Contains(entity.Transform.WorldPosition);
+                return physics.MapID == entity.Transform.MapID && physics.WorldAABB.Contains(entity.Transform.WorldPosition);
             }
             return false;
         }
@@ -132,6 +130,48 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
             return entityMan.GetEntities().Where(entity => Match(entity));
+        }
+    }
+
+    /// <summary>
+    ///     An entity query that will match entities that have all of the provided components.
+    /// </summary>
+    [PublicAPI]
+    public class MultipleTypeEntityQuery : IEntityQuery
+    {
+        private readonly List<Type> ComponentTypes;
+
+        /// <summary>
+        ///     Constructs a new instance of <c>MultipleTypeEntityQuery</c>.
+        /// </summary>
+        /// <param name="componentTypes">List of component types to match.</param>
+        public MultipleTypeEntityQuery(List<Type> componentTypes)
+        {
+            foreach (var componentType in componentTypes)
+            {
+                DebugTools.Assert(typeof(IComponent).IsAssignableFrom(componentType), "componentType must inherit IComponent");
+            }
+
+            ComponentTypes = componentTypes;
+        }
+
+        /// <inheritdoc />
+        public bool Match(IEntity entity)
+        {
+            foreach (var componentType in ComponentTypes)
+            {
+                if (!entity.HasComponent(componentType))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.GetEntities(new TypeEntityQuery(ComponentTypes.First())).Where(entity => Match(entity));
         }
     }
 }

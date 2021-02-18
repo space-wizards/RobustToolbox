@@ -10,7 +10,7 @@ namespace Robust.Shared.Players
         /// <summary>
         ///     The UID of this session.
         /// </summary>
-        NetSessionId SessionId { get; }
+        NetUserId UserId { get; }
 
         /// <summary>
         ///     Current name of this player.

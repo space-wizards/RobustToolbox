@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Graphics;
+using Robust.Client.UserInterface.XAML;
+using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -16,12 +16,12 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     A node in the GUI system.
-    ///     See https://github.com/space-wizards/RobustToolbox/wiki/UI-System-Tutorial for some basic concepts.
+    ///     See https://hackmd.io/@ss14/ui-system-tutorial for some basic concepts.
     /// </summary>
     [PublicAPI]
     public partial class Control : IDisposable
     {
-        private readonly List<Control> _orderedChildren = new List<Control>();
+        private readonly List<Control> _orderedChildren = new();
 
         private bool _visible = true;
 
@@ -30,14 +30,14 @@ namespace Robust.Client.UserInterface
 
         private bool _canKeyboardFocus;
 
-        public event Action<Control> OnVisibilityChanged;
+        public event Action<Control>? OnVisibilityChanged;
 
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
         /// </summary>
         [ViewVariables]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.
@@ -46,7 +46,46 @@ namespace Robust.Client.UserInterface
         ///     This cannot be changed directly. Use <see cref="AddChild" /> and such on the parent to change it.
         /// </remarks>
         [ViewVariables]
-        public Control Parent { get; private set; }
+        public Control? Parent { get; private set; }
+
+        public NameScope? NameScope;
+
+        //public void AttachNameScope(Dictionary<string, Control> nameScope)
+        //{
+        //    _nameScope = nameScope;
+        //}
+
+        public NameScope? FindNameScope()
+        {
+            foreach (var control in this.GetSelfAndLogicalAncestors())
+            {
+                if (control.NameScope != null) return control.NameScope;
+            }
+
+            return null;
+        }
+
+        public T FindControl<T>(string name) where T : Control
+        {
+            var nameScope = FindNameScope();
+            if (nameScope == null)
+            {
+                throw new ArgumentException("No Namespace found for Control");
+            }
+
+            var value = nameScope.Find(name);
+            if (value == null)
+            {
+                throw new ArgumentException($"No Control with the name {name} found");
+            }
+
+            if (value is not T ret)
+            {
+                throw new ArgumentException($"Control with name {name} had invalid type {value.GetType()}");
+            }
+
+            return ret;
+        }
 
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
 
@@ -60,6 +99,9 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public OrderedChildCollection Children { get; }
+
+        [Content]
+        public virtual ICollection<Control> XamlChildren { get; protected set; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
@@ -96,6 +138,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="VisibleInTree"/>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public bool Visible
         {
             get => _visible;
@@ -190,12 +233,88 @@ namespace Robust.Client.UserInterface
 
 
         /// <summary>
-        ///     The tooltip that is shown when the mouse is hovered over this control for a bit.
+        /// Simple text tooltip that is shown when the mouse is hovered over this control for a bit.
+        /// See <see cref="TooltipSupplier"/> or <see cref="OnShowTooltip"/> for a more customizable alternative.
+        /// No effect when TooltipSupplier is specified.
         /// </summary>
         /// <remarks>
-        ///     If empty or null, no tooltip is shown in the first place.
+        /// If empty or null, no tooltip is shown in the first place (but OnShowTooltip and OnHideTooltip
+        /// events are still fired).
         /// </remarks>
-        public string ToolTip { get; set; }
+        public string? ToolTip { get; set; }
+
+        /// <summary>
+        /// Overrides the global tooltip delay, showing the tooltip for this
+        /// control within the specified number of seconds.
+        /// </summary>
+        public float? TooltipDelay { get; set; }
+
+        /// <summary>
+        /// When a tooltip should be shown for this control, this will be invoked to
+        /// produce a control which will serve as the tooltip (doing nothing if null is returned).
+        /// This is the generally recommended way to implement custom tooltips for controls, as it takes
+        /// care of the various edge cases for showing / hiding the tooltip.
+        /// For an even more customizable approach, <see cref="OnShowTooltip"/>
+        ///
+        /// The returned control will be added to PopupRoot, and positioned
+        /// within the user interface under the current mouse position to avoid going off the edge of the
+        /// screen. When the tooltip should be hidden, the control will be hidden by removing it from the tree.
+        ///
+        /// It is expected that the returned control remains within PopupRoot. Other classes should
+        /// not move it around in the tree or move it out of PopupRoot, but may access and modify
+        /// the control and its children via <see cref="SuppliedTooltip"/>.
+        /// </summary>
+        /// <remarks>
+        /// Returning a new instance of a tooltip control every time is usually fine. If for some
+        /// reason constructing the tooltip control is expensive, it MAY be fine to cache + reuse a single instance but this
+        /// approach has not yet been tested.
+        /// </remarks>
+        public TooltipSupplier? TooltipSupplier { get; set; }
+
+        /// <summary>
+        /// Invoked when the mouse is hovered over this control for a bit and a tooltip
+        /// should be shown. Can be used as an alternative to ToolTip or TooltipSupplier to perform custom tooltip
+        /// logic such as showing a more complex tooltip control.
+        ///
+        /// Any custom tooltip controls should typically be added
+        /// as a child of UserInterfaceManager.PopupRoot
+        /// Handlers can use <see cref="Tooltips.PositionTooltip(Control)"/> to assist with positioning
+        /// custom tooltip controls.
+        /// </summary>
+        public event EventHandler? OnShowTooltip;
+
+
+
+        /// <summary>
+        /// If this control is currently showing a tooltip provided via TooltipSupplier,
+        /// returns that tooltip. Do not move this control within the tree, it should remain in PopupRoot.
+        /// Also, as it may be hidden (removed from tree) at any time, saving a reference to this is a Bad Idea.
+        /// </summary>
+        public Control? SuppliedTooltip => UserInterfaceManagerInternal.GetSuppliedTooltipFor(this);
+
+        /// <summary>
+        /// Manually hide the tooltip currently being shown for this control, if there is one.
+        /// </summary>
+        public void HideTooltip()
+        {
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+        }
+
+        internal void PerformShowTooltip()
+        {
+            OnShowTooltip?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Invoked when this control is showing a tooltip which should now be hidden.
+        /// </summary>
+        public event EventHandler? OnHideTooltip;
+
+        internal void PerformHideTooltip()
+        {
+            OnHideTooltip?.Invoke(this, EventArgs.Empty);
+        }
+
 
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
@@ -277,6 +396,7 @@ namespace Robust.Client.UserInterface
         ///     Modulation is multiplying or tinting the color basically.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color Modulate { get; set; } = Color.White;
 
         /// <summary>
@@ -315,6 +435,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
+            XamlChildren = Children;
         }
 
         /// <summary>
@@ -360,7 +481,6 @@ namespace Robust.Client.UserInterface
             }
 
             Dispose(true);
-            GC.SuppressFinalize(this);
             Disposed = true;
         }
 
@@ -371,15 +491,12 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+
             DisposeAllChildren();
             Parent?.RemoveChild(this);
 
             OnKeyBindDown = null;
-        }
-
-        ~Control()
-        {
-            Dispose(false);
         }
 
         /// <summary>
@@ -402,7 +519,7 @@ namespace Robust.Client.UserInterface
         {
             DebugTools.Assert(!Disposed, "Control has been disposed.");
 
-            foreach (var child in Children.ToList())
+            foreach (var child in Children.ToArray())
             {
                 RemoveChild(child);
             }
@@ -627,20 +744,43 @@ namespace Robust.Client.UserInterface
         /// <exception cref="InvalidOperationException">This control has no parent.</exception>
         public void SetPositionLast()
         {
+            if (Parent == null)
+            {
+                throw new InvalidOperationException("No parent to change position in.");
+            }
+
             SetPositionInParent(Parent.ChildCount - 1);
         }
 
         /// <summary>
         ///     Called when this control receives keyboard focus.
         /// </summary>
-        protected internal virtual void FocusEntered()
+        protected internal virtual void KeyboardFocusEntered()
         {
         }
 
         /// <summary>
-        ///     Called when this control loses keyboard focus.
+        ///     Called when this control loses keyboard focus (corresponds to UserInterfaceManager.KeyboardFocused).
         /// </summary>
-        protected internal virtual void FocusExited()
+        protected internal virtual void KeyboardFocusExited()
+        {
+        }
+
+        /// <summary>
+        ///     Fired when a control loses control focus for any reason. See <see cref="IUserInterfaceManager.ControlFocused"/>.
+        /// </summary>
+        /// <remarks>
+        ///     Controls which have some sort of drag / drop behavior should usually implement this method (typically by cancelling the drag drop).
+        ///     Otherwise, if a user clicks down LMB over one control to initiate a drag, then clicks RMB down
+        ///     over a different control while still holding down LMB, the control being dragged will now lose focus
+        ///     and will no longer receive the keyup for the LMB, thus won't cancel the drag.
+        ///     This should also be considered for controls which have any special KeyBindUp behavior - consider
+        ///     what would happen if the control lost focus and never received the KeyBindUp.
+        ///
+        ///     There is no corresponding ControlFocusEntered - if a control wants to handle that situation they should simply
+        ///     handle KeyBindDown as that's the only way a control would gain focus.
+        /// </remarks>
+        protected internal virtual void ControlFocusExited()
         {
         }
 
@@ -648,7 +788,7 @@ namespace Robust.Client.UserInterface
         ///     Check if this control currently has keyboard focus.
         /// </summary>
         /// <returns></returns>
-        public bool HasKeyboardFocus()
+        public virtual bool HasKeyboardFocus()
         {
             return UserInterfaceManager.KeyboardFocused == this;
         }
@@ -724,7 +864,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Mode that will be tested when testing controls to invoke mouse button events on.
         /// </summary>
-        public enum MouseFilterMode
+        public enum MouseFilterMode : byte
         {
             /// <summary>
             ///     The control will be able to receive mouse buttons events.
@@ -757,7 +897,7 @@ namespace Robust.Client.UserInterface
 
             public Enumerator GetEnumerator()
             {
-                return new Enumerator(Owner);
+                return new(Owner);
             }
 
             IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();
@@ -832,4 +972,6 @@ namespace Robust.Client.UserInterface
             }
         }
     }
+
+    public delegate Control? TooltipSupplier(Control sender);
 }

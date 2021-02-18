@@ -22,20 +22,20 @@ namespace Robust.UnitTesting
                 {
                     if (Tolerance != null)
                     {
-                        return new ConstraintResult(this, actual, FloatMath.CloseTo(f1, f2, Tolerance.Value));
+                        return new ConstraintResult(this, actual, MathHelper.CloseTo(f1, f2, Tolerance.Value));
                     }
 
-                    return new ConstraintResult(this, actual, FloatMath.CloseTo(f1, f2));
+                    return new ConstraintResult(this, actual, MathHelper.CloseTo(f1, f2));
                 }
 
                 if (Expected is double d1 && actual is float d2)
                 {
                     if (Tolerance != null)
                     {
-                        return new ConstraintResult(this, actual, FloatMath.CloseTo(d1, d2, Tolerance.Value));
+                        return new ConstraintResult(this, actual, MathHelper.CloseTo(d1, d2, Tolerance.Value));
                     }
 
-                    return new ConstraintResult(this, actual, FloatMath.CloseTo(d1, d2));
+                    return new ConstraintResult(this, actual, MathHelper.CloseTo(d1, d2));
                 }
 
                 return new ConstraintResult(this, actual, false);

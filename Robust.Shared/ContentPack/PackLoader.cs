@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using ICSharpCode.SharpZipLib.Zip;
+using System.IO.Compression;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -13,8 +14,9 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         class PackLoader : IContentRoot
         {
-            private readonly FileInfo _pack;
-            private ZipFile _zip;
+            private readonly FileInfo? _pack;
+            private readonly Stream? _stream;
+            private ZipArchive _zip = default!;
 
             /// <summary>
             ///     Constructor.
@@ -25,19 +27,33 @@ namespace Robust.Shared.ContentPack
                 _pack = pack;
             }
 
-            /// <inheritdoc />
-            public void Mount()
+            public PackLoader(Stream stream)
             {
-                Logger.InfoS("res", $"Loading ContentPack: {_pack.FullName}...");
-
-                var zipFileStream = File.OpenRead(_pack.FullName);
-                _zip = new ZipFile(zipFileStream);
+                _stream = stream;
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public void Mount()
             {
-                var entry = _zip.GetEntry(relPath.ToRootedPath().ToString());
+                if (_pack != null)
+                {
+                    Logger.InfoS("res", $"Loading ContentPack: {_pack.FullName}...");
+
+                    _zip = ZipFile.OpenRead(_pack.FullName);
+                }
+                else
+                {
+                    // Stream constructor.
+                    DebugTools.AssertNotNull(_stream);
+
+                    _zip = new ZipArchive(_stream!, ZipArchiveMode.Read);
+                }
+            }
+
+            /// <inheritdoc />
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
+            {
+                var entry = _zip.GetEntry(relPath.ToString());
 
                 if (entry == null)
                 {
@@ -51,22 +67,44 @@ namespace Robust.Shared.ContentPack
                 stream = new MemoryStream();
                 lock (_zip)
                 {
-                    using (var zipStream = _zip.GetInputStream(entry))
-                    {
-                        zipStream.CopyTo(stream);
-                        stream.Position = 0;
-                    }
+                    using var zipStream = entry.Open();
+                    zipStream.CopyTo(stream);
                 }
+
+                stream.Position = 0;
                 return true;
             }
 
             /// <inheritdoc />
             public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
             {
-                foreach (ZipEntry zipEntry in _zip)
+                var rootPath = path + "/";
+                foreach (var entry in _zip.Entries)
                 {
-                    if (zipEntry.IsFile && zipEntry.Name.StartsWith(path.ToRootedPath().ToString()))
-                        yield return new ResourcePath(zipEntry.Name).ToRelativePath();
+                    if (entry.Name == "")
+                    {
+                        // Dir node.
+                        continue;
+                    }
+
+                    if (entry.FullName.StartsWith(rootPath))
+                    {
+                        yield return new ResourcePath(entry.FullName).ToRelativePath();
+                    }
+                }
+            }
+
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                foreach (var entry in _zip.Entries)
+                {
+                    if (entry.Name == "")
+                    {
+                        // Dir node.
+                        continue;
+                    }
+
+                    yield return new ResourcePath(entry.FullName).ToRootedPath().ToString();
                 }
             }
         }

@@ -24,7 +24,11 @@ namespace Robust.Shared.Physics
         public Box2 LocalBounds
         {
             get => _localBounds;
-            set => _localBounds = value;
+            set
+            {
+                _localBounds = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -32,7 +36,11 @@ namespace Robust.Shared.Physics
         public int CollisionLayer
         {
             get => _collisionLayer;
-            set => _collisionLayer = value;
+            set
+            {
+                _collisionLayer = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -40,22 +48,30 @@ namespace Robust.Shared.Physics
         public int CollisionMask
         {
             get => _collisionMask;
-            set => _collisionMask = value;
+            set
+            {
+                _collisionMask = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
         public void ApplyState() { }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport)
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
+            float sleepPercent)
         {
             var m = Matrix3.Identity;
             m.R0C2 = modelMatrix.R0C2;
             m.R1C2 = modelMatrix.R1C2;
 
             handle.SetTransform(m);
-            handle.DrawRect(LocalBounds, handle.RectFillColor);
+            handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
+
+        [field: NonSerialized]
+        public event Action? OnDataChanged;
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
@@ -64,10 +80,10 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0);
-            serializer.DataField(ref _collisionMask, "mask", 0);
+            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
+            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
         }
     }

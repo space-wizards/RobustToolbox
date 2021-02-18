@@ -35,6 +35,16 @@ namespace Robust.Client.UserInterface.Controls
             control.SetValue(PopupOriginProperty, origin);
         }
 
+        public static Vector2 GetPopupOrigin(Control control)
+        {
+            return control.GetValue<Vector2>(PopupOriginProperty);
+        }
+
+        public static Vector2? GetAltOrigin(Control control)
+        {
+            return control.GetValue<Vector2?>(AltOriginProperty);
+        }
+
         public static void SetAltOrigin(Control control, Vector2? origin)
         {
             control.SetValue(AltOriginProperty, origin);

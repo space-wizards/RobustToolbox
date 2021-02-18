@@ -1,9 +1,12 @@
-using Robust.Shared.Maths;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
+        private static readonly (string, uint)[] BaseShaderAttribLocations = {
+            ("aPos", 0),
+            ("tCoord", 1)
+        };
+
         private const int UniIModUV = 0;
         private const int UniIModelMatrix = 1;
         private const int UniIModulate = 2;
@@ -21,6 +24,20 @@ namespace Robust.Client.Graphics.Clyde
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
 
-        private static readonly Color AmbientLightColor = Color.Black;
+        private const int BindingIndexProjView = 0;
+        private const int BindingIndexUniformConstants = 1;
+
+        // To be clear: You shouldn't change this. This just helps with understanding where Primitive Restart is being used.
+        private const ushort PrimitiveRestartIndex = ushort.MaxValue;
+
+        private enum Renderer : short
+        {
+            // Default: Try all supported renderers (not necessarily the renderers shown here)
+            Default = default,
+            OpenGL33 = 1,
+            OpenGL31 = 2,
+            OpenGLES2 = 3,
+            Explode = -1,
+        }
     }
 }

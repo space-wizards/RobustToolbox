@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -9,12 +10,12 @@ namespace Robust.Server.ViewVariables.Traits
     {
         private readonly IEntity _entity;
 
-        public ViewVariablesTraitEntity(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
             _entity = (IEntity) Session.Object;
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {
@@ -24,13 +25,30 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = TypeAbbreviation.Abbreviate(type), FullName = type.FullName});
+                        {Stringified = TypeAbbreviation.Abbreviate(type), FullName = type.FullName, ComponentName = component.Name});
                 }
 
                 return new ViewVariablesBlobEntityComponents
                 {
                     ComponentTypes = list
                 };
+            }
+
+            if (viewVariablesRequest is ViewVariablesRequestAllValidComponents)
+            {
+                var list = new List<string>();
+
+                var componentFactory = IoCManager.Resolve<IComponentFactory>();
+
+                foreach (var type in componentFactory.AllRegisteredTypes)
+                {
+                    if (_entity.HasComponent(type))
+                        continue;
+
+                    list.Add(componentFactory.GetRegistration(type).Name);
+                }
+
+                return new ViewVariablesBlobAllValidComponents(){ComponentTypes = list};
             }
 
             return base.DataRequest(viewVariablesRequest);

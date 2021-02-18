@@ -13,7 +13,7 @@ namespace Robust.Shared.Exceptions
         /// <summary>
         /// The name of the type argument that had invalid data.
         /// </summary>
-        public readonly string TypeArgumentName;
+        public readonly string? TypeArgumentName;
 
         public TypeArgumentException()
         {

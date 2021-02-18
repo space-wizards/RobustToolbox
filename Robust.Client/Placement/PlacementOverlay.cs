@@ -1,5 +1,4 @@
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
+﻿using Robust.Client.Graphics;
 
 namespace Robust.Client.Placement
 {
@@ -17,7 +16,7 @@ namespace Robust.Client.Placement
                 ZIndex = 100;
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 _manager.Render((DrawingHandleWorld) handle);
             }

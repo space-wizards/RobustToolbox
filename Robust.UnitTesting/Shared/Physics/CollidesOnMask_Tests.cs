@@ -7,18 +7,18 @@ namespace Robust.UnitTesting.Shared.Physics
     [TestFixture]
     internal class CollidesOnMask_Tests
     {
-        private Mock<IPhysBody> A;
-        private Mock<IPhysBody> B;
+        private Mock<IPhysBody> A = default!;
+        private Mock<IPhysBody> B = default!;
 
         private bool Result;
 
         private void SetupDefault()
         {
             A = new Mock<IPhysBody>();
-            A.Setup(x => x.CollisionEnabled).Returns(true);
+            A.Setup(x => x.CanCollide).Returns(true);
 
             B = new Mock<IPhysBody>();
-            B.Setup(x => x.CollisionEnabled).Returns(true);
+            B.Setup(x => x.CanCollide).Returns(true);
         }
 
         private void Act()
@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
             //Act
             Act();
             //Assert
-            Assert.AreEqual(expected, Result);
+            Assert.That(Result, Is.EqualTo(expected));
         }
     }
 }

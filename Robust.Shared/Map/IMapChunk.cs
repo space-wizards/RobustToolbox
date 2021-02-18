@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -28,7 +27,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     The positional indices of this chunk in the <see cref="IMapGrid"/>.
         /// </summary>
-        MapIndices Indices { get; }
+        Vector2i Indices { get; }
 
         /// <summary>
         ///     Returns the tile at the given indices.
@@ -43,7 +42,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="indices">The tile indices relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>
-        TileRef GetTileRef(MapIndices indices);
+        TileRef GetTileRef(Vector2i indices);
 
         Tile GetTile(ushort xIndex, ushort yIndex);
 
@@ -68,14 +67,14 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="gridTile">Tile indices relative to the grid.</param>
         /// <returns>Tile indices relative to this chunk.</returns>
-        MapIndices GridTileToChunkTile(MapIndices gridTile);
+        Vector2i GridTileToChunkTile(Vector2i gridTile);
 
         /// <summary>
         ///     Translates chunk tile indices to grid tile indices.
         /// </summary>
         /// <param name="chunkTile">The indices relative to the chunk origin.</param>
         /// <returns>The indices relative to the grid origin.</returns>
-        MapIndices ChunkTileToGridTile(MapIndices chunkTile);
+        Vector2i ChunkTileToGridTile(Vector2i chunkTile);
 
         IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset);
 
@@ -90,6 +89,6 @@ namespace Robust.Shared.Map
         /// Tests if a point is on top of a non-empty tile.
         /// </summary>
         /// <param name="localIndices">Local tile indices</param>
-        bool CollidesWithChunk(MapIndices localIndices);
+        bool CollidesWithChunk(Vector2i localIndices);
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace Robust.Client.Graphics.Shaders
+﻿namespace Robust.Client.Graphics
 {
-    public enum ShaderParamType
+    public enum ShaderParamType : byte
     {
         // Can this even happen?
         Void = 0,

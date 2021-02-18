@@ -1,13 +1,4 @@
-﻿using Robust.Server.GameObjects.Components.Container;
-using Robust.Server.GameObjects.Components.Markers;
-using Robust.Server.GameObjects.Components.UserInterface;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.Interfaces.GameObjects.Components;
+﻿using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
@@ -29,35 +20,34 @@ namespace Robust.Server.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            RegisterIgnore("Icon");
-            RegisterIgnore("Eye");
+            Register<EyeComponent>();
+            RegisterReference<EyeComponent, SharedEyeComponent>();
 
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();
 
-            Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, ICollidableComponent>();
+            Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             Register<PointLightComponent>();
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
-
-            Register<PhysicsComponent>();
             Register<SpriteComponent>();
-
-            Register<ClickableComponent>();
-            RegisterReference<ClickableComponent, IClickableComponent>();
+            RegisterReference<SpriteComponent, SharedSpriteComponent>();
+            RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AppearanceComponent>();
+            RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
+
             Register<SnapGridComponent>();
 
             Register<ServerUserInterfaceComponent>();
             RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
 
-            Register<IgnorePauseComponent>();
+            Register<TimerComponent>();
 
             RegisterIgnore("AnimationPlayer");
 
@@ -67,6 +57,8 @@ namespace Robust.Server.GameObjects
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif
+
+            Register<MapSaveIdComponent>();
         }
     }
 }

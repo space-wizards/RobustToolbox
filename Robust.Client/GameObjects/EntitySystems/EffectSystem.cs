@@ -1,39 +1,31 @@
-﻿using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Shared.Interfaces.Map;
+using Robust.Client.Player;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameTiming gameTiming;
-        [Dependency] private readonly IResourceCache resourceCache;
-        [Dependency] private readonly IEyeManager eyeManager;
-        [Dependency] private readonly IOverlayManager overlayManager;
-        [Dependency] private readonly IPrototypeManager prototypeManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming gameTiming = default!;
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IOverlayManager overlayManager = default!;
+        [Dependency] private readonly IPrototypeManager prototypeManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private readonly List<Effect> _Effects = new List<Effect>();
+        private readonly List<Effect> _Effects = new();
 
         public override void Initialize()
         {
@@ -42,7 +34,7 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
-            var overlay = new EffectOverlay(this, prototypeManager, _mapManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager, _entityManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -55,38 +47,53 @@ namespace Robust.Client.GameObjects
 
         public void CreateEffect(EffectSystemMessage message)
         {
-            var gameTime = gameTiming.CurTime;
+            // The source of effects is either local actions during FirstTimePredicted, or the network at LastServerTick
+            // When replaying predicted input, don't spam effects.
+            if(gameTiming.InPrediction && !gameTiming.IsFirstTimePredicted)
+                return;
 
-            if (gameTime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
+            if (message.AttachedEntityUid != null && message.Coordinates != default)
             {
-                Logger.Warning("Effect using sprite {0} died in transit to the client", message.EffectSprite);
+                Logger.Warning("Set both an AttachedEntityUid and EntityCoordinates on an EffectSystemMessage for sprite {0} which is not supported!", message.EffectSprite);
+            }
+
+            if (message.LifeTime <= TimeSpan.Zero)
+            {
+                Logger.Warning("Effect using sprite {0} had zero lifetime.", message.EffectSprite);
                 return;
             }
 
             //Create effect from creation message
-            var effect = new Effect(message, resourceCache, _mapManager);
-
-            //Age the effect through a single update to the previous update tick of the effect system
-            //effect.Update((float)((lasttimeprocessed - effect.Age).TotalSeconds));
+            var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
+            effect.Deathtime = gameTiming.CurTime + message.LifeTime;
+            if (effect.AttachedEntityUid != null)
+            {
+                effect.AttachedEntity = _entityManager.GetEntity(effect.AttachedEntityUid.Value);
+            }
 
             _Effects.Add(effect);
         }
 
         public override void FrameUpdate(float frameTime)
         {
+            var curTime = gameTiming.CurTime;
             for (int i = 0; i < _Effects.Count; i++)
             {
                 var effect = _Effects[i];
 
-                //Update variables of the effect via its deltas
-                effect.Update(frameTime);
-
                 //These effects have died
-                if (effect.Age > effect.Deathtime)
+                // Effects are purely visual, so they don't need to be ran through prediction.
+                // once CurTime ever passes DeathTime (clients render the top at IsFirstTimePredicted, where this happens) just remove them.
+                if (curTime > effect.Deathtime)
                 {
                     //Remove from the effects list and decrement the iterator
                     _Effects.Remove(effect);
                     i--;
+                }
+                else
+                {
+                    //Update variables of the effect via its deltas
+                    effect.Update(frameTime);
                 }
             }
         }
@@ -99,7 +106,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public Texture EffectSprite { get; set; }
 
-            public RSI.State RsiState { get; set; }
+            public RSI.State? RsiState { get; set; }
 
             public int AnimationIndex { get; set; }
 
@@ -108,24 +115,36 @@ namespace Robust.Client.GameObjects
             public bool AnimationLoops { get; set; }
 
             /// <summary>
+            /// Entity that the effect is attached to
+            /// </summary>
+            public IEntity? AttachedEntity { get; set; }
+
+            public EntityUid? AttachedEntityUid { get; }
+
+            /// <summary>
+            /// Offset relative to the attached entity
+            /// </summary>
+            public Vector2 AttachedOffset { get; }
+
+            /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
-            public GridCoordinates Coordinates;
+            public EntityCoordinates Coordinates;
 
             /// <summary>
             /// Where the emitter was when the effect was first emitted
             /// </summary>
-            public GridCoordinates EmitterCoordinates;
+            public EntityCoordinates EmitterCoordinates;
 
             /// <summary>
             /// Effect's x/y velocity
             /// </summary>
-            public Vector2 Velocity = new Vector2(0, 0);
+            public Vector2 Velocity = Vector2.Zero;
 
             /// <summary>
             /// Effect's x/y acceleration
             /// </summary>
-            public Vector2 Acceleration = new Vector2(0, 0);
+            public Vector2 Acceleration = Vector2.Zero;
 
             /// <summary>
             /// Effect's radial velocity - relative to EmitterPosition
@@ -160,7 +179,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Effect's current size
             /// </summary>
-            public Vector2 Size = new Vector2(1f, 1f);
+            public Vector2 Size = new(1f, 1f);
 
             /// <summary>
             /// Rate of change of effect's size change
@@ -170,12 +189,12 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Effect's current color
             /// </summary>
-            public Vector4 Color = new Vector4(255, 255, 255, 255);
+            public Vector4 Color = new(255, 255, 255, 255);
 
             /// <summary>
             /// Rate of change of effect's color
             /// </summary>
-            public Vector4 ColorDelta = new Vector4(0, 0, 0, 0);
+            public Vector4 ColorDelta = new(0, 0, 0, 0);
 
             /// <summary>
             ///     True if the effect is affected by lighting.
@@ -183,18 +202,14 @@ namespace Robust.Client.GameObjects
             public bool Shaded = true;
 
             /// <summary>
-            /// Effect's age -- from 0f
+            /// CurTime after which the effect will "die"
             /// </summary>
-            public TimeSpan Age = TimeSpan.Zero;
-
-            /// <summary>
-            /// Time after which the effect will "die"
-            /// </summary>
-            public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
+            public TimeSpan Deathtime;
 
             private readonly IMapManager _mapManager;
+            private readonly IEntityManager _entityManager;
 
-            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager)
+            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager, IEntityManager entityManager)
             {
                 if (effectcreation.RsiState != null)
                 {
@@ -212,6 +227,8 @@ namespace Robust.Client.GameObjects
                 }
 
                 AnimationLoops = effectcreation.AnimationLoops;
+                AttachedEntityUid = effectcreation.AttachedEntityUid;
+                AttachedOffset = effectcreation.AttachedOffset;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -220,8 +237,6 @@ namespace Robust.Client.GameObjects
                 RadialAcceleration = effectcreation.RadialAcceleration;
                 TangentialVelocity = effectcreation.TangentialVelocity;
                 TangentialAcceleration = effectcreation.TangentialAcceleration;
-                Age = effectcreation.Born;
-                Deathtime = effectcreation.DeathTime;
                 Rotation = effectcreation.Rotation;
                 RotationRate = effectcreation.RotationRate;
                 Size = effectcreation.Size;
@@ -230,14 +245,11 @@ namespace Robust.Client.GameObjects
                 ColorDelta = effectcreation.ColorDelta;
                 Shaded = effectcreation.Shaded;
                 _mapManager = mapManager;
+                _entityManager = entityManager;
             }
 
             public void Update(float frameTime)
             {
-                Age += TimeSpan.FromSeconds(frameTime);
-                if (Age >= Deathtime)
-                    return;
-
                 Velocity += Acceleration * frameTime;
                 RadialVelocity += RadialAcceleration * frameTime;
                 TangentialVelocity += TangentialAcceleration * frameTime;
@@ -245,11 +257,11 @@ namespace Robust.Client.GameObjects
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if (_mapManager.GridExists(EmitterCoordinates.GridID))
+                if (_mapManager.GridExists(EmitterCoordinates.GetGridId(_entityManager)))
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter =
-                        Coordinates.ToMapPos(_mapManager) - EmitterCoordinates.ToMapPos(_mapManager);
+                        Coordinates.ToMapPos(_entityManager) - EmitterCoordinates.ToMapPos(_entityManager);
                     var deltaRadial = RadialVelocity * frameTime;
                     deltaPosition = positionRelativeToEmitter * (deltaRadial / positionRelativeToEmitter.Length);
 
@@ -266,7 +278,7 @@ namespace Robust.Client.GameObjects
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
                 deltaPosition += Velocity * frameTime;
-                Coordinates = new GridCoordinates(Coordinates.Position + deltaPosition, Coordinates.GridID);
+                Coordinates = Coordinates.Offset(deltaPosition);
 
                 //Finish calculating new rotation, size, color
                 Rotation += RotationRate * frameTime;
@@ -315,31 +327,38 @@ namespace Robust.Client.GameObjects
 
         private sealed class EffectOverlay : Overlay
         {
+            private readonly IPlayerManager _playerManager;
+
             public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;
             private readonly IMapManager _mapManager;
+            private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan) : base(
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base(
                 "EffectSystem")
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 _mapManager = mapMan;
+                _playerManager = playerMan;
+                _entityManager = entityManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 var map = _owner.eyeManager.CurrentMap;
 
                 var worldHandle = (DrawingHandleWorld) handle;
-                ShaderInstance currentShader = null;
+                ShaderInstance? currentShader = null;
+                var player = _playerManager.LocalPlayer?.ControlledEntity;
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (_mapManager.GetGrid(effect.Coordinates.GridID).ParentMapId != map)
+                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
+                        effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }
@@ -352,12 +371,15 @@ namespace Robust.Client.GameObjects
                         currentShader = newShader;
                     }
 
-                    worldHandle.SetTransform(
-                        effect.Coordinates.ToMapPos(_mapManager),
-                        new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
-                    worldHandle.DrawTexture(effectSprite,
-                        -((Vector2) effectSprite.Size / EyeManager.PixelsPerMeter) / 2, ToColor(effect.Color));
+                    var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ??
+                                               effect.Coordinates.ToMapPos(_entityManager);
+
+                    var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
+
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);
+
+                    worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }
             }
         }

@@ -1,32 +1,30 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Shared.ViewVariables.ViewVariablesBlobMembers;
 
 namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
-        private readonly List<MemberInfo> _members = new List<MemberInfo>();
+        private readonly List<MemberInfo> _members = new();
 
-        public ViewVariablesTraitMembers(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitMembers(IViewVariablesSession session) : base(session)
         {
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest messageRequestMeta)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest messageRequestMeta)
         {
             if (!(messageRequestMeta is ViewVariablesRequestMembers))
             {
                 return null;
             }
 
-            var dataList = new List<ViewVariablesBlobMembers.MemberData>();
-            var blob = new ViewVariablesBlobMembers
-            {
-                Members = dataList
-            };
+            var members = new List<(MemberData mData, MemberInfo mInfo)>();
 
             foreach (var property in Session.ObjectType.GetAllProperties())
             {
@@ -41,7 +39,7 @@ namespace Robust.Server.ViewVariables.Traits
                     continue;
                 }
 
-                dataList.Add(new ViewVariablesBlobMembers.MemberData
+                members.Add((new MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = property.Name,
@@ -49,7 +47,7 @@ namespace Robust.Server.ViewVariables.Traits
                     TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
                     Value = property.GetValue(Session.Object),
                     PropertyIndex = _members.Count
-                });
+                }, property));
                 _members.Add(property);
             }
 
@@ -61,7 +59,7 @@ namespace Robust.Server.ViewVariables.Traits
                     continue;
                 }
 
-                dataList.Add(new ViewVariablesBlobMembers.MemberData
+                members.Add((new MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = field.Name,
@@ -69,21 +67,34 @@ namespace Robust.Server.ViewVariables.Traits
                     TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
                     Value = field.GetValue(Session.Object),
                     PropertyIndex = _members.Count
-                });
+                }, field));
+
                 _members.Add(field);
             }
 
-            dataList.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
-
-            foreach (var data in dataList)
+            foreach (var (mData, _) in members)
             {
-                data.Value = MakeValueNetSafe(data.Value);
+                mData.Value = MakeValueNetSafe(mData.Value);
             }
 
-            return blob;
+            var dataList = members
+                .OrderBy(p => p.mData.Name)
+                .GroupBy(p => p.mInfo.DeclaringType!)
+                .OrderByDescending(g => g.Key, TypeHelpers.TypeInheritanceComparer)
+                .Select(g =>
+                (
+                    TypeAbbreviation.Abbreviate(g.Key),
+                    g.Select(d => d.mData).ToList()
+                ))
+                .ToList();
+
+            return new ViewVariablesBlobMembers
+            {
+                MemberGroups = dataList
+            };
         }
 
-        public override bool TryGetRelativeObject(object property, out object value)
+        public override bool TryGetRelativeObject(object property, out object? value)
         {
             if (!(property is ViewVariablesMemberSelector selector))
             {
@@ -150,7 +161,7 @@ namespace Robust.Server.ViewVariables.Traits
                 case PropertyInfo propertyInfo:
                     try
                     {
-                        propertyInfo.GetSetMethod(true).Invoke(Session.Object, new[] {value});
+                        propertyInfo.GetSetMethod(true)!.Invoke(Session.Object, new[] {value});
                         return true;
                     }
                     catch (Exception e)

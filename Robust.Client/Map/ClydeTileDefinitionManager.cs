@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -16,13 +14,11 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-#pragma warning disable 649
-        [Dependency] private IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public Texture TileTextureAtlas { get; private set; }
+        public Texture TileTextureAtlas { get; private set; } = default!;
 
-        private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
+        private readonly Dictionary<ushort, Box2> _tileRegions = new();
 
         public Box2? TileAtlasRegion(Tile tile)
         {
@@ -58,9 +54,9 @@ namespace Robust.Client.Map
                 var row = i / dimensionX;
 
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead($"/Textures/Tiles/{def.SpriteName}.png"))
+                using (var stream = _resourceCache.ContentFileRead($"/Textures/Constructible/Tiles/{def.SpriteName}.png"))
                 {
-                    image = Image.Load(stream);
+                    image = Image.Load<Rgba32>(stream);
                 }
 
                 if (image.Width != tileSize || image.Height != tileSize)

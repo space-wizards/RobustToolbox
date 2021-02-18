@@ -2,9 +2,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
@@ -12,7 +14,7 @@ namespace Robust.Shared.Utility
     ///     Provides object-oriented path manipulation for resource paths.
     ///     ResourcePaths are immutable.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Serializable, NetSerializable]
     public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>
@@ -28,12 +30,12 @@ namespace Robust.Shared.Utility
         /// <summary>
         ///     "." as a static. Separator used is <c>/</c>.
         /// </summary>
-        public static readonly ResourcePath Self = new ResourcePath(".");
+        public static readonly ResourcePath Self = new(".");
 
         /// <summary>
         ///     "/" (root) as a static. Separator used is <c>/</c>.
         /// </summary>
-        public static readonly ResourcePath Root = new ResourcePath("/");
+        public static readonly ResourcePath Root = new("/");
 
         /// <summary>
         ///     List of the segments of the path.
@@ -56,21 +58,13 @@ namespace Robust.Shared.Utility
         /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
         public ResourcePath(string path, string separator = "/")
         {
-            if (separator == ".")
-            {
-                throw new ArgumentException("Yeah no.", nameof(separator));
-            }
+            ValidateSeparate(separator);
 
             Separator = separator;
 
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
-            }
-
-            if (separator == null)
-            {
-                throw new ArgumentNullException(nameof(separator));
             }
 
             if (path == "")
@@ -250,24 +244,25 @@ namespace Robust.Shared.Utility
         ///     Returns a new instance with a different separator set.
         /// </summary>
         /// <param name="newSeparator">The new separator to use.</param>
-        /// <exception cref="ArgumentException">Thrown if the new separator is "."</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newSeparator"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the new separator is invalid.</exception>
         public ResourcePath ChangeSeparator(string newSeparator)
         {
-            if (newSeparator == ".")
-            {
-                throw new ArgumentException("Yeah no.", nameof(newSeparator));
-            }
-
-            if (newSeparator == null)
-            {
-                throw new ArgumentNullException(nameof(newSeparator));
-            }
+            ValidateSeparate(newSeparator);
 
             // Convert the segments into a string path, then re-parse it.
             // Solves the edge case of the segments containing the new separator.
-            var path = new ResourcePath(Segments, newSeparator).ToString();
-            return new ResourcePath(path, newSeparator);
+            ResourcePath path;
+            if (IsRooted)
+            {
+                var clone = (string[]) Segments.Clone();
+                clone[0] = newSeparator;
+                path = new ResourcePath(clone, newSeparator);
+            }
+            else
+            {
+                path = new ResourcePath(Segments, newSeparator);
+            }
+            return new ResourcePath(path.ToString(), newSeparator);
         }
 
         /// <summary>
@@ -467,7 +462,7 @@ namespace Robust.Shared.Utility
         /// <param name="relative">The path of how we are relative to <paramref name="basePath"/>, if at all.</param>
         /// <returns>True if we are relative to <paramref name="basePath"/>, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
-        public bool TryRelativeTo(ResourcePath basePath, out ResourcePath relative)
+        public bool TryRelativeTo(ResourcePath basePath, [NotNullWhen(true)] out ResourcePath? relative)
         {
             if (basePath.Separator != Separator)
             {
@@ -581,6 +576,31 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
+        ///     Return a copy of this resource path with the file extension changed.
+        /// </summary>
+        /// <param name="newExtension">
+        ///     The new file extension.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if <paramref name="newExtension"/> is null, empty,
+        ///     contains <see cref="Separator"/> or is equal to <c>.</c>
+        /// </exception>
+        public ResourcePath WithExtension(string newExtension)
+        {
+            if (string.IsNullOrEmpty(newExtension))
+            {
+                throw new ArgumentException("New file name cannot be null or empty.");
+            }
+
+            if (newExtension.Contains(Separator))
+            {
+                throw new ArgumentException("New file name cannot contain the separator.");
+            }
+
+            return WithName($"{FilenameWithoutExtension}.{newExtension}");
+        }
+
+        /// <summary>
         ///     Enumerates the segments of this path.
         /// </summary>
         /// <remarks>
@@ -616,7 +636,7 @@ namespace Robust.Shared.Utility
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is ResourcePath path && Equals(path);
         }
@@ -628,7 +648,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="other">The path to check equality with.</param>
         /// <returns>True if the paths are equal, false otherwise.</returns>
-        public bool Equals(ResourcePath other)
+        public bool Equals(ResourcePath? other)
         {
             if (other == null)
             {
@@ -651,17 +671,17 @@ namespace Robust.Shared.Utility
             return true;
         }
 
-        public static bool operator ==(ResourcePath a, ResourcePath b)
+        public static bool operator ==(ResourcePath? a, ResourcePath? b)
         {
-            if ((object) a == null)
+            if ((object?) a == null)
             {
-                return (object) b == null;
+                return (object?) b == null;
             }
 
             return a.Equals(b);
         }
 
-        public static bool operator !=(ResourcePath a, ResourcePath b)
+        public static bool operator !=(ResourcePath? a, ResourcePath? b)
         {
             return !(a == b);
         }
@@ -677,6 +697,19 @@ namespace Robust.Shared.Utility
             }
 
             return array;
+        }
+
+        private static void ValidateSeparate(string separator)
+        {
+            if (string.IsNullOrWhiteSpace(separator))
+            {
+                throw new ArgumentException("Separator may not be null or whitespace.");
+            }
+
+            if (separator == "." || separator == "..")
+            {
+                throw new ArgumentException("Separator may not be . or ..");
+            }
         }
     }
 }

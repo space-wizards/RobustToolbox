@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -14,15 +14,14 @@ namespace Robust.Client.GameStates
     {
         private readonly IGameTiming _timing;
 
-        private readonly List<GameState> _stateBuffer = new List<GameState>();
-        private GameState _lastFullState;
+        private readonly List<GameState> _stateBuffer = new();
+        private GameState? _lastFullState;
         private bool _waitingForFull = true;
         private int _interpRatio;
-        private GameTick _lastProcessedRealState;
         private GameTick _highestFromSequence;
 
         private readonly Dictionary<EntityUid, Dictionary<uint, ComponentState>> _lastStateFullRep
-            = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
+            = new();
 
         /// <inheritdoc />
         public int MinBufferSize => Interpolation ? 3 : 2;
@@ -48,6 +47,8 @@ namespace Robust.Client.GameStates
 
         /// <inheritdoc />
         public bool Logging { get; set; }
+
+        public GameTick LastProcessedRealState { get; set; }
 
         /// <summary>
         ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
@@ -109,7 +110,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState)
+        public bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             bool applyNextState;
             if (_waitingForFull)
@@ -121,13 +122,13 @@ namespace Robust.Client.GameStates
                 applyNextState = CalculateDeltaState(curTick, out curState, out nextState);
             }
 
-            if (applyNextState && !curState.Extrapolated)
-                _lastProcessedRealState = curState.ToSequence;
+            if (applyNextState && !curState!.Extrapolated)
+                LastProcessedRealState = curState.ToSequence;
 
             if (!_waitingForFull)
             {
                 if (!applyNextState)
-                    _timing.CurTick = _lastProcessedRealState;
+                    _timing.CurTick = LastProcessedRealState;
 
                 // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
                 // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
@@ -141,16 +142,22 @@ namespace Robust.Client.GameStates
 
             if (applyNextState)
             {
+                DebugTools.Assert(curState!.Extrapolated || curState.FromSequence <= LastProcessedRealState,
+                    "Tried to apply a non-extrapolated state that has too high of a FromSequence!");
+
                 if (Logging)
                 {
-                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState!.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 }
 
-                if (!curState.Extrapolated)
+                if (!curState!.Extrapolated)
                 {
                     UpdateFullRep(curState);
                 }
             }
+
+            var cState = curState!;
+            curState = cState;
 
             return applyNextState;
         }
@@ -205,7 +212,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private bool CalculateFullState(out GameState curState, out GameState nextState, int targetBufferSize)
+        private bool CalculateFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState, int targetBufferSize)
         {
             if (_lastFullState != null)
             {
@@ -261,7 +268,7 @@ namespace Robust.Client.GameStates
             return false;
         }
 
-        private bool CalculateDeltaState(GameTick curTick, out GameState curState, out GameState nextState)
+        private bool CalculateDeltaState(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             var lastTick = new GameTick(curTick.Value - 1);
             var nextTick = new GameTick(curTick.Value + 1);
@@ -269,7 +276,7 @@ namespace Robust.Client.GameStates
             curState = null;
             nextState = null;
 
-            GameState futureState = null;
+            GameTick? futureStateLowestFromSeq = null;
             uint lastStateInput = 0;
 
             for (var i = 0; i < _stateBuffer.Count; i++)
@@ -285,10 +292,18 @@ namespace Robust.Client.GameStates
                 else if (Interpolation && state.ToSequence == nextTick)
                 {
                     nextState = state;
+
+                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence)
+                    {
+                        futureStateLowestFromSeq = state.FromSequence;
+                    }
                 }
-                else if (state.ToSequence > nextTick)
+                else if (state.ToSequence > curTick)
                 {
-                    futureState = state;
+                    if (futureStateLowestFromSeq == null || futureStateLowestFromSeq.Value > state.FromSequence)
+                    {
+                        futureStateLowestFromSeq = state.FromSequence;
+                    }
                 }
                 else if (state.ToSequence == lastTick)
                 {
@@ -301,8 +316,14 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            // Make sure we can ACTUALLY apply this state.
+            // Can happen that we can't if there is a hole and we're doing extrapolation.
+            if (curState != null && curState.FromSequence > LastProcessedRealState)
+                curState = null;
+
             // can't find current state, but we do have a future state.
-            if (!Extrapolation && curState == null && futureState != null)
+            if (!Extrapolation && curState == null && futureStateLowestFromSeq != null
+                && futureStateLowestFromSeq <= LastProcessedRealState)
             {
                 //this is not actually extrapolation
                 curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
@@ -370,6 +391,12 @@ namespace Robust.Client.GameStates
         public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
         {
             return _lastStateFullRep[entity];
+        }
+
+        public bool TryGetLastServerStates(EntityUid entity,
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary)
+        {
+            return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }
 
         public int CalculateBufferSize(GameTick fromTick)

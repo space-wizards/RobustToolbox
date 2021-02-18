@@ -1,6 +1,6 @@
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     public class StyleBoxEmpty : StyleBox
     {

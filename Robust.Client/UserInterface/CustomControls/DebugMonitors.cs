@@ -1,15 +1,13 @@
-﻿using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
+﻿using Robust.Client.GameStates;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -52,7 +50,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _fpsCounter = new FpsCounter(gameTiming1);
             AddChild(_fpsCounter);
 
-            _debugCoordsPanel = new DebugCoordsPanel(playerManager, eyeManager, inputManager, stateManager, displayManager, mapManager);
+            _debugCoordsPanel = new DebugCoordsPanel();
             AddChild(_debugCoordsPanel);
 
             _debugNetPanel = new DebugNetPanel(netManager, gameTiming1);

@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 
 namespace Robust.UnitTesting.Shared.Serialization
@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Serialization
     [TestFixture]
     class NetSerializableAttribute_Test : RobustUnitTest
     {
-        private IReflectionManager _reflection;
+        private IReflectionManager _reflection = default!;
 
         [OneTimeSetUp]
         public void TestFixtureSetup()

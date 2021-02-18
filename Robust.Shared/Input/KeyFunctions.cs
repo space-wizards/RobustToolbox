@@ -16,13 +16,14 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction MoveDown = "MoveDown";
         public static readonly BoundKeyFunction MoveLeft = "MoveLeft";
         public static readonly BoundKeyFunction MoveRight = "MoveRight";
-        public static readonly BoundKeyFunction Run = "Run";
+        public static readonly BoundKeyFunction Walk = "Walk";
 
         public static readonly BoundKeyFunction CameraRotateRight = "CameraRotateRight";
         public static readonly BoundKeyFunction CameraRotateLeft = "CameraRotateLeft";
 
         public static readonly BoundKeyFunction Use = "Use";
         public static readonly BoundKeyFunction UIClick = "UIClick";
+        public static readonly BoundKeyFunction UIRightClick = "UIRightClick";
 
         public static readonly BoundKeyFunction CloseModals = "CloseModals";
         public static readonly BoundKeyFunction ShowDebugConsole = "ShowDebugConsole";
@@ -35,6 +36,10 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorPlaceObject = "EditorPlaceObject";
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
+
+        // Buttons to navigate between UI controls.
+        public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
+        public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
 
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
@@ -67,7 +72,7 @@ namespace Robust.Shared.Input
     }
 
     [Serializable, NetSerializable]
-    public struct BoundKeyFunction : IComparable, IComparable<BoundKeyFunction>, IEquatable<BoundKeyFunction>
+    public struct BoundKeyFunction : IComparable, IComparable<BoundKeyFunction>, IEquatable<BoundKeyFunction>, ISelfSerialize
     {
         public readonly string FunctionName;
 
@@ -78,38 +83,42 @@ namespace Robust.Shared.Input
 
         public static implicit operator BoundKeyFunction(string name)
         {
-            return new BoundKeyFunction(name);
+            return new(name);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"KeyFunction({FunctionName})";
         }
 
         #region Code for easy equality and sorting.
 
-        public int CompareTo(object obj)
+        public readonly int CompareTo(object? obj)
         {
-            return CompareTo((BoundKeyFunction) obj);
+            if (!(obj is BoundKeyFunction func))
+            {
+                return 1;
+            }
+            return CompareTo(func);
         }
 
-        public int CompareTo(BoundKeyFunction other)
+        public readonly int CompareTo(BoundKeyFunction other)
         {
             return string.Compare(FunctionName, other.FunctionName, StringComparison.InvariantCultureIgnoreCase);
         }
 
         // Could maybe go dirty and optimize these on the assumption that they're singletons.
-        public override bool Equals(object obj)
+        public override readonly bool Equals(object? obj)
         {
-            return Equals((BoundKeyFunction) obj);
+            return obj is BoundKeyFunction func && Equals(func);
         }
 
-        public bool Equals(BoundKeyFunction other)
+        public readonly bool Equals(BoundKeyFunction other)
         {
             return other.FunctionName == FunctionName;
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             return FunctionName.GetHashCode();
         }
@@ -125,6 +134,16 @@ namespace Robust.Shared.Input
         }
 
         #endregion
+
+        public void Deserialize(string value)
+        {
+            this = new BoundKeyFunction(value);
+        }
+
+        public readonly string Serialize()
+        {
+            return FunctionName;
+        }
     }
 
     /// <summary>

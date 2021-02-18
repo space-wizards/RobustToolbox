@@ -12,9 +12,9 @@ namespace Robust.Shared.IoC.Exceptions
         /// <summary>
         /// The <see cref="Type.AssemblyQualifiedName" /> of the type that threw the exception inside its constructor.
         /// </summary>
-        public readonly string typeName;
+        public readonly string? typeName;
 
-        public ImplementationConstructorException(Type type, Exception inner)
+        public ImplementationConstructorException(Type type, Exception? inner)
             : base($"{type} threw an exception inside its constructor.", inner)
         {
             typeName = type.AssemblyQualifiedName;

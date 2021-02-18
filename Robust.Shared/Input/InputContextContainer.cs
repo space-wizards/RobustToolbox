@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Input
 {
@@ -54,7 +55,7 @@ namespace Robust.Shared.Input
         /// <param name="uniqueName">Unique name of the context to search for.</param>
         /// <param name="context">The context with the given unique name (if any).</param>
         /// <returns>If a context with a given unique name exists in the set.</returns>
-        bool TryGetContext(string uniqueName, out IInputCmdContext context);
+        bool TryGetContext(string uniqueName, [NotNullWhen(true)] out IInputCmdContext? context);
 
         /// <summary>
         ///     Removes the context with the given unique name.
@@ -78,10 +79,10 @@ namespace Robust.Shared.Input
         public const string DefaultContextName = "common";
 
         /// <inheritdoc />
-        public event EventHandler<ContextChangedEventArgs> ContextChanged;
+        public event EventHandler<ContextChangedEventArgs>? ContextChanged;
 
-        private readonly Dictionary<string, InputCmdContext> _contexts = new Dictionary<string, InputCmdContext>();
-        private InputCmdContext _activeContext;
+        private readonly Dictionary<string, InputCmdContext> _contexts = new();
+        private InputCmdContext _activeContext = default!;
 
         /// <inheritdoc />
         public IInputCmdContext ActiveContext
@@ -154,7 +155,7 @@ namespace Robust.Shared.Input
         }
 
         /// <inheritdoc />
-        public bool TryGetContext(string uniqueName, out IInputCmdContext context)
+        public bool TryGetContext(string uniqueName, [NotNullWhen(true)] out IInputCmdContext? context)
         {
             if (_contexts.TryGetValue(uniqueName, out var ctext))
             {
@@ -190,19 +191,19 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     The new context that became active.
         /// </summary>
-        public IInputCmdContext NewContext { get; }
+        public IInputCmdContext? NewContext { get; }
 
         /// <summary>
         ///     The old context that used to be active.
         /// </summary>
-        public IInputCmdContext OldContext { get; }
+        public IInputCmdContext? OldContext { get; }
 
         /// <summary>
         ///     Constructs a new instance of <see cref="ContextChangedEventArgs"/>/
         /// </summary>
         /// <param name="oldContext">The old context that used to be active.</param>
         /// <param name="newContext">The new context that became active.</param>
-        public ContextChangedEventArgs(IInputCmdContext oldContext, IInputCmdContext newContext)
+        public ContextChangedEventArgs(IInputCmdContext? oldContext, IInputCmdContext? newContext)
         {
             OldContext = oldContext;
             NewContext = newContext;

@@ -1,4 +1,4 @@
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
+            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string? name=null)
             {
                 _clyde = clyde;
                 Compile(type, shaderSource);
@@ -26,12 +26,16 @@ namespace Robust.Client.Graphics.Clyde
                 ObjectHandle = (uint)GL.CreateShader(type);
                 Type = type;
                 GL.ShaderSource((int) ObjectHandle, shaderSource);
+                _clyde.CheckGlError();
                 GL.CompileShader(ObjectHandle);
+                _clyde.CheckGlError();
 
                 GL.GetShader(ObjectHandle, ShaderParameter.CompileStatus, out var compiled);
+                _clyde.CheckGlError();
                 if (compiled != 1)
                 {
                     var message = GL.GetShaderInfoLog((int) ObjectHandle);
+                    _clyde.CheckGlError();
                     Delete();
                     throw new ShaderCompilationException(message);
                 }
@@ -44,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
                 }
                 GL.DeleteShader(ObjectHandle);
+                _clyde.CheckGlError();
                 ObjectHandle = 0;
             }
         }

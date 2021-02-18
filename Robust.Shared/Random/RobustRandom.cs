@@ -1,10 +1,8 @@
-using Robust.Shared.Interfaces.Random;
-
 namespace Robust.Shared.Random
 {
     public class RobustRandom : IRobustRandom
     {
-        private readonly System.Random _random = new System.Random();
+        private readonly System.Random _random = new();
 
         public int Next()
         {

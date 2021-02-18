@@ -12,16 +12,16 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            CurrentTile = pManager.MapManager.GetGrid(MouseCoords.GridID).GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
 
             var nodes = new List<Vector2>();
 
-            if (pManager?.CurrentPrototype.MountingPoints != null)
+            if (pManager.CurrentPrototype!.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentPrototype.MountingPoints.Select(
@@ -34,27 +34,17 @@ namespace Robust.Client.Placement.Modes
                 nodes.Add(new Vector2(MouseCoords.X, CurrentTile.Y + 1.5f));
             }
 
-            Vector2 closestNode = (from Vector2 node in nodes
+            var closestNode = (from Vector2 node in nodes
                                    orderby (node - MouseCoords.Position).LengthSquared ascending
                                    select node).First();
 
-            MouseCoords = new GridCoordinates(closestNode + new Vector2(pManager.PlacementOffset.X,
-                                                                         pManager.PlacementOffset.Y),
-                                               MouseCoords.GridID);
+            MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
+                closestNode + (pManager.PlacementOffset.X, pManager.PlacementOffset.Y));
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
-            {
-                return false;
-            }
-            else if (!RangeCheck(position))
-            {
-                return false;
-            }
-
-            return true;
+            return !pManager.CurrentPermission!.IsTile && RangeCheck(position);
         }
     }
 }

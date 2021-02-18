@@ -1,43 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using Robust.Client.GameObjects.Components;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.GameStates;
+using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IClientGameStateManager _stateManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IClientGameStateManager _stateManager = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
-        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
         /// <summary>
         ///     Current states for all of the keyFunctions.
         /// </summary>
         public IPlayerCommandStates CmdStates => _cmdStates;
-
-        /// <summary>
-        ///     Holds the keyFunction -> handler bindings for the simulation.
-        /// </summary>
-        public ICommandBindMapping BindMap => _bindMap;
 
         /// <summary>
         /// If the input system is currently predicting input.
@@ -50,7 +38,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="session">Player session that raised the command. On client, this is always the LocalPlayer session.</param>
         /// <param name="function">Function that is being changed.</param>
         /// <param name="message">Arguments for this event.</param>
-        public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message)
+        /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
+        /// old input that was saved or buffered until further processing could be done</param>
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -59,24 +49,29 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             #endif
 
-            // set state, state change is updated regardless if it is locally bound
-            if (_cmdStates.GetState(function) == message.State)
+            if (!replay)
             {
-                return;
+                // set state, state change is updated regardless if it is locally bound
+                if (_cmdStates.GetState(function) == message.State)
+                {
+                    return false;
+                }
+                _cmdStates.SetState(function, message.State);
             }
 
-            _cmdStates.SetState(function, message.State);
-
             // handle local binds before sending off
-            if (_bindMap.TryGetHandler(function, out var handler))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
                 // local handlers can block sending over the network.
                 if (handler.HandleCmdMessage(session, message))
-                    return;
+                {
+                    return true;
+                }
             }
 
-            // send it off to the client
+            // send it off to the server
             DispatchInputCommand(message);
+            return false;
         }
 
         /// <summary>
@@ -85,23 +80,24 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="inputCmd">Input command to handle as predicted.</param>
         public void PredictInputCommand(FullInputCmdMessage inputCmd)
         {
+            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
+
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
-            if (!_bindMap.TryGetHandler(keyFunc, out var handler))
-                return;
-
             Predicted = true;
-
-            var session = _playerManager.LocalPlayer.Session;
-            handler.HandleCmdMessage(session, inputCmd);
-
+            var session = _playerManager.LocalPlayer!.Session;
+            foreach (var handler in BindRegistry.GetHandlers(keyFunc))
+            {
+                if (handler.HandleCmdMessage(session, inputCmd)) break;
+            }
             Predicted = false;
+
         }
 
         private void DispatchInputCommand(FullInputCmdMessage message)
         {
             _stateManager.InputCommandDispatched(message);
-            RaiseNetworkEvent(message);
+            EntityNetworkManager.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()
@@ -126,9 +122,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             if(entity == null || !entity.IsValid())
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!entity.TryGetComponent(out InputComponent inputComp))
+            if (!entity.TryGetComponent(out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
 
@@ -138,7 +135,8 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
 
@@ -147,7 +145,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer.ControlledEntity == null)
+            if (_playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 return;
             }
@@ -164,13 +162,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public IEntity AttachedEntity { get; }
+        public IEntity? AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(IEntity attachedEntity)
+        public PlayerAttachSysMessage(IEntity? attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

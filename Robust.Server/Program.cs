@@ -1,18 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Robust.Server.Interfaces;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared;
+using Robust.Shared.Asynchronous;
+using Robust.Shared.Reflection;
 
 namespace Robust.Server
 {
+
     internal static class Program
     {
+
         private static bool _hasStarted;
 
         internal static void Main(string[] args)
@@ -20,7 +24,7 @@ namespace Robust.Server
             Start(args);
         }
 
-        internal static void Start(string[] args)
+        internal static void Start(string[] args, bool contentStart = false)
         {
             if (_hasStarted)
             {
@@ -29,14 +33,27 @@ namespace Robust.Server
 
             _hasStarted = true;
 
-            if (CommandLineArgs.TryParse(args, out var parsed))
+            if (!CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed);
+                return;
             }
+
+            ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
+
+            // this sets up TaskScheduler.Current for new tasks to be scheduled off the main thread
+            // the LongRunning option causes it to not be scheduled on the thread pool, so it's just a plain thread with a task context
+            new TaskFactory(
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskContinuationOptions.None,
+                    RobustTaskScheduler.Instance
+                ).StartNew(() => ParsedMain(parsed, contentStart))
+                .GetAwaiter().GetResult();
         }
 
-        private static void ParsedMain(CommandLineArgs args)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
+            Thread.CurrentThread.Name = "Main Thread";
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();
@@ -45,6 +62,10 @@ namespace Robust.Server
 
             var server = IoCManager.Resolve<IBaseServerInternal>();
 
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
+            server.DisableLoadContext = contentStart;
             server.SetCommandLineArgs(args);
 
             Logger.Info("Server -> Starting");
@@ -56,10 +77,8 @@ namespace Robust.Server
                 return;
             }
 
-            string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string strVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
             Logger.Info("Server Version " + strVersion + " -> Ready");
-
-            IoCManager.Resolve<ISignalHandler>().MaybeStart();
 
             server.MainLoop();
 
@@ -82,11 +101,52 @@ namespace Robust.Server
 
         internal static void SetupLogging()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+#if WINDOWS_USE_UTF8_CONSOLE
+                System.Console.OutputEncoding = Encoding.UTF8;
+#else
+                System.Console.OutputEncoding = Encoding.Unicode;
+#endif
+            }
+
             var mgr = IoCManager.Resolve<ILogManager>();
             var handler = new ConsoleLogHandler();
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
             mgr.GetSawmill("go.sys").Level = LogLevel.Info;
+            // mgr.GetSawmill("szr").Level = LogLevel.Info;
+
+#if DEBUG_ONLY_FCE_INFO
+#if DEBUG_ONLY_FCE_LOG
+            var fce = mgr.GetSawmill("fce");
+#endif
+            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+            {
+                // TODO: record FCE stats
+#if DEBUG_ONLY_FCE_LOG
+                fce.Fatal(message);
+#endif
+            }
+#endif
+
+            var uh = mgr.GetSawmill("unhandled");
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var message = ((Exception) args.ExceptionObject).ToString();
+                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+            };
+
+            var uo = mgr.GetSawmill("unobserved");
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                uo.Error(args.Exception!.ToString());
+#if EXCEPTION_TOLERANCE
+                args.SetObserved(); // don't crash
+#endif
+            };
         }
+
     }
+
 }

@@ -2,7 +2,7 @@ using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Style box based on a 9-patch texture.
@@ -109,7 +109,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public Color Modulate { get; set; } = Color.White;
 
-        public Texture Texture { get; set; }
+        public Texture? Texture { get; set; }
 
         [Obsolete("Use SetPatchMargin")]
         public void SetMargin(Margin margin, float value)
@@ -165,6 +165,11 @@ namespace Robust.Client.Graphics.Drawing
 
         protected override void DoDraw(DrawingHandleScreen handle, UIBox2 box)
         {
+            if (Texture == null)
+            {
+                return;
+            }
+
             box = new UIBox2(
                 box.Left - ExpandMarginLeft,
                 box.Top - ExpandMarginTop,
@@ -276,7 +281,7 @@ namespace Robust.Client.Graphics.Drawing
         {
             if (Mode == StretchMode.Stretch)
             {
-                handle.DrawTextureRectRegion(Texture, area, texCoords, Modulate);
+                handle.DrawTextureRectRegion(Texture!, area, texCoords, Modulate);
                 return;
             }
 
@@ -296,7 +301,7 @@ namespace Robust.Client.Graphics.Drawing
                     var h = Math.Min(area.Bottom - y, texHeight);
 
                     handle.DrawTextureRectRegion(
-                        Texture,
+                        Texture!,
                         UIBox2.FromDimensions(x, y, w, h),
                         UIBox2.FromDimensions(texCoords.Left, texCoords.Top, w, h),
                         Modulate);
@@ -324,7 +329,7 @@ namespace Robust.Client.Graphics.Drawing
         /// <summary>
         ///     Specifies how to stretch the sides and center of the style box.
         /// </summary>
-        public enum StretchMode
+        public enum StretchMode : byte
         {
             Stretch,
             Tile,

@@ -6,7 +6,7 @@ namespace Robust.Shared.Configuration
     /// Extra flags for changing the behavior of a config var.
     /// </summary>
     [Flags]
-    public enum CVar
+    public enum CVar : short
     {
         /// <summary>
         /// No special flags.
@@ -41,6 +41,22 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Changing this var on the server notifies all clients, does nothing client-side.
         /// </summary>
-        NOTIFY = 32
+        NOTIFY = 32,
+
+        /// <summary>
+        ///     Ignore registration of this cvar on the client.
+        /// </summary>
+        /// <remarks>
+        ///     This is intended to aid shared code.
+        /// </remarks>
+        SERVERONLY = 64,
+
+        /// <summary>
+        ///     Ignore registration of this cvar on the server.
+        /// </summary>
+        /// <remarks>
+        ///     This is intended to aid shared code.
+        /// </remarks>
+        CLIENTONLY = 128
     }
 }

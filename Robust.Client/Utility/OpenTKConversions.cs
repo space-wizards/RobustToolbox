@@ -4,9 +4,9 @@ namespace Robust.Client.Utility
 {
     internal static class OpenTKConversions
     {
-        public static OpenTK.Matrix3 ConvertOpenTK(this Matrix3 matrix)
+        public static OpenToolkit.Mathematics.Matrix3 ConvertOpenTK(this Matrix3 matrix)
         {
-            return new OpenTK.Matrix3
+            return new()
             {
                 M11 = matrix.R0C0,
                 M12 = matrix.R0C1,
@@ -20,9 +20,9 @@ namespace Robust.Client.Utility
             };
         }
 
-        public static OpenTK.Graphics.Color4 ConvertOpenTK(this Color color)
+        public static OpenToolkit.Mathematics.Color4 ConvertOpenTK(this Color color)
         {
-            return new OpenTK.Graphics.Color4(color.R, color.G, color.B, color.A);
+            return new(color.R, color.G, color.B, color.A);
         }
     }
 }

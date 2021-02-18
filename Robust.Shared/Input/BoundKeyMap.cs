@@ -1,7 +1,7 @@
-﻿using Robust.Shared.Interfaces.Reflection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Input
@@ -34,7 +34,7 @@ namespace Robust.Shared.Input
             return _value == other._value;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is KeyFunctionId other && Equals(other);
         }
@@ -62,8 +62,8 @@ namespace Robust.Shared.Input
     {
         private readonly IReflectionManager reflectionManager;
 
-        private readonly Dictionary<BoundKeyFunction, KeyFunctionId> KeyFunctionsMap = new Dictionary<BoundKeyFunction, KeyFunctionId>();
-        private readonly List<BoundKeyFunction> KeyFunctionsList = new List<BoundKeyFunction>();
+        private readonly Dictionary<BoundKeyFunction, KeyFunctionId> KeyFunctionsMap = new();
+        private readonly List<BoundKeyFunction> KeyFunctionsList = new();
 
         public BoundKeyMap(IReflectionManager reflectionManager)
         {
@@ -87,7 +87,7 @@ namespace Robust.Shared.Input
                         continue;
                     }
 
-                    KeyFunctionsList.Add((BoundKeyFunction)field.GetValue(null));
+                    KeyFunctionsList.Add((BoundKeyFunction)field.GetValue(null)!);
                 }
             }
 
@@ -120,12 +120,6 @@ namespace Robust.Shared.Input
             var index = (int) funcId;
 
             if (0 > index || index >= list.Count)
-            {
-                func = default;
-                return false;
-            }
-
-            if (list[index] == null)
             {
                 func = default;
                 return false;

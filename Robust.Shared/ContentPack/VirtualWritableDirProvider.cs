@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -14,10 +14,10 @@ namespace Robust.Shared.ContentPack
     public sealed class VirtualWritableDirProvider : IWritableDirProvider
     {
         // Just a simple tree. No need to over complicate this.
-        private readonly DirectoryNode _rootDirectoryNode = new DirectoryNode();
+        private readonly DirectoryNode _rootDirectoryNode = new();
 
         /// <inheritdoc />
-        public string RootDir => null;
+        public string? RootDir => null;
 
         public void CreateDir(ResourcePath path)
         {
@@ -75,7 +75,7 @@ namespace Robust.Shared.ContentPack
         public (IEnumerable<ResourcePath> files, IEnumerable<ResourcePath> directories) Find(string pattern,
             bool recursive = true)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public bool IsDir(ResourcePath path)
@@ -83,7 +83,7 @@ namespace Robust.Shared.ContentPack
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;
         }
 
-        public Stream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             if (!path.IsRooted)
             {
@@ -105,7 +105,7 @@ namespace Robust.Shared.ContentPack
                 throw new ArgumentException("There is a directory at that location.");
             }
 
-            var fileNode = (FileNode) maybeFileNode;
+            var fileNode = (FileNode) maybeFileNode!;
 
             switch (fileMode)
             {
@@ -189,10 +189,10 @@ namespace Robust.Shared.ContentPack
 
         public void Rename(ResourcePath oldPath, ResourcePath newPath)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
-        private bool TryGetNodeAt(ResourcePath path, out INode node)
+        private bool TryGetNodeAt(ResourcePath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)
             {
@@ -236,12 +236,12 @@ namespace Robust.Shared.ContentPack
 
         private sealed class FileNode : INode
         {
-            public MemoryStream Contents { get; } = new MemoryStream();
+            public MemoryStream Contents { get; } = new();
         }
 
         private sealed class DirectoryNode : INode
         {
-            public Dictionary<string, INode> Children { get; } = new Dictionary<string, INode>();
+            public Dictionary<string, INode> Children { get; } = new();
         }
 
         private sealed class VirtualFileStream : Stream
@@ -269,7 +269,9 @@ namespace Robust.Shared.ContentPack
                 }
 
                 _source.Position = Position;
-                return _source.Read(buffer, offset, count);
+                var read = _source.Read(buffer, offset, count);
+                Position = _source.Position;
+                return read;
             }
 
             public override long Seek(long offset, SeekOrigin origin)
@@ -301,6 +303,7 @@ namespace Robust.Shared.ContentPack
             {
                 _source.Position = Position;
                 _source.Write(buffer, offset, count);
+                Position = _source.Position;
             }
 
             public override bool CanRead { get; }

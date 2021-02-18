@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Client.Interfaces.GameStates;
+using Robust.Client.GameStates;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -16,19 +15,18 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public class ClientEntityNetworkManager : IEntityNetworkManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _networkManager;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
-        public event EventHandler<object> ReceivedSystemMessage;
+        public event EventHandler<object>? ReceivedSystemMessage;
 
-        private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageTickComparer());
+        private readonly PriorityQueue<(uint seq, MsgEntity msg)> _queue = new(new MessageTickComparer());
+        private uint _incomingMsgSequence = 0;
 
         /// <inheritdoc />
         public void SetupNetworking()
@@ -38,9 +36,11 @@ namespace Robust.Client.GameObjects
 
         public void Update()
         {
-            while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameStateManager.CurServerTick)
+            while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameStateManager.CurServerTick)
             {
-                DispatchMsgEntity(_queue.Take());
+                var (_, msg) = _queue.Take();
+                // Logger.DebugS("net.ent", "Dispatching: {0}: {1}", seq, msg);
+                DispatchMsgEntity(msg);
             }
         }
 
@@ -68,7 +68,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
+        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component, ComponentMessage message)
         {
             if (!component.NetID.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
@@ -91,7 +91,10 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            _queue.Add(message);
+            // MsgEntity is sent with ReliableOrdered so Lidgren guarantees ordering of incoming messages.
+            // We still need to store a sequence input number to ensure ordering remains consistent in
+            // the priority queue.
+            _queue.Add((++_incomingMsgSequence, message));
         }
 
         private void DispatchMsgEntity(MsgEntity message)
@@ -108,14 +111,17 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private sealed class MessageTickComparer : IComparer<MsgEntity>
+        private sealed class MessageTickComparer : IComparer<(uint seq, MsgEntity msg)>
         {
-            public int Compare(MsgEntity x, MsgEntity y)
+            public int Compare((uint seq, MsgEntity msg) x, (uint seq, MsgEntity msg) y)
             {
-                DebugTools.AssertNotNull(x);
-                DebugTools.AssertNotNull(y);
+                var cmp = y.msg.SourceTick.CompareTo(x.msg.SourceTick);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
 
-                return y.SourceTick.CompareTo(x.SourceTick);
+                return y.seq.CompareTo(x.seq);
             }
         }
     }

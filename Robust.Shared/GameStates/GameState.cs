@@ -1,13 +1,14 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
-using JetBrains.Annotations;
+using System.Diagnostics;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
+    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence} ext={Extrapolated}")]
     [Serializable, NetSerializable]
-    public class GameState
+    public sealed class GameState
     {
         /// <summary>
         ///     An extrapolated state that was created artificially by the client.
@@ -25,7 +26,7 @@ namespace Robust.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, EntityState[] entities, PlayerState[] players, EntityUid[] deletions, GameStateMapData mapData)
+        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, EntityState[]? entities, PlayerState[]? players, EntityUid[]? deletions, GameStateMapData? mapData)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
@@ -41,11 +42,9 @@ namespace Robust.Shared.GameStates
 
         public readonly uint LastProcessedInput;
 
-        [CanBeNull]
-        public readonly EntityState[] EntityStates;
-        public readonly PlayerState[] PlayerStates;
-        [CanBeNull]
-        public readonly EntityUid[] EntityDeletions;
-        public readonly GameStateMapData MapData;
+        public readonly EntityState[]? EntityStates;
+        public readonly PlayerState[]? PlayerStates;
+        public readonly EntityUid[]? EntityDeletions;
+        public readonly GameStateMapData? MapData;
     }
 }

@@ -7,7 +7,7 @@ namespace Robust.Server
 #if FULL_RELEASE
             throw new System.InvalidOperationException("ContentStart is not available on a full release.");
 #else
-            Program.Main(args);
+            Program.Start(args, true);
 #endif
         }
     }

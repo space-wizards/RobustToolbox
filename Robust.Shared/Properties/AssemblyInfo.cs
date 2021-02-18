@@ -9,3 +9,8 @@
 [assembly: InternalsVisibleTo("Robust.UnitTesting")]
 [assembly: InternalsVisibleTo("OpenToolkit.GraphicsLibraryFramework")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // Gives access to Castle(Moq)
+[assembly: InternalsVisibleTo("Content.Benchmarks")]
+
+#if NET5_0
+[module: SkipLocalsInit]
+#endif

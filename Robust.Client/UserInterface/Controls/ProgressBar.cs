@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.Contracts;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -9,10 +9,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyBackground = "background";
         public const string StylePropertyForeground = "foreground";
 
-        private StyleBox _backgroundStyleBoxOverride;
-        private StyleBox _foregroundStyleBoxOverride;
+        private StyleBox? _backgroundStyleBoxOverride;
+        private StyleBox? _foregroundStyleBoxOverride;
 
-        public StyleBox BackgroundStyleBoxOverride
+        public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox ForegroundStyleBoxOverride
+        public StyleBox? ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set
@@ -33,26 +33,26 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private StyleBox _getBackground()
+        private StyleBox? _getBackground()
         {
             if (BackgroundStyleBoxOverride != null)
             {
                 return BackgroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyBackground, out StyleBox ret);
+            TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var ret);
             return ret;
         }
 
         [Pure]
-        private StyleBox _getForeground()
+        private StyleBox? _getForeground()
         {
             if (ForegroundStyleBoxOverride != null)
             {
                 return ForegroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyForeground, out StyleBox ret);
+            TryGetStyleProperty<StyleBox>(StylePropertyForeground, out var ret);
             return ret;
         }
 
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var bg = _getBackground();
-            bg?.Draw(handle, SizeBox);
+            bg?.Draw(handle, PixelSizeBox);
 
             var fg = _getForeground();
             if (fg == null)
@@ -69,10 +69,10 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
             var minSize = fg.MinimumSize;
-            var size = Width * GetAsRatio() - minSize.X;
+            var size = PixelWidth * GetAsRatio() - minSize.X;
             if (size > 0)
             {
-                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, Height));
+                fg.Draw(handle, UIBox2.FromDimensions(0, 0, minSize.X + size, PixelHeight));
             }
         }
 

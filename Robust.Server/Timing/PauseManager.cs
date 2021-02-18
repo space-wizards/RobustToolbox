@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Timing;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using Robust.Server.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
@@ -12,23 +10,29 @@ namespace Robust.Server.Timing
 {
     internal sealed class PauseManager : IPauseManager, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private IMapManager _mapManager;
-        [Dependency] private IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new HashSet<MapId>();
-        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new HashSet<MapId>();
+        [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
+        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
 
         public void SetMapPaused(MapId mapId, bool paused)
         {
             if (paused)
             {
                 _pausedMaps.Add(mapId);
+                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                {
+                    entity.Paused = true;
+                }
             }
             else
             {
                 _pausedMaps.Remove(mapId);
+                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                {
+                    entity.Paused = false;
+                }
             }
         }
 
@@ -41,28 +45,25 @@ namespace Robust.Server.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in _entityManager.GetEntities())
+            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
             {
-                if (entity.Transform.MapID != mapId)
-                {
-                    continue;
-                }
-
                 entity.RunMapInit();
+                entity.Paused = false;
             }
         }
 
         public void DoGridMapInitialize(IMapGrid grid) => DoGridMapInitialize(grid.Index);
         public void DoGridMapInitialize(GridId gridId)
         {
-            foreach (var entity in _entityManager.GetEntities())
+            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+
+            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)
-                {
                     continue;
-                }
 
                 entity.RunMapInit();
+                entity.Paused = false;
             }
         }
 

@@ -65,42 +65,13 @@ namespace Robust.Client.UserInterface
         protected abstract void DoOpen(Uri uri);
     }
 
-#if LINUX
-    internal sealed class UriOpenerLinux : UriOpenerBase
+    internal sealed class UriOpener : UriOpenerBase
     {
         protected override void DoOpen(Uri uri)
         {
-            // Expect xdg-open to exist.
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "xdg-open",
-                Arguments = $"\"{uri}\""
-            });
+            Process.Start(new ProcessStartInfo(uri.ToString()) {UseShellExecute = true});
         }
     }
-
-#elif MACOS
-    internal sealed class UriOpenerMacOS : UriOpenerBase
-    {
-        protected override void DoOpen(Uri uri)
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "open",
-                Arguments = $"\"{uri}\""
-            });
-        }
-    }
-
-#elif WINDOWS
-    internal sealed class UriOpenerWindows : UriOpenerBase
-    {
-        protected override void DoOpen(Uri uri)
-        {
-            Process.Start(uri.ToString());
-        }
-    }
-#endif
 
     internal sealed class UriOpenerDummy : UriOpenerBase
     {

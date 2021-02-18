@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -10,6 +11,13 @@ namespace Robust.Shared.Network
     ///     Callback for when the string table gets initialized on the client. This is NOT called on the server.
     /// </summary>
     public delegate void InitCallback();
+
+    /// <summary>
+    ///     Callback for when one or more entries in the string table get updated on the client.
+    ///     This is NOT called on the server.
+    /// </summary>
+    /// <param name="entries">The entries that were updated.</param>
+    public delegate void StringTableUpdateCallback(MsgStringTableEntries.Entry[] entries);
 
     /// <summary>
     ///     Contains a networked mapping of IDs -> Strings.
@@ -23,16 +31,18 @@ namespace Robust.Shared.Network
         private const int StringTablePacketId = 0;
 
         private bool _initialized = false;
-        private INetManager _network;
+        private readonly INetManager _network;
         private readonly Dictionary<int, string> _strings;
         private int _lastStringIndex;
-        private InitCallback _callback;
+        private InitCallback? _callback;
+        private StringTableUpdateCallback? _updateCallback;
 
         /// <summary>
         ///     Default constructor.
         /// </summary>
-        public StringTable()
+        public StringTable(INetManager network)
         {
+            _network = network;
             _strings = new Dictionary<int, string>();
         }
 
@@ -44,51 +54,54 @@ namespace Robust.Shared.Network
         /// <summary>
         /// Initializes the string table.
         /// </summary>
-        public void Initialize(INetManager network, InitCallback callback = null)
+        public void Initialize(InitCallback? callback = null,
+            StringTableUpdateCallback? updateCallback = null)
         {
             DebugTools.Assert(!_initialized);
 
             _callback = callback;
-            _network = network;
-            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, message =>
+            _updateCallback = updateCallback;
+            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, ReceiveEntries,
+                NetMessageAccept.Client);
+
+            Reset();
+        }
+
+        private void ReceiveEntries(MsgStringTableEntries message)
+        {
+            DebugTools.Assert(_network.IsClient);
+
+            Logger.InfoS("net", $"Received message name string table.");
+
+            foreach (var entry in message.Entries)
             {
-                if (_network.IsServer) // Server does not receive entries from clients.
-                    return;
+                var id = entry.Id;
+                var str = string.IsNullOrEmpty(entry.String) ? null : entry.String;
 
-                foreach (var entry in message.Entries)
+                if (str == null)
                 {
-                    var id = entry.Id;
-                    var str = string.IsNullOrEmpty(entry.String) ? null : entry.String;
-
-                    if (str == null)
+                    _strings.Remove(id);
+                }
+                else
+                {
+                    if (TryFindStringId(str, out int oldId))
                     {
-                        _strings.Remove(id);
+                        if (oldId == id) continue;
+
+                        _strings.Remove(oldId);
+                        _strings.Add(id, str);
                     }
                     else
                     {
-                        if (TryFindStringId(str, out int oldId))
-                        {
-                            if (oldId == id)
-                                continue;
-
-                            _strings.Remove(oldId);
-                            _strings.Add(id, str);
-                        }
-                        else
-                        {
-                            _strings.Add(id, str);
-                        }
+                        _strings.Add(id, str);
                     }
                 }
+            }
 
-                if (callback == null)
-                    return;
+            if (_callback == null) return;
 
-                if (_network.IsClient && !_initialized)
-                    _callback?.Invoke();
-            });
-
-            Reset();
+            if (_network.IsClient && !_initialized) _callback?.Invoke();
+            _updateCallback?.Invoke(message.Entries);
         }
 
         /// <summary>
@@ -103,6 +116,17 @@ namespace Robust.Shared.Network
             if (!TryFindStringId(MsgStringTableEntries.NAME, out _))
             {
                 _strings.Add(StringTablePacketId, MsgStringTableEntries.NAME);
+
+                if (_network.IsClient)
+                {
+                    _updateCallback?.Invoke(new [] {
+                        new MsgStringTableEntries.Entry
+                        {
+                            Id = StringTablePacketId,
+                            String = MsgStringTableEntries.NAME
+                        }
+                    });
+                }
             }
         }
 
@@ -148,7 +172,7 @@ namespace Robust.Shared.Network
             DebugTools.Assert(_network != null, "You need to call Initialize.");
 
             // The client should receive the table from the server, not add their own.
-            if (_network.IsClient)
+            if (_network!.IsClient)
                 return;
 
             // remove existing string, if any
@@ -167,9 +191,9 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="id">THe ID of the string to get.</param>
         /// <returns>The string with the given ID, or null.</returns>
-        public string GetString(int id)
+        public string? GetString(int id)
         {
-            return _strings.TryGetValue(id, out string str) ? str : null;
+            return _strings.TryGetValue(id, out var str) ? str : null;
         }
 
         /// <summary>
@@ -178,7 +202,7 @@ namespace Robust.Shared.Network
         /// <param name="id">The ID of the string.</param>
         /// <param name="str">The string with the ID.</param>
         /// <returns>True if the table contains the ID, false if it does not.</returns>
-        public bool TryGetString(int id, out string str)
+        public bool TryGetString(int id, [NotNullWhen(true)] out string? str)
         {
             return _strings.TryGetValue(id, out str);
         }
@@ -244,6 +268,7 @@ namespace Robust.Shared.Network
 
             }
 
+            Logger.InfoS("net",$"Sending message name string table to {channel.RemoteEndPoint.Address}.");
             _network.ServerSendMessage(message, channel);
         }
     }
@@ -259,7 +284,7 @@ namespace Robust.Shared.Network
         public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP) { }
         #endregion
 
-        public Entry[] Entries { get; set; }
+        public Entry[] Entries { get; set; } = default!;
 
         /// <summary>
         ///     A string table entry.

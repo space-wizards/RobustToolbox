@@ -43,32 +43,32 @@ namespace Robust.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
-    public readonly struct Color : IEquatable<Color>
+    public struct Color : IEquatable<Color>
     {
         /// <summary>
         ///     The red component of this Color4 structure.
         /// </summary>
-        public readonly float R;
+        public float R;
 
         /// <summary>
         ///     The green component of this Color4 structure.
         /// </summary>
-        public readonly float G;
+        public float G;
 
         /// <summary>
         ///     The blue component of this Color4 structure.
         /// </summary>
-        public readonly float B;
+        public float B;
 
         /// <summary>
         ///     The alpha component of this Color4 structure.
         /// </summary>
-        public readonly float A;
+        public float A;
 
-        public byte RByte => (byte) (R * byte.MaxValue);
-        public byte GByte => (byte) (G * byte.MaxValue);
-        public byte BByte => (byte) (B * byte.MaxValue);
-        public byte AByte => (byte) (A * byte.MaxValue);
+        public readonly byte RByte => (byte) (R * byte.MaxValue);
+        public readonly byte GByte => (byte) (G * byte.MaxValue);
+        public readonly byte BByte => (byte) (B * byte.MaxValue);
+        public readonly byte AByte => (byte) (A * byte.MaxValue);
 
         /// <summary>
         ///     Constructs a new Color4 structure from the specified components.
@@ -108,7 +108,7 @@ namespace Robust.Shared.Maths
         ///     This method is intended only for compatibility with System.Drawing. It compresses the color into 8 bits per
         ///     channel, which means color information is lost.
         /// </remarks>
-        public int ToArgb()
+        public readonly int ToArgb()
         {
             var value =
                 ((uint) (A * byte.MaxValue) << 24) |
@@ -148,20 +148,20 @@ namespace Robust.Shared.Maths
         /// <returns>A new Color4 structure containing the converted components.</returns>
         public static implicit operator Color(System.Drawing.Color color)
         {
-            return new Color(color.R, color.G, color.B, color.A);
+            return new(color.R, color.G, color.B, color.A);
         }
 
         public static implicit operator Color((float r, float g, float b, float a) tuple)
         {
-            return new Color(tuple.r, tuple.g, tuple.b, tuple.a);
+            return new(tuple.r, tuple.g, tuple.b, tuple.a);
         }
 
         public static implicit operator Color((float r, float g, float b) tuple)
         {
-            return new Color(tuple.r, tuple.g, tuple.b);
+            return new(tuple.r, tuple.g, tuple.b);
         }
 
-        public void Deconstruct(out float r, out float g, out float b, out float a)
+        public readonly void Deconstruct(out float r, out float g, out float b, out float a)
         {
             r = R;
             g = G;
@@ -169,7 +169,7 @@ namespace Robust.Shared.Maths
             a = A;
         }
 
-        public void Deconstruct(out float r, out float g, out float b)
+        public readonly void Deconstruct(out float r, out float g, out float b)
         {
             r = R;
             g = G;
@@ -210,7 +210,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">An object to compare to.</param>
         /// <returns>True obj is a Color4 structure with the same components as this Color4; false otherwise.</returns>
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (!(obj is Color))
                 return false;
@@ -222,7 +222,7 @@ namespace Robust.Shared.Maths
         ///     Calculates the hash code for this Color4 structure.
         /// </summary>
         /// <returns>A System.Int32 containing the hash code of this Color4 structure.</returns>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             return ToArgb();
         }
@@ -231,49 +231,49 @@ namespace Robust.Shared.Maths
         ///     Creates a System.String that describes this Color4 structure.
         /// </summary>
         /// <returns>A System.String that describes this Color4 structure.</returns>
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
         }
 
-        public Color WithRed(float newR)
+        public readonly Color WithRed(float newR)
         {
-            return new Color(newR, G, B, A);
+            return new(newR, G, B, A);
         }
 
-        public Color WithGreen(float newG)
+        public readonly Color WithGreen(float newG)
         {
-            return new Color(R, newG, B, A);
+            return new(R, newG, B, A);
         }
 
-        public Color WithBlue(float newB)
+        public readonly Color WithBlue(float newB)
         {
-            return new Color(R, G, newB, A);
+            return new(R, G, newB, A);
         }
 
-        public Color WithAlpha(float newA)
+        public readonly Color WithAlpha(float newA)
         {
-            return new Color(R, G, B, newA);
+            return new(R, G, B, newA);
         }
 
-        public Color WithRed(byte newR)
+        public readonly Color WithRed(byte newR)
         {
-            return new Color((float) newR / byte.MaxValue, G, B, A);
+            return new((float) newR / byte.MaxValue, G, B, A);
         }
 
-        public Color WithGreen(byte newG)
+        public readonly Color WithGreen(byte newG)
         {
-            return new Color(R, (float) newG / byte.MaxValue, B, A);
+            return new(R, (float) newG / byte.MaxValue, B, A);
         }
 
-        public Color WithBlue(byte newB)
+        public readonly Color WithBlue(byte newB)
         {
-            return new Color(R, G, (float) newB / byte.MaxValue, A);
+            return new(R, G, (float) newB / byte.MaxValue, A);
         }
 
-        public Color WithAlpha(byte newA)
+        public readonly Color WithAlpha(byte newA)
         {
-            return new Color(R, G, B, (float) newA / byte.MaxValue);
+            return new(R, G, B, (float) newA / byte.MaxValue);
         }
 
         /// <summary>
@@ -387,10 +387,10 @@ namespace Robust.Shared.Maths
             var saturation = hsl.Y;
             var lightness = hsl.Z;
 
-            var c = (1.0f - Math.Abs(2.0f * lightness - 1.0f)) * saturation;
+            var c = (1.0f - MathF.Abs(2.0f * lightness - 1.0f)) * saturation;
 
             var h = hue / 60.0f;
-            var X = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var X = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -452,8 +452,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsl(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -472,7 +472,7 @@ namespace Robust.Shared.Maths
 
             var saturation = 0.0f;
             if (0.0f != lightness && lightness != 1.0f)
-                saturation = c / (1.0f - Math.Abs(2.0f * lightness - 1.0f));
+                saturation = c / (1.0f - MathF.Abs(2.0f * lightness - 1.0f));
 
             return new Vector4(hue, saturation, lightness, rgb.A);
         }
@@ -498,7 +498,7 @@ namespace Robust.Shared.Maths
             var c = value * saturation;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -560,8 +560,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsv(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -679,7 +679,7 @@ namespace Robust.Shared.Maths
             var luminance = hcy.Z;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -741,8 +741,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHcy(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -764,7 +764,7 @@ namespace Robust.Shared.Maths
         public static Vector4 ToCmyk(Color rgb)
         {
             var (r, g, b) = rgb;
-            var k = 1 - Math.Max(r, Math.Max(g, b));
+            var k = 1 - MathF.Max(r, MathF.Max(g, b));
             var c = (1 - r - k) / (1 - k);
             var m = (1 - g - k) / (1 - k);
             var y = (1 - b - k) / (1 - k);
@@ -959,7 +959,7 @@ namespace Robust.Shared.Maths
                     throw new NotImplementedException();
             }
 
-            return new Color(ret.X, ret.Y, ret.Z, Math.Min(1, dstColor.A + dstColor.A * srcColor.A));
+            return new Color(ret.X, ret.Y, ret.Z, MathF.Min(1, dstColor.A + dstColor.A * srcColor.A));
         }
 
         /// <summary>
@@ -970,12 +970,28 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static Color operator *(Color a, Color b)
         {
-            return new Color(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
+            return new(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
         }
 
-        public string ToHex()
+        public readonly string ToHex()
         {
-            return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";
+            var hexColor = 0;
+            hexColor += RByte << 24;
+            hexColor += GByte << 16;
+            hexColor += BByte << 8;
+            hexColor += AByte;
+
+            return $"#{hexColor:X8}";
+        }
+
+        public readonly string ToHexNoAlpha()
+        {
+            var hexColor = 0;
+            hexColor += RByte << 16;
+            hexColor += GByte << 8;
+            hexColor += BByte;
+
+            return $"#{hexColor:X6}";
         }
 
         /// <summary>
@@ -983,17 +999,17 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="other">The Color4 structure to compare to.</param>
         /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
-        public bool Equals(Color other)
+        public readonly bool Equals(Color other)
         {
             return
-                FloatMath.CloseTo(R, other.R) &&
-                FloatMath.CloseTo(G, other.G) &&
-                FloatMath.CloseTo(B, other.B) &&
-                FloatMath.CloseTo(A, other.A);
+                MathHelper.CloseTo(R, other.R) &&
+                MathHelper.CloseTo(G, other.G) &&
+                MathHelper.CloseTo(B, other.B) &&
+                MathHelper.CloseTo(A, other.A);
         }
 
         [PublicAPI]
-        public enum BlendFactor
+        public enum BlendFactor : byte
         {
             Zero,
             One,
@@ -1012,709 +1028,710 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 255, 255, 0).
         /// </summary>
-        public static Color Transparent => new Color(255, 255, 255, 0);
+        public static Color Transparent => new(255, 255, 255, 0);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (240, 248, 255, 255).
         /// </summary>
-        public static Color AliceBlue => new Color(240, 248, 255, 255);
+        public static Color AliceBlue => new(240, 248, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (250, 235, 215, 255).
         /// </summary>
-        public static Color AntiqueWhite => new Color(250, 235, 215, 255);
+        public static Color AntiqueWhite => new(250, 235, 215, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 255, 255, 255).
         /// </summary>
-        public static Color Aqua => new Color(0, 255, 255, 255);
+        public static Color Aqua => new(0, 255, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (127, 255, 212, 255).
         /// </summary>
-        public static Color Aquamarine => new Color(127, 255, 212, 255);
+        public static Color Aquamarine => new(127, 255, 212, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (240, 255, 255, 255).
         /// </summary>
-        public static Color Azure => new Color(240, 255, 255, 255);
+        public static Color Azure => new(240, 255, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 245, 220, 255).
         /// </summary>
-        public static Color Beige => new Color(245, 245, 220, 255);
+        public static Color Beige => new(245, 245, 220, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 228, 196, 255).
         /// </summary>
-        public static Color Bisque => new Color(255, 228, 196, 255);
+        public static Color Bisque => new(255, 228, 196, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 0, 0, 255).
         /// </summary>
-        public static Color Black => new Color(0, 0, 0, 255);
+        public static Color Black => new(0, 0, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 235, 205, 255).
         /// </summary>
-        public static Color BlanchedAlmond => new Color(255, 235, 205, 255);
+        public static Color BlanchedAlmond => new(255, 235, 205, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 0, 255, 255).
         /// </summary>
-        public static Color Blue => new Color(0, 0, 255, 255);
+        public static Color Blue => new(0, 0, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (138, 43, 226, 255).
         /// </summary>
-        public static Color BlueViolet => new Color(138, 43, 226, 255);
+        public static Color BlueViolet => new(138, 43, 226, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (165, 42, 42, 255).
         /// </summary>
-        public static Color Brown => new Color(165, 42, 42, 255);
+        public static Color Brown => new(165, 42, 42, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (222, 184, 135, 255).
         /// </summary>
-        public static Color BurlyWood => new Color(222, 184, 135, 255);
+        public static Color BurlyWood => new(222, 184, 135, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (95, 158, 160, 255).
         /// </summary>
-        public static Color CadetBlue => new Color(95, 158, 160, 255);
+        public static Color CadetBlue => new(95, 158, 160, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (127, 255, 0, 255).
         /// </summary>
-        public static Color Chartreuse => new Color(127, 255, 0, 255);
+        public static Color Chartreuse => new(127, 255, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (210, 105, 30, 255).
         /// </summary>
-        public static Color Chocolate => new Color(210, 105, 30, 255);
+        public static Color Chocolate => new(210, 105, 30, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 127, 80, 255).
         /// </summary>
-        public static Color Coral => new Color(255, 127, 80, 255);
+        public static Color Coral => new(255, 127, 80, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (100, 149, 237, 255).
         /// </summary>
-        public static Color CornflowerBlue => new Color(100, 149, 237, 255);
+        public static Color CornflowerBlue => new(100, 149, 237, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 248, 220, 255).
         /// </summary>
-        public static Color Cornsilk => new Color(255, 248, 220, 255);
+        public static Color Cornsilk => new(255, 248, 220, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (220, 20, 60, 255).
         /// </summary>
-        public static Color Crimson => new Color(220, 20, 60, 255);
+        public static Color Crimson => new(220, 20, 60, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 255, 255, 255).
         /// </summary>
-        public static Color Cyan => new Color(0, 255, 255, 255);
+        public static Color Cyan => new(0, 255, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 0, 139, 255).
         /// </summary>
-        public static Color DarkBlue => new Color(0, 0, 139, 255);
+        public static Color DarkBlue => new(0, 0, 139, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 139, 139, 255).
         /// </summary>
-        public static Color DarkCyan => new Color(0, 139, 139, 255);
+        public static Color DarkCyan => new(0, 139, 139, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (184, 134, 11, 255).
         /// </summary>
-        public static Color DarkGoldenrod => new Color(184, 134, 11, 255);
+        public static Color DarkGoldenrod => new(184, 134, 11, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (169, 169, 169, 255).
         /// </summary>
-        public static Color DarkGray => new Color(169, 169, 169, 255);
+        public static Color DarkGray => new(169, 169, 169, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 100, 0, 255).
         /// </summary>
-        public static Color DarkGreen => new Color(0, 100, 0, 255);
+        public static Color DarkGreen => new(0, 100, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (189, 183, 107, 255).
         /// </summary>
-        public static Color DarkKhaki => new Color(189, 183, 107, 255);
+        public static Color DarkKhaki => new(189, 183, 107, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (139, 0, 139, 255).
         /// </summary>
-        public static Color DarkMagenta => new Color(139, 0, 139, 255);
+        public static Color DarkMagenta => new(139, 0, 139, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (85, 107, 47, 255).
         /// </summary>
-        public static Color DarkOliveGreen => new Color(85, 107, 47, 255);
+        public static Color DarkOliveGreen => new(85, 107, 47, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 140, 0, 255).
         /// </summary>
-        public static Color DarkOrange => new Color(255, 140, 0, 255);
+        public static Color DarkOrange => new(255, 140, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (153, 50, 204, 255).
         /// </summary>
-        public static Color DarkOrchid => new Color(153, 50, 204, 255);
+        public static Color DarkOrchid => new(153, 50, 204, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (139, 0, 0, 255).
         /// </summary>
-        public static Color DarkRed => new Color(139, 0, 0, 255);
+        public static Color DarkRed => new(139, 0, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (233, 150, 122, 255).
         /// </summary>
-        public static Color DarkSalmon => new Color(233, 150, 122, 255);
+        public static Color DarkSalmon => new(233, 150, 122, 255);
 
         /// <summary>
-        ///     Gets the system color with (R, G, B, A) = (143, 188, 139, 255).
+        ///     Gets the system color with (R, G, B, A) = (143, 188, 143, 255).
+        ///     Previously (R, G, B, A) = (143, 188, 139, 255) before .NET 5.
         /// </summary>
-        public static Color DarkSeaGreen => new Color(143, 188, 139, 255);
+        public static Color DarkSeaGreen => new(143, 188, 143, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (72, 61, 139, 255).
         /// </summary>
-        public static Color DarkSlateBlue => new Color(72, 61, 139, 255);
+        public static Color DarkSlateBlue => new(72, 61, 139, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (47, 79, 79, 255).
         /// </summary>
-        public static Color DarkSlateGray => new Color(47, 79, 79, 255);
+        public static Color DarkSlateGray => new(47, 79, 79, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 206, 209, 255).
         /// </summary>
-        public static Color DarkTurquoise => new Color(0, 206, 209, 255);
+        public static Color DarkTurquoise => new(0, 206, 209, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (148, 0, 211, 255).
         /// </summary>
-        public static Color DarkViolet => new Color(148, 0, 211, 255);
+        public static Color DarkViolet => new(148, 0, 211, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 20, 147, 255).
         /// </summary>
-        public static Color DeepPink => new Color(255, 20, 147, 255);
+        public static Color DeepPink => new(255, 20, 147, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 191, 255, 255).
         /// </summary>
-        public static Color DeepSkyBlue => new Color(0, 191, 255, 255);
+        public static Color DeepSkyBlue => new(0, 191, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (105, 105, 105, 255).
         /// </summary>
-        public static Color DimGray => new Color(105, 105, 105, 255);
+        public static Color DimGray => new(105, 105, 105, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (30, 144, 255, 255).
         /// </summary>
-        public static Color DodgerBlue => new Color(30, 144, 255, 255);
+        public static Color DodgerBlue => new(30, 144, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (178, 34, 34, 255).
         /// </summary>
-        public static Color Firebrick => new Color(178, 34, 34, 255);
+        public static Color Firebrick => new(178, 34, 34, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 250, 240, 255).
         /// </summary>
-        public static Color FloralWhite => new Color(255, 250, 240, 255);
+        public static Color FloralWhite => new(255, 250, 240, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (34, 139, 34, 255).
         /// </summary>
-        public static Color ForestGreen => new Color(34, 139, 34, 255);
+        public static Color ForestGreen => new(34, 139, 34, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 0, 255, 255).
         /// </summary>
-        public static Color Fuchsia => new Color(255, 0, 255, 255);
+        public static Color Fuchsia => new(255, 0, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (220, 220, 220, 255).
         /// </summary>
-        public static Color Gainsboro => new Color(220, 220, 220, 255);
+        public static Color Gainsboro => new(220, 220, 220, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (248, 248, 255, 255).
         /// </summary>
-        public static Color GhostWhite => new Color(248, 248, 255, 255);
+        public static Color GhostWhite => new(248, 248, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 215, 0, 255).
         /// </summary>
-        public static Color Gold => new Color(255, 215, 0, 255);
+        public static Color Gold => new(255, 215, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (218, 165, 32, 255).
         /// </summary>
-        public static Color Goldenrod => new Color(218, 165, 32, 255);
+        public static Color Goldenrod => new(218, 165, 32, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (128, 128, 128, 255).
         /// </summary>
-        public static Color Gray => new Color(128, 128, 128, 255);
+        public static Color Gray => new(128, 128, 128, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 128, 0, 255).
         /// </summary>
-        public static Color Green => new Color(0, 128, 0, 255);
+        public static Color Green => new(0, 128, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (173, 255, 47, 255).
         /// </summary>
-        public static Color GreenYellow => new Color(173, 255, 47, 255);
+        public static Color GreenYellow => new(173, 255, 47, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (240, 255, 240, 255).
         /// </summary>
-        public static Color Honeydew => new Color(240, 255, 240, 255);
+        public static Color Honeydew => new(240, 255, 240, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 105, 180, 255).
         /// </summary>
-        public static Color HotPink => new Color(255, 105, 180, 255);
+        public static Color HotPink => new(255, 105, 180, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (205, 92, 92, 255).
         /// </summary>
-        public static Color IndianRed => new Color(205, 92, 92, 255);
+        public static Color IndianRed => new(205, 92, 92, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (75, 0, 130, 255).
         /// </summary>
-        public static Color Indigo => new Color(75, 0, 130, 255);
+        public static Color Indigo => new(75, 0, 130, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 255, 240, 255).
         /// </summary>
-        public static Color Ivory => new Color(255, 255, 240, 255);
+        public static Color Ivory => new(255, 255, 240, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (240, 230, 140, 255).
         /// </summary>
-        public static Color Khaki => new Color(240, 230, 140, 255);
+        public static Color Khaki => new(240, 230, 140, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (230, 230, 250, 255).
         /// </summary>
-        public static Color Lavender => new Color(230, 230, 250, 255);
+        public static Color Lavender => new(230, 230, 250, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 240, 245, 255).
         /// </summary>
-        public static Color LavenderBlush => new Color(255, 240, 245, 255);
+        public static Color LavenderBlush => new(255, 240, 245, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (124, 252, 0, 255).
         /// </summary>
-        public static Color LawnGreen => new Color(124, 252, 0, 255);
+        public static Color LawnGreen => new(124, 252, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 250, 205, 255).
         /// </summary>
-        public static Color LemonChiffon => new Color(255, 250, 205, 255);
+        public static Color LemonChiffon => new(255, 250, 205, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (173, 216, 230, 255).
         /// </summary>
-        public static Color LightBlue => new Color(173, 216, 230, 255);
+        public static Color LightBlue => new(173, 216, 230, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (240, 128, 128, 255).
         /// </summary>
-        public static Color LightCoral => new Color(240, 128, 128, 255);
+        public static Color LightCoral => new(240, 128, 128, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (224, 255, 255, 255).
         /// </summary>
-        public static Color LightCyan => new Color(224, 255, 255, 255);
+        public static Color LightCyan => new(224, 255, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (250, 250, 210, 255).
         /// </summary>
-        public static Color LightGoldenrodYellow => new Color(250, 250, 210, 255);
+        public static Color LightGoldenrodYellow => new(250, 250, 210, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (144, 238, 144, 255).
         /// </summary>
-        public static Color LightGreen => new Color(144, 238, 144, 255);
+        public static Color LightGreen => new(144, 238, 144, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (211, 211, 211, 255).
         /// </summary>
-        public static Color LightGray => new Color(211, 211, 211, 255);
+        public static Color LightGray => new(211, 211, 211, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 182, 193, 255).
         /// </summary>
-        public static Color LightPink => new Color(255, 182, 193, 255);
+        public static Color LightPink => new(255, 182, 193, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 160, 122, 255).
         /// </summary>
-        public static Color LightSalmon => new Color(255, 160, 122, 255);
+        public static Color LightSalmon => new(255, 160, 122, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (32, 178, 170, 255).
         /// </summary>
-        public static Color LightSeaGreen => new Color(32, 178, 170, 255);
+        public static Color LightSeaGreen => new(32, 178, 170, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (135, 206, 250, 255).
         /// </summary>
-        public static Color LightSkyBlue => new Color(135, 206, 250, 255);
+        public static Color LightSkyBlue => new(135, 206, 250, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (119, 136, 153, 255).
         /// </summary>
-        public static Color LightSlateGray => new Color(119, 136, 153, 255);
+        public static Color LightSlateGray => new(119, 136, 153, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (176, 196, 222, 255).
         /// </summary>
-        public static Color LightSteelBlue => new Color(176, 196, 222, 255);
+        public static Color LightSteelBlue => new(176, 196, 222, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 255, 224, 255).
         /// </summary>
-        public static Color LightYellow => new Color(255, 255, 224, 255);
+        public static Color LightYellow => new(255, 255, 224, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 255, 0, 255).
         /// </summary>
-        public static Color Lime => new Color(0, 255, 0, 255);
+        public static Color Lime => new(0, 255, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (50, 205, 50, 255).
         /// </summary>
-        public static Color LimeGreen => new Color(50, 205, 50, 255);
+        public static Color LimeGreen => new(50, 205, 50, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (250, 240, 230, 255).
         /// </summary>
-        public static Color Linen => new Color(250, 240, 230, 255);
+        public static Color Linen => new(250, 240, 230, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 0, 255, 255).
         /// </summary>
-        public static Color Magenta => new Color(255, 0, 255, 255);
+        public static Color Magenta => new(255, 0, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (128, 0, 0, 255).
         /// </summary>
-        public static Color Maroon => new Color(128, 0, 0, 255);
+        public static Color Maroon => new(128, 0, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (102, 205, 170, 255).
         /// </summary>
-        public static Color MediumAquamarine => new Color(102, 205, 170, 255);
+        public static Color MediumAquamarine => new(102, 205, 170, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 0, 205, 255).
         /// </summary>
-        public static Color MediumBlue => new Color(0, 0, 205, 255);
+        public static Color MediumBlue => new(0, 0, 205, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (186, 85, 211, 255).
         /// </summary>
-        public static Color MediumOrchid => new Color(186, 85, 211, 255);
+        public static Color MediumOrchid => new(186, 85, 211, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (147, 112, 219, 255).
         /// </summary>
-        public static Color MediumPurple => new Color(147, 112, 219, 255);
+        public static Color MediumPurple => new(147, 112, 219, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (60, 179, 113, 255).
         /// </summary>
-        public static Color MediumSeaGreen => new Color(60, 179, 113, 255);
+        public static Color MediumSeaGreen => new(60, 179, 113, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (123, 104, 238, 255).
         /// </summary>
-        public static Color MediumSlateBlue => new Color(123, 104, 238, 255);
+        public static Color MediumSlateBlue => new(123, 104, 238, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 250, 154, 255).
         /// </summary>
-        public static Color MediumSpringGreen => new Color(0, 250, 154, 255);
+        public static Color MediumSpringGreen => new(0, 250, 154, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (72, 209, 204, 255).
         /// </summary>
-        public static Color MediumTurquoise => new Color(72, 209, 204, 255);
+        public static Color MediumTurquoise => new(72, 209, 204, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (199, 21, 133, 255).
         /// </summary>
-        public static Color MediumVioletRed => new Color(199, 21, 133, 255);
+        public static Color MediumVioletRed => new(199, 21, 133, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (25, 25, 112, 255).
         /// </summary>
-        public static Color MidnightBlue => new Color(25, 25, 112, 255);
+        public static Color MidnightBlue => new(25, 25, 112, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 255, 250, 255).
         /// </summary>
-        public static Color MintCream => new Color(245, 255, 250, 255);
+        public static Color MintCream => new(245, 255, 250, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 228, 225, 255).
         /// </summary>
-        public static Color MistyRose => new Color(255, 228, 225, 255);
+        public static Color MistyRose => new(255, 228, 225, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 228, 181, 255).
         /// </summary>
-        public static Color Moccasin => new Color(255, 228, 181, 255);
+        public static Color Moccasin => new(255, 228, 181, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 222, 173, 255).
         /// </summary>
-        public static Color NavajoWhite => new Color(255, 222, 173, 255);
+        public static Color NavajoWhite => new(255, 222, 173, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 0, 128, 255).
         /// </summary>
-        public static Color Navy => new Color(0, 0, 128, 255);
+        public static Color Navy => new(0, 0, 128, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (253, 245, 230, 255).
         /// </summary>
-        public static Color OldLace => new Color(253, 245, 230, 255);
+        public static Color OldLace => new(253, 245, 230, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (128, 128, 0, 255).
         /// </summary>
-        public static Color Olive => new Color(128, 128, 0, 255);
+        public static Color Olive => new(128, 128, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (107, 142, 35, 255).
         /// </summary>
-        public static Color OliveDrab => new Color(107, 142, 35, 255);
+        public static Color OliveDrab => new(107, 142, 35, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 165, 0, 255).
         /// </summary>
-        public static Color Orange => new Color(255, 165, 0, 255);
+        public static Color Orange => new(255, 165, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 69, 0, 255).
         /// </summary>
-        public static Color OrangeRed => new Color(255, 69, 0, 255);
+        public static Color OrangeRed => new(255, 69, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (218, 112, 214, 255).
         /// </summary>
-        public static Color Orchid => new Color(218, 112, 214, 255);
+        public static Color Orchid => new(218, 112, 214, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (238, 232, 170, 255).
         /// </summary>
-        public static Color PaleGoldenrod => new Color(238, 232, 170, 255);
+        public static Color PaleGoldenrod => new(238, 232, 170, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (152, 251, 152, 255).
         /// </summary>
-        public static Color PaleGreen => new Color(152, 251, 152, 255);
+        public static Color PaleGreen => new(152, 251, 152, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (175, 238, 238, 255).
         /// </summary>
-        public static Color PaleTurquoise => new Color(175, 238, 238, 255);
+        public static Color PaleTurquoise => new(175, 238, 238, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (219, 112, 147, 255).
         /// </summary>
-        public static Color PaleVioletRed => new Color(219, 112, 147, 255);
+        public static Color PaleVioletRed => new(219, 112, 147, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 239, 213, 255).
         /// </summary>
-        public static Color PapayaWhip => new Color(255, 239, 213, 255);
+        public static Color PapayaWhip => new(255, 239, 213, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 218, 185, 255).
         /// </summary>
-        public static Color PeachPuff => new Color(255, 218, 185, 255);
+        public static Color PeachPuff => new(255, 218, 185, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (205, 133, 63, 255).
         /// </summary>
-        public static Color Peru => new Color(205, 133, 63, 255);
+        public static Color Peru => new(205, 133, 63, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 192, 203, 255).
         /// </summary>
-        public static Color Pink => new Color(255, 192, 203, 255);
+        public static Color Pink => new(255, 192, 203, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (221, 160, 221, 255).
         /// </summary>
-        public static Color Plum => new Color(221, 160, 221, 255);
+        public static Color Plum => new(221, 160, 221, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (176, 224, 230, 255).
         /// </summary>
-        public static Color PowderBlue => new Color(176, 224, 230, 255);
+        public static Color PowderBlue => new(176, 224, 230, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (128, 0, 128, 255).
         /// </summary>
-        public static Color Purple => new Color(128, 0, 128, 255);
+        public static Color Purple => new(128, 0, 128, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 0, 0, 255).
         /// </summary>
-        public static Color Red => new Color(255, 0, 0, 255);
+        public static Color Red => new(255, 0, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (188, 143, 143, 255).
         /// </summary>
-        public static Color RosyBrown => new Color(188, 143, 143, 255);
+        public static Color RosyBrown => new(188, 143, 143, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (65, 105, 225, 255).
         /// </summary>
-        public static Color RoyalBlue => new Color(65, 105, 225, 255);
+        public static Color RoyalBlue => new(65, 105, 225, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (139, 69, 19, 255).
         /// </summary>
-        public static Color SaddleBrown => new Color(139, 69, 19, 255);
+        public static Color SaddleBrown => new(139, 69, 19, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (250, 128, 114, 255).
         /// </summary>
-        public static Color Salmon => new Color(250, 128, 114, 255);
+        public static Color Salmon => new(250, 128, 114, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (244, 164, 96, 255).
         /// </summary>
-        public static Color SandyBrown => new Color(244, 164, 96, 255);
+        public static Color SandyBrown => new(244, 164, 96, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (46, 139, 87, 255).
         /// </summary>
-        public static Color SeaGreen => new Color(46, 139, 87, 255);
+        public static Color SeaGreen => new(46, 139, 87, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 245, 238, 255).
         /// </summary>
-        public static Color SeaShell => new Color(255, 245, 238, 255);
+        public static Color SeaShell => new(255, 245, 238, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (160, 82, 45, 255).
         /// </summary>
-        public static Color Sienna => new Color(160, 82, 45, 255);
+        public static Color Sienna => new(160, 82, 45, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (192, 192, 192, 255).
         /// </summary>
-        public static Color Silver => new Color(192, 192, 192, 255);
+        public static Color Silver => new(192, 192, 192, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (135, 206, 235, 255).
         /// </summary>
-        public static Color SkyBlue => new Color(135, 206, 235, 255);
+        public static Color SkyBlue => new(135, 206, 235, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (106, 90, 205, 255).
         /// </summary>
-        public static Color SlateBlue => new Color(106, 90, 205, 255);
+        public static Color SlateBlue => new(106, 90, 205, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (112, 128, 144, 255).
         /// </summary>
-        public static Color SlateGray => new Color(112, 128, 144, 255);
+        public static Color SlateGray => new(112, 128, 144, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 250, 250, 255).
         /// </summary>
-        public static Color Snow => new Color(255, 250, 250, 255);
+        public static Color Snow => new(255, 250, 250, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 255, 127, 255).
         /// </summary>
-        public static Color SpringGreen => new Color(0, 255, 127, 255);
+        public static Color SpringGreen => new(0, 255, 127, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (70, 130, 180, 255).
         /// </summary>
-        public static Color SteelBlue => new Color(70, 130, 180, 255);
+        public static Color SteelBlue => new(70, 130, 180, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (210, 180, 140, 255).
         /// </summary>
-        public static Color Tan => new Color(210, 180, 140, 255);
+        public static Color Tan => new(210, 180, 140, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (0, 128, 128, 255).
         /// </summary>
-        public static Color Teal => new Color(0, 128, 128, 255);
+        public static Color Teal => new(0, 128, 128, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (216, 191, 216, 255).
         /// </summary>
-        public static Color Thistle => new Color(216, 191, 216, 255);
+        public static Color Thistle => new(216, 191, 216, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 99, 71, 255).
         /// </summary>
-        public static Color Tomato => new Color(255, 99, 71, 255);
+        public static Color Tomato => new(255, 99, 71, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (64, 224, 208, 255).
         /// </summary>
-        public static Color Turquoise => new Color(64, 224, 208, 255);
+        public static Color Turquoise => new(64, 224, 208, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (238, 130, 238, 255).
         /// </summary>
-        public static Color Violet => new Color(238, 130, 238, 255);
+        public static Color Violet => new(238, 130, 238, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 222, 179, 255).
         /// </summary>
-        public static Color Wheat => new Color(245, 222, 179, 255);
+        public static Color Wheat => new(245, 222, 179, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 255, 255, 255).
         /// </summary>
-        public static Color White => new Color(255, 255, 255, 255);
+        public static Color White => new(255, 255, 255, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (245, 245, 245, 255).
         /// </summary>
-        public static Color WhiteSmoke => new Color(245, 245, 245, 255);
+        public static Color WhiteSmoke => new(245, 245, 245, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (255, 255, 0, 255).
         /// </summary>
-        public static Color Yellow => new Color(255, 255, 0, 255);
+        public static Color Yellow => new(255, 255, 0, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (154, 205, 50, 255).
         /// </summary>
-        public static Color YellowGreen => new Color(154, 205, 50, 255);
+        public static Color YellowGreen => new(154, 205, 50, 255);
 
-        private static readonly Dictionary<string, Color> DefaultColors = new Dictionary<string, Color>
+        private static readonly Dictionary<string, Color> DefaultColors = new()
         {
             ["transparent"] = Transparent,
             ["aliceblue"] = AliceBlue,
@@ -1864,7 +1881,7 @@ namespace Robust.Shared.Maths
         private static readonly Dictionary<Color, string> DefaultColorsInverted =
             DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
 
-        public string? Name()
+        public readonly string? Name()
         {
             return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
         }

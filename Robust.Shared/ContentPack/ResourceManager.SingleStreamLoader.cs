@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Utility;
 
@@ -22,7 +23,7 @@ namespace Robust.Shared.ContentPack
                 // Nothing to do here I'm pretty sure.
             }
 
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 if (relPath == _resourcePath)
                 {
@@ -41,10 +42,15 @@ namespace Robust.Shared.ContentPack
 
             public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
             {
-                if (path.TryRelativeTo(_resourcePath, out var relative))
+                if (_resourcePath.TryRelativeTo(path, out var relative))
                 {
-                    yield return relative;
+                    yield return _resourcePath;
                 }
+            }
+
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                yield return _resourcePath.ToString();
             }
         }
     }

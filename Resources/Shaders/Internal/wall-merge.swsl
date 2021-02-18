@@ -1,16 +1,16 @@
 preset raw;
 
-varying vec2 pos;
+varying highp vec2 pos;
 
 void vertex()
 {
     VERTEX = (projectionMatrix * viewMatrix * vec3(VERTEX, 1.0)).xy;
 
-    pos = (VERTEX + vec2(1)) / 2;
+    pos = (VERTEX + vec2(1.0)) / 2.0;
 }
 
 
 void fragment()
 {
-    COLOR = texture(TEXTURE, pos);
+    COLOR = zTexture(pos);
 }

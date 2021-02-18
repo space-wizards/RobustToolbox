@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -10,11 +10,11 @@ namespace Robust.UnitTesting.Client.Graphics
     class EyeTest
     {
         [Test]
-        public void Constructor_DefaultZoom_isOne()
+        public void Constructor_DefaultZoom_isTwo()
         {
             var eye = new Eye();
 
-            Assert.That(eye.Zoom, Is.Approximately(Vector2.One));
+            Assert.That(eye.Zoom, Is.Approximately(Vector2.One*2f));
         }
 
         [Test]

@@ -1,7 +1,5 @@
 using System;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
@@ -10,8 +8,9 @@ namespace Robust.Client.GameObjects
 {
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
-        internal SnapGridComponent SnapGrid { get; private set; }
-        [ViewVariables] private (GridId, MapIndices) _lastPosition;
+        internal SnapGridComponent? SnapGrid { get; private set; }
+
+        [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 
@@ -30,7 +29,7 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.TryGetComponent(out SnapGridComponent snap))
+            if (Owner.TryGetComponent(out SnapGridComponent? snap))
             {
                 SnapGrid = snap;
                 SnapGrid.OnPositionChanged += SnapGridOnPositionChanged;
@@ -42,7 +41,7 @@ namespace Robust.Client.GameObjects
         private void SnapGridOnPositionChanged()
         {
             SendDirty();
-            _lastPosition = (Owner.Transform.GridID, SnapGrid.Position);
+            _lastPosition = (Owner.Transform.GridID, SnapGrid!.Position);
         }
 
         protected override void Shutdown()
@@ -79,7 +78,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var neighbor in SnapGrid.GetInDir(dir))
                 {
-                    if (neighbor.TryGetComponent(out ClientOccluderComponent comp) && comp.Enabled)
+                    if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;

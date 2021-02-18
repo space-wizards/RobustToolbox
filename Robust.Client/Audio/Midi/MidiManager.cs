@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using JetBrains.Annotations;
 using NFluidsynth;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -27,9 +30,9 @@ namespace Robust.Client.Audio.Midi
         /// <returns>
         ///     <c>null</c> if MIDI support is not available.
         /// </returns>
-        [CanBeNull]
-        IMidiRenderer GetNewRenderer();
+        IMidiRenderer? GetNewRenderer();
 
+        /*
         /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
         /// </summary>
@@ -45,6 +48,7 @@ namespace Robust.Client.Audio.Midi
         ///     We add this here so content doesn't need to reference NFluidsynth.
         /// </remarks>
         bool IsSoundfontFile(string filename);
+        */
 
         /// <summary>
         ///     Method called every frame.
@@ -57,13 +61,15 @@ namespace Robust.Client.Audio.Midi
         ///     If true, MIDI support is available.
         /// </summary>
         bool IsAvailable { get; }
+
+        public int OcclusionCollisionMask { get; set; }
     }
 
     internal class MidiManager : IDisposable, IMidiManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager = default!;
-#pragma warning restore 649
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public bool IsAvailable
         {
@@ -75,11 +81,12 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        private readonly List<MidiRenderer> _renderers = new List<MidiRenderer>();
+        private readonly List<MidiRenderer> _renderers = new();
 
         private bool _alive = true;
-        private Settings _settings;
-        private Thread _midiThread;
+        private Settings? _settings;
+        private Thread? _midiThread;
+        private ISawmill _midiSawmill = default!;
 
         private static readonly string[] LinuxSoundfonts =
         {
@@ -96,24 +103,28 @@ namespace Robust.Client.Audio.Midi
         private const string OsxSoundfont =
             "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
-        private const string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
+        private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
-        private ResourceLoaderCallbacks _soundfontLoaderCallbacks;
+        private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
 
         private bool FluidsynthInitialized;
         private bool _failedInitialize;
 
-        private NFluidsynth.Logger.LoggerDelegate _loggerDelegate;
-        private ISawmill _sawmill;
+        private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
+        private ISawmill _sawmill = default!;
+
+        public int OcclusionCollisionMask { get; set; }
 
         private void InitializeFluidsynth()
         {
             if (FluidsynthInitialized || _failedInitialize) return;
 
+            _midiSawmill = Logger.GetSawmill("midi");
+            _sawmill = Logger.GetSawmill("midi.fluidsynth");
+            _loggerDelegate = LoggerDelegate;
+
             try
             {
-                _loggerDelegate = LoggerDelegate;
-                _sawmill = Logger.GetSawmill("midi.fluidsynth");
                 NFluidsynth.Logger.SetLoggerMethod(_loggerDelegate); // Will cause a safe DllNotFoundException if not available.
 
                 _settings = new Settings();
@@ -122,7 +133,12 @@ namespace Robust.Client.Audio.Midi
                 _settings["synth.lock-memory"].IntValue = 0;
                 _settings["synth.threadsafe-api"].IntValue = 1;
                 _settings["synth.gain"].DoubleValue = 1.0d;
+                _settings["synth.polyphony"].IntValue = 1024;
+                _settings["synth.cpu-cores"].IntValue = 2;
+                _settings["synth.overflow.age"].DoubleValue = 3000;
                 _settings["audio.driver"].StringValue = "file";
+                _settings["audio.periods"].IntValue = 8;
+                _settings["audio.period-size"].IntValue = 4096;
                 _settings["midi.autoconnect"].IntValue = 1;
                 _settings["player.reset-synth"].IntValue = 0;
                 _settings["synth.midi-bank-select"].StringValue = "gm";
@@ -137,8 +153,6 @@ namespace Robust.Client.Audio.Midi
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
-
-            _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
 
             FluidsynthInitialized = true;
         }
@@ -156,6 +170,7 @@ namespace Robust.Client.Audio.Midi
             _sawmill.Log(rLevel, message);
         }
 
+        /*
         public bool IsMidiFile(string filename)
         {
             return SoundFont.IsMidiFile(filename);
@@ -165,8 +180,9 @@ namespace Robust.Client.Audio.Midi
         {
             return SoundFont.IsSoundFont(filename);
         }
+        */
 
-        public IMidiRenderer GetNewRenderer()
+        public IMidiRenderer? GetNewRenderer()
         {
             if (!FluidsynthInitialized)
             {
@@ -188,9 +204,15 @@ namespace Robust.Client.Audio.Midi
             {
                 soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 
-                var renderer = new MidiRenderer(_settings, soundfontLoader);
+                var renderer = new MidiRenderer(_settings!, soundfontLoader);
 
-                // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
+                foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
+                {
+                    if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                    renderer.LoadSoundfont(file.ToString());
+                }
+
+                // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
                 renderer.LoadSoundfont(FallbackSoundfont);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -242,30 +264,66 @@ namespace Robust.Client.Audio.Midi
 
             // Update positions of streams every frame.
             lock (_renderers)
-                for (var i = 0; i < _renderers.Count; i++)
+                foreach (var renderer in _renderers)
                 {
-                    var renderer = _renderers[i];
+                    if (renderer.Disposed)
+                        continue;
+
                     if (!renderer.Mono)
                     {
                         renderer.Source.SetGlobal();
                         continue;
                     }
 
+                    MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                        {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
-                        }
+                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition))
+                        mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                    }
+
+                    if (mapPos != null)
+                    {
+                        var pos = mapPos.Value;
+                        if (pos.MapId != _eyeManager.CurrentMap)
                         {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
+                            renderer.Source.SetVolume(-10000000);
                         }
+                        else
+                        {
+                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var occlusion = 0f;
+                            if (sourceRelative.Length > 0)
+                            {
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                    pos.MapId,
+                                    new CollisionRay(
+                                        pos.Position,
+                                        sourceRelative.Normalized,
+                                        OcclusionCollisionMask),
+                                    sourceRelative.Length,
+                                    renderer.TrackingEntity);
+                            }
+                            renderer.Source.SetOcclusion(occlusion);
+                        }
+
+                        if (renderer.Source.SetPosition(pos.Position))
+                        {
+                            continue;
+                        }
+
+                        if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
+                        {
+                            // just duck out instead of move to NaN
+                            renderer.Source.SetOcclusion(float.MaxValue);
+                            continue;
+                        }
+
+                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                        renderer.Source.StopPlaying();
                     }
                 }
         }
@@ -281,10 +339,13 @@ namespace Robust.Client.Audio.Midi
                     for (var i = 0; i < _renderers.Count; i++)
                     {
                         var renderer = _renderers[i];
-                        if (renderer != null && !renderer.Disposed)
+                        if (!renderer.Disposed)
                             renderer.Render();
                         else
-                            _renderers.RemoveAt(i);
+                        {
+                            ((IMidiRenderer)renderer).InternalDispose();
+                            _renderers.Remove(renderer);
+                        }
                     }
 
                 Thread.Sleep(1);
@@ -312,15 +373,23 @@ namespace Robust.Client.Audio.Midi
         /// </summary>
         private class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
         {
-            private readonly Dictionary<int, Stream> _openStreams = new Dictionary<int, Stream>();
+            private readonly Dictionary<int, Stream> _openStreams = new();
             private int _nextStreamId = 1;
 
             public override IntPtr Open(string filename)
             {
-                Stream stream;
-                if (filename.StartsWith("/Resources/"))
+                if (string.IsNullOrEmpty(filename))
                 {
-                    if (!IoCManager.Resolve<IResourceCache>().TryContentFileRead(filename.Substring(10), out stream))
+                    return IntPtr.Zero;
+                }
+
+                Stream? stream;
+                var resourceCache = IoCManager.Resolve<IResourceCache>();
+                var resourcePath = new ResourcePath(filename);
+
+                if (resourcePath.IsRooted && resourceCache.ContentFileExists(filename))
+                {
+                    if (!resourceCache.TryContentFileRead(filename, out stream))
                         return IntPtr.Zero;
                 }
                 else if (File.Exists(filename))

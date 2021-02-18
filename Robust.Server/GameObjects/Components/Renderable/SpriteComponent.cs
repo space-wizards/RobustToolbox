@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Renderable;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -14,19 +14,20 @@ namespace Robust.Server.GameObjects
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";
-        private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
+        [ViewVariables]
+        private List<PrototypeLayerData> Layers = new();
 
         private bool _visible;
-        private DrawDepth _drawDepth = DrawDepth.Objects;
+        private int _drawDepth = DrawDepthTag.Default;
         private Vector2 _scale;
         private Vector2 _offset;
         private Color _color;
         private bool _directional;
-        private string _baseRSIPath;
+        private string? _baseRSIPath;
         private Angle _rotation;
 
-        [ViewVariables]
-        public DrawDepth DrawDepth
+        [ViewVariables(VVAccess.ReadWrite)]
+        public int DrawDepth
         {
             get => _drawDepth;
             set
@@ -103,7 +104,7 @@ namespace Robust.Server.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string BaseRSIPath
+        public string? BaseRSIPath
         {
             get => _baseRSIPath;
             set
@@ -124,6 +125,9 @@ namespace Robust.Server.GameObjects
                 Dirty();
             }
         }
+
+        [ViewVariables]
+        public int LayerCount => Layers.Count;
 
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {
@@ -390,7 +394,7 @@ namespace Robust.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataFieldCached(ref _visible, "visible", true);
-            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepth.Objects);
+            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepthTag.Default, WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
             serializer.DataFieldCached(ref _scale, "scale", Vector2.One);
             serializer.DataFieldCached(ref _color, "color", Color.White);
@@ -413,9 +417,9 @@ namespace Robust.Server.GameObjects
             var layerData =
                 serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
 
-            {
-                var baseState = serializer.ReadDataField<string>("state", null);
-                var texturePath = serializer.ReadDataField<string>("texture", null);
+            if(layerData.Count == 0){
+                var baseState = serializer.ReadDataField<string?>("state", null);
+                var texturePath = serializer.ReadDataField<string?>("texture", null);
 
                 if (baseState != null || texturePath != null)
                 {
@@ -438,7 +442,7 @@ namespace Robust.Server.GameObjects
             Layers = layerData;
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional,
                 BaseRSIPath, Layers, RenderOrder);

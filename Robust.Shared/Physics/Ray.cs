@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Map;
-using Robust.Shared.Utility;
+﻿using Robust.Shared.Utility;
 using System;
 
 namespace Robust.Shared.Maths
@@ -8,20 +7,17 @@ namespace Robust.Shared.Maths
     ///     A representation of a 2D ray.
     /// </summary>
     [Serializable]
-    public readonly struct Ray : IEquatable<Ray>
+    public struct Ray : IEquatable<Ray>
     {
-        private readonly Vector2 _position;
-        private readonly Vector2 _direction;
-
         /// <summary>
         ///     Specifies the starting point of the ray.
         /// </summary>
-        public Vector2 Position => _position;
+        public Vector2 Position;
 
         /// <summary>
         ///     Specifies the direction the ray is pointing.
         /// </summary>
-        public Vector2 Direction => _direction;
+        public Vector2 Direction;
 
         /// <summary>
         ///     Creates a new instance of a Ray.
@@ -30,16 +26,16 @@ namespace Robust.Shared.Maths
         /// <param name="direction">Unit direction vector that the ray is pointing.</param>
         public Ray(Vector2 position, Vector2 direction)
         {
-            _position = position;
-            _direction = direction;
+            Position = position;
+            Direction = direction;
 
-            DebugTools.Assert(FloatMath.CloseTo(_direction.LengthSquared, 1));
+            DebugTools.Assert(MathHelper.CloseTo(Direction.LengthSquared, 1));
 
         }
 
         #region Intersect Tests
 
-        public bool Intersects(Box2 box, out float distance, out Vector2 hitPos)
+        public readonly bool Intersects(Box2 box, out float distance, out Vector2 hitPos)
         {
             hitPos = Vector2.Zero;
             distance = 0;
@@ -50,27 +46,27 @@ namespace Robust.Shared.Maths
 
             // X axis slab
             {
-                if (Math.Abs(_direction.X) < epsilon)
+                if (MathF.Abs(Direction.X) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (_position.X < Math.Min(box.Left, box.Right) || _position.X > Math.Max(box.Left, box.Right))
+                    if (Position.X < MathF.Min(box.Left, box.Right) || Position.X > MathF.Max(box.Left, box.Right))
                     {
                         return false;
                     }
                 }
 
                 // calculate intersection t value of ray with near and far plane of slab
-                var ood = 1.0f / _direction.X;
-                var t1 = (Math.Min(box.Left, box.Right) - _position.X) * ood;
-                var t2 = (Math.Max(box.Left, box.Right) - _position.X) * ood;
+                var ood = 1.0f / Direction.X;
+                var t1 = (MathF.Min(box.Left, box.Right) - Position.X) * ood;
+                var t2 = (MathF.Max(box.Left, box.Right) - Position.X) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
                     MathHelper.Swap(ref t1, ref t2);
 
                 // Compute the intersection of slab intersection intervals
-                tmin = Math.Max(t1, tmin);
-                tmax = Math.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
+                tmin = MathF.Max(t1, tmin);
+                tmax = MathF.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
 
                 // Exit with no collision as soon as slab intersection becomes empty
                 if (tmin > tmax)
@@ -81,27 +77,27 @@ namespace Robust.Shared.Maths
 
             // Y axis slab
             {
-                if (Math.Abs(_direction.Y) < epsilon)
+                if (MathF.Abs(Direction.Y) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (_position.Y < Math.Min(box.Top, box.Bottom) || _position.Y > Math.Max(box.Top, box.Bottom))
+                    if (Position.Y < MathF.Min(box.Top, box.Bottom) || Position.Y > MathF.Max(box.Top, box.Bottom))
                     {
                         return false;
                     }
                 }
 
                 // calculate intersection t value of ray with near and far plane of slab
-                var ood = 1.0f / _direction.Y;
-                var t1 = (Math.Min(box.Top, box.Bottom) - _position.Y) * ood;
-                var t2 = (Math.Max(box.Top, box.Bottom) - _position.Y) * ood;
+                var ood = 1.0f / Direction.Y;
+                var t1 = (MathF.Min(box.Top, box.Bottom) - Position.Y) * ood;
+                var t2 = (MathF.Max(box.Top, box.Bottom) - Position.Y) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
                     MathHelper.Swap(ref t1, ref t2);
 
                 // Compute the intersection of slab intersection intervals
-                tmin = Math.Max(t1, tmin);
-                tmax = Math.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
+                tmin = MathF.Max(t1, tmin);
+                tmax = MathF.Min(t2, tmax); // Is this Min (SE) or Max(Textbook)
 
                 // Exit with no collision as soon as slab intersection becomes empty
                 if (tmin > tmax)
@@ -111,7 +107,7 @@ namespace Robust.Shared.Maths
             }
 
             // Ray intersects all slabs. Return point and intersection t value
-            hitPos = _position + _direction * tmin;
+            hitPos = Position + Direction * tmin;
             distance = tmin;
             return true;
         }
@@ -124,16 +120,16 @@ namespace Robust.Shared.Maths
         ///     Determines if this Ray and another Ray are equivalent.
         /// </summary>
         /// <param name="other">Ray to compare to.</param>
-        public bool Equals(Ray other)
+        public readonly bool Equals(Ray other)
         {
-            return _position.Equals(other._position) && _direction.Equals(other._direction);
+            return Position.Equals(other.Position) && Direction.Equals(other.Direction);
         }
 
         /// <summary>
         ///     Determines if this ray and another object is equivalent.
         /// </summary>
         /// <param name="obj">Object to compare to.</param>
-        public override bool Equals(object obj)
+        public override readonly bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is Ray ray && Equals(ray);
@@ -142,11 +138,11 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Calculates the hash code of this Ray.
         /// </summary>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
-                return (_position.GetHashCode() * 397) ^ _direction.GetHashCode();
+                return (Position.GetHashCode() * 397) ^ Direction.GetHashCode();
             }
         }
 

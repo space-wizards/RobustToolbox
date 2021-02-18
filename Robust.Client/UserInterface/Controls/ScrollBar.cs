@@ -1,6 +1,5 @@
 ﻿using System;
-using JetBrains.Annotations;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -51,7 +50,7 @@ namespace Robust.Client.UserInterface.Controls
             get
             {
                 var offset = ValueTarget + Page;
-                return offset > MaxValue || FloatMath.CloseTo(offset, MaxValue);
+                return offset > MaxValue || MathHelper.CloseTo(offset, MaxValue);
             }
         }
 
@@ -65,14 +64,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            if (!VisibleInTree || FloatMath.CloseTo(Value, ValueTarget))
+            if (!VisibleInTree || MathHelper.CloseTo(Value, ValueTarget))
             {
                 Value = ValueTarget;
             }
             else
             {
                 _updating = true;
-                Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 15);
+                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
                 _updating = false;
             }
         }
@@ -173,15 +172,19 @@ namespace Robust.Client.UserInterface.Controls
 
         private float _getGrabberBoxMinSize()
         {
-            StyleBox styleBox = _getGrabberStyleBox();
+            var styleBox = _getGrabberStyleBox();
+            if (styleBox == null)
+            {
+                return 0;
+            }
+
             return _orientation == OrientationMode.Horizontal ? styleBox.MinimumSize.X : styleBox.MinimumSize.Y;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getGrabberStyleBox()
+        private StyleBox? _getGrabberStyleBox()
         {
-            if (TryGetStyleProperty(StylePropertyGrabber, out StyleBox styleBox))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyGrabber, out var styleBox))
             {
                 return styleBox;
             }
@@ -221,7 +224,7 @@ namespace Robust.Client.UserInterface.Controls
             return _getGrabberStyleBox()?.MinimumSize ?? Vector2.Zero;
         }
 
-        protected enum OrientationMode
+        protected enum OrientationMode : byte
         {
             Horizontal,
             Vertical

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -19,9 +18,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
-        private readonly List<int> _cachedTextWidths = new List<int>();
+        private readonly List<int> _cachedTextWidths = new();
         private bool _textDimensionCacheValid;
-        private string _text;
+        private string? _text;
         private bool _clipText;
         private AlignMode _align;
 
@@ -34,7 +33,7 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text to display.
         /// </summary>
         [ViewVariables]
-        public string Text
+        public string? Text
         {
             get => _text;
             set
@@ -72,7 +71,7 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables] public VAlignMode VAlign { get; set; }
 
-        public Font FontOverride { get; set; }
+        public Font? FontOverride { get; set; }
 
         private Font ActualFont
         {
@@ -194,7 +193,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum AlignMode
+        public enum AlignMode : byte
         {
             Left = 0,
             Center = 1,
@@ -202,7 +201,7 @@ namespace Robust.Client.UserInterface.Controls
             Fill = 3
         }
 
-        public enum VAlignMode
+        public enum VAlignMode : byte
         {
             Top = 0,
             Center = 1,
@@ -263,7 +262,7 @@ namespace Robust.Client.UserInterface.Controls
                 else
                 {
                     var metrics = font.GetCharMetrics(chr, UIScale);
-                    if (!metrics.HasValue)
+                    if (metrics == null)
                     {
                         continue;
                     }

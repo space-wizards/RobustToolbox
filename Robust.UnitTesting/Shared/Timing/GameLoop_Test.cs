@@ -2,7 +2,6 @@
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Timing
@@ -26,6 +25,7 @@ namespace Robust.UnitTesting.Shared.Timing
             var newStopwatch = new Mock<IStopwatch>();
             newStopwatch.SetupGet(p => p.Elapsed).Returns(elapsedVal);
             var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.Paused = false;
             var loop = new GameLoop(gameTiming);
 
             var callCount = 0;
@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.Timing
         {
             var timing = new GameTiming();
 
-            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Instance | BindingFlags.NonPublic)!;
             field.SetValue(timing, stopwatch);
 
             return timing;

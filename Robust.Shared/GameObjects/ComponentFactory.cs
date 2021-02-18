@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 
 namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
-#pragma warning disable 649
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private class ComponentRegistration : IComponentRegistration
         {
@@ -22,7 +20,7 @@ namespace Robust.Shared.GameObjects
             public uint? NetID { get; }
             public bool NetworkSynchronizeExistence { get; }
             public Type Type { get; }
-            internal readonly List<Type> References = new List<Type>();
+            internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
 
             public ComponentRegistration(string name, Type type, uint? netID, bool networkSynchronizeExistence)
@@ -44,22 +42,27 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of component name to type.
         /// </summary>
-        private readonly Dictionary<string, ComponentRegistration> names = new Dictionary<string, ComponentRegistration>();
+        private readonly Dictionary<string, ComponentRegistration> names = new();
+
+        /// <summary>
+        /// Mapping of lowercase component names to their registration.
+        /// </summary>
+        private readonly Dictionary<string, string> _lowerCaseNames = new();
 
         /// <summary>
         /// Mapping of network ID to type.
         /// </summary>
-        private readonly Dictionary<uint, ComponentRegistration> netIDs = new Dictionary<uint, ComponentRegistration>();
+        private readonly Dictionary<uint, ComponentRegistration> netIDs = new();
 
         /// <summary>
         /// Mapping of concrete component types to their registration.
         /// </summary>
-        private readonly Dictionary<Type, ComponentRegistration> types = new Dictionary<Type, ComponentRegistration>();
+        private readonly Dictionary<Type, ComponentRegistration> types = new();
 
         /// <summary>
         /// Set of components that should be ignored. Probably just the list of components unique to the other project.
         /// </summary>
-        private readonly HashSet<string> IgnoredComponentNames = new HashSet<string>();
+        private readonly HashSet<string> IgnoredComponentNames = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
@@ -71,7 +74,7 @@ namespace Robust.Shared.GameObjects
             Register(typeof(T), overwrite);
         }
 
-        private void Register(Type type, bool overwrite=false)
+        private void Register(Type type, bool overwrite = false)
         {
             if (types.ContainsKey(type))
             {
@@ -80,9 +83,10 @@ namespace Robust.Shared.GameObjects
 
             // Create a dummy to be able to fetch instance properties like name.
             // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = (IComponent)Activator.CreateInstance(type);
+            var dummy = (IComponent)Activator.CreateInstance(type)!;
 
             var name = dummy.Name;
+            var lowerCaseName = name.ToLowerInvariant();
             var netID = dummy.NetID;
             var netSyncExist = dummy.NetworkSynchronizeExistence;
 
@@ -106,6 +110,14 @@ namespace Robust.Shared.GameObjects
                 RemoveComponent(name);
             }
 
+            if (_lowerCaseNames.ContainsKey(lowerCaseName))
+            {
+                if (!overwrite)
+                {
+                    throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {_lowerCaseNames[lowerCaseName]}");
+                }
+            }
+
             if (netID != null && netIDs.ContainsKey(netID.Value))
             {
                 if (!overwrite)
@@ -118,6 +130,7 @@ namespace Robust.Shared.GameObjects
 
             var registration = new ComponentRegistration(name, type, netID, netSyncExist);
             names[name] = registration;
+            _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
             if (netID != null)
             {
@@ -170,6 +183,7 @@ namespace Robust.Shared.GameObjects
             var registration = names[name];
 
             names.Remove(registration.Name);
+            _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);
             if (registration.NetID != null)
             {
@@ -177,8 +191,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public ComponentAvailability GetComponentAvailability(string componentName)
+        public ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)
         {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             if (names.ContainsKey(componentName))
             {
                 return ComponentAvailability.Available;
@@ -198,7 +217,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<IComponent>(types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -207,16 +226,31 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<T>(types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
-        public IComponent GetComponent(string componentName)
+        public IComponent GetComponent(string componentName, bool ignoreCase = false)
         {
-            return _typeFactory.CreateInstance<IComponent>(GetRegistration(componentName).Type);
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
-        public IComponentRegistration GetRegistration(string componentName)
+        public IComponent GetComponent(uint netId)
         {
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
+        }
+
+        public IComponentRegistration GetRegistration(string componentName, bool ignoreCase = false)
+        {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             try
             {
                 return names[componentName];
@@ -261,6 +295,57 @@ namespace Robust.Shared.GameObjects
             return GetRegistration(component.GetType());
         }
 
+        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = false)
+        {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
+            if (names.TryGetValue(componentName, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (types.TryGetValue(reference, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new()
+        {
+            return TryGetRegistration(typeof(T), out registration);
+        }
+
+        public bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (netIDs.TryGetValue(netID, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            return TryGetRegistration(component.GetType(), out registration);
+        }
+
         public void DoAutoRegistrations()
         {
             var iComponent = typeof(IComponent);
@@ -295,6 +380,17 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<Type> GetAllRefTypes()
         {
             return AllRegistrations.SelectMany(r => r.References).Distinct();
+        }
+
+        public IEnumerable<uint> GetAllNetIds()
+        {
+            foreach (var registration in AllRegistrations)
+            {
+                if (registration.NetID != null)
+                {
+                    yield return registration.NetID.Value;
+                }
+            }
         }
     }
 

@@ -1,11 +1,10 @@
 ﻿using System;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a world map inside the ECS system.
@@ -41,14 +40,15 @@ namespace Robust.Shared.GameObjects.Components.Map
             _mapIndex = MapId.Nullspace;
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MapComponentState(_mapIndex);
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 

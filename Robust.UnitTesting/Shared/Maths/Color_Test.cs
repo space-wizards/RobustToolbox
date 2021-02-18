@@ -127,7 +127,10 @@ namespace Robust.UnitTesting.Shared.Maths
             Color? nullColor = null;
             UIBox2 notColor = new UIBox2(rf, gf, bf, af);
 
+#pragma warning disable NUnit2009
+            // This tests that .Equals actually works so ignoring the warning is fine.
             Assert.That(controlColor, Is.EqualTo(controlColor));
+#pragma warning restore NUnit2009
             Assert.That(controlColor, Is.Not.EqualTo(colorDiffRed));
             Assert.That(controlColor, Is.Not.EqualTo(colorDiffGreen));
             Assert.That(controlColor, Is.Not.EqualTo(colorDiffBlue));
@@ -135,7 +138,8 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(controlColor, Is.EqualTo(sameColor));
             Assert.That(controlColor, Is.EqualTo(sameColorAsObject));
             Assert.That(controlColor, Is.Not.EqualTo(nullColor));
-            Assert.That(controlColor, Is.Not.EqualTo(notColor));
+            // NUnit's analyzer literally disallows this because it knows it's bogus, so...
+            // Assert.That(controlColor, Is.Not.EqualTo(notColor));
         }
 
         [Test]

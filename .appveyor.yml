@@ -19,7 +19,7 @@ install:
 
 before_build:
 - cmd: py -3.5 -m pip install --user requests
-- cmd: py -3.5 RUN_THIS.py --no-prompt
+- cmd: git submodule update --init --recursive
 - ps: >
     if (-Not $env:APPVEYOR_PULL_REQUEST_NUMBER -And $env:APPVEYOR_REPO_BRANCH -Eq "master")
     {

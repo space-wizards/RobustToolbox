@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -8,24 +7,33 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Simple control that draws a single texture using a variety of possible stretching modes.
     /// </summary>
+    /// <seealso cref="AnimatedTextureRect"/>
     public class TextureRect : Control
     {
         public const string StylePropertyTexture = "texture";
+        public const string StylePropertyShader = "shader";
 
         private bool _canShrink;
-        private Texture _texture;
+        private Texture? _texture;
         private Vector2 _textureScale = Vector2.One;
+
+        public ShaderInstance? ShaderOverride { get; set; }
 
         /// <summary>
         ///     The texture to draw.
         /// </summary>
-        public Texture Texture
+        public Texture? Texture
         {
             get => _texture;
             set
             {
+                var oldSize = _texture?.Size;
                 _texture = value;
-                MinimumSizeChanged();
+
+                if (value?.Size != oldSize)
+                {
+                    MinimumSizeChanged();
+                }
             }
         }
 
@@ -72,6 +80,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var texture = _texture;
+            ShaderInstance? shader = null;
 
             if (texture == null)
             {
@@ -82,23 +91,54 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
+            if (ShaderOverride != null)
+            {
+                shader = ShaderOverride;
+            }
+            else if (TryGetStyleProperty(StylePropertyShader, out ShaderInstance? styleShader))
+            {
+                shader = styleShader;
+            }
+
+            if (shader != null)
+            {
+                handle.UseShader(shader);
+            }
+
             switch (Stretch)
             {
                 case StretchMode.Scale:
-                    handle.DrawTextureRect(texture,
-                        UIBox2.FromDimensions(Vector2.Zero, PixelSize));
-                    break;
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
+                case StretchMode.KeepCentered:
+                case StretchMode.KeepAspect:
+                case StretchMode.KeepAspectCentered:
                     handle.DrawTextureRect(texture,
-                        UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale));
+                        GetDrawDimensions(texture));
                     break;
+                case StretchMode.KeepAspectCovered:
+                    handle.DrawTextureRectRegion(texture, PixelSizeBox, GetDrawDimensions(texture));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        protected UIBox2 GetDrawDimensions(Texture texture)
+        {
+            switch (Stretch)
+            {
+                case StretchMode.Scale:
+                    return UIBox2.FromDimensions(Vector2.Zero, PixelSize);
+                case StretchMode.Tile:
+                // TODO: Implement Tile.
+                case StretchMode.Keep:
+                    return UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale);
                 case StretchMode.KeepCentered:
                 {
                     var position = (PixelSize - texture.Size * _textureScale * UIScale) / 2;
-                    handle.DrawTextureRect(texture, UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale));
-                    break;
+                    return UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale);
                 }
 
                 case StretchMode.KeepAspect:
@@ -120,8 +160,7 @@ namespace Robust.Client.UserInterface.Controls
                         position = (PixelSize - size) / 2;
                     }
 
-                    handle.DrawTextureRectRegion(texture, UIBox2.FromDimensions(position, size));
-                    break;
+                    return UIBox2.FromDimensions(position, size);
                 }
 
                 case StretchMode.KeepAspectCovered:
@@ -132,14 +171,13 @@ namespace Robust.Client.UserInterface.Controls
                     var scale = Math.Max(scaleX, scaleY);
                     // Offset inside the actual texture.
                     var offset = (texSize - PixelSize) / scale / 2f;
-                    handle.DrawTextureRectRegion(texture, PixelSizeBox, UIBox2.FromDimensions(offset, PixelSize / scale));
-                    break;
+                    return UIBox2.FromDimensions(offset, PixelSize / scale);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
 
-        public enum StretchMode
+        public enum StretchMode : byte
         {
             /// <summary>
             ///     The texture is stretched to fit the entire area of the control.

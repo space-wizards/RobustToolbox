@@ -1,27 +1,34 @@
-﻿using Nett;
-using Robust.Shared.Interfaces.Configuration;
+using Nett;
 using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    public class ConfigurationManager : IConfigurationManager
+    internal class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars;
-        private string _configFile;
+        protected readonly Dictionary<string, ConfigVar> _configVars = new();
+        private string? _configFile;
+        protected bool _isServer;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
         /// </summary>
         public ConfigurationManager()
         {
-            _configVars = new Dictionary<string, ConfigVar>();
+        }
+
+        public void Initialize(bool isServer)
+        {
+            _isServer = isServer;
         }
 
         /// <inheritdoc />
@@ -71,18 +78,22 @@ namespace Robust.Shared.Configuration
             else // this is a key, add CVar
             {
                 // if the CVar has already been registered
-                if (_configVars.TryGetValue(tablePath, out ConfigVar cfgVar))
+                var tomlValue = TypeConvert(obj);
+                if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
                     // overwrite the value with the saved one
-                    cfgVar.Value = TypeConvert(obj);
+                    cfgVar.Value = tomlValue;
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);
                 }
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
-                    _configVars.Add(tablePath, cVar);
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
+                    _configVars.Add(tablePath, cfgVar);
                 }
+
+                cfgVar.ConfigModified = true;
             }
         }
 
@@ -99,11 +110,8 @@ namespace Robust.Shared.Configuration
             {
                 var tblRoot = Toml.Create();
 
-                foreach (var kvCVar in _configVars)
+                foreach (var (name, cVar) in _configVars)
                 {
-                    var cVar = kvCVar.Value;
-                    var name = kvCVar.Key;
-
                     var value = cVar.Value;
                     if (value == null && cVar.Registered)
                     {
@@ -113,6 +121,14 @@ namespace Robust.Shared.Configuration
                     if (value == null)
                     {
                         Logger.ErrorS("cfg", $"CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    // Don't write if Archive flag is not set.
+                    // Don't write if the cVar is the default value.
+                    if (!cVar.ConfigModified &&
+                        (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
+                    {
                         continue;
                     }
 
@@ -166,18 +182,36 @@ namespace Robust.Shared.Configuration
             }
             catch (Exception e)
             {
-                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e.Message}");
+                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e}");
             }
         }
 
-        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T> onValueChanged = null)
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+            where T : notnull
         {
-            Action<object> valueChangedDelegate = null;
+            Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
             {
                 valueChangedDelegate = v => onValueChanged((T) v);
             }
-            if (_configVars.TryGetValue(name, out ConfigVar cVar))
+
+            RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
+        }
+
+        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
+        {
+            DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
+                $"{name}: Enum cvars must have int as underlying type.");
+
+            var only = _isServer ? CVar.CLIENTONLY : CVar.SERVERONLY;
+
+            if ((flags & only) != 0)
+            {
+                // Ignored on this side.
+                return;
+            }
+
+            if (_configVars.TryGetValue(name, out var cVar))
             {
                 if (cVar.Registered)
                     Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
@@ -185,11 +219,11 @@ namespace Robust.Shared.Configuration
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
-                cVar.ValueChanged = valueChangedDelegate;
+                cVar.ValueChanged = onValueChanged;
 
                 if (cVar.OverrideValue != null)
                 {
-                    cVar.OverrideValueParsed = ParseOverrideValue(cVar.OverrideValue, typeof(T));
+                    cVar.OverrideValueParsed = ParseOverrideValue(cVar.OverrideValue, type);
                 }
 
                 return;
@@ -199,52 +233,128 @@ namespace Robust.Shared.Configuration
             {
                 Registered = true,
                 Value = defaultValue,
-                ValueChanged = valueChangedDelegate
+                ValueChanged = onValueChanged
             });
+        }
+
+        public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+        }
+
+        public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            var reg = _configVars[name];
+            reg.ValueChanged += o => onValueChanged((T) o);
+
+            if (invokeImmediately)
+            {
+                onValueChanged((T) (reg.Value ?? reg.DefaultValue)!);
+            }
+        }
+
+        public void LoadCVarsFromAssembly(Assembly assembly)
+        {
+            foreach (var defField in assembly
+                .GetTypes()
+                .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
+                .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
+            {
+                var fieldType = defField.FieldType;
+                if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))
+                {
+                    continue;
+                }
+
+                var type = fieldType.GetGenericArguments()[0];
+
+                if (!defField.IsInitOnly)
+                {
+                    throw new InvalidOperationException($"Found CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' that is not readonly. Please mark it as readonly.");
+                }
+
+                var def = (CVarDef?) defField.GetValue(null);
+
+                if (def == null)
+                {
+                    throw new InvalidOperationException($"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
+                }
+
+                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags, null);
+            }
         }
 
         /// <inheritdoc />
         public bool IsCVarRegistered(string name)
         {
-            return _configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered;
+            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered;
         }
 
         /// <inheritdoc />
-        public void SetCVar(string name, object value)
+        public IEnumerable<string> GetRegisteredCVars()
+        {
+            return _configVars.Select(p => p.Key);
+        }
+
+        /// <inheritdoc />
+        public virtual void SetCVar(string name, object value)
+        {
+            SetCVarInternal(name, value);
+        }
+
+        private void SetCVarInternal(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
             {
-                cVar.Value = value;
-                cVar.ValueChanged?.Invoke(value);
+                if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
+                {
+                    // Setting an overriden var just turns off the override, basically.
+                    cVar.OverrideValue = null;
+                    cVar.OverrideValueParsed = null;
 
-                // Setting an override value just turns off the override, basically.
-                cVar.OverrideValue = null;
-                cVar.OverrideValueParsed = null;
+                    cVar.Value = value;
+                    cVar.ValueChanged?.Invoke(value);
+                }
             }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
         }
 
+        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            SetCVar(def.Name, value);
+        }
+
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
-            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue);
+                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
 
+        public T GetCVar<T>(CVarDef<T> def) where T : notnull
+        {
+            return GetCVar<T>(def.Name);
+        }
+
         public Type GetCVarType(string name)
         {
-            var cVar = _configVars[name];
+            if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
+            {
+                throw new InvalidConfigurationException($"Trying to get type of unregistered variable '{name}'");
+            }
 
             // If it's null it's a string, since the rest is primitives which aren't null.
             return cVar.Value?.GetType() ?? typeof(string);
         }
 
-        public void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars)
+        public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
         {
             foreach (var (key, value) in cVars)
             {
@@ -257,13 +367,14 @@ namespace Robust.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(key, null, CVar.NONE) { OverrideValue = value };
+                    //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
+                    var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
                     _configVars.Add(key, cVar);
                 }
             }
         }
 
-        private object ParseOverrideValue(string value, Type type)
+        private static object ParseOverrideValue(string value, Type? type)
         {
             if (type == typeof(int))
             {
@@ -314,7 +425,7 @@ namespace Robust.Shared.Configuration
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
-        private class ConfigVar
+        protected class ConfigVar
         {
             /// <summary>
             ///     Constructs a CVar.
@@ -349,7 +460,7 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The current value of this CVar.
             /// </summary>
-            public object Value { get; set; }
+            public object? Value { get; set; }
 
             /// <summary>
             ///     Has this CVar been registered in code?
@@ -357,20 +468,26 @@ namespace Robust.Shared.Configuration
             public bool Registered { get; set; }
 
             /// <summary>
+            ///     Was the CVar present in the config file?
+            ///     If so we need to always re-save it even if it's not ARCHIVE.
+            /// </summary>
+            public bool ConfigModified;
+
+            /// <summary>
             ///     Invoked when the value of this CVar is changed.
             /// </summary>
-            public Action<object> ValueChanged { get; set; }
+            public Action<object>? ValueChanged { get; set; }
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.
             // So we keep the raw string around.
-            public string OverrideValue { get; set; }
-            public object OverrideValueParsed { get; set; }
+            public string? OverrideValue { get; set; }
+            public object? OverrideValueParsed { get; set; }
         }
     }
 
-    [System.Serializable]
-    public class InvalidConfigurationException : System.Exception
+    [Serializable]
+    public class InvalidConfigurationException : Exception
     {
         public InvalidConfigurationException()
         {
@@ -378,7 +495,7 @@ namespace Robust.Shared.Configuration
         public InvalidConfigurationException(string message) : base(message)
         {
         }
-        public InvalidConfigurationException(string message, System.Exception inner) : base(message, inner)
+        public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
         {
         }
         protected InvalidConfigurationException(

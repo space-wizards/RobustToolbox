@@ -1,73 +1,33 @@
 // Shared code necessary for using depth casting like FOV and shadows.
 
-const float PI = 3.1415926535897932384626433; // That enough digits?
-
-// Because the shadow map is projected as a SQUARE, not a circle.
-// We can't just use some atan magic to undo the projection.
-// This matrix is the projection matrix used to create the projection
-// so we can use that to "reverse engineer" the position.
-uniform mat4 shadowMatrix;
+const highp float PI = 3.1415926535897932384626433; // That enough digits?
 
 // This returns a vec2 because of VSM moments.
-vec2 occludeDepth(vec2 diff, sampler2D shadowMap, float mapOffsetY)
+highp vec2 occludeDepth(highp vec2 rel, sampler2D shadowMap, highp float mapOffsetY)
 {
-    float angle = atan(diff.y, -diff.x) + PI + radians(135.0);
-
-    angle = mod(angle, 2 * PI);
-
-    vec2 shadowPoint;
-    float shadowMapOffset;
-
-    // Find quadrant the point is in and select correct horizontal offset in shadow map based on this.
-    // We also have to manually apply rotation to shadowPoint to accomodate for each quadrant actually being rotated.
-    if (angle < radians(90.0)) // Top
-    {
-        shadowPoint = diff;
-        shadowMapOffset = 0;
-    }
-    else if (angle < radians(180.0)) // Right
-    {
-        shadowPoint = vec2(-diff.y, diff.x);
-        shadowMapOffset = 0.25;
-    }
-    else if (angle < radians(270.0)) // Bottom
-    {
-        shadowPoint = -diff;
-        shadowMapOffset = 0.50;
-    }
-    else // Left
-    {
-        shadowPoint = vec2(diff.y, -diff.x);
-        shadowMapOffset = 0.75;
-    }
-
-    // Run shadow point through shadow matrix.
-    vec4 s = shadowMatrix * vec4(shadowPoint, 0.0, 1.0);
-    // Undo NDC coordinates to get a 0 -> 1 representing the x coordinates of the "screen".
-    // Which we then map to the texture.
-    s.xyz /= s.w;
-    float su = s.x * 0.5 + 0.5;
-
-    return texture(shadowMap, vec2(su / 4 + shadowMapOffset, mapOffsetY)).rg;
+    // It's a circle now, because it's faster to compute.
+    highp float deflect = (atan(rel.y, -rel.x) / PI);
+    highp float mapOffsetX = (deflect + 1.0) / 2.0;
+    return zClydeShadowDepthUnpack(texture2D(shadowMap, vec2(mapOffsetX, mapOffsetY)));
 }
 
-bool doesOcclude(vec2 diff, sampler2D shadowMap, float mapOffsetY, float bias)
+bool doesOcclude(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY, highp float bias)
 {
-    float ourDist = length(diff);
+    highp float ourDist = length(diff);
 
     return occludeDepth(diff, shadowMap, mapOffsetY).x + bias < ourDist;
 }
 
 // Use this for VSM shadow casting stuff.
-float ChebyshevUpperBound(vec2 moments, float t)
+highp float ChebyshevUpperBound(highp vec2 moments, highp float t)
 {
     // One-tailed inequality valid if t > Moments.x
-    float p = float(t <= moments.x);
+    highp float p = float(t <= moments.x);
     // Compute variance.
-    float variance = moments.y - (moments.x * moments.x);
+    highp float variance = moments.y - (moments.x * moments.x);
     variance = max(variance, g_MinVariance);
     // Compute probabilistic upper bound.
-    float d = t - moments.x;
-    float p_max = variance / (variance + d*d);
+    highp float d = t - moments.x;
+    highp float p_max = variance / (variance + d*d);
     return max(p, p_max);
 }

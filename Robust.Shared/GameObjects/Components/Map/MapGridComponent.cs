@@ -1,18 +1,17 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a map grid inside the ECS system.
     /// </summary>
-    internal interface IMapGridComponent : IComponent
+    public interface IMapGridComponent : IComponent
     {
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
@@ -22,9 +21,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     /// <inheritdoc cref="IMapGridComponent"/>
     internal class MapGridComponent : Component, IMapGridComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
         private GridId _gridIndex;
@@ -43,6 +40,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
         public void ClearGridId()
@@ -64,14 +62,15 @@ namespace Robust.Shared.GameObjects.Components.Map
             base.OnRemove();
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MapGridComponentState(_gridIndex);
+            return new MapGridComponentState(_gridIndex, Grid.HasGravity);
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 
@@ -79,6 +78,7 @@ namespace Robust.Shared.GameObjects.Components.Map
                 return;
 
             _gridIndex = state.GridIndex;
+            Grid.HasGravity = state.HasGravity;
         }
 
         /// <inheritdoc />
@@ -101,14 +101,17 @@ namespace Robust.Shared.GameObjects.Components.Map
         /// </summary>
         public GridId GridIndex { get; }
 
+        public bool HasGravity { get; }
+
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
-        public MapGridComponentState(GridId gridIndex)
+        public MapGridComponentState(GridId gridIndex, bool hasGravity)
             : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
+            HasGravity = hasGravity;
         }
     }
 }

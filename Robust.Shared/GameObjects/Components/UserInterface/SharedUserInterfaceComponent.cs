@@ -1,8 +1,7 @@
 using System;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.UserInterface
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedUserInterfaceComponent : Component
     {
@@ -11,10 +10,10 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
 
         protected sealed class PrototypeData : IExposeData
         {
-            public object UiKey { get; private set; }
-            public string ClientType { get; private set; }
+            public object UiKey { get; private set; } = default!;
+            public string ClientType { get; private set; } = default!;
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 UiKey = serializer.ReadStringEnumKey("key");
                 ClientType = serializer.ReadDataField<string>("type");
@@ -32,6 +31,11 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
                 Directed = true;
                 Message = message;
                 UiKey = uiKey;
+            }
+
+            public override string ToString()
+            {
+                return $"{nameof(BoundInterfaceMessageWrapMessage)}: {Message}";
             }
         }
     }

@@ -3,41 +3,40 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using OpenTK.Graphics.OpenGL4;
-using Robust.Client.Graphics.Shaders;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = Robust.Client.Graphics.Shaders.StencilOp;
+using StencilOp = Robust.Client.Graphics.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private ClydeShaderInstance _defaultShader;
+        private ClydeShaderInstance _defaultShader = default!;
 
-        private string _shaderWrapCodeDefaultFrag;
-        private string _shaderWrapCodeDefaultVert;
+        private string _shaderLibrary = default!;
 
-        private string _shaderWrapCodeRawFrag;
-        private string _shaderWrapCodeRawVert;
+        private string _shaderWrapCodeDefaultFrag = default!;
+        private string _shaderWrapCodeDefaultVert = default!;
 
-
+        private string _shaderWrapCodeRawFrag = default!;
+        private string _shaderWrapCodeRawVert = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
-            new Dictionary<ClydeHandle, LoadedShader>();
+            new();
 
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
-            new Dictionary<ClydeHandle, LoadedShaderInstance>();
+            new();
 
-        private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new ConcurrentQueue<ClydeHandle>();
+        private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
         private class LoadedShader
         {
-            public GLShaderProgram Program;
+            public GLShaderProgram Program = default!;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
-            public string Name;
+            public string? Name;
         }
 
         private class LoadedShaderInstance
@@ -45,19 +44,22 @@ namespace Robust.Client.Graphics.Clyde
             public ClydeHandle ShaderHandle;
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
-            public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
+            public readonly Dictionary<string, object> Parameters = new();
 
             public StencilParameters Stencil = StencilParameters.Default;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var program = _compileProgram(vertBody, fragBody, name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
 
-            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
-            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
+            if (_hasGLUniformBuffers)
+            {
+                program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+                program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            }
 
             var loaded = new LoadedShader
             {
@@ -80,14 +82,17 @@ namespace Robust.Client.Graphics.Clyde
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
-            var program = _compileProgram(vertBody, fragBody, loaded.Name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
 
             loaded.Program.Delete();
 
             loaded.Program = program;
 
-            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
-            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
+            if (_hasGLUniformBuffers)
+            {
+                program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+                program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            }
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
@@ -104,6 +109,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadStockShaders()
         {
+            _shaderLibrary = ReadEmbeddedShader("z-library.glsl");
+
             _shaderWrapCodeDefaultFrag = ReadEmbeddedShader("base-default.frag");
             _shaderWrapCodeDefaultVert = ReadEmbeddedShader("base-default.vert");
 
@@ -121,16 +128,52 @@ namespace Robust.Client.Graphics.Clyde
         private string ReadEmbeddedShader(string fileName)
         {
             var assembly = typeof(Clyde).Assembly;
-            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}");
+            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}")!;
             DebugTools.AssertNotNull(stream);
             using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
             return reader.ReadToEnd();
         }
 
-        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
+        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
+            (string, uint)[] attribLocations, string? name = null)
         {
-            GLShader vertexShader = null;
-            GLShader fragmentShader = null;
+            GLShader? vertexShader = null;
+            GLShader? fragmentShader = null;
+
+            var versionHeader = "#version 140\n#define HAS_MOD\n";
+
+            if (_isGLES)
+            {
+                // GLES2 uses a different GLSL versioning scheme to desktop GL.
+                versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
+                if (_hasGLStandardDerivatives)
+                {
+                    versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                }
+            }
+
+            if (_hasGLStandardDerivatives)
+            {
+                versionHeader += "#define HAS_DFDX\n";
+            }
+
+            if (_hasGLFloatFramebuffers)
+            {
+                versionHeader += "#define HAS_FLOAT_TEXTURES\n";
+            }
+
+            if (_hasGLSrgb)
+            {
+                versionHeader += "#define HAS_SRGB\n";
+            }
+
+            if (_hasGLUniformBuffers)
+            {
+                versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
+            }
+
+            vertexSource = versionHeader + "#define VERTEX_SHADER\n" + _shaderLibrary + vertexSource;
+            fragmentSource = versionHeader + "#define FRAGMENT_SHADER\n" + _shaderLibrary + fragmentSource;
 
             try
             {
@@ -140,8 +183,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
+                    File.WriteAllText("error.glsl", vertexSource);
                     throw new ShaderCompilationException(
-                        "Failed to compile vertex shader, see inner for details.", e);
+                        "Failed to compile vertex shader, see inner for details (and error.glsl for formatted source).", e);
                 }
 
                 try
@@ -150,8 +194,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
+                    File.WriteAllText("error.glsl", fragmentSource);
                     throw new ShaderCompilationException(
-                        "Failed to compile fragment shader, see inner for details.", e);
+                        "Failed to compile fragment shader, see inner for details (and error.glsl for formatted source).", e);
                 }
 
                 var program = new GLShaderProgram(this, name);
@@ -160,7 +205,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 try
                 {
-                    program.Link();
+                    program.Link(attribLocations);
                 }
                 catch (ShaderCompilationException e)
                 {
@@ -206,12 +251,12 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var (name, varying) in shader.Varyings)
             {
-                varyingsFragment.AppendFormat("in {0} {1};\n", varying.Type.GetNativeType(), name);
-                varyingsVertex.AppendFormat("out {0} {1};\n", varying.Type.GetNativeType(), name);
+                varyingsFragment.AppendFormat("varying {0} {1};\n", varying.Type.GetNativeType(), name);
+                varyingsVertex.AppendFormat("varying {0} {1};\n", varying.Type.GetNativeType(), name);
             }
 
-            ShaderFunctionDefinition fragmentMain = null;
-            ShaderFunctionDefinition vertexMain = null;
+            ShaderFunctionDefinition? fragmentMain = null;
+            ShaderFunctionDefinition? vertexMain = null;
 
             var functionsBuilder = new StringBuilder();
 
@@ -275,7 +320,7 @@ namespace Robust.Client.Graphics.Clyde
             return (vertexSource, fragmentSource);
         }
 
-        private void ClearDeadShaderInstances()
+        private void FlushShaderInstanceDispose()
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {
@@ -425,7 +470,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private struct StencilParameters
         {
-            public static readonly StencilParameters Default = new StencilParameters
+            public static readonly StencilParameters Default = new()
             {
                 Enabled = false,
                 Ref = 0,

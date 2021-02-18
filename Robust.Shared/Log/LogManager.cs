@@ -1,18 +1,19 @@
-﻿using Robust.Shared.Interfaces.Log;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 
 namespace Robust.Shared.Log
 {
     // Sealed. New functionality should be added with handlers.
-    public partial class LogManager : ILogManager
+    public partial class LogManager : ILogManager, IDisposable
     {
+        public const string SawmillProperty = "Sawmill";
         public const string ROOT = "root";
         private readonly Sawmill rootSawmill;
         public ISawmill RootSawmill => rootSawmill;
 
-        private readonly Dictionary<string, Sawmill> sawmills = new Dictionary<string, Sawmill>();
-        private readonly ReaderWriterLockSlim _sawmillsLock = new ReaderWriterLockSlim();
+        private readonly Dictionary<string, Sawmill> sawmills = new();
+        private readonly ReaderWriterLockSlim _sawmillsLock = new();
 
         public ISawmill GetSawmill(string name)
         {
@@ -71,6 +72,14 @@ namespace Robust.Shared.Log
                 Level = LogLevel.Debug,
             };
             sawmills[ROOT] = rootSawmill;
+        }
+
+        public void Dispose()
+        {
+            foreach (Sawmill p in sawmills.Values)
+            {
+                p.Dispose();
+            }
         }
     }
 }

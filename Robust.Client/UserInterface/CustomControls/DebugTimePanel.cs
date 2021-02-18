@@ -1,7 +1,6 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.GameStates;
+﻿using Robust.Client.GameStates;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -46,16 +45,20 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value}
+            // NOTE: CurTick gets incremented by the main loop AFTER Tick runs, not before.
+            // This means that CurTick reports the NEXT tick to be ran, NOT the last tick that was ran.
+            // This is why there's a -1 on Pred:.
+
+            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}/{_gameTiming.CurTick-1}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value-1}
 CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
-TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
+ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
 
             MinimumSizeChanged();
         }
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
+            return new(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

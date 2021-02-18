@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Client.UserInterface.Controls;
@@ -75,7 +74,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             uiMgr.StateRoot.AddChild(control);
             control.ForceRunStyleUpdate();
 
-            control.TryGetStyleProperty("foo", out string value);
+            control.TryGetStyleProperty("foo", out string? value);
             Assert.That(value, Is.EqualTo("bar"));
 
             control.StyleIdentifier = "baz";
@@ -125,7 +124,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             // Assign sheets.
             baseControl.ForceRunStyleUpdate();
 
-            baseControl.TryGetStyleProperty("foo", out object value);
+            baseControl.TryGetStyleProperty("foo", out object? value);
             Assert.That(value, Is.EqualTo("bar"));
 
             childA.TryGetStyleProperty("foo", out value);

@@ -27,6 +27,7 @@ THE SOFTWARE.
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Utility
 {
@@ -48,13 +49,13 @@ namespace Robust.Shared.Utility
         private int _shrinkBound;
 
         // ReSharper disable once StaticFieldInGenericType
-        private static readonly InvalidOperationException EmptyCollectionException = new InvalidOperationException("Collection is empty.");
+        private static readonly InvalidOperationException EmptyCollectionException = new("Collection is empty.");
 
         /// <summary>
         /// Create a max-priority queue with default capacity of 10.
         /// </summary>
         /// <param name="comparer">Custom comparer to compare elements. If omitted - default will be used.</param>
-        public PriorityQueue(IComparer<T> comparer = null) : this(DEFAULT_CAPACITY, comparer) { }
+        public PriorityQueue(IComparer<T>? comparer = null) : this(DEFAULT_CAPACITY, comparer) { }
 
         /// <summary>
         /// Create a max-priority queue with provided capacity.
@@ -63,7 +64,7 @@ namespace Robust.Shared.Utility
         /// <param name="comparer">Custom comparer to compare elements. If omitted - default will be used.</param>
         /// <exception cref="ArgumentOutOfRangeException">Throws <see cref="ArgumentOutOfRangeException"/> when capacity is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Throws <see cref="ArgumentException"/> when comparer is null and <typeparamref name="T"/> does not implement IComparable.</exception>
-        public PriorityQueue(int capacity, IComparer<T> comparer = null)
+        public PriorityQueue(int capacity, IComparer<T>? comparer = null)
         {
             if (capacity <= 0) throw new ArgumentOutOfRangeException("capacity", "Expected capacity greater than zero.");
 
@@ -118,7 +119,7 @@ namespace Robust.Shared.Utility
             var item = _heap[0];
             Count--;
             _heap.Swap(0, Count);              // last element at count
-            _heap[Count] = default(T);         // release hold on the object
+            _heap[Count] = default(T)!;        // release hold on the object
             // provide index of first item as for 1-based heap, but also set shift to -1
             _heap.Sink(1, Count, _comparer, shift: -1);   // move item "down" while heap principles are not met
 
@@ -199,7 +200,7 @@ namespace Robust.Shared.Utility
             var itemIndex = index + shift;
             Count--;
             _heap.Swap(itemIndex, Count);       // last element at Count
-            _heap[Count] = default(T);          // release hold on the object
+            _heap[Count] = default(T)!;         // release hold on the object
             // use a 1-based-heap index and then apply shift of -1
             var parent = index / 2 + shift;     // get parent
             // if new item at index is greater than it's parent then sift it up, else sink it down
@@ -252,7 +253,7 @@ namespace Robust.Shared.Utility
             array[j] = tmp;
         }
 
-        internal static bool GreaterOrEqual<T>(this IComparer<T> comparer, T x, T y)
+        internal static bool GreaterOrEqual<T>(this IComparer<T> comparer, [AllowNull] T x, [AllowNull] T y)
         {
             return comparer.Compare(x, y) >= 0;
         }
@@ -287,13 +288,15 @@ namespace Robust.Shared.Utility
                 var right = hasRight ? heap[rightIndex] : default(T);
 
                 // if item is greater than children - heap is fine, exit
-                if (GreaterOrEqual(comparer, item, left) && (!hasRight || GreaterOrEqual(comparer, item, right)))
+                // ReSharper disable once RedundantTypeArgumentsOfMethod
+                if (GreaterOrEqual(comparer, item, left) && (!hasRight || GreaterOrEqual<T>(comparer, item, right)))
                 {
                     return;
                 }
 
                 // else exchange with greater of children
-                var greaterChildIndex = !hasRight || GreaterOrEqual(comparer, left, right) ? leftIndex : rightIndex;
+                // ReSharper disable once RedundantTypeArgumentsOfMethod
+                var greaterChildIndex = !hasRight || GreaterOrEqual<T>(comparer, left, right) ? leftIndex : rightIndex;
                 heap.Swap(itemIndex, greaterChildIndex);
 
                 // continue at new position

@@ -2,8 +2,8 @@
 using Lidgren.Network;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Players;
+
+#nullable disable
 
 namespace Robust.Shared.Network.Messages
 {
@@ -26,7 +26,7 @@ namespace Robust.Shared.Network.Messages
             {
                 var plyNfo = new PlayerState
                 {
-                    SessionId = new NetSessionId(buffer.ReadString()),
+                    UserId = new NetUserId(buffer.ReadGuid()),
                     Name = buffer.ReadString(),
                     Status = (SessionStatus)buffer.ReadByte(),
                     Ping = buffer.ReadInt16()
@@ -41,7 +41,7 @@ namespace Robust.Shared.Network.Messages
 
             foreach (var ply in Plyrs)
             {
-                buffer.Write(ply.SessionId.Username);
+                buffer.Write(ply.UserId.UserId);
                 buffer.Write(ply.Name);
                 buffer.Write((byte) ply.Status);
                 buffer.Write(ply.Ping);

@@ -1,7 +1,7 @@
-using Robust.Shared.Interfaces.GameObjects;
+using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleScreen : DrawingHandleBase
     {
@@ -21,6 +21,23 @@ namespace Robust.Client.Graphics.Drawing
             CheckDisposed();
 
             DrawTextureRectRegion(texture, rect, null, modulate);
+        }
+
+        public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
+        {
+            const int segments = 64;
+            Span<Vector2> buffer = stackalloc Vector2[segments + 1];
+
+            for (var i = 0; i <= segments; i++)
+            {
+                var angle = i / (float) segments * MathHelper.TwoPi;
+                var pos = new Vector2(MathF.Sin(angle), MathF.Cos(angle));
+
+                buffer[i] = position + pos * radius;
+            }
+
+            DrawPrimitiveTopology type = filled ? DrawPrimitiveTopology.TriangleFan : DrawPrimitiveTopology.LineStrip;
+            DrawPrimitives(type, buffer, color);
         }
     }
 }

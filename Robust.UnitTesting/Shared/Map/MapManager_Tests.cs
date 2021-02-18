@@ -1,8 +1,5 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -89,7 +86,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(mapMan.GridExists(GridId.Invalid), Is.True);
+            Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
             Assert.That(oldEntity.Deleted, Is.True);
 
         }

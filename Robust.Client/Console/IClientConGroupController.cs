@@ -1,19 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Robust.Client.Console
+﻿namespace Robust.Client.Console
 {
-    public interface IClientConGroupController
+    public interface IClientConGroupController : IClientConGroupImplementation
     {
-        void Initialize();
-
-        bool CanCommand(string cmdName);
-        bool CanViewVar();
-        bool CanAdminPlace();
-        bool CanScript();
-        event Action ConGroupUpdated;
+        IClientConGroupImplementation Implementation { set; }
     }
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Linq;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -68,7 +67,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
+            return new(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

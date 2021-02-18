@@ -1,13 +1,10 @@
-using System;
 using System.IO;
 using Lidgren.Network;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+
+#nullable disable
 
 namespace Robust.Shared.Network.Messages
 {
@@ -41,11 +38,8 @@ namespace Robust.Shared.Network.Messages
             RequestId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
-            var bytes = buffer.ReadBytes(length);
-            using (var stream = new MemoryStream(bytes))
-            {
-                Selector = serializer.Deserialize<ViewVariablesObjectSelector>(stream);
-            }
+            using var stream = buffer.ReadAlignedMemory(length);
+            Selector = serializer.Deserialize<ViewVariablesObjectSelector>(stream);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -56,7 +50,8 @@ namespace Robust.Shared.Network.Messages
             {
                 serializer.Serialize(stream, Selector);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

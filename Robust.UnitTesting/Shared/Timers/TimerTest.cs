@@ -1,12 +1,10 @@
 using System;
-using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Robust.Shared.Asynchronous;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Timers;
 using Robust.Shared.Timing;
 using Timer = Robust.Shared.Timers.Timer;
 
@@ -16,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Timers
     [TestOf(typeof(Timer))]
     public class TimerTest : RobustUnitTest
     {
-        private LogCatcher _catcher;
+        private LogCatcher _catcher = default!;
 
         [OneTimeSetUp]
         public void InstallLogCatcher()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
@@ -55,7 +54,7 @@ namespace Robust.Shared.Utility
         [Conditional("DEBUG")]
         [AssertionMethod]
         public static void AssertNotNull([AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
-            object arg)
+            object? arg)
         {
             if (arg == null)
             {
@@ -71,12 +70,21 @@ namespace Robust.Shared.Utility
         [Conditional("DEBUG")]
         [AssertionMethod]
         public static void AssertNull([AssertionCondition(AssertionConditionType.IS_NULL)]
-            object arg)
+            object? arg)
         {
             if (arg != null)
             {
                 throw new DebugAssertException();
             }
+        }
+
+        /// <summary>
+        /// If a debugger is attached to the process, calling this function will cause the
+        /// debugger to break. Equivalent to a software interrupt (INT 3).
+        /// </summary>
+        public static void Break()
+        {
+            Debugger.Break();
         }
     }
 

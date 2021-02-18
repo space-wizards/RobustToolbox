@@ -1,20 +1,21 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.ContentPack;
+﻿using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.LoaderApi;
 
 namespace Robust.Client.ResourceManagement
 {
-    internal class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
+    internal partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
-            new Dictionary<Type, Dictionary<ResourcePath, BaseResource>>();
+            new();
 
-        private readonly Dictionary<Type, BaseResource> _fallbacks = new Dictionary<Type, BaseResource>();
+        private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {
@@ -53,12 +54,12 @@ namespace Robust.Client.ResourceManagement
             }
         }
 
-        public bool TryGetResource<T>(string path, out T resource) where T : BaseResource, new()
+        public bool TryGetResource<T>(string path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
         {
             return TryGetResource(new ResourcePath(path), out resource);
         }
 
-        public bool TryGetResource<T>(ResourcePath path, out T resource) where T : BaseResource, new()
+        public bool TryGetResource<T>(ResourcePath path, [NotNullWhen(true)] out T? resource) where T : BaseResource, new()
         {
             var cache = GetTypeDict<T>();
             if (cache.TryGetValue(path, out var cached))
@@ -150,6 +151,9 @@ namespace Robust.Client.ResourceManagement
             return GetTypeDict<T>().Select(p => new KeyValuePair<ResourcePath, T>(p.Key, (T) p.Value));
         }
 
+        public event Action<TextureLoadedEventArgs>? OnRawTextureLoaded;
+        public event Action<RsiLoadedEventArgs>? OnRsiLoaded;
+
         #region IDisposable Members
 
         private bool disposed = false;
@@ -195,6 +199,23 @@ namespace Robust.Client.ResourceManagement
             }
 
             return ret;
+        }
+
+        public void TextureLoaded(TextureLoadedEventArgs eventArgs)
+        {
+            OnRawTextureLoaded?.Invoke(eventArgs);
+        }
+
+        public void RsiLoaded(RsiLoadedEventArgs eventArgs)
+        {
+            OnRsiLoaded?.Invoke(eventArgs);
+        }
+
+        public void MountLoaderApi(IFileApi api, string apiPrefix, ResourcePath? prefix=null)
+        {
+            prefix ??= ResourcePath.Root;
+            var root = new LoaderApiLoader(api, apiPrefix);
+            AddRoot(prefix, root);
         }
     }
 }

@@ -1,16 +1,10 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -20,11 +14,9 @@ namespace Robust.Client.GameStates
     /// </summary>
     internal class NetGraphOverlay : Overlay
     {
-#pragma warning disable 0649
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager;
-#pragma warning restore 0649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -40,13 +32,13 @@ namespace Robust.Client.GameStates
         private int _warningPayloadSize;
         private int _midrangePayloadSize;
 
-        private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new List<(GameTick Tick, int Payload, int lag, int interp)>(HistorySize+10);
+        private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new(HistorySize+10);
 
         public NetGraphOverlay() : base(nameof(NetGraphOverlay))
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
-            _font = new VectorFont(cache.GetResource<FontResource>("/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
@@ -61,7 +53,7 @@ namespace Robust.Client.GameStates
             _midrangePayloadSize = MidrangePayloadBps / _gameTiming.TickRate;
 
             // calc lag
-            var lag = _netManager.ServerChannel.Ping;
+            var lag = _netManager.ServerChannel!.Ping;
 
             // calc interp info
             var interpBuff = _gameStateManager.CurrentBufferSize - _gameStateManager.MinBufferSize;
@@ -70,7 +62,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        internal override void FrameUpdate(FrameEventArgs args)
+        protected internal override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
 
@@ -81,7 +73,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected override void Draw(DrawingHandleBase handle)
+        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 
@@ -174,18 +166,18 @@ namespace Robust.Client.GameStates
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
@@ -194,15 +186,13 @@ namespace Robust.Client.GameStates
                 if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
-                    console.AddLine("Enabled network overlay.");
+                    shell.WriteLine("Enabled network overlay.");
                 }
                 else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
                 {
                     overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
-                    console.AddLine("Disabled network overlay.");
+                    shell.WriteLine("Disabled network overlay.");
                 }
-
-                return false;
             }
         }
     }

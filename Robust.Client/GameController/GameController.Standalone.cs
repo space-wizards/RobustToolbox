@@ -1,7 +1,5 @@
-﻿using System;
-using System.Threading;
-using Robust.Client.Interfaces;
-using Robust.Shared.Interfaces.Timing;
+using System;
+using Robust.LoaderApi;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
@@ -10,11 +8,9 @@ namespace Robust.Client
 {
     internal partial class GameController
     {
-        private IGameLoop _mainLoop;
+        private IGameLoop _mainLoop = default!;
 
-#pragma warning disable 649
-        [Dependency] private IGameTiming _gameTiming;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private static bool _hasStarted;
 
@@ -23,7 +19,7 @@ namespace Robust.Client
             Start(args);
         }
 
-        public static void Start(string[] args, bool contentStart = false)
+        public static void Start(string[] args, bool contentStart = false, IMainArgs? loaderArgs=null)
         {
             if (_hasStarted)
             {
@@ -34,11 +30,11 @@ namespace Robust.Client
 
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed, contentStart);
+                ParsedMain(parsed, contentStart, loaderArgs);
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args, bool contentStart)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart, IMainArgs? loaderArgs)
         {
             IoCManager.InitThread();
 
@@ -48,6 +44,11 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
+            gc._loaderArgs = loaderArgs;
+
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
             gc._disableAssemblyLoadContext = contentStart;
             if (!gc.Startup())
             {
@@ -79,7 +80,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    Update(args);
+                    Tick(args);
                 }
             };
 
@@ -95,7 +96,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _clyde.ProcessInput(args);
+                    Input(args);
                 }
             };
 
@@ -103,12 +104,14 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _frameProcessMain(args);
+                    Update(args);
                 }
             };
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
+
+            Cleanup();
         }
     }
 }

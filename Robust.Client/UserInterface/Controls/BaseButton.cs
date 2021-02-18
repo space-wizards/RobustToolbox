@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _disabled;
         private bool _pressed;
         private bool _enableAllKeybinds;
-        private ButtonGroup _group;
+        private ButtonGroup? _group;
         private bool _toggleMode;
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         ///     Of multiple buttons in the same group, only one can be pressed (radio buttons).
         /// </remarks>
-        public ButtonGroup Group
+        public ButtonGroup? Group
         {
             get => _group;
             set
@@ -37,12 +37,12 @@ namespace Robust.Client.UserInterface.Controls
 
                 _group = value;
 
-                if (_group == null)
+                if (value == null)
                 {
                     return;
                 }
 
-                _group.Buttons.Add(this);
+                value.Buttons.Add(this);
                 ToggleMode = true;
 
                 // Set us to pressed if we're the first button.
@@ -169,26 +169,26 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Fired when the button is pushed down by the mouse.
         /// </summary>
-        public event Action<ButtonEventArgs> OnButtonDown;
+        public event Action<ButtonEventArgs>? OnButtonDown;
 
         /// <summary>
         ///     Fired when the button is released by the mouse.
         /// </summary>
-        public event Action<ButtonEventArgs> OnButtonUp;
+        public event Action<ButtonEventArgs>? OnButtonUp;
 
         /// <summary>
         ///     Fired when the button is "pressed". When this happens depends on <see cref="Mode"/>.
         /// </summary>
-        public event Action<ButtonEventArgs> OnPressed;
+        public event Action<ButtonEventArgs>? OnPressed;
 
         /// <summary>
         ///     If <see cref="ToggleMode"/> is set, fired when the button is toggled up or down.
         /// </summary>
-        public event Action<ButtonToggledEventArgs> OnToggled;
+        public event Action<ButtonToggledEventArgs>? OnToggled;
 
         protected BaseButton()
         {
-            MouseFilter = MouseFilterMode.Pass;
+            MouseFilter = MouseFilterMode.Stop;
         }
 
         protected virtual void DrawModeChanged()
@@ -318,7 +318,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum DrawModeEnum
+        public enum DrawModeEnum : byte
         {
             Normal = 0,
             Pressed = 1,
@@ -361,7 +361,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     For use with <see cref="BaseButton.Mode"/>.
         /// </summary>
-        public enum ActionMode
+        public enum ActionMode : byte
         {
             /// <summary>
             ///     <see cref="BaseButton.OnPressed"/> fires when the mouse button causing them is pressed down.
@@ -385,6 +385,6 @@ namespace Robust.Client.UserInterface.Controls
     /// </remarks>
     public sealed class ButtonGroup
     {
-        internal readonly List<BaseButton> Buttons = new List<BaseButton>();
+        internal readonly List<BaseButton> Buttons = new();
     }
 }

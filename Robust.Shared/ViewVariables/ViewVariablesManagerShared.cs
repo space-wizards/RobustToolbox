@@ -1,13 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.ViewVariables
 {
     internal class ViewVariablesManagerShared
     {
-        private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new Dictionary<Type, HashSet<object>>();
+        private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 
         /// <summary>
         ///     Figures out which VV traits an object type has. This method is in shared so the client and server agree on this mess.

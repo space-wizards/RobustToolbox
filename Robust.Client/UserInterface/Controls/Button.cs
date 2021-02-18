@@ -20,6 +20,16 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(Label);
         }
 
+        protected override void StylePropertiesChanged()
+        {
+            base.StylePropertiesChanged();
+
+			// Temporary workaround to fix button styles in content thanks to a lack of correct style updating for child selectors.
+			// The changing of the style class on the parent control (button in this case) doesn't cause a style update in the label correctly currently.
+			// This works around that.
+            Label.Restyle();
+        }
+
         /// <summary>
         ///     How to align the text inside the button.
         /// </summary>
@@ -38,6 +48,6 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text displayed by the button.
         /// </summary>
         [ViewVariables]
-        public string Text { get => Label.Text; set => Label.Text = value; }
+        public string? Text { get => Label.Text; set => Label.Text = value; }
     }
 }

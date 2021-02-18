@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
@@ -58,6 +59,12 @@ namespace Robust.Client.GameStates
         bool Logging { get; set; }
 
         /// <summary>
+        ///     The last REAL server tick that has been processed.
+        ///     i.e. not incremented on extrapolation.
+        /// </summary>
+        GameTick LastProcessedRealState { get; set; }
+
+        /// <summary>
         ///     Adds a new state into the processor. These are usually from networking or replays.
         /// </summary>
         /// <param name="state">Newly received state.</param>
@@ -70,7 +77,7 @@ namespace Robust.Client.GameStates
         /// <param name="curState">Current state for the given tick. This can be null.</param>
         /// <param name="nextState">Current state for tick + 1. This can be null.</param>
         /// <returns>Was the function able to correctly calculate the states for the given tick?</returns>
-        bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState);
+        bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState);
 
         /// <summary>
         ///     Resets the processor back to its initial state.
@@ -102,5 +109,8 @@ namespace Robust.Client.GameStates
         /// </summary>
         /// <param name="fromTick">The tick to calculate from.</param>
         int CalculateBufferSize(GameTick fromTick);
+
+        bool TryGetLastServerStates(EntityUid entity,
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary);
     }
 }

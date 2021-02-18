@@ -6,17 +6,17 @@ namespace Robust.Shared.Maths
     ///     Represents a circle with a 2D position and a radius.
     /// </summary>
     [Serializable]
-    public readonly struct Circle : IEquatable<Circle>
+    public struct Circle : IEquatable<Circle>
     {
         /// <summary>
         ///     Position of the circle in 2D space.
         /// </summary>
-        public readonly Vector2 Position;
+        public Vector2 Position;
 
         /// <summary>
         ///     Radius of the circle.
         /// </summary>
-        public readonly float Radius;
+        public float Radius;
 
         /// <summary>
         ///     Constructs an instance of this struct.
@@ -30,7 +30,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Checks if this circle contains a point.
         /// </summary>
-        public bool Contains(Vector2 point)
+        public readonly bool Contains(Vector2 point)
         {
             return Contains(point.X, point.Y);
         }
@@ -38,7 +38,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Checks if this circle intersects with another circle.
         /// </summary>
-        public bool Intersects(Circle circle)
+        public readonly bool Intersects(Circle circle)
         {
             var dx = Position.X - circle.Position.X;
             var dy = Position.Y - circle.Position.Y;
@@ -50,7 +50,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Checks if this circle intersects with a box.
         /// </summary>
-        public bool Intersects(Box2 box)
+        public readonly bool Intersects(Box2 box)
         {
             // Construct the point in / on the box nearest to the center of the circle.
             float closestX = MathHelper.Median(box.Left, box.Right, Position.X);
@@ -60,7 +60,7 @@ namespace Robust.Shared.Maths
             return Contains(closestX, closestY);
         }
 
-        private bool Contains(float x, float y)
+        private readonly bool Contains(float x, float y)
         {
             var dx = Position.X - x;
             var dy = Position.Y - y;
@@ -68,25 +68,25 @@ namespace Robust.Shared.Maths
             var d2 = dx * dx + dy * dy;
             var r2 = Radius * Radius;
 
-            // Instead of d2 <= r2, use FloatMath.CloseTo to allow for some tolerance.
-            return (d2 < r2) || FloatMath.CloseTo(d2, r2);
+            // Instead of d2 <= r2, use MathHelper.CloseTo to allow for some tolerance.
+            return (d2 < r2) || MathHelper.CloseTo(d2, r2);
         }
 
         /// <inheritdoc />
-        public bool Equals(Circle other)
+        public readonly bool Equals(Circle other)
         {
             return Position.Equals(other.Position) && Radius.Equals(other.Radius);
         }
 
         /// <inheritdoc />
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Circle circle && Equals(circle);
         }
 
         /// <inheritdoc />
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -104,7 +104,7 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"Circle ({Position.X}, {Position.Y}), {Radius} r";
         }

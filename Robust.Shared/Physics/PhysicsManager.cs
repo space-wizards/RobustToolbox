@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -18,147 +13,160 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-        private readonly List<IPhysBody> _results = new List<IPhysBody>();
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
-            new ConcurrentDictionary<MapId, BroadPhase>();
+            new();
 
         private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
         /// <summary>
-        ///     returns true if collider intersects a physBody under management. Does not trigger Bump.
+        ///     returns true if collider intersects a physBody under management.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <param name="map">Map ID to filter</param>
         /// <returns></returns>
-        public bool IsColliding(Box2 collider, MapId map)
+        public bool TryCollideRect(Box2 collider, MapId map)
         {
-            foreach (var body in this[map].Query(collider))
+            var state = (collider, map, found: false);
+            this[map].QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in IPhysBody body) =>
             {
-                if (!body.CollisionEnabled || body.CollisionLayer == 0x0)
-                    continue;
-
-                if (body.MapID == map &&
-                    body.IsHardCollidable &&
-                    body.WorldAABB.Intersects(collider))
+                if (!body.CanCollide || body.CollisionLayer == 0x0)
                     return true;
+
+                if (body.MapID == state.map &&
+                    body.WorldAABB.Intersects(state.collider))
+                {
+                    state.found = true;
+                    return false;
+                }
+                return true;
+            }, collider, true);
+
+            return state.found;
+        }
+
+        public bool IsWeightless(EntityCoordinates coordinates)
+        {
+            var gridId = coordinates.GetGridId(_entityManager);
+            if (!gridId.IsValid())
+            {
+                // Not on a grid = no gravity for now.
+                // In the future, may want to allow maps to override to always have gravity instead.
+                return true;
             }
 
-            return false;
+            var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
+            return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
         }
 
         /// <summary>
-        ///     returns true if collider intersects a physBody under management and calls Bump.
+        ///     Calculates the normal vector for two colliding bodies
         /// </summary>
-        /// <param name="entity">Rectangle to check for collision</param>
-        /// <param name="offset"></param>
-        /// <param name="bump"></param>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
         /// <returns></returns>
-        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
+        public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
-
-            var collidable = (IPhysBody) entity.GetComponent<ICollidableComponent>();
-
-            // This will never collide with anything
-            if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
-                return false;
-
-            var colliderAABB = collidable.WorldAABB;
-            if (offset.LengthSquared > 0)
+            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            if (manifold.IsEmpty()) return Vector2.Zero;
+            if (manifold.Height > manifold.Width)
             {
-                colliderAABB = colliderAABB.Translated(offset);
+                // X is the axis of seperation
+                var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
+                var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
+                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
             }
-
-            // Test this physBody against every other one.
-            _results.Clear();
-            DoCollisionTest(collidable, colliderAABB, _results);
-
-            // collided with nothing
-            if (_results.Count == 0)
-                return false;
-
-            //See if our collision will be overridden by a component
-            var collisionmodifiers = entity.GetAllComponents<ICollideSpecial>().ToList();
-            var collidedwith = new List<IEntity>();
-
-            //try all of the AABBs against the target rect.
-            var collided = false;
-            foreach (var otherCollidable in _results)
+            else
             {
-                if (!otherCollidable.IsHardCollidable)
-                {
-                    continue;
-                }
-
-                var othercollisionmodifiers = otherCollidable.Owner.GetAllComponents<ICollideSpecial>();
-
-                //Provides component level overrides for collision behavior based on the entity we are trying to collide with
-                var preventcollision = false;
-                foreach (var mods in collisionmodifiers)
-                {
-                    preventcollision |= mods.PreventCollide(otherCollidable);
-                }
-                foreach (var othermods in othercollisionmodifiers)
-                {
-                    preventcollision |= othermods.PreventCollide(collidable);
-                }
-                if (preventcollision)
-                {
-                    continue;
-                }
-
-                collided = true;
-
-                if (!bump)
-                {
-                    continue;
-                }
-
-                otherCollidable.Bumped(entity);
-                collidedwith.Add(otherCollidable.Owner);
+                // Y is the axis of seperation
+                var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
+                var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
+                return new Vector2(0, bottomDist > topDist ? 1 : -1);
             }
-
-            collidable.Bump(collidedwith);
-
-            //TODO: This needs multi-grid support.
-            return collided;
         }
 
-        /// <summary>
-        ///     Tests a physBody against every other registered physBody.
-        /// </summary>
-        /// <param name="physBody">Body being tested.</param>
-        /// <param name="colliderAABB">The AABB of the physBody being tested. This can be IPhysBody.WorldAABB, or a modified version of it.</param>
-        /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
-        internal bool DoCollisionTest(IPhysBody physBody, Box2 colliderAABB, List<IPhysBody> results)
+        public float CalculatePenetration(IPhysBody target, IPhysBody source)
         {
-            // TODO: Terrible hack to fix bullets crashing the server.
-            // Should be handled with deferred physics events instead.
-            if(physBody.Owner.Deleted)
-                return false;
+            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            if (manifold.IsEmpty()) return 0.0f;
+            return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
+        }
 
-            var any = false;
+        // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
+        public Vector2 SolveCollisionImpulse(Manifold manifold)
+        {
+            var aP = manifold.A;
+            var bP = manifold.B;
 
-            foreach ( var body in this[physBody.MapID].Query(colliderAABB))
+            if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
+
+            var restitution = 0.01f;
+            var normal = manifold.Normal;
+            var rV = manifold.RelativeVelocity;
+
+            var vAlongNormal = Vector2.Dot(rV, normal);
+            if (vAlongNormal > 0)
             {
-
-                // TODO: Terrible hack to fix bullets crashing the server.
-                // Should be handled with deferred physics events instead.
-                if (body.Owner.Deleted) {
-                    continue;
-                }
-
-                if (CollidesOnMask(physBody, body))
-                {
-                    results.Add(body);
-                }
-
-                any = true;
+                return Vector2.Zero;
             }
 
-            return any;
+            var impulse = -(1.0f + restitution) * vAlongNormal;
+            impulse /= aP.InvMass + bP.InvMass;
+
+            return manifold.Normal * impulse;
+        }
+
+        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
+        {
+            var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();
+            var entities = new List<IEntity>();
+
+            var state = (physBody, modifiers, entities);
+
+            this[physBody.MapID].QueryAabb(ref state,
+                (ref (IPhysBody physBody, IEnumerable<ICollideSpecial> modifiers, List<IEntity> entities) state,
+                    in IPhysBody body) =>
+            {
+                if (body.Entity.Deleted) {
+                    return true;
+                }
+
+                if (CollidesOnMask(state.physBody, body))
+                {
+                    var preventCollision = false;
+                    var otherModifiers = body.Entity.GetAllComponents<ICollideSpecial>();
+                    foreach (var modifier in state.modifiers)
+                    {
+                        preventCollision |= modifier.PreventCollide(body);
+                    }
+                    foreach (var modifier in otherModifiers)
+                    {
+                        preventCollision |= modifier.PreventCollide(state.physBody);
+                    }
+
+                    if (preventCollision)
+                    {
+                        return true;
+                    }
+                    state.entities.Add(body.Entity);
+                }
+                return true;
+            }, physBody.WorldAABB, approximate);
+
+            return entities;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
+        {
+            return this[mapId].QueryAabb(worldBox, false);
+        }
+
+        public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
+        {
+            return GetCollidingEntities(body, offset, approximate).Any();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
@@ -166,7 +174,7 @@ namespace Robust.Shared.Physics
             if (a == b)
                 return false;
 
-            if (!a.CollisionEnabled || !b.CollisionEnabled)
+            if (!a.CanCollide || !b.CanCollide)
                 return false;
 
             if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
@@ -184,13 +192,9 @@ namespace Robust.Shared.Physics
         {
             if (!this[physBody.MapID].Add(physBody))
             {
-                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
+                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Entity}");
             }
         }
-
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
 
         /// <summary>
         ///     Removes a physBody from the manager
@@ -200,7 +204,7 @@ namespace Robust.Shared.Physics
         {
             var removed = false;
 
-            if (physBody.Owner.Deleted || physBody.Owner.Transform.Deleted)
+            if (physBody.Entity.Deleted || physBody.Entity.Transform.Deleted)
             {
                 foreach (var mapId in _mapManager.GetAllMapIds())
                 {
@@ -248,27 +252,27 @@ namespace Robust.Shared.Physics
             }
 
             if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Entity.Uid}");
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool ignoreNonHardCollidables = false)
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
+            float maxLength = 50F,
+            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
-            RayCastResults result = default;
+            List<RayCastResults> results = new();
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) => {
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            {
+
+                if (returnOnFirstHit && results.Count > 0) return true;
 
                 if (distFromOrigin > maxLength)
                 {
                     return true;
                 }
 
-                if (predicate.Invoke(body.Owner))
-                {
-                    return true;
-                }
-
-                if (!body.CollisionEnabled)
+                if (!body.CanCollide)
                 {
                     return true;
                 }
@@ -278,73 +282,91 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (ignoreNonHardCollidables && !body.IsHardCollidable)
+                if (predicate != null && predicate.Invoke(body.Entity))
                 {
                     return true;
                 }
 
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (result.Distance != 0f && distFromOrigin > result.Distance)
-                {
-                    return true;
-                }
-
-                result = new RayCastResults(distFromOrigin, point, body.Owner);
-
+                var result = new RayCastResults(distFromOrigin, point, body.Entity);
+                results.Add(result);
+                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
                 return true;
-            }, ray.Position, ray.Direction);
+            }, ray);
+            if (results.Count == 0)
+            {
+                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
+            }
 
-            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
-
-            return result;
+            results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+            return results;
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, ignoreNonHardCollidables);
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
-        public event Action<DebugRayData> DebugDrawRay;
-
-        public IEnumerable<(IPhysBody, IPhysBody)> GetCollisions()
+        /// <inheritdoc />
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
         {
-            foreach (var mapId in _mapManager.GetAllMapIds())
+            var penetration = 0f;
+
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
-                foreach (var collision in this[mapId].GetCollisions(true))
+                if (distFromOrigin > maxLength)
                 {
-                    var (a, b) = collision;
-
-                    if (!a.CollisionEnabled || !b.CollisionEnabled)
-                    {
-                        continue;
-                    }
-
-                    if (((a.CollisionLayer & b.CollisionMask) == 0x0)
-                        ||(b.CollisionLayer & a.CollisionMask) == 0x0)
-                    {
-                        continue;
-                    }
-
-                    if (!a.WorldAABB.Intersects(b.WorldAABB))
-                    {
-                        continue;
-                    }
-
-                    yield return collision;
+                    return true;
                 }
-            }
+
+                if (!body.CanCollide)
+                {
+                    return true;
+                }
+
+                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
+                    body.WorldAABB, out _, out var exitPoint))
+                {
+                    penetration += (point - exitPoint).Length;
+                }
+                return true;
+            }, ray);
+
+            return penetration;
         }
 
+        public event Action<DebugRayData>? DebugDrawRay;
+
         public bool Update(IPhysBody collider)
-            => this[collider.MapID].Update(collider);
+        {
+            collider.WakeBody();
+            return this[collider.MapID].Update(collider);
+        }
 
         public void RemovedFromMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Remove(body);
         }
 
         public void AddedToMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Add(body);
         }
+
+        /// <summary>
+        /// How many ticks before a physics body will go to sleep. Bodies will only sleep if
+        /// they have no velocity.
+        /// </summary>
+        /// <remarks>
+        /// This is an arbitrary number greater than zero. To solve "locker stacks" that span multiple ticks,
+        /// this needs to be greater than one. Every time an entity collides or is moved, the body's <see cref="IPhysBody.SleepAccumulator"/>
+        /// goes back to zero.
+        /// </remarks>
+        public int SleepTimeThreshold { get; set; } = 2;
     }
 }

@@ -1,5 +1,5 @@
+using System.IO;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.UserInterface;
 
 namespace Robust.Client.UserInterface
 {
@@ -8,19 +8,14 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal sealed class DummyFileDialogManager : IFileDialogManager
     {
-        public Task<string> OpenFile(FileDialogFilters filters = null)
+        public Task<Stream?> OpenFile(FileDialogFilters? filters = null)
         {
-            return Task.FromResult<string>(null);
+            return Task.FromResult<Stream?>(null);
         }
 
-        public Task<string> SaveFile()
+        public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile()
         {
-            return Task.FromResult<string>(null);
-        }
-
-        public Task<string> OpenFolder()
-        {
-            return Task.FromResult<string>(null);
+            return Task.FromResult<(Stream fileStream, bool alreadyExisted)?>(null);
         }
     }
 }

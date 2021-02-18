@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq.Expressions;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -22,13 +22,15 @@ namespace Robust.Shared.Serialization
     /// </summary>
     public class YamlObjectSerializer : ObjectSerializer
     {
+        private const string TagSkipTag = "SRZ_DO_NOT_TAG";
+
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
-		public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
+        public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private YamlMappingNode WriteMap;
-        private List<YamlMappingNode> ReadMaps;
-        private Context _context;
+        private YamlMappingNode? WriteMap;
+        private List<YamlMappingNode>? ReadMaps;
+        private Context? _context;
 
         static YamlObjectSerializer()
         {
@@ -37,6 +39,7 @@ namespace Robust.Shared.Serialization
             {
                 { typeof(Color), new ColorSerializer() },
                 { typeof(Vector2), new Vector2Serializer() },
+                { typeof(Vector2i), new Vector2iSerializer() },
                 { typeof(Vector3), new Vector3Serializer() },
                 { typeof(Vector4), new Vector4Serializer() },
                 { typeof(Angle), new AngleSerializer() },
@@ -46,6 +49,7 @@ namespace Robust.Shared.Serialization
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
+                { typeof(TimeSpan), new TimeSpanSerializer() },
             };
         }
 
@@ -63,9 +67,17 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context context = null)
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context? context = null)
         {
             return NewReader(new List<YamlMappingNode>(1) { readMap }, context);
+        }
+
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Type deserializingType,
+            Context? context = null)
+        {
+            var r = NewReader(readMap, context);
+            r.SetDeserializingType(deserializingType);
+            return r;
         }
 
         /// <summary>
@@ -78,9 +90,9 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabilities such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context context = null)
+        public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 ReadMaps = readMaps,
                 _context = context,
@@ -98,9 +110,9 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context context = null)
+        public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 WriteMap = writeMap,
                 _context = context,
@@ -111,15 +123,16 @@ namespace Robust.Shared.Serialization
         // TODO: Theoretical optimization.
         // Might be a good idea to make DataField<T> use caching for value types without references too.
         /// <inheritdoc />
-        public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         return;
                     }
                 }
@@ -129,77 +142,57 @@ namespace Robust.Shared.Serialization
             else // write
             {
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, format))
                     return;
 
+                // if value AND defaultValue are null then IsValueDefault above will abort.
+                var customFormatter = format.GetYamlSerializer();
                 var key = name;
-                var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+                var val = value == null ? customFormatter.TypeToNode(defaultValue!, this) : customFormatter.TypeToNode(value, this);
 
                 // write the concrete type tag
-                if (typeof(T).IsAbstract || typeof(T).IsInterface)
-                {
-                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
-                    val.Tag = $"!type:{concreteType.Name}";
-                }
+                AssignTag(typeof(T), value, defaultValue, val);
 
-                WriteMap.Add(key, val);
+                WriteMap!.Add(key, val);
             }
         }
 
-
-        public override void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
+        private static void AssignTag<T>(Type t, T value, T defaultValue, YamlNode node)
         {
-            if (o == null)
+            // This TagSkipTag thing is a hack
+            // to get the serializer to SKIP writing type-tags
+            // for some special cases like serializing IReadOnlyList<T>.
+            // If the skip tag is set, we clear it and don't set a tag.
+            if (node.Tag == TagSkipTag)
             {
-                throw new ArgumentNullException(nameof(o));
+                node.Tag = null;
+                return;
             }
 
-            if (expr == null)
+            if (t.IsAbstract || t.IsInterface)
             {
-                throw new ArgumentNullException(nameof(expr));
+                var concreteType = value == null ? defaultValue!.GetType() : value.GetType();
+                node.Tag = $"!type:{concreteType.Name}";
             }
-
-            if (!(expr.Body is MemberExpression mExpr))
-            {
-                throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
-            }
-
-
-            WriteFunctionDelegate<T> getter;
-            ReadFunctionDelegate<T> setter;
-            switch (mExpr.Member)
-            {
-                case FieldInfo fi:
-                    getter = () => (T) fi.GetValue(o);
-                    setter = v => fi.SetValue(o, v);
-                    break;
-                case PropertyInfo pi:
-                    getter = () => (T) pi.GetValue(o);
-                    setter = v => pi.SetValue(o, v);
-                    break;
-                default:
-                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
-            }
-
-            DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
         }
 
         /// <inheritdoc />
-        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
-                if (_context != null && _context.TryGetCachedField(name, out T theValue))
+                if (_context != null && _context.TryGetCachedField<T>(name, out var theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
                     return;
                 }
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -210,7 +203,7 @@ namespace Robust.Shared.Serialization
             }
             else // write
             {
-                DataField(ref value, name, defaultValue, alwaysWrite);
+                DataField(ref value, name, defaultValue, format, alwaysWrite);
             }
         }
 
@@ -219,13 +212,13 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false)
         {
             if (Reading)
             {
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
@@ -245,22 +238,18 @@ namespace Robust.Shared.Serialization
                 }
 
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<TTarget>.NoFormat))
                 {
                     return;
                 }
 
                 var key = name;
-                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
+                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue!)) : TypeToNode(WriteConvertFunc(value!));
 
                 // write the concrete type tag
-                if (typeof(TTarget).IsAbstract || typeof(TTarget).IsInterface)
-                {
-                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
-                    val.Tag = $"!type:{concreteType.Name}";
-                }
+                AssignTag(typeof(TTarget), value, defaultValue, val);
 
-                WriteMap.Add(key, val);
+                WriteMap!.Add(key, val);
             }
         }
 
@@ -269,19 +258,19 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false)
         {
             if (Reading)
             {
-                if (_context != null && _context.TryGetCachedField(name, out TTarget theValue))
+                if (_context != null && _context.TryGetCachedField<TTarget>(name, out var theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
                     return;
                 }
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
@@ -307,7 +296,7 @@ namespace Robust.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -326,12 +315,12 @@ namespace Robust.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            if (_context != null && _context.TryGetCachedField(name, out T val))
+            if (_context != null && _context.TryGetCachedField<T>(name, out var val))
             {
                 return val;
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -345,18 +334,19 @@ namespace Robust.Shared.Serialization
         }
 
         /// <inheritdoc />
-        public override bool TryReadDataField<T>(string name, out T value)
+        public override bool TryReadDataField<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
         {
             if (!Reading)
             {
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     return true;
                 }
             }
@@ -364,8 +354,7 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        /// <inheritdoc />
-        public override bool TryReadDataFieldCached<T>(string name, out T value)
+        public override bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
         {
             if (!Reading)
             {
@@ -377,11 +366,12 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     _context?.SetCachedField(name, value);
                     return true;
                 }
@@ -390,12 +380,13 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
+
         /// <inheritdoc />
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -415,20 +406,16 @@ namespace Robust.Shared.Serialization
             var value = func.Invoke();
 
             // don't write if value is null or default
-            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+            if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<T>.NoFormat))
                 return;
 
             var key = name;
-            var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+            var val = value == null ? TypeToNode(defaultValue!) : TypeToNode(value);
 
             // write the concrete type tag
-            if (typeof(T).IsAbstract || typeof(T).IsInterface)
-            {
-                var concreteType = value == null ? defaultValue.GetType() : value.GetType();
-                val.Tag = $"!type:{concreteType.Name}";
-            }
+            AssignTag(typeof(T), value, defaultValue, val);
 
-            WriteMap.Add(key, val);
+            WriteMap!.Add(key, val);
         }
 
         /// <inheritdoc />
@@ -442,17 +429,17 @@ namespace Robust.Shared.Serialization
         {
             if (_context != null && _context.TryGetDataCache(key, out var value))
             {
-                return (T)value;
+                return (T) value!;
             }
             throw new KeyNotFoundException();
         }
 
         /// <inheritdoc />
-        public override bool TryGetCacheData<T>(string key, out T data)
+        public override bool TryGetCacheData<T>(string key, [MaybeNullWhen(false)] out T data)
         {
             if (_context != null && _context.TryGetDataCache(key, out var value))
             {
-                data = (T)value;
+                data = (T) value!;
                 return true;
             }
 
@@ -462,23 +449,59 @@ namespace Robust.Shared.Serialization
 
         public object NodeToType(Type type, YamlNode node)
         {
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
             // special snowflake string
             if (type == typeof(String))
                 return node.ToString();
 
             // val primitives
-            if (type.IsPrimitive || type == typeof(decimal))
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
+            {
                 return StringToType(type, node.ToString());
+            }
+
+            // array
+            if (type.IsArray)
+            {
+                var listNode = (YamlSequenceNode)node;
+                var newArray = (Array)Activator.CreateInstance(type, listNode.Children.Count)!;
+
+                var idx = 0;
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(type.GetElementType()!, entryNode);
+                    newArray.SetValue(value, idx++);
+                }
+
+                return newArray;
+            }
 
             // val enum
-            if (type.IsEnum)
-                return Enum.Parse(type, node.ToString());
+            if (underlyingType.IsEnum)
+                return Enum.Parse(underlyingType, node.ToString());
+
+            // IReadOnlyList<T>/IReadOnlyCollection<T>
+            if (TryGenericReadOnlyCollectionType(type, out var collectionType))
+            {
+                var listNode = (YamlSequenceNode)node;
+                var elems = listNode.Children;
+                // Deserialize to an array because that is much more efficient, and allowed.
+                var newList = (IList)Array.CreateInstance(collectionType, elems.Count);
+
+                for (var i = 0; i < elems.Count; i++)
+                {
+                    newList[i] = NodeToType(collectionType, elems[i]);
+                }
+
+                return newList;
+            }
 
             // List<T>
             if (TryGenericListType(type, out var listType))
             {
                 var listNode = (YamlSequenceNode)node;
-                var newList = (IList)Activator.CreateInstance(type);
+                var newList = (IList)Activator.CreateInstance(type, listNode.Children.Count)!;
 
                 foreach (var entryNode in listNode)
                 {
@@ -489,11 +512,29 @@ namespace Robust.Shared.Serialization
                 return newList;
             }
 
-            // Dictionary<K,V>
-            if (TryGenericDictType(type, out var keyType, out var valType))
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var listNode = (YamlSequenceNode) node;
+                var elems = listNode.Children;
+
+                var newList = Array.CreateInstance(immutableListType, elems.Count);
+
+                for (var i = 0; i < elems.Count; i++)
+                {
+                    newList.SetValue(NodeToType(immutableListType, elems[i]), i);
+                }
+
+                var list = typeof(ImmutableList);
+                var add = list.GetMethod("CreateRange")!.MakeGenericMethod(immutableListType);
+
+                return add.Invoke(null, new object?[] {newList})!;
+            }
+
+            // Dictionary<K,V>/IReadOnlyDictionary<K,V>
+            if (TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
             {
                 var dictNode = (YamlMappingNode)node;
-                var newDict = (IDictionary)Activator.CreateInstance(type);
+                var newDict = (IDictionary)Activator.CreateInstance(dictType, dictNode.Children.Count)!;
 
                 foreach (var kvEntry in dictNode.Children)
                 {
@@ -504,6 +545,50 @@ namespace Robust.Shared.Serialization
                 }
 
                 return newDict;
+            }
+
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var nodes = ((YamlSequenceNode) node).Children;
+                var valuesArray = Array.CreateInstance(setType, new[] {nodes.Count})!;
+
+                for (var i = 0; i < nodes.Count; i++)
+                {
+                    var value = NodeToType(setType, nodes[i]);
+                    valuesArray.SetValue(value, i);
+                }
+
+                var newSet = Activator.CreateInstance(type, valuesArray)!;
+
+                return newSet;
+            }
+
+            // KeyValuePair<K, V>
+            if (TryGenericKeyValuePairType(type, out var kvpKeyType, out var kvpValType))
+            {
+                var pairType = typeof(KeyValuePair<,>).MakeGenericType(kvpKeyType, kvpValType);
+                var pairNode = (YamlMappingNode) node;
+
+                switch (pairNode.Children.Count)
+                {
+                    case 0:
+                        return Activator.CreateInstance(pairType)!;
+                    case 1:
+                    {
+                        using var enumerator = pairNode.GetEnumerator();
+                        enumerator.MoveNext();
+                        var yamlPair = enumerator.Current;
+                        var keyValue = NodeToType(kvpKeyType, yamlPair.Key);
+                        var valValue = NodeToType(kvpValType, yamlPair.Value);
+                        var pair = Activator.CreateInstance(pairType, keyValue, valValue)!;
+
+                        return pair;
+                    }
+                    default:
+                        throw new InvalidOperationException(
+                            $"Cannot read KeyValuePair from mapping node with more than one child.");
+                }
             }
 
             // Hand it to the context.
@@ -519,30 +604,31 @@ namespace Robust.Shared.Serialization
             // IExposeData.
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
-                if (!(node is YamlMappingNode mapNode))
-                {
-                    throw new InvalidOperationException("Cannot read from IExposeData on non-mapping node.");
-                }
-
                 var concreteType = type;
+
                 if (type.IsAbstract || type.IsInterface)
                 {
                     var tag = node.Tag;
                     if (string.IsNullOrWhiteSpace(tag))
                         throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
 
-                    var args = tag.Split(':');
-                    if (args.Length == 2 && args[0] == "!type")
+                    if (tag.StartsWith("!type:"))
                     {
-                        concreteType = ResolveConcreteType(type, args[1]);
+                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
                     }
                     else
                     {
-                        throw new YamlException($"Malformed type tag.");
+                        throw new YamlException("Malformed type tag.");
                     }
                 }
 
-                var instance = (IExposeData)Activator.CreateInstance(concreteType);
+                var instance = (IExposeData)Activator.CreateInstance(concreteType)!;
+
+                if (node is not YamlMappingNode mapNode)
+                {
+                    return instance;
+                }
+
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -550,6 +636,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewReader(mapNode, _context);
+                fork.CurrentType = concreteType;
                 if (_context != null)
                 {
                     _context.StackDepth--;
@@ -561,7 +648,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
                 instance.Deserialize(node.ToString());
                 return instance;
             }
@@ -574,18 +661,21 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
+        public T NodeToType<T>(YamlNode node, string name)
+        {
+            return (T) NodeToType(typeof(T), node);
+        }
+
         private static Type ResolveConcreteType(Type baseType, string typeName)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
-            foreach (var derivedType in reflection.GetAllChildren(baseType))
+            var type = reflection.YamlTypeTagLookup(baseType, typeName);
+            if (type == null)
             {
-                if (derivedType.Name == typeName)
-                {
-                    return derivedType;
-                }
+                throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
             }
 
-            throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
+            return type;
         }
 
         public YamlNode TypeToNode(object obj)
@@ -595,6 +685,7 @@ namespace Robust.Shared.Serialization
                 return s;
 
             var type = obj.GetType();
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // val primitives and val enums
             if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
@@ -605,21 +696,70 @@ namespace Robust.Shared.Serialization
                 return convertible.ToString(CultureInfo.InvariantCulture);
             }
 
-            // List<T>
-            if (TryGenericListType(type, out var listType))
+            // array
+            if (type.IsArray)
             {
-                var node = new YamlSequenceNode();
+                var sequence = new YamlSequenceNode();
+                var element = type.GetElementType()!;
 
-                foreach (var entry in (IEnumerable)obj)
+                foreach (var entry in (IEnumerable) obj)
                 {
+                    if (entry == null)
+                    {
+                        continue;
+                        throw new ArgumentException("Cannot serialize null value inside array.");
+                    }
+
                     var entryNode = TypeToNode(entry);
 
                     // write the concrete type tag
-                    if (listType.IsAbstract || listType.IsInterface)
+                    AssignTag<object?>(element, entry, null, entryNode);
+
+                    sequence.Add(entryNode);
+                }
+
+                return sequence;
+            }
+
+            // List<T>/IReadOnlyCollection<T>/IReadOnlyList<T>
+            if (TryGenericListType(type, out var listType) || TryGenericReadOnlyCollectionType(type, out listType))
+            {
+                var node = new YamlSequenceNode();
+                node.Tag = TagSkipTag;
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    if (entry == null)
                     {
-                        var concreteType =  entry.GetType();
-                        entryNode.Tag = $"!type:{concreteType.Name}";
+                        throw new ArgumentException("Cannot serialize null value inside list.");
                     }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(listType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
+            if (TryGenericImmutableListType(type, out var immutableListType))
+            {
+                var node = new YamlSequenceNode {Tag = TagSkipTag};
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside list.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(immutableListType, entry, null, entryNode);
 
                     node.Add(entryNode);
                 }
@@ -628,24 +768,67 @@ namespace Robust.Shared.Serialization
             }
 
             // Dictionary<K,V>
-            if (TryGenericDictType(type, out var keyType, out var valType))
+            if (TryGenericDictType(type, out var keyType, out var valType)
+                || TryGenericReadOnlyDictType(type, out keyType, out valType))
             {
                 var node = new YamlMappingNode();
+                node.Tag = TagSkipTag;
 
-                foreach (DictionaryEntry entry in (IDictionary)obj)
+                foreach (var oEntry in (IDictionary)obj)
                 {
+                    var entry = (DictionaryEntry) oEntry!;
                     var keyNode = TypeToNode(entry.Key);
+                    if (entry.Value == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside dictionary.");
+                    }
+
                     var valNode = TypeToNode(entry.Value);
 
                     // write the concrete type tag
-                    if (valType.IsAbstract || valType.IsInterface)
-                    {
-                        var concreteType = entry.GetType();
-                        valNode.Tag = $"!type:{concreteType.Name}";
-                    }
+                    AssignTag<object?>(valType, entry, null, valNode);
 
                     node.Add(keyNode, valNode);
                 }
+
+                return node;
+            }
+
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var node = new YamlSequenceNode();
+                node.Tag = TagSkipTag;
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside hashset.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(setType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
+            if (TryGenericKeyValuePairType(type, out var kvpKeyType, out var kvpValType))
+            {
+                var node = new YamlMappingNode {Tag = TagSkipTag};
+                dynamic pair = obj;
+                var keyNode = TypeToNode(pair.Key);
+                var valNode = TypeToNode(pair.Value);
+
+                // write the concrete type tag
+                AssignTag<object?>(kvpValType, pair, null, valNode);
+
+                node.Add(keyNode, valNode);
 
                 return node;
             }
@@ -669,6 +852,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewWriter(mapping, _context);
+                fork.CurrentType = type;
                 if (_context != null)
                 {
                     _context.StackDepth--;
@@ -680,7 +864,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                var instance = (ISelfSerialize) obj!;
                 return instance.Serialize();
             }
 
@@ -692,7 +876,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 
-        bool IsValueDefault<T>(string field, T value, T providedDefault)
+        bool IsValueDefault<T>(string field, T value, T providedDefault, WithFormat<T> format)
         {
             if ((value != null || providedDefault == null) && (value == null || IsSerializedEqual(value, providedDefault)))
             {
@@ -701,14 +885,14 @@ namespace Robust.Shared.Serialization
 
             if (_context != null)
             {
-                return _context.IsValueDefault(field, value);
+                return _context.IsValueDefault(field, value, format);
             }
 
             return false;
 
         }
 
-        internal static bool IsSerializedEqual(object a, object b)
+        internal static bool IsSerializedEqual(object? a, object? b)
         {
             var type = a?.GetType();
             if (type != b?.GetType())
@@ -721,10 +905,11 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericListType(type, out _))
+            if (TryGenericListType(type!, out _) ||
+                TryGenericImmutableListType(type!, out _))
             {
                 var listA = (IList) a;
-                var listB = (IList) b;
+                var listB = (IList) b!;
 
                 if (listA.Count != listB.Count)
                 {
@@ -745,6 +930,75 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
+            if (TryGenericDictType(type!, out _, out _))
+            {
+                var dictA = (IDictionary) a;
+                var dictB = (IDictionary) b!;
+
+                foreach (var entryMaybe in dictA)
+                {
+                    var entry = (DictionaryEntry) entryMaybe!;
+                    var k = entry.Key;
+                    var v = entry.Value;
+
+                    if (!dictB.Contains(k))
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(v, dictB[k]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (TryGenericHashSetType(type!, out _))
+            {
+                var setA = ((IEnumerable) a).GetEnumerator();
+                var setB = ((IEnumerable) b!).GetEnumerator();
+
+                while (setA.MoveNext())
+                {
+                    if (!setB.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(setA.Current, setB.Current))
+                    {
+                        return false;
+                    }
+                }
+
+                if (setB.MoveNext())
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (TryGenericKeyValuePairType(type!, out _, out _))
+            {
+                dynamic tupleA = a;
+                dynamic tupleB = b!;
+
+                if (!IsSerializedEqual(tupleA.Key, tupleB.Key))
+                {
+                    return false;
+                }
+
+                if (!IsSerializedEqual(tupleA.Value, tupleB.Value))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
                 // Serialize both, see if output matches.
@@ -754,7 +1008,7 @@ namespace Robust.Shared.Serialization
                 var serB = NewWriter(testB);
 
                 var expA = (IExposeData) a;
-                var expB = (IExposeData) b;
+                var expB = (IExposeData) b!;
 
                 expA.ExposeData(serA);
                 expB.ExposeData(serB);
@@ -779,7 +1033,28 @@ namespace Robust.Shared.Serialization
                 _typeSerializers.Add(type, serializer);
         }
 
-        private static bool TryGenericListType(Type type, out Type listType)
+        private static bool TryGenericReadOnlyCollectionType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            if (!type.GetTypeInfo().IsGenericType)
+            {
+                listType = default;
+                return false;
+            }
+
+            var baseGeneric = type.GetGenericTypeDefinition();
+            var isList = baseGeneric == typeof(IReadOnlyCollection<>) || baseGeneric == typeof(IReadOnlyList<>);
+
+            if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        private static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
         {
             var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
 
@@ -793,11 +1068,100 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        private static bool TryGenericDictType(Type type, out Type keyType, out Type valType)
+        private static bool TryGenericImmutableListType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            var isImmutableList = type.GetTypeInfo().IsGenericType &&
+                                  type.GetGenericTypeDefinition() == typeof(ImmutableList<>);
+
+            if (isImmutableList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        private static bool TryGenericReadOnlyDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
+            return false;
+        }
+
+        private static bool TryGenericReadDictType(Type type, [NotNullWhen(true)] out Type? keyType,
+            [NotNullWhen(true)] out Type? valType, [NotNullWhen(true)] out Type? dictType)
+        {
+            if (TryGenericDictType(type, out keyType, out valType))
+            {
+                // Pass through the type directly if it's Dictionary<K,V>.
+                // Since that's more efficient.
+                dictType = type;
+                return true;
+            }
+
+            if (TryGenericReadOnlyDictType(type, out keyType, out valType))
+            {
+                // If it's IReadOnlyDictionary<K,V> we need to make a Dictionary<K,V> type to use to deserialize.
+                dictType = typeof(Dictionary<,>).MakeGenericType(keyType, valType);
+                return true;
+            }
+
+            dictType = default;
+            return false;
+        }
+
+        private static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
         {
             var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
 
             if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
+            return false;
+        }
+
+        private static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
+        {
+            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+            if (isSet)
+            {
+                setType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            setType = default;
+            return false;
+        }
+
+        private static bool TryGenericKeyValuePairType(
+            Type type,
+            [NotNullWhen(true)] out Type? keyType,
+            [NotNullWhen(true)] out Type? valType)
+        {
+            var isPair = type.GetTypeInfo().IsGenericType &&
+                         type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+
+            if (isPair)
             {
                 var genArgs = type.GetGenericArguments();
                 keyType = genArgs[0];
@@ -830,24 +1194,24 @@ namespace Robust.Shared.Serialization
             /// </summary>
             public int StackDepth { get; protected internal set; } = 0;
 
-            public virtual bool TryTypeToNode(object obj, out YamlNode node)
+            public virtual bool TryTypeToNode(object obj, [NotNullWhen(true)] out YamlNode? node)
             {
                 node = null;
                 return false;
             }
 
-            public virtual bool TryNodeToType(YamlNode node, Type type, out object obj)
+            public virtual bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
             {
                 obj = default;
                 return false;
             }
 
-            public virtual bool IsValueDefault<T>(string field, T value)
+            public virtual bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
             {
                 return false;
             }
 
-            public virtual bool TryGetCachedField<T>(string field, out T value)
+            public virtual bool TryGetCachedField<T>(string field, [MaybeNullWhen(false)] out T value)
             {
                 value = default;
                 return false;
@@ -857,7 +1221,7 @@ namespace Robust.Shared.Serialization
             {
             }
 
-            public virtual bool TryGetDataCache(string field, out object value)
+            public virtual bool TryGetDataCache(string field, out object? value)
             {
                 value = null;
                 return false;
@@ -872,10 +1236,10 @@ namespace Robust.Shared.Serialization
         {
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var mapNode = node as YamlMappingNode;
+                var mapNode = (YamlMappingNode)node;
 
                 var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                var instance = Activator.CreateInstance(type);
+                var instance = Activator.CreateInstance(type)!;
                 var scalarNode = new YamlScalarNode();
 
                 foreach (var field in fields)
@@ -911,6 +1275,11 @@ namespace Robust.Shared.Serialization
 
                     var fVal = field.GetValue(obj);
 
+                    if (fVal == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside struct field.");
+                    }
+
                     // Potential recursive infinite loop?
                     var fTypeNode = serializer.TypeToNode(fVal);
                     node.Add(field.Name, fTypeNode);
@@ -931,13 +1300,7 @@ namespace Robust.Shared.Serialization
             {
                 var color = (Color)obj;
 
-                Int32 hexColor = 0;
-                hexColor += color.RByte << 24;
-                hexColor += color.GByte << 16;
-                hexColor += color.BByte << 8;
-                hexColor += color.AByte;
-
-                return new YamlScalarNode("#" + hexColor.ToString("X"));
+                return new YamlScalarNode(color.ToHex());
             }
         }
 
@@ -980,6 +1343,20 @@ namespace Robust.Shared.Serialization
             public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
             {
                 var vec = (Vector2)obj;
+                return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
+            }
+        }
+
+        class Vector2iSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return node.AsVector2i();
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var vec = (Vector2i)obj;
                 return new YamlScalarNode($"{vec.X.ToString(CultureInfo.InvariantCulture)},{vec.Y.ToString(CultureInfo.InvariantCulture)}");
             }
         }
@@ -1106,6 +1483,21 @@ namespace Robust.Shared.Serialization
                         return mapping;
                 }
                 throw new NotImplementedException();
+            }
+        }
+
+        class TimeSpanSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                var seconds = double.Parse(node.AsString(), CultureInfo.InvariantCulture);
+                return TimeSpan.FromSeconds(seconds);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var seconds = ((TimeSpan) obj).TotalSeconds;
+                return new YamlScalarNode(seconds.ToString(CultureInfo.InvariantCulture));
             }
         }
     }

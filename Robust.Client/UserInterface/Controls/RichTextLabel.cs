@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -9,7 +8,7 @@ namespace Robust.Client.UserInterface.Controls
 {
     public class RichTextLabel : Control
     {
-        private FormattedMessage _message;
+        private FormattedMessage? _message;
         private RichTextEntry _entry;
 
         public float? MaxWidth { get; set; }
@@ -51,7 +50,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var oldHeight = _entry.Height;
                 var oldWidth = _entry.Width;
-                _entry.Update(font, MaxWidth ?? Width, UIScale);
+                _entry.Update(font, (MaxWidth ?? Width) * UIScale, UIScale);
                 if (oldHeight != _entry.Height || MaxWidth != null && _entry.Width != oldWidth)
                 {
                     MinimumSizeChanged();
@@ -88,7 +87,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }

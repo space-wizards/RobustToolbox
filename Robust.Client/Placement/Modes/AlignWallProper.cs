@@ -16,15 +16,14 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var grid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = grid.GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
 
-            var tileGridCoordinates = grid.GridTileToLocal(CurrentTile.GridIndices);
+            var tileCoordinates = new EntityCoordinates(MouseCoords.EntityId, CurrentTile.GridIndices);
 
             var offsets = new Vector2[]
             {
@@ -34,15 +33,17 @@ namespace Robust.Client.Placement.Modes
                 (-0.5f, 0f)
             };
 
-            var closestNode = offsets.Select(o => tileGridCoordinates.Offset(o))
-                .OrderBy(node => node.Distance(pManager.MapManager, MouseCoords)).First();
+            var closestNode = offsets
+                .Select(o => tileCoordinates.Offset(o))
+                .OrderBy(node => node.TryDistance(pManager.EntityManager, MouseCoords, out var distance) ? distance : (float?) null)
+                .First();
 
             MouseCoords = closestNode;
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return false;
             }

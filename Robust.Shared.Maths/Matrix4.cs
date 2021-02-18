@@ -26,6 +26,7 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
@@ -62,7 +63,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// The identity matrix
         /// </summary>
-        public static readonly Matrix4 Identity = new Matrix4(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
+        public static readonly Matrix4 Identity = new(Vector4.UnitX, Vector4.UnitY, Vector4.UnitZ, Vector4.UnitW);
 
         #endregion Fields
 
@@ -75,6 +76,7 @@ namespace Robust.Shared.Maths
         /// <param name="row1">Second row of the matrix</param>
         /// <param name="row2">Third row of the matrix</param>
         /// <param name="row3">Bottom row of the matrix</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Matrix4(Vector4 row0, Vector4 row1, Vector4 row2, Vector4 row3)
         {
             Row0 = row0;
@@ -102,6 +104,7 @@ namespace Robust.Shared.Maths
         /// <param name="m31">Second item of the fourth row of the matrix.</param>
         /// <param name="m32">Third item of the fourth row of the matrix.</param>
         /// <param name="m33">Fourth item of the fourth row of the matrix.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Matrix4(
             float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
@@ -123,39 +126,61 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// The determinant of this matrix
         /// </summary>
-        public float Determinant => Row0.X * Row1.Y * Row2.Z * Row3.W - Row0.X * Row1.Y * Row2.W * Row3.Z + Row0.X * Row1.Z * Row2.W * Row3.Y - Row0.X * Row1.Z * Row2.Y * Row3.W
-                                    + Row0.X * Row1.W * Row2.Y * Row3.Z - Row0.X * Row1.W * Row2.Z * Row3.Y - Row0.Y * Row1.Z * Row2.W * Row3.X + Row0.Y * Row1.Z * Row2.X * Row3.W
-                                    - Row0.Y * Row1.W * Row2.X * Row3.Z + Row0.Y * Row1.W * Row2.Z * Row3.X - Row0.Y * Row1.X * Row2.Z * Row3.W + Row0.Y * Row1.X * Row2.W * Row3.Z
-                                                                                                                                                + Row0.Z * Row1.W * Row2.X * Row3.Y - Row0.Z * Row1.W * Row2.Y * Row3.X + Row0.Z * Row1.X * Row2.Y * Row3.W - Row0.Z * Row1.X * Row2.W * Row3.Y
-                                    + Row0.Z * Row1.Y * Row2.W * Row3.X - Row0.Z * Row1.Y * Row2.X * Row3.W - Row0.W * Row1.X * Row2.Y * Row3.Z + Row0.W * Row1.X * Row2.Z * Row3.Y
-                                    - Row0.W * Row1.Y * Row2.Z * Row3.X + Row0.W * Row1.Y * Row2.X * Row3.Z - Row0.W * Row1.Z * Row2.X * Row3.Y + Row0.W * Row1.Z * Row2.Y * Row3.X;
+        public float Determinant
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Row0.X * Row1.Y * Row2.Z * Row3.W - Row0.X * Row1.Y * Row2.W * Row3.Z + Row0.X * Row1.Z * Row2.W * Row3.Y - Row0.X * Row1.Z * Row2.Y * Row3.W
+                + Row0.X * Row1.W * Row2.Y * Row3.Z - Row0.X * Row1.W * Row2.Z * Row3.Y - Row0.Y * Row1.Z * Row2.W * Row3.X + Row0.Y * Row1.Z * Row2.X * Row3.W
+                - Row0.Y * Row1.W * Row2.X * Row3.Z + Row0.Y * Row1.W * Row2.Z * Row3.X - Row0.Y * Row1.X * Row2.Z * Row3.W + Row0.Y * Row1.X * Row2.W * Row3.Z
+                + Row0.Z * Row1.W * Row2.X * Row3.Y - Row0.Z * Row1.W * Row2.Y * Row3.X + Row0.Z * Row1.X * Row2.Y * Row3.W - Row0.Z * Row1.X * Row2.W * Row3.Y
+                + Row0.Z * Row1.Y * Row2.W * Row3.X - Row0.Z * Row1.Y * Row2.X * Row3.W - Row0.W * Row1.X * Row2.Y * Row3.Z + Row0.W * Row1.X * Row2.Z * Row3.Y
+                - Row0.W * Row1.Y * Row2.Z * Row3.X + Row0.W * Row1.Y * Row2.X * Row3.Z - Row0.W * Row1.Z * Row2.X * Row3.Y + Row0.W * Row1.Z * Row2.Y * Row3.X;
+        }
 
         /// <summary>
         /// The first column of this matrix
         /// </summary>
-        public Vector4 Column0 => new Vector4(Row0.X, Row1.X, Row2.X, Row3.X);
+        public Vector4 Column0
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Row0.X, Row1.X, Row2.X, Row3.X);
+        }
 
         /// <summary>
         /// The second column of this matrix
         /// </summary>
-        public Vector4 Column1 => new Vector4(Row0.Y, Row1.Y, Row2.Y, Row3.Y);
+        public Vector4 Column1
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Row0.Y, Row1.Y, Row2.Y, Row3.Y);
+        }
 
         /// <summary>
         /// The third column of this matrix
         /// </summary>
-        public Vector4 Column2 => new Vector4(Row0.Z, Row1.Z, Row2.Z, Row3.Z);
+        public Vector4 Column2
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Row0.Z, Row1.Z, Row2.Z, Row3.Z);
+        }
 
         /// <summary>
         /// The fourth column of this matrix
         /// </summary>
-        public Vector4 Column3 => new Vector4(Row0.W, Row1.W, Row2.W, Row3.W);
+        public Vector4 Column3
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(Row0.W, Row1.W, Row2.W, Row3.W);
+        }
 
         /// <summary>
         /// Gets or sets the value at row 1, column 1 of this instance.
         /// </summary>
         public float M11
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row0.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row0.X = value;
         }
 
@@ -164,7 +189,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M12
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row0.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row0.Y = value;
         }
 
@@ -173,7 +200,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M13
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row0.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row0.Z = value;
         }
 
@@ -182,7 +211,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M14
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row0.W;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row0.W = value;
         }
 
@@ -191,7 +222,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M21
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row1.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row1.X = value;
         }
 
@@ -200,7 +233,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M22
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row1.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row1.Y = value;
         }
 
@@ -209,7 +244,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M23
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row1.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row1.Z = value;
         }
 
@@ -218,7 +255,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M24
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row1.W;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row1.W = value;
         }
 
@@ -227,7 +266,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M31
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row2.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row2.X = value;
         }
 
@@ -236,7 +277,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M32
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row2.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row2.Y = value;
         }
 
@@ -245,7 +288,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M33
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row2.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row2.Z = value;
         }
 
@@ -254,7 +299,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M34
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row2.W;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row2.W = value;
         }
 
@@ -263,7 +310,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M41
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row3.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row3.X = value;
         }
 
@@ -272,7 +321,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M42
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row3.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row3.Y = value;
         }
 
@@ -281,7 +332,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M43
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row3.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row3.Z = value;
         }
 
@@ -290,7 +343,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float M44
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Row3.W;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => Row3.W = value;
         }
 
@@ -302,6 +357,7 @@ namespace Robust.Shared.Maths
 
         /// <summary>
         /// Converts this instance into its inverse.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// </summary>
         public void Invert()
         {
@@ -315,6 +371,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Converts this instance into its transpose.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Transpose()
         {
             this = Transpose(this);
@@ -334,6 +391,7 @@ namespace Robust.Shared.Maths
         /// <param name="axis">The axis to rotate about.</param>
         /// <param name="angle">Angle in radians to rotate counter-clockwise (looking in the direction of the given axis).</param>
         /// <param name="result">A matrix instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateFromAxisAngle(Vector3 axis, float angle, out Matrix4 result)
         {
             var cos = (float) Math.Cos(-angle);
@@ -354,6 +412,7 @@ namespace Robust.Shared.Maths
         /// <param name="axis">The axis to rotate about.</param>
         /// <param name="angle">Angle in radians to rotate counter-clockwise (looking in the direction of the given axis).</param>
         /// <returns>A matrix instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateFromAxisAngle(Vector3 axis, float angle)
         {
             CreateFromAxisAngle(axis, angle, out var result);
@@ -369,6 +428,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateRotationX(float angle, out Matrix4 result)
         {
             var cos = (float) Math.Cos(angle);
@@ -385,6 +445,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateRotationX(float angle)
         {
             CreateRotationX(angle, out var result);
@@ -396,6 +457,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateRotationY(float angle, out Matrix4 result)
         {
             var cos = (float) Math.Cos(angle);
@@ -412,6 +474,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateRotationY(float angle)
         {
             CreateRotationY(angle, out var result);
@@ -423,6 +486,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateRotationZ(float angle, out Matrix4 result)
         {
             var cos = (float) Math.Cos(angle);
@@ -439,6 +503,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="angle">The counter-clockwise angle in radians.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateRotationZ(float angle)
         {
             CreateRotationZ(angle, out var result);
@@ -456,6 +521,7 @@ namespace Robust.Shared.Maths
         /// <param name="y">Y translation.</param>
         /// <param name="z">Z translation.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateTranslation(float x, float y, float z, out Matrix4 result)
         {
             result = Identity;
@@ -467,6 +533,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vector">The translation vector.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateTranslation(ref Vector3 vector, out Matrix4 result)
         {
             result = Identity;
@@ -480,6 +547,7 @@ namespace Robust.Shared.Maths
         /// <param name="y">Y translation.</param>
         /// <param name="z">Z translation.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateTranslation(float x, float y, float z)
         {
             CreateTranslation(x, y, z, out var result);
@@ -491,6 +559,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vector">The translation vector.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateTranslation(Vector3 vector)
         {
             CreateTranslation(vector.X, vector.Y, vector.Z, out var result);
@@ -509,6 +578,7 @@ namespace Robust.Shared.Maths
         /// <param name="zNear">The near edge of the projection volume.</param>
         /// <param name="zFar">The far edge of the projection volume.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateOrthographic(float width, float height, float zNear, float zFar, out Matrix4 result)
         {
             CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out result);
@@ -522,6 +592,7 @@ namespace Robust.Shared.Maths
         /// <param name="zNear">The near edge of the projection volume.</param>
         /// <param name="zFar">The far edge of the projection volume.</param>
         /// <rereturns>The resulting Matrix4 instance.</rereturns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateOrthographic(float width, float height, float zNear, float zFar)
         {
             CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out var result);
@@ -542,6 +613,7 @@ namespace Robust.Shared.Maths
         /// <param name="zNear">The near edge of the projection volume.</param>
         /// <param name="zFar">The far edge of the projection volume.</param>
         /// <param name="result">The resulting Matrix4 instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result)
         {
             result = new Matrix4();
@@ -570,6 +642,7 @@ namespace Robust.Shared.Maths
         /// <param name="zNear">The near edge of the projection volume.</param>
         /// <param name="zFar">The far edge of the projection volume.</param>
         /// <returns>The resulting Matrix4 instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)
         {
             CreateOrthographicOffCenter(left, right, bottom, top, zNear, zFar, out var result);
@@ -598,6 +671,7 @@ namespace Robust.Shared.Maths
         /// <item>zNear is larger than zFar</item>
         /// </list>
         /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result)
         {
             if (fovy <= 0 || fovy > Math.PI)
@@ -635,6 +709,7 @@ namespace Robust.Shared.Maths
         /// <item>zNear is larger than zFar</item>
         /// </list>
         /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar)
         {
             CreatePerspectiveFieldOfView(fovy, aspect, zNear, zFar, out var result);
@@ -663,6 +738,7 @@ namespace Robust.Shared.Maths
         /// <item>zNear is larger than zFar</item>
         /// </list>
         /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result)
         {
             if (zNear <= 0)
@@ -703,6 +779,7 @@ namespace Robust.Shared.Maths
         /// <item>zNear is larger than zFar</item>
         /// </list>
         /// </exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar)
         {
             CreatePerspectiveOffCenter(left, right, bottom, top, zNear, zFar, out var result);
@@ -718,6 +795,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="scale">Single scale factor for x,y and z axes</param>
         /// <returns>A scaling matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Scale(float scale)
         {
             return Scale(scale, scale, scale);
@@ -728,6 +806,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="scale">Scale factors for x,y and z axes</param>
         /// <returns>A scaling matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Scale(Vector3 scale)
         {
             return Scale(scale.X, scale.Y, scale.Z);
@@ -740,6 +819,7 @@ namespace Robust.Shared.Maths
         /// <param name="y">Scale factor for y-axis</param>
         /// <param name="z">Scale factor for z-axis</param>
         /// <returns>A scaling matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Scale(float x, float y, float z)
         {
             Matrix4 result;
@@ -759,6 +839,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">the quaternion</param>
         /// <returns>A rotation matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Rotate(Quaternion q)
         {
             q.ToAxisAngle(out var axis, out var angle);
@@ -776,6 +857,7 @@ namespace Robust.Shared.Maths
         /// <param name="target">Target position in world space</param>
         /// <param name="up">Up vector in world space (should not be parallel to the camera direction, that is target - eye)</param>
         /// <returns>A Matrix4 that transforms world space to camera space</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up)
         {
             var z = Vector3.Normalize(eye - target);
@@ -805,6 +887,7 @@ namespace Robust.Shared.Maths
         /// <param name="upY">Up vector in world space (should not be parallel to the camera direction, that is target - eye)</param>
         /// <param name="upZ">Up vector in world space (should not be parallel to the camera direction, that is target - eye)</param>
         /// <returns>A Matrix4 that transforms world space to camera space</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 LookAt(float eyeX, float eyeY, float eyeZ, float targetX, float targetY, float targetZ, float upX, float upY, float upZ)
         {
             return LookAt(new Vector3(eyeX, eyeY, eyeZ), new Vector3(targetX, targetY, targetZ), new Vector3(upX, upY, upZ));
@@ -820,6 +903,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left operand of the multiplication.</param>
         /// <param name="right">The right operand of the multiplication.</param>
         /// <returns>A new instance that is the result of the multiplication</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Mult(Matrix4 left, Matrix4 right)
         {
             Mult(ref left, ref right, out var result);
@@ -832,6 +916,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left operand of the multiplication.</param>
         /// <param name="right">The right operand of the multiplication.</param>
         /// <param name="result">A new instance that is the result of the multiplication</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Mult(ref Matrix4 left, ref Matrix4 right, out Matrix4 result)
         {
             float lM11 = left.Row0.X,
@@ -895,6 +980,7 @@ namespace Robust.Shared.Maths
         /// <param name="mat">The matrix to invert</param>
         /// <returns>The inverse of the given matrix if it has one, or the input if it is singular</returns>
         /// <exception cref="InvalidOperationException">Thrown if the Matrix4 is singular.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Invert(Matrix4 mat)
         {
             var result = new Matrix4();
@@ -902,6 +988,7 @@ namespace Robust.Shared.Maths
             return result;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invert(ref Matrix4 result)
         {
             float m41 = Row3.X, m42 = Row3.Y, m43 = Row3.Z, m44 = Row3.W;
@@ -947,6 +1034,7 @@ namespace Robust.Shared.Maths
             result.Row3.W = d1 * (m11 * m22 * m33 + m12 * m23 * m31 + m13 * m21 * m32 - m11 * m23 * m32 - m12 * m21 * m33 - m13 * m22 * m31);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InvertAffine(ref Matrix4 result)
         {
             float m11 = Row0.X,
@@ -1000,9 +1088,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="mat">The matrix to transpose</param>
         /// <returns>The transpose of the given matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 Transpose(Matrix4 mat)
         {
-            return new Matrix4(mat.Column0, mat.Column1, mat.Column2, mat.Column3);
+            return new(mat.Column0, mat.Column1, mat.Column2, mat.Column3);
         }
 
         /// <summary>
@@ -1010,6 +1099,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="mat">The matrix to transpose</param>
         /// <param name="result">The result of the calculation</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transpose(ref Matrix4 mat, out Matrix4 result)
         {
             result.Row0 = mat.Column0;
@@ -1030,6 +1120,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">left-hand operand</param>
         /// <param name="right">right-hand operand</param>
         /// <returns>A new Matrix44 which holds the result of the multiplication</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix4 operator *(Matrix4 left, Matrix4 right)
         {
             return Mult(left, right);
@@ -1041,6 +1132,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left equals right; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Matrix4 left, Matrix4 right)
         {
             return left.Equals(right);
@@ -1052,6 +1144,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left does not equal right; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(Matrix4 left, Matrix4 right)
         {
             return !left.Equals(right);
@@ -1080,6 +1173,7 @@ namespace Robust.Shared.Maths
         /// Returns the hashcode for this instance.
         /// </summary>
         /// <returns>A System.Int32 containing the unique hashcode for this instance.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
         {
             return Row0.GetHashCode() ^ Row1.GetHashCode() ^ Row2.GetHashCode() ^ Row3.GetHashCode();

@@ -1,44 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Server side processing of incoming user commands.
     /// </summary>
     public class InputSystem : SharedInputSystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
-        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
+        private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new();
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new Dictionary<IPlayerSession, uint>();
 
-        /// <summary>
-        ///     Server side input command binds.
-        /// </summary>
-        public override ICommandBindMapping BindMap => _bindMap;
+        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new();
 
         /// <inheritdoc />
         public override void Initialize()
         {
             SubscribeNetworkEvent<FullInputCmdMessage>(InputMessageHandler);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        }
-
-        private void HandleCommandMessage(IPlayerSession session, InputCmdHandler cmdHandler, FullInputCmdMessage msg)
-        {
-            cmdHandler.HandleCmdMessage(session, msg);
         }
 
         /// <inheritdoc />
@@ -65,15 +51,15 @@ namespace Robust.Server.GameObjects.EntitySystems
             if (_lastProcessedInputCmd[session] < msg.InputSequence)
                 _lastProcessedInputCmd[session] = msg.InputSequence;
 
+            // set state, only bound key functions get state changes
+            var states = GetInputStates(session);
+            states.SetState(function, msg.State);
+
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore
-            if (_bindMap.TryGetHandler(function, out var cmdHandler))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
-                // set state, only bound key functions get state changes
-                var states = GetInputStates(session);
-                states.SetState(function, msg.State);
-
-                HandleCommandMessage(session, cmdHandler, msg);
+                if (handler.HandleCmdMessage(session, msg)) return;
             }
         }
 
@@ -87,7 +73,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             return _lastProcessedInputCmd[session];
         }
 
-        private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)
             {

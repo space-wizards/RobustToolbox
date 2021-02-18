@@ -9,15 +9,18 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class SpinBox : HBoxContainer
     {
+        public const string LeftButtonStyle = "spinbox-left";
+        public const string RightButtonStyle = "spinbox-right";
+        public const string MiddleButtonStyle = "spinbox-middle";
         private LineEdit _lineEdit;
-        private List<Button> _leftButtons = new List<Button>();
-        private List<Button> _rightButtons = new List<Button>();
+        private List<Button> _leftButtons = new();
+        private List<Button> _rightButtons = new();
         private int _stepSize = 1;
 
         /// <summary>
         ///     Determines whether the SpinBox value gets changed by the input text.
         /// </summary>
-        public Func<int, bool> IsValid { get; set; }
+        public Func<int, bool>? IsValid { get; set; }
 
         public int Value
         {
@@ -29,8 +32,25 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _lineEdit.Text = value.ToString();
+                ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
             }
         }
+
+        /// <summary>
+        /// Overrides the value of the spinbox without calling the event.
+        /// Still applies validity-checks
+        /// </summary>
+        /// <param name="value">the new value</param>
+        public void OverrideValue(int value)
+        {
+            if (IsValid != null && !IsValid(value))
+            {
+                return;
+            }
+            _lineEdit.Text = value.ToString();
+        }
+
+        public event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
         public SpinBox() : base()
         {
@@ -45,7 +65,7 @@ namespace Robust.Client.UserInterface.Controls
 
             Value = 0;
 
-            _lineEdit.IsValid = (str) => int.TryParse(str, out int i);
+            _lineEdit.IsValid = (str) => int.TryParse(str, out var i) && (IsValid == null || IsValid(i));
         }
 
         /// <summary>
@@ -66,6 +86,12 @@ namespace Robust.Client.UserInterface.Controls
             var button = new Button { Text = text };
             button.OnPressed += (args) => Value += num;
             AddChild(button);
+            button.AddStyleClass(RightButtonStyle);
+            if (_rightButtons.Count > 0)
+            {
+                _rightButtons[^1].RemoveStyleClass(RightButtonStyle);
+                _rightButtons[^1].AddStyleClass(MiddleButtonStyle);
+            }
             _rightButtons.Add(button);
         }
 
@@ -78,6 +104,10 @@ namespace Robust.Client.UserInterface.Controls
             button.OnPressed += (args) => Value += num;
             AddChild(button);
             button.SetPositionInParent(_leftButtons.Count);
+            button.AddStyleClass(_leftButtons.Count == 0 ? LeftButtonStyle : MiddleButtonStyle);
+            if (_leftButtons.Count == 0)
+            {
+            }
             _leftButtons.Add(button);
         }
 
@@ -94,6 +124,32 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var num in rightButtons)
             {
                 AddRightButton(num, num.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Changes the editability of the lineedit-field
+        /// </summary>
+        public bool LineEditDisabled
+        {
+            get => !_lineEdit.Editable;
+            set => _lineEdit.Editable = !value;
+        }
+
+        /// <summary>
+        /// Changes the editability of the buttons
+        /// </summary>
+        /// <param name="disabled"></param>
+        public void SetButtonDisabled(bool disabled)
+        {
+            foreach (var leftButton in _leftButtons)
+            {
+                leftButton.Disabled = disabled;
+            }
+
+            foreach (var rightButton in _rightButtons)
+            {
+                rightButton.Disabled = disabled;
             }
         }
 
@@ -127,6 +183,16 @@ namespace Robust.Client.UserInterface.Controls
                 Value += _stepSize;
             else if (args.Delta.Y < 0)
                 Value -= _stepSize;
+        }
+    }
+
+    public class ValueChangedEventArgs : EventArgs
+    {
+        public readonly int Value;
+
+        public ValueChangedEventArgs(int value)
+        {
+            Value = value;
         }
     }
 }

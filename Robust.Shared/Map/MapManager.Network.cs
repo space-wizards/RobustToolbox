@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -14,11 +14,9 @@ namespace Robust.Shared.Map
 {
     internal partial class MapManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly INetManager _netManager;
-#pragma warning restore 649
+        [Dependency] private readonly INetManager _netManager = default!;
 
-        public GameStateMapData GetStateData(GameTick fromTick)
+        public GameStateMapData? GetStateData(GameTick fromTick)
         {
             var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
             foreach (var grid in _grids.Values)
@@ -61,17 +59,16 @@ namespace Robust.Shared.Map
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
+                .Select(kv => kv.Key).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
-                    grid.IsDefaultGrid));
+                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
 
             // no point sending empty collections
-            if (gridDatums.Count        == 0) gridDatums        = default;
-            if (gridDeletionsData.Count == 0) gridDeletionsData = default;
-            if (mapDeletionsData.Count  == 0) mapDeletionsData  = default;
-            if (mapCreations.Count      == 0) mapCreations      = default;
-            if (gridCreations.Count     == 0) gridCreations     = default;
+            if (gridDatums.Count        == 0)  gridDatums        = default;
+            if (gridDeletionsData.Count == 0)  gridDeletionsData = default;
+            if (mapDeletionsData.Count  == 0)  mapDeletionsData  = default;
+            if (mapCreations.Length     == 0)  mapCreations      = default;
+            if (gridCreations.Count     == 0)  gridCreations     = default;
 
             // no point even creating an empty map state if no data
             if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
@@ -86,7 +83,7 @@ namespace Robust.Shared.Map
             _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
         }
 
-        public void ApplyGameStatePre(GameStateMapData data)
+        public void ApplyGameStatePre(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
@@ -99,26 +96,20 @@ namespace Robust.Shared.Map
                 : null;
 
             // First we need to figure out all the NEW MAPS.
-            // And make their default grids too.
             if(data.CreatedMaps != null)
             {
-                DebugTools.AssertNotNull(createdGrids);
-
-                foreach (var (mapId, gridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     if (_maps.Contains(mapId))
                     {
                         continue;
                     }
 
-                    var gridCreation = createdGrids[gridId];
-                    DebugTools.Assert(gridCreation.IsTheDefault);
-
-                    CreateMap(mapId, gridId);
+                    CreateMap(mapId);
                 }
             }
 
-            // Then make all the other grids.
+            // Then make all the grids.
             if(data.CreatedGrids != null)
             {
                 var gridData = data.GridData != null
@@ -129,12 +120,12 @@ namespace Robust.Shared.Map
 
                 foreach (var (gridId, creationDatum) in data.CreatedGrids)
                 {
-                    if (creationDatum.IsTheDefault || _grids.ContainsKey(gridId))
+                    if (_grids.ContainsKey(gridId))
                     {
                         continue;
                     }
 
-                    CreateGrid(gridData[gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
+                    CreateGrid(gridData![gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
                         creationDatum.SnapSize);
                 }
             }
@@ -154,10 +145,11 @@ namespace Robust.Shared.Map
 
                     grid.WorldPosition = gridDatum.Coordinates.Position;
 
-                    var modified = new List<(MapIndices position, Tile tile)>();
+                    var modified = new List<(Vector2i position, Tile tile)>();
                     foreach (var chunkData in gridDatum.ChunkData)
                     {
                         var chunk = grid.GetChunk(chunkData.Index);
+                        chunk.SuppressCollisionRegeneration = true;
                         DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
 
                         var counter = 0;
@@ -169,10 +161,13 @@ namespace Robust.Shared.Map
                                 if (chunk.GetTileRef(x, y).Tile != tile)
                                 {
                                     chunk.SetTile(x, y, tile);
-                                    modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                                    modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
                                 }
                             }
                         }
+
+                        chunk.SuppressCollisionRegeneration = false;
+                        chunk.RegenerateCollision();
                     }
 
                     if (modified.Count != 0)
@@ -185,7 +180,7 @@ namespace Robust.Shared.Map
             }
         }
 
-        public void ApplyGameStatePost(GameStateMapData data)
+        public void ApplyGameStatePost(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
@@ -197,7 +192,7 @@ namespace Robust.Shared.Map
             // and delete the client entities
             if (data.CreatedMaps != null)
             {
-                foreach (var (mapId, defaultGridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     // CreateMap should have set this
                     DebugTools.Assert(_mapEntities.ContainsKey(mapId));
@@ -210,8 +205,8 @@ namespace Robust.Shared.Map
                     var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
 
                     // locate the entity that represents this map that was just sent to us
-                    IEntity sharedMapEntity = null;
-                    var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                    IEntity? sharedMapEntity = null;
+                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
                     foreach (var mapComp in mapComps)
                     {
                         if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
@@ -231,7 +226,7 @@ namespace Robust.Shared.Map
                     // so they are not deleted
                     foreach (var childGridTrans in cEntity.Transform.Children.ToList())
                     {
-                        childGridTrans.AttachParent(sharedMapEntity);
+                        childGridTrans.AttachParent(sharedMapEntity!);
                     }
 
                     // remove client entity
@@ -261,7 +256,7 @@ namespace Robust.Shared.Map
                     cGridComp.ClearGridId();
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
-                    var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
+                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true);
                     foreach (var gridComp in gridComps)
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)

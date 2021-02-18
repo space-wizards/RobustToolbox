@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
-        public event Action<Control> OnMinimumSizeChanged;
+        public event Action<Control>? OnMinimumSizeChanged;
 
         private Vector2 _size;
 
@@ -30,6 +30,9 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The amount of "real" pixels a virtual pixel takes up.
         ///     The higher the number, the bigger the interface.
+        ///     I.e. UIScale units are real pixels (rp) / virtual pixels (vp),
+        ///     real pixels varies depending on interface, virtual pixels doesn't.
+        ///     And vp * UIScale = rp, and rp / UIScale = vp
         /// </summary>
         [ViewVariables]
         protected float UIScale => UserInterfaceManager.UIScale;
@@ -67,13 +70,13 @@ namespace Robust.Client.UserInterface
         ///     A <see cref="UIBox2"/> with the top left at 0,0 and the size equal to <see cref="Size"/>.
         /// </summary>
         /// <seealso cref="PixelSizeBox"/>
-        public UIBox2 SizeBox => new UIBox2(Vector2.Zero, Size);
+        public UIBox2 SizeBox => new(Vector2.Zero, Size);
 
         /// <summary>
         ///     A <see cref="UIBox2i"/> with the top left at 0,0 and the size equal to <see cref="PixelSize"/>.
         /// </summary>
         /// <seealso cref="SizeBox"/>
-        public UIBox2i PixelSizeBox => new UIBox2i(Vector2i.Zero, PixelSize);
+        public UIBox2i PixelSizeBox => new(Vector2i.Zero, PixelSize);
 
         /// <summary>
         ///     The width of the control, in virtual pixels.
@@ -246,7 +249,7 @@ namespace Robust.Client.UserInterface
                     DebugTools.Assert(_calculatedMinimumSize.HasValue);
                 }
 
-                return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize.Value);
+                return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize!.Value);
             }
         }
 

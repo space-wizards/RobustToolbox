@@ -1,9 +1,13 @@
-﻿namespace Robust.Shared.Physics
+﻿using System;
+using Robust.Shared.Serialization;
+
+namespace Robust.Shared.Physics
 {
     /// <summary>
     ///     The properties of physical body. This determines how collisions will effect this body.
     /// </summary>
-    public enum BodyType
+    [Serializable, NetSerializable]
+    public enum BodyType : byte
     {
         /// <summary>
         ///     Will not be processed by the collision system. Basically "out of phase" with the world.

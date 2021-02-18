@@ -1,13 +1,11 @@
-﻿using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.Interfaces.Map;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 #nullable enable
 
-namespace Robust.Client.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
     public sealed class EyeManager : IEyeManager
@@ -19,14 +17,11 @@ namespace Robust.Client.Graphics.ClientEye
         /// </summary>
         public const int PixelsPerMeter = 32;
 
-#pragma warning disable 649, CS8618
-        // ReSharper disable twice NotNullMemberIsNotInitialized
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IClyde _displayManager;
-#pragma warning restore 649, CS8618
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         // We default to this when we get set to a null eye.
-        private readonly FixedEye _defaultEye = new FixedEye();
+        private readonly FixedEye _defaultEye = new();
 
         private IEye? _currentEye;
 
@@ -37,6 +32,11 @@ namespace Robust.Client.Graphics.ClientEye
             set => _currentEye = value;
         }
 
+        public void ClearCurrentEye()
+        {
+            _currentEye = _defaultEye;
+        }
+
         /// <inheritdoc />
         public MapId CurrentMap => CurrentEye.Position.MapId;
 
@@ -45,11 +45,11 @@ namespace Robust.Client.Graphics.ClientEye
         {
             var vpSize = _displayManager.ScreenSize;
 
-            var topLeft = ScreenToWorld(Vector2.Zero);
-            var topRight = ScreenToWorld(new Vector2(vpSize.X, 0));
-            var bottomRight = ScreenToWorld(vpSize);
-            var bottomLeft = ScreenToWorld(new Vector2(0, vpSize.Y));
-
+            var topLeft = ScreenToMap(Vector2.Zero);
+            var topRight = ScreenToMap(new Vector2(vpSize.X, 0));
+            var bottomRight = ScreenToMap(vpSize);
+            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y));
+            
             var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
             var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
             var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
@@ -96,29 +96,20 @@ namespace Robust.Client.Graphics.ClientEye
         }
 
         /// <inheritdoc />
-        public ScreenCoordinates WorldToScreen(GridCoordinates point)
+        public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            var worldCoords = _mapManager.GetGrid(point.GridID).LocalToWorld(point);
-            return new ScreenCoordinates(WorldToScreen(worldCoords.Position));
+            return MapToScreen(point.ToMap(_entityManager));
+        }
+
+        public ScreenCoordinates MapToScreen(MapCoordinates point)
+        {
+            return new(WorldToScreen(point.Position));
         }
 
         /// <inheritdoc />
-        public GridCoordinates ScreenToWorld(ScreenCoordinates point)
+        public MapCoordinates ScreenToMap(ScreenCoordinates point)
         {
-            return ScreenToWorld(point.Position);
-        }
-
-        /// <inheritdoc />
-        public GridCoordinates ScreenToWorld(Vector2 point)
-        {
-            var mapCoords = ScreenToMap(point);
-
-            if (!_mapManager.TryFindGridAt(mapCoords, out var grid))
-            {
-                grid = _mapManager.GetDefaultGrid(mapCoords.MapId);
-            }
-
-            return new GridCoordinates(grid.WorldToLocal(mapCoords.Position), grid.Index);
+            return ScreenToMap(point.Position);
         }
 
         /// <inheritdoc />

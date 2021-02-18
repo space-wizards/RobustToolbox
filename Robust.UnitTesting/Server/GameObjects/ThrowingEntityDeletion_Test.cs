@@ -2,10 +2,8 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using Robust.Server.Interfaces.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -16,9 +14,9 @@ namespace Robust.UnitTesting.Server.GameObjects
     [TestFixture]
     public class ThrowingEntityDeletion_Test : RobustUnitTest
     {
-        private IServerEntityManager EntityManager;
-        private IComponentFactory _componentFactory;
-        private IMapManager MapManager;
+        private IServerEntityManager EntityManager = default!;
+        private IComponentFactory _componentFactory = default!;
+        private IMapManager MapManager = default!;
 
         const string PROTOTYPES = @"
 - type: entity

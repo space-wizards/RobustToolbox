@@ -26,6 +26,7 @@ SOFTWARE.
 #endregion
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
@@ -66,6 +67,7 @@ namespace Robust.Shared.Maths
         /// Constructs a new instance.
         /// </summary>
         /// <param name="value">The value that will initialize this instance.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(float value)
         {
             X = value;
@@ -79,6 +81,7 @@ namespace Robust.Shared.Maths
         /// <param name="x">The x component of the Vector3.</param>
         /// <param name="y">The y component of the Vector3.</param>
         /// <param name="z">The z component of the Vector3.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(float x, float y, float z)
         {
             X = x;
@@ -90,6 +93,7 @@ namespace Robust.Shared.Maths
         /// Constructs a new Vector3 from the given Vector2.
         /// </summary>
         /// <param name="v">The Vector2 to copy components from.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector2 v)
         {
             X = v.X;
@@ -101,6 +105,7 @@ namespace Robust.Shared.Maths
         /// Constructs a new Vector3 from the given Vector3.
         /// </summary>
         /// <param name="v">The Vector3 to copy components from.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector3 v)
         {
             X = v.X;
@@ -112,6 +117,7 @@ namespace Robust.Shared.Maths
         /// Constructs a new Vector3 from the given Vector4.
         /// </summary>
         /// <param name="v">The Vector4 to copy components from.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector4 v)
         {
             X = v.X;
@@ -119,6 +125,7 @@ namespace Robust.Shared.Maths
             Z = v.Z;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Deconstruct(out float x, out float y, out float z)
         {
             x = X;
@@ -138,11 +145,11 @@ namespace Robust.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-#if NETCOREAPP
-        public float Length => MathF.Sqrt(LengthSquared);
-#else
-        public float Length => (float) Math.Sqrt(LengthSquared);
-#endif
+        public float Length
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => MathF.Sqrt(LengthSquared);
+        }
         #endregion
 
         #region public float LengthSquared
@@ -155,7 +162,11 @@ namespace Robust.Shared.Maths
         /// for comparisons.
         /// </remarks>
         /// <see cref="Length"/>
-        public float LengthSquared => X * X + Y * Y + Z * Z;
+        public float LengthSquared
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => X * X + Y * Y + Z * Z;
+        }
 
         #endregion
 
@@ -164,6 +175,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Scales the Vector3 to unit length.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Normalize()
         {
             var scale = 1.0f / Length;
@@ -183,27 +195,27 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines a unit-length Vector3 that points towards the X-axis.
         /// </summary>
-        public static readonly Vector3 UnitX = new Vector3(1, 0, 0);
+        public static readonly Vector3 UnitX = new(1, 0, 0);
 
         /// <summary>
         /// Defines a unit-length Vector3 that points towards the Y-axis.
         /// </summary>
-        public static readonly Vector3 UnitY = new Vector3(0, 1, 0);
+        public static readonly Vector3 UnitY = new(0, 1, 0);
 
         /// <summary>
         /// /// Defines a unit-length Vector3 that points towards the Z-axis.
         /// </summary>
-        public static readonly Vector3 UnitZ = new Vector3(0, 0, 1);
+        public static readonly Vector3 UnitZ = new(0, 0, 1);
 
         /// <summary>
         /// Defines a zero-length Vector3.
         /// </summary>
-        public static readonly Vector3 Zero = new Vector3(0, 0, 0);
+        public static readonly Vector3 Zero = new(0, 0, 0);
 
         /// <summary>
         /// Defines an instance with all components set to 1.
         /// </summary>
-        public static readonly Vector3 One = new Vector3(1, 1, 1);
+        public static readonly Vector3 One = new(1, 1, 1);
 
         /// <summary>
         /// Defines the size of the Vector3 struct in bytes.
@@ -220,6 +232,7 @@ namespace Robust.Shared.Maths
         /// <param name="a">Left operand.</param>
         /// <param name="b">Right operand.</param>
         /// <returns>Result of operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Add(Vector3 a, Vector3 b)
         {
             Add(ref a, ref b, out a);
@@ -232,6 +245,7 @@ namespace Robust.Shared.Maths
         /// <param name="a">Left operand.</param>
         /// <param name="b">Right operand.</param>
         /// <param name="result">Result of operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add(ref Vector3 a, ref Vector3 b, out Vector3 result)
         {
             result = new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
@@ -247,6 +261,7 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>Result of subtraction</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Subtract(Vector3 a, Vector3 b)
         {
             Subtract(ref a, ref b, out a);
@@ -259,6 +274,7 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">Result of subtraction</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Subtract(ref Vector3 a, ref Vector3 b, out Vector3 result)
         {
             result = new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
@@ -274,6 +290,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Multiply(Vector3 vector, float scale)
         {
             Multiply(ref vector, scale, out vector);
@@ -286,6 +303,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Multiply(ref Vector3 vector, float scale, out Vector3 result)
         {
             result = new Vector3(vector.X * scale, vector.Y * scale, vector.Z * scale);
@@ -297,6 +315,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Multiply(Vector3 vector, Vector3 scale)
         {
             Multiply(ref vector, ref scale, out vector);
@@ -309,6 +328,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Multiply(ref Vector3 vector, ref Vector3 scale, out Vector3 result)
         {
             result = new Vector3(vector.X * scale.X, vector.Y * scale.Y, vector.Z * scale.Z);
@@ -324,6 +344,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Divide(Vector3 vector, float scale)
         {
             Divide(ref vector, scale, out vector);
@@ -336,6 +357,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Divide(ref Vector3 vector, float scale, out Vector3 result)
         {
             Multiply(ref vector, 1 / scale, out result);
@@ -347,6 +369,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <returns>Result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Divide(Vector3 vector, Vector3 scale)
         {
             Divide(ref vector, ref scale, out vector);
@@ -359,6 +382,7 @@ namespace Robust.Shared.Maths
         /// <param name="vector">Left operand.</param>
         /// <param name="scale">Right operand.</param>
         /// <param name="result">Result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Divide(ref Vector3 vector, ref Vector3 scale, out Vector3 result)
         {
             result = new Vector3(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z);
@@ -374,11 +398,12 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>The component-wise minimum</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 ComponentMin(Vector3 a, Vector3 b)
         {
-            a.X = a.X < b.X ? a.X : b.X;
-            a.Y = a.Y < b.Y ? a.Y : b.Y;
-            a.Z = a.Z < b.Z ? a.Z : b.Z;
+            a.X = MathF.Min(a.X, b.X);
+            a.Y = MathF.Min(a.Y, b.Y);
+            a.Z = MathF.Min(a.Z, b.Z);
             return a;
         }
 
@@ -388,11 +413,12 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">The component-wise minimum</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ComponentMin(ref Vector3 a, ref Vector3 b, out Vector3 result)
         {
-            result.X = a.X < b.X ? a.X : b.X;
-            result.Y = a.Y < b.Y ? a.Y : b.Y;
-            result.Z = a.Z < b.Z ? a.Z : b.Z;
+            result.X = MathF.Min(a.X, b.X);
+            result.Y = MathF.Min(a.Y, b.Y);
+            result.Z = MathF.Min(a.Z, b.Z);
         }
 
         #endregion
@@ -405,11 +431,12 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <returns>The component-wise maximum</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 ComponentMax(Vector3 a, Vector3 b)
         {
-            a.X = a.X > b.X ? a.X : b.X;
-            a.Y = a.Y > b.Y ? a.Y : b.Y;
-            a.Z = a.Z > b.Z ? a.Z : b.Z;
+            a.X = MathF.Max(a.X, b.X);
+            a.Y = MathF.Max(a.Y, b.Y);
+            a.Z = MathF.Max(a.Z, b.Z);
             return a;
         }
 
@@ -419,11 +446,12 @@ namespace Robust.Shared.Maths
         /// <param name="a">First operand</param>
         /// <param name="b">Second operand</param>
         /// <param name="result">The component-wise maximum</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ComponentMax(ref Vector3 a, ref Vector3 b, out Vector3 result)
         {
-            result.X = a.X > b.X ? a.X : b.X;
-            result.Y = a.Y > b.Y ? a.Y : b.Y;
-            result.Z = a.Z > b.Z ? a.Z : b.Z;
+            result.X = MathF.Max(a.X, b.X);
+            result.Y = MathF.Max(a.Y, b.Y);
+            result.Z = MathF.Max(a.Z, b.Z);
         }
 
         #endregion
@@ -436,6 +464,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">Left operand</param>
         /// <param name="right">Right operand</param>
         /// <returns>The minimum Vector3</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Min(Vector3 left, Vector3 right)
         {
             return left.LengthSquared < right.LengthSquared ? left : right;
@@ -451,6 +480,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">Left operand</param>
         /// <param name="right">Right operand</param>
         /// <returns>The minimum Vector3</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Max(Vector3 left, Vector3 right)
         {
             return left.LengthSquared >= right.LengthSquared ? left : right;
@@ -467,11 +497,12 @@ namespace Robust.Shared.Maths
         /// <param name="min">Minimum vector</param>
         /// <param name="max">Maximum vector</param>
         /// <returns>The clamped vector</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Clamp(Vector3 vec, Vector3 min, Vector3 max)
         {
-            vec.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
-            vec.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-            vec.Z = vec.Z < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            vec.X = MathHelper.Clamp(vec.X, min.X, max.X);
+            vec.Y = MathHelper.Clamp(vec.Y, min.Y, max.Y);
+            vec.Z = MathHelper.Clamp(vec.Z, min.Z, max.Z);
             return vec;
         }
 
@@ -482,11 +513,12 @@ namespace Robust.Shared.Maths
         /// <param name="min">Minimum vector</param>
         /// <param name="max">Maximum vector</param>
         /// <param name="result">The clamped vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Clamp(ref Vector3 vec, ref Vector3 min, ref Vector3 max, out Vector3 result)
         {
-            result.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
-            result.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-            result.Z = vec.Z < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
+            result.X = MathHelper.Clamp(vec.X, min.X, max.X);
+            result.Y = MathHelper.Clamp(vec.Y, min.Y, max.Y);
+            result.Z = MathHelper.Clamp(vec.Z, min.Z, max.Z);
         }
 
         #endregion
@@ -498,6 +530,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec">The input vector</param>
         /// <returns>The normalized vector</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Normalize(Vector3 vec)
         {
             var scale = 1.0f / vec.Length;
@@ -512,6 +545,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec">The input vector</param>
         /// <param name="result">The normalized vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Normalize(ref Vector3 vec, out Vector3 result)
         {
             var scale = 1.0f / vec.Length;
@@ -530,6 +564,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">First operand</param>
         /// <param name="right">Second operand</param>
         /// <returns>The dot product of the two inputs</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Dot(Vector3 left, Vector3 right)
         {
             return left.X * right.X + left.Y * right.Y + left.Z * right.Z;
@@ -541,6 +576,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">First operand</param>
         /// <param name="right">Second operand</param>
         /// <param name="result">The dot product of the two inputs</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Dot(ref Vector3 left, ref Vector3 right, out float result)
         {
             result = left.X * right.X + left.Y * right.Y + left.Z * right.Z;
@@ -556,6 +592,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">First operand</param>
         /// <param name="right">Second operand</param>
         /// <returns>The cross product of the two inputs</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Cross(Vector3 left, Vector3 right)
         {
             Cross(ref left, ref right, out var result);
@@ -569,6 +606,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">Second operand</param>
         /// <returns>The cross product of the two inputs</returns>
         /// <param name="result">The cross product of the two inputs</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Cross(ref Vector3 left, ref Vector3 right, out Vector3 result)
         {
             result = new Vector3(left.Y * right.Z - left.Z * right.Y,
@@ -587,11 +625,12 @@ namespace Robust.Shared.Maths
         /// <param name="b">Second input vector</param>
         /// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
         /// <returns>a when blend=0, b when blend=1, and a linear combination otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Lerp(Vector3 a, Vector3 b, float blend)
         {
-            a.X = blend * (b.X - a.X) + a.X;
-            a.Y = blend * (b.Y - a.Y) + a.Y;
-            a.Z = blend * (b.Z - a.Z) + a.Z;
+            a.X = MathHelper.Lerp(a.X, b.X, blend);
+            a.Y = MathHelper.Lerp(a.Y, b.Y, blend);
+            a.Z = MathHelper.Lerp(a.Z, b.Z, blend);
             return a;
         }
 
@@ -602,13 +641,15 @@ namespace Robust.Shared.Maths
         /// <param name="b">Second input vector</param>
         /// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
         /// <param name="result">a when blend=0, b when blend=1, and a linear combination otherwise</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Lerp(ref Vector3 a, ref Vector3 b, float blend, out Vector3 result)
         {
-            result.X = blend * (b.X - a.X) + a.X;
-            result.Y = blend * (b.Y - a.Y) + a.Y;
-            result.Z = blend * (b.Z - a.Z) + a.Z;
+            result.X = MathHelper.Lerp(a.X, b.X, blend);
+            result.Y = MathHelper.Lerp(a.Y, b.Y, blend);
+            result.Z = MathHelper.Lerp(a.Z, b.Z, blend);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 InterpolateCubic(Vector3 preA, Vector3 a, Vector3 b, Vector3 postB, float t)
         {
             return a +
@@ -629,6 +670,7 @@ namespace Robust.Shared.Maths
         /// <param name="u">First Barycentric Coordinate</param>
         /// <param name="v">Second Barycentric Coordinate</param>
         /// <returns>a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 BaryCentric(Vector3 a, Vector3 b, Vector3 c, float u, float v)
         {
             return a + u * (b - a) + v * (c - a);
@@ -641,6 +683,7 @@ namespace Robust.Shared.Maths
         /// <param name="u">First Barycentric Coordinate.</param>
         /// <param name="v">Second Barycentric Coordinate.</param>
         /// <param name="result">Output Vector. a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void BaryCentric(ref Vector3 a, ref Vector3 b, ref Vector3 c, float u, float v, out Vector3 result)
         {
             result = a; // copy
@@ -666,6 +709,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed vector</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformVector(Vector3 vec, Matrix4 mat)
         {
             Vector3 v;
@@ -681,6 +725,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TransformVector(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
         {
             result.X = vec.X * mat.Row0.X +
@@ -704,6 +749,7 @@ namespace Robust.Shared.Maths
         /// <param name="norm">The normal to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed normal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformNormal(Vector3 norm, Matrix4 mat)
         {
             mat.Invert();
@@ -718,6 +764,7 @@ namespace Robust.Shared.Maths
         /// <param name="norm">The normal to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed normal</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TransformNormal(ref Vector3 norm, ref Matrix4 mat, out Vector3 result)
         {
             var inverse = Matrix4.Invert(mat);
@@ -732,6 +779,7 @@ namespace Robust.Shared.Maths
         /// <param name="norm">The normal to transform</param>
         /// <param name="invMat">The inverse of the desired transformation</param>
         /// <returns>The transformed normal</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformNormalInverse(Vector3 norm, Matrix4 invMat)
         {
             Vector3 n;
@@ -749,6 +797,7 @@ namespace Robust.Shared.Maths
         /// <param name="norm">The normal to transform</param>
         /// <param name="invMat">The inverse of the desired transformation</param>
         /// <param name="result">The transformed normal</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TransformNormalInverse(ref Vector3 norm, ref Matrix4 invMat, out Vector3 result)
         {
             result.X = norm.X * invMat.Row0.X +
@@ -768,6 +817,7 @@ namespace Robust.Shared.Maths
         /// <param name="pos">The position to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed position</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformPosition(Vector3 pos, Matrix4 mat)
         {
             Vector3 p;
@@ -781,6 +831,7 @@ namespace Robust.Shared.Maths
         /// <param name="pos">The position to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed position</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TransformPosition(ref Vector3 pos, ref Matrix4 mat, out Vector3 result)
         {
             result.X = pos.X * mat.Row0.X +
@@ -803,6 +854,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed vector</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Transform(Vector3 vec, Matrix4 mat)
         {
             Transform(ref vec, ref mat, out Vector3 result);
@@ -813,6 +865,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(ref Vector3 vec, ref Matrix4 mat, out Vector4 result)
         {
             var v4 = new Vector4(vec.X, vec.Y, vec.Z, 1.0f);
@@ -823,6 +876,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
         {
             var v4 = new Vector4(vec.X, vec.Y, vec.Z, 1.0f);
@@ -836,6 +890,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform.</param>
         /// <param name="quat">The quaternion to rotate the vector by.</param>
         /// <returns>The result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Transform(Vector3 vec, Quaternion quat)
         {
             Transform(ref vec, ref quat, out var result);
@@ -848,6 +903,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform.</param>
         /// <param name="quat">The quaternion to rotate the vector by.</param>
         /// <param name="result">The result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Transform(ref Vector3 vec, ref Quaternion quat, out Vector3 result)
         {
             // Since vec.W == 0, we can optimize quat * vec * quat^-1 as follows:
@@ -865,6 +921,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <returns>The transformed vector</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformPerspective(Vector3 vec, Matrix4 mat)
         {
             TransformPerspective(ref vec, ref mat, out var result);
@@ -875,6 +932,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The vector to transform</param>
         /// <param name="mat">The desired transformation</param>
         /// <param name="result">The transformed vector</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void TransformPerspective(ref Vector3 vec, ref Matrix4 mat, out Vector3 result)
         {
             var v = new Vector4(vec, 1);
@@ -895,9 +953,10 @@ namespace Robust.Shared.Maths
         /// <param name="second">The second vector.</param>
         /// <returns>Angle (in radians) between the vectors.</returns>
         /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float CalculateAngle(Vector3 first, Vector3 second)
         {
-            return (float) Math.Acos(Dot(first, second) / (first.Length * second.Length));
+            return (float) MathF.Acos(Dot(first, second) / (first.Length * second.Length));
         }
 
         /// <summary>Calculates the angle (in radians) between two vectors.</summary>
@@ -905,10 +964,11 @@ namespace Robust.Shared.Maths
         /// <param name="second">The second vector.</param>
         /// <param name="result">Angle (in radians) between the vectors.</param>
         /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
         {
             Dot(ref first, ref second, out var temp);
-            result = (float) Math.Acos(temp / (first.Length * second.Length));
+            result = (float) MathF.Acos(temp / (first.Length * second.Length));
         }
 
         #endregion
@@ -923,7 +983,9 @@ namespace Robust.Shared.Maths
         [XmlIgnore]
         public Vector2 Xy
         {
-            get => new Vector2(X, Y);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new(X, Y);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
                 X = value.X;
@@ -941,6 +1003,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator +(Vector3 left, Vector3 right)
         {
             left.X += right.X;
@@ -955,6 +1018,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator -(Vector3 left, Vector3 right)
         {
             left.X -= right.X;
@@ -968,6 +1032,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="vec">The instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator -(Vector3 vec)
         {
             vec.X = -vec.X;
@@ -982,6 +1047,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator *(Vector3 vec, float scale)
         {
             vec.X *= scale;
@@ -996,6 +1062,7 @@ namespace Robust.Shared.Maths
         /// <param name="scale">The scalar.</param>
         /// <param name="vec">The instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator *(float scale, Vector3 vec)
         {
             vec.X *= scale;
@@ -1007,9 +1074,10 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Component wise multiply two vectors.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator *(Vector3 a, Vector3 b)
         {
-            return new Vector3(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
+            return new(a.X * b.X, a.Y * b.Y, a.Z * b.Z);
         }
 
         /// <summary>
@@ -1018,6 +1086,7 @@ namespace Robust.Shared.Maths
         /// <param name="vec">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 operator /(Vector3 vec, float scale)
         {
             var mult = 1.0f / scale;
@@ -1033,6 +1102,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left equals right; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Vector3 left, Vector3 right)
         {
             return left.Equals(right);
@@ -1044,6 +1114,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left does not equa lright; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(Vector3 left, Vector3 right)
         {
             return !left.Equals(right);

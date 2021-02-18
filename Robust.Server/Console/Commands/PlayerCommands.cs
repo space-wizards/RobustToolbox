@@ -1,30 +1,26 @@
-﻿using System;
+using System;
+using System.Linq;
 using System.Text;
-using Robust.Server.Interfaces.Console;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
+using Robust.Shared.Console;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Players;
 
 namespace Robust.Server.Console.Commands
 {
-    internal class TeleportCommand : IClientCommand
+    internal class TeleportCommand : IConsoleCommand
     {
         public string Command => "tp";
         public string Description => "Teleports a player to any location in the round.";
         public string Help => "tp <x> <y> [<mapID>]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (player.Status != SessionStatus.InGame || player.AttachedEntity == null)
+            var player = shell.Player as IPlayerSession;
+            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
 
             if (args.Length < 2 || !float.TryParse(args[0], out var posX) || !float.TryParse(args[1], out var posY))
@@ -38,7 +34,7 @@ namespace Robust.Server.Console.Commands
             if(transform == null)
                 return;
 
-            transform.DetachParent();
+            transform.AttachToGridOrMap();
 
             MapId mapId;
             if (args.Length == 3 && int.TryParse(args[2], out var intMapId))
@@ -50,7 +46,7 @@ namespace Robust.Server.Console.Commands
             {
                 var gridPos = grid.WorldToLocal(position);
 
-                transform.GridPosition = new GridCoordinates(gridPos, grid);
+                transform.Coordinates = new EntityCoordinates(grid.GridEntityId, gridPos);
             }
             else
             {
@@ -60,17 +56,45 @@ namespace Robust.Server.Console.Commands
                 transform.WorldPosition = position;
             }
 
-            shell.SendText(player, $"Teleported {player} to {mapId}:{posX},{posY}.");
+            shell.WriteLine($"Teleported {player} to {mapId}:{posX},{posY}.");
         }
     }
 
-    public class ListPlayers : IClientCommand
+    public class TeleportToPlayerCommand : IConsoleCommand
+    {
+        public string Command => "tpto";
+        public string Description => "Teleports the current player to the location of another player.";
+        public string Help => "tpto <username>";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var player = shell.Player as IPlayerSession;
+            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+                return;
+
+            if (args.Length < 1)
+                return;
+
+            var players = IoCManager.Resolve<IPlayerManager>();
+            var name = args[0];
+
+            if (players.TryGetSessionByUsername(name, out var target))
+            {
+                if (target.AttachedEntity == null)
+                    return;
+
+                player.AttachedEntity.Transform.Coordinates = target.AttachedEntity.Transform.Coordinates;
+            }
+        }
+    }
+
+    public class ListPlayers : IConsoleCommand
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
         public string Help => "listplayers";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             // Player: number of people connected and their byond keys
             // Admin: read a byond variable which shows their ip, byond version, ckey, attached entity and hardware id
@@ -87,38 +111,42 @@ namespace Robust.Server.Console.Commands
                 sb.AppendLine(string.Format("{4,20} {1,12} {2,14:hh\\:mm\\:ss} {3,9} {0,20}",
                     p.ConnectedClient.RemoteEndPoint,
                     p.Status.ToString(),
-                    DateTime.Now - p.ConnectedTime,
+                    DateTime.UtcNow - p.ConnectedTime,
                     p.ConnectedClient.Ping + "ms",
                     p.Name));
             }
 
-            shell.SendText(player, sb.ToString());
+            shell.WriteLine(sb.ToString());
         }
     }
 
-    internal class KickCommand : IClientCommand
+    internal class KickCommand : IConsoleCommand
     {
         public string Command => "kick";
         public string Description => "Kicks a connected player out of the server, disconnecting them.";
         public string Help => "kick <PlayerIndex> [<Reason>]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            var players = IoCManager.Resolve<IPlayerManager>();
             if (args.Length < 1)
             {
-                shell.SendText(player, $"You need to provide a player to kick. Try running 'kick {player.Name}' as an example.");
+                var player = shell.Player as IPlayerSession;
+                var toKickPlayer = player ?? players.GetAllPlayers().FirstOrDefault();
+                if (toKickPlayer == null)
+                {
+                    shell.WriteLine("You need to provide a player to kick.");
+                    return;
+                }
+                shell.WriteLine($"You need to provide a player to kick. Try running 'kick {toKickPlayer?.Name}' as an example.");
                 return;
             }
 
             var name = args[0];
 
-            var players = IoCManager.Resolve<IPlayerManager>();
-            var index = new NetSessionId(name);
-
-            if (players.ValidSessionId(index))
+            if (players.TryGetSessionByUsername(name, out var target))
             {
                 var network = IoCManager.Resolve<IServerNetManager>();
-                var targetPlyr = players.GetSessionById(index);
 
                 var reason = "Kicked by console.";
                 if (args.Length >= 2)
@@ -126,7 +154,7 @@ namespace Robust.Server.Console.Commands
                     reason = reason + args[1];
                 }
 
-                network.DisconnectChannel(targetPlyr.ConnectedClient, reason);
+                network.DisconnectChannel(target.ConnectedClient, reason);
             }
         }
     }

@@ -1,0 +1,60 @@
+using System;
+using System.Collections.Generic;
+using Robust.Shared.Log;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.Loki;
+using Serilog.Sinks.Loki.Labels;
+using SLogger = Serilog.Core.Logger;
+
+namespace Robust.Server.Log
+{
+    public class LokiLogHandler : ILogHandler, IDisposable
+    {
+        private readonly SLogger _sLogger;
+
+        public LokiLogHandler(string serverName, LokiCredentials credentials)
+        {
+            _sLogger = new LoggerConfiguration()
+                .WriteTo.LokiHttp(credentials, new LogLabelProvider(serverName))
+                .MinimumLevel.Debug()
+                .CreateLogger();
+        }
+
+        public void Log(string sawmillName, LogEvent message)
+        {
+            var valid = _sLogger.BindProperty(LogManager.SawmillProperty, sawmillName, false, out var sawmillProperty);
+
+            if (valid)
+            {
+                message.AddOrUpdateProperty(sawmillProperty);
+            }
+
+            _sLogger.Write(message);
+        }
+
+        public void Dispose()
+        {
+            _sLogger.Dispose();
+        }
+
+        private sealed class LogLabelProvider : ILogLabelProvider
+        {
+            private readonly string _serverName;
+
+            public LogLabelProvider(string serverName)
+            {
+                _serverName = serverName;
+            }
+
+            public IList<LokiLabel> GetLabels()
+            {
+                return new[]
+                {
+                    new LokiLabel("App", "Robust.Server"),
+                    new LokiLabel("Server", _serverName),
+                };
+            }
+        }
+    }
+}

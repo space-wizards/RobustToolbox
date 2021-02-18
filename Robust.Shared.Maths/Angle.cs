@@ -9,8 +9,8 @@ namespace Robust.Shared.Maths
     [Serializable]
     public readonly struct Angle : IApproxEquatable<Angle>, IEquatable<Angle>
     {
-        public static Angle Zero { get; } = new Angle();
-        public static Angle South { get; } = new Angle(-MathHelper.PiOver2);
+        public static Angle Zero { get; } = new();
+        public static Angle South { get; } = new(-MathHelper.PiOver2);
 
         /// <summary>
         ///     Angle in radians.
@@ -87,8 +87,10 @@ namespace Robust.Shared.Maths
         public Vector2 RotateVec(in Vector2 vec)
         {
             var (x, y) = vec;
-            var dx = Math.Cos(Theta) * x - Math.Sin(Theta) * y;
-            var dy = Math.Sin(Theta) * x + Math.Cos(Theta) * y;
+            var cos = Math.Cos(Theta);
+            var sin = Math.Sin(Theta);
+            var dx = cos * x - sin * y;
+            var dy = sin * x + cos * y;
 
             return new Vector2((float)dx, (float)dy);
         }
@@ -114,9 +116,9 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return FloatMath.CloseTo(aPositive, bPositive)
-                || FloatMath.CloseTo(aPositive + MathHelper.TwoPi, bPositive)
-                || FloatMath.CloseTo(aPositive, bPositive + MathHelper.TwoPi);
+            return MathHelper.CloseTo(aPositive, bPositive)
+                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive)
+                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi);
         }
 
         private static bool EqualsApprox(Angle a, Angle b, double tolerance)
@@ -130,9 +132,9 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return FloatMath.CloseTo(aPositive, bPositive, tolerance)
-                || FloatMath.CloseTo(aPositive + MathHelper.TwoPi, bPositive, tolerance)
-                || FloatMath.CloseTo(aPositive, bPositive + MathHelper.TwoPi, tolerance);
+            return MathHelper.CloseTo(aPositive, bPositive, tolerance)
+                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive, tolerance)
+                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi, tolerance);
         }
 
         /// <summary>
@@ -140,7 +142,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Angle Reduced()
         {
-            return new Angle(Reduce(Theta));
+            return new(Reduce(Theta));
         }
 
         /// <summary>
@@ -184,9 +186,14 @@ namespace Robust.Shared.Maths
             return !(a == b);
         }
 
+        public Angle Opposite()
+        {
+            return new Angle(FlipPositive(Theta-Math.PI));
+        }
+
         public Angle FlipPositive()
         {
-            return new Angle(FlipPositive(Theta));
+            return new(FlipPositive(Theta));
         }
 
         /// <summary>
@@ -205,12 +212,12 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static Angle Lerp(in Angle a, in Angle b, float factor)
         {
-            var degA = FloatMath.RadToDeg * Angle.Reduce(a);
-            var degB = FloatMath.RadToDeg * Angle.Reduce(b);
-            var delta = FloatMath.Repeat((float) (degB - degA), 360);
+            var degA = MathHelper.RadiansToDegrees(Reduce(a));
+            var degB = MathHelper.RadiansToDegrees(Reduce(b));
+            var delta = MathHelper.Mod((degB - degA), 360);
             if (delta > 180)
                 delta -= 360;
-            return new Angle(FloatMath.DegToRad * (degA + delta * FloatMath.Clamp01(factor)));
+            return new Angle(MathHelper.DegreesToRadians(degA + delta * MathHelper.Clamp(factor, 0, 1)));
         }
 
         /// <summary>
@@ -219,7 +226,7 @@ namespace Robust.Shared.Maths
         /// <param name="degrees">The angle in degrees.</param>
         public static Angle FromDegrees(double degrees)
         {
-            return new Angle(MathHelper.DegreesToRadians(degrees));
+            return new(MathHelper.DegreesToRadians(degrees));
         }
 
         /// <summary>
@@ -237,7 +244,7 @@ namespace Robust.Shared.Maths
         /// <param name="theta"></param>
         public static implicit operator Angle(double theta)
         {
-            return new Angle(theta);
+            return new(theta);
         }
 
         /// <summary>
@@ -246,7 +253,7 @@ namespace Robust.Shared.Maths
         /// <param name="theta"></param>
         public static implicit operator Angle(float theta)
         {
-            return new Angle(theta);
+            return new(theta);
         }
 
         public override string ToString()

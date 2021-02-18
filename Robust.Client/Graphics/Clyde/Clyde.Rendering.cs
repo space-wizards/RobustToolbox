@@ -1,117 +1,157 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using StencilOp = OpenTK.Graphics.OpenGL4.StencilOp;
+using Color = Robust.Shared.Maths.Color;
+using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private RenderHandle _renderHandle;
-
-        /// <summary>
-        ///     Are we current rendering screen space or world space? Some code works differently between the two.
-        /// </summary>
-        private CurrentSpace _currentSpace;
-
-        private CurrentSpace _queuedSpace;
-
-        private bool _lightingReady;
-
-        /// <summary>
-        ///     The current model matrix we would use.
-        ///     Necessary since certain drawing operations mess with it still.
-        /// </summary>
-        private Matrix3 _currentModelMatrix = Matrix3.Identity;
-
         // The amount of quads we can render with ushort indices, leaving open 65536 for primitive restart.
         private const ushort MaxBatchQuads = (2 << 13) - 1; // In human terms: (2**16/4)-1 = 16383
 
+        //
+        // While rendering of most normal things (read: not grids or lighting),
+        // we record stuff into a queue of rendering commands.
+        // This both improves performance (I think because of CPU cache?)
+        // and allows us to do batching more nicely
+        // (make one fat vertex buffer of batching data and send it off quickly)
+        //
+        // This *basically* divides the renderer into 3 "states":
+        // 1. running through high level rendering code and taking simple rendering commands,
+        //    probably user code (UI, overlays, maybe more in the future).
+        //    Hereafter referred to as "queue"
+        // 2. actively going through queued rendering commands created during (queue)
+        //    and submitting them to the GL driver.
+        //    Hereafter referred to as "submit"
+        // 3. running fixed special-purpose rendering code like lighting, FOV and grids.
+        //    Also minor switching and transition code between stages of the renderer.
+        //    Hereafter referred to as "misc"
+        //
+        // (queue) always has to be followed by (submit) so that the queued commands actually get executed.
+        //
+        // Each state obviously has some amount of... state to keep track of,
+        // like transformation matrices.
+        // This is complicated and I'll my best to keep it straight in the comments.
+        //
+
+        // Set to true after lighting is rendered for the current viewport.
+        // Disabled again after the world rendering phase on a viewport.
+        private bool _lightingReady;
+
+        // The viewport we are currently rendering to.
+        private Viewport? _currentViewport;
+
+        // The current render target we're rendering to during queue state.
+        // This gets immediately updated when switching render targets during (queue) and (misc),
+        // but not during (submit).
+        private LoadedRenderTarget _currentRenderTarget;
+
+        // Current model matrix used by the (queue) state.
+        // This matrix is applied to most normal geometry coming in.
+        // Some is applied while the batch is being created (e.g. simple texture draw calls).
+        // For DrawPrimitives OTOH the model matrix is passed along with the render command so is applied in the shader.
+        private Matrix3 _currentMatrixModel = Matrix3.Identity;
+
+        // Buffers and data for the batching system. Written into during (queue) and processed during (submit).
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
 
-        // Need 5 indices per quad: 4 to draw the quad with triangle strips and another one as primitive restart.
-        private readonly ushort[] BatchIndexData = new ushort[MaxBatchQuads * 5];
-
+        // Only write from InitRenderingBatchBuffers!
+        private ushort[] BatchIndexData = default!;
         private int BatchVertexIndex;
         private int BatchIndexIndex;
 
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
-        private LoadedTexture _batchLoadedTexture;
+
+        // private LoadedTexture? _batchLoadedTexture;
+        // Contains the shader instance that's currently being used by the (queue) stage for new commands.
         private ClydeHandle _queuedShader;
 
-        private ProjViewMatrices _currentMatrices;
+        // Current projection & view matrices that are being used ot render.
+        // This gets updated to keep track during (queue) and (misc), but not during (submit).
+        private Matrix3 _currentMatrixProj;
+        private Matrix3 _currentMatrixView;
 
-        private float _renderTime;
+        // (queue) and (misc), current state of the scissor test. Null if disabled.
+        private UIBox2i? _currentScissorState;
 
+        // Some simple flags that basically just tracks the current state of glEnable(GL_STENCIL/GL_SCISSOR_TEST)
         private bool _isScissoring;
         private bool _isStencilling;
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
+        private void InitRenderingBatchBuffers()
+        {
+            BatchIndexData = new ushort[MaxBatchQuads * GetQuadBatchIndexCount()];
+        }
+
         /// <summary>
         ///     Updates uniform constants shared to all shaders, such as time and pixel size.
         /// </summary>
-        private void _updateUniformConstants()
+        private void _updateUniformConstants(in Vector2i screenSize)
         {
-            var constants = new UniformConstants(Vector2.One / ScreenSize, _renderTime);
+            var constants = new UniformConstants(Vector2.One / screenSize, (float) _gameTiming.RealTime.TotalSeconds);
             UniformConstantsUBO.Reallocate(constants);
         }
 
-        private ProjViewMatrices _screenMatrices()
+        private static void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
         {
-            var viewMatrixScreen = Matrix3.Identity;
+            proj = Matrix3.Identity;
+            proj.R0C0 = 2f / screenSize.X;
+            proj.R1C1 = -2f / screenSize.Y;
+            proj.R0C2 = -1;
+            proj.R1C2 = 1;
 
-            // Screen projection matrix.
-            var projMatrixScreen = Matrix3.Identity;
-            projMatrixScreen.R0C0 = 2f / ScreenSize.X;
-            projMatrixScreen.R1C1 = -2f / ScreenSize.Y;
-            projMatrixScreen.R0C2 = -1;
-            projMatrixScreen.R1C2 = 1;
-
-            return new ProjViewMatrices(projMatrixScreen, viewMatrixScreen);
+            view = Matrix3.Identity;
         }
 
-        private ProjViewMatrices _worldMatrices()
+        private static void CalcWorldMatrices(in Vector2i screenSize, IEye eye, out Matrix3 proj, out Matrix3 view)
         {
-            var eye = _eyeManager.CurrentEye;
+            eye.GetViewMatrix(out view);
 
-            eye.GetViewMatrix(out var viewMatrixWorld);
-
-            CalcWorldProjectionMatrix(out var projMatrixWorld);
-
-            return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+            CalcWorldProjMatrix(screenSize, out proj);
         }
 
-        /// <inheritdoc />
-        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
         {
-            var projMatrixWorld = Matrix3.Identity;
-            projMatrixWorld.R0C0 = EyeManager.PixelsPerMeter * 2f / ScreenSize.X;
-            projMatrixWorld.R1C1 = EyeManager.PixelsPerMeter * 2f / ScreenSize.Y;
-            projMatrix = projMatrixWorld;
+            proj = Matrix3.Identity;
+            proj.R0C0 = EyeManager.PixelsPerMeter * 2f / screenSize.X;
+            proj.R1C1 = EyeManager.PixelsPerMeter * 2f / screenSize.Y;
         }
 
-        private void _setProjViewMatrices(in ProjViewMatrices matrices)
+        private void SetProjViewBuffer(in Matrix3 proj, in Matrix3 view)
         {
-            _currentMatrices = matrices;
-            ProjViewUBO.Reallocate(matrices);
+            // TODO: Fix perf here.
+            // This immediately causes a glBufferData() call every time this is changed.
+            // Which will be a real performance bottleneck later.
+            // Because this is an UBO, these matrices should be batched as well
+            // and switched out during command buffer submit by just modifying the bind points.
+            var combined = new ProjViewMatrices(proj, view);
+            ProjViewUBO.Reallocate(combined);
+        }
+
+        private void SetProjViewFull(in Matrix3 proj, in Matrix3 view)
+        {
+            _currentMatrixProj = proj;
+            _currentMatrixView = view;
+
+            SetProjViewBuffer(proj, view);
         }
 
         private void ProcessRenderCommands()
@@ -125,67 +165,32 @@ namespace Robust.Client.Graphics.Clyde
                         break;
 
                     case RenderCommandType.Scissor:
-                        var oldIsScissoring = _isScissoring;
-                        _isScissoring = command.Scissor.EnableScissor;
-                        if (_isScissoring)
-                        {
-                            if (!oldIsScissoring)
-                            {
-                                GL.Enable(EnableCap.ScissorTest);
-                            }
-
-                            ref var s = ref command.Scissor.Scissor;
-                            // Don't forget to flip it, these coordinates have bottom left as origin.
-                            GL.Scissor(s.Left, _framebufferSize.Y - s.Bottom, s.Width, s.Height);
-                        }
-                        else if (oldIsScissoring)
-                        {
-                            GL.Disable(EnableCap.ScissorTest);
-                        }
-
+                        SetScissorImmediate(command.Scissor.EnableScissor, command.Scissor.Scissor);
                         break;
 
-                    case RenderCommandType.ViewMatrix:
-                        var matrices = new ProjViewMatrices(_currentMatrices, command.ViewMatrix.Matrix);
-                        _setProjViewMatrices(matrices);
-                        break;
-
-                    case RenderCommandType.ResetViewMatrix:
-                        _setSpace(_currentSpace);
-                        break;
-
-                    case RenderCommandType.SwitchSpace:
-                        _setSpace(command.SwitchSpace.NewSpace);
+                    case RenderCommandType.ProjViewMatrix:
+                        SetProjViewBuffer(command.ProjView.ProjMatrix, command.ProjView.ViewMatrix);
                         break;
 
                     case RenderCommandType.RenderTarget:
-                        if (command.RenderTarget.RenderTarget.Value == 0)
-                        {
-                            // Bind window framebuffer.
-                            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                            var (w, h) = ScreenSize;
-                            GL.Viewport(0, 0, w, h);
-                        }
-                        else
-                        {
-                            var renderTarget = _renderTargets[command.RenderTarget.RenderTarget];
-
-                            GL.BindFramebuffer(FramebufferTarget.Framebuffer, renderTarget.ObjectHandle.Handle);
-                            var (w, h) = renderTarget.Size;
-                            GL.Viewport(0, 0, w, h);
-                        }
-
+                        var rt = _renderTargets[command.RenderTarget.RenderTarget];
+                        BindRenderTargetImmediate(rt);
+                        GL.Viewport(0, 0, rt.Size.X, rt.Size.Y);
+                        CheckGlError();
                         break;
 
                     case RenderCommandType.Viewport:
                         ref var vp = ref command.Viewport.Viewport;
                         GL.Viewport(vp.Left, vp.Bottom, vp.Width, vp.Height);
+                        CheckGlError();
                         break;
 
                     case RenderCommandType.Clear:
                         ref var color = ref command.Clear.Color;
                         GL.ClearColor(color.R, color.G, color.B, color.A);
+                        CheckGlError();
                         GL.Clear(ClearBufferMask.ColorBufferBit);
+                        CheckGlError();
                         break;
 
                     default:
@@ -198,16 +203,20 @@ namespace Robust.Client.Graphics.Clyde
         {
             var loadedTexture = _loadedTextures[command.TextureId];
 
-            GL.BindVertexArray(BatchVAO.Handle);
+            BindVertexArray(BatchVAO.Handle);
+            CheckGlError();
 
             var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
+            SetupGlobalUniformsImmediate(program, loadedTexture.IsSrgb);
 
             GL.ActiveTexture(TextureUnit.Texture0);
+            CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            CheckGlError();
 
             if (_lightingReady && loaded.HasLighting)
             {
-                SetTexture(TextureUnit.Texture1, _lightRenderTarget.Texture);
+                SetTexture(TextureUnit.Texture1, _currentViewport!.LightRenderTarget.Texture);
             }
             else
             {
@@ -225,16 +234,17 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModulate, command.Modulate);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
-
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
             {
                 GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort,
                     command.StartIndex * sizeof(ushort));
+                CheckGlError();
             }
             else
             {
                 GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
+                CheckGlError();
             }
 
             _debugStats.LastGLDrawCalls += 1;
@@ -256,7 +266,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
-            GL.BindVertexArray(QuadVAO.Handle);
+            BindVertexArray(QuadVAO.Handle);
+            CheckGlError();
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
@@ -265,6 +276,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _debugStats.LastGLDrawCalls += 1;
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            CheckGlError();
         }
 
         /// <summary>
@@ -275,7 +287,8 @@ namespace Robust.Client.Graphics.Clyde
             // Finish any batches that may have been WiP.
             BreakBatch();
 
-            GL.BindVertexArray(BatchVAO.Handle);
+            BindVertexArray(BatchVAO.Handle);
+            CheckGlError();
 
             _debugStats.LargestBatchVertices = Math.Max(BatchVertexIndex, _debugStats.LargestBatchVertices);
             _debugStats.LargestBatchIndices = Math.Max(BatchIndexIndex, _debugStats.LargestBatchIndices);
@@ -297,57 +310,57 @@ namespace Robust.Client.Graphics.Clyde
             _queuedRenderCommands.Clear();
 
             // Reset renderer state.
-            _currentModelMatrix = Matrix3.Identity;
+            _currentMatrixModel = Matrix3.Identity;
             _queuedShader = _defaultShader.Handle;
-            _disableScissor();
+            SetScissorFull(null);
         }
 
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void _disableScissor()
+        private void SetScissorFull(UIBox2i? state)
         {
+            if (state.HasValue)
+            {
+                SetScissorImmediate(true, state.Value);
+            }
+            else
+            {
+                SetScissorImmediate(false, default);
+            }
+
+            _currentScissorState = state;
+        }
+
+        private void SetScissorImmediate(bool enable, in UIBox2i box)
+        {
+            var oldIsScissoring = _isScissoring;
+            _isScissoring = enable;
             if (_isScissoring)
             {
-                GL.Disable(EnableCap.ScissorTest);
+                if (!oldIsScissoring)
+                {
+                    GL.Enable(EnableCap.ScissorTest);
+                    CheckGlError();
+                }
+
+                // Don't forget to flip it, these coordinates have bottom left as origin.
+                // TODO: Broken when rendering to non-screen render targets.
+                GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+                CheckGlError();
             }
-
-            _isScissoring = false;
-        }
-
-        private void _setSpace(CurrentSpace newSpace)
-        {
-            _currentSpace = newSpace;
-
-            switch (newSpace)
+            else if (oldIsScissoring)
             {
-                case CurrentSpace.ScreenSpace:
-                    _setProjViewMatrices(_screenMatrices());
-                    break;
-                case CurrentSpace.WorldSpace:
-                    _setProjViewMatrices(_worldMatrices());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(newSpace), newSpace, null);
+                GL.Disable(EnableCap.ScissorTest);
+                CheckGlError();
             }
-        }
-
-        private void SetSpaceFull(CurrentSpace newSpace)
-        {
-            _setSpace(newSpace);
-
-            SetQueuedSpace(newSpace);
-        }
-
-        private void SetQueuedSpace(CurrentSpace newSpace)
-        {
-            _queuedSpace = newSpace;
         }
 
         private void ClearFramebuffer(Color color)
         {
             GL.ClearColor(color.ConvertOpenTK());
+            CheckGlError();
             GL.ClearStencil(0);
+            CheckGlError();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            CheckGlError();
         }
 
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
@@ -412,16 +425,21 @@ namespace Robust.Client.Graphics.Clyde
                 if (!_isStencilling)
                 {
                     GL.Enable(EnableCap.StencilTest);
+                    CheckGlError();
                     _isStencilling = true;
                 }
 
                 GL.StencilMask(instance.Stencil.WriteMask);
+                CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
-                GL.StencilOp(StencilOp.Keep, StencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                CheckGlError();
+                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                CheckGlError();
             }
             else if (_isStencilling)
             {
                 GL.Disable(EnableCap.StencilTest);
+                CheckGlError();
                 _isStencilling = false;
             }
 
@@ -443,70 +461,31 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawSetModelTransform(in Matrix3 matrix)
         {
-            _currentModelMatrix = matrix;
+            _currentMatrixModel = matrix;
         }
 
-        private void DrawSetViewTransform(in Matrix3 matrix)
+        private void DrawSetProjViewTransform(in Matrix3 proj, in Matrix3 view)
         {
-            ref var command = ref AllocRenderCommand(RenderCommandType.ViewMatrix);
+            BreakBatch();
 
-            command.ViewMatrix.Matrix = matrix;
+            ref var command = ref AllocRenderCommand(RenderCommandType.ProjViewMatrix);
+
+            command.ProjView.ProjMatrix = proj;
+            command.ProjView.ViewMatrix = view;
+
+            _currentMatrixProj = proj;
+            _currentMatrixView = view;
         }
 
-        private void DrawResetViewTransform()
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
+            in Box2 sr)
         {
-            AllocRenderCommand(RenderCommandType.ResetViewMatrix);
-        }
+            EnsureBatchState(texture, modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
-        private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-            Angle angle)
-        {
-            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
-
-            Box2 sr;
-            if (subRegion.HasValue)
-            {
-                var (w, h) = _batchLoadedTexture.Size;
-                var csr = subRegion.Value;
-                if (_queuedSpace == CurrentSpace.WorldSpace)
-                {
-                    sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
-                }
-                else
-                {
-                    sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
-                }
-            }
-            else
-            {
-                if (_queuedSpace == CurrentSpace.WorldSpace)
-                {
-                    sr = new Box2(0, 0, 1, 1);
-                }
-                else
-                {
-                    sr = new Box2(0, 1, 1, 0);
-                }
-            }
-
-            Vector2 bl;
-            Vector2 br;
-            Vector2 tr;
-            Vector2 tl;
-            if (angle == Angle.Zero)
-            {
-                bl = _currentModelMatrix.Transform(a);
-                br = _currentModelMatrix.Transform(new Vector2(b.X, a.Y));
-                tr = _currentModelMatrix.Transform(b);
-                tl = _currentModelMatrix.Transform(new Vector2(a.X, b.Y));
-            }
-            else
-            {
-                bl = _currentModelMatrix.Transform(angle.RotateVec(a));
-                br = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(b.X, a.Y)));
-                tr = _currentModelMatrix.Transform(angle.RotateVec(b));
-                tl = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(a.X, b.Y)));
-            }
+            bl = _currentMatrixModel.Transform(bl);
+            br = _currentMatrixModel.Transform(br);
+            tr = _currentMatrixModel.Transform(tr);
+            tl = _currentMatrixModel.Transform(tl);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
@@ -515,14 +494,7 @@ namespace Robust.Client.Graphics.Clyde
             BatchVertexData[vIdx + 2] = new Vertex2D(tr, sr.TopRight);
             BatchVertexData[vIdx + 3] = new Vertex2D(tl, sr.TopLeft);
             BatchVertexIndex += 4;
-            var nIdx = BatchIndexIndex;
-            var tIdx = (ushort) vIdx;
-            BatchIndexData[nIdx + 0] = tIdx;
-            BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
-            BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
-            BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
-            BatchIndexData[nIdx + 4] = ushort.MaxValue;
-            BatchIndexIndex += 5;
+            QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
             _debugStats.LastClydeDrawCalls += 1;
         }
@@ -541,7 +513,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var o = BatchIndexIndex + i;
                 var index = indices[i];
-                if (index != ushort.MaxValue) // Don't offset primitive restart.
+                if (index != PrimitiveRestartIndex) // Don't offset primitive restart.
                 {
                     index = (ushort) (index + BatchVertexIndex);
                 }
@@ -561,7 +533,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.ShaderInstance = _queuedShader;
 
             command.DrawBatch.Count = indices.Length;
-            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+            command.DrawBatch.ModelMatrix = _currentMatrixModel;
 
             _debugStats.LastBatches += 1;
             _debugStats.LastClydeDrawCalls += 1;
@@ -586,14 +558,14 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.ShaderInstance = _queuedShader;
 
             command.DrawBatch.Count = vertices.Length;
-            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+            command.DrawBatch.ModelMatrix = _currentMatrixModel;
 
             _debugStats.LastBatches += 1;
             _debugStats.LastClydeDrawCalls += 1;
             BatchVertexIndex += vertices.Length;
         }
 
-        private BatchPrimitiveType MapDrawToBatchPrimitiveType(DrawPrimitiveTopology topology)
+        private static BatchPrimitiveType MapDrawToBatchPrimitiveType(DrawPrimitiveTopology topology)
         {
             return topology switch
             {
@@ -611,8 +583,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
 
-            a = _currentModelMatrix.Transform(a);
-            b = _currentModelMatrix.Transform(b);
+            a = _currentMatrixModel.Transform(a);
+            b = _currentMatrixModel.Transform(b);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
@@ -634,17 +606,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 command.Scissor.Scissor = scissorBox.Value;
             }
-        }
 
-        private void DrawSwitchSpace(CurrentSpace space)
-        {
-            BreakBatch();
-
-            ref var command = ref AllocRenderCommand(RenderCommandType.SwitchSpace);
-
-            command.SwitchSpace.NewSpace = space;
-
-            SetQueuedSpace(space);
+            _currentScissorState = scissorBox;
         }
 
         private void DrawUseShader(ClydeHandle handle)
@@ -677,13 +640,15 @@ namespace Robust.Client.Graphics.Clyde
             ref var command = ref AllocRenderCommand(RenderCommandType.RenderTarget);
 
             command.RenderTarget.RenderTarget = handle;
+
+            _currentRenderTarget = _renderTargets[handle];
         }
 
         /// <summary>
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed,
+        private void EnsureBatchState(ClydeHandle textureId, in Color color, bool indexed,
             BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
@@ -707,6 +672,7 @@ namespace Robust.Client.Graphics.Clyde
             _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
                 indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
 
+            /*
             if (textureId != default)
             {
                 _batchLoadedTexture = _loadedTextures[textureId];
@@ -715,6 +681,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _batchLoadedTexture = null;
             }
+            */
         }
 
         private void FinishBatch()
@@ -744,18 +711,18 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastBatches += 1;
         }
 
-        private static StencilOp ToGLStencilOp(Shaders.StencilOp op)
+        private static TKStencilOp ToGLStencilOp(StencilOp op)
         {
             return op switch
             {
-                Shaders.StencilOp.Keep => StencilOp.Keep,
-                Shaders.StencilOp.Zero => StencilOp.Zero,
-                Shaders.StencilOp.Replace => StencilOp.Replace,
-                Shaders.StencilOp.IncrementClamp => StencilOp.Incr,
-                Shaders.StencilOp.IncrementWrap => StencilOp.IncrWrap,
-                Shaders.StencilOp.DecrementClamp => StencilOp.Decr,
-                Shaders.StencilOp.DecrementWrap => StencilOp.DecrWrap,
-                Shaders.StencilOp.Invert => StencilOp.Invert,
+                StencilOp.Keep => TKStencilOp.Keep,
+                StencilOp.Zero => TKStencilOp.Zero,
+                StencilOp.Replace => TKStencilOp.Replace,
+                StencilOp.IncrementClamp => TKStencilOp.Incr,
+                StencilOp.IncrementWrap => TKStencilOp.IncrWrap,
+                StencilOp.DecrementClamp => TKStencilOp.Decr,
+                StencilOp.DecrementWrap => TKStencilOp.DecrWrap,
+                StencilOp.Invert => TKStencilOp.Invert,
                 _ => throw new NotSupportedException()
             };
         }
@@ -797,17 +764,55 @@ namespace Robust.Client.Graphics.Clyde
 
             _queuedScreenshots.RemoveAll(p => p.type == type);
 
-            GL.CreateBuffers(1, out uint pbo);
-            GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
-            GL.BufferData(BufferTarget.PixelPackBuffer, ScreenSize.X * ScreenSize.Y * sizeof(Rgb24), IntPtr.Zero,
-                BufferUsageHint.StreamRead);
             GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
-            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            CheckGlError();
+
+            var bufferLength = ScreenSize.X * ScreenSize.Y;
+            if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
+            {
+                Logger.DebugS("clyde.ogl", "Necessary features for async screenshots not available, falling back to blocking path.");
+
+                // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,
+                // we'll have to fall back to a crappy synchronous stalling method of glReadPixels().
+
+                var buffer = new Rgba32[bufferLength];
+                fixed (Rgba32* ptr = buffer)
+                {
+                    var bufSize = sizeof(Rgba32) * bufferLength;
+                    GL.ReadnPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, bufSize,
+                        (IntPtr) ptr);
+                    CheckGlError();
+                }
+
+                var (w, h) = ScreenSize;
+
+                var image = new Image<Rgb24>(w, h);
+                var imageSpan = image.GetPixelSpan();
+
+                FlipCopyScreenshot(buffer, imageSpan, w, h);
+
+                RunCallback(image);
+                return;
+            }
+
+            GL.GenBuffers(1, out uint pbo);
+            CheckGlError();
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+            CheckGlError();
+            GL.BufferData(BufferTarget.PixelPackBuffer, bufferLength * sizeof(Rgba32), IntPtr.Zero,
+                BufferUsageHint.StreamRead);
+            CheckGlError();
+            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            CheckGlError();
             var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
+            CheckGlError();
 
             GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+            CheckGlError();
 
-            _transferringScreenshots.Add((pbo, fence, ScreenSize, image => delegates.ForEach(p => p.callback(image))));
+            _transferringScreenshots.Add((pbo, fence, ScreenSize, RunCallback));
+
+            void RunCallback(Image<Rgb24> image) => delegates.ForEach(p => p.callback(image));
         }
 
         private unsafe void CheckTransferringScreenshots()
@@ -823,23 +828,32 @@ namespace Robust.Client.Graphics.Clyde
 
                 int status;
                 GL.GetSync(fence, SyncParameterName.SyncStatus, sizeof(int), null, &status);
+                CheckGlError();
 
                 if (status == (int) All.Signaled)
                 {
-                    GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
-                    var ptr = GL.MapBuffer(BufferTarget.PixelPackBuffer, BufferAccess.ReadOnly);
+                    var bufLen = width * height;
+                    var bufSize = sizeof(Rgba32) * bufLen;
 
-                    var packSpan = new ReadOnlySpan<Rgb24>((void*) ptr, width * height);
+                    GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+                    CheckGlError();
+                    var ptr = MapFullBuffer(BufferTarget.PixelPackBuffer, bufSize, BufferAccess.ReadOnly,
+                        BufferAccessMask.MapReadBit);
+
+                    var packSpan = new ReadOnlySpan<Rgba32>((void*) ptr, width * height);
 
                     var image = new Image<Rgb24>(width, height);
                     var imageSpan = image.GetPixelSpan();
 
-                    FlipCopy(packSpan, imageSpan, width, height);
+                    FlipCopyScreenshot(packSpan, imageSpan, width, height);
 
-                    GL.UnmapBuffer(BufferTarget.PixelPackBuffer);
+                    UnmapBuffer(BufferTarget.PixelPackBuffer);
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+                    CheckGlError();
                     GL.DeleteBuffer(pbo);
+                    CheckGlError();
                     GL.DeleteSync(fence);
+                    CheckGlError();
 
                     _transferringScreenshots.Remove(screenshot);
 
@@ -847,6 +861,50 @@ namespace Robust.Client.Graphics.Clyde
                     callback(image);
                 }
             }
+        }
+
+        private FullStoredRendererState PushRenderStateFull()
+        {
+            return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentRenderTarget);
+        }
+
+        private void PopRenderStateFull(in FullStoredRendererState state)
+        {
+            SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
+            BindRenderTargetFull(state.RenderTarget);
+
+            var (width, height) = state.RenderTarget.Size;
+            GL.Viewport(0, 0, width, height);
+            CheckGlError();
+        }
+
+        private void SetViewportImmediate(Box2i box)
+        {
+            GL.Viewport(box.Left, box.Bottom, box.Width, box.Height);
+            CheckGlError();
+        }
+
+        private void ClearRenderState()
+        {
+            BatchVertexIndex = 0;
+            BatchIndexIndex = 0;
+            _queuedRenderCommands.Clear();
+            _currentViewport = null;
+            _lightingReady = false;
+            _currentMatrixModel = Matrix3.Identity;
+            SetScissorFull(null);
+            BindRenderTargetFull(_mainWindowRenderTarget);
+            _batchMetaData = null;
+            _queuedShader = _defaultShader.Handle;
+        }
+
+        private void ResetBlendFunc()
+        {
+            GL.BlendFuncSeparate(
+                BlendingFactorSrc.SrcAlpha,
+                BlendingFactorDest.OneMinusSrcAlpha,
+                BlendingFactorSrc.One,
+                BlendingFactorDest.OneMinusSrcAlpha);
         }
 
         [StructLayout(LayoutKind.Explicit)]
@@ -858,9 +916,8 @@ namespace Robust.Client.Graphics.Clyde
             [FieldOffset(0)] public RenderCommandType Type;
 
             [FieldOffset(4)] public RenderCommandDrawBatch DrawBatch;
-            [FieldOffset(4)] public RenderCommandViewMatrix ViewMatrix;
+            [FieldOffset(4)] public RenderCommandProjViewMatrix ProjView;
             [FieldOffset(4)] public RenderCommandScissor Scissor;
-            [FieldOffset(4)] public RenderCommandSwitchSpace SwitchSpace;
             [FieldOffset(4)] public RenderCommandRenderTarget RenderTarget;
             [FieldOffset(4)] public RenderCommandViewport Viewport;
             [FieldOffset(4)] public RenderCommandClear Clear;
@@ -881,20 +938,16 @@ namespace Robust.Client.Graphics.Clyde
             public Matrix3 ModelMatrix;
         }
 
-        private struct RenderCommandViewMatrix
+        private struct RenderCommandProjViewMatrix
         {
-            public Matrix3 Matrix;
+            public Matrix3 ProjMatrix;
+            public Matrix3 ViewMatrix;
         }
 
         private struct RenderCommandScissor
         {
             public bool EnableScissor;
             public UIBox2i Scissor;
-        }
-
-        private struct RenderCommandSwitchSpace
-        {
-            public CurrentSpace NewSpace;
         }
 
         private struct RenderCommandRenderTarget
@@ -912,25 +965,20 @@ namespace Robust.Client.Graphics.Clyde
             public Color Color;
         }
 
-        private enum RenderCommandType
+        private enum RenderCommandType : byte
         {
             DrawBatch,
 
-            ViewMatrix,
-            ResetViewMatrix,
-            SwitchSpace,
+            ProjViewMatrix,
+
+            //ResetViewMatrix,
+            //SwitchSpace,
             Viewport,
 
             Scissor,
             RenderTarget,
 
             Clear
-        }
-
-        private enum CurrentSpace
-        {
-            ScreenSpace = 0,
-            WorldSpace = 1,
         }
 
         private struct PopDebugGroup : IDisposable
@@ -957,7 +1005,7 @@ namespace Robust.Client.Graphics.Clyde
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
 
-            public BatchMetaData(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType,
+            public BatchMetaData(ClydeHandle textureId, in Color color, bool indexed, BatchPrimitiveType primitiveType,
                 int startIndex, ClydeHandle shaderInstance)
             {
                 TextureId = textureId;
@@ -993,7 +1041,7 @@ namespace Robust.Client.Graphics.Clyde
                 var a = _drawList[x].Item1;
                 var b = _drawList[y].Item1;
 
-                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                var cmp = (a.DrawDepth).CompareTo(b.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;
@@ -1014,6 +1062,21 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return a.Owner.Uid.CompareTo(b.Owner.Uid);
+            }
+        }
+
+        private readonly struct FullStoredRendererState
+        {
+            public readonly Matrix3 ProjMatrix;
+            public readonly Matrix3 ViewMatrix;
+            public readonly LoadedRenderTarget RenderTarget;
+
+            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix,
+                LoadedRenderTarget renderTarget)
+            {
+                ProjMatrix = projMatrix;
+                ViewMatrix = viewMatrix;
+                RenderTarget = renderTarget;
             }
         }
     }

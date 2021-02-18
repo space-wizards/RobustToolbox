@@ -1,10 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using OpenToolkit.GraphicsLibraryFramework;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 
@@ -15,13 +15,13 @@ namespace Robust.Client.Graphics.Clyde
         // These are actually Cursor* but we can't do that because no pointer generic arguments.
         // Need a queue to dispose cursors since the GLFW methods aren't allowed from non-main thread (finalizers).
         // And they also aren't re-entrant.
-        private readonly Queue<IntPtr> _cursorDisposeQueue = new Queue<IntPtr>();
+        private readonly ConcurrentQueue<IntPtr> _cursorDisposeQueue = new();
 
         private readonly Dictionary<StandardCursorShape, CursorImpl> _standardCursors =
-            new Dictionary<StandardCursorShape, CursorImpl>();
+            new();
 
         // Keep current active cursor around so it doesn't get garbage collected.
-        private CursorImpl _currentCursor;
+        private CursorImpl? _currentCursor;
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public unsafe void SetCursor(ICursor cursor)
+        public unsafe void SetCursor(ICursor? cursor)
         {
             if (_currentCursor == cursor)
             {
@@ -69,7 +69,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetCursor(_glfwWindow, impl.Cursor);
         }
 
-        private unsafe void FlushCursorDisposeQueue()
+        private unsafe void FlushCursorDispose()
         {
             while (_cursorDisposeQueue.TryDequeue(out var cursor))
             {

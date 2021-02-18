@@ -1,5 +1,4 @@
-using JetBrains.Annotations;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -8,13 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyPanel = "panel";
 
-        private StyleBox _panelOverride;
-
-        public StyleBox PanelOverride
-        {
-            get => _panelOverride;
-            set => _panelOverride = value;
-        }
+        public StyleBox? PanelOverride { get; set; }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
@@ -26,7 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void LayoutUpdateOverride()
         {
-            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? SizeBox;
+            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
 
             foreach (var child in Children)
             {
@@ -47,15 +40,14 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getStyleBox()
+        private StyleBox? _getStyleBox()
         {
-            if (_panelOverride != null)
+            if (PanelOverride != null)
             {
-                return _panelOverride;
+                return PanelOverride;
             }
 
-            TryGetStyleProperty(StylePropertyPanel, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyPanel, out var box);
             return box;
         }
     }

@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.Components.UserInterface;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Server.Player;
+using Robust.Shared.GameObjects;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects.EntitySystems
+namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
     internal class UserInterfaceSystem : EntitySystem
@@ -14,11 +13,11 @@ namespace Robust.Server.GameObjects.EntitySystems
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;
 
-        private readonly List<IPlayerSession> _sessionCache = new List<IPlayerSession>();
+        private readonly List<IPlayerSession> _sessionCache = new();
 
         // List of all bound user interfaces that have at least one player looking at them.
         [ViewVariables]
-        private readonly List<BoundUserInterface> _activeInterfaces = new List<BoundUserInterface>();
+        private readonly List<BoundUserInterface> _activeInterfaces = new();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -31,6 +30,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             foreach (var userInterface in _activeInterfaces.ToList())
             {
                 CheckRange(userInterface);
+                userInterface.DispatchPendingState();
             }
         }
 

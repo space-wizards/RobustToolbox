@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Players;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,6 +10,7 @@ namespace Robust.Shared.GameObjects
 
     public delegate void EntitySessionEventHandler<in T>(T msg, EntitySessionEventArgs args);
 
+    [Serializable, NetSerializable]
     public class EntityEventArgs : EventArgs { }
 
     public readonly struct EntitySessionEventArgs

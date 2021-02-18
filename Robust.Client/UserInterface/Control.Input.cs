@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Invoked when the mouse enters the area of this control / when it hovers over the control.
         /// </summary>
-        public event Action<GUIMouseHoverEventArgs> OnMouseEntered;
+        public event Action<GUIMouseHoverEventArgs>? OnMouseEntered;
 
         protected internal virtual void MouseEntered()
         {
@@ -21,7 +21,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Invoked when the mouse exits the area of this control / when it stops hovering over the control.
         /// </summary>
-        public event Action<GUIMouseHoverEventArgs> OnMouseExited;
+        public event Action<GUIMouseHoverEventArgs>? OnMouseExited;
 
         protected internal virtual void MouseExited()
         {
@@ -32,7 +32,8 @@ namespace Robust.Client.UserInterface
         {
         }
 
-        public event Action<GUIBoundKeyEventArgs> OnKeyBindDown;
+        public event Action<GUIBoundKeyEventArgs>? OnKeyBindDown;
+        public event Action<GUIBoundKeyEventArgs>? OnKeyBindUp;
 
         protected internal virtual void KeyBindDown(GUIBoundKeyEventArgs args)
         {
@@ -41,6 +42,7 @@ namespace Robust.Client.UserInterface
 
         protected internal virtual void KeyBindUp(GUIBoundKeyEventArgs args)
         {
+            OnKeyBindUp?.Invoke(args);
         }
 
         protected internal virtual void MouseMove(GUIMouseMoveEventArgs args)

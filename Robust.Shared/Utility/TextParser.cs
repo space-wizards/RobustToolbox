@@ -17,7 +17,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         public int CurrentIndex { get; private set; }
 
-        private string _currentLine;
+        private string? _currentLine;
 
         public TextParser(TextReader reader)
         {
@@ -38,7 +38,7 @@ namespace Robust.Shared.Utility
                 return false;
             }
 
-            var valid = _currentLine.IndexOf(str, CurrentIndex, StringComparison.Ordinal) == CurrentIndex;
+            var valid = _currentLine!.IndexOf(str, CurrentIndex, StringComparison.Ordinal) == CurrentIndex;
 
             if (valid)
             {
@@ -55,7 +55,7 @@ namespace Robust.Shared.Utility
                 return false;
             }
 
-            var valid = _currentLine[CurrentIndex] == chr;
+            var valid = _currentLine![CurrentIndex] == chr;
             if (valid)
             {
                 Advance();
@@ -71,7 +71,7 @@ namespace Robust.Shared.Utility
                 throw new ParserException($"Expected '{chr}', got EOL");
             }
 
-            if (_currentLine[CurrentIndex] != chr)
+            if (_currentLine![CurrentIndex] != chr)
             {
                 throw new ParserException($"Expected '{chr}'.");
             }
@@ -112,7 +112,7 @@ namespace Robust.Shared.Utility
             var ateAny = false;
             while (!IsEOL())
             {
-                if (!char.IsWhiteSpace(_currentLine, CurrentIndex))
+                if (!char.IsWhiteSpace(_currentLine!, CurrentIndex))
                 {
                     break;
                 }
@@ -129,7 +129,7 @@ namespace Robust.Shared.Utility
             var current = CurrentIndex;
             while (!IsEOL())
             {
-                if (char.IsWhiteSpace(_currentLine, CurrentIndex))
+                if (char.IsWhiteSpace(_currentLine!, CurrentIndex))
                 {
                     break;
                 }
@@ -137,7 +137,7 @@ namespace Robust.Shared.Utility
                 Advance();
             }
 
-            return _currentLine.Substring(current, CurrentIndex - current);
+            return _currentLine!.Substring(current, CurrentIndex - current);
         }
 
         public string EatUntilEOL()
@@ -148,13 +148,13 @@ namespace Robust.Shared.Utility
                 Advance();
             }
 
-            return _currentLine.Substring(current, CurrentIndex - current);
+            return _currentLine!.Substring(current, CurrentIndex - current);
         }
 
         [System.Diagnostics.Contracts.Pure]
         public char Peek()
         {
-            if (CurrentIndex >= _currentLine.Length)
+            if (CurrentIndex >= _currentLine!.Length)
             {
                 return '\0';
             }
@@ -163,7 +163,7 @@ namespace Robust.Shared.Utility
 
         public char Take()
         {
-            return _currentLine[CurrentIndex++];
+            return _currentLine![CurrentIndex++];
         }
 
         public void Advance(int amount = 1)
@@ -175,7 +175,7 @@ namespace Robust.Shared.Utility
         [System.Diagnostics.Contracts.Pure]
         public bool PeekIsDigit()
         {
-            return char.IsDigit(_currentLine, CurrentIndex);
+            return char.IsDigit(_currentLine!, CurrentIndex);
         }
 
         public class ParserException : Exception

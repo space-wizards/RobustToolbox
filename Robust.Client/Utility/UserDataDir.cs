@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Robust.Client.Utility
 {
-    public static class UserDataDir
+    internal static class UserDataDir
     {
         [Pure]
         public static string GetUserDataDir()
@@ -29,7 +29,7 @@ namespace Robust.Client.Utility
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif
 
-            return Path.Combine(appDataDir, "Space Station 14");
+            return Path.Combine(appDataDir, "Space Station 14", "data");
         }
 
     }

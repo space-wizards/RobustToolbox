@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
@@ -15,32 +16,32 @@ namespace Robust.Shared.Utility
         // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
         // Obviously thread local to avoid threading issues.
         private static readonly ThreadLocal<YamlScalarNode> FetchNode =
-            new ThreadLocal<YamlScalarNode>(() => new YamlScalarNode());
+            new(() => new YamlScalarNode());
 
         // Easy conversions for YamlScalarNodes.
         // All of these take regular nodes, to make the API easier and less copy paste.
         [Pure]
         public static int AsInt(this YamlNode node)
         {
-            return int.Parse(((YamlScalarNode) node).Value, CultureInfo.InvariantCulture);
+            return int.Parse(node.AsString(), CultureInfo.InvariantCulture);
         }
 
         [Pure]
         public static string AsString(this YamlNode node)
         {
-            return ((YamlScalarNode) node).Value;
+            return ((YamlScalarNode) node).Value ?? "";
         }
 
         [Pure]
         public static float AsFloat(this YamlNode node)
         {
-            return float.Parse(((YamlScalarNode) node).Value, CultureInfo.InvariantCulture);
+            return float.Parse(node.AsString(), CultureInfo.InvariantCulture);
         }
 
         [Pure]
         public static bool AsBool(this YamlNode node)
         {
-            return bool.Parse(((YamlScalarNode) node).Value);
+            return bool.Parse(node.AsString());
         }
 
         [Pure]
@@ -128,7 +129,7 @@ namespace Robust.Shared.Utility
         [Pure]
         public static ResourcePath AsResourcePath(this YamlNode node)
         {
-            return new ResourcePath(node.ToString());
+            return new(node.ToString());
         }
 
         // Mapping specific helpers.
@@ -183,7 +184,7 @@ namespace Robust.Shared.Utility
         /// This is intentional, as this most of the time means user error in the prototype definition.
         /// </exception>
         [Pure]
-        public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, out T returnNode) where T : YamlNode
+        public static bool TryGetNode<T>(this YamlMappingNode mapping, string key, [NotNullWhen(true)] out T? returnNode) where T : YamlNode
         {
             if (mapping.Children.TryGetValue(_getFetchNode(key), out var node))
             {
@@ -204,7 +205,7 @@ namespace Robust.Shared.Utility
         /// <param name="key">The value of the scalar node that will be looked up.</param>
         /// <param name="returnNode">The node found, <c>null</c> if it could not be found.</param>
         /// <returns>True if the value could be found, false otherwise.</returns>
-        public static bool TryGetNode(this YamlMappingNode mapping, string key, out YamlNode returnNode)
+        public static bool TryGetNode(this YamlMappingNode mapping, string key, [NotNullWhen(true)] out YamlNode? returnNode)
         {
             return mapping.Children.TryGetValue(_getFetchNode(key), out returnNode);
         }
@@ -228,7 +229,7 @@ namespace Robust.Shared.Utility
 
         private static YamlScalarNode _getFetchNode(string key)
         {
-            var node = FetchNode.Value;
+            var node = FetchNode.Value!;
             node.Value = key;
             return node;
         }

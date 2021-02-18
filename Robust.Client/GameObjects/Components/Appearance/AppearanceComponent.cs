@@ -1,29 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.EntitySystems;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Appearance;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
-        private Dictionary<object, object> data = new Dictionary<object, object>();
-        internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [ViewVariables]
+        private Dictionary<object, object> data = new();
+        [ViewVariables]
+        internal List<AppearanceVisualizer> Visualizers = new();
+
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private static bool _didRegisterSerializer;
 
+        [ViewVariables]
         private bool _appearanceDirty;
 
         public override void SetData(string key, object value)
@@ -51,17 +50,17 @@ namespace Robust.Client.GameObjects
             return (T) data[key];
         }
 
-        public override bool TryGetData<T>(Enum key, out T data)
+        public override bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        public override bool TryGetData<T>(string key, out T data)
+        public override bool TryGetData<T>(string key, [NotNullWhen(true)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        internal bool TryGetData<T>(object key, out T data)
+        internal bool TryGetData<T>(object key, [NotNullWhen(true)] out T data)
         {
             if (this.data.TryGetValue(key, out var dat))
             {
@@ -69,23 +68,24 @@ namespace Robust.Client.GameObjects
                 return true;
             }
 
-            data = default;
+            data = default!;
             return false;
         }
 
         private void SetData(object key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value)) return;
+
             data[key] = value;
 
             MarkDirty();
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
-            if (curState == null)
+            if (curState is not AppearanceComponentState actualState)
                 return;
 
-            var actualState = (AppearanceComponentState) curState;
             data = actualState.Data;
             MarkDirty();
         }
@@ -168,7 +168,7 @@ namespace Robust.Client.GameObjects
                             throw new InvalidOperationException();
                         }
 
-                        var vis = (AppearanceVisualizer) Activator.CreateInstance(visType);
+                        var vis = (AppearanceVisualizer) Activator.CreateInstance(visType)!;
                         vis.LoadData(mapping);
                         return vis;
                 }

@@ -1,17 +1,24 @@
-﻿using Robust.Shared.Interfaces.Log;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using Serilog;
+using Serilog.Events;
+using SLogger = Serilog.Core.Logger;
 
 namespace Robust.Shared.Log
 {
     public sealed partial class LogManager
     {
-        private sealed class Sawmill : ISawmill
+        private sealed class Sawmill : ISawmill, IDisposable
         {
+            // Need this to act as a proxy for some internal Serilog APIs related to message parsing.
+            private readonly SLogger _sLogger = new LoggerConfiguration().CreateLogger();
+
             public string Name { get; }
 
-            public Sawmill Parent { get; }
+            public Sawmill? Parent { get; }
+
+            private bool _disposed;
 
             public LogLevel? Level
             {
@@ -22,15 +29,17 @@ namespace Robust.Shared.Log
                     {
                         throw new ArgumentException("Cannot set root sawmill level to null.");
                     }
+
                     _level = value;
                 }
             }
+
             private LogLevel? _level = null;
 
-            private readonly List<ILogHandler> _handlers = new List<ILogHandler>();
-            private readonly ReaderWriterLockSlim _handlerLock = new ReaderWriterLockSlim();
+            public List<ILogHandler> Handlers { get; } = new();
+            private readonly ReaderWriterLockSlim _handlerLock = new();
 
-            public Sawmill(Sawmill parent, string name)
+            public Sawmill(Sawmill? parent, string name)
             {
                 Parent = parent;
                 Name = name;
@@ -41,7 +50,7 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterWriteLock();
                 try
                 {
-                    _handlers.Add(handler);
+                    Handlers.Add(handler);
                 }
                 finally
                 {
@@ -54,7 +63,7 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterWriteLock();
                 try
                 {
-                    _handlers.Remove(handler);
+                    Handlers.Remove(handler);
                 }
                 finally
                 {
@@ -62,20 +71,33 @@ namespace Robust.Shared.Log
                 }
             }
 
-            public void Log(LogLevel level, string message, params object[] args)
+            public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
             {
-                Log(level, string.Format(message, args));
+                _sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties);
+                var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
+                LogInternal(Name, msg);
+            }
+
+            public void Log(LogLevel level, string message, params object?[] args)
+            {
+                if (args.Length != 0 && message.Contains("{0"))
+                {
+                    // Fallback for logs that still use the string.Format approach.
+                    message = string.Format(message, args);
+                    args = Array.Empty<object>();
+                }
+
+                Log(level, null, message, args);
             }
 
             public void Log(LogLevel level, string message)
             {
-                var msg = new LogMessage(message, level, Name);
-                LogInternal(msg);
+                Log(level, message, Array.Empty<object>());
             }
 
-            private void LogInternal(in LogMessage message)
+            private void LogInternal(string sourceSawmill, LogEvent message)
             {
-                if (message.Level < GetPracticalLevel())
+                if (message.Level.ToRobust() < GetPracticalLevel())
                 {
                     return;
                 }
@@ -83,9 +105,14 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterReadLock();
                 try
                 {
-                    foreach (var handler in _handlers)
+                    if (_disposed)
                     {
-                        handler.Log(message);
+                        throw new ObjectDisposedException(nameof(Sawmill));
+                    }
+
+                    foreach (var handler in Handlers)
+                    {
+                        handler.Log(sourceSawmill, message);
                     }
                 }
                 finally
@@ -93,7 +120,7 @@ namespace Robust.Shared.Log
                     _handlerLock.ExitReadLock();
                 }
 
-                Parent?.LogInternal(message);
+                Parent?.LogInternal(sourceSawmill, message);
             }
 
             private LogLevel GetPracticalLevel()
@@ -102,10 +129,11 @@ namespace Robust.Shared.Log
                 {
                     return Level.Value;
                 }
-                return Parent.GetPracticalLevel();
+
+                return Parent?.GetPracticalLevel() ?? default;
             }
 
-            public void Debug(string message, params object[] args)
+            public void Debug(string message, params object?[] args)
             {
                 Log(LogLevel.Debug, message, args);
             }
@@ -115,7 +143,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Debug, message);
             }
 
-            public void Info(string message, params object[] args)
+            public void Info(string message, params object?[] args)
             {
                 Log(LogLevel.Info, message, args);
             }
@@ -125,7 +153,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Info, message);
             }
 
-            public void Warning(string message, params object[] args)
+            public void Warning(string message, params object?[] args)
             {
                 Log(LogLevel.Warning, message, args);
             }
@@ -135,7 +163,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Warning, message);
             }
 
-            public void Error(string message, params object[] args)
+            public void Error(string message, params object?[] args)
             {
                 Log(LogLevel.Error, message, args);
             }
@@ -145,7 +173,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Error, message);
             }
 
-            public void Fatal(string message, params object[] args)
+            public void Fatal(string message, params object?[] args)
             {
                 Log(LogLevel.Fatal, message, args);
             }
@@ -153,6 +181,27 @@ namespace Robust.Shared.Log
             public void Fatal(string message)
             {
                 Log(LogLevel.Fatal, message);
+            }
+
+            public void Dispose()
+            {
+                _handlerLock.EnterWriteLock();
+                try
+                {
+                    _disposed = true;
+
+                    foreach (ILogHandler handler in Handlers)
+                    {
+                        if (handler is IDisposable disposable)
+                        {
+                            disposable.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    _handlerLock.ExitWriteLock();
+                }
             }
         }
     }

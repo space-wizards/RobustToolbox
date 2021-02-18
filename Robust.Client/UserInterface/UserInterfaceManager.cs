@@ -1,48 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
+using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IClyde _displayManager;
-        [Dependency] private readonly IClientConsole _console;
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IStateManager _stateManager;
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IStateManager _stateManager = default!;
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        public UITheme ThemeDefaults { get; private set; }
+        public UITheme ThemeDefaults { get; private set; } = default!;
 
-        public Stylesheet Stylesheet
+        public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
@@ -56,44 +50,49 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public Control KeyboardFocused { get; private set; }
+        public Control? KeyboardFocused { get; private set; }
 
-        // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
-        // So we keep track of which control is "focused" by the mouse.
-        private Control _controlFocused;
+        public Control? ControlFocused { get; private set; }
 
-        public LayoutContainer StateRoot { get; private set; }
-        public PopupContainer ModalRoot { get; private set; }
-        public Control CurrentlyHovered { get; private set; }
+        public LayoutContainer StateRoot { get; private set; } = default!;
+        public PopupContainer ModalRoot { get; private set; } = default!;
+        public Control? CurrentlyHovered { get; private set; } = default!;
         public float UIScale { get; private set; } = 1;
-        public Control RootControl { get; private set; }
-        public LayoutContainer WindowRoot { get; private set; }
-        public LayoutContainer PopupRoot { get; private set; }
-        public DebugConsole DebugConsole { get; private set; }
+        public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
+        public Control RootControl { get; private set; } = default!;
+        public LayoutContainer WindowRoot { get; private set; } = default!;
+        public LayoutContainer PopupRoot { get; private set; } = default!;
+        public DebugConsole DebugConsole { get; private set; } = default!;
         public IDebugMonitors DebugMonitors => _debugMonitors;
-        private DebugMonitors _debugMonitors;
+        private DebugMonitors _debugMonitors = default!;
 
-        private readonly List<Control> _modalStack = new List<Control>();
+        private readonly List<Control> _modalStack = new();
 
         private bool _rendering = true;
         private float _tooltipTimer;
-        private Tooltip _tooltip;
+        // set to null when not counting down
+        private float? _tooltipDelay;
+        private Tooltip _tooltip = default!;
+        private bool showingTooltip;
+        private Control? _suppliedTooltip;
         private const float TooltipDelay = 1;
 
-        private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
-        private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
-        private Stylesheet _stylesheet;
-        private ICursor _worldCursor;
+        private readonly Queue<Control> _styleUpdateQueue = new();
+        private readonly Queue<Control> _layoutUpdateQueue = new();
+        private Stylesheet? _stylesheet;
+        private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
 
         public void Initialize()
         {
-            UIScale = _configurationManager.GetCVar<float>("display.uiScale");
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_console, _resourceManager);
+            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
@@ -205,10 +204,15 @@ namespace Robust.Client.UserInterface
                 control.DoLayoutUpdate();
             }
 
-            _tooltipTimer -= args.DeltaSeconds;
-            if (_tooltipTimer <= 0)
+            // count down tooltip delay if we're not showing one yet and
+            // are hovering the mouse over a control without moving it
+            if (_tooltipDelay != null && !showingTooltip)
             {
-                _showTooltip();
+                _tooltipTimer += args.DeltaSeconds;
+                if (_tooltipTimer >= _tooltipDelay)
+                {
+                    _showTooltip();
+                }
             }
 
             if (_needUpdateActiveCursor)
@@ -229,7 +233,14 @@ namespace Robust.Client.UserInterface
                 var offset = pointerPosition - top.GlobalPixelPosition;
                 if (!top.HasPoint(offset / UIScale))
                 {
-                    RemoveModal(top);
+                    if (top.MouseFilter != Control.MouseFilterMode.Stop)
+                        RemoveModal(top);
+                    else
+                    {
+                        ControlFocused?.ControlFocusExited();
+                        ControlFocused = top;
+                        return false; // prevent anything besides the top modal control from receiving input
+                    }
                 }
                 else
                 {
@@ -243,15 +254,21 @@ namespace Robust.Client.UserInterface
             {
                 return false;
             }
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = control;
 
-            _controlFocused = control;
-
-            if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
+            if (ControlFocused.CanKeyboardFocus && ControlFocused.KeyboardFocusOnClick)
             {
-                _controlFocused.GrabKeyboardFocus();
+                ControlFocused.GrabKeyboardFocus();
             }
 
             return true;
+        }
+
+        public void HandleCanFocusUp()
+        {
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = null;
         }
 
         public void KeyBindDown(BoundKeyEventArgs args)
@@ -268,7 +285,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {
@@ -289,7 +306,7 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
             if (control == null)
             {
                 return;
@@ -300,7 +317,6 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
-            _controlFocused = null;
 
             // Always mark this as handled.
             // The only case it should not be is if we do not have a control to click on,
@@ -319,11 +335,19 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered?.MouseExited();
                 CurrentlyHovered = newHovered;
                 CurrentlyHovered?.MouseEntered();
+                if (CurrentlyHovered != null)
+                {
+                    _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
+                }
+                else
+                {
+                    _tooltipDelay = null;
+                }
 
                 _needUpdateActiveCursor = true;
             }
 
-            var target = _controlFocused ?? newHovered;
+            var target = ControlFocused ?? newHovered;
             if (target != null)
             {
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
@@ -339,7 +363,7 @@ namespace Robust.Client.UserInterface
         private void UpdateActiveCursor()
         {
             // Consider mouse input focus first so that dragging windows don't act up etc.
-            var cursorTarget = _controlFocused ?? CurrentlyHovered;
+            var cursorTarget = ControlFocused ?? CurrentlyHovered;
 
             if (cursorTarget == null)
             {
@@ -408,12 +432,23 @@ namespace Robust.Client.UserInterface
             };
 
             popup.Contents.AddChild(new Label {Text = contents});
-            popup.OpenCenteredMinSize();
+            popup.OpenCentered();
         }
 
-        public Control MouseGetControl(Vector2 coordinates)
+        public Control? MouseGetControl(Vector2 coordinates)
         {
             return _mouseFindControlAtPos(RootControl, coordinates);
+        }
+
+        public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+        public Vector2 ScreenToUIPosition(Vector2 position)
+        {
+            return position / UIScale;
+        }
+
+        public Vector2 ScreenToUIPosition(ScreenCoordinates coordinates)
+        {
+            return ScreenToUIPosition(coordinates.Position);
         }
 
         /// <inheritdoc />
@@ -438,13 +473,13 @@ namespace Robust.Client.UserInterface
 
             KeyboardFocused = control;
 
-            KeyboardFocused.FocusEntered();
+            KeyboardFocused.KeyboardFocusEntered();
         }
 
         public void ReleaseKeyboardFocus()
         {
             var oldFocused = KeyboardFocused;
-            oldFocused?.FocusExited();
+            oldFocused?.KeyboardFocusExited();
             KeyboardFocused = null;
         }
 
@@ -461,7 +496,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public ICursor WorldCursor
+        public ICursor? WorldCursor
         {
             get => _worldCursor;
             set
@@ -485,12 +520,12 @@ namespace Robust.Client.UserInterface
             {
                 control.MouseExited();
                 CurrentlyHovered = null;
+                _clearTooltip();
             }
 
-            if (control == _controlFocused)
-            {
-                _controlFocused = null;
-            }
+            if (control != ControlFocused) return;
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = null;
         }
 
         public void PushModal(Control modal)
@@ -528,7 +563,7 @@ namespace Robust.Client.UserInterface
 
         public void CursorChanged(Control control)
         {
-            if (control == _controlFocused || control == CurrentlyHovered)
+            if (control == ControlFocused || control == CurrentlyHovered)
             {
                 _needUpdateActiveCursor = true;
             }
@@ -584,6 +619,8 @@ namespace Robust.Client.UserInterface
             }
 
             control.DrawInternal(renderHandle);
+            handle.UseShader(null);
+
             foreach (var child in control.Children)
             {
                 _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);
@@ -595,7 +632,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private Control _mouseFindControlAtPos(Control control, Vector2 position)
+        private Control? _mouseFindControlAtPos(Control control, Vector2 position)
         {
             for (var i = control.ChildCount - 1; i >= 0; i--)
             {
@@ -620,12 +657,13 @@ namespace Robust.Client.UserInterface
             return null;
         }
 
-        private static void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+        private static void _doMouseGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
             bool ignoreStop = false)
             where T : GUIMouseEventArgs
         {
             while (control != null)
             {
+                guiEvent.SourceControl = control;
                 if (control.MouseFilter != Control.MouseFilterMode.Ignore)
                 {
                     action(control, guiEvent);
@@ -639,11 +677,10 @@ namespace Robust.Client.UserInterface
                 guiEvent.RelativePosition += control.Position;
                 guiEvent.RelativePixelPosition += control.PixelPosition;
                 control = control.Parent;
-                guiEvent.SourceControl = control;
             }
         }
 
-        private static void _doGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+        private static void _doGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
             bool ignoreStop = false)
             where T : GUIBoundKeyEventArgs
         {
@@ -667,49 +704,71 @@ namespace Robust.Client.UserInterface
 
         private void _clearTooltip()
         {
+            if (!showingTooltip) return;
             _tooltip.Visible = false;
+            if (_suppliedTooltip != null)
+            {
+                PopupRoot.RemoveChild(_suppliedTooltip);
+                _suppliedTooltip = null;
+            }
+            CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
+            showingTooltip = false;
+        }
+
+
+        public void HideTooltipFor(Control control)
+        {
+            if (CurrentlyHovered == control)
+            {
+                _clearTooltip();
+            }
+        }
+
+        public Control? GetSuppliedTooltipFor(Control control)
+        {
+            return CurrentlyHovered == control ? _suppliedTooltip : null;
         }
 
         private void _resetTooltipTimer()
         {
-            _tooltipTimer = TooltipDelay;
+            _tooltipTimer = 0;
         }
 
         private void _showTooltip()
         {
+            if (showingTooltip) return;
+            showingTooltip = true;
             var hovered = CurrentlyHovered;
-            if (hovered == null || string.IsNullOrWhiteSpace(hovered.ToolTip))
+            if (hovered == null)
             {
                 return;
             }
 
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, _inputManager.MouseScreenPosition);
-            LayoutContainer.SetSize(_tooltip, _tooltip.CustomMinimumSize);
-
-            var (right, bottom) = _tooltip.Position + _tooltip.Size;
-
-            if (right > RootControl.Size.X)
+            // show supplied tooltip if there is one
+            if (hovered.TooltipSupplier != null)
             {
-                LayoutContainer.SetPosition(_tooltip, (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y));
+                _suppliedTooltip = hovered.TooltipSupplier.Invoke(hovered);
+                if (_suppliedTooltip != null)
+                {
+                    PopupRoot.AddChild(_suppliedTooltip);
+                    Tooltips.PositionTooltip(_suppliedTooltip);
+                }
+            }
+            else if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
+            {
+                // show simple tooltip if there is one
+                _tooltip.Visible = true;
+                _tooltip.Text = hovered.ToolTip;
+               Tooltips.PositionTooltip(_tooltip);
             }
 
-            if (bottom > RootControl.Size.Y)
-            {
-                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
-            }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.RegisterCVar("display.uiScale", 1f, CVar.ARCHIVE, _uiScaleChanged);
+            hovered.PerformShowTooltip();
         }
 
         private void _uiScaleChanged(float newValue)
         {
-            UIScale = newValue;
+            UIScale = newValue == 0f ? DefaultUIScale : newValue;
 
             if (RootControl == null)
             {
@@ -739,13 +798,8 @@ namespace Robust.Client.UserInterface
         ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
-        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        private bool OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            if (!args.CanFocus && KeyboardFocused != null)
-            {
-                args.Handle();
-            }
-
             if (args.State == BoundKeyState.Down)
             {
                 KeyBindDown(args);
@@ -754,6 +808,12 @@ namespace Robust.Client.UserInterface
             {
                 KeyBindUp(args);
             }
+
+            if (!args.CanFocus && KeyboardFocused != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

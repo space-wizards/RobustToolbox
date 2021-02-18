@@ -1,7 +1,6 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -10,6 +9,9 @@ namespace Robust.UnitTesting.Shared.ContentPack
     [TestFixture]
     public class ResourceManagerTest : RobustUnitTest
     {
+        private static Stream ZipStream => typeof(ResourceManagerTest).Assembly
+            .GetManifestResourceStream("Robust.UnitTesting.Shared.ContentPack.ZipTest.zip")!;
+
         private static readonly byte[] Data =
         {
             0x56, 0x75, 0x6c, 0x6b, 0x61, 0x6e, 0x20, 0x57, 0x68, 0x65, 0x6e
@@ -84,6 +86,37 @@ namespace Robust.UnitTesting.Shared.ContentPack
         public void TestInvalidPathsLowerCase([ValueSource(nameof(InvalidPaths))] string path)
         {
             Assert.That(ResourceManager.IsPathValid(new ResourcePath(path.ToLowerInvariant())), Is.False);
+        }
+
+        [Test]
+        public void TestZipRead()
+        {
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
+            resourceManager.MountContentPack(ZipStream);
+
+            var stream = resourceManager.ContentFileRead("/foo.txt");
+            Assert.That(ReadString(stream), Is.EqualTo("Honk!! \n"));
+        }
+
+        [Test]
+        public void TestZipFind()
+        {
+            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
+            resourceManager.MountContentPack(ZipStream);
+
+            var found = resourceManager.ContentFindFiles("/bar/");
+
+            Assert.That(found, Is.EquivalentTo(new[]
+            {
+                new ResourcePath("/bar/a.txt"),
+                new ResourcePath("/bar/b.txt"),
+            }));
+        }
+
+        private static string ReadString(Stream stream)
+        {
+            using var streamReader = new StreamReader(stream);
+            return streamReader.ReadToEnd();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Players
 {
@@ -13,6 +13,6 @@ namespace Robust.Shared.Players
         /// </summary>
         SessionStatus Status { get; set; }
 
-        IEntity AttachedEntity { get; }
+        IEntity? AttachedEntity { get; }
     }
 }

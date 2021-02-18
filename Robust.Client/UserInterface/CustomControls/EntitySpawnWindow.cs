@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Robust.Client.GameObjects;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Placement;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -20,7 +20,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
-        private readonly ILocalizationManager _loc;
 
         private VBoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
@@ -32,7 +31,7 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
         // List of prototypes that are visible based on current filter criteria.
-        private readonly List<EntityPrototype> _filteredPrototypes = new List<EntityPrototype>();
+        private readonly List<EntityPrototype> _filteredPrototypes = new();
         // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
         // This is inclusive, so end is the index of the last prototype, not right after it.
         private (int start, int end) _lastPrototypeIndices;
@@ -53,25 +52,20 @@ namespace Robust.Client.UserInterface.CustomControls
             "AlignWallProper",
         };
 
-        private const int TARGET_ICON_HEIGHT = 32;
-
-        private EntitySpawnButton SelectedButton;
-        private EntityPrototype SelectedPrototype;
+        private EntitySpawnButton? SelectedButton;
+        private EntityPrototype? SelectedPrototype;
 
         protected override Vector2? CustomSize => (250, 300);
 
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
-            IResourceCache resourceCache,
-            ILocalizationManager loc)
+            IResourceCache resourceCache)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
 
-            _loc = loc;
-
-            Title = _loc.GetString("Entity Spawn Panel");
+            Title = Loc.GetString("Entity Spawn Panel");
 
             Contents.AddChild(MainVBox = new VBoxContainer
             {
@@ -84,13 +78,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = _loc.GetString("Search")
+                                PlaceHolder = Loc.GetString("Search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = _loc.GetString("Clear"),
+                                Text = Loc.GetString("Clear"),
                             })
                         }
                     },
@@ -110,13 +104,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (EraseButton = new Button
                             {
                                 ToggleMode = true,
-                                Text = _loc.GetString("Erase Mode")
+                                Text = Loc.GetString("Erase Mode")
                             }),
 
                             (OverrideMenu = new OptionButton
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                ToolTip = _loc.GetString("Override placement")
+                                ToolTip = Loc.GetString("Override placement")
                             })
                         }
                     },
@@ -129,6 +123,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 OverrideMenu.AddItem(initOpts[i], i);
             }
 
+            EraseButton.Pressed = placementManager.Eraser;
             EraseButton.OnToggled += OnEraseButtonToggled;
             OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
@@ -136,7 +131,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildEntityList();
 
-            this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            this.placementManager.PlacementChanged += OnPlacementCanceled;
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -151,10 +146,12 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Dispose(disposing);
 
-            if (disposing)
-            {
-                placementManager.PlacementCanceled -= OnPlacementCanceled;
-            }
+            if (!disposing) return;
+
+            if(EraseButton.Pressed)
+                placementManager.Clear();
+
+            placementManager.PlacementChanged -= OnPlacementCanceled;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
@@ -172,7 +169,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 var newObjInfo = new PlacementInformation
                 {
                     PlacementOption = initOpts[args.Id],
-                    EntityType = placementManager.CurrentPermission.EntityType,
+                    EntityType = placementManager.CurrentPermission!.EntityType,
                     Range = 2,
                     IsTile = placementManager.CurrentPermission.IsTile
                 };
@@ -193,7 +190,7 @@ namespace Robust.Client.UserInterface.CustomControls
             placementManager.ToggleEraser();
         }
 
-        private void BuildEntityList(string searchStr = null)
+        private void BuildEntityList(string? searchStr = null)
         {
             _filteredPrototypes.Clear();
             PrototypeList.RemoveAllChildren();
@@ -239,7 +236,7 @@ namespace Robust.Client.UserInterface.CustomControls
             var endIndex = startIndex - 1;
             var spaceUsed = -height; // -height instead of 0 because else it cuts off the last button.
 
-            while (spaceUsed < PrototypeList.Parent.Height)
+            while (spaceUsed < PrototypeList.Parent!.Height)
             {
                 spaceUsed += height;
                 endIndex += 1;
@@ -308,16 +305,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = true;
             }
 
-            var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            var rect = button.EntityTextureRect;
-            if (tex != null)
-            {
-                rect.Texture = tex.Default;
-            }
-            else
-            {
-                rect.Dispose();
-            }
+            var rect = button.EntityTextureRects;
+            rect.Textures = SpriteComponent.GetPrototypeTextures(prototype, resourceCache).Select(o => o.Default).ToList();
 
             PrototypeList.AddChild(button);
             if (insertFirst)
@@ -354,7 +343,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            var item = (EntitySpawnButton) args.Button.Parent;
+            var item = (EntitySpawnButton) args.Button.Parent!;
             if (SelectedButton == item)
             {
                 SelectedButton = null;
@@ -459,10 +448,10 @@ namespace Robust.Client.UserInterface.CustomControls
         private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
-            public EntityPrototype Prototype { get; set; }
+            public EntityPrototype Prototype { get; set; } = default!;
             public Button ActualButton { get; private set; }
             public Label EntityLabel { get; private set; }
-            public TextureRect EntityTextureRect { get; private set; }
+            public LayeredTextureRect EntityTextureRects { get; private set; }
             public int Index { get; set; }
 
             public EntitySpawnButton()
@@ -478,7 +467,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     Children =
                     {
-                        (EntityTextureRect = new TextureRect
+                        (EntityTextureRects = new LayeredTextureRect
                         {
                             CustomMinimumSize = (32, 32),
                             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
@@ -498,7 +487,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void OnPlacementCanceled(object sender, EventArgs e)
+        private void OnPlacementCanceled(object? sender, EventArgs e)
         {
             if (SelectedButton != null)
             {

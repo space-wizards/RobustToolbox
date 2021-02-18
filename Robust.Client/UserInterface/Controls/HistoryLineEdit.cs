@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 using Robust.Shared.Input;
 
 namespace Robust.Client.UserInterface.Controls
@@ -8,12 +7,12 @@ namespace Robust.Client.UserInterface.Controls
     public class HistoryLineEdit : LineEdit
     {
         private const int MaxHistorySize = 100;
-        private string _historyTemp;
+        private string? _historyTemp;
 
-        public List<string> History { get; } = new List<string>();
+        public List<string> History { get; } = new();
         public int HistoryIndex { get; set; } = 0;
 
-        public event Action OnHistoryChanged;
+        public event Action? OnHistoryChanged;
 
         public HistoryLineEdit()
         {
@@ -49,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (!this.HasKeyboardFocus())
+            if (!HasKeyboardFocus())
             {
                 return;
             }
@@ -83,7 +82,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (HistoryIndex == History.Count)
                 {
-                    Text = _historyTemp;
+                    Text = _historyTemp!;
                 }
                 else
                 {

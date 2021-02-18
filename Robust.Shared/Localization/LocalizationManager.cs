@@ -4,21 +4,18 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using NGettext;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.IoC;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Localization.Macros;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed class LocalizationManager : ILocalizationManager
+    internal sealed class LocalizationManager : ILocalizationManagerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceManager;
-#pragma warning restore 649
-
-        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
-        private CultureInfo _defaultCulture;
+        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new();
+        private CultureInfo? _defaultCulture;
 
         public string GetString(string text)
         {
@@ -100,11 +97,16 @@ namespace Robust.Shared.Localization
             return catalog.GetParticularPluralString(context, text, pluralText, n, args);
         }
 
-        public CultureInfo DefaultCulture
+        public CultureInfo? DefaultCulture
         {
             get => _defaultCulture;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
                 if (!_catalogs.ContainsKey(value))
                 {
                     throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));
@@ -116,36 +118,58 @@ namespace Robust.Shared.Localization
             }
         }
 
-        public void LoadCulture(CultureInfo culture)
+        public void LoadCulture(IResourceManager resourceManager, ITextMacroFactory textMacroFactory, CultureInfo culture)
         {
-            var catalog = new Catalog(culture);
+            var catalog = new CustomFormatCatalog(culture);
             _catalogs.Add(culture, catalog);
 
-            _loadData(culture, catalog);
+            _loadData(resourceManager, culture, catalog);
+            _loadMacros(textMacroFactory, culture, catalog);
             if (DefaultCulture == null)
             {
                 DefaultCulture = culture;
             }
         }
 
-        private void _loadData(CultureInfo culture, Catalog catalog)
+        public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)
+        {
+            serializer.AddStrings(StringIterator());
+
+            IEnumerable<string> StringIterator()
+            {
+                foreach (var catalog in _catalogs.Values)
+                {
+                    foreach (var (key, translations) in catalog.Translations)
+                    {
+                        yield return key;
+
+                        foreach (var t in translations)
+                        {
+                            yield return t;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void _loadData(IResourceManager resourceManager, CultureInfo culture, Catalog catalog)
         {
             // Load data from .yml files.
             // Data is loaded from /Locale/<language-code>/*
 
             var root = new ResourcePath($"/Locale/{culture.IetfLanguageTag}/");
 
-            foreach (var file in _resourceManager.ContentFindFiles(root))
+            foreach (var file in resourceManager.ContentFindFiles(root))
             {
                 var yamlFile = root / file;
-                _loadFromFile(yamlFile, catalog);
+                _loadFromFile(resourceManager, yamlFile, catalog);
             }
         }
 
-        private void _loadFromFile(ResourcePath filePath, Catalog catalog)
+        private static void _loadFromFile(IResourceManager resourceManager, ResourcePath filePath, Catalog catalog)
         {
             var yamlStream = new YamlStream();
-            using (var fileStream = _resourceManager.ContentFileRead(filePath))
+            using (var fileStream = resourceManager.ContentFileRead(filePath))
             using (var reader = new StreamReader(fileStream, EncodingHelpers.UTF8))
             {
                 yamlStream.Load(reader);
@@ -179,6 +203,12 @@ namespace Robust.Shared.Localization
             }
 
             catalog.Translations.Add(id, strings);
+        }
+
+        private static void _loadMacros(ITextMacroFactory textMacroFactory, CultureInfo culture, CustomFormatCatalog catalog)
+        {
+            var macros = textMacroFactory.GetMacrosForLanguage(culture.IetfLanguageTag);
+            catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }
 }

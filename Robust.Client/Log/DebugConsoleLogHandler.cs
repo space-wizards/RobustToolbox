@@ -1,9 +1,8 @@
-﻿using Robust.Client.Interfaces.Console;
-using Robust.Client.Utility;
-using Robust.Shared.Interfaces.Log;
+﻿using Robust.Client.Console;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Serilog.Events;
 
 namespace Robust.Client.Log
 {
@@ -12,49 +11,45 @@ namespace Robust.Client.Log
     /// </summary>
     class DebugConsoleLogHandler : ILogHandler
     {
-        readonly IDebugConsole Console;
+        readonly IClientConsoleHost Console;
 
-        public DebugConsoleLogHandler(IDebugConsole console)
+        public DebugConsoleLogHandler(IClientConsoleHost console)
         {
             Console = console;
         }
 
-        public void Log(in LogMessage message)
+        public void Log(string sawmillName, LogEvent message)
         {
             var formatted = new FormattedMessage(8);
+            var robustLevel = message.Level.ToRobust();
             formatted.PushColor(Color.DarkGray);
             formatted.AddText("[");
-            formatted.PushColor(LogLevelToColor(message.Level));
-            formatted.AddText(message.LogLevelToName());
+            formatted.PushColor(LogLevelToColor(robustLevel));
+            formatted.AddText(LogMessage.LogLevelToName(robustLevel));
             formatted.Pop();
-            formatted.AddText($"] {message.SawmillName}: ");
+            formatted.AddText($"] {sawmillName}: ");
             formatted.Pop();
-            formatted.AddText(message.Message);
+            formatted.AddText(message.RenderMessage());
+            if (message.Exception != null)
+            {
+                formatted.AddText("\n");
+                formatted.AddText(message.Exception.ToString());
+            }
             Console.AddFormattedLine(formatted);
         }
 
         private static Color LogLevelToColor(LogLevel level)
         {
-            switch (level)
+            return level switch
             {
-                case LogLevel.Debug:
-                    return Color.Blue;
-
-                case LogLevel.Info:
-                    return Color.Cyan;
-
-                case LogLevel.Warning:
-                    return Color.Yellow;
-
-                case LogLevel.Error:
-                    return Color.Red;
-
-                case LogLevel.Fatal:
-                    return Color.Red;
-
-                default:
-                    return Color.White;
-            }
+                LogLevel.Verbose => Color.Green,
+                LogLevel.Debug => Color.Blue,
+                LogLevel.Info => Color.Cyan,
+                LogLevel.Warning => Color.Yellow,
+                LogLevel.Error => Color.Red,
+                LogLevel.Fatal => Color.Red,
+                _ => Color.White
+            };
         }
     }
 }

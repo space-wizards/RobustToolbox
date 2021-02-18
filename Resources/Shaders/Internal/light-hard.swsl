@@ -1,0 +1,11 @@
+#include "/Shaders/Internal/light_shared.swsl"
+
+highp float createOcclusion(highp vec2 diff)
+{
+    highp float ourDist = length(diff);
+
+    highp vec2 occlDist = occludeDepth(diff, shadowMap, lightIndex);
+
+    return smoothstep(0.1, 1.0, ChebyshevUpperBound(occlDist, ourDist));
+}
+

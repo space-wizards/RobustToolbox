@@ -10,6 +10,7 @@ namespace Robust.Client.UserInterface
     ///     As part of my evil plan to convince Monster to work on SS14, I'm porting web technologies to Robust.
     ///     Here's CSS style sheets.
     /// </summary>
+    /// <seealso cref="StylesheetHelpers"/>
     public sealed class Stylesheet
     {
         public IReadOnlyList<StyleRule> Rules { get; }
@@ -53,6 +54,180 @@ namespace Robust.Client.UserInterface
     }
 
     /// <summary>
+    /// Helper methods to make construction of style sheets easier.
+    /// </summary>
+    public static class StylesheetHelpers
+    {
+        /// <summary>
+        ///     Creates a blank mutable element selector.
+        /// </summary>
+        /// <seealso cref="SelectorElement"/>
+        public static MutableSelectorElement Element()
+        {
+            return new();
+        }
+
+        /// <summary>
+        ///     Creates a mutable element selector with <typeparamref name="T"/> as control type.
+        /// </summary>
+        /// <typeparam name="T">The type of control that the selector binds to.</typeparam>
+        /// <seealso cref="SelectorElement"/>
+        public static MutableSelectorElement Element<T>() where T : Control
+        {
+            return new() {Type = typeof(T)};
+        }
+
+        /// <summary>
+        ///     Creates a new blank mutable child selector.
+        /// </summary>
+        /// <seealso cref="MutableSelectorChild"/>
+        public static MutableSelectorChild Child()
+        {
+            return new();
+        }
+    }
+
+    /// <summary>
+    ///     Mutable selectors are convenience wrappers to make constructing style selectors cleaner.
+    /// </summary>
+    /// <remarks>
+    ///     Mutable selectors can store style properties that will get used when converted to a style rule.
+    ///     These can be added with <see cref="Prop"/>
+    /// </remarks>
+    public abstract class MutableSelector
+    {
+        private readonly List<StyleProperty> _props = new();
+
+        public MutableSelector Prop(string key, object value)
+        {
+            _props.Add(new StyleProperty(key, value));
+            return this;
+        }
+
+        /// <summary>
+        ///     Converts a mutable selector into a style rule, using the properties added via <see cref="Prop"/>.
+        /// </summary>
+        public static implicit operator StyleRule(MutableSelector elem)
+        {
+            return new(elem.ToSelector(), elem._props);
+        }
+
+        public static implicit operator Selector(MutableSelector elem)
+        {
+            return elem.ToSelector();
+        }
+
+        protected abstract Selector ToSelector();
+    }
+
+    /// <summary>
+    ///     Mutable selector for <see cref="SelectorElement"/>.
+    /// </summary>
+    /// <inheritdoc/>
+    public sealed class MutableSelectorElement : MutableSelector
+    {
+        public Type? Type { get; set; }
+        public List<string>? StyleClasses { get; set; }
+        public string? StyleIdentifier { get; set; }
+        public List<string>? PseudoClasses { get; set; }
+
+        /// <summary>
+        ///     Adds a set of style classes to this selector.
+        /// </summary>
+        public MutableSelectorElement Class(params string[] classes)
+        {
+            StyleClasses ??= new List<string>();
+            StyleClasses.AddRange(classes);
+            return this;
+        }
+
+        /// <summary>
+        ///     Adds a single style class to this selector.
+        /// </summary>
+        public MutableSelectorElement Class(string @class)
+        {
+            StyleClasses ??= new List<string>();
+            StyleClasses.Add(@class);
+            return this;
+        }
+
+        /// <summary>
+        ///     Adds a set of pseudo classes to this selector.
+        /// </summary>
+        public MutableSelectorElement Pseudo(params string[] classes)
+        {
+            PseudoClasses ??= new List<string>();
+            PseudoClasses.AddRange(classes);
+            return this;
+        }
+
+        /// <summary>
+        ///     Adds a single pseudo class to this selector.
+        /// </summary>
+        public MutableSelectorElement Pseudo(string @class)
+        {
+            PseudoClasses ??= new List<string>();
+            PseudoClasses.Add(@class);
+            return this;
+        }
+
+        /// <summary>
+        ///     Sets the style identifier on this selector.
+        /// </summary>
+        public MutableSelectorElement Identifier(string identifier)
+        {
+            StyleIdentifier = identifier;
+            return this;
+        }
+
+        protected override Selector ToSelector()
+        {
+            return new SelectorElement(Type, StyleClasses, StyleIdentifier, PseudoClasses);
+        }
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <inheritdoc/>
+    /// <remarks>
+    ///     Both <see cref="Parent"/> and <see cref="Child"/> must be set before converting this to a proper selector,
+    ///     or else an <see cref="InvalidOperationException"/> will be thrown.
+    /// </remarks>
+    public sealed class MutableSelectorChild : MutableSelector
+    {
+        public Selector? ParentSelector { get; set; }
+        public Selector? ChildSelector { get; set; }
+
+        public MutableSelectorChild()
+        {
+        }
+
+        public MutableSelectorChild Parent(Selector parent)
+        {
+            ParentSelector = parent;
+            return this;
+        }
+
+        public MutableSelectorChild Child(Selector child)
+        {
+            ChildSelector = child;
+            return this;
+        }
+
+        protected override Selector ToSelector()
+        {
+            if (ParentSelector == null || ChildSelector == null)
+            {
+                throw new InvalidOperationException("Must initialize both parent and child.");
+            }
+
+            return new SelectorChild(ParentSelector, ChildSelector);
+        }
+    }
+
+
+    /// <summary>
     ///     A single rule in a style sheet, containing a bunch of properties and a selector.
     /// </summary>
     public sealed class StyleRule
@@ -85,7 +260,7 @@ namespace Robust.Client.UserInterface
 
         public static StyleSpecificity operator +(StyleSpecificity a, StyleSpecificity b)
         {
-            return new StyleSpecificity(
+            return new(
                 a.IdSelectors + b.IdSelectors,
                 a.ClassSelectors + b.ClassSelectors,
                 a.TypeSelectors + b.TypeSelectors);
@@ -108,7 +283,7 @@ namespace Robust.Client.UserInterface
             return TypeSelectors.CompareTo(other.TypeSelectors);
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
             if (ReferenceEquals(null, obj)) return 1;
             return obj is StyleSpecificity other
@@ -145,14 +320,14 @@ namespace Robust.Client.UserInterface
 
     public sealed class SelectorElement : Selector
     {
-        private readonly string[] _elementClasses;
-        private readonly string[] _pseudoClasses;
+        private readonly string[]? _elementClasses;
+        private readonly string[]? _pseudoClasses;
 
         public SelectorElement(
-            Type elementType,
-            IEnumerable<string> elementClasses,
-            string elementId,
-            IEnumerable<string> pseudoClass)
+            Type? elementType,
+            IEnumerable<string>? elementClasses,
+            string? elementId,
+            IEnumerable<string>? pseudoClass)
         {
             if (elementType != null)
             {
@@ -175,23 +350,23 @@ namespace Robust.Client.UserInterface
 
         public static SelectorElement Type(Type elementType)
         {
-            return new SelectorElement(elementType, null, null, null);
+            return new(elementType, null, null, null);
         }
 
         public static SelectorElement Class(params string[] classes)
         {
-            return new SelectorElement(null, classes, null, null);
+            return new(null, classes, null, null);
         }
 
         public static SelectorElement Id(string id)
         {
-            return new SelectorElement(null, null, id, null);
+            return new(null, null, id, null);
         }
 
-        public Type ElementType { get; }
-        public IReadOnlyList<string> ElementClasses => _elementClasses;
-        public string ElementId { get; }
-        public IReadOnlyList<string> PseudoClasses => _pseudoClasses;
+        public Type? ElementType { get; }
+        public IReadOnlyList<string>? ElementClasses => _elementClasses;
+        public string? ElementId { get; }
+        public IReadOnlyList<string>? PseudoClasses => _pseudoClasses;
 
         public override bool Matches(Control control)
         {
@@ -241,10 +416,11 @@ namespace Robust.Client.UserInterface
                 while (type != typeof(Control))
                 {
                     DebugTools.AssertNotNull(type);
-                    type = type.BaseType;
+                    type = type!.BaseType;
                     countTypes += 1;
                 }
             }
+
             return new StyleSpecificity(countId, countClasses, countTypes);
         }
     }

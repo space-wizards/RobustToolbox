@@ -1,6 +1,7 @@
 ﻿using System;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
+
+#nullable disable
 
 namespace Robust.Shared.Network.Messages
 {

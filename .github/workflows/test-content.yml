@@ -1,0 +1,41 @@
+name: Test content master against engine
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out content
+      uses: actions/checkout@v2
+      with:
+        repository: space-wizards/space-station-14
+        submodules: recursive
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+    - name: Disable submodule autoupdate
+      run: touch BuildChecker/DISABLE_SUBMODULE_AUTOUPDATE
+
+    - name: Check out engine version
+      run: |
+        cd RobustToolbox
+        git fetch origin ${{ github.sha }}
+        git checkout FETCH_HEAD
+        git submodule update --init --recursive
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Content.Tests
+      run: dotnet test --no-build Content.Tests/Content.Tests.csproj -v n
+    - name: Content.IntegrationTests
+      run: dotnet test --no-build Content.IntegrationTests/Content.IntegrationTests.csproj -v n

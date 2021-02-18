@@ -9,9 +9,9 @@ namespace Robust.Shared.Timing
     [Serializable, NetSerializable]
     public readonly struct GameTick : IEquatable<GameTick>, IComparable<GameTick>
     {
-        public static readonly GameTick Zero = new GameTick(0);
-        public static readonly GameTick First = new GameTick(1);
-        public static readonly GameTick MaxValue = new GameTick(uint.MaxValue);
+        public static readonly GameTick Zero = new(0);
+        public static readonly GameTick First = new(1);
+        public static readonly GameTick MaxValue = new(uint.MaxValue);
 
         public readonly uint Value;
 
@@ -31,7 +31,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GameTick other && Equals(other);
@@ -72,12 +72,12 @@ namespace Robust.Shared.Timing
 
         public static GameTick operator +(GameTick a, uint b)
         {
-            return new GameTick(a.Value + b);
+            return new(a.Value + b);
         }
 
         public static GameTick operator -(GameTick a, uint b)
         {
-            return new GameTick(a.Value - b);
+            return new(a.Value - b);
         }
 
         /// <inheritdoc />

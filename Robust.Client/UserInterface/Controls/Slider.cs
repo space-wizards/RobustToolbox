@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
@@ -19,12 +19,14 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _grabbed;
 
-        private StyleBox _backgroundStyleBoxOverride;
-        private StyleBox _foregroundStyleBoxOverride;
-        private StyleBox _fillStyleBoxOverride;
-        private StyleBox _grabberStyleBoxOverride;
+        private StyleBox? _backgroundStyleBoxOverride;
+        private StyleBox? _foregroundStyleBoxOverride;
+        private StyleBox? _fillStyleBoxOverride;
+        private StyleBox? _grabberStyleBoxOverride;
 
-        public StyleBox ForegroundStyleBoxOverride
+        public bool Grabbed => _grabbed;
+
+        public StyleBox? ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set
@@ -34,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox BackgroundStyleBoxOverride
+        public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -44,7 +46,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox FillStyleBoxOverride
+        public StyleBox? FillStyleBoxOverride
         {
             get => _fillStyleBoxOverride;
             set
@@ -54,7 +56,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox GrabberStyleBoxOverride
+        public StyleBox? GrabberStyleBoxOverride
         {
             get => _grabberStyleBoxOverride;
             set
@@ -97,6 +99,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public override void SetValueWithoutEvent(float newValue)
+        {
+            base.SetValueWithoutEvent(newValue);
+            UpdateValue();
+        }
+
         private void UpdateValue()
         {
             var ratio = GetAsRatio();
@@ -131,10 +139,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Function == EngineKeyFunctions.UIClick)
-            {
-                _grabbed = false;
-            }
+            if (args.Function != EngineKeyFunctions.UIClick) return;
+
+            _grabbed = false;
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
@@ -163,9 +170,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateStyleBoxes()
         {
-            StyleBox GetStyleBox(string name)
+            StyleBox? GetStyleBox(string name)
             {
-                if (TryGetStyleProperty(name, out StyleBox box))
+                if (TryGetStyleProperty<StyleBox>(name, out var box))
                 {
                     return box;
                 }

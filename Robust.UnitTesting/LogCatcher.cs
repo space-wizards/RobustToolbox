@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Log;
+using Serilog.Events;
 
 namespace Robust.UnitTesting
 {
@@ -12,8 +12,8 @@ namespace Robust.UnitTesting
         /// <summary>
         ///     Read only list of every log message that was caught since the last flush.
         /// </summary>
-        public IReadOnlyList<LogMessage> CaughtLogs => _logs;
-        private readonly List<LogMessage> _logs = new List<LogMessage>();
+        public IReadOnlyList<LogEvent> CaughtLogs => _logs;
+        private readonly List<LogEvent> _logs = new();
 
         /// <summary>
         ///     Clears all currently caught logs
@@ -26,7 +26,7 @@ namespace Robust.UnitTesting
             }
         }
 
-        void ILogHandler.Log(in LogMessage message)
+        void ILogHandler.Log(string sawmillName, LogEvent message)
         {
             lock (_logs)
             {

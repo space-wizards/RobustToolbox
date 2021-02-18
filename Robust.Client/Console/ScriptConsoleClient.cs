@@ -10,11 +10,10 @@ using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
 
@@ -28,7 +27,7 @@ namespace Robust.Client.Console
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 #pragma warning restore 649
 
-        private readonly StringBuilder _inputBuffer = new StringBuilder();
+        private readonly StringBuilder _inputBuffer = new();
         private int _linesEntered;
 
         // Necessary for syntax highlighting.
@@ -42,7 +41,7 @@ namespace Robust.Client.Console
             Title = Loc.GetString("Robust C# Interactive (CLIENT)");
             ScriptInstanceShared.InitDummy();
 
-            _globals = new ScriptGlobals(this);
+            _globals = new ScriptGlobalsImpl(this);
 
             IoCManager.InjectDependencies(this);
 
@@ -97,7 +96,7 @@ namespace Robust.Client.Console
             else
             {
                 var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
-                newScript = CSharpScript.Create(code, options, typeof(IScriptGlobals));
+                newScript = CSharpScript.Create(code, options, typeof(ScriptGlobals));
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
@@ -119,7 +118,7 @@ namespace Robust.Client.Console
                 }
                 else
                 {
-                    _state = await newScript.RunAsync(_globals);
+                    _state = await newScript.RunAsync(_globals, _ => true);
                 }
             }
             catch (CompilationErrorException e)
@@ -156,37 +155,30 @@ namespace Robust.Client.Console
             OutputPanel.AddText(">");
         }
 
-        private sealed class ScriptGlobals : IScriptGlobals
+        private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
             private readonly ScriptConsoleClient _owner;
 
-            [field: Dependency] public IEntityManager ent { get; } = default!;
-            [field: Dependency] public IComponentManager comp { get; } = default!;
-            [field: Dependency] public IViewVariablesManager vvm { get; } = default!;
+            [field: Dependency] public override IViewVariablesManager vvm { get; } = default!;
 
-            public ScriptGlobals(ScriptConsoleClient owner)
+            public ScriptGlobalsImpl(ScriptConsoleClient owner)
             {
                 IoCManager.InjectDependencies(this);
 
                 _owner = owner;
             }
 
-            public void vv(object a)
+            public override void vv(object a)
             {
                 vvm.OpenVV(a);
             }
 
-            public T res<T>()
-            {
-                return IoCManager.Resolve<T>();
-            }
-
-            public void write(object toString)
+            public override void write(object toString)
             {
                 _owner.OutputPanel.AddText(toString?.ToString() ?? "");
             }
 
-            public void show(object obj)
+            public override void show(object obj)
             {
                 write(CSharpObjectFormatter.Instance.FormatObject(obj));
             }
@@ -195,16 +187,11 @@ namespace Robust.Client.Console
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PublicAPI]
-    public interface IScriptGlobals
+    public abstract class ScriptGlobals : ScriptGlobalsShared
     {
-        public IEntityManager ent { get; }
-        public IComponentManager comp { get; }
-        public IViewVariablesManager vvm { get; }
+        public abstract IViewVariablesManager vvm { get; }
 
-        public void vv(object a);
-        public T res<T>();
-        public void write(object toString);
-        public void show(object obj);
+        public abstract void vv(object a);
     }
 }
 #endif

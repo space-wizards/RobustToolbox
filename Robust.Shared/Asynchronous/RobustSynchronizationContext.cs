@@ -16,9 +16,10 @@ namespace Robust.Shared.Asynchronous
             _runtimeLog = runtimeLog;
         }
 
-        private readonly BlockingCollection<(SendOrPostCallback d, object state)> _pending = new BlockingCollection<(SendOrPostCallback, object)>();
+        private readonly ConcurrentQueue<(SendOrPostCallback d, object? state)> _pending
+            = new();
 
-        public override void Send(SendOrPostCallback d, object state)
+        public override void Send(SendOrPostCallback d, object? state)
         {
             if (Current != this)
             {
@@ -31,14 +32,14 @@ namespace Robust.Shared.Asynchronous
             d(state);
         }
 
-        public override void Post(SendOrPostCallback d, object state)
+        public override void Post(SendOrPostCallback d, object? state)
         {
-            _pending.Add((d, state));
+            _pending.Enqueue((d, state));
         }
 
         public void ProcessPendingTasks()
         {
-            while (_pending.TryTake(out var task))
+            while (_pending.TryDequeue(out var task))
             {
 #if EXCEPTION_TOLERANCE
                 try

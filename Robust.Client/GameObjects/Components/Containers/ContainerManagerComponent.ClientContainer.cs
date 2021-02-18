@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.GameObjects;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.GameObjects.Components.Containers
+namespace Robust.Client.GameObjects
 {
     public sealed partial class ContainerManagerComponent
     {
@@ -24,8 +23,11 @@ namespace Robust.Client.GameObjects.Components.Containers
             [ViewVariables] public string ID { get; }
             [ViewVariables] public IEntity Owner => Manager.Owner;
             [ViewVariables] public bool Deleted { get; private set; }
-            [ViewVariables] public IReadOnlyCollection<IEntity> ContainedEntities => Entities;
+            [ViewVariables] public IReadOnlyList<IEntity> ContainedEntities => Entities;
+            [ViewVariables]
             public bool ShowContents { get; set; }
+            [ViewVariables]
+            public bool OccludesLight { get; set; }
 
             public bool CanInsert(IEntity toinsert)
             {
@@ -60,17 +62,25 @@ namespace Robust.Client.GameObjects.Components.Containers
             public void DoInsert(IEntity entity)
             {
                 Entities.Add(entity);
+
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(entity));
             }
 
             public void DoRemove(IEntity entity)
             {
                 Entities.Remove(entity);
+
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(entity));
             }
 
             public void Shutdown()
             {
                 Deleted = true;
             }
+        }
+
+        public override void InternalContainerShutdown(IContainer container)
+        {
         }
     }
 }

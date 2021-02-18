@@ -191,7 +191,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minWidth = Math.Max(minWidth, childWidth);
+                    minWidth = MathF.Max(minWidth, childWidth);
                 }
                 else
                 {
@@ -203,14 +203,14 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minHeight = Math.Max(minHeight, childHeight);
+                    minHeight = MathF.Max(minHeight, childHeight);
                 }
             }
 
             return new Vector2(minWidth, minHeight);
         }
 
-        public enum AlignMode
+        public enum AlignMode : byte
         {
             /// <summary>
             ///     Controls are laid out from the begin of the box container.

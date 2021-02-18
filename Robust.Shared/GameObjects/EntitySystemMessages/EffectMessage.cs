@@ -1,9 +1,9 @@
-﻿using Robust.Shared.Map;
+using System;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using System;
 
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
     public class EffectSystemMessage : EntitySystemMessage
@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         ///     Specifies the name of the RSI state to use if <see cref="EffectSprite"/> is an RSI.
         /// </summary>
-        public string RsiState { get; set; }
+        public string? RsiState { get; set; }
 
         /// <summary>
         ///     If the sprite is an RSI state, controls whether the animation loops or ends on the last frame.
@@ -25,24 +25,34 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         public bool AnimationLoops { get; set; }
 
         /// <summary>
+        /// Effect position attached to an entity
+        /// </summary>
+        public EntityUid? AttachedEntityUid { get; set; }
+        
+        /// <summary>
+        /// Effect offset relative to the parent
+        /// </summary>
+        public Vector2 AttachedOffset { get; set; } = Vector2.Zero;
+        
+        /// <summary>
         /// Effect position relative to the emit position
         /// </summary>
-        public GridCoordinates Coordinates { get; set; }
+        public EntityCoordinates Coordinates { get; set; }
 
         /// <summary>
         /// Where the emitter was when the effect was first emitted
         /// </summary>
-        public GridCoordinates EmitterCoordinates { get; set; }
+        public EntityCoordinates EmitterCoordinates { get; set; }
 
         /// <summary>
         /// Effect's x/y velocity
         /// </summary>
-        public Vector2 Velocity { get; set; } = new Vector2(0, 0);
+        public Vector2 Velocity { get; set; } = new(0, 0);
 
         /// <summary>
         /// Effect's x/y acceleration
         /// </summary>
-        public Vector2 Acceleration { get; set; } = new Vector2(0, 0);
+        public Vector2 Acceleration { get; set; } = new(0, 0);
 
         /// <summary>
         /// Effect's radial velocity - relative to EmitterPosition
@@ -75,6 +85,11 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         public TimeSpan DeathTime { get; set; } = TimeSpan.FromSeconds(1);
 
         /// <summary>
+        /// How long the particle lasts.
+        /// </summary>
+        public TimeSpan LifeTime => DeathTime - Born;
+
+        /// <summary>
         /// Effect's spin about its center in radians
         /// </summary>
         public float Rotation { get; set; } = 0f;
@@ -87,7 +102,7 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect's current size
         /// </summary>
-        public Vector2 Size { get; set; } = new Vector2(1f, 1f);
+        public Vector2 Size { get; set; } = new(1f, 1f);
 
         /// <summary>
         /// Rate of change of effect's size change
@@ -97,12 +112,12 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect's current color
         /// </summary>
-        public Vector4 Color { get; set; } = new Vector4(1, 0, 0, 0);
+        public Vector4 Color { get; set; } = new(1, 0, 0, 0);
 
         /// <summary>
         /// Rate of change of effect's color
         /// </summary>
-        public Vector4 ColorDelta { get; set; } = new Vector4(-1, 0, 0, 0);
+        public Vector4 ColorDelta { get; set; } = new(-1, 0, 0, 0);
 
         /// <summary>
         ///     True if the effect is affected by lighting.

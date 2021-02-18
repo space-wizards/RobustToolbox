@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     internal sealed class AppearanceSystem : EntitySystem
     {
-        private readonly Queue<AppearanceComponent> _updatesQueued = new Queue<AppearanceComponent>();
+        private readonly Queue<AppearanceComponent> _updatesQueued = new();
 
         public override void FrameUpdate(float frameTime)
         {
@@ -18,6 +18,9 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private static void UpdateComponent(AppearanceComponent component)
         {
+            if (component.Deleted)
+                return;
+
             foreach (var visualizer in component.Visualizers)
             {
                 switch (visualizer)

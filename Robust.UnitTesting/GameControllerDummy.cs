@@ -1,15 +1,16 @@
-﻿using Robust.Client;
+using System;
+using Robust.Client;
 using Robust.Client.Input;
-using Robust.Client.Interfaces;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting
 {
     internal sealed class GameControllerDummy : IGameControllerInternal
     {
-        public InitialLaunchState LaunchState { get; } = new InitialLaunchState(false, null, null, null);
+        public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
 
-        public void Shutdown(string reason = null)
+        public void Shutdown(string? reason = null)
         {
         }
 
@@ -19,7 +20,7 @@ namespace Robust.UnitTesting
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
-        public bool Startup()
+        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
         {
             return true;
         }
@@ -28,7 +29,7 @@ namespace Robust.UnitTesting
         {
         }
 
-        public string ContentRootDir { get; set; }
+        public string? ContentRootDir { get; set; }
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
@@ -52,7 +53,7 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
     }
 }

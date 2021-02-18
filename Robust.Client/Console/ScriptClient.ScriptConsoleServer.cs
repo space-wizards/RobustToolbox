@@ -14,7 +14,7 @@ namespace Robust.Client.Console
             private readonly int _session;
 
             private int _linesEntered;
-            private string _lastEnteredText;
+            private string? _lastEnteredText;
 
             public ScriptConsoleServer(ScriptClient client, int session)
             {

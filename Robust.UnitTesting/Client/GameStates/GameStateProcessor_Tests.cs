@@ -2,7 +2,6 @@
 using NUnit.Framework;
 using Robust.Client.GameStates;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.GameStates
@@ -49,7 +48,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState.Extrapolated, Is.False);
+            Assert.That(curState!.Extrapolated, Is.False);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(1));
             Assert.That(nextState, Is.Null);
         }
@@ -148,9 +147,87 @@ namespace Robust.UnitTesting.Client.GameStates
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState.Extrapolated, Is.True);
+            Assert.That(curState!.Extrapolated, Is.True);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(5));
             Assert.That(nextState, Is.Null);
+        }
+
+        /// <summary>
+        ///     There is a hole in the state buffer, we have a future state but their FromSequence is too high!
+        ///     In this case we stop and wait for the server to get us the missing link.
+        /// </summary>
+        [Test]
+        public void Hole()
+        {
+            var (timing, processor) = SetupProcessorFactory();
+
+            processor.AddNewState(GameStateFactory(4, 5));
+            processor.LastProcessedRealState = new GameTick(3);
+
+            timing.CurTick = new GameTick(4);
+
+            var result = processor.ProcessTickStates(timing.CurTick, out _, out _);
+
+            Assert.That(result, Is.False);
+        }
+
+        /// <summary>
+        ///     Test that the game state manager goes into extrapolation mode *temporarily*,
+        ///     if we are missing the curState, but we have a future state that we can apply to skip it.
+        /// </summary>
+        [Test]
+        public void ExtrapolateAdvanceWithFutureState()
+        {
+            var (timing, processor) = SetupProcessorFactory();
+
+            processor.Interpolation = true;
+
+            timing.CurTick = new GameTick(4);
+
+            processor.LastProcessedRealState = new GameTick(3);
+            processor.AddNewState(GameStateFactory(3, 5));
+
+            // We're missing the state for this tick so go into extrap.
+            var result = processor.ProcessTickStates(timing.CurTick, out var curState, out _);
+
+            Assert.That(result, Is.True);
+            Assert.That(curState, Is.Not.Null);
+            Assert.That(curState!.Extrapolated, Is.True);
+
+            timing.CurTick = new GameTick(5);
+
+            // But we DO have the state for the tick after so apply away!
+            result = processor.ProcessTickStates(timing.CurTick, out curState, out _);
+
+            Assert.That(result, Is.True);
+            Assert.That(curState, Is.Not.Null);
+            Assert.That(curState!.Extrapolated, Is.False);
+        }
+
+        /// <summary>
+        ///     The client started extrapolating and now received the state it needs to "continue as normal".
+        ///     In this scenario the CurTick passed to the game state processor
+        ///     is higher than the real next tick to apply, IF it went into extrapolation.
+        ///     The processor needs to go back to the next REAL tick.
+        /// </summary>
+        [Test, Ignore("Extrapolation is currently non functional anyways")]
+        public void UndoExtrapolation()
+        {
+            var (timing, processor) = SetupProcessorFactory();
+
+            processor.Extrapolation = true;
+
+            processor.AddNewState(GameStateFactory(4, 5));
+            processor.AddNewState(GameStateFactory(3, 4));
+            processor.LastProcessedRealState = new GameTick(3);
+
+            timing.CurTick = new GameTick(5);
+
+            var result = processor.ProcessTickStates(timing.CurTick, out var curState, out _);
+
+            Assert.That(result, Is.True);
+            Assert.That(curState, Is.Not.Null);
+            Assert.That(curState!.ToSequence, Is.EqualTo(new GameTick(4)));
         }
 
         /// <summary>
@@ -158,7 +235,7 @@ namespace Robust.UnitTesting.Client.GameStates
         /// </summary>
         private static GameState GameStateFactory(uint from, uint to)
         {
-            return new GameState(new GameTick(@from), new GameTick(to), 0, null, null, null, null);
+            return new(new GameTick(@from), new GameTick(to), 0, null, null, null, null);
         }
 
         /// <summary>
@@ -181,7 +258,7 @@ namespace Robust.UnitTesting.Client.GameStates
             // calculate states for first tick
             timing.CurTick = new GameTick(1);
             processor.ProcessTickStates(timing.CurTick, out _, out _);
-            
+
             return (timing, processor);
         }
     }

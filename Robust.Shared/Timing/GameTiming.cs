@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing
@@ -15,8 +16,10 @@ namespace Robust.Shared.Timing
         private const int NumFrames = 60;
 
         private readonly IStopwatch _realTimer = new Stopwatch();
-        private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
+        private readonly List<long> _realFrameTimes = new(NumFrames);
         private TimeSpan _lastRealTime;
+
+        [Dependency] private readonly INetManager _netManager = default!;
 
         /// <summary>
         ///     Default constructor.
@@ -26,7 +29,7 @@ namespace Robust.Shared.Timing
             // does nothing if timer is already running
             _realTimer.Start();
 
-            Paused = false;
+            Paused = true;
             TickRate = NumFrames;
         }
 
@@ -40,16 +43,64 @@ namespace Robust.Shared.Timing
         /// </summary>
         public bool Paused { get; set; }
 
+        // Cached values for making CurTime not jump whenever the tickrate
+        // changes. This holds the last calculated value of CurTime, and the
+        // tick that the value was calculated for. The next time CurTime is
+        // calculated, it should only try to monotonically increase both of
+        // these values
+        //
+        // Notice that it starts from GameTick 1  - the "first tick" has no impact
+        // on timing
+        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);
+
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.
         /// </summary>
-        public TimeSpan CurTime => CalcCurTime();
+        public TimeSpan CurTime
+        {
+            get
+            {
+                // last tickrate change epoch
+                var (time, lastTimeTick) = _cachedCurTimeInfo;
+
+                // add our current time to it.
+                // the server never rewinds time, and the client never rewinds time outside of prediction.
+                // the only way this assert should fail is if the TickRate is changed inside prediction, which should never happen.
+                //DebugTools.Assert(CurTick >= lastTimeTick);
+                //TODO: turns out prediction leaves CurTick at the last predicted tick, and not at the last processed server tick
+                //so time gets rewound when processing events like TickRate.
+                time += TickPeriod * (CurTick.Value - lastTimeTick.Value);
+
+                if (!InSimulation) // rendering can draw frames between ticks
+                {
+                    DebugTools.Assert(0 <= (time + TickRemainder).TotalSeconds);
+                    return time + TickRemainder;
+                }
+
+                DebugTools.Assert(0 <= time.TotalSeconds);
+                return time;
+            }
+        }
 
         /// <summary>
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
+
+        public TimeSpan ServerTime
+        {
+            get
+            {
+                var offset = GetServerOffset();
+                if (offset == null)
+                {
+                    return TimeSpan.Zero;
+                }
+
+                return RealTime + offset.Value;
+            }
+        }
 
         /// <summary>
         ///     The simulated time it took to render the last frame.
@@ -79,12 +130,30 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
+        public GameTick CurTick { get; set; } = new(1); // Time always starts on the first tick
+
+        private byte _tickRate;
+        private TimeSpan _tickRemainder;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public byte TickRate { get; set; }
+        public byte TickRate
+        {
+            get => _tickRate;
+            set
+            {
+                // Check this, because TickRate is a divisor in the cache calculation
+                // The first time TickRate is set, no time will have passed anyways
+                if (_tickRate != 0)
+                    // Cache BEFORE updating the tick rate, because ticks up until
+                    // now have been on a different rate, so they count for a
+                    // different amount of time
+                    CacheCurTime();
+
+                _tickRate = value;
+            }
+        }
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
@@ -94,7 +163,16 @@ namespace Robust.Shared.Timing
         /// <summary>
         /// The remaining time left over after the last tick was ran.
         /// </summary>
-        public TimeSpan TickRemainder { get; set; }
+        public TimeSpan TickRemainder
+        {
+            get => _tickRemainder;
+            set
+            {
+                // Generally the upper limit is Tickrate*2, but changing the tickrate mid-round can make this really large until timing can stabilize
+                DebugTools.Assert(TimeSpan.Zero <= TickRemainder);
+                _tickRemainder = value;
+            }
+        }
 
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1, from swapbuffer to swapbuffer. Useful to set a
@@ -136,26 +214,70 @@ namespace Robust.Shared.Timing
             }
         }
 
-        private TimeSpan CalcCurTime()
+        // Calculate and store the current time value, based on the current tick rate.
+        // Call this whenever you change the TickRate.
+        private void CacheCurTime()
         {
-            // calculate simulation CurTime
-            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick.Value);
+            var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
 
-            if (!InSimulation) // rendering can draw frames between ticks
-                return time + TickRemainder;
-            return time;
+            TimeSpan newTime;
+
+            if (CurTick.Value >= lastTimeTick.Value)
+              newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
+            else
+              newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
+
+            DebugTools.Assert(TimeSpan.Zero <= newTime);
+            _cachedCurTimeInfo = (newTime, CurTick);
         }
 
         /// <summary>
-        ///     Resets the real uptime of the server.
+        /// Resets the simulation time.
         /// </summary>
-        public void ResetRealTime()
+        public void ResetSimTime()
         {
-            _realTimer.Restart();
-            _lastRealTime = TimeSpan.Zero;
+            _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);;
+            CurTick = GameTick.First;
+            TickRemainder = TimeSpan.Zero;
+            Paused = true;
+        }
+
+        public TimeSpan RealLocalToServer(TimeSpan local)
+        {
+            var offset = GetServerOffset();
+            if (offset == null)
+                return TimeSpan.Zero;
+
+            return local + offset.Value;
+        }
+
+        public TimeSpan RealServerToLocal(TimeSpan server)
+        {
+            var offset = GetServerOffset();
+            if (offset == null)
+                return TimeSpan.Zero;
+
+            return server - offset.Value;
+        }
+
+        private TimeSpan? GetServerOffset()
+        {
+            if (_netManager.IsServer)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var clientNetManager = (IClientNetManager) _netManager;
+            return clientNetManager.ServerChannel?.RemoteTimeOffset;
         }
 
         public bool IsFirstTimePredicted { get; private set; } = true;
+
+        /// <inheritdoc />
+        public bool InPrediction => CurTick > LastRealTick;
+
+        /// <inheritdoc />
+        public GameTick LastRealTick { get; set; }
 
         public void StartPastPrediction()
         {

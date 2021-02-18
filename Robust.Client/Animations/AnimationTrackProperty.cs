@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
@@ -10,7 +10,7 @@ namespace Robust.Client.Animations
     /// </summary>
     public abstract class AnimationTrackProperty : AnimationTrack
     {
-        public readonly List<KeyFrame> KeyFrames = new List<KeyFrame>();
+        public readonly List<KeyFrame> KeyFrames = new();
 
         /// <summary>
         ///     How to interpolate values when between two keyframes.
@@ -86,7 +86,7 @@ namespace Robust.Client.Animations
 
         protected abstract void ApplyProperty(object context, object value);
 
-        private static object InterpolateLinear(object a, object b, float t)
+        protected static object InterpolateLinear(object a, object b, float t)
         {
             switch (a)
             {
@@ -97,22 +97,22 @@ namespace Robust.Client.Animations
                 case Vector4 vector4:
                     return Vector4.Lerp(vector4, (Vector4) b, t);
                 case float f:
-                    return FloatMath.Lerp(f, (float) b, t);
+                    return MathHelper.Lerp(f, (float) b, t);
                 case double d:
-                    return FloatMath.Lerp(d, (double) b, t);
+                    return MathHelper.Lerp(d, (double) b, t);
                 case Angle angle:
-                    return (Angle) FloatMath.Lerp(angle, (Angle) b, t);
+                    return (Angle) MathHelper.Lerp(angle, (Angle) b, t);
                 case Color color:
                     return Color.InterpolateBetween(color, (Color) b, t);
                 case int i:
-                    return (int) FloatMath.Lerp((double) i, (int) b, t);
+                    return (int) MathHelper.Lerp((double) i, (int) b, t);
                 default:
                     // Fall back to "previous" interpolation, treating this as a discrete value.
                     return a;
             }
         }
 
-        private static object InterpolateCubic(object preA, object a, object b, object postB, float t)
+        protected static object InterpolateCubic(object preA, object a, object b, object postB, float t)
         {
             switch (a)
             {
@@ -123,11 +123,11 @@ namespace Robust.Client.Animations
                 case Vector4 vector4:
                     return Vector4.InterpolateCubic((Vector4) preA, vector4, (Vector4) b, (Vector4) postB, t);
                 case float f:
-                    return FloatMath.InterpolateCubic((float) preA, f, (float) b, (float) postB, t);
+                    return MathHelper.InterpolateCubic((float) preA, f, (float) b, (float) postB, t);
                 case double d:
-                    return FloatMath.InterpolateCubic((double) preA, d, (double) b, (double) postB, t);
+                    return MathHelper.InterpolateCubic((double) preA, d, (double) b, (double) postB, t);
                 case int i:
-                    return (int) FloatMath.InterpolateCubic((int) preA, (double) i, (int) b, (int) postB, t);
+                    return (int) MathHelper.InterpolateCubic((int) preA, (double) i, (int) b, (int) postB, t);
                 default:
                     // Fall back to "previous" interpolation, treating this as a discrete value.
                     return a;

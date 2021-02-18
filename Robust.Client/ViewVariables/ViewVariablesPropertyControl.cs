@@ -1,13 +1,11 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -15,28 +13,23 @@ namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesPropertyControl : PanelContainer
     {
-        public VBoxContainer VBox { get; private set; }
-        public HBoxContainer TopContainer { get; private set; }
-        public HBoxContainer BottomContainer { get; private set; }
-        public Label NameLabel { get; private set; }
+        public VBoxContainer VBox { get; }
+        public HBoxContainer TopContainer { get; }
+        public HBoxContainer BottomContainer { get; }
+        public Label NameLabel { get; }
 
-        private Label _bottomLabel;
+        private readonly Label _bottomLabel;
 
         private readonly IViewVariablesManagerInternal _viewVariablesManager;
-        private readonly IResourceCache _resourceCache;
+        private readonly IRobustSerializer _robustSerializer;
 
-        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IResourceCache resourceCache)
+        public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IRobustSerializer robustSerializer)
         {
             MouseFilter = MouseFilterMode.Pass;
 
             _viewVariablesManager = viewVars;
-            _resourceCache = resourceCache;
+            _robustSerializer = robustSerializer;
 
-            PerformLayout();
-        }
-
-        private void PerformLayout()
-        {
             MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
             CustomMinimumSize = new Vector2(0, 25);
@@ -57,7 +50,7 @@ namespace Robust.Client.ViewVariables
 
             _bottomLabel = new Label
             {
-            //    FontOverride = smallFont,
+                //    FontOverride = smallFont,
                 FontColorOverride = Color.DarkGray
             };
             BottomContainer.AddChild(_bottomLabel);
@@ -66,26 +59,26 @@ namespace Robust.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
+        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
         {
             NameLabel.Text = member.Name;
             var type = Type.GetType(member.Type);
 
             _bottomLabel.Text = $"Type: {member.TypePretty}";
-            ViewVariablesPropertyEditor editor;
-            if (type == null)
+            VVPropEditor editor;
+            if (type == null || !_robustSerializer.CanSerialize(type))
             {
                 // Type is server-side only.
                 // Info whether it's reference or value type can be figured out from the sent value.
-                if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
+                if (type?.IsValueType == true || member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
                 {
                     // Value type, just display it stringified read-only.
-                    editor = new ViewVariablesPropertyEditorDummy();
+                    editor = new VVPropEditorDummy();
                 }
                 else
                 {
                     // Has to be a reference type at this point.
-                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null);
+                    DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null || type?.IsClass == true || type?.IsInterface == true);
                     editor = _viewVariablesManager.PropertyFor(typeof(object));
                 }
             }

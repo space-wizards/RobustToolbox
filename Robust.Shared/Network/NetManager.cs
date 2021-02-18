@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,11 +10,12 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Prometheus;
 using Robust.Shared.Configuration;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -35,50 +37,114 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
-        private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
+        internal const int AesKeyLength = 32;
+
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+
+        private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_sent_packets",
+            "Number of packets sent since server startup.");
+
+        private static readonly Counter RecvPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_recv_packets",
+            "Number of packets received since server startup.");
+
+        private static readonly Counter SentMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_messages",
+            "Number of messages sent since server startup.");
+
+        private static readonly Counter RecvMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_messages",
+            "Number of messages received since server startup.");
+
+        private static readonly Counter SentBytesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_bytes",
+            "Number of bytes sent since server startup.");
+
+        private static readonly Counter RecvBytesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_bytes",
+            "Number of bytes received since server startup.");
+
+        private static readonly Counter MessagesResentDelayMetrics = Metrics.CreateCounter(
+            "robust_net_resent_delay",
+            "Number of messages that had to be re-sent due to delay.");
+
+        private static readonly Counter MessagesResentHoleMetrics = Metrics.CreateCounter(
+            "robust_net_resent_hole",
+            "Number of messages that had to be re-sent due to holes.");
+
+        private static readonly Counter MessagesDroppedMetrics = Metrics.CreateCounter(
+            "robust_net_dropped",
+            "Number of incoming messages that have been dropped.");
+
+        // TODO: Disabled for now since calculating these from Lidgren is way too expensive.
+        // Need to go through and have Lidgren properly keep track of counters for these.
+        /*
+        private static readonly Gauge MessagesStoredMetrics = Metrics.CreateGauge(
+            "robust_net_stored",
+            "Number of stored messages for reliable resending (if necessary).");
+
+        private static readonly Gauge MessagesUnsentMetrics = Metrics.CreateGauge(
+            "robust_net_unsent",
+            "Number of queued (unsent) messages that have yet to be sent.");
+        */
+
+        private readonly Dictionary<Type, ProcessMessage> _callbacks = new();
 
         /// <summary>
         ///     Holds the synced lookup table of NetConnection -> NetChannel
         /// </summary>
-        private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
+        private readonly Dictionary<NetConnection, NetChannel> _channels = new();
 
-        private readonly Dictionary<NetConnection, NetSessionId> _assignedSessions =
-            new Dictionary<NetConnection, NetSessionId>();
+        private readonly Dictionary<string, NetConnection> _assignedUsernames = new();
+
+        private readonly Dictionary<NetUserId, NetConnection> _assignedUserIds =
+            new();
 
         // Used for processing incoming net messages.
-        private readonly (Func<INetChannel, NetMessage>, Type)[] _netMsgFunctions = new (Func<INetChannel, NetMessage>, Type)[256];
+        private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
         // Used for processing outgoing net messages.
-        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions = new Dictionary<Type, Func<NetMessage>>();
+        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
+            new();
 
-        private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
+        private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _config;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
+        [Dependency] private readonly IAuthManager _authManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
         /// </summary>
-        private readonly Dictionary<string, Type> _messages = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _messages = new();
 
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
         /// </summary>
-        private readonly StringTable _strings = new StringTable();
+        private readonly StringTable _strings;
 
         /// <summary>
         ///     The list of network peers we are listening on.
         /// </summary>
-        private readonly List<NetPeer> _netPeers = new List<NetPeer>();
+        private readonly List<NetPeerData> _netPeers = new();
 
         // Client connect happens during status changed and such callbacks, so we need to defer deletion of these.
-        private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
+        private readonly List<NetPeer> _toCleanNetPeers = new();
+
+        private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
+            = new();
+
+        private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
         /// <inheritdoc />
-        public int Port => _config.GetCVar<int>("net.port");
+        public int Port => _config.GetCVar(CVars.NetPort);
+
+        public bool IsAuthEnabled => _config.GetCVar<bool>("auth.enabled");
 
         public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
+
+        private NetEncryption? _clientEncryption;
 
         /// <inheritdoc />
         public bool IsServer { get; private set; }
@@ -93,7 +159,7 @@ namespace Robust.Shared.Network
             {
                 foreach (var p in _netPeers)
                 {
-                    if (p.ConnectionsCount > 0)
+                    if (p.Peer.ConnectionsCount > 0)
                     {
                         return true;
                     }
@@ -116,7 +182,7 @@ namespace Robust.Shared.Network
 
                 foreach (var peer in _netPeers)
                 {
-                    var netPeerStatistics = peer.Statistics;
+                    var netPeerStatistics = peer.Peer.Statistics;
                     sentPackets += netPeerStatistics.SentPackets;
                     sentBytes += netPeerStatistics.SentBytes;
                     recvPackets += netPeerStatistics.ReceivedPackets;
@@ -136,7 +202,7 @@ namespace Robust.Shared.Network
         public IReadOnlyDictionary<Type, ProcessMessage> CallbackAudit => _callbacks;
 
         /// <inheritdoc />
-        public INetChannel ServerChannel
+        public INetChannel? ServerChannel
         {
             get
             {
@@ -148,17 +214,16 @@ namespace Robust.Shared.Network
                 }
 
                 var peer = _netPeers[0];
-                if (peer.ConnectionsCount == 0)
-                {
-                    return null;
-                }
-
-                TryGetChannel(peer.Connections[0], out var channel);
-                return channel;
+                return peer.Channels.Count == 0 ? null : peer.Channels[0];
             }
         }
 
         private bool _initialized;
+
+        public NetManager()
+        {
+            _strings = new StringTable(this);
+        }
 
         public void ResetBandwidthMetrics()
         {
@@ -173,44 +238,74 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
+            SynchronizeNetTime();
+
             IsServer = isServer;
 
-            _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
-
-            _config.RegisterCVar("net.sendbuffersize", 131071, CVar.ARCHIVE);
-            _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
-            _config.RegisterCVar("net.verbose", false, CVar.ARCHIVE, NetVerboseChanged);
-
-            if (!isServer)
+            _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
+            if (isServer)
             {
-                _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
-                _config.RegisterCVar("net.updaterate", 20, CVar.ARCHIVE);
-                _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
-                _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
+                _config.OnValueChanged(CVars.AuthMode, i => Auth = (AuthMode) i, invokeImmediately: true);
             }
-            else
-            {
-                // That's comma-separated, btw.
-                _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
-                _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
-            }
-
 #if DEBUG
-            _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT, _fakeLossChanged);
-            _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT, _fakeLagMinChanged);
-            _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
+            _config.OnValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
+            _config.OnValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
+            _config.OnValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
+            _config.OnValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
 #endif
 
-            _strings.Initialize(this, () => { OnConnected(ServerChannel); });
+            _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
+                UpdateNetMessageFunctions);
+            _serializer.ClientHandshakeComplete += () =>
+            {
+                Logger.InfoS("net", "Client completed serializer handshake.");
+                OnConnected(ServerChannel!);
+            };
 
             _initialized = true;
+
+            if (IsServer)
+            {
+                SAGenerateRsaKeys();
+            }
+        }
+
+        private void SynchronizeNetTime()
+        {
+            // Synchronize Lidgren NetTime with our RealTime.
+
+            for (var i = 0; i < 10; i++)
+            {
+                // Try and set this in a loop to avoid any JIT hang fuckery or similar.
+                // Loop until the time is within acceptable margin.
+                // Fixing this "properly" would basically require re-architecturing Lidgren to do DI stuff
+                // so we can more sanely wire these together.
+                NetTime.SetNow(_timing.RealTime.TotalSeconds);
+                var dev = TimeSpan.FromSeconds(NetTime.Now) - _timing.RealTime;
+
+                if (Math.Abs(dev.TotalMilliseconds) < 0.05)
+                    break;
+            }
+        }
+
+        private void UpdateNetMessageFunctions(MsgStringTableEntries.Entry[] entries)
+        {
+            foreach (var entry in entries)
+            {
+                if (entry.Id > byte.MaxValue)
+                {
+                    continue;
+                }
+
+                CacheNetMsgFunction((byte) entry.Id);
+            }
         }
 
         private void NetVerboseChanged(bool on)
         {
             foreach (var peer in _netPeers)
             {
-                peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, on);
+                peer.Peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, on);
             }
         }
 
@@ -219,8 +314,8 @@ namespace Robust.Shared.Network
             DebugTools.Assert(IsServer);
             DebugTools.Assert(!IsRunning);
 
-            var binds = _config.GetCVar<string>("net.bindto").Split(',');
-            var dualStack = _config.GetCVar<bool>("net.dualstack");
+            var binds = _config.GetCVar(CVars.NetBindTo).Split(',');
+            var dualStack = _config.GetCVar(CVars.NetDualStack);
 
             var foundIpv6 = false;
 
@@ -234,7 +329,8 @@ namespace Robust.Shared.Network
                 var config = _getBaseNetPeerConfig();
                 config.LocalAddress = address;
                 config.Port = Port;
-                config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
+                // Disabled for now since we aren't doing anything with the connection approval stuff.
+                // config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
                 if (address.AddressFamily == AddressFamily.InterNetworkV6 && dualStack)
                 {
@@ -244,7 +340,7 @@ namespace Robust.Shared.Network
 
                 var peer = IsServer ? (NetPeer) new NetServer(config) : new NetClient(config);
                 peer.Start();
-                _netPeers.Add(peer);
+                _netPeers.Add(new NetPeerData(peer));
             }
 
             if (_netPeers.Count == 0)
@@ -272,19 +368,24 @@ namespace Robust.Shared.Network
                 DisconnectChannel(kvChannel.Value, reason);
 
             // request shutdown of the netPeer
-            _netPeers.ForEach(p => p.Shutdown(reason));
-            _netPeers.Clear();
+            _netPeers.ForEach(p => p.Peer.Shutdown(reason));
 
             // wait for the network thread to finish its work (like flushing packets and gracefully disconnecting)
             // Lidgren does not expose the thread, so we can't join or or anything
             // pretty much have to poll every so often and wait for it to finish before continuing
             // when the network thread is finished, it will change status from ShutdownRequested to NotRunning
-            while (_netPeers.Any(p => p.Status == NetPeerStatus.ShutdownRequested))
+            while (_netPeers.Any(p => p.Peer.Status == NetPeerStatus.ShutdownRequested))
             {
                 // sleep the thread for an arbitrary length so it isn't spinning in the while loop as much
                 Thread.Sleep(50);
             }
 
+            _netPeers.Clear();
+
+            // Clear cached message functions.
+            Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
+            // Clear string table.
+            // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
 
             _cancelConnectTokenSource?.Cancel();
@@ -293,32 +394,51 @@ namespace Robust.Shared.Network
 
         public void ProcessPackets()
         {
+            var sentMessages = 0L;
+            var recvMessages = 0L;
+            var sentBytes = 0L;
+            var recvBytes = 0L;
+            var sentPackets = 0L;
+            var recvPackets = 0L;
+            var resentDelays = 0L;
+            var resentHoles = 0L;
+            var dropped = 0L;
+            /*
+            var unsent = 0L;
+            var stored = 0L;
+            */
+
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
                 var recycle = true;
-                while ((msg = peer.ReadMessage()) != null)
+                while ((msg = peer.Peer.ReadMessage()) != null)
                 {
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
-                            Logger.DebugS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.DebugS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.DebugMessage:
-                            Logger.InfoS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.InfoS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.WarningMessage:
-                            Logger.WarningS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.WarningS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.ErrorMessage:
-                            Logger.ErrorS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.ErrorS("net", "{PeerAddress}: {Message}", peer.Peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.ConnectionApproval:
                             HandleApproval(msg);
+                            recycle = false;
                             break;
 
                         case NetIncomingMessageType.Data:
@@ -326,13 +446,13 @@ namespace Robust.Shared.Network
                             break;
 
                         case NetIncomingMessageType.StatusChanged:
-                            HandleStatusChanged(msg);
+                            HandleStatusChanged(peer, msg);
                             break;
 
                         default:
                             Logger.WarningS("net",
                                 "{0}: Unhandled incoming packet type from {1}: {2}",
-                                peer.Configuration.LocalAddress,
+                                peer.Peer.Configuration.LocalAddress,
                                 msg.SenderConnection.RemoteEndPoint,
                                 msg.MessageType);
                             break;
@@ -340,25 +460,63 @@ namespace Robust.Shared.Network
 
                     if (recycle)
                     {
-                        peer.Recycle(msg);
+                        peer.Peer.Recycle(msg);
                     }
                 }
+
+                var statistics = peer.Peer.Statistics;
+                sentMessages += statistics.SentMessages;
+                recvMessages += statistics.ReceivedMessages;
+                sentBytes += statistics.SentBytes;
+                recvBytes += statistics.ReceivedBytes;
+                sentPackets += statistics.SentPackets;
+                recvPackets += statistics.ReceivedPackets;
+                resentDelays += statistics.ResentMessagesDueToDelay;
+                resentHoles += statistics.ResentMessagesDueToHole;
+                dropped += statistics.DroppedMessages;
+
+                /*
+                statistics.CalculateUnsentAndStoredMessages(out var pUnsent, out var pStored);
+                unsent += pUnsent;
+                stored += pStored;
+                */
             }
 
             if (_toCleanNetPeers.Count != 0)
             {
                 foreach (var peer in _toCleanNetPeers)
                 {
-                    _netPeers.Remove(peer);
+                    _netPeers.RemoveAll(p => p.Peer == peer);
                 }
+
+                _toCleanNetPeers.Clear();
             }
+
+            SentMessagesMetrics.IncTo(sentMessages);
+            RecvMessagesMetrics.IncTo(recvMessages);
+            SentBytesMetrics.IncTo(sentBytes);
+            RecvBytesMetrics.IncTo(recvBytes);
+            SentPacketsMetrics.IncTo(sentPackets);
+            RecvPacketsMetrics.IncTo(recvPackets);
+            MessagesResentDelayMetrics.IncTo(resentDelays);
+            MessagesResentHoleMetrics.IncTo(resentHoles);
+            MessagesDroppedMetrics.IncTo(dropped);
+
+            /*
+            MessagesUnsentMetrics.Set(unsent);
+            MessagesStoredMetrics.Set(stored);
+            */
         }
 
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
-            Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
+            if (ServerChannel != null)
+            {
+                Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
+            }
+
             Shutdown(reason);
         }
 
@@ -369,23 +527,26 @@ namespace Robust.Shared.Network
             // ping the client once per second.
             netConfig.PingInterval = 1f;
 
-            netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
-            netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
-            netConfig.MaximumHandshakeAttempts = 1;
+            netConfig.SendBufferSize = _config.GetCVar(CVars.NetSendBufferSize);
+            netConfig.ReceiveBufferSize = _config.GetCVar(CVars.NetReceiveBufferSize);
+            netConfig.MaximumHandshakeAttempts = 5;
 
-            var verbose = _config.GetCVar<bool>("net.verbose");
+            var verbose = _config.GetCVar(CVars.NetVerbose);
             netConfig.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, verbose);
 
             if (IsServer)
             {
-                netConfig.MaximumConnections = _config.GetCVar<int>("game.maxplayers");
+                netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
+                netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
             }
+
 
 #if DEBUG
             //Simulate Latency
-            netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
-            netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
-            netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
+            netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);
+            netConfig.SimulatedMinimumLatency = _config.GetCVar(CVars.NetFakeLagMin);
+            netConfig.SimulatedRandomLatency = _config.GetCVar(CVars.NetFakeLagRand);
+            netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
             netConfig.ConnectionTimeout = 30000f;
 #endif
@@ -397,7 +558,7 @@ namespace Robust.Shared.Network
         {
             foreach (var peer in _netPeers)
             {
-                peer.Configuration.SimulatedLoss = newValue;
+                peer.Peer.Configuration.SimulatedLoss = newValue;
             }
         }
 
@@ -405,7 +566,7 @@ namespace Robust.Shared.Network
         {
             foreach (var peer in _netPeers)
             {
-                peer.Configuration.SimulatedMinimumLatency = newValue;
+                peer.Peer.Configuration.SimulatedMinimumLatency = newValue;
             }
         }
 
@@ -413,7 +574,15 @@ namespace Robust.Shared.Network
         {
             foreach (var peer in _netPeers)
             {
-                peer.Configuration.SimulatedRandomLatency = newValue;
+                peer.Peer.Configuration.SimulatedRandomLatency = newValue;
+            }
+        }
+
+        private void FakeDuplicatesChanged(float newValue)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Peer.Configuration.SimulatedDuplicatesChance = newValue;
             }
         }
 #endif
@@ -428,13 +597,13 @@ namespace Robust.Shared.Network
             if (connection == null)
                 throw new ArgumentNullException(nameof(connection));
 
-            if (_channels.TryGetValue(connection, out NetChannel channel))
+            if (_channels.TryGetValue(connection, out var channel))
                 return channel;
 
             throw new NetManagerException("There is no NetChannel for this NetConnection.");
         }
 
-        private bool TryGetChannel(NetConnection connection, out INetChannel channel)
+        private bool TryGetChannel(NetConnection connection, [NotNullWhen(true)] out INetChannel? channel)
         {
             if (connection == null)
             {
@@ -451,12 +620,14 @@ namespace Robust.Shared.Network
             return false;
         }
 
-        private void HandleStatusChanged(NetIncomingMessage msg)
+        private void HandleStatusChanged(NetPeerData peer, NetIncomingMessage msg)
         {
             var sender = msg.SenderConnection;
             msg.ReadByte();
             var reason = msg.ReadString();
-            Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}, reason: {reason}");
+            Logger.DebugS("net",
+                "{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
+                sender.RemoteEndPoint, sender.Status, reason);
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
@@ -471,7 +642,7 @@ namespace Robust.Shared.Network
                 case NetConnectionStatus.Connected:
                     if (IsServer)
                     {
-                        HandleHandshake(sender);
+                        HandleHandshake(peer, sender);
                     }
 
                     break;
@@ -487,114 +658,75 @@ namespace Robust.Shared.Network
 
                     if (_channels.ContainsKey(sender))
                     {
-                        HandleDisconnect(sender, reason);
+                        HandleDisconnect(peer, sender, reason);
+                    }
+
+                    if (_awaitingDisconnect.TryGetValue(sender, out var tcs))
+                    {
+                        tcs.TrySetResult(null);
                     }
 
                     break;
             }
         }
 
-        private void HandleApproval(NetIncomingMessage message)
+        private async void HandleInitialHandshakeComplete(NetPeerData peer,
+            NetConnection sender,
+            NetUserId userId,
+            string userName,
+            NetEncryption? encryption,
+            LoginType loginType)
         {
-            // TODO: Maybe preemptively refuse connections here in some cases?
-            if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
-            {
-                // This can happen if the approval message comes in after the state changes to disconnected.
-                // In that case just ignore it.
-                return;
-            }
-            message.SenderConnection.Approve();
-        }
-
-        private async void HandleHandshake(NetConnection connection)
-        {
-            string requestedUsername;
-            try
-            {
-                var userNamePacket = await AwaitData(connection);
-                requestedUsername = userNamePacket.ReadString();
-            }
-            catch (ClientDisconnectedException)
-            {
-                return;
-            }
-
-            var (nameValid, invalidReason) = UsernameHelpers.IsNameValid(requestedUsername);
-            if (!nameValid)
-            {
-                connection.Disconnect($"Username is invalid ({invalidReason}).");
-                return;
-            }
-
-            var endPoint = connection.RemoteEndPoint;
-            var name = requestedUsername;
-            var origName = name;
-            var iterations = 1;
-
-            while (_assignedSessions.Values.Any(u => u.Username == name))
-            {
-                // This is shit but I don't care.
-                name = $"{origName}_{++iterations}";
-            }
-
-            var session = new NetSessionId(name);
-
-            if (OnConnecting(endPoint, session))
-            {
-                _assignedSessions.Add(connection, session);
-                var msg = connection.Peer.CreateMessage();
-                msg.Write(name);
-                connection.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
-            }
-            else
-            {
-                connection.Disconnect("Sorry, denied. Why? Couldn't tell you, I didn't implement a deny reason.");
-                return;
-            }
-
-            NetIncomingMessage okMsg;
-            try
-            {
-                okMsg = await AwaitData(connection);
-            }
-            catch (ClientDisconnectedException)
-            {
-                return;
-            }
-
-            if (okMsg.ReadString() != "ok")
-            {
-                connection.Disconnect("You should say ok.");
-                return;
-            }
-
-            // Handshake complete!
-            HandleInitialHandshakeComplete(connection);
-        }
-
-        private void HandleInitialHandshakeComplete(NetConnection sender)
-        {
-            var session = _assignedSessions[sender];
-
-            var channel = new NetChannel(this, sender, session);
+            var channel = new NetChannel(this, sender, userId, userName, loginType);
+            _assignedUserIds.Add(userId, sender);
+            _assignedUsernames.Add(userName, sender);
             _channels.Add(sender, channel);
+            peer.AddChannel(channel);
+            channel.Encryption = encryption;
 
             _strings.SendFullTable(channel);
 
-            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Connected");
+            try
+            {
+                await _serializer.Handshake(channel);
+            }
+            catch (TaskCanceledException)
+            {
+                // Client disconnected during handshake.
+                return;
+            }
+
+            Logger.InfoS("net", "{ConnectionEndpoint}: Connected", channel.RemoteEndPoint);
 
             OnConnected(channel);
         }
 
-        private void HandleDisconnect(NetConnection connection, string reason)
+        private void HandleDisconnect(NetPeerData peer, NetConnection connection, string reason)
         {
             var channel = _channels[connection];
 
-            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
-            _assignedSessions.Remove(connection);
+            Logger.InfoS("net", "{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint,
+                reason);
+            _assignedUsernames.Remove(channel.UserName);
+            _assignedUserIds.Remove(channel.UserId);
 
-            OnDisconnected(channel, reason);
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
+                OnDisconnected(channel, reason);
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                // A throw aborting in the middle of this method would be *really* bad
+                // and cause fun bugs like ghost clients sticking around.
+                // I say "would" as if it hasn't already happened...
+                Logger.ErrorS("net", "Caught exception in OnDisconnected handler:\n{0}", e);
+            }
+#endif
             _channels.Remove(connection);
+            peer.RemoveChannel(channel);
 
             if (IsClient)
             {
@@ -617,13 +749,25 @@ namespace Robust.Shared.Network
         {
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
+            {
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
                 return true;
+            }
 
             if (peer.Status == NetPeerStatus.NotRunning)
+            {
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
                 return true;
+            }
 
             if (!IsConnected)
+            {
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
                 return true;
+            }
 
             if (_awaitingData.TryGetValue(msg.SenderConnection, out var info))
             {
@@ -640,24 +784,33 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            var id = msg.ReadByte();
+            var channel = _channels[msg.SenderConnection];
 
-            if (_netMsgFunctions[id].Item1 == null)
+            var encryption = IsServer ? channel.Encryption : _clientEncryption;
+
+            if (encryption != null)
             {
-                if (!CacheNetMsgFunction(id))
-                {
-                    Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
-                    return true;
-                }
+                msg.Decrypt(encryption);
             }
 
-            var (func, type) = _netMsgFunctions[id];
+            var id = msg.ReadByte();
 
-            var channel = GetChannel(msg.SenderConnection);
-            var instance = func(channel);
+            ref var entry = ref _netMsgFunctions[id];
+            if (entry.CreateFunction == null)
+            {
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+
+                channel.Disconnect("Got NetMessage with invalid ID");
+                return true;
+            }
+
+            var type = entry.Type;
+
+            var instance = entry.CreateFunction(channel);
             instance.MsgChannel = channel;
 
-            #if DEBUG
+#if DEBUG
 
             if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
             {
@@ -666,7 +819,7 @@ namespace Robust.Shared.Network
 
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
 
-            #endif
+#endif
 
             try
             {
@@ -676,42 +829,54 @@ namespace Robust.Shared.Network
             {
                 Logger.ErrorS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
-                throw;
+                return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
                 Logger.WarningS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
-            }
-
-            if (!_callbacks.TryGetValue(type, out ProcessMessage callback))
-            {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{type}, but callback was not registered.");
                 return true;
             }
 
-            callback?.Invoke(instance);
+            // Callback must be available or else construction delegate will not be registered.
+            var callback = _callbacks[type];
+
+            try
+            {
+                callback?.Invoke(instance);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
+            }
+
             return true;
         }
 
-        private bool CacheNetMsgFunction(byte id)
+        private void CacheNetMsgFunction(byte id)
         {
             if (!_strings.TryGetString(id, out var name))
             {
-                return false;
+                return;
             }
 
             if (!_messages.TryGetValue(name, out var packetType))
             {
-                return false;
+                return;
             }
 
-            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)});
+            if (!_callbacks.ContainsKey(packetType))
+            {
+                return;
+            }
+
+            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)})!;
 
             DebugTools.AssertNotNull(constructor);
 
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{id}", typeof(NetMessage), new[]{typeof(INetChannel)}, packetType, false);
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[] {typeof(INetChannel)},
+                packetType, false);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
 
@@ -723,43 +888,55 @@ namespace Robust.Shared.Network
             var @delegate =
                 (Func<INetChannel, NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<INetChannel, NetMessage>));
 
-            _netMsgFunctions[id] = (@delegate, packetType);
-            return true;
+            ref var entry = ref _netMsgFunctions[id];
+            entry.CreateFunction = @delegate;
+            entry.Type = packetType;
         }
 
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
             where T : NetMessage
         {
-            _strings.AddString(name);
+            var id = _strings.AddString(name);
 
             _messages.Add(name, typeof(T));
 
-            if (rxCallback != null)
+            var thisSide = IsServer ? NetMessageAccept.Server : NetMessageAccept.Client;
+
+            if (rxCallback != null && (accept & thisSide) != 0)
+            {
                 _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
+
+                if (id != -1)
+                {
+                    CacheNetMsgFunction((byte) id);
+                }
+            }
+
+            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
+            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
+            // so it no thread safety crap.
+            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            if (!_blankNetMsgFunctions.TryGetValue(typeof(T), out var func))
-            {
-                CacheBlankFunction(typeof(T));
-                func = _blankNetMsgFunctions[typeof(T)];
-            }
-            return (T) func();
+            return (T) _blankNetMsgFunctions[typeof(T)]();
         }
 
         private void CacheBlankFunction(Type type)
         {
-            var constructor = type.GetConstructor(new[] {typeof(INetChannel)});
+            var constructor = type.GetConstructor(new[] {typeof(INetChannel)})!;
 
             DebugTools.AssertNotNull(constructor);
 
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(), type, false);
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
+                type, false);
             var gen = dynamicMethod.GetILGenerator();
             gen.Emit(OpCodes.Ldnull);
             gen.Emit(OpCodes.Newobj, constructor);
@@ -791,16 +968,9 @@ namespace Robust.Shared.Network
             if (!IsConnected)
                 return;
 
-            foreach (var peer in _netPeers)
+            foreach (var channel in _channels.Values)
             {
-                var packet = BuildMessage(message, peer);
-                var method = message.DeliveryMethod;
-                if (peer.ConnectionsCount == 0)
-                {
-                    continue;
-                }
-
-                peer.SendMessage(packet, peer.Connections, method, 0);
+                ServerSendMessage(message, channel);
             }
         }
 
@@ -813,6 +983,11 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
+            if (channel.Encryption != null)
+            {
+                packet.Encrypt(channel.Encryption);
+            }
+
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
         }
@@ -840,52 +1015,72 @@ namespace Robust.Shared.Network
                 return;
 
             DebugTools.Assert(_netPeers.Count == 1);
-            DebugTools.Assert(_netPeers[0].ConnectionsCount == 1);
+            DebugTools.Assert(_netPeers[0].Channels.Count == 1);
 
             var peer = _netPeers[0];
-            var packet = BuildMessage(message, peer);
+            var packet = BuildMessage(message, peer.Peer);
             var method = message.DeliveryMethod;
-            peer.SendMessage(packet, peer.Connections[0], method);
+            if (_clientEncryption != null)
+            {
+                packet.Encrypt(_clientEncryption);
+            }
+
+            peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
         }
 
         #endregion NetMessages
 
         #region Events
 
-        protected virtual bool OnConnecting(IPEndPoint ip, NetSessionId sessionId)
+        private async Task<NetConnectingArgs> OnConnecting(
+            IPEndPoint ip,
+            NetUserId userId,
+            string userName,
+            LoginType loginType)
         {
-            var args = new NetConnectingArgs(sessionId, ip);
-            Connecting?.Invoke(this, args);
-            return !args.Deny;
+            var args = new NetConnectingArgs(userId, ip, userName, loginType);
+            foreach (var conn in _connectingEvent)
+            {
+                await conn(args);
+            }
+
+            return args;
         }
 
-        protected virtual void OnConnectFailed(string reason)
+        private void OnConnectFailed(string reason)
         {
             var args = new NetConnectFailArgs(reason);
             ConnectFailed?.Invoke(this, args);
         }
 
-        protected virtual void OnConnected(INetChannel channel)
+        private void OnConnected(INetChannel channel)
         {
             Connected?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnDisconnected(INetChannel channel, string reason)
+        private void OnDisconnected(INetChannel channel, string reason)
         {
             Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, reason));
         }
 
-        /// <inheritdoc />
-        public event EventHandler<NetConnectingArgs> Connecting;
+        private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
+            = new();
 
         /// <inheritdoc />
-        public event EventHandler<NetConnectFailArgs> ConnectFailed;
+        public event Func<NetConnectingArgs, Task> Connecting
+        {
+            add => _connectingEvent.Add(value);
+            remove => _connectingEvent.Remove(value);
+        }
 
         /// <inheritdoc />
-        public event EventHandler<NetChannelArgs> Connected;
+        public event EventHandler<NetConnectFailArgs>? ConnectFailed;
 
         /// <inheritdoc />
-        public event EventHandler<NetDisconnectedArgs> Disconnect;
+        public event EventHandler<NetChannelArgs>? Connected;
+
+        /// <inheritdoc />
+        public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
         #endregion Events
 
@@ -909,6 +1104,39 @@ namespace Robust.Shared.Network
                 StreamingContext context) : base(info, context)
             {
             }
+        }
+
+        private class NetPeerData
+        {
+            public readonly NetPeer Peer;
+
+            public readonly List<NetChannel> Channels = new();
+
+            // So that we can do ServerSendToAll without a list copy.
+            public readonly List<NetConnection> ConnectionsWithChannels = new();
+
+            public NetPeerData(NetPeer peer)
+            {
+                Peer = peer;
+            }
+
+            public void AddChannel(NetChannel channel)
+            {
+                Channels.Add(channel);
+                ConnectionsWithChannels.Add(channel.Connection);
+            }
+
+            public void RemoveChannel(NetChannel channel)
+            {
+                Channels.Remove(channel);
+                ConnectionsWithChannels.Remove(channel.Connection);
+            }
+        }
+
+        private struct NetMsgEntry
+        {
+            public Func<INetChannel, NetMessage>? CreateFunction;
+            public Type Type;
         }
     }
 

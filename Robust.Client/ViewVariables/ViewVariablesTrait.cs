@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using Robust.Client.ViewVariables.Instances;
 
 namespace Robust.Client.ViewVariables
@@ -11,7 +9,7 @@ namespace Robust.Client.ViewVariables
     /// </summary>
     internal abstract class ViewVariablesTrait
     {
-        protected ViewVariablesInstanceObject Instance { get; private set; }
+        protected ViewVariablesInstanceObject Instance { get; private set; } = default!;
 
         public virtual void Initialize(ViewVariablesInstanceObject instance)
         {

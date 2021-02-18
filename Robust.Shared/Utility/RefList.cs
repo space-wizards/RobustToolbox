@@ -33,7 +33,7 @@ namespace Robust.Shared.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Enumerator GetEnumerator()
         {
-            return new Enumerator(this);
+            return new(this);
         }
 
         IEnumerator<T> IEnumerable<T>.GetEnumerator()
@@ -135,7 +135,7 @@ namespace Robust.Shared.Utility
 
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                _array[_size] = default;
+                _array[_size] = default!;
             }
         }
 
@@ -159,7 +159,7 @@ namespace Robust.Shared.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> GetSpan()
         {
-            return new Span<T>(_array, 0, _size);
+            return new(_array, 0, _size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -207,7 +207,7 @@ namespace Robust.Shared.Utility
 
             T IEnumerator<T>.Current => Current;
 
-            object IEnumerator.Current => Current;
+            object? IEnumerator.Current => Current;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose()

@@ -9,15 +9,13 @@ using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
 using Robust.Server.Console;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
 
@@ -33,7 +31,7 @@ namespace Robust.Server.Scripting
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         readonly Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>> _instances =
-            new Dictionary<IPlayerSession, Dictionary<int, ScriptInstance>>();
+            new();
 
         public void Initialize()
         {
@@ -154,7 +152,7 @@ namespace Robust.Server.Scripting
             else
             {
                 var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
-                newScript = CSharpScript.Create(code, options, typeof(IScriptGlobals));
+                newScript = CSharpScript.Create(code, options, typeof(ScriptGlobals));
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
@@ -177,7 +175,7 @@ namespace Robust.Server.Scripting
                 }
                 else
                 {
-                    instance.State = await newScript.RunAsync(instance.Globals);
+                    instance.State = await newScript.RunAsync(instance.Globals, _ => true);
                 }
             }
             catch (CompilationErrorException e)
@@ -222,8 +220,8 @@ namespace Robust.Server.Scripting
         private sealed class ScriptInstance
         {
             public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
-            public StringBuilder InputBuffer { get; } = new StringBuilder();
-            public StringBuilder OutputBuffer { get; } = new StringBuilder();
+            public StringBuilder InputBuffer { get; } = new();
+            public StringBuilder OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
 
             public ScriptGlobals Globals { get; }
@@ -231,29 +229,21 @@ namespace Robust.Server.Scripting
 
             public ScriptInstance()
             {
-                Globals = new ScriptGlobals(this);
+                Globals = new ScriptGlobalsImpl(this);
             }
         }
 
-        private sealed class ScriptGlobals : IScriptGlobals
+        private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
             private readonly ScriptInstance _scriptInstance;
 
-            public ScriptGlobals(ScriptInstance scriptInstance)
+            public ScriptGlobalsImpl(ScriptInstance scriptInstance)
             {
                 _scriptInstance = scriptInstance;
                 IoCManager.InjectDependencies(this);
             }
 
-            [field: Dependency] public IEntityManager ent { get; } = default!;
-            [field: Dependency] public IComponentManager comp { get; } = default!;
-
-            public T res<T>()
-            {
-                return IoCManager.Resolve<T>();
-            }
-
-            public void write(object toString)
+            public override void write(object toString)
             {
                 if (_scriptInstance.RunningScript)
                 {
@@ -261,7 +251,7 @@ namespace Robust.Server.Scripting
                 }
             }
 
-            public void show(object obj)
+            public override void show(object obj)
             {
                 write(CSharpObjectFormatter.Instance.FormatObject(obj));
             }
@@ -270,13 +260,7 @@ namespace Robust.Server.Scripting
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PublicAPI]
-    public interface IScriptGlobals
+    public abstract class ScriptGlobals : ScriptGlobalsShared
     {
-        public IEntityManager ent { get; }
-        public IComponentManager comp { get; }
-
-        public T res<T>();
-        public void write(object toString);
-        public void show(object obj);
     }
 }

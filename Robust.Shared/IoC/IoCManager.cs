@@ -1,8 +1,9 @@
-﻿using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.IoC.Exceptions;
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
@@ -28,18 +29,33 @@ namespace Robust.Shared.IoC
     /// <para>
     /// <c>IoCManager</c> is actually a static wrapper class around a thread local <see cref="IDependencyCollection"/>.
     /// As such, <c>IoCManager</c> will not work in other threads,
-    /// unless they have first been initialized with <see cref="InitThread(Robust.Shared.IoC.IDependencyCollection)"/>.
+    /// unless they have first been initialized with <see cref="InitThread()"/> or <see cref="InitThread(IDependencyCollection,bool)"/>.
     /// You should not initialize IoC in thread pools like that of <see cref="Task.Run(Action)"/>,
     /// since said thread pool might be used by different running instances
     /// (for example, server and client running in the same process, they have a different IoC instance).
     /// </para>
     /// </remarks>
-    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IReflectionManager"/>
     public static class IoCManager
     {
         private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";
-        private static readonly ThreadLocal<IDependencyCollection> _container = new ThreadLocal<IDependencyCollection>();
+        private static readonly ThreadLocal<IDependencyCollection> _container = new();
 
+        /// <summary>
+        /// Returns the singleton thread-local instance of the IoCManager's dependency collection.
+        /// </summary>
+        /// <remarks>
+        /// This property will be null if <see cref="InitThread()"/> has not been called on this thread yet.
+        /// </remarks>
+        public static IDependencyCollection? Instance => _container.IsValueCreated ? _container.Value : null;
+
+        /// <summary>
+        /// Ensures that the <see cref="IDependencyCollection"/> instance exists for this thread.
+        /// </summary>
+        /// <remarks>
+        /// This will create a new instance of a <see cref="IDependencyCollection"/> for this thread,
+        /// otherwise it will do nothing if one already exists.
+        /// </remarks>
         public static void InitThread()
         {
             if (_container.IsValueCreated)
@@ -50,9 +66,16 @@ namespace Robust.Shared.IoC
             _container.Value = new DependencyCollection();
         }
 
-        public static void InitThread(IDependencyCollection collection)
+        /// <summary>
+        /// Sets an existing <see cref="IDependencyCollection"/> as the instance for this thread.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Will be thrown if a <see cref="IDependencyCollection"/> instance is already set for this thread,
+        /// and replaceExisting is set to false.</exception>
+        /// <param name="collection">Collection to set as the instance for this thread.</param>
+        /// <param name="replaceExisting">If this is true, replaces the existing collection, if one is set for this thread.</param>
+        public static void InitThread(IDependencyCollection collection, bool replaceExisting=false)
         {
-            if (_container.IsValueCreated)
+            if (_container.IsValueCreated && !replaceExisting)
             {
                 throw new InvalidOperationException("This thread has already been initialized.");
             }
@@ -78,7 +101,30 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.Register<TInterface, TImplementation>(overwrite);
+            _container.Value!.Register<TInterface, TImplementation>(overwrite);
+        }
+
+        /// <summary>
+        /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
+        /// <see cref="BuildGraph"/> MUST be called after this method to make the new interface available.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
+        /// </exception>
+        public static void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
+            where TImplementation : class, TInterface
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Register<TInterface, TImplementation>(factory, overwrite);
         }
 
         /// <summary>
@@ -97,7 +143,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.RegisterInstance<TInterface>(implementation, overwrite);
+            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
         /// <summary>
@@ -108,7 +154,7 @@ namespace Robust.Shared.IoC
         public static void Clear()
         {
             if (_container.IsValueCreated)
-                _container.Value.Clear();
+                _container.Value!.Clear();
         }
 
         /// <summary>
@@ -124,7 +170,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            return _container.Value.Resolve<T>();
+            return _container.Value!.Resolve<T>();
         }
 
         /// <summary>
@@ -140,18 +186,18 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            return _container.Value.ResolveType(type);
+            return _container.Value!.ResolveType(type);
         }
 
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.
         /// </summary>
-        /// <seealso cref="InjectDependencies(object)"/>
+        /// <seealso cref="InjectDependencies{T}"/>
         public static void BuildGraph()
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.BuildGraph();
+            _container.Value!.BuildGraph();
         }
 
         /// <summary>
@@ -166,10 +212,10 @@ namespace Robust.Shared.IoC
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
         /// <seealso cref="BuildGraph"/>
-        public static T InjectDependencies<T>(T obj)
+        public static T InjectDependencies<T>(T obj) where T : notnull
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-            _container.Value.InjectDependencies(obj);
+            _container.Value!.InjectDependencies(obj);
             return obj;
         }
     }

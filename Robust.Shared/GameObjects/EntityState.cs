@@ -1,6 +1,5 @@
 ﻿using Robust.Shared.Serialization;
 using System;
-using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -8,12 +7,10 @@ namespace Robust.Shared.GameObjects
     public sealed class EntityState
     {
         public EntityUid Uid { get; }
-        [CanBeNull]
-        public ComponentChanged[] ComponentChanges { get; }
-        [CanBeNull]
-        public ComponentState[] ComponentStates { get; }
+        public ComponentChanged[]? ComponentChanges { get; }
+        public ComponentState[]? ComponentStates { get; }
 
-        public EntityState(EntityUid uid, ComponentChanged[] changedComponents, ComponentState[] componentStates)
+        public EntityState(EntityUid uid, ComponentChanged[]? changedComponents, ComponentState[]? componentStates)
         {
             Uid = uid;
 
@@ -41,9 +38,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The prototype name of the component to add.
         /// </summary>
-        public readonly string ComponentName;
+        public readonly string? ComponentName;
 
-        public ComponentChanged(bool deleted, uint netId, string componentName)
+        public ComponentChanged(bool deleted, uint netId, string? componentName)
         {
             Deleted = deleted;
             NetID = netId;
@@ -57,12 +54,12 @@ namespace Robust.Shared.GameObjects
 
         public static ComponentChanged Added(uint netId, string componentName)
         {
-            return new ComponentChanged(false, netId, componentName);
+            return new(false, netId, componentName);
         }
 
         public static ComponentChanged Removed(uint netId)
         {
-            return new ComponentChanged(true, netId, null);
+            return new(true, netId, null);
         }
     }
 }

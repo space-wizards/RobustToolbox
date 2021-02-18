@@ -1,38 +1,34 @@
 ﻿using System;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Server.Interfaces.Placement;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.GameObjects;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IServerEntityManager _entityManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-        public List<PlacementInformation> BuildPermissions { get; set; } = new List<PlacementInformation>();
+        public List<PlacementInformation> BuildPermissions { get; set; } = new();
 
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
-        public Func<MsgPlacement, bool> AllowPlacementFunc { get; set; }
+        public Func<MsgPlacement, bool>? AllowPlacementFunc { get; set; }
 
         #region IPlacementManager Members
 
@@ -46,7 +42,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void HandleNetMessage(MsgPlacement msg)
         {
-            if (!AllowPlacementFunc(msg))
+            if (AllowPlacementFunc != null && !AllowPlacementFunc(msg))
             {
                 return;
             }
@@ -88,8 +84,14 @@ namespace Robust.Server.Placement
 
             //TODO: Distance check, so you can't place things off of screen.
 
-            var coordinates = msg.GridCoordinates;
+            var coordinates = msg.EntityCoordinates;
 
+            if (!coordinates.IsValid(_entityManager))
+            {
+                Logger.WarningS("placement",
+                    $"{session} tried to place {msg.ObjType} at invalid coordinate {coordinates}");
+                return;
+            }
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing
             var permission = GetPermission(session.attachedEntity.Uid, alignRcv);
@@ -120,7 +122,7 @@ namespace Robust.Server.Placement
             }
             else
             {
-                var mapCoords = coordinates.ToMap(_mapManager);
+                var mapCoords = coordinates.ToMap(_entityManager);
                 PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
             }
         }
@@ -134,7 +136,7 @@ namespace Robust.Server.Placement
 
             var gridsInArea = _mapManager.FindGridsIntersecting(mapId, gridSearchBox);
 
-            IMapGrid closest = null;
+            IMapGrid? closest = null;
             float distance = float.PositiveInfinity;
             Box2 intersect = new Box2();
             foreach (var grid in gridsInArea)
@@ -154,7 +156,13 @@ namespace Robust.Server.Placement
             if (closest != null) // stick to existing grid
             {
                 // round to nearest cardinal dir
-                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec();
+                var deltaVec = position - intersect.Center;
+                var normal = new Vector2(0,0);
+                if (deltaVec != Vector2.Zero)
+                {
+                    normal = new Angle(deltaVec).GetCardinalDir().ToVec();
+                }
+
 
                 // round coords to center of tile
                 var tileIndices = closest.WorldToTile(intersect.Center);
@@ -353,7 +361,7 @@ namespace Robust.Server.Placement
 
         #endregion IPlacementManager Members
 
-        private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
+        private PlacementInformation? GetPermission(EntityUid uid, string alignOpt)
         {
             foreach (var buildPermission in BuildPermissions)
             {

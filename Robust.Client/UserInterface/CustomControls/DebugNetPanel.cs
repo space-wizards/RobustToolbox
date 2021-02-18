@@ -1,13 +1,9 @@
 ﻿using System;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -64,6 +60,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
             if (!NetManager.IsConnected)
             {
                 contents.Text = "Not connected to server.";
@@ -93,7 +94,7 @@ PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
+            return new(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

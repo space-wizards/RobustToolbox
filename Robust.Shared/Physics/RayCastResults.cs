@@ -1,14 +1,10 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {
     public readonly struct RayCastResults
     {
-        /// <summary>
-        ///     True if an object was indeed hit. False otherwise.
-        /// </summary>
-        public bool DidHitObject => HitEntity != null;
 
         /// <summary>
         ///     The entity that was hit. <see langword="null" /> if no entity was hit.

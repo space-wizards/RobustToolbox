@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -15,7 +14,7 @@ namespace Robust.Client.Graphics
     ///     Contains a texture used for drawing things.
     /// </summary>
     [PublicAPI]
-    public abstract class Texture : IDirectionalTextureProvider
+    public abstract class Texture : IRsiStateLike
     {
         /// <summary>
         ///     The width of the texture, in pixels.
@@ -30,7 +29,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     The size of the texture, in pixels.
         /// </summary>
-        public Vector2i Size { get; }
+        public Vector2i Size { get; /*protected set;*/ }
 
         protected Texture(Vector2i size)
         {
@@ -56,7 +55,7 @@ namespace Robust.Client.Graphics
         ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
         /// </param>
         /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string name = null,
+        public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
         {
             var manager = IoCManager.Resolve<IClyde>();
@@ -72,7 +71,7 @@ namespace Robust.Client.Graphics
         ///     Parameters that influence the loading of textures.
         ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
         /// </param>
-        public static Texture LoadFromPNGStream(Stream stream, string name = null,
+        public static Texture LoadFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParameters = null)
         {
             var manager = IoCManager.Resolve<IClyde>();
@@ -83,6 +82,26 @@ namespace Robust.Client.Graphics
 
         Texture IDirectionalTextureProvider.TextureFor(Direction dir)
         {
+            return this;
+        }
+
+        RSI.State.DirectionType IRsiStateLike.Directions => RSI.State.DirectionType.Dir1;
+        bool IRsiStateLike.IsAnimated => false;
+        int IRsiStateLike.AnimationFrameCount => 0;
+
+        float IRsiStateLike.GetDelay(int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
+            return 0;
+        }
+
+        Texture IRsiStateLike.GetFrame(RSI.State.Direction dir, int frame)
+        {
+            if (frame != 0)
+                throw new IndexOutOfRangeException();
+
             return this;
         }
     }
@@ -105,8 +124,8 @@ namespace Robust.Client.Graphics
 
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
-            var loadParams = TextureLoadParameters.Default;
-            if (yaml.TryGetNode("sample", out YamlMappingNode sampleNode))
+            var loadParams = Default;
+            if (yaml.TryGetNode("sample", out YamlMappingNode? sampleNode))
             {
                 loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);
             }
@@ -119,7 +138,7 @@ namespace Robust.Client.Graphics
             return loadParams;
         }
 
-        public static readonly TextureLoadParameters Default = new TextureLoadParameters
+        public static readonly TextureLoadParameters Default = new()
         {
             SampleParameters = TextureSampleParameters.Default,
             Srgb = true
@@ -178,7 +197,7 @@ namespace Robust.Client.Graphics
             return new TextureSampleParameters {Filter = filter, WrapMode = wrap};
         }
 
-        public static readonly TextureSampleParameters Default = new TextureSampleParameters
+        public static readonly TextureSampleParameters Default = new()
         {
             Filter = false,
             WrapMode = TextureWrapMode.None
@@ -189,7 +208,7 @@ namespace Robust.Client.Graphics
     ///     Controls behavior when reading texture coordinates outside 0-1, which usually wraps the texture somehow.
     /// </summary>
     [PublicAPI]
-    public enum TextureWrapMode
+    public enum TextureWrapMode : byte
     {
         /// <summary>
         ///     Do not wrap, instead clamp to edge.

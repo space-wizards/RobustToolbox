@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
-        [CanBeNull] private Dictionary<AttachedProperty, object> _attachedProperties;
+        private Dictionary<AttachedProperty, object?>? _attachedProperties;
 
         /// <summary>
         /// Gets the value of an attached property on this control.
@@ -17,7 +16,7 @@ namespace Robust.Client.UserInterface
         /// The property's value for this object,
         /// or the property's default value if it has not been set on this control yet.
         /// </returns>
-        public object GetValue(AttachedProperty property)
+        public object? GetValue(AttachedProperty property)
         {
             if (_attachedProperties == null)
             {
@@ -30,6 +29,21 @@ namespace Robust.Client.UserInterface
             }
 
             return value;
+        }
+
+        public T GetValue<T>(AttachedProperty<T> property)
+        {
+            if (_attachedProperties == null)
+            {
+                return property.DefaultValue;
+            }
+
+            if (!_attachedProperties.TryGetValue(property, out var value))
+            {
+                return property.DefaultValue;
+            }
+
+            return (T) value!;
         }
 
         /// <summary>
@@ -46,7 +60,7 @@ namespace Robust.Client.UserInterface
         /// </exception>
         public T GetValue<T>(AttachedProperty property)
         {
-            return (T) GetValue(property);
+            return (T) GetValue(property)!;
         }
 
         /// <summary>
@@ -66,11 +80,11 @@ namespace Robust.Client.UserInterface
         /// <exception cref="ArgumentException">
         /// Thrown if the property has a validation function, and the validation function failed.
         /// </exception>
-        public void SetValue(AttachedProperty property, object value)
+        public void SetValue(AttachedProperty property, object? value)
         {
             if (_attachedProperties == null)
             {
-                _attachedProperties = new Dictionary<AttachedProperty, object>();
+                _attachedProperties = new Dictionary<AttachedProperty, object?>();
             }
 
             // Verify that the value can be assigned to the property.
@@ -109,6 +123,32 @@ namespace Robust.Client.UserInterface
             property.Changed?.Invoke(this, changed);
         }
 
+        public void SetValue<T>(AttachedProperty<T> property, T value)
+        {
+            _attachedProperties ??= new Dictionary<AttachedProperty, object?>();
+
+            if (property.Validate != null && !property.Validate(value))
+            {
+                throw new ArgumentException("Value is not valid for this property.", nameof(value));
+            }
+
+            T oldValue;
+            if (!_attachedProperties.TryGetValue(property, out var oldValueBoxed))
+            {
+                oldValue = property.DefaultValue;
+            }
+            else
+            {
+                oldValue = (T) oldValueBoxed!;
+            }
+
+            var changed = new AttachedPropertyChangedEventArgs<T>(value, oldValue);
+
+            _attachedProperties[property] = value;
+
+            property.Changed?.Invoke(this, changed);
+        }
+
         // Using generics simplifies the type check A LOT, so this is preferred.
         /// <summary>
         /// Sets the value of an attached property on this control.
@@ -128,7 +168,7 @@ namespace Robust.Client.UserInterface
         {
             if (_attachedProperties == null)
             {
-                _attachedProperties = new Dictionary<AttachedProperty, object>();
+                _attachedProperties = new Dictionary<AttachedProperty, object?>();
             }
 
             if (!property.PropertyType.IsAssignableFrom(typeof(T)))
@@ -138,7 +178,7 @@ namespace Robust.Client.UserInterface
 
             if (typeof(T) == typeof(object))
             {
-                SetValue(property, (object) value);
+                SetValue(property, (object?) value);
                 return;
             }
 
@@ -159,7 +199,7 @@ namespace Robust.Client.UserInterface
             property.Changed?.Invoke(this, changed);
         }
 
-        public IEnumerable<KeyValuePair<AttachedProperty, object>> AllAttachedProperties =>
-            _attachedProperties ?? Enumerable.Empty<KeyValuePair<AttachedProperty, object>>();
+        public IEnumerable<KeyValuePair<AttachedProperty, object?>> AllAttachedProperties =>
+            _attachedProperties ?? Enumerable.Empty<KeyValuePair<AttachedProperty, object?>>();
     }
 }

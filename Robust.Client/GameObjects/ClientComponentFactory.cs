@@ -1,15 +1,4 @@
-﻿using Robust.Client.GameObjects.Components;
-using Robust.Client.GameObjects.Components.Animations;
-using Robust.Client.GameObjects.Components.Containers;
-using Robust.Client.GameObjects.Components.UserInterface;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.Interfaces.GameObjects.Components;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
@@ -32,42 +21,39 @@ namespace Robust.Client.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, IPhysBody>();
-            RegisterReference<CollidableComponent, ICollidableComponent>();
-            Register<IconComponent>();
+            Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
-            Register<PhysicsComponent>();
 
             Register<InputComponent>();
 
             Register<SpriteComponent>();
+            RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
-            RegisterReference<SpriteComponent, IClickTargetComponent>();
-
-            Register<ClickableComponent>();
-            RegisterReference<ClickableComponent, IClientClickableComponent>();
-            RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
             Register<EyeComponent>();
+            RegisterReference<EyeComponent, SharedEyeComponent>();
 
             Register<AppearanceComponent>();
+            RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
+
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
             Register<ClientUserInterfaceComponent>();
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
 
-            RegisterIgnore("IgnorePause");
-
             Register<AnimationPlayerComponent>();
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
+
+            Register<TimerComponent>();
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();

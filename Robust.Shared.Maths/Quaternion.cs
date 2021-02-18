@@ -26,6 +26,7 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
@@ -52,6 +53,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="v">The vector part</param>
         /// <param name="w">The w part</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion(Vector3 v, float w)
         {
             xyz = v;
@@ -65,9 +67,11 @@ namespace Robust.Shared.Maths
         /// <param name="y">The y component</param>
         /// <param name="z">The z component</param>
         /// <param name="w">The w component</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion(float x, float y, float z, float w)
             : this(new Vector3(x, y, z), w) { }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion(ref Matrix3 matrix)
         {
             var scale = Math.Pow(matrix.Determinant, 1.0d / 3.0d);
@@ -96,7 +100,9 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Vector3 Xyz
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz = value;
         }
 
@@ -106,7 +112,9 @@ namespace Robust.Shared.Maths
         [XmlIgnore]
         public float X
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.X = value;
         }
 
@@ -116,7 +124,9 @@ namespace Robust.Shared.Maths
         [XmlIgnore]
         public float Y
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.Y = value;
         }
 
@@ -126,7 +136,9 @@ namespace Robust.Shared.Maths
         [XmlIgnore]
         public float Z
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.Z = value;
         }
 
@@ -135,25 +147,33 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float W
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => w;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => w = value;
         }
 
         public float x
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.X;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.X = value;
         }
 
         public float y
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.Y;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.Y = value;
         }
 
         public float z
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => xyz.Z;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => xyz.Z = value;
         }
 
@@ -168,6 +188,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="axis">The resultant axis</param>
         /// <param name="angle">The resultant angle</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ToAxisAngle(out Vector3 axis, out float angle)
         {
             var result = ToAxisAngle();
@@ -179,6 +200,7 @@ namespace Robust.Shared.Maths
         /// Convert this instance to an axis-angle representation.
         /// </summary>
         /// <returns>A Vector4 that is the axis-angle representation of this quaternion.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector4 ToAxisAngle()
         {
             var q = this;
@@ -211,7 +233,11 @@ namespace Robust.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
+        public float Length
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
+        }
 
         #endregion public float Length
 
@@ -220,7 +246,11 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Gets the square of the quaternion length (magnitude).
         /// </summary>
-        public float LengthSquared => W * W + Xyz.LengthSquared;
+        public float LengthSquared
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => W * W + Xyz.LengthSquared;
+        }
 
         #endregion public float LengthSquared
 
@@ -229,6 +259,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Scales the Quaternion to unit length.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Normalize()
         {
             var scale = 1.0f / Length;
@@ -243,6 +274,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Convert this quaternion to its conjugate
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Conjugate()
         {
             Xyz = -Xyz;
@@ -262,7 +294,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the identity quaternion.
         /// </summary>
-        public static readonly Quaternion Identity = new Quaternion(0, 0, 0, 1);
+        public static readonly Quaternion Identity = new(0, 0, 0, 1);
 
         #endregion Fields
 
@@ -274,9 +306,10 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first operand</param>
         /// <param name="right">The second operand</param>
         /// <returns>The result of the addition</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Add(Quaternion left, Quaternion right)
         {
-            return new Quaternion(
+            return new(
                 left.Xyz + right.Xyz,
                 left.W + right.W);
         }
@@ -287,6 +320,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first operand</param>
         /// <param name="right">The second operand</param>
         /// <param name="result">The result of the addition</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Add(ref Quaternion left, ref Quaternion right, out Quaternion result)
         {
             result = new Quaternion(
@@ -304,9 +338,10 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left instance.</param>
         /// <param name="right">The right instance.</param>
         /// <returns>The result of the operation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Sub(Quaternion left, Quaternion right)
         {
-            return new Quaternion(
+            return new(
                 left.Xyz - right.Xyz,
                 left.W - right.W);
         }
@@ -317,6 +352,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The left instance.</param>
         /// <param name="right">The right instance.</param>
         /// <param name="result">The result of the operation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Sub(ref Quaternion left, ref Quaternion right, out Quaternion result)
         {
             result = new Quaternion(
@@ -334,6 +370,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>A new instance containing the result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Multiply(Quaternion left, Quaternion right)
         {
             Multiply(ref left, ref right, out var result);
@@ -346,6 +383,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <param name="result">A new instance containing the result of the calculation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Multiply(ref Quaternion left, ref Quaternion right, out Quaternion result)
         {
             result = new Quaternion(
@@ -359,6 +397,7 @@ namespace Robust.Shared.Maths
         /// <param name="quaternion">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <param name="result">A new instance containing the result of the calculation.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Multiply(ref Quaternion quaternion, float scale, out Quaternion result)
         {
             result = new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
@@ -370,9 +409,10 @@ namespace Robust.Shared.Maths
         /// <param name="quaternion">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>A new instance containing the result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Multiply(Quaternion quaternion, float scale)
         {
-            return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
+            return new(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
 
         #endregion Mult
@@ -382,6 +422,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Calculates the dot product between two Quaternions.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Dot(Quaternion a, Quaternion b)
         {
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z + a.W * b.W;
@@ -396,9 +437,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion</param>
         /// <returns>The conjugate of the given quaternion</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Conjugate(Quaternion q)
         {
-            return new Quaternion(-q.Xyz, q.W);
+            return new(-q.Xyz, q.W);
         }
 
         /// <summary>
@@ -406,6 +448,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion</param>
         /// <param name="result">The conjugate of the given quaternion</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Conjugate(ref Quaternion q, out Quaternion result)
         {
             result = new Quaternion(-q.Xyz, q.W);
@@ -420,6 +463,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion to invert</param>
         /// <returns>The inverse of the given quaternion</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Invert(Quaternion q)
         {
             Invert(ref q, out var result);
@@ -431,6 +475,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion to invert</param>
         /// <param name="result">The inverse of the given quaternion</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invert(ref Quaternion q, out Quaternion result)
         {
             var lengthSq = q.LengthSquared;
@@ -454,6 +499,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion to normalize</param>
         /// <returns>The normalized quaternion</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Normalize(Quaternion q)
         {
             Normalize(ref q, out var result);
@@ -465,6 +511,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="q">The quaternion to normalize</param>
         /// <param name="result">The normalized quaternion</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Normalize(ref Quaternion q, out Quaternion result)
         {
             var scale = 1.0f / q.Length;
@@ -481,6 +528,7 @@ namespace Robust.Shared.Maths
         /// <param name="axis">The axis to rotate about</param>
         /// <param name="angle">The rotation angle in radians</param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion FromAxisAngle(Vector3 axis, float angle)
         {
             if (axis.LengthSquared == 0.0f)
@@ -507,6 +555,7 @@ namespace Robust.Shared.Maths
         /// <param name="q2">The second quaternion</param>
         /// <param name="blend">The blend factor</param>
         /// <returns>A smooth blend between the given quaternions</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Slerp(Quaternion q1, Quaternion q2, float blend)
         {
             // if either input is zero, return the other.
@@ -568,6 +617,7 @@ namespace Robust.Shared.Maths
 
         #region RotateTowards
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion RotateTowards(Quaternion from, Quaternion to, float maxDegreesDelta)
         {
             var num = Angle(from, to);
@@ -576,7 +626,7 @@ namespace Robust.Shared.Maths
                 return to;
             }
 
-            var t = Math.Min(1f, maxDegreesDelta / num);
+            var t = MathF.Min(1f, maxDegreesDelta / num);
             return Slerp(from, to, t);
         }
 
@@ -584,6 +634,7 @@ namespace Robust.Shared.Maths
 
         #region Angle
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Angle(Quaternion a, Quaternion b)
         {
             var f = Dot(a, b);
@@ -595,6 +646,7 @@ namespace Robust.Shared.Maths
         #region LookRotation
 
         // from http://answers.unity3d.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion LookRotation(ref Vector3 forward, ref Vector3 up)
         {
             forward = Vector3.Normalize(forward);
@@ -614,7 +666,7 @@ namespace Robust.Shared.Maths
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float) Math.Sqrt(num8 + 1f);
+                var num = (float) MathF.Sqrt(num8 + 1f);
                 quaternion.w = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -625,7 +677,7 @@ namespace Robust.Shared.Maths
 
             if (m00 >= m11 && m00 >= m22)
             {
-                var num7 = (float) Math.Sqrt(1f + m00 - m11 - m22);
+                var num7 = (float) MathF.Sqrt(1f + m00 - m11 - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -636,7 +688,7 @@ namespace Robust.Shared.Maths
 
             if (m11 > m22)
             {
-                var num6 = (float) Math.Sqrt(1f + m11 - m00 - m22);
+                var num6 = (float) MathF.Sqrt(1f + m11 - m00 - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -645,7 +697,7 @@ namespace Robust.Shared.Maths
                 return quaternion;
             }
 
-            var num5 = (float) Math.Sqrt(1f + m22 - m00 - m11);
+            var num5 = (float) MathF.Sqrt(1f + m22 - m00 - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -659,6 +711,7 @@ namespace Robust.Shared.Maths
         #region Euler Angles
 
         // from http://stackoverflow.com/questions/12088610/conversion-between-euler-quaternion-like-in-unity3d-engine
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 ToEulerRad(Quaternion rotation)
         {
             var sqw = rotation.w * rotation.w;
@@ -672,7 +725,7 @@ namespace Robust.Shared.Maths
             if (test > 0.4995f * unit)
             {
                 // singularity at north pole
-                v.Y = (float) (2f * Math.Atan2(rotation.y, rotation.x));
+                v.Y = (float) (2f * MathF.Atan2(rotation.y, rotation.x));
                 v.X = (float) (Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
@@ -681,19 +734,20 @@ namespace Robust.Shared.Maths
             if (test < -0.4995f * unit)
             {
                 // singularity at south pole
-                v.Y = (float) (-2f * Math.Atan2(rotation.y, rotation.x));
+                v.Y = (float) (-2f * MathF.Atan2(rotation.y, rotation.x));
                 v.X = (float) (-Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
 
             var q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
-            v.Y = (float) Math.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
-            v.X = (float) Math.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
-            v.Z = (float) Math.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
+            v.Y = (float) MathF.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
+            v.X = (float) MathF.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
+            v.Z = (float) MathF.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
             return NormalizeAngles(v * RadToDeg);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector3 NormalizeAngles(Vector3 angles)
         {
             angles.X = NormalizeAngle(angles.X);
@@ -702,13 +756,45 @@ namespace Robust.Shared.Maths
             return angles;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float NormalizeAngle(float angle)
         {
+            /*
             while (angle > 360)
                 angle -= 360;
             while (angle < 0)
                 angle += 360;
             return angle;
+
+            asm:
+
+    L0000: vzeroupper
+    L0003: vucomiss xmm0, [fld 360f]
+    L000b: jbe short L001f
+    L000d: vsubss xmm0, xmm0, [fld 360f]
+    L0015: vucomiss xmm0, [fld 0]
+    L001d: ja short L000d
+    L001f: vxorps xmm1, xmm1, xmm1
+    L0023: vucomiss xmm1, xmm0
+    L0027: jbe short L003b
+    L0029: vaddss xmm0, xmm0, [fld 360f]
+    L0031: vxorps xmm1, xmm1, xmm1
+    L0035: vucomiss xmm1, xmm0
+    L0039: ja short L0029
+    L003b: ret
+
+            */
+
+            return angle - MathF.Floor(angle * (1/360f)) * 360f;
+            /* asm:
+    L0000: vzeroupper
+    L0003: vmovaps xmm1, xmm0
+    L0007: vmulss xmm1, xmm1, [fld 1/360f]
+    L000f: vroundss xmm1, xmm1, xmm1, 9
+    L0015: vmulss xmm1, xmm1, [fld 360f]
+    L001d: vsubss xmm0, xmm0, xmm1
+    L0021: ret
+             */
         }
 
         #endregion Euler Angles
@@ -723,6 +809,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator +(Quaternion left, Quaternion right)
         {
             left.Xyz += right.Xyz;
@@ -736,6 +823,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator -(Quaternion left, Quaternion right)
         {
             left.Xyz -= right.Xyz;
@@ -749,6 +837,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>The result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator *(Quaternion left, Quaternion right)
         {
             Multiply(ref left, ref right, out left);
@@ -761,6 +850,7 @@ namespace Robust.Shared.Maths
         /// <param name="quaternion">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>A new instance containing the result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator *(Quaternion quaternion, float scale)
         {
             Multiply(ref quaternion, scale, out quaternion);
@@ -773,9 +863,10 @@ namespace Robust.Shared.Maths
         /// <param name="quaternion">The instance.</param>
         /// <param name="scale">The scalar.</param>
         /// <returns>A new instance containing the result of the calculation.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator *(float scale, Quaternion quaternion)
         {
-            return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
+            return new(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
 
         /// <summary>
@@ -784,6 +875,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left equals right; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Quaternion left, Quaternion right)
         {
             return left.Equals(right);
@@ -795,6 +887,7 @@ namespace Robust.Shared.Maths
         /// <param name="left">The first instance.</param>
         /// <param name="right">The second instance.</param>
         /// <returns>True, if left does not equal right; false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(Quaternion left, Quaternion right)
         {
             return !left.Equals(right);

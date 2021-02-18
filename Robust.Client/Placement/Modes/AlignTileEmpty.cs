@@ -1,6 +1,4 @@
-﻿using Robust.Shared.IoC;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
@@ -16,35 +14,44 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTileRef(MouseCoords);
-            float tileSize = mapGrid.TileSize; //convert from ushort to float
+            var tileSize = 1f;
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+
+            if (gridId.IsValid())
+            {
+                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
+                CurrentTile = mapGrid.GetTileRef(MouseCoords);
+                tileSize = mapGrid.TileSize; //convert from ushort to float
+            }
+
             GridDistancing = tileSize;
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
-                                                  CurrentTile.Y + tileSize / 2,
-                                                  MouseCoords.GridID);
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
+                    (CurrentTile.X + tileSize / 2, CurrentTile.Y + tileSize / 2));
             }
             else
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
-                                                  CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y,
-                                                  MouseCoords.GridID);
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
+                    (CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
+                        CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y));
             }
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             if (!RangeCheck(position))
             {
                 return false;
             }
 
-            var entitymanager = IoCManager.Resolve<IClientEntityManager>();
-            return !(entitymanager.AnyEntitiesIntersecting(pManager.MapManager.GetGrid(MouseCoords.GridID).ParentMapId,
-                new Box2(new Vector2(CurrentTile.X, CurrentTile.Y), new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f))));
+            var map = MouseCoords.GetMapId(pManager.EntityManager);
+            var bottomLeft = new Vector2(CurrentTile.X, CurrentTile.Y);
+            var topRight = new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f);
+            var box = new Box2(bottomLeft, topRight);
+
+            return !pManager.EntityManager.AnyEntitiesIntersecting(map, box);
         }
     }
 }

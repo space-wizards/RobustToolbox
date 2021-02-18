@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
 {
+    public delegate T DependencyFactoryDelegate<out T>()
+        where T : class;
+
     /// <inheritdoc />
     internal class DependencyCollection : IDependencyCollection
     {
@@ -18,27 +21,36 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Dictionary that maps the types passed to <see cref="Resolve{T}"/> to their implementation.
         /// </summary>
-        private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _services = new();
 
         /// <summary>
         /// The types interface types mapping to their registered implementations.
         /// This is pulled from to make a service if it doesn't exist yet.
         /// </summary>
-        private readonly Dictionary<Type, Type> _resolveTypes = new Dictionary<Type, Type>();
+        private readonly Dictionary<Type, Type> _resolveTypes = new();
+
+        private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
-        private readonly Dictionary<Type, (InjectorDelegate @delegate, object[] services)> _injectorCache =
-            new Dictionary<Type, (InjectorDelegate @delegate, object[] services)>();
+        private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
+            new();
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new()
         {
+            Register<TInterface, TImplementation>(() => new TImplementation(), overwrite);
+        }
+
+        public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
+            where TImplementation : class, TInterface
+        {
             var interfaceType = typeof(TInterface);
             CheckRegisterInterface(interfaceType, typeof(TImplementation), overwrite);
 
             _resolveTypes[interfaceType] = typeof(TImplementation);
+            _resolveFactories[typeof(TImplementation)] = factory;
         }
 
         [AssertionMethod]
@@ -80,7 +92,7 @@ namespace Robust.Shared.IoC
             _resolveTypes[typeof(TInterface)] = implementation.GetType();
             _services[typeof(TInterface)] = implementation;
 
-            InjectDependencies(implementation);
+            InjectDependencies(implementation, true);
 
             if (implementation is IPostInjectInit init)
                 init.PostInject();
@@ -96,6 +108,7 @@ namespace Robust.Shared.IoC
 
             _services.Clear();
             _resolveTypes.Clear();
+            _resolveFactories.Clear();
             _injectorCache.Clear();
         }
 
@@ -122,6 +135,11 @@ namespace Robust.Shared.IoC
                     $"Attempted to resolve type {type} before the object graph for it has been populated.");
             }
 
+            if (type == typeof(IDependencyCollection))
+            {
+                return this;
+            }
+
             throw new UnregisteredTypeException(type);
         }
 
@@ -138,7 +156,7 @@ namespace Robust.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.
-                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value);
+                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value)!;
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.
@@ -151,7 +169,8 @@ namespace Robust.Shared.IoC
 
                 try
                 {
-                    var instance = Activator.CreateInstance(value);
+                    // Yay for delegate covariance
+                    object instance = _resolveFactories[value].Invoke();
                     _services[key] = instance;
                     injectList.Add(instance);
                 }
@@ -160,6 +179,10 @@ namespace Robust.Shared.IoC
                     throw new ImplementationConstructorException(value, e.InnerException);
                 }
             }
+
+            // Because we only ever construct an instance once per registration, there is no need to keep the factory
+            // delegates. Also we need to free the delegates because lambdas capture variables.
+            _resolveFactories.Clear();
 
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)
@@ -196,7 +219,7 @@ namespace Robust.Shared.IoC
 
             // If @delegate is null then the type has no dependencies.
             // So running an initializer would be quite wasteful.
-            @delegate?.Invoke(obj, services);
+            @delegate?.Invoke(obj, services!);
         }
 
         private void InjectDependenciesReflection(object obj)

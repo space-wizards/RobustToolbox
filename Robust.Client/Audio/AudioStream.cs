@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Clyde;
 
 namespace Robust.Client.Audio
 {
@@ -8,10 +7,10 @@ namespace Robust.Client.Audio
     {
         public TimeSpan Length { get; }
         internal ClydeHandle? ClydeHandle { get; }
-        public string Name { get; }
+        public string? Name { get; }
         public int ChannelCount { get; }
 
-        internal AudioStream(ClydeHandle handle, TimeSpan length, int channelCount, string name = null)
+        internal AudioStream(ClydeHandle handle, TimeSpan length, int channelCount, string? name = null)
         {
             ClydeHandle = handle;
             Length = length;

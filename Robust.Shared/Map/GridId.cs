@@ -9,7 +9,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// An invalid grid ID.
         /// </summary>
-        public static readonly GridId Invalid = new GridId(0);
+        public static readonly GridId Invalid = new(0);
 
         internal readonly int Value;
 
@@ -30,7 +30,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GridId id && Equals(id);

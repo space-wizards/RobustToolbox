@@ -14,11 +14,17 @@ namespace Robust.Shared.Utility
                 {
                     var builder = new StringBuilder();
                     builder.AppendLine(reflectionTypeLoad.ToString());
-                    var i = 0;
-                    foreach (var inner in reflectionTypeLoad.LoaderExceptions)
+                    if (reflectionTypeLoad.LoaderExceptions != null)
                     {
-                        builder.Append($"---> (Loader Exception #{i} {inner.ToStringBetter()}\n<---");
-                        i += 1;
+                        var i = 0;
+                        foreach (var inner in reflectionTypeLoad.LoaderExceptions)
+                        {
+                            if (inner != null)
+                            {
+                                builder.Append($"---> (Loader Exception #{i} {inner.ToStringBetter()}\n<---");
+                                i += 1;
+                            }
+                        }
                     }
 
                     return builder.ToString();

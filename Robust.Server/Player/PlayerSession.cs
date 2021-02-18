@@ -1,11 +1,8 @@
-﻿using Robust.Server.Interfaces.Player;
-using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.GameObjects;
+﻿using Robust.Shared.GameStates;
 using Robust.Server.GameObjects;
 using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 
@@ -22,12 +19,13 @@ namespace Robust.Server.Player
         public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerData data)
         {
             _playerManager = playerManager;
-            SessionId = client.SessionId;
+            UserId = client.UserId;
+            Name = client.UserName;
             _data = data;
 
             PlayerState = new PlayerState
             {
-                SessionId = client.SessionId,
+                UserId = client.UserId,
             };
 
             ConnectedClient = client;
@@ -37,14 +35,14 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
 
         [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
         private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
-        public string Name => SessionId.Username;
+        public string Name { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -73,13 +71,13 @@ namespace Robust.Server.Player
 
         /// <inheritdoc />
         [ViewVariables]
-        public NetSessionId SessionId { get; }
+        public NetUserId UserId { get; }
 
         private readonly PlayerData _data;
         [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
-        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+        public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
         public void AttachToEntity(IEntity a)
@@ -127,7 +125,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public void OnConnect()
         {
-            ConnectedTime = DateTime.Now;
+            ConnectedTime = DateTime.UtcNow;
             Status = SessionStatus.Connected;
             UpdatePlayerState();
         }
@@ -161,6 +159,8 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
+        public LoginType AuthType => ConnectedClient.AuthType;
+
         private void UpdatePlayerState()
         {
             PlayerState.Status = Status;
@@ -176,7 +176,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public override string ToString()
         {
-            return SessionId.ToString();
+            return Name;
         }
     }
 }

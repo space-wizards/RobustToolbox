@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.ContentPack
@@ -8,9 +9,9 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     public abstract class GameShared : IDisposable
     {
-        protected ModuleTestingCallbacks TestingCallbacks { get; private set; }
+        protected List<ModuleTestingCallbacks> TestingCallbacks { get; private set; } = new();
 
-        public void SetTestingCallbacks(ModuleTestingCallbacks testingCallbacks)
+        public void SetTestingCallbacks(List<ModuleTestingCallbacks> testingCallbacks)
         {
             TestingCallbacks = testingCallbacks;
         }

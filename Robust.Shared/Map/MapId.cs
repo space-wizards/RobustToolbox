@@ -6,7 +6,7 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public struct MapId : IEquatable<MapId>
     {
-        public static readonly MapId Nullspace = new MapId(0);
+        public static readonly MapId Nullspace = new(0);
 
         internal readonly int Value;
 
@@ -22,7 +22,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is MapId id && Equals(id);

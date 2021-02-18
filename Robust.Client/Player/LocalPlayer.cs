@@ -1,11 +1,8 @@
 ﻿using System;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.ViewVariables;
 
@@ -22,21 +19,21 @@ namespace Robust.Client.Player
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
-        public event Action<EntityAttachedEventArgs> EntityAttached;
+        public event Action<EntityAttachedEventArgs>? EntityAttached;
 
         /// <summary>
         ///     An entity has been detached from the local player.
         /// </summary>
-        public event Action<EntityDetachedEventArgs> EntityDetached;
+        public event Action<EntityDetachedEventArgs>? EntityDetached;
 
         /// <summary>
         ///     Game entity that the local player is controlling. If this is null, the player
         ///     is in free/spectator cam.
         /// </summary>
-        [ViewVariables] public IEntity ControlledEntity { get; private set; }
+        [ViewVariables] public IEntity? ControlledEntity { get; private set; }
 
 
-        [ViewVariables] public NetSessionId SessionId { get; set; }
+        [ViewVariables] public NetUserId UserId { get; set; }
 
         /// <summary>
         ///     Session of the local client.
@@ -44,17 +41,18 @@ namespace Robust.Client.Player
         [ViewVariables]
         public IPlayerSession Session => InternalSession;
 
-        internal PlayerSession InternalSession { get; set; }
+        internal PlayerSession InternalSession { get; set; } = default!;
 
         /// <summary>
         ///     OOC name of the local player.
         /// </summary>
-        [ViewVariables] public string Name => SessionId.Username;
+        [ViewVariables]
+        public string Name { get; set; } = default!;
 
         /// <summary>
         ///     The status of the client's session has changed.
         /// </summary>
-        public event EventHandler<StatusEventArgs> StatusChanged;
+        public event EventHandler<StatusEventArgs>? StatusChanged;
 
         /// <summary>
         ///     Constructs an instance of this object.

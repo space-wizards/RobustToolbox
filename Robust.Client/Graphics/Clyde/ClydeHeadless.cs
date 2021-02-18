@@ -1,32 +1,40 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics.Clyde
 {
     /// <summary>
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
+    [UsedImplicitly]
     internal sealed class ClydeHeadless : ClydeBase, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
+        public IRenderWindow MainWindowRenderTarget { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
+        public Vector2 DefaultWindowScale => (1, 1);
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
             return new DummyShaderInstance();
         }
 
+        public ClydeHeadless()
+        {
+            MainWindowRenderTarget = new DummyRenderWindow(this);
+        }
+
         public Vector2 MouseScreenPosition => ScreenSize / 2;
-        public IClydeDebugInfo DebugInfo => null;
-        public IClydeDebugStats DebugStats => null;
+        public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
+        public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -39,19 +47,37 @@ namespace Robust.Client.Graphics.Clyde
         public string GetKeyNameScanCode(int scanCode) => string.Empty;
         public int GetKeyScanCode(Keyboard.Key key) => default;
 
+        public void Shutdown()
+        {
+            // Nada.
+        }
+
+        public uint? GetX11WindowId()
+        {
+            return null;
+        }
+
         public override void SetWindowTitle(string title)
+        {
+            // Nada.
+        }
+
+        public void RequestWindowAttention()
         {
             // Nada.
         }
 
         public override bool Initialize()
         {
+            base.Initialize();
             return true;
         }
 
-#pragma warning disable CS0067
-        public override event Action<WindowResizedEventArgs> OnWindowResized;
-#pragma warning restore CS0067
+        public override event Action<WindowResizedEventArgs> OnWindowResized
+        {
+            add { }
+            remove { }
+        }
 
         public void Render()
         {
@@ -68,30 +94,34 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
-            using (var image = Image.Load(stream))
+            using (var image = Image.Load<Rgba32>(stream))
             {
                 return LoadTextureFromImage(image, name, loadParams);
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
         }
 
-        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
-            TextureSampleParameters? sampleParameters = null, string name = null)
+        public OwnedTexture CreateBlankTexture<T>(
+            Vector2i size,
+            string? name = null,
+            in TextureLoadParameters? loadParams = null)
+            where T : unmanaged, IPixel<T>
         {
-            return new DummyRenderTarget(size, new DummyTexture(size));
+            return new DummyTexture(size);
         }
 
-        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
+        public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+            TextureSampleParameters? sampleParameters = null, string? name = null)
         {
-            projMatrix = Matrix3.Identity;
+            return new DummyRenderTexture(size, new DummyTexture(size));
         }
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
@@ -104,7 +134,7 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyCursor();
         }
 
-        public void SetCursor(ICursor cursor)
+        public void SetCursor(ICursor? cursor)
         {
             // Nada.
         }
@@ -114,7 +144,12 @@ namespace Robust.Client.Graphics.Clyde
             callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
+        public IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        {
+            return new Viewport();
+        }
+
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
         {
             return default;
         }
@@ -129,16 +164,16 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream, string name = null)
+        public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
-        public AudioStream LoadAudioWav(Stream stream, string name = null)
+        public AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -146,7 +181,7 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio = false)
         {
             return DummyBufferedAudioSource.Instance;
         }
@@ -161,6 +196,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetMasterVolume(float newVolume)
+        {
+            // Nada.
+        }
+
         private class DummyCursor : ICursor
         {
             public void Dispose()
@@ -171,7 +211,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private class DummyAudioSource : IClydeAudioSource
         {
-            public static DummyAudioSource Instance { get; } = new DummyAudioSource();
+            public static DummyAudioSource Instance { get; } = new();
 
             public bool IsPlaying => default;
             public bool IsLooping { get; set; }
@@ -206,12 +246,12 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetLooping()
+            public void SetVolume(float decibels)
             {
                 // Nada.
             }
 
-            public void SetVolume(float decibels)
+            public void SetOcclusion(float blocks)
             {
                 // Nada.
             }
@@ -224,25 +264,20 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
         {
-            public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
+            public new static DummyBufferedAudioSource Instance { get; } = new();
             public int SampleRate { get; set; } = 0;
 
-            public void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
+            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
             {
                 // Nada.
             }
 
-            public void WriteBuffer(uint handle, ReadOnlySpan<float> data)
+            public void WriteBuffer(int handle, ReadOnlySpan<float> data)
             {
                 // Nada.
             }
 
-            public void QueueBuffer(uint handle)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffers(ReadOnlySpan<uint> handles)
+            public void QueueBuffers(ReadOnlySpan<int> handles)
             {
                 // Nada.
             }
@@ -252,7 +287,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void GetBuffersProcessed(Span<uint> handles)
+            public void GetBuffersProcessed(Span<int> handles)
             {
                 // Nada.
             }
@@ -265,13 +300,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyTexture : OwnedTexture
         {
-            public override void Delete()
-            {
-                // Hey that was easy.
-            }
-
             public DummyTexture(Vector2i size) : base(size)
             {
+            }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Image<T> sourceImage, in UIBox2i sourceRegion)
+            {
+                // Just do nothing on mutate.
             }
         }
 
@@ -351,9 +386,9 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class DummyRenderTarget : IRenderTarget
+        private sealed class DummyRenderTexture : IRenderTexture
         {
-            public DummyRenderTarget(Vector2i size, Texture texture)
+            public DummyRenderTexture(Vector2i size, Texture texture)
             {
                 Size = size;
                 Texture = texture;
@@ -363,6 +398,61 @@ namespace Robust.Client.Graphics.Clyde
             public Texture Texture { get; }
 
             public void Delete()
+            {
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private sealed class DummyRenderWindow : IRenderWindow
+        {
+            private readonly ClydeHeadless _clyde;
+
+            public DummyRenderWindow(ClydeHeadless clyde)
+            {
+                _clyde = clyde;
+            }
+
+            public Vector2i Size => _clyde.ScreenSize;
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private sealed class DummyDebugStats : IClydeDebugStats
+        {
+            public int LastGLDrawCalls => 0;
+            public int LastClydeDrawCalls => 0;
+            public int LastBatches => 0;
+            public (int vertices, int indices) LargestBatchSize => (0, 0);
+            public int TotalLights => 0;
+        }
+
+        private sealed class DummyDebugInfo : IClydeDebugInfo
+        {
+            public OpenGLVersion OpenGLVersion { get; } = new(3, 3, isES: false, isCore: true);
+            public string Renderer => "ClydeHeadless";
+            public string Vendor => "Space Wizards Federation";
+            public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
+            public bool Overriding => false;
+        }
+
+        private sealed class Viewport : IClydeViewport
+        {
+            public void Dispose()
+            {
+            }
+
+            public IRenderTexture RenderTarget { get; } =
+                new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
+
+            public IEye? Eye { get; set; }
+            public Vector2i Size { get; }
+
+            public void Render()
             {
             }
         }

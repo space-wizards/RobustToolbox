@@ -1,17 +1,15 @@
-using System;
-using System.Buffers;
+﻿using System;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL4;
+using System.Buffers;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
-using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
+using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -28,46 +26,23 @@ namespace Robust.Client.Graphics.Clyde
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
         // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
         private const int FovMapSize = 2048;
-        private const int MaxLightsPerScene = 128;
 
-        private ClydeShaderInstance _fovDebugShaderInstance;
+        // The maximum possible amount of lights in the light list.
+        // In the average case, the only cost of increasing this value is memory.
+        // If you are ever in a situation where this value needs to be increased, however, it will also implicitly cost some CPU time to sort the additional lights.
+        private const int LightsToRenderListSize = 2048;
+
+        private ClydeShaderInstance _fovDebugShaderInstance = default!;
 
         // Various shaders used in the light rendering process.
         // We keep ClydeHandles into the _loadedShaders dict so they can be reloaded.
         // They're all .swsl now.
-        private ClydeHandle _lightShaderHandle;
+        private ClydeHandle _lightSoftShaderHandle;
+        private ClydeHandle _lightHardShaderHandle;
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
         private ClydeHandle _wallBleedBlurShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
-
-        // Projection matrix used while rendering FOV.
-        // We keep this around so we can reverse the effects while overlaying actual FOV.
-        private Matrix4 _fovProjection;
-
-        // Various render targets used in the light rendering process.
-
-        // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
-        private RenderTarget _lightRenderTarget;
-
-        // For depth calculation for FOV.
-        private RenderTarget _fovRenderTarget;
-
-        // For depth calculation of lighting shadows.
-        private RenderTarget _shadowRenderTarget;
-
-        // Unused, to be removed.
-        private RenderTarget _wallMaskRenderTarget;
-
-        // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
-        // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
-        private RenderTarget _wallBleedIntermediateRenderTarget1;
-        private RenderTarget _wallBleedIntermediateRenderTarget2;
-
-        // Proxies to textures of some of the above render targets.
-        private ClydeTexture FovTexture => _fovRenderTarget.Texture;
-
-        private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
         // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
         // (it uses VSM unlike final FOV).
@@ -75,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // Shader program used to calculate depth for shadows/FOV.
         // Sadly not .swsl since it has a different vertex format and such.
-        private GLShaderProgram _fovCalculationProgram;
+        private GLShaderProgram _fovCalculationProgram = default!;
 
         // Occlusion geometry used to render shadows and FOV.
 
@@ -83,8 +58,9 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionVbo;
-        private GLBuffer _occlusionEbo;
+        private GLBuffer _occlusionVbo = default!;
+        private GLBuffer _occlusionVIVbo = default!;
+        private GLBuffer _occlusionEbo = default!;
         private GLHandle _occlusionVao;
 
 
@@ -95,40 +71,66 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionMaskDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionMaskVbo;
-        private GLBuffer _occlusionMaskEbo;
+        private GLBuffer _occlusionMaskVbo = default!;
+        private GLBuffer _occlusionMaskEbo = default!;
         private GLHandle _occlusionMaskVao;
+
+        // For depth calculation for FOV.
+        private RenderTexture _fovRenderTarget = default!;
+
+        // For depth calculation of lighting shadows.
+        private RenderTexture _shadowRenderTarget = default!;
+        // Used because otherwise a MaxLightsPerScene change callback getting hit on startup causes interesting issues (read: bugs)
+        private bool _shadowRenderTargetCanInitializeSafely = false;
+
+        // Proxies to textures of the above render targets.
+        private ClydeTexture FovTexture => _fovRenderTarget.Texture;
+        private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
+
+        private (PointLightComponent light, Vector2 pos, float distanceSquared)[] _lightsToRenderList = new (PointLightComponent light, Vector2 pos, float distanceSquared)[LightsToRenderListSize];
 
         private unsafe void InitLighting()
         {
+            // Other...
             LoadLightingShaders();
-
-            RegenerateLightingRenderTargets();
 
             {
                 // Occlusion VAO.
                 // Only handles positions, no other vertex data necessary.
-                _occlusionVao = new GLHandle(GL.GenVertexArray());
-                GL.BindVertexArray(_occlusionVao.Handle);
+                _occlusionVao = new GLHandle(GenVertexArray());
+                BindVertexArray(_occlusionVao.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
 
+                // aPos
                 _occlusionVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionVbo));
+                GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, sizeof(Vector4), IntPtr.Zero);
+                GL.EnableVertexAttribArray(0);
 
+                CheckGlError();
+
+                // subVertex
+                _occlusionVIVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionVIVbo));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.UnsignedByte, true, sizeof(byte) * 2, IntPtr.Zero);
+                GL.EnableVertexAttribArray(1);
+
+                // index
                 _occlusionEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionEbo));
 
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vector3), IntPtr.Zero);
-                GL.EnableVertexAttribArray(0);
+                CheckGlError();
             }
 
             {
                 // Occlusion mask VAO.
                 // Only handles positions, no other vertex data necessary.
 
-                _occlusionMaskVao = new GLHandle(GL.GenVertexArray());
-                GL.BindVertexArray(_occlusionMaskVao.Handle);
+                _occlusionMaskVao = new GLHandle(GenVertexArray());
+                BindVertexArray(_occlusionMaskVao.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionMaskVao, nameof(_occlusionMaskVao));
 
@@ -140,25 +142,28 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(Vector2), IntPtr.Zero);
                 GL.EnableVertexAttribArray(0);
+                CheckGlError();
             }
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
 
-            _fovFilterSampler = new GLHandle(GL.GenSampler());
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+            if (_hasGLSamplerObjects)
+            {
+                _fovFilterSampler = new GLHandle(GL.GenSampler());
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+                CheckGlError();
+            }
 
             // Shadow FBO.
-            _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
-                nameof(_shadowRenderTarget));
+            _shadowRenderTargetCanInitializeSafely = true;
+            MaxLightsPerSceneChanged(_maxLightsPerScene);
         }
 
         private void LoadLightingShaders()
@@ -166,7 +171,12 @@ namespace Robust.Client.Graphics.Clyde
             var depthVert = ReadEmbeddedShader("shadow-depth.vert");
             var depthFrag = ReadEmbeddedShader("shadow-depth.frag");
 
-            _fovCalculationProgram = _compileProgram(depthVert, depthFrag, "Shadow Depth Program");
+            (string, uint)[] attribLocations = {
+                ("aPos", 0),
+                ("subVertex", 1)
+            };
+
+            _fovCalculationProgram = _compileProgram(depthVert, depthFrag, attribLocations, "Shadow Depth Program");
 
             var debugShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/depth-debug.swsl");
             _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
@@ -186,35 +196,38 @@ namespace Robust.Client.Graphics.Clyde
             }
 
 
-            _lightShaderHandle = LoadShaderHandle("/Shaders/Internal/light.swsl");
+            _lightSoftShaderHandle = LoadShaderHandle("/Shaders/Internal/light-soft.swsl");
+            _lightHardShaderHandle = LoadShaderHandle("/Shaders/Internal/light-hard.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
 
-        private void DrawFov(IEye eye)
+        private void DrawFov(Viewport viewport, IEye eye)
         {
             using var _ = DebugGroup(nameof(DrawFov));
 
-            PrepareDepthDraw(_fovRenderTarget);
+            PrepareDepthDraw(RtToLoaded(_fovRenderTarget));
 
             if (eye.DrawFov)
             {
                 // Calculate maximum distance for the projection based on screen size.
-                var screenSizeCut = ScreenSize / EyeManager.PixelsPerMeter;
+                var screenSizeCut = viewport.Size / EyeManager.PixelsPerMeter;
                 var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
                 // Once with back face culling like regular lighting.
                 // Then once with front face culling for the final FOV pass (so you see "into" walls).
                 GL.CullFace(CullFaceMode.Back);
+                CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0);
 
                 GL.CullFace(CullFaceMode.Front);
+                CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1);
             }
 
             FinalizeDepthDraw();
@@ -227,91 +240,86 @@ namespace Robust.Client.Graphics.Clyde
         /// <param name="width">The width of the current framebuffer.</param>
         /// <param name="maxDist">The maximum distance of this light.</param>
         /// <param name="viewportY">Y index of the row to render the depth at in the framebuffer.</param>
-        /// <param name="projMatrix">
-        ///     Projection matrix necessary to later un-project the depth map when applying it.
         /// </param>
-        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY,
-            out Matrix4 projMatrix)
+        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY)
         {
-            projMatrix = default; // Gets overriden below.
-
-            var (posX, posY) = lightPos;
-            var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
-
             // The light is now the center of the universe.
-            _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
+            _fovCalculationProgram.SetUniform("shadowLightCentre", lightPos);
 
-            var baseProj = Matrix4.CreatePerspectiveFieldOfView(
-                MathHelper.DegreesToRadians(90),
-                1,
-                maxDist / 1000,
-                maxDist * 1.1f);
+            // Shift viewport around so we write to the correct quadrant of the depth map.
+            GL.Viewport(0, viewportY, width, 1);
+            CheckGlError();
 
-            var step = width / 4;
-
-            for (var i = 0; i < 4; i++)
-            {
-                // The occlusion geometry has to be rotated for every orientation and also corrected
-                // so that the 2D coordinates make more sense in 3D.
-                // These quaternions do that.
-                // They're just two 90 degree rotations around (at most) 2 of the axes of rotation but uhhh.
-                // I couldn't get LookRotation to work, ok?
-                var orientation = i switch
-                {
-                    0 => new Quaternion(-0.707f, 0, 0, 0.707f),
-                    1 => new Quaternion(0.5f, -0.5f, -0.5f, -0.5f),
-                    2 => new Quaternion(0, 0.707f, 0.707f, 0),
-                    3 => new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
-                    _ => default
-                };
-
-                var rotMatrix = Matrix4.Rotate(orientation);
-                var proj = rotMatrix * baseProj;
-
-                if (i == 0)
-                {
-                    // First projection matrix is necessary to undo the projection inside the application shader.
-                    // So store it.
-                    projMatrix = proj;
-                }
-
-                _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
-                // Shift viewport around so we write to the correct quadrant of the depth map.
-                GL.Viewport(step * i, viewportY, step, 1);
-
-                GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
-                _debugStats.LastGLDrawCalls += 1;
-            }
+            // Make two draw calls. This allows a faked "generation" of additional polygons.
+            _fovCalculationProgram.SetUniform("shadowOverlapSide", 0.0f);
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            CheckGlError();
+            _debugStats.LastGLDrawCalls += 1;
+            // Yup, it's the other draw call.
+            _fovCalculationProgram.SetUniform("shadowOverlapSide", 1.0f);
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            CheckGlError();
+            _debugStats.LastGLDrawCalls += 1;
         }
 
-        private void PrepareDepthDraw(RenderTarget target)
+        private void PrepareDepthDraw(LoadedRenderTarget target)
         {
             const float arbitraryDistanceMax = 1234;
 
+            GL.Disable(EnableCap.Blend);
+            CheckGlError();
+
             GL.Enable(EnableCap.DepthTest);
+            CheckGlError();
             GL.DepthFunc(DepthFunction.Lequal);
+            CheckGlError();
             GL.DepthMask(true);
+            CheckGlError();
 
             GL.Enable(EnableCap.CullFace);
+            CheckGlError();
             GL.FrontFace(FrontFaceDirection.Cw);
+            CheckGlError();
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
+            BindRenderTargetImmediate(target);
+            CheckGlError();
             GL.ClearDepth(1);
-            GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
+            CheckGlError();
+            if (_hasGLFloatFramebuffers)
+            {
+                GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
+            }
+            else
+            {
+                GL.ClearColor(1, 1, 1, 1);
+            }
+            CheckGlError();
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+            CheckGlError();
 
-            GL.BindVertexArray(_occlusionVao.Handle);
+            BindVertexArray(_occlusionVao.Handle);
+            CheckGlError();
 
             _fovCalculationProgram.Use();
+
+            SetupGlobalUniformsImmediate(_fovCalculationProgram, null);
         }
 
-        private static void FinalizeDepthDraw()
+        private void FinalizeDepthDraw()
         {
-            GL.Disable(EnableCap.DepthTest);
             GL.Disable(EnableCap.CullFace);
+            CheckGlError();
+
+            GL.DepthMask(false);
+            CheckGlError();
+            GL.Disable(EnableCap.DepthTest);
+            CheckGlError();
+
+            GL.Enable(EnableCap.Blend);
+            CheckGlError();
         }
 
-        private void DrawLightsAndFov(Box2 worldBounds, IEye eye)
+        private void DrawLightsAndFov(Viewport viewport, Box2 worldBounds, IEye eye)
         {
             if (!_lightManager.Enabled)
             {
@@ -320,65 +328,73 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = eye.Position.MapId;
 
-            var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
+            var (lights, count, expandedBounds) = GetLightsToRender(map, worldBounds);
 
             UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
 
-            DrawFov(eye);
+            DrawFov(viewport, eye);
 
-            var shadowMatrices = new Matrix4[lights.Count];
+            if (!_lightManager.DrawLighting)
+            {
+                BindRenderTargetFull(viewport.RenderTarget);
+                GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
+                CheckGlError();
+                return;
+            }
 
             using (DebugGroup("Draw shadow depth"))
             {
-                PrepareDepthDraw(_shadowRenderTarget);
+                PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
                 GL.CullFace(CullFaceMode.Back);
+                CheckGlError();
 
                 if (_lightManager.DrawShadows)
                 {
-                    for (var i = 0; i < lights.Count; i++)
+                    for (var i = 0; i < count; i++)
                     {
-                        var (light, lightPos) = lights[i];
+                        var (light, lightPos, _) = lights[i];
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out shadowMatrices[i]);
+                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
                     }
                 }
 
                 FinalizeDepthDraw();
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _lightRenderTarget.ObjectHandle.Handle);
-            GLClearColor(Color.FromSrgb(AmbientLightColor));
+            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
+            CheckGlError();
+            GLClearColor(_lightManager.AmbientLightColor);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            CheckGlError();
 
-            var (lightW, lightH) = GetLightMapSize();
+            var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
+            CheckGlError();
 
-            var lightShader = _loadedShaders[_lightShaderHandle].Program;
+            var lightShader = _loadedShaders[_enableSoftShadows ? _lightSoftShaderHandle : _lightHardShaderHandle].Program;
             lightShader.Use();
+
+            SetupGlobalUniformsImmediate(lightShader, ShadowTexture);
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+            CheckGlError();
 
             var lastRange = float.NaN;
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
-            Texture lastMask = null;
+            var lastSoftness = float.NaN;
+            Texture? lastMask = null;
 
-            for (var i = 0; i < lights.Count; i++)
+            for (var i = 0; i < count; i++)
             {
-                var (component, lightPos) = lights[i];
+                var (component, lightPos, _) = lights[i];
+
                 var transform = component.Owner.Transform;
 
-                var circle = new Circle(lightPos, component.Radius);
-
-                if (!circle.Intersects(worldBounds))
-                {
-                    continue;
-                }
-
-                Texture mask = null;
+                Texture? mask = null;
                 var rotation = Angle.Zero;
                 if (component.Mask != null)
                 {
@@ -399,13 +415,13 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
 
-                if (!FloatMath.CloseTo(lastRange, component.Radius))
+                if (!MathHelper.CloseTo(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
                     lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
-                if (!FloatMath.CloseTo(lastPower, component.Energy))
+                if (!MathHelper.CloseTo(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
                     lightShader.SetUniformMaybe("lightPower", lastPower);
@@ -417,9 +433,14 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("lightColor", lastColor);
                 }
 
+                if (_enableSoftShadows && !MathHelper.CloseTo(lastSoftness, component.Softness))
+                {
+                    lastSoftness = component.Softness;
+                    lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
+                }
+
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
                 lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
-                lightShader.SetUniformMaybe("shadowMatrix", shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -437,26 +458,81 @@ namespace Robust.Client.Graphics.Clyde
                 (matrix.R0C2, matrix.R1C2) = lightPos;
 
                 _drawQuad(-offset, offset, matrix, lightShader);
+
+                _debugStats.TotalLights += 1;
             }
 
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            ResetBlendFunc();
 
-            ApplyLightingFovToBuffer(eye);
+            CheckGlError();
 
-            BlurOntoWalls(eye);
+            ApplyLightingFovToBuffer(viewport, eye);
 
-            MergeWallLayer();
+            BlurOntoWalls(viewport, eye);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            MergeWallLayer(viewport);
+
+            BindRenderTargetFull(viewport.RenderTarget);
+            GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
+            CheckGlError();
+
+            Array.Clear(lights, 0, count);
 
             _lightingReady = true;
         }
 
-        private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
+        private ((PointLightComponent light, Vector2 pos, float distanceSquared)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            var lights = new List<(PointLightComponent light, Vector2 pos)>(64);
+            var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
+
+            var state = (this, worldBounds, count: 0);
+
+            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
+            {
+                var transform = light.Owner.Transform;
+
+                if (state.count >= LightsToRenderListSize)
+                {
+                    // There are too many lights to fit in the static memory.
+                    return false;
+                }
+
+                if (!light.Enabled || light.ContainerOccluded)
+                {
+                    return true;
+                }
+
+                var lightPos = transform.WorldMatrix.Transform(light.Offset);
+
+                var circle = new Circle(lightPos, light.Radius);
+
+                // If the light doesn't touch anywhere the camera can see, it doesn't matter.
+                if (!circle.Intersects(state.worldBounds))
+                {
+                    return true;
+                }
+
+                float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
+                state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
+
+                return true;
+            }, worldBounds);
+
+            if (state.count > _maxLightsPerScene)
+            {
+                // There are too many lights to fit in the scene.
+                // This check must occur before occluder expansion, or else bad things happen.
+                // Sort lights by distance.
+                Array.Sort(_lightsToRenderList, 0, state.count, Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
+                {
+                    return x.distanceSquared.CompareTo(y.distanceSquared);
+                }));
+                // Then effectively delete the furthest lights.
+                state.count = _maxLightsPerScene;
+            }
+
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
             // As they could still affect the shadows of (large) light sources.
             // We expand the world bounds so that it encompasses the center of every light source.
@@ -464,62 +540,44 @@ namespace Robust.Client.Graphics.Clyde
             // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
             var expandedBounds = worldBounds;
 
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            for (var i = 0; i < state.count; i++)
             {
-                var transform = component.Owner.Transform;
-
-                if (!component.Enabled || transform.MapID != map)
-                {
-                    continue;
-                }
-
-                var lightPos = transform.WorldMatrix.Transform(component.Offset);
-
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
-
-                if (!lightBounds.Intersects(worldBounds))
-                {
-                    continue;
-                }
-
-                lights.Add((component, lightPos));
-
+                var (_, lightPos, _) = _lightsToRenderList[i];
                 expandedBounds = expandedBounds.ExtendToContain(lightPos);
-
-                if (lights.Count == MaxLightsPerScene)
-                {
-                    // TODO: Allow more than 64 lights.
-                    break;
-                }
             }
 
-            return (lights, expandedBounds);
+            return (_lightsToRenderList, state.count, expandedBounds);
         }
 
-        private void BlurOntoWalls(IEye eye)
+        private void BlurOntoWalls(Viewport viewport, IEye eye)
         {
             using var _ = DebugGroup(nameof(BlurOntoWalls));
 
             GL.Disable(EnableCap.Blend);
-            _setSpace(CurrentSpace.ScreenSpace);
+            CheckGlError();
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
 
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
 
-            shader.SetUniformMaybe("size", (Vector2) _wallBleedIntermediateRenderTarget1.Size);
+            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
+
+            shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
-            var size = _wallBleedIntermediateRenderTarget1.Size;
+            var size = viewport.WallBleedIntermediateRenderTarget1.Size;
             GL.Viewport(0, 0, size.X, size.Y);
+            CheckGlError();
 
             // Initially we're pulling from the light render target.
             // So we set it out of the loop so
             // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
-            SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
+            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PixelsPerMeter;
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -530,94 +588,130 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                _wallBleedIntermediateRenderTarget1.Bind();
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget1);
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, _wallBleedIntermediateRenderTarget1.Texture);
-                _wallBleedIntermediateRenderTarget2.Bind();
+                SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget1.Texture);
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget2);
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, _wallBleedIntermediateRenderTarget2.Texture);
+                SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget2.Texture);
             }
 
             GL.Enable(EnableCap.Blend);
-            _setSpace(CurrentSpace.WorldSpace);
+            CheckGlError();
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
-        private void MergeWallLayer()
+        private void MergeWallLayer(Viewport viewport)
         {
             using var _ = DebugGroup(nameof(MergeWallLayer));
 
-            _lightRenderTarget.Bind();
+            BindRenderTargetFull(viewport.LightRenderTarget);
 
-            GL.Viewport(0, 0, _lightRenderTarget.Size.X, _lightRenderTarget.Size.Y);
+            GL.Viewport(0, 0, viewport.LightRenderTarget.Size.X, viewport.LightRenderTarget.Size.Y);
+            CheckGlError();
             GL.Disable(EnableCap.Blend);
+            CheckGlError();
 
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
 
-            var tex = _wallBleedIntermediateRenderTarget2.Texture;
+            var tex = viewport.WallBleedIntermediateRenderTarget2.Texture;
+
+            SetupGlobalUniformsImmediate(shader, tex);
+
             SetTexture(TextureUnit.Texture0, tex);
 
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
-            GL.BindVertexArray(_occlusionMaskVao.Handle);
+            BindVertexArray(_occlusionMaskVao.Handle);
+            CheckGlError();
 
-            GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
                 IntPtr.Zero);
+            CheckGlError();
 
             GL.Enable(EnableCap.Blend);
+            CheckGlError();
         }
 
-        private void ApplyFovToBuffer(IEye eye)
+        private void ApplyFovToBuffer(Viewport viewport, IEye eye)
         {
             // Applies FOV to the final framebuffer.
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
 
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
+
             SetTexture(TextureUnit.Texture0, FovTexture);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(fovShader);
+            DrawBlit(viewport, fovShader);
         }
 
-        private void ApplyLightingFovToBuffer(IEye eye)
+        private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)
         {
             // Applies FOV to the lighting framebuffer.
 
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
 
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
+
             SetTexture(TextureUnit.Texture0, FovTexture);
 
-            // Have to bind sampler to use linear filtering on the shadow map here.
+            // Have to swap to linear filtering on the shadow map here.
             // VSM wants it.
-            GL.BindSampler(0, _fovFilterSampler.Handle);
+            if (_hasGLSamplerObjects)
+            {
+                GL.BindSampler(0, _fovFilterSampler.Handle);
+                CheckGlError();
+            }
+            else
+            {
+                // OpenGL why do you torture me so.
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
+                CheckGlError();
+            }
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(fovShader);
+            DrawBlit(viewport, fovShader);
 
-            GL.BindSampler(0, 0);
+            if (_hasGLSamplerObjects)
+            {
+                GL.BindSampler(0, 0);
+                CheckGlError();
+            }
+            else
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+                CheckGlError();
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+                CheckGlError();
+            }
         }
 
-        private void DrawBlit(GLShaderProgram shader)
+        private void DrawBlit(Viewport vp, GLShaderProgram shader)
         {
-            _drawQuad(_eyeManager.ScreenToMap((-1, -1)).Position,
-                _eyeManager.ScreenToMap(ScreenSize + Vector2i.One).Position,
-                Matrix3.Identity, shader);
+            var a = ScreenToMap((-1, -1), vp);
+            var b = ScreenToMap(vp.Size + Vector2i.One, vp);
+
+            _drawQuad(a, b, Matrix3.Identity, shader);
         }
 
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
@@ -630,283 +724,289 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Yes this function throws and index exception if you reach maxOccluders.
 
             const int maxOccluders = 2048;
-            const float polygonHeight = 500;
 
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            // TODO: More accurate bounds check.
-            // Yeah just enlarge it a wee bit to accomodate for large occluders maybe. Oh well.
-            expandedBounds.Enlarged(2);
-
-            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
+            // 16 = 4 vertices * 4 directions
+            var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(maxOccluders * 4 * 4);
+            // multiplied by 2 (it's a vector2 of bytes)
+            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(maxOccluders * 2 * 4 * 4);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount() * 4);
 
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxOccluders * 4);
-            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 5);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount());
 
             try
             {
+                var occluderSystem = _entitySystemManager.GetEntitySystem<OccluderSystem>();
+
                 var ai = 0;
+                var avi = 0;
                 var ami = 0;
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
+                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, expandedBounds, true))
                 {
-                    var transform = occluder.Owner.Transform;
-                    if (!occluder.Enabled || transform.MapID != map)
+                    if (!occluderSystem.TryGetOccluderTreeForGrid(map, gridId, out var occluderTree)) continue;
+
+                    Box2 gridBounds;
+
+                    if (gridId == GridId.Invalid)
                     {
-                        continue;
+                        gridBounds = expandedBounds;
+                    }
+                    else
+                    {
+                        // TODO: Ideally this would clamp to the outer border of what we can see
+                        var grid = _mapManager.GetGrid(gridId);
+                        gridBounds = expandedBounds.Translated(-grid.WorldPosition);
                     }
 
-                    var worldTransform = transform.WorldMatrix;
-                    var box = occluder.BoundingBox;
-
-                    var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
-
-                    if (!expandedBounds.Contains(centerPos))
+                    occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
-                        continue;
-                    }
-
-                    // So uh, angle 0 = east... Apparently...
-                    // We account for that here so I don't go insane.
-                    var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
-                    var (trX, trY) = worldTransform.Transform(box.TopLeft);
-                    var (brX, brY) = worldTransform.Transform(box.TopRight);
-                    var (blX, blY) = worldTransform.Transform(box.BottomRight);
-
-                    // Vertices used as main occlusion geometry.
-                    // We always send all of these (see below) to keep code complexity down.
-                    arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
-                    arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
-                    arrayBuffer[ai + 2] = new Vector3(trX, trY, polygonHeight);
-                    arrayBuffer[ai + 3] = new Vector3(trX, trY, -polygonHeight);
-                    arrayBuffer[ai + 4] = new Vector3(brX, brY, polygonHeight);
-                    arrayBuffer[ai + 5] = new Vector3(brX, brY, -polygonHeight);
-                    arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
-                    arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
-
-                    //
-                    // Buckle up.
-                    // For the front-face culled final FOV to work, we obviously cannot have faces inside a series
-                    // of walls that are perpendicular to you.
-                    // This next code does that by only writing render indices for faces that should be rendered.
-                    //
-
-                    //
-                    // Keep in mind, a face only blocks light from *leaving* from the back.
-                    // It does not block light entering.
-                    //
-                    // So first rule: a face always exists if there's no neighboring occluder in that direction.
-                    // Can't have holes after all.
-                    // Second rule: otherwise, if either vertex of the face is "visible" from the camera,
-                    // we don't draw the face.
-                    // This visibility check is significantly more simple and resourceful than you might think.
-                    // A corner becomes "occluded" if it's not visible from either cardinal direction it's on.
-                    // So a the top right corner is occluded if there's something blocking visibility
-                    // on the top AND right.
-                    // This "occluded in direction" check has two parts: whether this is a neighboring occluder (duh)
-                    // And whether the is in that direction of the corner.
-                    // (so a corner on the back of a wall is occluded because the camera is position on the other side).
-                    //
-                    // You'll notice that in some cases like corner walls, ALL corners are marked "occluded".
-                    // This is fine! The occlusion only blocks incoming light,
-                    // and the neighboring walls DO treat those corners as visible.
-                    // Yes, you cannot share the handling of overlapping corners of two aligned neighboring occluders.
-                    // They still have different potential behavior, keeps the code simple(ish).
-                    //
-
-                    // Calculate delta positions from camera.
-                    var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
-                    var (dTrX, dTrY) = (trX, trY) - eyePosition;
-                    var (dBlX, dBlY) = (blX, blY) - eyePosition;
-                    var (dBrX, dBrY) = (brX, brY) - eyePosition;
-
-                    // Get which neighbors are occluding.
-                    var no = occluder.Occluding.HasFlag(OccluderDir.North);
-                    var so = occluder.Occluding.HasFlag(OccluderDir.South);
-                    var eo = occluder.Occluding.HasFlag(OccluderDir.East);
-                    var wo = occluder.Occluding.HasFlag(OccluderDir.West);
-
-                    // Do visibility tests for occluders (described above).
-                    var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
-                    var trV = dTrX < 0 && !eo || dTrY < 0 && !no;
-                    var blV = dBlX > 0 && !wo || dBlY > 0 && !so;
-                    var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
-
-                    // Handle faces, rules described above.
-
-                    // North face.
-                    if (!no || !tlV && !trV)
-                    {
-                        indexBuffer[ii + 0] = (ushort) (ai + 0);
-                        indexBuffer[ii + 1] = (ushort) (ai + 1);
-                        indexBuffer[ii + 2] = (ushort) (ai + 2);
-                        indexBuffer[ii + 3] = (ushort) (ai + 3);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
-                    }
-
-                    // East face.
-                    if (!eo || !brV && !trV)
-                    {
-                        indexBuffer[ii + 0] = (ushort) (ai + 2);
-                        indexBuffer[ii + 1] = (ushort) (ai + 3);
-                        indexBuffer[ii + 2] = (ushort) (ai + 4);
-                        indexBuffer[ii + 3] = (ushort) (ai + 5);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
-                    }
-
-                    // South face.
-                    if (!so || !brV && !blV)
-                    {
-                        indexBuffer[ii + 0] = (ushort) (ai + 4);
-                        indexBuffer[ii + 1] = (ushort) (ai + 5);
-                        indexBuffer[ii + 2] = (ushort) (ai + 6);
-                        indexBuffer[ii + 3] = (ushort) (ai + 7);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
-                    }
-
-                    // West face.
-                    if (!wo || !blV && !tlV)
-                    {
-                        indexBuffer[ii + 0] = (ushort) (ai + 6);
-                        indexBuffer[ii + 1] = (ushort) (ai + 7);
-                        indexBuffer[ii + 2] = (ushort) (ai + 0);
-                        indexBuffer[ii + 3] = (ushort) (ai + 1);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
-                    }
-
-                    if (_quartResLights)
-                    {
-                        // On low-res lights we bias the occlusion mask inwards.
-                        // This avoids wall lighting going onto the tile next to them at certain tile alignments.
-                        // It's inwards to avoid seeing disconnected shadows on wall edges.
-                        const float bias = 0.5f / EyeManager.PixelsPerMeter;
-
-                        if (!no)
+                        var occluder = (ClientOccluderComponent) sOccluder;
+                        var transform = occluder.Owner.Transform;
+                        if (!occluder.Enabled)
                         {
-                            tlY -= bias;
-                            trY -= bias;
+                            return true;
                         }
 
-                        if (!eo)
+                        var worldTransform = transform.WorldMatrix;
+                        var box = occluder.BoundingBox;
+
+                        // So uh, angle 0 = east... Apparently...
+                        // We account for that here so I don't go insane.
+                        var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
+                        var (trX, trY) = worldTransform.Transform(box.TopLeft);
+                        var (brX, brY) = worldTransform.Transform(box.TopRight);
+                        var (blX, blY) = worldTransform.Transform(box.BottomRight);
+
+                        // Faces.
+                        var faceN = new Vector4(tlX, tlY, trX, trY);
+                        var faceE = new Vector4(trX, trY, brX, brY);
+                        var faceS = new Vector4(brX, brY, blX, blY);
+                        var faceW = new Vector4(blX, blY, tlX, tlY);
+
+                        //
+                        // Buckle up.
+                        // For the front-face culled final FOV to work, we obviously cannot have faces inside a series
+                        // of walls that are perpendicular to you.
+                        // This next code does that by only writing render indices for faces that should be rendered.
+                        //
+
+                        //
+                        // Keep in mind, a face only blocks light from *leaving* from the back.
+                        // It does not block light entering.
+                        //
+                        // So first rule: a face always exists if there's no neighboring occluder in that direction.
+                        // Can't have holes after all.
+                        // Second rule: otherwise, if either vertex of the face is "visible" from the camera,
+                        // we don't draw the face.
+                        // This visibility check is significantly more simple and resourceful than you might think.
+                        // A corner becomes "occluded" if it's not visible from either cardinal direction it's on.
+                        // So a the top right corner is occluded if there's something blocking visibility
+                        // on the top AND right.
+                        // This "occluded in direction" check has two parts: whether this is a neighboring occluder (duh)
+                        // And whether the is in that direction of the corner.
+                        // (so a corner on the back of a wall is occluded because the camera is position on the other side).
+                        //
+                        // You'll notice that in some cases like corner walls, ALL corners are marked "occluded".
+                        // This is fine! The occlusion only blocks incoming light,
+                        // and the neighboring walls DO treat those corners as visible.
+                        // Yes, you cannot share the handling of overlapping corners of two aligned neighboring occluders.
+                        // They still have different potential behavior, keeps the code simple(ish).
+                        //
+
+                        // Calculate delta positions from camera.
+                        var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
+                        var (dTrX, dTrY) = (trX, trY) - eyePosition;
+                        var (dBlX, dBlY) = (blX, blY) - eyePosition;
+                        var (dBrX, dBrY) = (brX, brY) - eyePosition;
+
+                        // Get which neighbors are occluding.
+                        var no = (occluder.Occluding & OccluderDir.North) != 0;
+                        var so = (occluder.Occluding & OccluderDir.South) != 0;
+                        var eo = (occluder.Occluding & OccluderDir.East) != 0;
+                        var wo = (occluder.Occluding & OccluderDir.West) != 0;
+
+                        // Do visibility tests for occluders (described above).
+                        var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
+                        var trV = dTrX < 0 && !eo || dTrY < 0 && !no;
+                        var blV = dBlX > 0 && !wo || dBlY > 0 && !so;
+                        var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
+
+                        // Handle faces, rules described above.
+                        // Note that "from above" it should be clockwise.
+                        // Further handling is in the shadow depth vertex shader.
+                        // (I have broken this so many times. - 20kdc)
+
+                        void WriteFaceOfBuffer(Vector4 vec)
                         {
-                            trX -= bias;
-                            brX -= bias;
+                            var aiBase = ai;
+                            for (byte vi = 0; vi < 4; vi++)
+                            {
+                                arrayBuffer[ai++] = vec;
+                                // generates the sequence:
+                                // DddD
+                                // HHhh
+                                // deflection
+                                arrayVIBuffer[avi++] = (byte) ((((vi + 1) & 2) != 0) ? 0 : 255);
+                                // height
+                                arrayVIBuffer[avi++] = (byte) (((vi & 2) != 0) ? 0 : 255);
+                            }
+                            QuadBatchIndexWrite(indexBuffer, ref ii, (ushort) aiBase);
                         }
 
-                        if (!so)
+                        // North face (TL/TR)
+                        if (!no || !tlV && !trV)
                         {
-                            blY += bias;
-                            brY += bias;
+                            WriteFaceOfBuffer(faceN);
                         }
 
-                        if (!wo)
+                        // East face (TR/BR)
+                        if (!eo || !brV && !trV)
                         {
-                            blX += bias;
-                            tlX += bias;
+                            WriteFaceOfBuffer(faceE);
                         }
-                    }
 
-                    // Generate mask geometry.
-                    arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
-                    arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
-                    arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
-                    arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
+                        // South face (BR/BL)
+                        if (!so || !brV && !blV)
+                        {
+                            WriteFaceOfBuffer(faceS);
+                        }
 
-                    // Generate mask indices.
-                    indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
-                    indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
-                    indexMaskBuffer[imi + 2] = (ushort) (ami + 2);
-                    indexMaskBuffer[imi + 3] = (ushort) (ami + 3);
-                    indexMaskBuffer[imi + 4] = ushort.MaxValue; // Primitive restart
+                        // West face (BL/TL)
+                        if (!wo || !blV && !tlV)
+                        {
+                            WriteFaceOfBuffer(faceW);
+                        }
 
-                    ai += 8;
-                    ami += 4;
-                    imi += 5;
+                        // Generate mask geometry.
+                        arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
+                        arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
+                        arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
+                        arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
+
+                        // Generate mask indices.
+                        QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort) ami);
+
+                        ami += 4;
+
+                        return true;
+                    }, gridBounds);
                 }
 
                 _occlusionDataLength = ii;
                 _occlusionMaskDataLength = imi;
 
                 // Upload geometry to OpenGL.
-                GL.BindVertexArray(_occlusionVao.Handle);
+                BindVertexArray(_occlusionVao.Handle);
+                CheckGlError();
 
-                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
-                _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
+                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(0, ai));
+                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
+                _occlusionEbo.Reallocate(indexBuffer.AsSpan(0, ii));
 
-                GL.BindVertexArray(_occlusionMaskVao.Handle);
+                BindVertexArray(_occlusionMaskVao.Handle);
+                CheckGlError();
 
-                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(..ami));
-                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(..imi));
+                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
+                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
             }
             finally
             {
-                ArrayPool<Vector3>.Shared.Return(arrayBuffer);
-                ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
+                ArrayPool<Vector4>.Shared.Return(arrayBuffer);
+                ArrayPool<byte>.Shared.Return(arrayVIBuffer);
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
+                ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
             }
         }
 
-        private void RegenerateLightingRenderTargets()
+        private void RegenLightRts(Viewport viewport)
         {
             // All of these depend on screen size so they have to be re-created if it changes.
 
-            var lightMapSize = GetLightMapSize();
-            var lightMapSizeQuart = GetLightMapSize(true);
-            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
+            var lightMapSize = GetLightMapSize(viewport.Size);
+            var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
+            var lightMapColorFormat = _hasGLFloatFramebuffers ? RenderTargetColorFormat.R11FG11FB10F : RenderTargetColorFormat.Rgba8;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
-            _lightRenderTarget?.Delete();
-            _wallMaskRenderTarget?.Delete();
-            _wallBleedIntermediateRenderTarget1?.Delete();
-            _wallBleedIntermediateRenderTarget2?.Delete();
+            viewport.LightRenderTarget?.Dispose();
+            viewport.WallMaskRenderTarget?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget1?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget2?.Dispose();
 
-            _wallMaskRenderTarget = CreateRenderTarget(ScreenSize, RenderTargetColorFormat.R8,
-                name: nameof(_wallMaskRenderTarget));
+            viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
+                name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
 
-            _lightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
+            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_lightRenderTarget));
+                $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 
-            _wallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_wallBleedIntermediateRenderTarget1));
+                $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget1)}");
 
-            _wallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_wallBleedIntermediateRenderTarget2));
+                $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget2)}");
         }
 
-        private Vector2i GetLightMapSize(bool? overrideSetting = null)
+        private void RegenAllLightRts()
         {
-            var setting = overrideSetting ?? _quartResLights;
-            if (!setting)
+            foreach (var viewportRef in _viewports.Values)
             {
-                return (ScreenSize.X, ScreenSize.Y);
+                if (viewportRef.TryGetTarget(out var viewport))
+                {
+                    RegenLightRts(viewport);
+                }
+            }
+        }
+
+        private Vector2i GetLightMapSize(Vector2i screenSize, bool furtherDivide = false)
+        {
+            var divider = (float) _lightmapDivider;
+            if (furtherDivide)
+            {
+                divider *= 2;
             }
 
-            var w = (int) Math.Ceiling(ScreenSize.X / 2f);
-            var h = (int) Math.Ceiling(ScreenSize.Y / 2f);
+            var w = (int) Math.Ceiling(screenSize.X / divider);
+            var h = (int) Math.Ceiling(screenSize.Y / divider);
 
             return (w, h);
         }
 
-        protected override void HighResLightsChanged(bool newValue)
+        protected override void LightmapDividerChanged(int newValue)
         {
-            _quartResLights = !newValue;
-            if (_lightRenderTarget == null)
-            {
-                return;
-            }
+            _lightmapDivider = newValue;
+            RegenAllLightRts();
+        }
 
-            RegenerateLightingRenderTargets();
+        protected override void MaxLightsPerSceneChanged(int newValue)
+        {
+            _maxLightsPerScene = newValue;
+
+            // This guard is in place because otherwise the shadow FBO is initialized before GL is initialized.
+            if (!_shadowRenderTargetCanInitializeSafely)
+                return;
+
+            if (_shadowRenderTarget != null)
+            {
+                DeleteRenderTexture(_shadowRenderTarget.Handle);
+            }
+            // Shadow FBO.
+            _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, _maxLightsPerScene),
+                new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                nameof(_shadowRenderTarget));
+        }
+
+        protected override void SoftShadowsChanged(bool newValue)
+        {
+            _enableSoftShadows = newValue;
         }
     }
 }

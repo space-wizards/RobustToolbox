@@ -1,41 +1,40 @@
-﻿using System;
+using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Prometheus;
 using Robust.Server.Console;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.GameState;
-using Robust.Server.Interfaces.Placement;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Server.Interfaces.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Localization;
-using Robust.Server.Interfaces.Debugging;
 using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Network.Messages;
+using Robust.Server.DataMetrics;
+using Robust.Server.Debugging;
+using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
+using Robust.Server.Log;
+using Robust.Server.Placement;
+using Robust.Server.Player;
+using Robust.Server.Utility;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Localization;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Serialization;
+using Robust.Shared.Timers;
+using Serilog.Debugging;
+using Serilog.Sinks.Loki;
+using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
 {
@@ -44,44 +43,68 @@ namespace Robust.Server
     /// </summary>
     internal sealed class BaseServer : IBaseServerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _config;
-        [Dependency] private readonly IComponentManager _components;
-        [Dependency] private readonly IServerEntityManager _entities;
-        [Dependency] private readonly ILogManager _log;
-        [Dependency] private readonly IRobustSerializer _serializer;
-        [Dependency] private readonly IGameTiming _time;
-        [Dependency] private readonly IResourceManagerInternal _resources;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly ITimerManager timerManager;
-        [Dependency] private readonly IServerGameStateManager _stateManager;
-        [Dependency] private readonly IServerNetManager _network;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole;
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly ILocalizationManager _localizationManager;
-        [Dependency] private IRuntimeLog runtimeLog;
-        [Dependency] private readonly IModLoader _modLoader;
-        [Dependency] private readonly IWatchdogApi _watchdogApi;
-        [Dependency] private readonly IScriptHost _scriptHost;
-#pragma warning restore 649
+        private static readonly Gauge ServerUpTime = Metrics.CreateGauge(
+            "robust_server_uptime",
+            "The real time the server main loop has been running.");
 
-        private CommandLineArgs _commandLineArgs;
-        private FileLogHandler fileLogHandler;
-        private IGameLoop _mainLoop;
+        private static readonly Gauge ServerCurTime = Metrics.CreateGauge(
+            "robust_server_curtime",
+            "The IGameTiming.CurTime of the server.");
+
+        private static readonly Gauge ServerCurTick = Metrics.CreateGauge(
+            "robust_server_curtick",
+            "The IGameTiming.CurTick of the server.");
+
+        private static readonly Histogram TickUsage = Metrics.CreateHistogram(
+            "robust_server_update_usage",
+            "Time usage of the main loop Update()s",
+            new HistogramConfiguration
+            {
+                LabelNames = new[] {"area"},
+                Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
+            });
+
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
+        [Dependency] private readonly IComponentManager _components = default!;
+        [Dependency] private readonly IServerEntityManager _entities = default!;
+        [Dependency] private readonly ILogManager _log = default!;
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IGameTiming _time = default!;
+        [Dependency] private readonly IResourceManagerInternal _resources = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly ITimerManager timerManager = default!;
+        [Dependency] private readonly IServerGameStateManager _stateManager = default!;
+        [Dependency] private readonly IServerNetManager _network = default!;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IRuntimeLog runtimeLog = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
+        [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly IScriptHost _scriptHost = default!;
+        [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
+
+        private readonly Stopwatch _uptimeStopwatch = new();
+
+        private CommandLineArgs? _commandLineArgs;
+        private Func<ILogHandler>? _logHandlerFactory;
+        private ILogHandler? _logHandler;
+        private IGameLoop _mainLoop = default!;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
 
-        private string _shutdownReason;
+        private string? _shutdownReason;
 
-        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
-
-        /// <inheritdoc />
-        public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
+        private readonly ManualResetEventSlim _shutdownEvent = new(false);
 
         /// <inheritdoc />
-        public string ServerName => _config.GetCVar<string>("game.hostname");
+        public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
+
+        /// <inheritdoc />
+        public string ServerName => _config.GetCVar(CVars.GameHostName);
 
         /// <inheritdoc />
         public void Restart()
@@ -89,11 +112,11 @@ namespace Robust.Server
             Logger.InfoS("srv", "Restarting Server...");
 
             Cleanup();
-            Start();
+            Start(_logHandlerFactory);
         }
 
         /// <inheritdoc />
-        public void Shutdown(string reason)
+        public void Shutdown(string? reason)
         {
             if (string.IsNullOrWhiteSpace(reason))
                 Logger.InfoS("srv", "Shutting down...");
@@ -103,8 +126,11 @@ namespace Robust.Server
             _shutdownReason = reason;
 
             _mainLoop.Running = false;
-            _log.RootSawmill.RemoveHandler(fileLogHandler);
-            fileLogHandler.Dispose();
+            if (_logHandler != null)
+            {
+                _log.RootSawmill.RemoveHandler(_logHandler);
+                (_logHandler as IDisposable)?.Dispose();
+            }
         }
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -113,67 +139,96 @@ namespace Robust.Server
         }
 
         /// <inheritdoc />
-        public bool Start()
+        public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
-            // Sets up the configMgr
-            // If a config file path was passed, use it literally.
-            // This ensures it's working-directory relative
-            // (for people passing config file through the terminal or something).
-            // Otherwise use the one next to the executable.
-            if (_commandLineArgs?.ConfigFile != null)
+            _config.Initialize(true);
+
+            if (LoadConfigAndUserData)
             {
-                _config.LoadFromFile(_commandLineArgs.ConfigFile);
-            }
-            else
-            {
-                var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
-                if (File.Exists(path))
+                // Sets up the configMgr
+                // If a config file path was passed, use it literally.
+                // This ensures it's working-directory relative
+                // (for people passing config file through the terminal or something).
+                // Otherwise use the one next to the executable.
+                if (_commandLineArgs?.ConfigFile != null)
                 {
-                    _config.LoadFromFile(path);
+                    _config.LoadFromFile(_commandLineArgs.ConfigFile);
                 }
                 else
                 {
-                    _config.SetSaveFile(path);
+                    var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                    if (File.Exists(path))
+                    {
+                        _config.LoadFromFile(path);
+                    }
+                    else
+                    {
+                        _config.SetSaveFile(path);
+                    }
                 }
             }
+
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
+
+            _config.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
             {
                 _config.OverrideConVars(_commandLineArgs.CVars);
             }
 
-
             //Sets up Logging
-            _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
+            _logHandlerFactory = logHandlerFactory;
 
-            var logPath = _config.GetCVar<string>("log.path");
-            var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd"))
-                .Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
-            var fullPath = Path.Combine(logPath, logFilename);
+            var logHandler = logHandlerFactory?.Invoke() ?? null;
 
-            if (!Path.IsPathRooted(fullPath))
+            var logEnabled = _config.GetCVar(CVars.LogEnabled);
+
+            if (logEnabled && logHandler == null)
             {
-                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                var logPath = _config.GetCVar(CVars.LogPath);
+                var logFormat = _config.GetCVar(CVars.LogFormat);
+                var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
+                    .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
+                var fullPath = Path.Combine(logPath, logFilename);
+
+                if (!Path.IsPathRooted(fullPath))
+                {
+                    logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                }
+
+                logHandler = new FileLogHandler(logPath);
             }
 
-            fileLogHandler = new FileLogHandler(logPath);
-            _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
-            _log.RootSawmill.AddHandler(fileLogHandler);
+            _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);
+
+            if (logEnabled && logHandler != null)
+            {
+                _logHandler = logHandler;
+                _log.RootSawmill.AddHandler(_logHandler!);
+            }
+
+            SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });
+
+            if (!SetupLoki())
+            {
+                return true;
+            }
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
 
             LoadSettings();
 
+            // Load metrics really early so that we can profile startup times in the future maybe.
+            _metricsManager.Initialize();
+
             var netMan = IoCManager.Resolve<IServerNetManager>();
             try
             {
                 netMan.Initialize(true);
                 netMan.StartServer();
-                netMan.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME);
             }
             catch (Exception e)
             {
@@ -184,33 +239,27 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir = _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data");
+            var dataDir = LoadConfigAndUserData
+                ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
+                : null;
 
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-#if FULL_RELEASE
-            _resources.MountContentDirectory(@"./Resources/");
-#else
-            // Load from the resources dir in the repo root instead.
-            // It's a debug build so this is fine.
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resources.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
-            _resources.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server");
 
-            //identical code in game controller for client
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+            _modLoader.SetUseLoadContext(!DisableLoadContext);
+            _modLoader.SetEnableSandboxing(false);
+
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                Logger.Fatal("Errors while loading content assemblies.");
                 return true;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Server DLL.");
-                return true;
+                _config.LoadCVarsFromAssembly(loadedModule);
             }
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -220,8 +269,17 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
+            _loc.AddLoadedToStringSerializer(_stringSerializer);
+
+            //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
+            //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
+            IoCManager.Resolve<IPrototypeManager>().LoadedData +=
+                (yaml, name) => _stringSerializer.AddStrings(yaml);
+
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
+
+            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
 
             _stateManager.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
@@ -242,8 +300,7 @@ namespace Robust.Server
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 
-            IoCManager.Resolve<IConsoleShell>().Initialize();
-            IoCManager.Resolve<IConGroupController>().Initialize();
+            IoCManager.Resolve<IServerConsoleHost>().Initialize();
             _entities.Startup();
             _scriptHost.Initialize();
 
@@ -255,10 +312,66 @@ namespace Robust.Server
 
             _watchdogApi.Initialize();
 
+            _stringSerializer.LockStrings();
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
+
             return false;
         }
 
-        private void ProcessExiting(object sender, EventArgs e)
+        private bool SetupLoki()
+        {
+            var enabled = _config.GetCVar(CVars.LokiEnabled);
+            if (!enabled)
+            {
+                return true;
+            }
+
+            var serverName = _config.GetCVar(CVars.LokiName);
+            var address = _config.GetCVar(CVars.LokiAddress);
+            var username = _config.GetCVar(CVars.LokiUsername);
+            var password = _config.GetCVar(CVars.LokiPassword);
+
+            if (string.IsNullOrWhiteSpace(serverName))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Server name is not specified/empty.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Loki address is not specified/empty.");
+                return false;
+            }
+
+            LokiCredentials credentials;
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                credentials = new NoAuthCredentials(address);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    Logger.FatalS("loki", "Misconfiguration: Loki password is not specified/empty but username is.");
+                    return false;
+                }
+
+                credentials = new BasicAuthCredentials(address, username, password);
+            }
+
+            Logger.DebugS("loki", "Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
+                address);
+
+            var handler = new LokiLogHandler(serverName, credentials);
+            _log.RootSawmill.AddHandler(handler);
+            return true;
+        }
+
+        private void ProcessExiting(object? sender, EventArgs e)
         {
             _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
             // Give the server 10 seconds to shut down.
@@ -278,13 +391,21 @@ namespace Robust.Server
                 _mainLoop = new GameLoop(_time)
                 {
                     SleepMode = SleepMode.Delay,
-                    DetectSoftLock = true
+                    DetectSoftLock = true,
+                    EnableMetrics = true
                 };
             }
 
+            _uptimeStopwatch.Start();
+
+            _mainLoop.Input += (sender, args) => Input(args);
+
             _mainLoop.Tick += (sender, args) => Update(args);
 
+            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
+
             // set GameLoop.Running to false to return from this function.
+            _time.Paused = false;
             _mainLoop.Run();
 
             _time.InSimulation = true;
@@ -292,6 +413,9 @@ namespace Robust.Server
 
             _shutdownEvent.Set();
         }
+
+        public bool DisableLoadContext { private get; set; }
+        public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
@@ -328,50 +452,51 @@ namespace Robust.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER, i =>
+            cfgMgr.OnValueChanged(CVars.NetTickrate, i =>
             {
                 var b = (byte) i;
                 _time.TickRate = b;
-                SendTickRateUpdateToClients(b);
+
+                Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
             });
 
-            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.type", GameType.Game);
-
-            _time.TickRate = (byte) _config.GetCVar<int>("net.tickrate");
+            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
         }
 
-        private void SendTickRateUpdateToClients(byte newTickRate)
-        {
-            var msg = _network.CreateNetMessage<MsgSetTickRate>();
-            msg.NewTickRate = newTickRate;
-
-            _network.ServerSendToAll(msg);
-        }
-
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
+
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
             _entities.Shutdown();
 
-            // Wrtie down exception log
-            var logPath = _config.GetCVar<string>("log.path");
-            var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath),
-                "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
-            File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            if (_config.GetCVar(CVars.LogRuntimeLog))
+            {
+                // Wrtie down exception log
+                var logPath = _config.GetCVar(CVars.LogPath);
+                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
+                Directory.CreateDirectory(relPath);
+                var pathToWrite = Path.Combine(relPath,
+                    "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            }
 
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            {
+                WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
+            }
         }
 
         private string UpdateBps()
@@ -387,35 +512,63 @@ namespace Robust.Server
             return bps;
         }
 
-        private void Update(FrameEventArgs frameEventArgs)
+        private void Input(FrameEventArgs args)
         {
-            UpdateTitle();
             _systemConsole.Update();
 
             _network.ProcessPackets();
-
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
-
-            timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
+        }
 
-            _components.CullRemovedComponents();
-            _entities.Update(frameEventArgs.DeltaSeconds);
+        private void Update(FrameEventArgs frameEventArgs)
+        {
+            ServerCurTick.Set(_time.CurTick.Value);
+            ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            // These are always the same on the server, there is no prediction.
+            _time.LastRealTick = _time.CurTick;
 
-            _stateManager.SendGameStateUpdate();
+            UpdateTitle();
+
+            using (TickUsage.WithLabels("PreEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
+            {
+                IoCManager.Resolve<INetConfigurationManager>().TickProcessMessages();
+            }
+
+            using (TickUsage.WithLabels("Timers").NewTimer())
+            {
+                timerManager.UpdateTimers(frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("AsyncTasks").NewTimer())
+            {
+                _taskManager.ProcessPendingTasks();
+            }
+
+            using (TickUsage.WithLabels("ComponentCull").NewTimer())
+            {
+                _components.CullRemovedComponents();
+            }
+
+            // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
+            _entities.Update(frameEventArgs.DeltaSeconds, TickUsage);
+
+            using (TickUsage.WithLabels("PostEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("GameState").NewTimer())
+            {
+                _stateManager.SendGameStateUpdate();
+            }
 
             _watchdogApi.Heartbeat();
         }
-    }
-
-    /// <summary>
-    ///     Type of game currently running.
-    /// </summary>
-    public enum GameType
-    {
-        MapEditor = 0,
-        Game,
     }
 }

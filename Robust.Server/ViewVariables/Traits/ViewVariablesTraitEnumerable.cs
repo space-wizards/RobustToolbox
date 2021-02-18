@@ -1,23 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
-        private readonly List<object> _cache = new List<object>();
-        private IEnumerator _enumerator;
+        private readonly List<object?> _cache = new();
+        private IEnumerator? _enumerator;
         private readonly IEnumerable _enumerable;
         private bool Ended => _enumerator == null;
 
-        public ViewVariablesTraitEnumerable(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitEnumerable(IViewVariablesSession session) : base(session)
         {
             _enumerable = (IEnumerable) session.Object;
             _refresh();
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             if (viewVariablesRequest is ViewVariablesRequestEnumerable requestEnumerable)
             {
@@ -26,7 +27,7 @@ namespace Robust.Server.ViewVariables.Traits
                     _refresh();
                 }
                 _cacheTo(requestEnumerable.ToIndex);
-                var list = new List<object>();
+                var list = new List<object?>();
 
                 for (var i = requestEnumerable.FromIndex; i < _cache.Count && i <= requestEnumerable.ToIndex; i++)
                 {
@@ -39,7 +40,7 @@ namespace Robust.Server.ViewVariables.Traits
             return base.DataRequest(viewVariablesRequest);
         }
 
-        public override bool TryGetRelativeObject(object property, out object value)
+        public override bool TryGetRelativeObject(object property, out object? value)
         {
             if (!(property is ViewVariablesEnumerableIndexSelector selector))
             {
@@ -71,14 +72,15 @@ namespace Robust.Server.ViewVariables.Traits
                 return;
             }
 
+            DebugTools.AssertNotNull(_enumerator);
             while (_cache.Count <= index)
             {
-                if (!_enumerator.MoveNext())
+                if (!_enumerator!.MoveNext())
                 {
                     _enumerator = null;
                     break;
                 }
-                _cache.Add(_enumerator.Current);
+                _cache.Add(_enumerator!.Current);
             }
         }
 

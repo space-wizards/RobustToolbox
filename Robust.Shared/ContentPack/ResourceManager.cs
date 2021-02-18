@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -16,29 +16,26 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal partial class ResourceManager : IResourceManagerInternal
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IConfigurationManager _config;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _config = default!;
 
-        private readonly ReaderWriterLockSlim _contentRootsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private readonly ReaderWriterLockSlim _contentRootsLock = new(LockRecursionPolicy.SupportsRecursion);
 
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
-            new List<(ResourcePath, IContentRoot)>();
+            new();
 
         // Special file names on Windows like serial ports.
         private static readonly Regex BadPathSegmentRegex =
-            new Regex("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
+            new("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
 
         // Literally not characters that can't go into filenames on Windows.
         private static readonly Regex BadPathCharacterRegex =
-            new Regex("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
+            new("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
-        public IWritableDirProvider UserData { get; private set; }
+        public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public void Initialize(string userData)
+        public void Initialize(string? userData)
         {
             if (userData != null)
             {
@@ -68,19 +65,12 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack, ResourcePath prefix = null)
+        public void MountContentPack(string pack, ResourcePath? prefix = null)
         {
-            if (prefix == null)
-            {
-                prefix = ResourcePath.Root;
-            }
+            prefix = SanitizePrefix(prefix);
 
-            if (!prefix.IsRooted)
-            {
-                throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
-            }
-
-            pack = PathHelpers.ExecutableRelativeFile(pack);
+            if (!Path.IsPathRooted(pack))
+                pack = PathHelpers.ExecutableRelativeFile(pack);
 
             var packInfo = new FileInfo(pack);
 
@@ -90,7 +80,21 @@ namespace Robust.Shared.ContentPack
             }
 
             //create new PackLoader
+
             var loader = new PackLoader(packInfo);
+            AddRoot(prefix, loader);
+        }
+
+        public void MountContentPack(Stream zipStream, ResourcePath? prefix = null)
+        {
+            prefix = SanitizePrefix(prefix);
+
+            var loader = new PackLoader(zipStream);
+            AddRoot(prefix, loader);
+        }
+
+        protected void AddRoot(ResourcePath prefix, IContentRoot loader)
+        {
             loader.Mount();
             _contentRootsLock.EnterWriteLock();
             try
@@ -103,20 +107,28 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        /// <inheritdoc />
-        public void MountContentDirectory(string path, ResourcePath prefix = null)
+        private static ResourcePath SanitizePrefix(ResourcePath? prefix)
         {
             if (prefix == null)
             {
                 prefix = ResourcePath.Root;
             }
-
-            if (!prefix.IsRooted)
+            else if (!prefix.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
 
-            path = PathHelpers.ExecutableRelativeFile(path);
+            return prefix;
+        }
+
+        /// <inheritdoc />
+        public void MountContentDirectory(string path, ResourcePath? prefix = null)
+        {
+            prefix = SanitizePrefix(prefix);
+
+            if (!Path.IsPathRooted(path))
+                path = PathHelpers.ExecutableRelativeFile(path);
+
             var pathInfo = new DirectoryInfo(path);
             if (!pathInfo.Exists)
             {
@@ -124,16 +136,7 @@ namespace Robust.Shared.ContentPack
             }
 
             var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"));
-            loader.Mount();
-            _contentRootsLock.EnterWriteLock();
-            try
-            {
-                _contentRoots.Add((prefix, loader));
-            }
-            finally
-            {
-                _contentRootsLock.ExitWriteLock();
-            }
+            AddRoot(prefix, loader);
         }
 
         /// <inheritdoc />
@@ -154,13 +157,13 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(string path, out Stream fileStream)
+        public bool TryContentFileRead(string path, [NotNullWhen(true)] out Stream? fileStream)
         {
             return TryContentFileRead(new ResourcePath(path), out fileStream);
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(ResourcePath path, out Stream fileStream)
+        public bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream)
         {
             if (path == null)
             {
@@ -212,7 +215,13 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public bool ContentFileExists(ResourcePath path)
         {
-            return TryContentFileRead(path, out var _);
+            if (TryContentFileRead(path, out var stream))
+            {
+                stream.Dispose();
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc />
@@ -263,8 +272,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        // TODO: Remove this when/if we can get Godot to load from not-the-filesystem.
-        public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
+        public bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath)
         {
             // loop over each root trying to get the file
             _contentRootsLock.EnterReadLock();
@@ -272,7 +280,7 @@ namespace Robust.Shared.ContentPack
             {
                 foreach (var (prefix, root) in _contentRoots)
                 {
-                    if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
+                    if (root is not DirLoader dirLoader || !path.TryRelativeTo(prefix, out var tempPath))
                     {
                         continue;
                     }
@@ -293,22 +301,8 @@ namespace Robust.Shared.ContentPack
 
         public void MountStreamAt(MemoryStream stream, ResourcePath path)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted.", nameof(path));
-            }
-
             var loader = new SingleStreamLoader(stream, path.ToRelativePath());
-            loader.Mount();
-            _contentRootsLock.EnterWriteLock();
-            try
-            {
-                _contentRoots.Add((ResourcePath.Root, loader));
-            }
-            finally
-            {
-                _contentRootsLock.ExitWriteLock();
-            }
+            AddRoot(ResourcePath.Root, loader);
         }
 
         public IEnumerable<ResourcePath> GetContentRoots()

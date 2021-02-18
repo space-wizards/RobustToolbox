@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
-using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -29,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(chunk.X, Is.EqualTo(7));
             Assert.That(chunk.Y, Is.EqualTo(9));
-            Assert.That(chunk.Indices, Is.EqualTo(new MapIndices(7,9)));
+            Assert.That(chunk.Indices, Is.EqualTo(new Vector2i(7,9)));
         }
 
         [Test]
@@ -57,7 +56,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapGrid.SetupGet(f => f.CurTick).Returns((() => curTick));
             mapGrid.SetupGet(f => f.ParentMapId).Returns(new MapId(11));
             mapGrid.SetupGet(f => f.Index).Returns(new GridId(13));
-            
+
             var chunk = new MapChunk(mapGrid.Object, 7, 9, 8);
 
             curTick = new GameTick(13);
@@ -100,14 +99,14 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result.GridIndex, Is.EqualTo(new GridId(13)));
             Assert.That(result.MapIndex, Is.EqualTo(new MapId(11)));
         }
-        
+
         [Test]
         public void GetTileRefByIndices()
         {
             var chunk = MapChunkFactory(7, 9);
             chunk.SetTile(3, 5, new Tile(1, 3));
 
-            var result = chunk.GetTileRef(new MapIndices(3, 5));
+            var result = chunk.GetTileRef(new Vector2i(3, 5));
 
             Assert.That(result.X, Is.EqualTo(8 * 7 + 3));
             Assert.That(result.Y, Is.EqualTo(8 * 9 + 5));
@@ -116,7 +115,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result.GridIndex, Is.EqualTo(new GridId(13)));
             Assert.That(result.MapIndex, Is.EqualTo(new MapId(11)));
         }
-        
+
         [Test]
         public void GetTileRefThrowsOutOfRange()
         {
@@ -124,8 +123,8 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(8, 0)));
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(0, 8)));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(new MapIndices(8,0))));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(new MapIndices(0, 8))));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(new Vector2i(8,0))));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetTileRef(new Vector2i(0, 8))));
         }
 
         [Test]
@@ -135,7 +134,7 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             var result = chunk.GetTile(3, 5);
-            
+
             Assert.That(result.TypeId, Is.EqualTo(1));
             Assert.That(result.Data, Is.EqualTo((ushort)3));
         }
@@ -164,13 +163,13 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(tiles[0],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 3, 8 * 9 + 5),
+                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
                     new Tile(1, 3))));
 
             Assert.That(tiles[1],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 5, 8 * 9 + 4),
+                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
                     new Tile(5, 7))));
         }
 
@@ -189,13 +188,13 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(tiles[8*3+5],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 3, 8 * 9 + 5),
+                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
                     new Tile(1, 3))));
 
             Assert.That(tiles[8*5+4],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 5, 8 * 9 + 4),
+                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
                     new Tile(5, 7))));
         }
 
@@ -238,9 +237,9 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             var tiles = new List<TileRef>();
-            foreach (var tileRef in ((IEnumerable)chunk))
+            foreach (var tileRef in chunk)
             {
-                tiles.Add((TileRef)tileRef);
+                tiles.Add(tileRef);
             }
 
             Assert.That(tiles.Count, Is.EqualTo(2));
@@ -249,13 +248,13 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(tiles[0],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 3, 8 * 9 + 5),
+                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
                     new Tile(1, 3))));
 
             Assert.That(tiles[1],
                 Is.EqualTo(new TileRef(new MapId(11),
                     new GridId(13),
-                    new MapIndices(8 * 7 + 5, 8 * 9 + 4),
+                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
                     new Tile(5, 7))));
         }
 
@@ -267,12 +266,12 @@ namespace Robust.UnitTesting.Shared.Map
             // 8x8 chunk (-1,-1) occupies tiles -8 to -1 on each axis
             var chunk = MapChunkFactory(-1, -1);
 
-            var indices = chunk.GridTileToChunkTile(new MapIndices(-3, -5));
+            var indices = chunk.GridTileToChunkTile(new Vector2i(-3, -5));
 
             // drawing this out helps a ton
             // grid tile -1,-1 is chunk tile 7,7
             // grid tile -8,-8 is chunk tile 0,0
-            Assert.That(indices, Is.EqualTo(new MapIndices(5, 3)));
+            Assert.That(indices, Is.EqualTo(new Vector2i(5, 3)));
         }
 
         [Test]
@@ -282,7 +281,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var result = chunk.ToString();
 
-            Assert.That(result, Is.EqualTo("Chunk {7,9}"));
+            Assert.That(result, Is.EqualTo("Chunk (7, 9)"));
         }
 
         [Test]
@@ -298,7 +297,7 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetSnapGridThrowsOutOfRange()
         {
             var chunk = MapChunkFactory(7, 9);
-            
+
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0, SnapGridOffset.Center).ToList()));
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8, SnapGridOffset.Center).ToList()));
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0,SnapGridOffset.Edge).ToList()));
@@ -449,7 +448,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
             chunk.SetTile(3, 5, new Tile(1));
 
-            var result = chunk.CollidesWithChunk(new MapIndices(3, 5));
+            var result = chunk.CollidesWithChunk(new Vector2i(3, 5));
 
             Assert.That(result, Is.True);
         }
@@ -460,7 +459,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
             chunk.SetTile(3, 5, new Tile(1));
 
-            var result = chunk.CollidesWithChunk(new MapIndices(3, 6));
+            var result = chunk.CollidesWithChunk(new Vector2i(3, 6));
 
             Assert.That(result, Is.False);
         }

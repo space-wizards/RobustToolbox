@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -27,9 +25,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _cursorPosition;
         private int _selectionStart;
-        [NotNull] private string _text = "";
+        private string _text = "";
         private bool _editable = true;
-        [CanBeNull] private string _placeHolder;
+        private string? _placeHolder;
 
         private int _drawOffset;
 
@@ -42,13 +40,15 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
-        public event Action<LineEditEventArgs> OnTextChanged;
-        public event Action<LineEditEventArgs> OnTextEntered;
+        public event Action<LineEditEventArgs>? OnTextChanged;
+        public event Action<LineEditEventArgs>? OnTextEntered;
+        public event Action<LineEditEventArgs>? OnFocusEnter;
+        public event Action<LineEditEventArgs>? OnFocusExit;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
         /// </summary>
-        public Func<string, bool> IsValid { get; set; }
+        public Func<string, bool>? IsValid { get; set; }
 
         /// <summary>
         ///     The actual text currently stored in the LineEdit.
@@ -111,7 +111,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string PlaceHolder
+        public string? PlaceHolder
         {
             get => _placeHolder;
             set
@@ -126,7 +126,7 @@ namespace Robust.Client.UserInterface.Controls
             get => _cursorPosition;
             set
             {
-                _cursorPosition = value.Clamp(0, _text.Length);
+                _cursorPosition = MathHelper.Clamp(value, 0, _text.Length);
                 _selectionStart = _cursorPosition;
             }
         }
@@ -134,7 +134,7 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionStart
         {
             get => _selectionStart;
-            set => _selectionStart = value.Clamp(0, _text.Length);
+            set => _selectionStart = MathHelper.Clamp(value, 0, _text.Length);
         }
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
@@ -236,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
                     _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
                 }
 
-                var index = GetIndexAtPos(_lastMousePosition.Clamp(contentBox.Left, contentBox.Right));
+                var index = GetIndexAtPos(MathHelper.Clamp(_lastMousePosition, contentBox.Left, contentBox.Right));
 
                 _cursorPosition = index;
             }
@@ -271,15 +271,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            if (!SetText(_text.Insert(_cursorPosition, ((char) args.CodePoint).ToString())))
-            {
-                return;
-            }
-
-            _cursorPosition += 1;
-            _selectionStart = _cursorPosition;
-            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
-            _updatePseudoClass();
+            InsertAtCursor(((char) args.CodePoint).ToString());
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -595,18 +587,25 @@ namespace Robust.Client.UserInterface.Controls
             return index;
         }
 
-        protected internal override void FocusEntered()
+        protected internal override void KeyboardFocusEntered()
         {
-            base.FocusEntered();
+            base.KeyboardFocusEntered();
 
             // Reset this so the cursor is always visible immediately after gaining focus..
             _resetCursorBlink();
+            OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
+        }
+
+        protected internal override void KeyboardFocusExited()
+        {
+            base.KeyboardFocusExited();
+            OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
         }
 
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }
@@ -617,7 +616,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private StyleBox _getStyleBox()
         {
-            if (TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
             {
                 return box;
             }
@@ -710,7 +709,7 @@ namespace Robust.Client.UserInterface.Controls
             return CharClass.Other;
         }
 
-        private enum CharClass
+        private enum CharClass : byte
         {
             Other,
             AlphaNumeric,
@@ -754,7 +753,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 var offsetY = (contentBox.Height - font.GetHeight(UIScale)) / 2;
 
-                var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder : _master._text;
+                var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder! : _master._text;
                 DebugTools.AssertNotNull(renderedText);
 
                 ref var drawOffset = ref _master._drawOffset;
@@ -820,13 +819,18 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    // Glyph would be completely outside the bounding box and invisible, abort.
                     if (baseLine.X > contentBox.Right)
                     {
+                        // Past the right edge, not gonna render anything anymore.
                         break;
                     }
 
-                    font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    // Make sure we're not off the left edge of the box.
+                    if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
+                    {
+                        font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    }
+
                     baseLine += (metrics.Advance, 0);
                 }
 

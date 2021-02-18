@@ -10,8 +10,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -20,7 +20,7 @@ namespace Robust.Shared.Scripting
     internal static class ScriptInstanceShared
     {
         public static CSharpParseOptions ParseOptions { get; } =
-            new CSharpParseOptions(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
+            new(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
 
         private static readonly Func<Script, bool> _hasReturnValue;
 
@@ -32,7 +32,8 @@ namespace Robust.Shared.Scripting
             "Robust.Shared.IoC",
             "Robust.Shared.Maths",
             "Robust.Shared.GameObjects",
-            "Robust.Shared.Interfaces.GameObjects"
+            "Robust.Shared.Map",
+            "Robust.Shared.Prototypes"
         };
 
         static ScriptInstanceShared()

@@ -1,47 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using NumberType = Robust.Client.ViewVariables.Editors.ViewVariablesPropertyEditorNumeric.NumberType;
+using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
 
 namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
 
         private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
-            new Dictionary<ViewVariablesInstance, SS14Window>();
+            new();
 
         private readonly Dictionary<uint, ViewVariablesRemoteSession> _sessions =
-            new Dictionary<uint, ViewVariablesRemoteSession>();
+            new();
 
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesRemoteSession>> _requestedSessions =
-            new Dictionary<uint, TaskCompletionSource<ViewVariablesRemoteSession>>();
+            new();
 
         private readonly Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>> _requestedData
-            = new Dictionary<uint, TaskCompletionSource<ViewVariablesBlob>>();
+            = new();
 
         public void Initialize()
         {
@@ -58,150 +54,156 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
         }
 
-        public ViewVariablesPropertyEditor PropertyFor(Type type)
+        public VVPropEditor PropertyFor(Type? type)
         {
             // TODO: make this more flexible.
             if (type == null)
             {
-                return new ViewVariablesPropertyEditorDummy();
+                return new VVPropEditorDummy();
             }
 
             if (type == typeof(sbyte))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.SByte);
+                return new VVPropEditorNumeric(NumberType.SByte);
             }
 
             if (type == typeof(byte))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Byte);
+                return new VVPropEditorNumeric(NumberType.Byte);
             }
 
             if (type == typeof(ushort))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.UShort);
+                return new VVPropEditorNumeric(NumberType.UShort);
             }
 
             if (type == typeof(short))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Short);
+                return new VVPropEditorNumeric(NumberType.Short);
             }
 
             if (type == typeof(uint))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.UInt);
+                return new VVPropEditorNumeric(NumberType.UInt);
             }
 
             if (type == typeof(int))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Int);
+                return new VVPropEditorNumeric(NumberType.Int);
             }
 
             if (type == typeof(ulong))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.ULong);
+                return new VVPropEditorNumeric(NumberType.ULong);
             }
 
             if (type == typeof(long))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Long);
+                return new VVPropEditorNumeric(NumberType.Long);
             }
 
             if (type == typeof(float))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Float);
+                return new VVPropEditorNumeric(NumberType.Float);
             }
 
             if (type == typeof(double))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Double);
+                return new VVPropEditorNumeric(NumberType.Double);
             }
 
             if (type == typeof(decimal))
             {
-                return new ViewVariablesPropertyEditorNumeric(NumberType.Decimal);
+                return new VVPropEditorNumeric(NumberType.Decimal);
             }
 
             if (type == typeof(string))
             {
-                return new ViewVariablesPropertyEditorString();
+                return new VVPropEditorString();
             }
 
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerialzable<>).MakeGenericType(type));
+                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerialzable<>).MakeGenericType(type))!;
             }
 
             if (type.IsEnum)
             {
-                return new ViewVariablesPropertyEditorEnum();
+                return new VVPropEditorEnum();
             }
 
             if (type == typeof(Vector2))
             {
-                return new ViewVariablesPropertyEditorVector2(intVec: false);
+                return new VVPropEditorVector2(intVec: false);
             }
 
             if (type == typeof(Vector2i))
             {
-                return new ViewVariablesPropertyEditorVector2(intVec: true);
+                return new VVPropEditorVector2(intVec: true);
             }
 
             if (type == typeof(bool))
             {
-                return new ViewVariablesPropertyEditorBoolean();
+                return new VVPropEditorBoolean();
             }
 
             if (type == typeof(Angle))
             {
-                return new ViewVariablesPropertyEditorAngle();
+                return new VVPropEditorAngle();
             }
 
             if (type == typeof(Box2))
             {
-                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.Box2);
+                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.Box2);
             }
 
             if (type == typeof(Box2i))
             {
-                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.Box2i);
+                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.Box2i);
             }
 
             if (type == typeof(UIBox2))
             {
-                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2);
+                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.UIBox2);
             }
 
             if (type == typeof(UIBox2i))
             {
-                return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2i);
+                return new VVPropEditorUIBox2(VVPropEditorUIBox2.BoxType.UIBox2i);
             }
 
-            if (type == typeof(GridCoordinates))
+            if (type == typeof(EntityCoordinates))
             {
-                return new ViewVariablesPropertyEditorGridLocalCoordinates();
+                return new VVPropEditorEntityCoordinates();
             }
 
             if (type == typeof(EntityUid))
             {
-                return new ViewVariablesPropertyEditorEntityUid();
+                return new VVPropEditorEntityUid();
             }
 
             if (type == typeof(Color))
             {
-                return new ViewVariablesPropertyEditorColor();
+                return new VVPropEditorColor();
+            }
+
+            if (type == typeof(TimeSpan))
+            {
+                return new VVPropEditorTimeSpan();
+            }
+
+            if (type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
+                type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return new VVPropEditorKeyValuePair();
             }
 
             if (type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType)
             {
-                return new ViewVariablesPropertyEditorReference();
+                return new VVPropEditorReference();
             }
 
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                return new ViewVariablesPropertyEditorKeyValuePair();
-            }
-
-            return new ViewVariablesPropertyEditorDummy();
+            return new VVPropEditorDummy();
         }
 
         public void OpenVV(object obj)
@@ -210,11 +212,11 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (obj is IEntity entity && !entity.Deleted)
             {
-                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _resourceCache);
+                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
             var window = new SS14Window {Title = "View Variables"};
@@ -251,11 +253,11 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(IEntity).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _resourceCache);
+                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
             loadingLabel.Dispose();
@@ -311,7 +313,7 @@ namespace Robust.Client.ViewVariables
             _netManager.ClientSendMessage(closeMsg);
         }
 
-        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object value)
+        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object? value)
         {
             if (!_sessions.ContainsKey(session.SessionId))
             {

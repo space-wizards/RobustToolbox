@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -22,11 +21,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Read outer most chunks.
+            Span<char> fourCc = stackalloc char[4];
             while (true)
             {
-                var fourCC = _readFourCC(reader);
+                _readFourCC(reader, fourCc);
 
-                if (fourCC != "RIFF")
+                if (!fourCc.SequenceEqual("RIFF"))
                 {
                     SkipChunk();
                     continue;
@@ -42,28 +42,26 @@ namespace Robust.Client.Graphics.Clyde
             reader.BaseStream.Position += length;
         }
 
-        private static string _readFourCC(BinaryReader reader)
+        private static void _readFourCC(BinaryReader reader, Span<char> fourCc)
         {
-            var headerChar1 = reader.ReadByte();
-            var headerChar2 = reader.ReadByte();
-            var headerChar3 = reader.ReadByte();
-            var headerChar4 = reader.ReadByte();
-
-            return new string(new[]
-                {(char) headerChar1, (char) headerChar2, (char) headerChar3, (char) headerChar4});
+            fourCc[0] = (char) reader.ReadByte();
+            fourCc[1] = (char) reader.ReadByte();
+            fourCc[2] = (char) reader.ReadByte();
+            fourCc[3] = (char) reader.ReadByte();
         }
 
         private static WavData _readRiffChunk(BinaryReader reader)
         {
+            Span<char> format = stackalloc char[4];
             reader.ReadUInt32();
-            var format = _readFourCC(reader);
-            if (format != "WAVE")
+            _readFourCC(reader, format);
+            if (!format.SequenceEqual("WAVE"))
             {
                 throw new InvalidDataException("File is not a WAVE file.");
             }
 
-            format = _readFourCC(reader);
-            if (format != "fmt ")
+            _readFourCC(reader, format);
+            if (!format.SequenceEqual("fmt "))
             {
                 throw new InvalidDataException("Expected fmt chunk.");
             }
@@ -92,8 +90,8 @@ namespace Robust.Client.Graphics.Clyde
 
             while (true)
             {
-                format = _readFourCC(reader);
-                if (format != "data")
+                _readFourCC(reader, format);
+                if (!format.SequenceEqual("data"))
                 {
                     _skipChunk(reader);
                     continue;

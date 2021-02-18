@@ -21,12 +21,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     An Invalid entity UID you can compare against.
         /// </summary>
-        public static readonly EntityUid Invalid = new EntityUid(0);
+        public static readonly EntityUid Invalid = new(0);
 
         /// <summary>
         ///     The first entity UID the entityManager should use when the manager is initialized.
         /// </summary>
-        public static readonly EntityUid FirstUid = new EntityUid(1);
+        public static readonly EntityUid FirstUid = new(1);
 
         /// <summary>
         ///     Creates an instance of this structure, with the given network ID.
@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is EntityUid id && Equals(id);

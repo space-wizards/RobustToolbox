@@ -13,37 +13,38 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
-            CurrentTile = mapGrid.GetTileRef(MouseCoords);
-            float tileSize = mapGrid.TileSize; //convert from ushort to float
+            var tileSize = 1f;
+
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            if (gridId.IsValid())
+            {
+                var mapGrid = pManager.MapManager.GetGrid(gridId);
+                tileSize = mapGrid.TileSize; //convert from ushort to float
+            }
+
+            CurrentTile = GetTileRef(MouseCoords);
             GridDistancing = tileSize;
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
-                                                 CurrentTile.Y + tileSize / 2,
-                                                 MouseCoords.GridID);
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
+                    (CurrentTile.X + tileSize / 2, CurrentTile.Y + tileSize / 2));
             }
             else
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
-                                                  CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y,
-                                                  MouseCoords.GridID);
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId,
+                    (CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
+                        CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y));
             }
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             if (!RangeCheck(position))
             {
                 return false;
             }
-            if (!pManager.CurrentPermission.IsTile && IsColliding(position))
-            {
-                return false;
-            }
-
-            return true;
+            return pManager.CurrentPermission!.IsTile || !IsColliding(position);
         }
     }
 }

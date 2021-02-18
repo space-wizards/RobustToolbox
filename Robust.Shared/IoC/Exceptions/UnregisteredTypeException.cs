@@ -12,7 +12,7 @@ namespace Robust.Shared.IoC.Exceptions
         /// <summary>
         /// The actual type that was attempted to be resolved, but wasn't registered. This is the <see cref="Type.AssemblyQualifiedName"/>.
         /// </summary>
-        public readonly string TypeName;
+        public readonly string? TypeName;
 
         public UnregisteredTypeException(Type type) : base($"Attempted to resolve unregistered type: {type}")
         {

@@ -1,8 +1,6 @@
 using System;
-using Content.Client.Animations;
 using NUnit.Framework;
 using Robust.Client.Animations;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
@@ -15,13 +13,16 @@ namespace Robust.UnitTesting.Client.UserInterface
     public class ControlTest : RobustUnitTest
     {
         private static readonly AttachedProperty _refTypeAttachedProperty
-            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string) v != "bar");
+            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");
 
         private static readonly AttachedProperty _valueTypeAttachedProperty
             = AttachedProperty.Create("_valueType", typeof(ControlTest), typeof(float));
 
         private static readonly AttachedProperty _nullableAttachedProperty
             = AttachedProperty.Create("_nullable", typeof(ControlTest), typeof(float?));
+
+        private static readonly AttachedProperty<int> _genericProperty =
+            AttachedProperty<int>.Create("generic", typeof(ControlTest), 5, i => i % 2 == 1);
 
         public override UnitTestProject Project => UnitTestProject.Client;
 
@@ -93,7 +94,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             control.SetValue(_refTypeAttachedProperty, "honk");
 
-            Assert.AreEqual(control.GetValue(_refTypeAttachedProperty), "honk");
+            Assert.That(control.GetValue(_refTypeAttachedProperty), Is.EqualTo("honk"));
         }
 
         [Test]
@@ -127,6 +128,20 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control();
 
             control.SetValue(_nullableAttachedProperty, null);
+        }
+
+        [Test]
+        public void TestAttachedPropertiesGeneric()
+        {
+            var control = new Control();
+
+            Assert.That(control.GetValue(_genericProperty), Is.EqualTo(5));
+
+            control.SetValue(_genericProperty, 11);
+
+            Assert.That(control.GetValue(_genericProperty), Is.EqualTo(11));
+
+            Assert.That(() => control.SetValue(_genericProperty, 10), Throws.ArgumentException);
         }
 
         [Test]

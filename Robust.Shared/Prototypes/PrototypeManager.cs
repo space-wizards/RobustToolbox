@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -57,6 +57,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void LoadDirectory(ResourcePath path);
         void LoadFromStream(TextReader stream);
+        void LoadString(string str);
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
         /// </summary>
@@ -74,6 +75,16 @@ namespace Robust.Shared.Prototypes
         ///     Registers a specific prototype name to be ignored.
         /// </summary>
         void RegisterIgnore(string name);
+
+        /// <summary>
+        /// Loads a single prototype class type into the manager.
+        /// </summary>
+        /// <param name="protoClass">A prototype class type that implements IPrototype. This type also
+        /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
+        void RegisterType(Type protoClass);
+
+        event Action<YamlStream, string>? LoadedData;
+
     }
 
     /// <summary>
@@ -95,18 +106,12 @@ namespace Robust.Shared.Prototypes
 
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IReflectionManager ReflectionManager;
-        [Dependency]
-        private readonly IDynamicTypeFactory _dynamicTypeFactory;
-        [Dependency]
-        private readonly IResourceManager _resources;
-
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
+        [Dependency] private readonly IResourceManager _resources = default!;
         [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
 
-        private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> prototypeTypes = new();
 
         private bool _hasEverBeenReloaded;
 
@@ -115,10 +120,10 @@ namespace Robust.Shared.Prototypes
         private DateTime timeSinceLastReload = DateTime.Now;
 
         #region IPrototypeManager members
-        private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
-        private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
+        private readonly Dictionary<Type, List<IPrototype>> prototypes = new();
+        private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new();
 
-        private readonly HashSet<string> IgnoredPrototypeTypes = new HashSet<string>();
+        private readonly HashSet<string> IgnoredPrototypeTypes = new();
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
@@ -246,7 +251,11 @@ namespace Robust.Shared.Prototypes
                         var yamlStream = new YamlStream();
                         yamlStream.Load(reader);
 
-                        return (yamlStream, filePath);
+                        var result = ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
+
+                        LoadedData?.Invoke(yamlStream, filePath.ToString());
+
+                        return result;
                     }
                     catch (YamlException e)
                     {
@@ -259,7 +268,7 @@ namespace Robust.Shared.Prototypes
 
             foreach (var (stream, filePath) in yamlStreams)
             {
-                for (var i = 0; i < stream.Documents.Count; i++)
+                for (var i = 0; i < stream!.Documents.Count; i++)
                 {
                     try
                     {
@@ -290,6 +299,13 @@ namespace Robust.Shared.Prototypes
                     throw new PrototypeLoadException(string.Format("Failed to load prototypes from document#{0}", i), e);
                 }
             }
+
+            LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
+        }
+
+        public void LoadString(string str)
+        {
+            LoadFromStream(new StreamReader(str));
         }
 
         #endregion IPrototypeManager members
@@ -329,24 +345,7 @@ namespace Robust.Shared.Prototypes
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
-                var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
-                if (attribute == null)
-                {
-                    throw new InvalidImplementationException(type, typeof(IPrototype), "No " + nameof(PrototypeAttribute) + " to give it a type string.");
-                }
-
-                if (prototypeTypes.ContainsKey(attribute.Type))
-                {
-                    throw new InvalidImplementationException(type, typeof(IPrototype),
-                        $"Duplicate prototype type ID: {attribute.Type}. Current: {prototypeTypes[attribute.Type]}");
-                }
-
-                prototypeTypes[attribute.Type] = type;
-                prototypes[type] = new List<IPrototype>();
-                if (typeof(IIndexedPrototype).IsAssignableFrom(type))
-                {
-                    indexedPrototypes[type] = new Dictionary<string, IIndexedPrototype>();
-                }
+                RegisterType(type);
             }
         }
 
@@ -366,7 +365,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = _dynamicTypeFactory.CreateInstance<IPrototype>(prototypeType);
+                var prototype = _dynamicTypeFactory.CreateInstanceUnchecked<IPrototype>(prototypeType);
                 prototype.LoadFrom(node);
                 prototypes[prototypeType].Add(prototype);
                 var indexedPrototype = prototype as IIndexedPrototype;
@@ -391,14 +390,14 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, out T prototype) where T : IIndexedPrototype
+        public bool TryIndex<T>(string id, [MaybeNullWhen(false)] out T prototype) where T : IIndexedPrototype
         {
             if (!indexedPrototypes.TryGetValue(typeof(T), out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
             var returned = index.TryGetValue(id, out var uncast);
-            prototype = (T)uncast;
+            prototype = (T) uncast!;
             return returned;
         }
 
@@ -406,6 +405,40 @@ namespace Robust.Shared.Prototypes
         {
             IgnoredPrototypeTypes.Add(name);
         }
+
+        /// <inheritdoc />
+        public void RegisterType(Type type)
+        {
+            if(!(typeof(IPrototype).IsAssignableFrom(type)))
+                throw new InvalidOperationException("Type must implement IPrototype.");
+
+            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+
+            if (attribute == null)
+            {
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    "No " + nameof(PrototypeAttribute) + " to give it a type string.");
+            }
+
+            if (prototypeTypes.ContainsKey(attribute.Type))
+            {
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {prototypeTypes[attribute.Type]}");
+            }
+
+            prototypeTypes[attribute.Type] = type;
+            prototypes[type] = new List<IPrototype>();
+
+            if (typeof(IIndexedPrototype).IsAssignableFrom(type))
+            {
+                indexedPrototypes[type] = new Dictionary<string, IIndexedPrototype>();
+            }
+        }
+
+        public event Action<YamlStream, string>? LoadedData;
+
     }
 
     [Serializable]
@@ -435,7 +468,7 @@ namespace Robust.Shared.Prototypes
     public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;
-        public readonly string Prototype;
+        public readonly string? Prototype;
         public UnknownPrototypeException(string prototype)
         {
             Prototype = prototype;
@@ -443,7 +476,7 @@ namespace Robust.Shared.Prototypes
 
         public UnknownPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-            Prototype = (string)info.GetValue("prototype", typeof(string));
+            Prototype = (string?)info.GetValue("prototype", typeof(string));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

@@ -4,7 +4,7 @@
     {
         public static ApproxEqualityConstraint Approximately(object expected, double? tolerance = null)
         {
-            return new ApproxEqualityConstraint(expected, tolerance);
+            return new(expected, tolerance);
         }
     }
 }

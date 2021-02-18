@@ -1,5 +1,8 @@
 using System.Globalization;
 using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Localization.Macros;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Localization
 {
@@ -58,12 +61,19 @@ namespace Robust.Shared.Localization
         ///     Default culture used by other methods when no culture is explicitly specified.
         ///     Changing this also changes the current thread's culture.
         /// </summary>
-        CultureInfo DefaultCulture { get; set; }
+        CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
         ///     Load data for a culture.
         /// </summary>
+        /// <param name="resourceManager"></param>
+        /// <param name="textMacroFactory"></param>
         /// <param name="culture"></param>
-        void LoadCulture(CultureInfo culture);
+        void LoadCulture(IResourceManager resourceManager, ITextMacroFactory textMacroFactory, CultureInfo culture);
+    }
+
+    internal interface ILocalizationManagerInternal : ILocalizationManager
+    {
+        void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer);
     }
 }

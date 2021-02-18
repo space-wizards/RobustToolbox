@@ -1,5 +1,4 @@
-﻿using Robust.Shared.Interfaces.Timers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
@@ -9,12 +8,10 @@ namespace Robust.Shared.Timers
 {
     internal sealed class TimerManager : ITimerManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
-#pragma warning restore 649
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private readonly List<(Timer, CancellationToken)> _timers
-            = new List<(Timer, CancellationToken)>();
+            = new();
 
         public void AddTimer(Timer timer, CancellationToken cancellationToken = default)
         {

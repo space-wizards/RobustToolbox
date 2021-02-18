@@ -1,5 +1,6 @@
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -9,7 +10,7 @@ namespace Robust.Server.GameObjects
     {
         private Color _color;
         private bool _enabled;
-        private int _radius;
+        private float _radius;
         private Vector2 _offset;
 
         public override string Name => "PointLight";
@@ -32,13 +33,16 @@ namespace Robust.Server.GameObjects
             get => _enabled;
             set
             {
-                _enabled = value;
-                Dirty();
+                if (_enabled != value)
+                {
+                    _enabled = value;
+                    Dirty();
+                }
             }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public int Radius
+        public float Radius
         {
             get => _radius;
             set
@@ -70,7 +74,7 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new PointLightComponentState(Enabled, Color, Radius, Offset);
         }

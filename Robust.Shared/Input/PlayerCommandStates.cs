@@ -30,7 +30,7 @@ namespace Robust.Shared.Input
     /// <inheritdoc />
     public class PlayerCommandStates : IPlayerCommandStates
     {
-        private readonly Dictionary<BoundKeyFunction, BoundKeyState> _functionStates = new Dictionary<BoundKeyFunction, BoundKeyState>();
+        private readonly Dictionary<BoundKeyFunction, BoundKeyState> _functionStates = new();
 
         /// <inheritdoc />
         public BoundKeyState this[BoundKeyFunction function]
@@ -48,10 +48,7 @@ namespace Robust.Shared.Input
         /// <inheritdoc />
         public void SetState(BoundKeyFunction function, BoundKeyState state)
         {
-            if (_functionStates.ContainsKey(function))
-                _functionStates[function] = state;
-            else
-                _functionStates.Add(function, state);
+            _functionStates[function] = state;
         }
     }
 }

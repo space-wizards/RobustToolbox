@@ -11,8 +11,8 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class MenuBar : PanelContainer
     {
-        private readonly List<Menu> _menus = new List<Menu>();
-        private readonly List<MenuBarTopButton> _buttons = new List<MenuBarTopButton>();
+        private readonly List<Menu> _menus = new();
+        private readonly List<MenuBarTopButton> _buttons = new();
         private readonly HBoxContainer _hBox;
         private readonly Popup _popup;
         private readonly VBoxContainer _popupVBox;
@@ -104,7 +104,11 @@ namespace Robust.Client.UserInterface.Controls
                             Disabled = menuButton.Disabled,
                             TextAlign = Label.AlignMode.Left
                         };
-                        pushButton.OnPressed += _ => menuButton.OnPressed?.Invoke();
+                        pushButton.OnPressed += _ =>
+                        {
+                            _popup.Visible = false;
+                            menuButton.OnPressed?.Invoke();
+                        };
                         container.AddChild(pushButton);
                         break;
 
@@ -229,9 +233,9 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public sealed class Menu
         {
-            public string Title { get; set; }
+            public string? Title { get; set; }
 
-            public List<MenuEntry> Entries { get; } = new List<MenuEntry>();
+            public List<MenuEntry> Entries { get; } = new();
         }
 
         /// <summary>
@@ -239,9 +243,9 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public sealed class MenuButton : MenuEntry
         {
-            public string Text { get; set; }
+            public string? Text { get; set; }
             public bool Disabled { get; set; }
-            public Action OnPressed { get; set; }
+            public Action? OnPressed { get; set; }
         }
 
         public sealed class MenuSeparator : MenuEntry

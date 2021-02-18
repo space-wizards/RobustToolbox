@@ -1,7 +1,5 @@
-﻿using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.ClientEye;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -10,23 +8,23 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    public class EyeComponent : Component
+    public class EyeComponent : SharedEyeComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Eye";
 
         [ViewVariables]
-        private Eye _eye;
+        private Eye? _eye = default!;
 
         // Horrible hack to get around ordering issues.
-        private bool setCurrentOnInitialize;
-        private bool setDrawFovOnInitialize;
-        private Vector2 setZoomOnInitialize = Vector2.One;
-        private Vector2 offset = Vector2.Zero;
+        private bool _setCurrentOnInitialize;
+        private bool _setDrawFovOnInitialize;
+        private Vector2 _setZoomOnInitialize = Vector2.One/2f;
+        private Vector2 _offset = Vector2.Zero;
+
+        public IEye? Eye => _eye;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
@@ -36,26 +34,32 @@ namespace Robust.Client.GameObjects
             {
                 if (_eye == null)
                 {
-                    setCurrentOnInitialize = value;
+                    _setCurrentOnInitialize = value;
                     return;
                 }
 
                 if (_eyeManager.CurrentEye == _eye == value)
                     return;
 
-                _eyeManager.CurrentEye = value ? _eye : null;
+                if (value)
+                {
+                    _eyeManager.CurrentEye = _eye;
+                }
+                else
+                {
+                    _eyeManager.ClearCurrentEye();
+                }
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Zoom
+        public override Vector2 Zoom
         {
-            get => _eye?.Zoom ?? setZoomOnInitialize;
+            get => _eye?.Zoom ?? _setZoomOnInitialize;
             set
             {
                 if (_eye == null)
                 {
-                    setZoomOnInitialize = value;
+                    _setZoomOnInitialize = value;
                 }
                 else
                 {
@@ -64,10 +68,9 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Angle Rotation
+        public override Angle Rotation
         {
-            get => _eye.Rotation;
+            get => _eye?.Rotation ?? Angle.Zero;
             set
             {
                 if (_eye != null)
@@ -75,29 +78,27 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Offset
+        public override Vector2 Offset
         {
-            get => offset;
+            get => _offset;
             set
             {
-                if(offset == value)
+                if(_offset.EqualsApprox(value))
                     return;
 
-                offset = value;
+                _offset = value;
                 UpdateEyePosition();
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool DrawFov
+        public override bool DrawFov
         {
-            get => _eye?.DrawFov ?? setDrawFovOnInitialize;
+            get => _eye?.DrawFov ?? _setDrawFovOnInitialize;
             set
             {
                 if (_eye == null)
                 {
-                    setDrawFovOnInitialize = value;
+                    _setDrawFovOnInitialize = value;
                 }
                 else
                 {
@@ -117,14 +118,36 @@ namespace Robust.Client.GameObjects
             _eye = new Eye
             {
                 Position = Owner.Transform.MapPosition,
-                Zoom = setZoomOnInitialize,
-                DrawFov = setDrawFovOnInitialize
+                Zoom = _setZoomOnInitialize,
+                DrawFov = _setDrawFovOnInitialize
             };
 
-            if (_eyeManager.CurrentEye == _eye != setCurrentOnInitialize)
+            if ((_eyeManager.CurrentEye == _eye) != _setCurrentOnInitialize)
             {
-                _eyeManager.CurrentEye = setCurrentOnInitialize ? _eye : null;
+                if (_setCurrentOnInitialize)
+                {
+                    _eyeManager.ClearCurrentEye();
+                }
+                else
+                {
+                    _eyeManager.CurrentEye = _eye;
+                }
             }
+        }
+
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
+        {
+            base.HandleComponentState(curState, nextState);
+
+            if (!(curState is EyeComponentState state))
+            {
+                return;
+            }
+
+            DrawFov = state.DrawFov;
+            Zoom = state.Zoom;
+            Offset = state.Offset;
+            Rotation = state.Rotation;
         }
 
         public override void OnRemove()
@@ -139,8 +162,8 @@ namespace Robust.Client.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One);
-            serializer.DataFieldCached(ref setDrawFovOnInitialize, "drawFov", true);
+            serializer.DataFieldCached(ref _setZoomOnInitialize, "zoom", Vector2.One/2f);
+            serializer.DataFieldCached(ref _setDrawFovOnInitialize, "drawFov", true);
         }
 
         /// <summary>
@@ -149,8 +172,9 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void UpdateEyePosition()
         {
+            if (_eye == null) return;
             var mapPos = Owner.Transform.MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position + offset, mapPos.MapId);
+            _eye.Position = new MapCoordinates(mapPos.Position + _offset, mapPos.MapId);
         }
     }
 }

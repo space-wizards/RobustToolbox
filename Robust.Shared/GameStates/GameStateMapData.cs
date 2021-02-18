@@ -1,21 +1,22 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]
-    public class GameStateMapData
+    public sealed class GameStateMapData
     {
-        // Dict of the new maps along with which grids are their defaults.
-        public readonly KeyValuePair<MapId, GridId>[] CreatedMaps;
-        public readonly KeyValuePair<GridId, GridCreationDatum>[] CreatedGrids;
-        public readonly KeyValuePair<GridId, GridDatum>[] GridData;
-        public readonly GridId[] DeletedGrids;
-        public readonly MapId[] DeletedMaps;
+        // Dict of the new maps
+        public readonly MapId[]? CreatedMaps;
+        public readonly KeyValuePair<GridId, GridCreationDatum>[]? CreatedGrids;
+        public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
+        public readonly GridId[]? DeletedGrids;
+        public readonly MapId[]? DeletedMaps;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[] gridData, GridId[] deletedGrids, MapId[] deletedMaps, KeyValuePair<MapId, GridId>[] createdMaps, KeyValuePair<GridId, GridCreationDatum>[] createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? deletedGrids, MapId[]? deletedMaps, MapId[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
         {
             GridData = gridData;
             DeletedGrids = deletedGrids;
@@ -29,13 +30,11 @@ namespace Robust.Shared.GameStates
         {
             public readonly ushort ChunkSize;
             public readonly float SnapSize;
-            public readonly bool IsTheDefault;
 
-            public GridCreationDatum(ushort chunkSize, float snapSize, bool isTheDefault)
+            public GridCreationDatum(ushort chunkSize, float snapSize)
             {
                 ChunkSize = chunkSize;
                 SnapSize = snapSize;
-                IsTheDefault = isTheDefault;
             }
         }
 
@@ -55,14 +54,14 @@ namespace Robust.Shared.GameStates
         [Serializable, NetSerializable]
         public struct ChunkDatum
         {
-            public readonly MapIndices Index;
+            public readonly Vector2i Index;
 
             // Definitely wasteful to send EVERY tile.
             // Optimize away future coder.
             // Also it's stored row-major.
             public readonly Tile[] TileData;
 
-            public ChunkDatum(MapIndices index, Tile[] tileData)
+            public ChunkDatum(Vector2i index, Tile[] tileData)
             {
                 Index = index;
                 TileData = tileData;

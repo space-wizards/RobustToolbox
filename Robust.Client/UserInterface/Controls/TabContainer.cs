@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
     public class TabContainer : Container
     {
+        public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
+        public static readonly AttachedProperty<string?> TabTitleProperty = AttachedProperty<string?>.CreateNull("TabTitle", typeof(TabContainer));
+
         public const string StylePropertyTabStyleBox = "tab-stylebox";
         public const string StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
         public const string stylePropertyTabFontColor = "tab-font-color";
@@ -20,7 +19,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _currentTab;
         private bool _tabsVisible = true;
-        private readonly List<TabData> _tabData = new List<TabData>();
 
         public int CurrentTab
         {
@@ -65,28 +63,62 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public event Action<int> OnTabChanged;
+        public event Action<int>? OnTabChanged;
 
         public TabContainer()
         {
             MouseFilter = MouseFilterMode.Pass;
         }
 
-        public string GetTabTitle(int tab)
+        public string GetActualTabTitle(int tab)
         {
-            return _tabData[tab].Name ?? GetChild(tab).Name ?? Loc.GetString("No title");
+            var control = GetChild(tab);
+            var title = control.GetValue(TabTitleProperty);
+
+            return title ?? control.Name ?? Loc.GetString("No title");
+        }
+
+        public static string? GetTabTitle(Control control)
+        {
+            return control.GetValue(TabTitleProperty);
+        }
+
+        public bool GetTabVisible(int tab)
+        {
+            var control = GetChild(tab);
+            return GetTabVisible(control);
+        }
+
+        public static bool GetTabVisible(Control control)
+        {
+            return control.GetValue(TabVisibleProperty);
         }
 
         public void SetTabTitle(int tab, string title)
         {
-            _tabData[tab].Name = title;
+            var control = GetChild(tab);
+            SetTabTitle(control, title);
+        }
+
+        public static void SetTabTitle(Control control, string title)
+        {
+            control.SetValue(TabTitleProperty, title);
+        }
+
+        public void SetTabVisible(int tab, bool visible)
+        {
+            var control = GetChild(tab);
+            SetTabVisible(control, visible);
+        }
+
+        public static void SetTabVisible(Control control, bool visible)
+        {
+            control.SetValue(TabVisibleProperty, visible);
         }
 
         protected override void ChildAdded(Control newChild)
         {
             base.ChildAdded(newChild);
-
-            _tabData.Add(new TabData(newChild));
 
             if (ChildCount == 1)
             {
@@ -99,30 +131,6 @@ namespace Robust.Client.UserInterface.Controls
                 // If not this can't be the currently selected tab so just make it invisible immediately.
                 newChild.Visible = false;
             }
-        }
-
-        protected override void ChildRemoved(Control child)
-        {
-            base.ChildRemoved(child);
-
-            for (var i = 0; i < _tabData.Count; i++)
-            {
-                if (_tabData[i].Control == child)
-                {
-                    _tabData.RemoveAt(i);
-                    break;
-                }
-            }
-        }
-
-        protected override void ChildMoved(Control child, int oldIndex, int newIndex)
-        {
-            base.ChildMoved(child, oldIndex, newIndex);
-
-            var data = _tabData[oldIndex];
-            DebugTools.Assert(data.Control == child);
-            _tabData.RemoveAt(oldIndex);
-            _tabData.Insert(newIndex, data);
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -145,9 +153,14 @@ namespace Robust.Client.UserInterface.Controls
             var headerOffset = 0f;
 
             // Then, draw the tabs.
-            for (var i = 0; i < _tabData.Count; i++)
+            for (var i = 0; i < ChildCount; i++)
             {
-                var title = GetTabTitle(i);
+                if (!GetTabVisible(i))
+                {
+                    continue;
+                }
+
+                var title = GetActualTabTitle(i);
 
                 var titleLength = 0;
                 // Get string length.
@@ -264,9 +277,14 @@ namespace Robust.Client.UserInterface.Controls
 
             var headerOffset = 0f;
 
-            for (var i = 0; i < _tabData.Count; i++)
+            for (var i = 0; i < ChildCount; i++)
             {
-                var title = GetTabTitle(i);
+                if (!GetTabVisible(i))
+                {
+                    continue;
+                }
+
+                var title = GetActualTabTitle(i);
 
                 var titleLength = 0;
                 // Get string length.
@@ -322,7 +340,7 @@ namespace Robust.Client.UserInterface.Controls
                 var activeSize = active?.MinimumSize ?? Vector2.Zero;
                 var inactiveSize = inactive?.MinimumSize ?? Vector2.Zero;
 
-                headerSize = (int) Math.Max(activeSize.Y, inactiveSize.Y);
+                headerSize = (int) MathF.Max(activeSize.Y, inactiveSize.Y);
                 headerSize += font.GetHeight(UIScale);
             }
 
@@ -330,18 +348,16 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getTabBoxActive()
+        private StyleBox? _getTabBoxActive()
         {
-            TryGetStyleProperty(StylePropertyTabStyleBox, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getTabBoxInactive()
+        private StyleBox? _getTabBoxInactive()
         {
-            TryGetStyleProperty(StylePropertyTabStyleBoxInactive, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBoxInactive, out var box);
             return box;
         }
 
@@ -366,34 +382,21 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getPanel()
+        private StyleBox? _getPanel()
         {
-            TryGetStyleProperty(StylePropertyPanelStyleBox, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyPanelStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [NotNull]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }
 
             return UserInterfaceManager.ThemeDefaults.DefaultFont;
-        }
-
-        private class TabData
-        {
-            public string Name;
-            public readonly Control Control;
-
-            public TabData(Control control)
-            {
-                Control = control;
-            }
         }
     }
 }

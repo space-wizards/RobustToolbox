@@ -14,7 +14,7 @@ namespace Robust.Client.ViewVariables
         ///     Creates the ideal property editor for a specific property type.
         /// </summary>
         /// <param name="type">The type of the property to create an editor for.</param>
-        ViewVariablesPropertyEditor PropertyFor(Type type);
+        VVPropEditor PropertyFor(Type? type);
 
         /// <summary>
         ///     Requests a session to an object on the server.
@@ -50,7 +50,7 @@ namespace Robust.Client.ViewVariables
         /// <param name="session">The session pointing to the remote object.</param>
         /// <param name="propertyIndex">An array of objects that the server can parse to figure out what to assign.</param>
         /// <param name="value">The new value for the object.</param>
-        void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object value);
+        void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object? value);
 
         /// <summary>
         ///     Gets a collection of trait IDs that are agreed upon so <see cref="ViewVariablesInstanceObject"/> knows which traits to instantiate.

@@ -1,8 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Con = System.Console;
@@ -11,17 +9,15 @@ namespace Robust.Server.Console
 {
     internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConsoleShell _conShell;
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly IBaseServer _baseServer;
-#pragma warning restore 649
+        [Dependency] private readonly IServerConsoleHost _conShell = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IBaseServer _baseServer = default!;
 
-        private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
+        private readonly Dictionary<int, string> commandHistory = new();
         private string currentBuffer = "";
         private int historyIndex;
         private int internalCursor;
-        private List<string> tabCompleteList = new List<string>();
+        private List<string> tabCompleteList = new();
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
 
@@ -68,7 +64,7 @@ namespace Robust.Server.Console
                             Con.WriteLine("> " + currentBuffer);
                             commandHistory.Add(commandHistory.Count, currentBuffer);
                             historyIndex = commandHistory.Count;
-                            ExecuteCommand(currentBuffer);
+                            _conShell.ExecuteCommand(currentBuffer);
                             currentBuffer = "";
                             internalCursor = 0;
                             break;
@@ -148,11 +144,6 @@ namespace Robust.Server.Console
             }
         }
 
-        private void ExecuteCommand(string commandLine)
-        {
-            _conShell.ExecuteCommand(commandLine);
-        }
-
         public void Print(string text)
         {
             Con.Write(text);
@@ -183,7 +174,7 @@ namespace Robust.Server.Console
 
             if (tabCompleteList.Count == 0)
             {
-                tabCompleteList = _conShell.AvailableCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
+                tabCompleteList = _conShell.RegisteredCommands.Keys.Where(key => key.StartsWith(currentBuffer)).ToList();
                 if (tabCompleteList.Count == 0)
                 {
                     return String.Empty;
@@ -200,7 +191,7 @@ namespace Robust.Server.Console
             return result;
         }
 
-        private void CancelKeyHandler(object sender, ConsoleCancelEventArgs args)
+        private void CancelKeyHandler(object? sender, ConsoleCancelEventArgs args)
         {
             // Handle process exiting ourselves.
             args.Cancel = true;

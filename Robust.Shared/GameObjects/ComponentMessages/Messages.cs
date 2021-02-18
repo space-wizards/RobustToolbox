@@ -1,26 +1,11 @@
-﻿using System;
-using Robust.Shared.Console;
-using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Serialization;
+﻿using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
-    [Serializable, NetSerializable]
-    public class BumpedEntMsg : ComponentMessage
-    {
-        public IEntity Entity { get; }
-
-        public BumpedEntMsg(IEntity entity)
-        {
-            Entity = entity;
-        }
-    }
-
     public class RelayMovementEntityMessage : ComponentMessage
     {
-        public IEntity Entity { get; set; }
+        [PublicAPI]
+        public readonly IEntity Entity;
 
         public RelayMovementEntityMessage(IEntity entity)
         {
@@ -36,19 +21,19 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The new parent of the transform.
         /// </summary>
-        public IEntity NewParent { get; }
+        public IEntity? NewParent { get; }
 
         /// <summary>
         ///     The old parent of the transform.
         /// </summary>
-        public IEntity OldParent { get; }
+        public IEntity? OldParent { get; }
 
         /// <summary>
         ///     Constructs a new instance of <see cref="ParentChangedMessage"/>.
         /// </summary>
         /// <param name="newParent">The new parent of the transform.</param>
         /// <param name="oldParent">The old parent of the transform.</param>
-        public ParentChangedMessage(IEntity newParent, IEntity oldParent)
+        public ParentChangedMessage(IEntity? newParent, IEntity? oldParent)
         {
             NewParent = newParent;
             OldParent = oldParent;

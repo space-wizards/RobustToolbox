@@ -1,30 +1,17 @@
-#version 330 core
+varying highp vec2 UV;
 
-out vec4 FragColor;
-
-in vec2 UV;
-
-uniform sampler2D TEXTURE;
 uniform sampler2D lightMap;
-uniform vec4 modulate;
-
-layout (std140) uniform uniformConstants
-{
-    vec2 SCREEN_PIXEL_SIZE;
-    float TIME;
-};
-
-uniform vec2 TEXTURE_PIXEL_SIZE;
+uniform highp vec4 modulate;
 
 // [SHADER_HEADER_CODE]
 
 void main()
 {
-    vec4 FRAGCOORD = gl_FragCoord;
+    highp vec4 FRAGCOORD = gl_FragCoord;
 
-    vec4 COLOR = vec4(0);
+    lowp vec4 COLOR = vec4(0.0);
 
     // [SHADER_CODE]
 
-    FragColor = COLOR;
+    gl_FragColor = zAdjustResult(COLOR);
 }

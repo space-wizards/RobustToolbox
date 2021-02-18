@@ -1,6 +1,5 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -36,7 +35,11 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner { get; set; }
+        public IEntity Owner { get; set; } = default!;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Paused => Owner.Paused;
 
         /// <summary>
         ///     True if this entity is a client-only entity.
@@ -188,19 +191,20 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message to send.</param>
         /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel channel = null)
+        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);
         }
 
         /// <inheritdoc />
-        public virtual void HandleMessage(ComponentMessage message, IComponent component) { }
+        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
 
         /// <inheritdoc />
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null) { }
+        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public virtual ComponentState GetComponentState()
+        public virtual ComponentState GetComponentState(ICommonSession player)
         {
             if (NetID == null)
                 throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
@@ -209,7 +213,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleComponentState(ComponentState curState, ComponentState nextState) { }
+        public virtual void HandleComponentState(ComponentState? curState, ComponentState? nextState) { }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.

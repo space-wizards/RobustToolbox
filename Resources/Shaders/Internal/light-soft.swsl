@@ -1,0 +1,30 @@
+#include "/Shaders/Internal/light_shared.swsl"
+
+highp float createOcclusion(highp vec2 diff)
+{
+    // Calculate vector perpendicular to light vector.
+    // So we can sample it to get a decent soft shadow?
+    highp vec2 perpendicular = normalize(cross(vec3(diff, 0.0), vec3(0.0, 0.0, 1.0)).xy) * 1.0 / 32.0;
+
+    highp float ourDist = length(diff);
+
+    highp vec2 occlDist = occludeDepth(diff, shadowMap, lightIndex);
+
+    // Change soft shadow size based on distance from primary occluder.
+    highp float distRatio = (ourDist - occlDist.x) / occlDist.x / 2.0;
+
+    perpendicular *= distRatio * lightSoftness;
+
+    // Totally not hacky PCF on top of VSM.
+    highp float occlusion = smoothstep(0.1, 1.0, ChebyshevUpperBound(occlDist, ourDist));
+
+    occlusion += shadowContrib(diff + perpendicular);
+    occlusion += shadowContrib(diff - perpendicular);
+    occlusion += shadowContrib(diff + perpendicular * 2.0);
+    occlusion += shadowContrib(diff - perpendicular * 2.0);
+    occlusion += shadowContrib(diff + perpendicular * 3.0);
+    occlusion += shadowContrib(diff - perpendicular * 3.0);
+
+    return occlusion / 7.0;
+}
+

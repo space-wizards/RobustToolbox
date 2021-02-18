@@ -1,0 +1,58 @@
+preset raw;
+
+#include "/Shaders/Internal/shadow_cast_shared.swsl"
+
+const highp float LIGHTING_HEIGHT = 1.0;
+
+const highp float g_MinVariance = 0.0;
+
+varying highp vec2 worldPosition;
+
+uniform highp vec4 lightColor;
+// Position of the light, in world coordinates.
+uniform highp vec2 lightCenter;
+uniform highp float lightRange;
+uniform highp float lightPower;
+uniform highp float lightSoftness;
+uniform highp float lightIndex;
+uniform sampler2D shadowMap;
+
+void vertex()
+{
+    highp vec3 transformed = modelMatrix * vec3(VERTEX, 1.0);
+    worldPosition = transformed.xy;
+    transformed = projectionMatrix * viewMatrix * transformed;
+
+    VERTEX = transformed.xy;
+}
+
+highp float shadowContrib(highp vec2 diff)
+{
+    highp float dist = length(diff);
+
+    return smoothstep(0.0, 1.0, ChebyshevUpperBound(occludeDepth(diff, shadowMap, lightIndex), dist));
+}
+
+void fragment()
+{
+    highp float mask = zTexture(UV).r;
+
+    highp vec2 diff = worldPosition - lightCenter;
+
+    // Totally not hacky PCF on top of VSM.
+    highp float occlusion = createOcclusion(diff);
+
+    if (occlusion == 0.0)
+    {
+        discard;
+    }
+
+    highp float dist = dot(diff, diff) + LIGHTING_HEIGHT;
+    highp float val = clamp((1.0 - clamp(sqrt(dist) / lightRange, 0.0, 1.0)) * (1.0 / (sqrt(dist + 1.0))), 0.0, 1.0);
+
+    val *= lightPower;
+    val *= mask;
+
+    COLOR = vec4(lightColor.rgb, val * occlusion);
+}
+

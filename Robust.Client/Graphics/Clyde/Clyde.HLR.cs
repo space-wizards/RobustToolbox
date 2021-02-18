@@ -371,7 +371,7 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         GL.Clear(ClearBufferMask.StencilBufferBit);
                         GL.Enable(EnableCap.StencilTest);
-                        GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
+                        GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
                         GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
                         GL.StencilMask(0xFF);
                         ApplyFovToBuffer(viewport, eye);

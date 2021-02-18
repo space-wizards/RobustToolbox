@@ -1,15 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
-<<<<<<< HEAD
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-=======
 using Robust.Shared.GameObjects;
->>>>>>> 3ef4ac74524a2532cb2ba62820db9abf16076e66
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -46,13 +41,8 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlayOfType<PhysicsOverlay>())
                 {
-<<<<<<< HEAD
-                    _overlayManager.AddOverlay(Guid.NewGuid(), new PhysicsOverlay(_componentManager, _eyeManager,
-                        _prototypeManager, _inputManager));
-=======
                     _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager, _physicsManager));
->>>>>>> 3ef4ac74524a2532cb2ba62820db9abf16076e66
                 }
                 else
                 {
@@ -99,12 +89,10 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new();
 
-<<<<<<< HEAD
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager) : base()
-=======
+
             public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
                 : base(nameof(PhysicsOverlay))
->>>>>>> 3ef4ac74524a2532cb2ba62820db9abf16076e66
+
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;

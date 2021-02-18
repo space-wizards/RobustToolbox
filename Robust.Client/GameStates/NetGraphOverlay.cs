@@ -144,12 +144,14 @@ namespace Robust.Client.GameStates
             DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
+        /* //Dispose was removed (for now?)
         protected override void Dispose(bool disposing)
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
 
             base.Dispose(disposing);
         }
+        */
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
         {

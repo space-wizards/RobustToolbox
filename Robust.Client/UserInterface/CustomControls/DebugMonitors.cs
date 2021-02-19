@@ -69,12 +69,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
             AddChild(_debugClydePanel = new DebugClydePanel
             {
-                SizeFlagsHorizontal = SizeFlags.None
+                HorizontalAlignment = HAlignment.Left
             });
 
             AddChild(_debugInputPanel = new DebugInputPanel
             {
-                SizeFlagsHorizontal = SizeFlags.None
+                HorizontalAlignment = HAlignment.Left
             });
         }
     }

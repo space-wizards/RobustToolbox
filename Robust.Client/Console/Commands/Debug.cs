@@ -481,6 +481,8 @@ namespace Robust.Client.Console.Commands
             {
                 _writeNode(root, 0, writer);
             }
+
+            shell.WriteLine("Saved guidump");
         }
 
         private static void _writeNode(Control control, int indents, TextWriter writer)

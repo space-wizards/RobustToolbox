@@ -90,19 +90,19 @@ namespace Robust.Shared.Scripting
 
         public void setprop(object target, string name, object? value)
         {
-            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic)
+            target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                 !.SetValue(target, value);
         }
 
         public object? fld(object target, string name)
         {
-            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+            return target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                 !.GetValue(target);
         }
 
         public void setfld(object target, string name, object? value)
         {
-            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+            target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                 !.SetValue(target, value);
         }
 
@@ -110,7 +110,7 @@ namespace Robust.Shared.Scripting
         {
             var t = target.GetType();
             // TODO: overloads
-            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            var m = t.GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
             return m!.Invoke(target, args);
         }
 

@@ -219,7 +219,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             return _getGrabberStyleBox()?.MinimumSize ?? Vector2.Zero;
         }

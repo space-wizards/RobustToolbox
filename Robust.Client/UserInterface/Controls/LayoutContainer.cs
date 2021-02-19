@@ -1,6 +1,8 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -16,6 +18,8 @@ namespace Robust.Client.UserInterface.Controls
         ///     The value of an anchor that is exactly on the end of the parent control.
         /// </summary>
         public const float AnchorEnd = 1;
+
+        [ViewVariables(VVAccess.ReadWrite)] public bool Debug { get; set; }
 
         public static readonly AttachedProperty MarginLeftProperty = AttachedProperty.Create("MarginLeft",
             typeof(LayoutContainer), typeof(float), changed: LayoutPropertyChangedCallback);
@@ -112,16 +116,10 @@ namespace Robust.Client.UserInterface.Controls
             SetMarginBottom(control, diffY + control.GetValue<float>(MarginBottomProperty));
         }
 
+        [Obsolete("Change SetSize on the control instead.")]
         public static void SetSize(Control control, Vector2 size)
         {
-            var (diffX, diffY) = size - control.Size;
-
-            // This is just to make subsequent set calls work correctly.
-            // It should get reset to this exact value next update either way.
-            control.Size = size;
-
-            SetMarginRight(control, diffX + control.GetValue<float>(MarginRightProperty));
-            SetMarginBottom(control, diffY + control.GetValue<float>(MarginBottomProperty));
+            control.SetSize = size;
         }
 
         /// <summary>
@@ -297,8 +295,9 @@ namespace Robust.Client.UserInterface.Controls
             LayoutPresetMode resizeMode = LayoutPresetMode.MinSize,
             int margin = 0)
         {
+            control.Measure(Vector2.Infinity);
             var newSize = control.Size;
-            var minSize = control.CombinedMinimumSize;
+            var minSize = control.DesiredSize;
             if ((resizeMode & LayoutPresetMode.KeepWidth) == 0)
             {
                 newSize = new Vector2(minSize.X, newSize.Y);
@@ -445,39 +444,98 @@ namespace Robust.Client.UserInterface.Controls
             control.SetValue(MarginBottomProperty, marginBottom);
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
+            base.MeasureOverride(Vector2.Infinity);
+
+            return Vector2.Zero;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            foreach (var child in Children)
+            {
+                child.Arrange(CalcChildRect(finalSize, UIScale, child, out _));
+            }
+
+            return finalSize;
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            base.Draw(handle);
+
+            if (!Debug)
+                return;
+
             var (pSizeX, pSizeY) = PixelSize;
             foreach (var child in Children)
             {
-                var anchorLeft = child.GetValue<float>(AnchorLeftProperty);
-                var anchorTop = child.GetValue<float>(AnchorTopProperty);
-                var anchorRight = child.GetValue<float>(AnchorRightProperty);
-                var anchorBottom = child.GetValue<float>(AnchorBottomProperty);
+                var rect = CalcChildRect(Size, UIScale, child, out var anchorSize);
 
-                var marginLeft = child.GetValue<float>(MarginLeftProperty) * UIScale;
-                var marginTop = child.GetValue<float>(MarginTopProperty) * UIScale;
-                var marginRight = child.GetValue<float>(MarginRightProperty) * UIScale;
-                var marginBottom = child.GetValue<float>(MarginBottomProperty) * UIScale;
+                var left = rect.Left * UIScale;
+                var right = rect.Right * UIScale;
+                var top = rect.Top * UIScale;
+                var bottom = rect.Bottom * UIScale;
 
-                var growHorizontal = child.GetValue<GrowDirection>(GrowHorizontalProperty);
-                var growVertical = child.GetValue<GrowDirection>(GrowVerticalProperty);
+                DrawVLine(anchorSize.Left, Color.Pink);
+                DrawVLine(anchorSize.Right, Color.Green);
+                DrawHLine(anchorSize.Top, Color.Pink);
+                DrawHLine(anchorSize.Bottom, Color.Green);
 
-                // Calculate where the control "wants" to be by its anchors/margins.
-                var left = anchorLeft * pSizeX + marginLeft;
-                var top = anchorTop * pSizeY + marginTop;
-                var right = anchorRight * pSizeX + marginRight;
-                var bottom = anchorBottom * pSizeY + marginBottom;
+                /*
+                DrawVLine(left, Color.Orange);
+                DrawVLine(right, Color.Blue);
+                DrawHLine(top, Color.Orange);
+                DrawHLine(bottom, Color.Blue);
+                */
 
-                var (wSizeX, wSizeY) = (right - left, bottom - top);
-                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-
-                HandleLayoutOverflow(growHorizontal, minSizeX, left, wSizeX, out var posX, out var sizeX);
-                HandleLayoutOverflow(growVertical, minSizeY, top, wSizeY, out var posY, out var sizeY);
-
-                child.Position = new Vector2(posX, posY) / UserInterfaceManager.UIScale;
-                child.Size = new Vector2(sizeX, sizeY)  / UserInterfaceManager.UIScale;
+                handle.DrawRect(new UIBox2(left, top, right, bottom), Color.Red, false);
             }
+
+            void DrawVLine(float x, Color color)
+            {
+                handle.DrawLine((x, 0), (x, pSizeY), color);
+            }
+
+            void DrawHLine(float y, Color color)
+            {
+                handle.DrawLine((0, y), (pSizeX, y), color);
+            }
+        }
+
+        private static UIBox2 CalcChildRect(Vector2 ourSize, float uiScale, Control child, out UIBox2 anchorSize)
+        {
+            var (pSizeX, pSizeY) = ourSize * uiScale;
+
+            var anchorLeft = child.GetValue<float>(AnchorLeftProperty);
+            var anchorTop = child.GetValue<float>(AnchorTopProperty);
+            var anchorRight = child.GetValue<float>(AnchorRightProperty);
+            var anchorBottom = child.GetValue<float>(AnchorBottomProperty);
+
+            var marginLeft = child.GetValue<float>(MarginLeftProperty) * uiScale;
+            var marginTop = child.GetValue<float>(MarginTopProperty) * uiScale;
+            var marginRight = child.GetValue<float>(MarginRightProperty) * uiScale;
+            var marginBottom = child.GetValue<float>(MarginBottomProperty) * uiScale;
+
+            var growHorizontal = child.GetValue<GrowDirection>(GrowHorizontalProperty);
+            var growVertical = child.GetValue<GrowDirection>(GrowVerticalProperty);
+
+            // Calculate where the control "wants" to be by its anchors/margins.
+            var left = anchorLeft * pSizeX + marginLeft;
+            var top = anchorTop * pSizeY + marginTop;
+            var right = anchorRight * pSizeX + marginRight;
+            var bottom = anchorBottom * pSizeY + marginBottom;
+
+            anchorSize = new UIBox2(left, top, right, bottom);
+
+            var (wSizeX, wSizeY) = (right - left, bottom - top);
+            var (minSizeX, minSizeY) = child.DesiredPixelSize;
+
+            HandleLayoutOverflow(growHorizontal, minSizeX, left, wSizeX, out var posX, out var sizeX);
+            HandleLayoutOverflow(growVertical, minSizeY, top, wSizeY, out var posY, out var sizeY);
+
+            return UIBox2.FromDimensions(posX / uiScale, posY / uiScale, sizeX / uiScale, sizeY / uiScale);
         }
 
         private static void HandleLayoutOverflow(GrowDirection direction, float minSize, float wPos, float wSize,
@@ -514,7 +572,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (owner.Parent is LayoutContainer container)
             {
-                container.UpdateLayout();
+                container.InvalidateArrange();
             }
         }
 

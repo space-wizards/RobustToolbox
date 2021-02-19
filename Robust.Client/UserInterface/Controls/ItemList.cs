@@ -403,7 +403,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var size = Vector2.Zero;
             if (ActualBackground != null)

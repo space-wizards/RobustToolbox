@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                             (OverrideMenu = new OptionButton
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 ToolTip = Loc.GetString("Override placement")
                             })
                         }
@@ -225,7 +225,7 @@ namespace Robust.Client.UserInterface.CustomControls
             // Update visible buttons in the prototype list.
 
             // Calculate index of first prototype to render based on current scroll.
-            var height = MeasureButton.CombinedMinimumSize.Y + PrototypeListContainer.Separation;
+            var height = MeasureButton.DesiredSize.Y + PrototypeListContainer.Separation;
             var offset = -PrototypeList.Position.Y;
             var startIndex = (int) Math.Floor(offset / height);
             PrototypeList.ItemOffset = startIndex;
@@ -394,7 +394,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 set
                 {
                     _totalItemCount = value;
-                    MinimumSizeChanged();
+                    InvalidateMeasure();
                 }
             }
 
@@ -404,13 +404,13 @@ namespace Robust.Client.UserInterface.CustomControls
                 set
                 {
                     _itemOffset = value;
-                    UpdateLayout();
+                    InvalidateMeasure();
                 }
             }
 
             public const float Separation = 2;
 
-            protected override Vector2 CalculateMinimumSize()
+            protected override Vector2 MeasureOverride(Vector2 availableSize)
             {
                 if (ChildCount == 0)
                 {
@@ -419,28 +419,31 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 var first = GetChild(0);
 
-                var (minX, minY) = first.CombinedMinimumSize;
+                first.Measure(availableSize);
+                var (minX, minY) = first.DesiredSize;
 
                 return (minX, minY * TotalItemCount + (TotalItemCount - 1) * Separation);
             }
 
-            protected override void LayoutUpdateOverride()
+            protected override Vector2 ArrangeOverride(Vector2 finalSize)
             {
                 if (ChildCount == 0)
                 {
-                    return;
+                    return Vector2.Zero;
                 }
 
                 var first = GetChild(0);
 
-                var height = first.CombinedMinimumSize.Y;
+                var height = first.DesiredSize.Y;
                 var offset = ItemOffset * height + (ItemOffset - 1) * Separation;
 
                 foreach (var child in Children)
                 {
-                    FitChildInBox(child, UIBox2.FromDimensions(0, offset, Width, height));
+                    child.Arrange(UIBox2.FromDimensions(0, offset, Width, height));
                     offset += Separation + height;
                 }
+
+                return finalSize;
             }
         }
 
@@ -458,8 +461,6 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 AddChild(ActualButton = new Button
                 {
-                    SizeFlagsHorizontal = SizeFlags.FillExpand,
-                    SizeFlagsVertical = SizeFlags.FillExpand,
                     ToggleMode = true,
                 });
 
@@ -470,15 +471,15 @@ namespace Robust.Client.UserInterface.CustomControls
                         (EntityTextureRects = new LayeredTextureRect
                         {
                             CustomMinimumSize = (32, 32),
-                            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                            HorizontalAlignment = HAlignment.Center,
+                            VerticalAlignment = VAlignment.Center,
                             Stretch = TextureRect.StretchMode.KeepAspectCentered,
                             CanShrink = true
                         }),
                         (EntityLabel = new Label
                         {
-                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                            SizeFlagsHorizontal = SizeFlags.FillExpand,
+                            VerticalAlignment = VAlignment.Center,
+                            HorizontalExpand = true,
                             Text = "Backpack",
                             ClipText = true
                         })

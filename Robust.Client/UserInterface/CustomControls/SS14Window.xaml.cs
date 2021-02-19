@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
             XamlChildren = new SS14ContentCollection(this);
         }
 
-        public MarginContainer Contents { get; private set; }
+        public Control Contents { get; private set; }
         //private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
@@ -42,9 +42,12 @@ namespace Robust.Client.UserInterface.CustomControls
         private const float HEADER_SIZE_Y = 25;
         protected virtual Vector2 ContentsMinimumSize => (50, 50);
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            return Vector2.ComponentMax(ContentsMinimumSize, base.CalculateMinimumSize());
+
+            return Vector2.ComponentMax(
+                ContentsMinimumSize,
+                base.MeasureOverride(Vector2.ComponentMax(availableSize, ContentsMinimumSize)));
         }
 
         protected override void Opened()

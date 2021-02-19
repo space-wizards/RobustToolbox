@@ -89,12 +89,7 @@ namespace Robust.Client.UserInterface.CustomControls
 DOWN: {receivedBytes / ONE_KIBIBYTE:N} KiB/s, {receivedPackets} pckt/s, {LastReceivedBytes / ONE_KIBIBYTE:N} KiB, {LastReceivedPackets} pckt
 PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
 
-            MinimumSizeChanged();
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            return new(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
+            // MinimumSizeChanged();
         }
     }
 }

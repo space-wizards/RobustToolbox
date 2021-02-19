@@ -13,7 +13,8 @@ namespace Robust.Build.Tasks
         public IXamlConstructor Vector2ConstructorFull { get; }
         public IXamlType Vector2i { get; }
         public IXamlConstructor Vector2iConstructorFull { get; }
-
+        public IXamlType Thickness { get; }
+        public IXamlConstructor ThicknessConstructorFull { get; }
         public RXamlWellKnownTypes(TransformerConfiguration cfg)
         {
             var ts = cfg.TypeSystem;
@@ -23,6 +24,7 @@ namespace Robust.Build.Tasks
 
             (Vector2, Vector2ConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2", Single, 2);
             (Vector2i, Vector2iConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2i", Int32, 2);
+            (Thickness, ThicknessConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Thickness", Single, 4);
 
             (IXamlType, IXamlConstructor) GetNumericTypeInfo(string name, IXamlType componentType, int componentCount)
             {

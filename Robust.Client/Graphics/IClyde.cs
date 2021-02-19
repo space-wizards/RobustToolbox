@@ -13,6 +13,8 @@ namespace Robust.Client.Graphics
 
         Vector2i ScreenSize { get; }
 
+        bool IsFocused { get; }
+
         /// <summary>
         ///     The default scale ratio for window contents, given to us by the OS.
         /// </summary>

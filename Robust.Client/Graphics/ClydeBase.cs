@@ -25,6 +25,8 @@ namespace Robust.Client.Graphics
         protected bool VSync { get; private set; } = true;
 
         public abstract Vector2i ScreenSize { get; }
+        public abstract bool IsFocused { get; }
+
         public abstract void SetWindowTitle(string title);
 
         public virtual bool Initialize()

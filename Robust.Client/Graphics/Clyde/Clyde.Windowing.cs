@@ -63,6 +63,7 @@ namespace Robust.Client.Graphics.Clyde
         private Window* _glfwWindow;
 
         private Vector2i _framebufferSize;
+        private bool _isFocused;
         private Vector2i _windowSize;
         private Vector2i _prevWindowSize;
         private Vector2i _prevWindowPos;
@@ -75,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
         public override Vector2i ScreenSize => _framebufferSize;
+        public override bool IsFocused => _isFocused;
         public Vector2 DefaultWindowScale => _windowScale;
         public Vector2 MouseScreenPosition => _lastMousePos;
 
@@ -119,7 +121,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
-        private bool _isFocused;
 
         private bool InitGlfw()
         {

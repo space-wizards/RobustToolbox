@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(componentData.GetValue<bool>("boolt"), Is.EqualTo(true));
             Assert.That(componentData.GetValue<bool>("boolf"), Is.EqualTo(false));
             Assert.That(componentData.GetValue<Vector2>("vec2"), Is.EqualTo(new Vector2(1.5f, 1.5f)));
-            //todo Assert.That(componentData["vec2i"], Is.EqualTo(new Vector2i(1, 1)));
+            Assert.That(componentData.GetValue<Vector2i>("vec2i"), Is.EqualTo(new Vector2i(1, 1)));
             Assert.That(componentData.GetValue<Vector3>("vec3"), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
             Assert.That(componentData.GetValue<Vector4>("vec4"), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
             Assert.That(componentData.GetValue<Color>("color"), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
@@ -138,7 +138,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
     boolt: true
     boolf: false
     vec2: 1.5, 1.5
-#    vec2i: 1, 1
+    vec2i: 1, 1
     vec3: 1.5, 1.5, 1.5
     vec4: 1.5, 1.5, 1.5, 1.5
     color: '#aabbcc'
@@ -172,11 +172,11 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
         [DataField("str")] public string Str = null!;
 
-        [DataField("anint")] public int? @int = null!;
+        [DataField("int")] public int? int_field = null!;
 
-        [DataField("anfloat")] public float? @float = null!;
+        [DataField("float")] public float? float_field = null!;
 
-        [DataField("float2")] public float? @float2 = null!;
+        [DataField("float2")] public float? float2_field = null!;
 
         [DataField("boolt")] public bool? @boolt = null!;
 
@@ -184,7 +184,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
         [DataField("vec2")] public Vector2 vec2 = default;
 
-        //todo [YamlField("vec2i")] public Vector2i vec2i = default;
+        [DataField("vec2i")] public Vector2i vec2i = default;
 
         [DataField("vec3")] public Vector3 vec3 = default;
 

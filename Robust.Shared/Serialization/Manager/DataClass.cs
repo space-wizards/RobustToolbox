@@ -8,7 +8,7 @@ namespace Robust.Shared.Serialization.Manager
     [ImplicitDataDefinitionForInheritors]
     public abstract class DataClass
     {
-        public T GetValue<T>(string name)
+        public T? GetValue<T>(string name)
         {
             if(IoCManager.Resolve<IServ3Manager>().TryGetDataClassField(this, name, out T? value))
             {

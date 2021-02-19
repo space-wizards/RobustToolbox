@@ -95,14 +95,17 @@ namespace Robust.Shared.Serialization.Manager
             return GetEmptyDataClass(_componentFactory.GetRegistration(compName).Type);
         }
 
-        public bool TryGetDataClassField<T>(DataClass dataClass, string name, [NotNullWhen(true)] out T? value)
+        public bool TryGetDataClassField<T>(DataClass dataClass, string name, out T? value)
         {
+            value = default;
             foreach (var classLink in _dataClassLinks)
             {
                 if (classLink.Value.DataClassType == dataClass.GetType())
                 {
-                    value = (T?) classLink.Value.GetFieldDelegate(dataClass, name)!;
-                    return value != null;
+                    var val = classLink.Value.GetFieldDelegate(dataClass, name);
+                    if (val == null) return true;
+                    value = (T?) val;
+                    return true;
                 }
             }
 

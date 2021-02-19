@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -8,7 +8,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
-using Timer = Robust.Shared.Timers.Timer;
+using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.ViewVariables.Instances
 {

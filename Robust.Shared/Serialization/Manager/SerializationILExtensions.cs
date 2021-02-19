@@ -255,6 +255,8 @@ public readonly bool ServerOnly;
         public static void EmitCopy(this RobustILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
             AbstractFieldInfo toField, int mgrArg, bool assumeValueNotNull = false)
         {
+            //todo paul breaks if fromfield is nullable & tofield is not
+
             if (assumeValueNotNull)
             {
                 var type = fromField.FieldType.EnsureNotNullableType();

@@ -276,7 +276,7 @@ namespace Robust.Shared.Prototypes
 
         public void LoadString(string str)
         {
-            LoadFromStream(new StreamReader(str));
+            LoadFromStream(new StringReader(str));
         }
 
         #endregion IPrototypeManager members

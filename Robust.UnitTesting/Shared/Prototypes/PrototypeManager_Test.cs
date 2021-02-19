@@ -12,7 +12,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
     [TestFixture]
     public class PrototypeManager_Test : RobustUnitTest
     {
+        private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -97,6 +99,16 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.PlacementMode, Is.EqualTo("SnapgridCenter"));
         }
 
+        [Test]
+        public void TestLoadString()
+        {
+            manager.LoadString(LoadStringDocument);
+
+            var prototype = manager.Index<EntityPrototype>(LoadStringTestDummyId);
+
+            Assert.That(prototype.Name, Is.EqualTo(LoadStringTestDummyId));
+        }
+
         private enum YamlTestEnum : byte
         {
             Foo,
@@ -159,6 +171,11 @@ namespace Robust.UnitTesting.Shared.Prototypes
   placement:
     mode: SnapgridCenter
 ";
+
+        private static readonly string LoadStringDocument = $@"
+- type: entity
+  id: {LoadStringTestDummyId}
+  name: {LoadStringTestDummyId}";
     }
 
     public class TestBasicPrototypeComponent : Component

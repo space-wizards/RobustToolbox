@@ -303,6 +303,7 @@ namespace Robust.Shared.Prototypes
         {
             var retries = 0;
 
+            // This might be shit-code, but its pjb-responded-idk-when-asked shit-code.
             while (true)
             {
                 try

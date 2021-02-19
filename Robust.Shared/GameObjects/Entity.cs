@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects
             get => _paused;
             set
             {
-                if (_paused == value || value && HasComponent<SharedIgnorePauseComponent>())
+                if (_paused == value || value && HasComponent<IgnorePauseComponent>())
                     return;
 
                 _paused = value;

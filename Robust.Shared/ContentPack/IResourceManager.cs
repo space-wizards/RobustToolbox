@@ -117,6 +117,12 @@ namespace Robust.Shared.ContentPack
         IEnumerable<ResourcePath> ContentFindFiles(string path);
 
         /// <summary>
+        ///     Returns a list of paths to all top-level content directories
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<ResourcePath> GetContentRoots();
+
+        /// <summary>
         ///     Read a file from the mounted content paths to a string.
         /// </summary>
         /// <param name="path">Path of the file to read.</param>

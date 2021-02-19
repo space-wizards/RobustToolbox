@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -18,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity")]
-    public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
+    public class EntityPrototype : IPrototype, ISyncingPrototype
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
@@ -257,6 +258,11 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        public void Reset()
+        {
+            Children.Clear();
+        }
+
         // Resolve inheritance.
         public bool Sync(IPrototypeManager manager, int stage)
         {
@@ -422,6 +428,68 @@ namespace Robust.Shared.Prototypes
             {
                 return;
             }
+        }
+
+        public void UpdateEntity(Entity entity)
+        {
+            bool HasBeenModified(string name, YamlMappingNode data, EntityPrototype prototype, IComponent currentComponent, IComponentFactory factory)
+            {
+                var component = factory.GetComponent(name);
+                prototype.CurrentDeserializingComponent = name;
+                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(prototype));
+                component.ExposeData(ser);
+                return component == (Component) currentComponent;
+            }
+
+            if (Name != entity.Prototype?.Name)
+            {
+                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{entity.Prototype?.Name}', got '{Name}'");
+                return;
+            }
+
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            var componentManager = IoCManager.Resolve<IComponentManager>();
+            var oldPrototype = entity.Prototype;
+
+            var oldPrototypeComponents = oldPrototype.Components.Keys
+                .Where(n => n != "Transform" && n != "MetaData")
+                .Select(name => (name, factory.GetRegistration(name).Type))
+                .ToList();
+            var newPrototypeComponents = Components.Keys
+                .Where(n => n != "Transform" && n != "MetaData")
+                .Select(name => (name, factory.GetRegistration(name).Type))
+                .ToList();
+
+            var ignoredComponents = new List<string>();
+
+            // Find components to be removed, and remove them
+            foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
+            {
+                if (!HasBeenModified(name, oldPrototype.Components[name], oldPrototype, entity.GetComponent(type),
+                    factory) && Components.Keys.Contains(name))
+                {
+                    ignoredComponents.Add(name);
+                    Logger.Debug(name);
+                    continue;
+                }
+                componentManager.RemoveComponent(entity.Uid, type);
+            }
+            componentManager.CullRemovedComponents();
+
+            // Add new components
+            foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name)).Except(oldPrototypeComponents))
+            {
+                var data = Components[name];
+                var component = (Component) factory.GetComponent(name);
+                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(this));
+                CurrentDeserializingComponent = name;
+                component.Owner = entity;
+                component.ExposeData(ser);
+                entity.AddComponent(component);
+            }
+
+            // Update entity metadata
+            entity.MetaData.EntityPrototype = this;
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context)

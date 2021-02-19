@@ -2,9 +2,8 @@
 using System.Threading;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
-using Robust.Shared.Timing;
 
-namespace Robust.Shared.Timers
+namespace Robust.Shared.Timing
 {
     internal sealed class TimerManager : ITimerManager
     {

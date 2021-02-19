@@ -30,5 +30,10 @@ namespace Robust.Server.Console
         {
             return Implementation?.CanAdminMenu(session) ?? false;
         }
+
+        public bool CanAdminReloadPrototypes(IPlayerSession session)
+        {
+            return Implementation?.CanAdminReloadPrototypes(session) ?? false;
+        }
     }
 }

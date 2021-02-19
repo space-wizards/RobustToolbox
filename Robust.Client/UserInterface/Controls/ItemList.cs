@@ -5,7 +5,7 @@ using System.Diagnostics.Contracts;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
-using Timer = Robust.Shared.Timers.Timer;
+using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {

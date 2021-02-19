@@ -1,11 +1,9 @@
-using Robust.Shared.GameObjects;
-
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Defines a component that has "map initialization" behavior.
-    ///     Basically irreversible behavior that moves the map from "map editor" to playable,
-    ///     like spawning preset objects.
+    /// Defines a component that has "map initialization" behavior.
+    /// Basically irreversible behavior that moves the map from "map editor" to playable,
+    /// like spawning preset objects.
     /// </summary>
     public interface IMapInit
     {

@@ -101,6 +101,7 @@ namespace Robust.Client.GameObjects
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use NoRotation and/or DirectionOverride")]
         public bool Directional
         {
             get => _directional;
@@ -971,21 +972,28 @@ namespace Robust.Client.GameObjects
             RenderInternal(drawingHandle, Matrix3.Identity, worldRotation, overrideDirection);
         }
         
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool DScreenLock = false;
+        private bool _screenLock = false;
+        private Direction _overrideDirection = Direction.South;
+        private bool _enableOverrideDirection = false;
 
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public Direction DOverrideDirection = Direction.South;
+        public bool NoRotation { get => _screenLock; set => _screenLock = value; }
 
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool DEnableOverride = false;
+        public Direction DirectionOverride { get => _overrideDirection; set => _overrideDirection = value; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
 
         // Sprite rendering path
         internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
         {
             var angle = Rotation;
 
-            if (DScreenLock)
+            if (_screenLock)
             {
                 angle = Angle.Zero;
             }
@@ -995,9 +1003,9 @@ namespace Robust.Client.GameObjects
             }
 
             Direction? overrideDir = null;
-            if (DEnableOverride)
+            if (_enableOverrideDirection)
             {
-                overrideDir = DOverrideDirection;
+                overrideDir = _overrideDirection;
             }
 
             var sWorldRotation = angle;
@@ -1051,7 +1059,7 @@ namespace Robust.Client.GameObjects
                 drawingHandle.UseShader(null);
             }
         }
-
+        
         private static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
@@ -1094,8 +1102,10 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepthTag.Default,
                 WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref color, "color", Color.White);
-            serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
+            serializer.DataFieldCached(ref _screenLock, "noRot", false);
+            serializer.DataFieldCached(ref _enableOverrideDirection, "enableOverrideDir", false);
+            serializer.DataFieldCached(ref _overrideDirection, "overrideDir", Direction.East);
 
             // TODO: Writing?
             if (!serializer.Reading)
@@ -1350,7 +1360,6 @@ namespace Robust.Client.GameObjects
             Rotation = thestate.Rotation;
             Offset = thestate.Offset;
             Color = thestate.Color;
-            Directional = thestate.Directional;
             RenderOrder = thestate.RenderOrder;
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
@@ -1409,11 +1418,6 @@ namespace Robust.Client.GameObjects
 
         private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
         {
-            if (!Directional)
-            {
-                return RSI.State.Direction.South;
-            }
-
             var dir = rsiDirectionType switch
             {
                 RSI.State.DirectionType.Dir1 => Direction.South,

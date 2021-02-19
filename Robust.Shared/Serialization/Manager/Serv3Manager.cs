@@ -24,7 +24,6 @@ namespace Robust.Shared.Serialization.Manager
         {
             InitializeFlagsAndConstants();
             InitializeTypeSerializers();
-            InitializeDataClasses();
 
             //var registrations = _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>().ToHashSet();
             var registrations = new HashSet<Type>();
@@ -251,8 +250,9 @@ namespace Robust.Shared.Serialization.Manager
             return target;
         }
 
-        public object CreateCopy(object source)
+        public object? CreateCopy(object? source)
         {
+            if (source == null) return source;
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target);

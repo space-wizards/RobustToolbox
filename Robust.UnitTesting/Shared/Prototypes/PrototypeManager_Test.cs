@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using JetBrains.Annotations;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -35,8 +36,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            var mapping = prototype.Components["TestBasicPrototypeComponent"];
-            Assert.That(mapping.GetValue<string>("foo"), Is.EqualTo("bar!"));
+            var mapping = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            Assert.That(mapping!.Foo, Is.EqualTo("bar!"));
         }
 
         [Test, Combinatorial]
@@ -53,9 +54,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"];
+            var componentData = prototype.Components["PointLight"] as PointLightComponent;
 
-            Assert.That(componentData.GetValue<bool>("netsync"), Is.EqualTo(false));
+            Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }
 
         [Test]
@@ -64,21 +65,22 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("yamltester");
             Assert.That(prototype.Components, Contains.Key("TestBasicPrototypeComponent"));
 
-            var componentData = prototype.Components["TestBasicPrototypeComponent"];
+            var componentData = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
 
-            Assert.That(componentData.GetValue<string>("str"), Is.EqualTo("hi!"));
-            Assert.That(componentData.GetValue<int>("int"), Is.EqualTo(10));
-            Assert.That(componentData.GetValue<float>("float"), Is.EqualTo(10f));
-            Assert.That(componentData.GetValue<float>("float2"), Is.EqualTo(10.5f));
-            Assert.That(componentData.GetValue<bool>("boolt"), Is.EqualTo(true));
-            Assert.That(componentData.GetValue<bool>("boolf"), Is.EqualTo(false));
-            Assert.That(componentData.GetValue<Vector2>("vec2"), Is.EqualTo(new Vector2(1.5f, 1.5f)));
-            Assert.That(componentData.GetValue<Vector2i>("vec2i"), Is.EqualTo(new Vector2i(1, 1)));
-            Assert.That(componentData.GetValue<Vector3>("vec3"), Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData.GetValue<Vector4>("vec4"), Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
-            Assert.That(componentData.GetValue<Color>("color"), Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
-            Assert.That(componentData.GetValue<YamlTestEnum>("enumf"), Is.EqualTo(YamlTestEnum.Foo));
-            Assert.That(componentData.GetValue<YamlTestEnum>("enumb"), Is.EqualTo(YamlTestEnum.Bar));
+            Assert.NotNull(componentData);
+            Assert.That(componentData!.Str, Is.EqualTo("hi!"));
+            Assert.That(componentData!.int_field, Is.EqualTo(10));
+            Assert.That(componentData!.float_field, Is.EqualTo(10f));
+            Assert.That(componentData!.float2_field, Is.EqualTo(10.5f));
+            Assert.That(componentData!.boolt, Is.EqualTo(true));
+            Assert.That(componentData!.boolf, Is.EqualTo(false));
+            Assert.That(componentData!.vec2, Is.EqualTo(new Vector2(1.5f, 1.5f)));
+            Assert.That(componentData!.vec2i, Is.EqualTo(new Vector2i(1, 1)));
+            Assert.That(componentData!.vec3, Is.EqualTo(new Vector3(1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData!.vec4, Is.EqualTo(new Vector4(1.5f, 1.5f, 1.5f, 1.5f)));
+            Assert.That(componentData!.color, Is.EqualTo(new Color(0xAA, 0xBB, 0xCC, 0xFF)));
+            Assert.That(componentData!.enumf, Is.EqualTo(YamlTestEnum.Foo));
+            Assert.That(componentData!.enumb, Is.EqualTo(YamlTestEnum.Bar));
         }
 
         [Test]

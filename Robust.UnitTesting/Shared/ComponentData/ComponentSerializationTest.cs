@@ -6,7 +6,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.YAML;
 
 namespace Robust.UnitTesting.Shared.ComponentData
 {
@@ -77,9 +76,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
             var entity = IoCManager.Resolve<IEntityManager>().CreateEntityUninitialized("TestEntity");
             var comp = entity.GetComponent<SerializationTestComponent>();
 
-            var dataClass = IoCManager.Resolve<IServ3Manager>().GetEmptyComponentDataClass(comp.Name);
-            IoCManager.Resolve<IServ3Manager>().Object2DataClass(comp, dataClass);
-            var mapping = IoCManager.Resolve<IServ3Manager>().WriteValue(dataClass.GetType(), dataClass) as MappingDataNode;
+            var mapping = IoCManager.Resolve<IServ3Manager>().WriteValue(comp.GetType(), comp) as MappingDataNode;
             Assert.That(mapping, Is.Not.Null);
             Assert.That(mapping!.HasNode("foo"));
             Assert.That(mapping.GetNode("foo"), Is.EqualTo(new ValueDataNode("1")));
@@ -118,12 +115,11 @@ namespace Robust.UnitTesting.Shared.ComponentData
             public string Baz = "abc";
         }
 
-        [DataClass(typeof(ACustomDataClassWithARandomName))]
         private class TestCustomDataClassComponent : Component
         {
             public override string Name => "CustomTestComp";
 
-            [DataClassTarget("abc")]
+            [DataField("abc")]
             public string Abc = "ERROR";
         }
 
@@ -131,12 +127,5 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             public override string Name => "CustomTestCompInheritor";
         }
-    }
-
-    public partial class ACustomDataClassWithARandomName
-    {
-        [DataClassTarget("abc")]
-        [DataField("abc")]
-        public string? Abc;
     }
 }

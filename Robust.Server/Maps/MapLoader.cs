@@ -735,9 +735,7 @@ namespace Robust.Server.Maps
                             continue;
 
                         CurrentWritingComponent = component.Name;
-                        var dataClass = serv3Mgr.GetEmptyComponentDataClass(component.Name);
-                        serv3Mgr.Object2DataClass(component, dataClass);
-                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(dataClass.GetType(), dataClass, context: this);
+                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(component.GetType(), component, context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
@@ -758,8 +756,8 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            DataClass IEntityLoadContext.GetComponentData(string componentName,
-                DataClass? protoData)
+            IComponent IEntityLoadContext.GetComponentData(string componentName,
+                IComponent? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
@@ -767,18 +765,18 @@ namespace Robust.Server.Maps
                 }
 
                 var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+                var factory = IoCManager.Resolve<IComponentFactory>();
 
-                var data = serv3Mgr.GetEmptyComponentDataClass(componentName);
+                IComponent data = (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    var dataClassType = serv3Mgr.GetComponentDataClassType(componentName);
-                    data = (DataClass)serv3Mgr.ReadValue(dataClassType, mapping.ToDataNode(), this);
+                    data = (IComponent)serv3Mgr.ReadValue(factory.GetRegistration(componentName).Type, mapping.ToDataNode(), this);
                 }
 
                 if (protoData != null)
                 {
-                    serv3Mgr.PushInheritance(protoData, data);
+                    data = (IComponent)serv3Mgr.PushInheritance(protoData, data)!;
                 }
 
                 return data;

@@ -55,6 +55,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public SerializationDataDefinition(Type type)
         {
+            //todo abstract types -> defer getting default values
             Type = type;
             var dummyObj = Activator.CreateInstance(type)!;
 

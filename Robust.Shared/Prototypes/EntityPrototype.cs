@@ -166,11 +166,10 @@ namespace Robust.Shared.Prototypes
 
         public EntityPrototype()
         {
-            var compDataMgr = IoCManager.Resolve<IServ3Manager>();
             // Everybody gets a transform component!
-            Components.Add("Transform", compDataMgr.GetEmptyComponentDataClass("Transform"));
+            Components.Add("Transform", new TransformComponent());
             // And a metadata component too!
-            Components.Add("MetaData", compDataMgr.GetEmptyComponentDataClass("MetaData"));
+            Components.Add("MetaData", new MetaDataComponent());
         }
 
         // Resolve inheritance.
@@ -280,10 +279,10 @@ namespace Robust.Shared.Prototypes
                         }
                     }
 
-                    var data = serv3Mgr.GetEmptyComponentDataClass(type);
-                    serv3Mgr.PushInheritance(component, data);
 
-                    target.Components[type] = data;
+                    var data = serv3Mgr.CreateCopy(component)!;
+
+                    target.Components[type] = (IComponent)data;
                 }
 
                 next: ;
@@ -390,7 +389,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, DataClass data)
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, IComponent data)
         {
             var compType = factory.GetRegistration(compName).Type;
 
@@ -402,7 +401,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IServ3Manager>().DataClass2Object(data, component);
+            IoCManager.Resolve<IServ3Manager>().PushInheritance(data, component);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -433,11 +432,10 @@ namespace Robust.Shared.Prototypes
             // TODO: figure out a better way to exclude the type node.
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
+            var compType = factory.GetRegistration(type).Type;
 
-            var dataClassType =
-                IoCManager.Resolve<IServ3Manager>().GetDataClassType(factory.GetRegistration(type).Type);
 
-            Components[type] = (DataClass) IoCManager.Resolve<IServ3Manager>().ReadValue(dataClassType, copy.ToDataNode());
+            Components[type] = (IComponent) IoCManager.Resolve<IServ3Manager>().ReadValue(compType, copy.ToDataNode());
         }
 
         public override string ToString()
@@ -445,7 +443,7 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, DataClass>{}
+        public class ComponentRegistry : Dictionary<string, IComponent>{}
 
         [DataDefinition]
         public class EntityPlacementProperties

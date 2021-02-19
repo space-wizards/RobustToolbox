@@ -19,40 +19,8 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null);
 
         object? Copy(object? source, object? target);
-        object CreateCopy(object source);
+        object? CreateCopy(object? source);
         object PushInheritance(object source, object target);
-
-        #endregion
-
-        #region DataClasses
-        /// <summary>
-        /// Returns an empty dataclass for type <paramref name="classType"/>
-        /// </summary>
-        /// <param name="classType"></param>
-        /// <returns></returns>
-        DataClass? GetEmptyDataClass(Type classType);
-
-        /// <summary>
-        /// Returns an empty dataclass for <paramref name="compName"/>
-        /// </summary>
-        /// <param name="compName"></param>
-        /// <returns></returns>
-        DataClass GetEmptyComponentDataClass(string compName);
-
-        Type GetDataClassType(Type classType);
-
-        Type GetComponentDataClassType(string compName);
-
-        object DataClass2Object(DataClass dataClass, object obj);
-
-        void Object2DataClass(object obj, DataClass dataClass);
-
-        public bool TryGetDataClassField<T>(DataClass dataClass, string name, [NotNullWhen(true)] out T? value);
-
-        public static string GetAutoDataClassMetadataName(Type type)
-        {
-            return $"{type.Namespace}.{type.Name}_AUTODATA";
-        }
         #endregion
 
         #region Flags And Constants

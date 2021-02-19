@@ -2016,7 +2016,7 @@ namespace Robust.Client.GameObjects
             public T AddComponent<T>() where T : Component, new()
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var dataMgr = IoCManager.Resolve<IServ3Manager>();
+                var serv3Manager = IoCManager.Resolve<IServ3Manager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2028,7 +2028,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    dataMgr.DataClass2Object(node, comp);
+                    comp = (T)serv3Manager.PushInheritance(node, comp);
                 }
 
                 return comp;

@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
-    [ImplicitDataClassForInheritors]
+    [ImplicitDataDefinitionForInheritorsAttribute]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />

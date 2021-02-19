@@ -969,7 +969,7 @@ namespace Robust.Client.GameObjects
         // Lobby SpriteView rendering path
         internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
         {
-            RenderInternal(drawingHandle, Matrix3.Identity, worldRotation, overrideDirection);
+            RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
         }
         
         private bool _screenLock = false;
@@ -991,7 +991,18 @@ namespace Robust.Client.GameObjects
         // Sprite rendering path
         internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
         {
-            var angle = Rotation;
+            Direction? overrideDir = null;
+            if (_enableOverrideDirection)
+            {
+                overrideDir = _overrideDirection;
+            }
+
+            RenderInternal(drawingHandle, worldRotation, worldPosition, overrideDir);
+        }
+
+        private void CalcModelMatrix(int numDirs, Angle worldRotation, Vector2 worldPosition, out Matrix3 modelMatrix)
+        {
+            Angle angle;
 
             if (_screenLock)
             {
@@ -999,40 +1010,52 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                angle = CalcRectWorldAngle(worldRotation, 4);
-            }
-
-            Direction? overrideDir = null;
-            if (_enableOverrideDirection)
-            {
-                overrideDir = _overrideDirection;
+                angle = CalcRectWorldAngle(worldRotation, numDirs);
             }
 
             var sWorldRotation = angle;
-
-            var modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
-            RenderInternal(drawingHandle, modelMatrix, worldRotation, overrideDir);
+            modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
         }
 
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Matrix3 modelMatrix, Angle worldRotation, Direction? overrideDirection)
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             var localMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
-            Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
-            drawingHandle.SetTransform(in transformMatrix);
             
             foreach (var layer in Layers)
             {
+                if (!layer.Visible)
+                {
+                    return;
+                }
+
+                var dirType = GetLayerDirectionType(layer);
+
+                int numDirs;
+                switch (dirType)
+                {
+                    case RSI.State.DirectionType.Dir1:
+                        numDirs = 1;
+                        break;
+                    case RSI.State.DirectionType.Dir4:
+                        numDirs = 4;
+                        break;
+                    case RSI.State.DirectionType.Dir8:
+                        numDirs = 8;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
+                Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
+                drawingHandle.SetTransform(in transformMatrix);
+
                 RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
             }
         }
 
         private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
         {
-            if (!layer.Visible)
-            {
-                return;
-            }
-
             var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
 
             if (layer.Shader != null)
@@ -1071,6 +1094,21 @@ namespace Robust.Client.GameObjects
             return result;
         }
 
+        private RSI.State.DirectionType GetLayerDirectionType(Layer layer)
+        {
+            if (!layer.State.IsValid)
+                return RSI.State.DirectionType.Dir1;
+
+            // Pull texture from RSI state instead.
+            var rsi = layer.RSI ?? BaseRSI;
+            if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+            {
+                state = GetFallbackState(resourceCache);
+            }
+
+            return state.Directions;
+        }
+
         private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
         {
             var texture = layer.Texture;
@@ -1083,7 +1121,7 @@ namespace Robust.Client.GameObjects
                 {
                     state = GetFallbackState(resourceCache);
                 }
-
+                
                 var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
                 texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
             }

@@ -337,6 +337,12 @@ namespace Robust.Shared.Prototypes
             try
             {
                 using var reader = await ReadFile(file, !overwrite);
+
+                if (reader == null)
+                {
+                    return changedPrototypes;
+                }
+
                 var yamlStream = new YamlStream();
                 yamlStream.Load(reader);
 

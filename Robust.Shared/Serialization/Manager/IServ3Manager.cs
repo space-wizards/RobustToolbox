@@ -18,7 +18,8 @@ namespace Robust.Shared.Serialization.Manager
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
-        object Copy(object source, object target);
+        object? Copy(object? source, object? target);
+        object CreateCopy(object source);
         object PushInheritance(object source, object target);
 
         #endregion

@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly PushInheritanceDelegateSignature _pushInheritanceDelegate;
 
-        public readonly CopyDelegateSignature InvokeCopyDelegate;
+        public readonly CopyDelegateSignature _copyDelegate;
 
         public object InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
             ISerializationContext? context) =>
@@ -46,6 +46,9 @@ namespace Robust.Shared.Serialization.Manager
         public object InvokePushInheritanceDelegate(object source, object target,
             IServ3Manager serv3Manager) =>
             _pushInheritanceDelegate(source, target, serv3Manager, _defaultValues);
+
+        public object InvokeCopyDelegate(object source, object target, IServ3Manager serv3Manager) =>
+            _copyDelegate(source, target, serv3Manager);
 
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
@@ -85,7 +88,7 @@ namespace Robust.Shared.Serialization.Manager
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
             _pushInheritanceDelegate = EmitPushInheritanceDelegate();
-            InvokeCopyDelegate = EmitCopyDelegate();
+            _copyDelegate = EmitCopyDelegate();
         }
 
         private PopulateDelegateSignature EmitPopulateDelegate()

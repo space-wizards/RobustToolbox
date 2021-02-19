@@ -228,22 +228,28 @@ public readonly bool ServerOnly;
         public static void EmitPushInheritanceField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
+            var endLabel = generator.DefineLabel();
             var isDefaultValue = generator.DefineLabel();
 
-            //load sourcevalue
-            generator.Emit(OpCodes.Ldarg_0);
+            //load targetvalue
+            generator.Emit(OpCodes.Ldarg_1);
             generator.EmitLdfld(fieldDefinition.FieldInfo);
+            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
 
             //load defaultValue
             generator.Emit(OpCodes.Ldarg_3);
             generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
             generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
+            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
             generator.EmitEquals(fieldDefinition.FieldType, isDefaultValue);
+            generator.Emit(OpCodes.Br, endLabel);
+            generator.MarkLabel(isDefaultValue);
 
             //copy if not default
             generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
-
-            generator.MarkLabel(isDefaultValue);
+            generator.MarkLabel(endLabel);
         }
 
         public static void EmitCopy(this RobustILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
@@ -251,11 +257,7 @@ public readonly bool ServerOnly;
         {
             if (assumeValueNotNull)
             {
-                var type = fromField.FieldType;
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    type = type.GenericTypeArguments.First();
-                }
+                var type = fromField.FieldType.EnsureNotNullableType();
                 if (!toField.FieldType.IsAssignableFrom(type))
                     throw new InvalidOperationException("Mismatch of types in EmitCopy call");
             }
@@ -271,12 +273,17 @@ public readonly bool ServerOnly;
 
             generator.Emit(OpCodes.Ldarg, fromArg);
             generator.EmitLdfld(fromField);
+            //if(!fromField.FieldType.IsPrimitive && fromField.FieldType.IsValueType)
+            generator.Emit(OpCodes.Box, fromField.FieldType);
             generator.Emit(OpCodes.Ldarg, toArg);
             generator.EmitLdfld(toField);
+            //if(!toField.FieldType.IsPrimitive && toField.FieldType.IsValueType)
+            generator.Emit(OpCodes.Box, toField.FieldType);
 
             var copyMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.Copy));
             Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
             generator.Emit(OpCodes.Callvirt, copyMethod);
+            generator.Emit(OpCodes.Unbox_Any, toField.FieldType);
 
             generator.EmitStfld(toField);
         }

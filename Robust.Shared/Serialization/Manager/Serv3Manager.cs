@@ -212,8 +212,13 @@ namespace Robust.Shared.Serialization.Manager
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
-        public object Copy(object source, object target)
+        public object? Copy(object? source, object? target)
         {
+            if (source == null || target == null)
+            {
+                return source;
+            }
+
             if (target.GetType().IsPrimitive == source.GetType().IsPrimitive)
             {
                 //todo does this work
@@ -239,11 +244,18 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 if(TryGetDataDefinition(commonType, out var dataDef))
-                    target = dataDef.InvokePushInheritanceDelegate(source, target, this);
+                    target = dataDef.InvokeCopyDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
 
             return target;
+        }
+
+        public object CreateCopy(object source)
+        {
+            //todo paul checks here
+            var target = Activator.CreateInstance(source.GetType())!;
+            return Copy(source, target);
         }
 
         public object PushInheritance(object source, object target)
@@ -259,7 +271,7 @@ namespace Robust.Shared.Serialization.Manager
             while (commonType != null)
             {
                 if(TryGetDataDefinition(commonType, out var dataDef))
-                    target = dataDef.InvokeCopyDelegate(source, target, this);
+                    target = dataDef.InvokePushInheritanceDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
 

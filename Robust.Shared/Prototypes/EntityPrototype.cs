@@ -257,14 +257,14 @@ namespace Robust.Shared.Prototypes
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            /*var dataMgr = IoCManager.Resolve<IDataClassManager>();
+            var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
             // Copy component data over.
             foreach (var(type, component) in source.Components)
             {
                 if (target.Components.TryGetValue(type, out var targetComponent))
                 {
                     // Copy over values the target component does not have.
-                    dataMgr.PushInheritance(component, targetComponent);
+                    serv3Mgr.PushInheritance(component, targetComponent);
                 }
                 else
                 {
@@ -280,8 +280,8 @@ namespace Robust.Shared.Prototypes
                         }
                     }
 
-                    var data = dataMgr.GetEmptyComponentDataClass(type);
-                    dataMgr.PushInheritance(component, data);
+                    var data = serv3Mgr.GetEmptyComponentDataClass(type);
+                    serv3Mgr.PushInheritance(component, data);
 
                     target.Components[type] = data;
                 }
@@ -289,9 +289,10 @@ namespace Robust.Shared.Prototypes
                 next: ;
             }
 
-            target.PlacementProperties
+            target.PlacementProperties = (EntityPlacementProperties) serv3Mgr.PushInheritance(source.PlacementProperties, target.PlacementProperties);
+            //target.PlacementProperties = (EntityPlacementProperties)serv3Mgr.CreateCopy(source.PlacementProperties);
             // Copy all simple data over.
-            if (!target._placementOverriden)
+            /*if (!target._placementOverriden)
             {
                 target.PlacementMode = source.PlacementMode;
             }
@@ -309,7 +310,7 @@ namespace Robust.Shared.Prototypes
             if (target.PlacementRange == DEFAULT_RANGE)
             {
                 target.PlacementRange = source.PlacementRange;
-            }
+            }*/
 
             if (!target._descriptionModified)
             {
@@ -337,7 +338,7 @@ namespace Robust.Shared.Prototypes
             if (target.Children == null)
             {
                 return;
-            }*/
+            }
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context) //yeah officer this method right here

@@ -25,6 +25,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client
 {

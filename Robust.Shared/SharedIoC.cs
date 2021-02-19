@@ -24,6 +24,7 @@ namespace Robust.Shared
     {
         public static void RegisterIoC()
         {
+            IoCManager.Register<IServ3Manager, Serv3Manager>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
@@ -50,7 +51,6 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<IServ3Manager, Serv3Manager>();
         }
     }
 }

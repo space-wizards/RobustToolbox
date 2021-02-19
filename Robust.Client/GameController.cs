@@ -158,13 +158,14 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
+            IoCManager.Resolve<IServ3Manager>().Initialize();
+
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
-            IoCManager.Resolve<IServ3Manager>().Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

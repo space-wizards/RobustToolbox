@@ -55,14 +55,12 @@ namespace Robust.Shared.Serialization.Manager
 
         public SerializationDataDefinition(Type type)
         {
-            //todo abstract types -> defer getting default values
             Type = type;
             var dummyObj = Activator.CreateInstance(type)!;
 
             var fieldDefs = new List<FieldDefinition>();
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
-                if(abstractFieldInfo.DeclaringType != type) continue;
                 var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
                 if(attr == null) continue;
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)

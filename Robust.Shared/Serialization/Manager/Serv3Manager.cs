@@ -4,12 +4,15 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using NFluidsynth;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using IComponent = Robust.Shared.GameObjects.IComponent;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -47,6 +50,7 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var type in registrations)
             {
+                if(type.IsAbstract || type.IsInterface) continue; //todo more verbose?
                 _dataDefinitions.Add(type, new SerializationDataDefinition(type));
             }
 
@@ -136,16 +140,26 @@ namespace Robust.Shared.Serialization.Manager
             if(obj is IPopulateDefaultValues populateDefaultValues)
                 populateDefaultValues.PopulateDefaultValues();
 
-            if(node is MappingDataNode mappingDataNode)
-            {
-                while (currentType != null)
-                {
-                    if(TryGetDataDefinition(currentType, out var dataDef))
-                        obj = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
+            SerializationDataDefinition? dataDef = null;
 
-                    currentType = currentType.BaseType;
-                }
+            while (currentType != null && !TryGetDataDefinition(currentType, out dataDef))
+            {
+                currentType = currentType.BaseType;
             }
+
+            if (dataDef == null)
+            {
+                Logger.Warning($"Failed to get datadefintion for {type} when reading");
+                return obj;
+            }
+
+            if (node is not MappingDataNode mappingDataNode)
+            {
+                Logger.Warning($"No mappingnode provided for type {type}");
+                return obj;
+            }
+
+            obj = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
 
             if (obj is ISerializationHooks serHooks)
                 serHooks.AfterDeserialization();
@@ -197,17 +211,27 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = value.GetType();
             }
 
-            while (currentType != null)
+            SerializationDataDefinition? dataDef = null;
+
+            while (currentType != null && !TryGetDataDefinition(currentType, out dataDef))
             {
-                if (TryGetDataDefinition(currentType, out var dataDef))
-                {
-                    if (dataDef.CanCallWith(value) != true)
-                        throw new ArgumentException($"Supplied parameter does not fit with datadefinition of {type}.", nameof(value));
-                    var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
-                    mapping = mapping.Merge(newMapping);
-                }
                 currentType = currentType.BaseType;
             }
+
+            if (dataDef == null)
+            {
+                Logger.Warning($"Could not find datadefinition for type {type} when writing");
+                return mapping;
+            }
+
+            if (dataDef.CanCallWith(value) != true)
+            {
+                Logger.Warning($"Supplied parameter does not fit with datadefinition of {type}.");
+                return mapping;
+            }
+
+            var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
+            mapping = mapping.Merge(newMapping);
 
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
@@ -222,6 +246,7 @@ namespace Robust.Shared.Serialization.Manager
             if (target.GetType().IsPrimitive == source.GetType().IsPrimitive)
             {
                 //todo does this work
+                //i think it does
                 //todo validate we can assign source
                 return source;
             }
@@ -240,13 +265,19 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-
-            while (commonType != null)
+            SerializationDataDefinition? dataDef = null;
+            while (commonType != null && !TryGetDataDefinition(commonType, out var dataDefinition))
             {
-                if(TryGetDataDefinition(commonType, out var dataDef))
-                    target = dataDef.InvokeCopyDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
+
+            if (dataDef == null)
+            {
+                Logger.Warning($"Could not find datadefinition for type {target.GetType()} when copying");
+                return source;
+            }
+
+            target = dataDef.InvokeCopyDelegate(source, target, this);
 
             return target;
         }
@@ -269,12 +300,19 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException("Could not find common type in PushInheritance!");
             }
 
-            while (commonType != null)
+            SerializationDataDefinition? dataDefinition = null;
+            while (commonType != null && !TryGetDataDefinition(commonType, out dataDefinition))
             {
-                if(TryGetDataDefinition(commonType, out var dataDef))
-                    target = dataDef.InvokePushInheritanceDelegate(source, target, this);
                 commonType = commonType.BaseType;
             }
+
+            if (dataDefinition == null)
+            {
+                Logger.Warning($"Could not find datadefinition for type {target.GetType()} when pushing inheritance");
+                return source;
+            }
+
+            target = dataDefinition.InvokePushInheritanceDelegate(source, target, this);
 
             return target;
         }

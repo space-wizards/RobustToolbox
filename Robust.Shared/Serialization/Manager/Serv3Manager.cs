@@ -30,6 +30,7 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
             {
+                registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
                     registrations.Add(child);

@@ -26,7 +26,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timers;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

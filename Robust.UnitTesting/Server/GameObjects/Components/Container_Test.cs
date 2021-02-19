@@ -1,12 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
+using Moq;
 using NUnit.Framework;
+using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
-    [TestFixture]
+    [TestFixture, Parallelizable]
     public class ContainerTest
     {
         private static ISimulation SimulationFactory()
@@ -27,8 +31,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 - type: entity
   name: dummy
   id: dummy
-  components:
-  - type: Transform
 ";
 
         [Test]
@@ -154,6 +156,125 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             entityOne.Delete();
             Assert.That(entityTwo.Transform.Deleted, Is.True);
+        }
+
+        [Test]
+        public void BaseContainer_SelfInsert_False()
+        {
+            var sim = SimulationFactory();
+
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
+
+            Assert.That(container.Insert(entity), Is.False);
+            Assert.That(container.CanInsert(entity), Is.False);
+        }
+
+        [Test]
+        public void BaseContainer_InsertMap_False()
+        {
+            var sim = SimulationFactory();
+
+            var mapEnt = sim.Resolve<IEntityManager>().GetEntity(new EntityUid(1));
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
+
+            Assert.That(container.Insert(mapEnt), Is.False);
+            Assert.That(container.CanInsert(mapEnt), Is.False);
+        }
+        
+        [Test]
+        public void BaseContainer_InsertGrid_False()
+        {
+            var sim = SimulationFactory();
+
+            var grid = sim.Resolve<IMapManager>().CreateGrid(new MapId(1));
+            var gridEntity = sim.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
+
+            Assert.That(container.Insert(gridEntity), Is.False);
+            Assert.That(container.CanInsert(gridEntity), Is.False);
+        }
+
+        [Test]
+        public void BaseContainer_Insert_True()
+        {
+            var sim = SimulationFactory();
+
+            var containerEntity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(containerEntity, "dummy");
+            var insertEntity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+
+            var result = container.Insert(insertEntity);
+
+            Assert.That(result, Is.True);
+            Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
+
+            Assert.That(containerEntity.Transform.ChildCount, Is.EqualTo(1));
+            Assert.That(containerEntity.Transform.ChildEntityUids.First(), Is.EqualTo(insertEntity.Uid));
+
+            result = insertEntity.TryGetContainerMan(out var resultContainerMan);
+            Assert.That(result, Is.True);
+            Assert.That(resultContainerMan, Is.EqualTo(container.Manager));
+        }
+
+        [Test]
+        public void BaseContainer_RemoveNotAdded_False()
+        {
+            var sim = SimulationFactory();
+
+            var containerEntity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(containerEntity, "dummy");
+            var insertEntity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+
+            var result = container.Remove(insertEntity);
+
+            Assert.That(result, Is.False);
+        }
+
+        [Test]
+        public void BaseContainer_Transfer_True()
+        {
+            var sim = SimulationFactory();
+
+            var entity1 = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container1 = ContainerHelpers.CreateContainer<Container>(entity1, "dummy");
+            var entity2 = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container2 = ContainerHelpers.CreateContainer<Container>(entity2, "dummy");
+            var transferEntity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            container1.Insert(transferEntity);
+
+            var result = container2.Insert(transferEntity);
+
+            Assert.That(result, Is.True);
+            Assert.That(container1.ContainedEntities.Count, Is.EqualTo(0));
+            Assert.That(container2.ContainedEntities.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Container_Serialize()
+        {
+            var sim = SimulationFactory();
+
+            var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var container = ContainerHelpers.CreateContainer<Container>(entity, "dummy");
+            var childEnt = sim.SpawnEntity(null, new EntityCoordinates(new EntityUid(1), (0, 0)));
+
+            container.OccludesLight = true;
+            container.ShowContents = true;
+            container.Insert(childEnt);
+
+            var containerMan = entity.GetComponent<IContainerManager>();
+            var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState(new Mock<ICommonSession>().Object);
+
+            Assert.That(state.NetID, Is.EqualTo(containerMan.NetID));
+            Assert.That(state.ContainerSet.Count, Is.EqualTo(1));
+            Assert.That(state.ContainerSet[0].Id, Is.EqualTo("dummy"));
+            Assert.That(state.ContainerSet[0].OccludesLight, Is.True);
+            Assert.That(state.ContainerSet[0].ShowContents, Is.True);
+            Assert.That(state.ContainerSet[0].ContainedEntities.Length, Is.EqualTo(1));
+            Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt.Uid));
         }
 
         private class ContainerOnlyContainer : BaseContainer

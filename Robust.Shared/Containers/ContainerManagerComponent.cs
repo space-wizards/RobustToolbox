@@ -159,18 +159,6 @@ namespace Robust.Shared.Containers
             else
             {
                 serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
-
-                // var dict = new Dictionary<string, ContainerPrototypeData>();
-                // foreach (var (key, container) in _containers)
-                // {
-                //     var list = new List<EntityUid>(container.ContainedEntities.Select(e => e.Uid));
-                //     var data = new ContainerPrototypeData(list, container.GetType().FullName!);
-                //     dict.Add(key, data);
-                // }
-                //
-                // // ReSharper disable once RedundantTypeArgumentsOfMethod
-                // serializer.DataWriteFunction<Dictionary<string, ContainerPrototypeData>?>("containers", null,
-                //     () => dict);
             }
         }
 

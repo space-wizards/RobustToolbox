@@ -43,8 +43,8 @@ namespace Robust.UnitTesting.Server
         /// </summary>
         EntityUid AddMap(int mapId);
         EntityUid AddMap(MapId mapId);
-        IEntity SpawnEntity(string protoId, EntityCoordinates coordinates);
-        IEntity SpawnEntity(string protoId, MapCoordinates coordinates);
+        IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates);
+        IEntity SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     internal delegate void DiContainerDelegate(IDependencyCollection diContainer);
@@ -83,13 +83,13 @@ namespace Robust.UnitTesting.Server
             return mapMan.GetMapEntityId(mapId);
         }
 
-        public IEntity SpawnEntity(string protoId, EntityCoordinates coordinates)
+        public IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);
         }
 
-        public IEntity SpawnEntity(string protoId, MapCoordinates coordinates)
+        public IEntity SpawnEntity(string? protoId, MapCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);

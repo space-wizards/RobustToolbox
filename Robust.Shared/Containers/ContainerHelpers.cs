@@ -42,7 +42,8 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
-            if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager) && manager.ContainsEntity(entity))
+            var parentTransform = entity.Transform.Parent;
+            if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
             manager = default;

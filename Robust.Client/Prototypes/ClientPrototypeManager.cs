@@ -38,7 +38,7 @@ namespace Robust.Client.Prototypes
         private void WindowFocusedChanged(WindowFocusedEventArgs args)
         {
 #if !FULL_RELEASE
-            if (args.Focused)
+            if (args.Focused && _reloadQueue.Count > 0)
             {
                 Timer.Spawn(_reloadDelay, ReloadPrototypeQueue, _reloadToken.Token);
             }

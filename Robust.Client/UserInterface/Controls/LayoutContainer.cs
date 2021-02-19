@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Obsolete("Change SetSize on the control instead.")]
-        public static void SetSize(Control control, Vector2 size)
+        public new static void SetSize(Control control, Vector2 size)
         {
             control.SetSize = size;
         }

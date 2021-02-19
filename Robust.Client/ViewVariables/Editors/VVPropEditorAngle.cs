@@ -18,7 +18,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = angle.Degrees.ToString(CultureInfo.InvariantCulture),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
+                HorizontalExpand = true
             };
             if (!ReadOnly)
             {

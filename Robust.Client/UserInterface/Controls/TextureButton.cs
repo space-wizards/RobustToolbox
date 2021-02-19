@@ -78,7 +78,7 @@ namespace Robust.Client.UserInterface.Controls
             handle.DrawTextureRectRegion(texture, PixelSizeBox);
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var texture = TextureNormal;
 

@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             contents = new Label();
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
 
             contents = new Label
             {
@@ -68,7 +68,6 @@ namespace Robust.Client.UserInterface.CustomControls
             if (!NetManager.IsConnected)
             {
                 contents.Text = "Not connected to server.";
-                MinimumSizeChanged();
                 return;
             }
 

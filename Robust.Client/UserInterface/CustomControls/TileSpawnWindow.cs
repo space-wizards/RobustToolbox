@@ -38,7 +38,7 @@ namespace Robust.Client.UserInterface.CustomControls
             Contents.AddChild(vBox);
             var hBox = new HBoxContainer();
             vBox.AddChild(hBox);
-            SearchBar = new LineEdit {PlaceHolder = "Search", SizeFlagsHorizontal = SizeFlags.FillExpand};
+            SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
             hBox.AddChild(SearchBar);
 
@@ -46,7 +46,7 @@ namespace Robust.Client.UserInterface.CustomControls
             ClearButton.OnPressed += OnClearButtonPressed;
             hBox.AddChild(ClearButton);
 
-            TileList = new ItemList {SizeFlagsVertical = SizeFlags.FillExpand};
+            TileList = new ItemList {VerticalExpand = true};
             TileList.OnItemSelected += TileListOnOnItemSelected;
             TileList.OnItemDeselected += TileListOnOnItemDeselected;
             vBox.AddChild(TileList);

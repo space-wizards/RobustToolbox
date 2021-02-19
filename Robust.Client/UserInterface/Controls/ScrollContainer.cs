@@ -86,7 +86,11 @@ namespace Robust.Client.UserInterface.Controls
                 size = Vector2.ComponentMax(size, child.DesiredSize);
             }
 
-            return Vector2.ComponentMin(availableSize, size);
+            // Unlike WPF/Avalonia we report ZERO here instead of available size.
+            // This is to fix a bunch of jank with e.g. BoxContainer.
+            // Tbh this might be a mistake.
+            // DockPanel when.
+            return Vector2.Zero;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)

@@ -50,7 +50,7 @@ namespace Robust.Client.ViewVariables.Traits
             var outerVBox = new VBoxContainer();
             _controlsHBox = new HBoxContainer
             {
-                SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter
+                HorizontalAlignment = Control.HAlignment.Center
             };
 
             {

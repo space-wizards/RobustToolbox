@@ -21,11 +21,11 @@ namespace Robust.Client.ViewVariables.Editors
             hBoxContainer.AddChild(new Label {Text = "grid: "});
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            
+
             var gridId = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Grid ID",
                 ToolTip = "Grid ID",
                 Text = coords.GetGridId(entityManager).ToString()
@@ -38,7 +38,7 @@ namespace Robust.Client.ViewVariables.Editors
             var x = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "X",
                 ToolTip = "X",
                 Text = coords.X.ToString(CultureInfo.InvariantCulture)
@@ -49,7 +49,7 @@ namespace Robust.Client.ViewVariables.Editors
             var y = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Y",
                 ToolTip = "Y",
                 Text = coords.Y.ToString(CultureInfo.InvariantCulture)
@@ -63,7 +63,7 @@ namespace Robust.Client.ViewVariables.Editors
                 var mapManager = IoCManager.Resolve<IMapManager>();
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
-                
+
                 if (!mapManager.TryGetGrid(new GridId(gridVal), out var grid))
                 {
                     ValueChanged(new EntityCoordinates(EntityUid.Invalid, (xVal, yVal)));

@@ -223,8 +223,8 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.SetSize = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
@@ -264,8 +264,8 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, blob, session);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.Size = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)

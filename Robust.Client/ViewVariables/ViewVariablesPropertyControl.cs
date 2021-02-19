@@ -37,7 +37,7 @@ namespace Robust.Client.ViewVariables
             VBox = new VBoxContainer {SeparationOverride = 0};
             AddChild(VBox);
 
-            TopContainer = new HBoxContainer {SizeFlagsVertical = SizeFlags.FillExpand};
+            TopContainer = new HBoxContainer {VerticalExpand = true};
             VBox.AddChild(TopContainer);
 
             BottomContainer = new HBoxContainer
@@ -88,9 +88,9 @@ namespace Robust.Client.ViewVariables
             }
 
             var view = editor.Initialize(member.Value, !member.Editable);
-            if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
+            if (!view.HorizontalExpand)
             {
-                NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;
+                NameLabel.HorizontalExpand = true;
             }
 
             NameLabel.CustomMinimumSize = new Vector2(150, 0);

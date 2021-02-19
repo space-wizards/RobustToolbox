@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = $"Ref: {toString}",
                 ClipText = true,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
+                HorizontalExpand = true,
             };
             button.OnPressed += ButtonOnOnPressed;
             return button;

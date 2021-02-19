@@ -24,7 +24,7 @@ namespace Robust.Client.ViewVariables.Editors
             var x = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "X",
                 ToolTip = "X"
             };
@@ -34,7 +34,7 @@ namespace Robust.Client.ViewVariables.Editors
             var y = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Y",
                 ToolTip = "Y"
             };

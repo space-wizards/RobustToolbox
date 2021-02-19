@@ -60,14 +60,14 @@ namespace Robust.Client.UserInterface.Controls
             _label = new Label
             {
                 StyleClasses = { StyleClassOptionButton },
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
             hBox.AddChild(_label);
 
             _triangle = new TextureRect
             {
                 StyleClasses = { StyleClassOptionTriangle },
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                VerticalAlignment = VAlignment.Center,
                 Visible = !HideTriangle
             };
             hBox.AddChild(_triangle);

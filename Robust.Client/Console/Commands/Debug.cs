@@ -564,7 +564,7 @@ namespace Robust.Client.Console.Commands
             optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
             vBox.AddChild(optionButton);
 
-            var tree = new Tree { SizeFlagsVertical = Control.SizeFlags.FillExpand };
+            var tree = new Tree { VerticalExpand = true };
             var root = tree.CreateItem();
             root.Text = "Honk!";
             var child = tree.CreateItem();
@@ -630,6 +630,29 @@ namespace Robust.Client.Console.Commands
                 Children =
                 {
                     new Slider()
+                }
+            });
+
+            tabContainer.AddChild(new HSplitContainer
+            {
+                Children =
+                {
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Blue},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
                 }
             });
 

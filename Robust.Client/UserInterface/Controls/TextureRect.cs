@@ -223,7 +223,7 @@ namespace Robust.Client.UserInterface.Controls
             KeepAspectCovered = 8
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var texture = _texture;
 

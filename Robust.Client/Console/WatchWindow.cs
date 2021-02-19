@@ -42,7 +42,7 @@ namespace Robust.Client.Console
                 {
                     (_watchesVBox = new VBoxContainer
                     {
-                        SizeFlagsVertical = SizeFlags.FillExpand
+                        VerticalExpand = true
                     }),
                     new HBoxContainer
                     {
@@ -50,7 +50,7 @@ namespace Robust.Client.Console
                         {
                             (_addWatchEdit = new HistoryLineEdit
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 PlaceHolder = Loc.GetString("Add watch (C# interactive)")
                             }),
                             (_addWatchButton = new Button
@@ -113,7 +113,7 @@ namespace Robust.Client.Console
                     {
                         (_outputLabel = new Label
                         {
-                            SizeFlagsHorizontal = SizeFlags.FillExpand,
+                            HorizontalExpand = true,
                             ClipText = true
                         }),
                         (delButton = new Button
@@ -176,7 +176,7 @@ namespace Robust.Client.Console
                         {
                             Text = message,
                             ClipText = true,
-                            SizeFlagsHorizontal = SizeFlags.FillExpand
+                            HorizontalExpand = true
                         },
                         (delButton = new Button {Text = Loc.GetString("Remove")})
                     }

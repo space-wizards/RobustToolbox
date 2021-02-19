@@ -26,7 +26,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _contents = new Label();
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
 
             _contents = new Label
             {

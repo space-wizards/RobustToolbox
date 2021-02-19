@@ -299,7 +299,7 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        private Task<StreamReader> ReadFile(ResourcePath file)
+        private Task<StreamReader?> ReadFile(ResourcePath file, bool @throw = true)
         {
             var retries = 0;
 
@@ -309,13 +309,19 @@ namespace Robust.Shared.Prototypes
                 {
                     var reader = new StreamReader(Resources.ContentFileRead(file), EncodingHelpers.UTF8);
 
-                    return Task.FromResult(reader);
+                    return Task.FromResult<StreamReader?>(reader);
                 }
-                catch (IOException)
+                catch (IOException e)
                 {
                     if (retries > 10)
                     {
-                        throw;
+                        if (@throw)
+                        {
+                            throw;
+                        }
+
+                        Logger.Error($"Error reloading prototypes in file {file}.", e);
+                        return Task.FromResult<StreamReader?>(null);
                     }
 
                     retries++;
@@ -330,7 +336,7 @@ namespace Robust.Shared.Prototypes
 
             try
             {
-                using var reader = await ReadFile(file);
+                using var reader = await ReadFile(file, !overwrite);
                 var yamlStream = new YamlStream();
                 yamlStream.Load(reader);
 

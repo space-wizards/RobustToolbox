@@ -16,16 +16,27 @@ namespace Robust.Shared.Network.Messages
 
         #endregion
 
-        public ResourcePath Path = default!;
+        public ResourcePath[] Paths = default!;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            Path = new ResourcePath(buffer.ReadString());
+            var count = buffer.ReadInt32();
+            Paths = new ResourcePath[count];
+
+            for (var i = 0; i < count; i++)
+            {
+                Paths[i] = new ResourcePath(buffer.ReadString());
+            }
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(Path.ToString());
+            buffer.Write(Paths.Length);
+
+            foreach (var path in Paths)
+            {
+                buffer.Write(path.ToString());
+            }
         }
     }
 }

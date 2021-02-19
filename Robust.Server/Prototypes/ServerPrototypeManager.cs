@@ -1,20 +1,18 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Robust.Shared.ContentPack;
+using Robust.Server.Console;
+using Robust.Server.Player;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.Prototypes
 {
     public sealed class ServerPrototypeManager : PrototypeManager
     {
-        private readonly List<FileSystemWatcher> _watchers = new();
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IConGroupControllerImplementation _conGroups = default!;
 
         public ServerPrototypeManager() : base()
         {
@@ -25,73 +23,28 @@ namespace Robust.Server.Prototypes
         {
             base.Initialize();
 
-            WatchResources();
-            NetManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME,
-                accept: NetMessageAccept.Client);
+            NetManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, HandleReloadPrototypes, NetMessageAccept.Server);
         }
 
-        public override void ReloadPrototypes(ResourcePath file)
+        private void HandleReloadPrototypes(MsgReloadPrototypes msg)
         {
 #if !FULL_RELEASE
-            base.ReloadPrototypes(file);
-
-            var msg = NetManager.CreateNetMessage<MsgReloadPrototypes>();
-            msg.Path = file;
-            NetManager.ServerSendToAll(msg);
-#endif
-        }
-
-        private void WatchResources()
-        {
-#if !FULL_RELEASE
-            foreach (var path in Resources.GetContentRoots().Select(r => r.ToString())
-                .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
+            if (!_playerManager.TryGetSessionByChannel(msg.MsgChannel, out var player) ||
+                !_conGroups.CanAdminReloadPrototypes(player))
             {
-                var watcher = new FileSystemWatcher(path, "*.yml")
-                {
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.LastWrite
-                };
-
-                watcher.Changed += (_, args) =>
-                {
-                    switch (args.ChangeType)
-                    {
-                        case WatcherChangeTypes.Renamed:
-                        case WatcherChangeTypes.Deleted:
-                            return;
-                        case WatcherChangeTypes.Created:
-                        // case WatcherChangeTypes.Deleted:
-                        case WatcherChangeTypes.Changed:
-                        case WatcherChangeTypes.All:
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
-
-                    TaskManager.RunOnMainThread(() =>
-                    {
-                        var then = DateTime.Now;
-                        var file = new ResourcePath(args.FullPath);
-
-                        foreach (var root in IoCManager.Resolve<IResourceManager>().GetContentRoots())
-                        {
-                            if (!file.TryRelativeTo(root, out var relative))
-                            {
-                                continue;
-                            }
-
-                            ReloadPrototypes(relative);
-                        }
-
-                        Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
-                    });
-                };
-
-                watcher.EnableRaisingEvents = true;
-                _watchers.Add(watcher);
+                return;
             }
+
+            var then = DateTime.Now;
+
+            foreach (var path in msg.Paths)
+            {
+                ReloadPrototypes(path);
+            }
+
+            Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
 #endif
         }
+
     }
 }

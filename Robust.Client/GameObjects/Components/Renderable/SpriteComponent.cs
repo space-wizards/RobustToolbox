@@ -17,6 +17,7 @@ using Robust.Shared.Utility;
 using System.Linq;
 using Robust.Shared.Network;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
@@ -25,10 +26,13 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
-    [DataClass(typeof(SpriteComponentData))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug
+        IComponentDebug, ISerializationHooks
     {
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IReflectionManager reflectionManager = default!;
+
         [DataField("visible")]
         private bool _visible = true;
 
@@ -118,8 +122,8 @@ namespace Robust.Client.GameObjects
         [DataField("directional")]
         private bool _directional = true;
 
-        [DataClassTarget("layerDatums", 2)]
-        private List<PrototypeLayerData> _yamlLayerDataReceiver
+        [DataField("layerDatums")]
+        private List<PrototypeLayerData> LayerDatums
         {
             get
             {
@@ -252,7 +256,7 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataClassTarget("rsi")]
+        [DataField("rsi")]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -287,6 +291,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [DataField("sprite", readOnly: true)] private string? rsi;
+        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new ();
+
+        [DataField("state", readOnly: true)] private string? state;
+        [DataField("texture", readOnly: true)] private string? texture;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded { get; set; }
 
@@ -299,10 +309,6 @@ namespace Robust.Client.GameObjects
         [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = new();
-
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IReflectionManager reflectionManager = default!;
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
@@ -319,6 +325,45 @@ namespace Robust.Client.GameObjects
         const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
+
+        public void AfterDeserialization()
+        {
+            {
+                if (!string.IsNullOrWhiteSpace(rsi))
+                {
+                    var rsiPath = TextureRoot / rsi;
+                    try
+                    {
+                        if (rsi.EndsWith("apc.rsi")) System.Console.Write("a");
+                        BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.ErrorS(SpriteComponent.LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
+                    }
+                }
+            }
+
+            if (layerDatums.Count == 0)
+            {
+                if (state != null || texture != null)
+                {
+                    layerDatums.Insert(0, new PrototypeLayerData
+                    {
+                        TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
+                        State = string.IsNullOrWhiteSpace(state) ? null : state,
+                        Color = Color.White,
+                        Scale = Vector2.One,
+                        Visible = true,
+                    });
+                }
+            }
+
+            if (layerDatums.Count != 0)
+            {
+                LayerDatums = layerDatums;
+            }
+        }
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time

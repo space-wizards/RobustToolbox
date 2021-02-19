@@ -12,30 +12,40 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    [DataClass(typeof(SpriteComponentData))]
-    public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
+    public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent, ISerializationHooks
     {
         const string LayerSerializationCache = "spritelayersrv";
+
         [ViewVariables]
-        [DataClassTarget("layersTarget")]
+        [DataField("layers", priority: 2, readOnly: true)]
         private List<PrototypeLayerData> Layers = new();
 
         [DataField("visible")]
         private bool _visible = true;
+
         [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
         private int _drawDepth = DrawDepthTag.Default;
+
         [DataField("scale")]
         private Vector2 _scale = Vector2.One;
+
         [DataField("offset")]
         private Vector2 _offset = Vector2.Zero;
+
         [DataField("color")]
         private Color _color = Color.White;
+
         [DataField("directional")]
         private bool _directional = true;
+
         [DataField("sprite")]
         private string? _baseRSIPath;
+
         [DataField("rotation")]
         private Angle _rotation = Angle.Zero;
+
+        [DataField("state")] private string? state;
+        [DataField("texture")] private string? texture;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public int DrawDepth
@@ -139,6 +149,28 @@ namespace Robust.Server.GameObjects
 
         [ViewVariables]
         public int LayerCount => Layers.Count;
+
+        public void AfterDeserialization()
+        {
+            if (Layers.Count == 0)
+            {
+                if (state != null || texture != null)
+                {
+                    var layerZeroData = SharedSpriteComponent.PrototypeLayerData.New();
+                    if (!string.IsNullOrWhiteSpace(state))
+                    {
+                        layerZeroData.State = state;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(texture))
+                    {
+                        layerZeroData.TexturePath = texture;
+                    }
+
+                    Layers.Insert(0, layerZeroData);
+                }
+            }
+        }
 
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {

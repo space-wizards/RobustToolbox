@@ -19,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity")]
-    public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
+    public class EntityPrototype : IPrototype, ISyncingPrototype
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
@@ -258,6 +258,11 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        public void Reset()
+        {
+            Children.Clear();
+        }
+
         // Resolve inheritance.
         public bool Sync(IPrototypeManager manager, int stage)
         {
@@ -435,9 +440,10 @@ namespace Robust.Shared.Prototypes
                 component.ExposeData(ser);
                 return component == (Component) currentComponent;
             }
-            if (Name != entity.Prototype.Name)
+
+            if (Name != entity.Prototype?.Name)
             {
-                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{entity.Prototype.Name}', got '{Name}'");
+                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{entity.Prototype?.Name}', got '{Name}'");
                 return;
             }
 

@@ -1,4 +1,5 @@
 ﻿using Lidgren.Network;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
@@ -15,12 +16,16 @@ namespace Robust.Shared.Network.Messages
 
         #endregion
 
+        public ResourcePath Path = default!;
+
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
+            Path = new ResourcePath(buffer.ReadString());
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
+            buffer.Write(Path.ToString());
         }
     }
 }

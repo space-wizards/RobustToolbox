@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Network;
+﻿using System;
+using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 
@@ -15,8 +17,11 @@ namespace Robust.Client.Prototypes
 
         private void HandleReloadPrototypes(MsgReloadPrototypes msg)
         {
-            ReloadPrototypes();
-        }
+            var then = DateTime.Now;
 
+            ReloadPrototypes(msg.Path);
+
+            Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
+        }
     }
 }

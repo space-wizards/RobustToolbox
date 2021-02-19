@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Console.Commands
 {
@@ -17,7 +18,7 @@ namespace Robust.Server.Console.Commands
 #if !FULL_RELEASE
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
-            prototypeManager.ReloadPrototypes();
+            prototypeManager.ReloadPrototypes(new ResourcePath("/Prototypes/"));
 #else
             shell.WriteLine("Not supported on full release.");
 #endif

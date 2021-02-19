@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         public Regex Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return new Regex(node.Value, RegexOptions.Compiled);
+            return new(node.Value, RegexOptions.Compiled);
         }
 
         public DataNode Write(Regex value, bool alwaysWrite = false,

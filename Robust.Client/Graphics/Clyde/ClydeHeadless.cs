@@ -79,6 +79,12 @@ namespace Robust.Client.Graphics.Clyde
             remove { }
         }
 
+        public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        {
+            add { }
+            remove { }
+        }
+
         public void Render()
         {
             // Nada.

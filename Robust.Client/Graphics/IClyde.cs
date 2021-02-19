@@ -27,6 +27,8 @@ namespace Robust.Client.Graphics
 
         event Action<WindowResizedEventArgs> OnWindowResized;
 
+        event Action<WindowFocusedEventArgs> OnWindowFocused;
+
         Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
 

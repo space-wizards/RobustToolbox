@@ -45,6 +45,8 @@ namespace Robust.Client.Graphics
 
         public abstract event Action<WindowResizedEventArgs> OnWindowResized;
 
+        public abstract event Action<WindowFocusedEventArgs> OnWindowFocused;
+
         protected virtual void ReadConfig()
         {
             WindowMode = (WindowMode) _configurationManager.GetCVar(CVars.DisplayWindowMode);

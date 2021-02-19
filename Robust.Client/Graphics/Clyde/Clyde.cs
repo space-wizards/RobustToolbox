@@ -88,7 +88,7 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
-            
+
             _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
@@ -151,6 +151,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {

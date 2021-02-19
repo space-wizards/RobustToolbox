@@ -79,6 +79,12 @@ namespace Robust.Shared.Serialization.Manager
                 fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo));
             }
 
+            var duplicates = fieldDefs.Where(f =>
+                fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1).Select(f => f.Attribute.Tag).ToList();
+            if (duplicates.Count > 0)
+                throw new ArgumentException($"Duplicate Datafield-Tags found in {Type}: {string.Join(",", duplicates)}");
+
+
             var fields = fieldDefs;
             //todo paul write a test for this
             fields.Sort((a, b) => a.Attribute.Priority.CompareTo(a.Attribute.Priority));

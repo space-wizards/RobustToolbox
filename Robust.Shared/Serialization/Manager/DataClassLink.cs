@@ -35,6 +35,11 @@ namespace Robust.Shared.Serialization.Manager
             }
             //todo paul write a test for this
             _actualFields.Sort((a,b) => a.DataFieldAttribute.Priority.CompareTo(b.DataFieldAttribute.Priority));
+            var duplicates = _actualFields.Where(f =>
+                _actualFields.Count(df => df.DataFieldAttribute.Tag == f.DataFieldAttribute.Tag) > 1).Select(f => f.DataFieldAttribute.Tag).ToList();
+            if (duplicates.Count > 0)
+                throw new ArgumentException($"Duplicate Datafield-Tags found in {type}: {string.Join(",", duplicates)}");
+
 
             foreach (var abstractFieldInfo in dataClassType.GetAllPropertiesAndFields())
             {
@@ -45,6 +50,10 @@ namespace Robust.Shared.Serialization.Manager
             }
             //todo paul write a test for this
             _dataclassFields.Sort((a,b) => a.DataFieldAttribute.Priority.CompareTo(b.DataFieldAttribute.Priority));
+            duplicates = _dataclassFields.Where(f =>
+                _dataclassFields.Count(df => df.DataFieldAttribute.Tag == f.DataFieldAttribute.Tag) > 1).Select(f => f.DataFieldAttribute.Tag).ToList();
+            if (duplicates.Count > 0)
+                throw new ArgumentException($"Duplicate Datafield-Tags found in {dataClassType}: {string.Join(",", duplicates)}");
 
             PopulateObjectDelegate = EmitPopulateObjectDelegate();
             PopulateDataclassDelegate = EmitPopulateDataclassDelegate();

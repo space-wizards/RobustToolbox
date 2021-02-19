@@ -7,7 +7,7 @@ namespace Robust.Server.GameObjects
 {
     public partial class SpriteComponentData : ISerializationHooks
     {
-        [DataClassTarget("layers")]
+        [DataClassTarget("layersTarget")]
         [DataField("layers", priority: 2, readOnly: true)]
         private List<SharedSpriteComponent.PrototypeLayerData>? Layers;
 

@@ -56,7 +56,7 @@ namespace Robust.Client.Prototypes
 
             var msg = NetManager.CreateNetMessage<MsgReloadPrototypes>();
             msg.Paths = _reloadQueue.ToArray();
-            NetManager.ServerSendToAll(msg);
+            NetManager.ClientSendMessage(msg);
 
             foreach (var path in _reloadQueue)
             {

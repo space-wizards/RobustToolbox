@@ -156,10 +156,14 @@ public readonly bool ServerOnly;
 
                 //skip all of this if the value is default
                 generator.Emit(OpCodes.Ldloc, locIdx); //load val
+                if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                    generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
                 //load default value
                 generator.Emit(OpCodes.Ldarg, 4);
                 generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
                 generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
+                if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
+                    generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
                 //check if value is default
                 generator.EmitEquals(fieldDefinition.FieldType, endLabel);
 

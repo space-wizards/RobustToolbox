@@ -59,7 +59,7 @@ namespace Robust.Client.UserInterface.Controls
             _lineEdit = new LineEdit
             {
                 CustomMinimumSize = new Vector2(40, 0),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
+                HorizontalExpand = true
             };
             AddChild(_lineEdit);
 

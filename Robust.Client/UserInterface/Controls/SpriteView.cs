@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _scale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 

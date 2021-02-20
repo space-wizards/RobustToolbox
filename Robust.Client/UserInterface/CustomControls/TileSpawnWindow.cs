@@ -25,8 +25,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private bool _clearingSelections;
 
-        protected override Vector2? CustomSize => (300, 300);
-
         public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
             IResourceCache resourceCache)
         {
@@ -57,6 +55,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Title = "Place Tiles";
             SearchBar.GrabKeyboardFocus();
+
+            SetSize = (300, 300);
         }
 
         protected override void Dispose(bool disposing)

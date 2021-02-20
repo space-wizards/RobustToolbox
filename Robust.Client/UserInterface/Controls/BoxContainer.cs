@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     minSize.Y += taken;
-                    availableSize.Y -= taken;
+                    availableSize.Y = Math.Max(0, availableSize.Y - taken);
 
                     first = false;
                     minSize.X = Math.Max(minSize.X, childSize.X);
@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     minSize.X += taken;
-                    availableSize.X -= taken;
+                    availableSize.X = Math.Max(0, availableSize.X - taken);
 
                     first = false;
 

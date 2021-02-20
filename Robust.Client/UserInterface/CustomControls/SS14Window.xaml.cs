@@ -56,10 +56,12 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Opened();
 
+#pragma warning disable 618
             if (_firstTimeOpened && CustomSize != null)
             {
-                LayoutContainer.SetSize(this, CustomSize.Value);
+                SetSize = CustomSize.Value;
             }
+#pragma warning restore 618
         }
 
         //private Label TitleLabel;

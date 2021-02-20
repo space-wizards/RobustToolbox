@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected internal virtual void UIScaleChanged()
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -341,7 +341,7 @@ namespace Robust.Client.UserInterface
 
                 _sizeFlagsStretchRatio = value;
 
-                Parent?.UpdateLayout();
+                Parent?.InvalidateArrange();
             }
         }
 

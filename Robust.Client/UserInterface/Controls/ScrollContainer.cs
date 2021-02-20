@@ -172,8 +172,6 @@ namespace Robust.Client.UserInterface.Controls
                 _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
 
-            var sSize = (sWidth, sHeight);
-
             var realFinalSize = (
                 _hScrollEnabled ? Math.Max(cWidth, sWidth) : sWidth,
                 _vScrollEnabled ? Math.Max(cHeight, sHeight) : sHeight);

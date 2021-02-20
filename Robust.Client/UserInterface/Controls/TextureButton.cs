@@ -27,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _textureNormal = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -37,7 +37,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _scale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 

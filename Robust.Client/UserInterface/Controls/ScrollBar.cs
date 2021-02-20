@@ -129,13 +129,13 @@ namespace Robust.Client.UserInterface.Controls
             if (_grabData == null)
             {
                 var box = _getGrabberBox();
-                _isHovered = box.Contains(args.RelativePosition);
+                _isHovered = box.Contains(args.RelativePixelPosition);
                 _updatePseudoClass();
                 return;
             }
 
             var (grabPos, grabValue) = _grabData.Value;
-            var (grabRelX, grabRelY) = args.RelativePosition - grabPos;
+            var (grabRelX, grabRelY) = args.RelativePixelPosition - grabPos;
             float moved;
 
             if (_orientation == OrientationMode.Horizontal)

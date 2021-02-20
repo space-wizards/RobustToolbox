@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _backgroundStyleBoxOverride = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _foregroundStyleBoxOverride = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 

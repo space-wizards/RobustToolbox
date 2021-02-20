@@ -20,8 +20,6 @@ namespace Robust.Client.Console
     {
         private readonly IReflectionManager _reflectionManager;
 
-        protected override Vector2? CustomSize => (300, 300);
-
         private readonly VBoxContainer _watchesVBox;
         private readonly LineEdit _addWatchEdit;
         private readonly Button _addWatchButton;
@@ -66,6 +64,8 @@ namespace Robust.Client.Console
             _addWatchEdit.OnTextEntered += _ => AddWatch();
 
             Contents.AddChild(mainVBox);
+
+            SetSize = (300, 300);
         }
 
         private void AddWatch()

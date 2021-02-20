@@ -1,20 +1,21 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Localization.Macros;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Localization
 {
     // ReSharper disable once CommentTypo
     /// <summary>
-    ///     Provides facilities to automatically translate in-game text.
+    ///     Provides facilities to obtain language appropriate in-game text.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///     The translation API is similar to GNU gettext.
-    ///     You pass a string through it (most often the English version),
-    ///     and when the game is ran in another language with adequate translation, the translation is returned instead.
+    ///     Translation is handled using Project Fluent (https://www.projectfluent.org/)
+    ///     You pass a Fluent 'identifier' as a string and the localization manager will fetch the message
+    ///     matching that identifier from the currently loaded language's Fluent files.
     ///     </para>
     /// </remarks>
     /// <seealso cref="Loc"/>
@@ -22,40 +23,18 @@ namespace Robust.Shared.Localization
     public interface ILocalizationManager
     {
         /// <summary>
-        ///     Gets a string translated for the current culture.
+        ///     Gets a language approrpiate string represented by the supplied messageId.
         /// </summary>
-        /// <param name="text">The string to get translated.</param>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
-        ///     The translated string if a translation is available, otherwise the string is returned.
+        ///     The language appropriate message if available, otherwise the messageId is returned.
         /// </returns>
-        string GetString(string text);
+        string GetString(string messageId);
 
         /// <summary>
-        ///     Version of <see cref="GetString(string)"/> that also runs string formatting.
+        ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
-        [StringFormatMethod("text")]
-        string GetString(string text, params object[] args);
-
-        /// <summary>
-        ///     Gets a string inside a context or category.
-        /// </summary>
-        string GetParticularString(string context, string text);
-
-        /// <summary>
-        ///     Gets a string inside a context or category with formatting.
-        /// </summary>
-        [StringFormatMethod("text")]
-        string GetParticularString(string context, string text, params object[] args);
-
-        string GetPluralString(string text, string pluralText, long n);
-
-        [StringFormatMethod("pluralText")]
-        string GetPluralString(string text, string pluralText, long n, params object[] args);
-
-        string GetParticularPluralString(string context, string text, string pluralText, long n);
-
-        [StringFormatMethod("pluralText")]
-        string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args);
+        string GetString(string messageId, params (string, object)[] args);
 
         /// <summary>
         ///     Default culture used by other methods when no culture is explicitly specified.
@@ -67,9 +46,19 @@ namespace Robust.Shared.Localization
         ///     Load data for a culture.
         /// </summary>
         /// <param name="resourceManager"></param>
-        /// <param name="textMacroFactory"></param>
         /// <param name="culture"></param>
-        void LoadCulture(IResourceManager resourceManager, ITextMacroFactory textMacroFactory, CultureInfo culture);
+        void LoadCulture(IResourceManager resourceManager, CultureInfo culture);
+
+
+
+
+        /// <summary>
+        /// Remnants of the old Localization system.
+        /// It exists to prevent source errors and allow existing game text to *mostly* work
+        /// </summary>
+        [Obsolete]
+        [StringFormatMethod("text")]
+        string GetString(string text, params object[] args);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

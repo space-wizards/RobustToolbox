@@ -2,99 +2,71 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using NGettext;
+using Fluent.Net;
+using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Localization.Macros;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Localization
 {
     internal sealed class LocalizationManager : ILocalizationManagerInternal
     {
-        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new();
+        private readonly Dictionary<CultureInfo, MessageContext> _contexts = new();
+
         private CultureInfo? _defaultCulture;
 
-        public string GetString(string text)
+        public string GetString(string messageId)
         {
             if (_defaultCulture == null)
             {
-                return text;
+                return messageId;
             }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetString(text);
+            var context = _contexts[_defaultCulture];
+            var message = context.GetMessage(messageId);
+
+            if (message == null)
+            {
+                Logger.WarningS("Loc", $"Unknown messageId ({_defaultCulture.IetfLanguageTag}): {messageId}");
+                return messageId;
+            }
+
+            return context.Format(message, null, null);
         }
 
+        public string GetString(string messageId, params (string, object)[] args0)
+        {
+            if (_defaultCulture == null)
+            {
+                return messageId;
+            }
+            var context = _contexts[_defaultCulture];
+            var message = context.GetMessage(messageId);
+            var args = new Dictionary<string, object>();
+            foreach (var vari in args0)
+            {
+                args.Add(vari.Item1, vari.Item2);
+            }
+
+            if (message == null)
+            {
+                Logger.WarningS("Loc", $"Unknown messageId ({_defaultCulture.IetfLanguageTag}): {messageId}");
+                return messageId;
+            }
+
+            return context.Format(message, args, null);
+        }
+
+        /// <summary>
+        /// Remnants of the old Localization system.
+        /// It exists to prevent source errors and allow existing game text to *mostly* work
+        /// </summary>
+        [Obsolete]
+        [StringFormatMethod("text")]
         public string GetString(string text, params object[] args)
         {
-            if (_defaultCulture == null)
-            {
-                return string.Format(text, args);
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetString(text, args);
-        }
-
-        public string GetParticularString(string context, string text)
-        {
-            if (_defaultCulture == null)
-            {
-                return text;
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularString(context, text);
-        }
-
-        public string GetParticularString(string context, string text, params object[] args)
-        {
-            if (_defaultCulture == null)
-            {
-                return string.Format(text, args);
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularString(context, text, args);
-        }
-
-        public string GetPluralString(string text, string pluralText, long n)
-        {
-            if (_defaultCulture == null)
-            {
-                return n == 1 ? text : pluralText;
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetPluralString(text, pluralText, n);
-        }
-
-        public string GetPluralString(string text, string pluralText, long n, params object[] args)
-        {
-            if (_defaultCulture == null)
-            {
-                return string.Format(n == 1 ? text : pluralText, args);
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetPluralString(text, pluralText, n, args);
-        }
-
-        public string GetParticularPluralString(string context, string text, string pluralText, long n)
-        {
-            if (_defaultCulture == null)
-            {
-                return n == 1 ? text : pluralText;
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularPluralString(context, text, pluralText, n, pluralText);
-        }
-
-        public string GetParticularPluralString(string context, string text, string pluralText, long n, params object[] args)
-        {
-            if (_defaultCulture == null)
-            {
-                return string.Format(n == 1 ? text : pluralText, args);
-            }
-            var catalog = _catalogs[_defaultCulture];
-            return catalog.GetParticularPluralString(context, text, pluralText, n, args);
+            return string.Format(text, args);
         }
 
         public CultureInfo? DefaultCulture
@@ -107,7 +79,7 @@ namespace Robust.Shared.Localization
                     throw new ArgumentNullException(nameof(value));
                 }
 
-                if (!_catalogs.ContainsKey(value))
+                if (!_contexts.ContainsKey(value))
                 {
                     throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));
                 }
@@ -118,13 +90,16 @@ namespace Robust.Shared.Localization
             }
         }
 
-        public void LoadCulture(IResourceManager resourceManager, ITextMacroFactory textMacroFactory, CultureInfo culture)
+        public void LoadCulture(IResourceManager resourceManager, CultureInfo culture)
         {
-            var catalog = new CustomFormatCatalog(culture);
-            _catalogs.Add(culture, catalog);
+            var context = new MessageContext(
+                culture.Name,
+                new MessageContextOptions { UseIsolating = false }
+            );
 
-            _loadData(resourceManager, culture, catalog);
-            _loadMacros(textMacroFactory, culture, catalog);
+            _contexts.Add(culture, context);
+
+            _loadData(resourceManager, culture, context);
             if (DefaultCulture == null)
             {
                 DefaultCulture = culture;
@@ -133,13 +108,15 @@ namespace Robust.Shared.Localization
 
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)
         {
+            /*
+             * TODO: need to expose Messages on MessageContext in Fluent.NET
             serializer.AddStrings(StringIterator());
 
             IEnumerable<string> StringIterator()
             {
-                foreach (var catalog in _catalogs.Values)
+                foreach (var context in _contexts.Values)
                 {
-                    foreach (var (key, translations) in catalog.Translations)
+                    foreach (var (key, translations) in _context)
                     {
                         yield return key;
 
@@ -150,65 +127,34 @@ namespace Robust.Shared.Localization
                     }
                 }
             }
+            */
         }
 
-        private static void _loadData(IResourceManager resourceManager, CultureInfo culture, Catalog catalog)
+        private static void _loadData(IResourceManager resourceManager, CultureInfo culture, MessageContext context)
         {
-            // Load data from .yml files.
+            // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
 
             var root = new ResourcePath($"/Locale/{culture.IetfLanguageTag}/");
 
             foreach (var file in resourceManager.ContentFindFiles(root))
             {
-                var yamlFile = root / file;
-                _loadFromFile(resourceManager, yamlFile, catalog);
+                var ftlFile = root / file;
+                _loadFromFile(resourceManager, ftlFile, context);
             }
         }
 
-        private static void _loadFromFile(IResourceManager resourceManager, ResourcePath filePath, Catalog catalog)
+        private static void _loadFromFile(IResourceManager resourceManager, ResourcePath filePath, MessageContext context)
         {
-            var yamlStream = new YamlStream();
             using (var fileStream = resourceManager.ContentFileRead(filePath))
             using (var reader = new StreamReader(fileStream, EncodingHelpers.UTF8))
             {
-                yamlStream.Load(reader);
+                var errors = context.AddMessages(reader);
+                foreach (var error in errors)
+                {
+                    Logger.WarningS("Loc", error.Message);
+                }
             }
-
-            foreach (var entry in yamlStream.Documents
-                .SelectMany(d => (YamlSequenceNode) d.RootNode)
-                .Cast<YamlMappingNode>())
-            {
-                _readEntry(entry, catalog);
-            }
-        }
-
-        private static void _readEntry(YamlMappingNode entry, Catalog catalog)
-        {
-            var id = entry.GetNode("msgid").AsString();
-            var str = entry.GetNode("msgstr");
-            string[] strings;
-            if (str is YamlScalarNode scalar)
-            {
-                strings = new[] {scalar.AsString()};
-            }
-            else if (str is YamlSequenceNode sequence)
-            {
-                strings = sequence.Children.Select(c => c.AsString()).ToArray();
-            }
-            else
-            {
-                // TODO: Improve error reporting here.
-                throw new Exception("Invalid format in translation file.");
-            }
-
-            catalog.Translations.Add(id, strings);
-        }
-
-        private static void _loadMacros(ITextMacroFactory textMacroFactory, CultureInfo culture, CustomFormatCatalog catalog)
-        {
-            var macros = textMacroFactory.GetMacrosForLanguage(culture.IetfLanguageTag);
-            catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }
 }

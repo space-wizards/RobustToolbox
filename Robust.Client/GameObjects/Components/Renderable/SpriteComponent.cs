@@ -1025,7 +1025,7 @@ namespace Robust.Client.GameObjects
             {
                 if (!layer.Visible)
                 {
-                    return;
+                    continue;
                 }
 
                 var dirType = GetLayerDirectionType(layer);
@@ -1141,6 +1141,7 @@ namespace Robust.Client.GameObjects
                 WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _visible, "visible", true);
+            serializer.DataFieldCached(ref _directional, "directional", true); //TODO: Kill ME
             serializer.DataFieldCached(ref _screenLock, "noRot", false);
             serializer.DataFieldCached(ref _enableOverrideDirection, "enableOverrideDir", false);
             serializer.DataFieldCached(ref _overrideDirection, "overrideDir", Direction.East);

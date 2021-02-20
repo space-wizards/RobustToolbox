@@ -175,7 +175,8 @@ namespace Robust.Client.Debugging
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepTime / sleepThreshold);
+                        var sleepPercent = physBody.Awake ? physBody.SleepTime / sleepThreshold : 1.0f;
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport,  sleepPercent);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

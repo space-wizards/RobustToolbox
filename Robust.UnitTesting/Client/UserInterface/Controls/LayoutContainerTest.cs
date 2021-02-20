@@ -21,7 +21,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             LayoutContainer.SetMarginBottom(child, 5);
             control.AddChild(child);
 
-            control.ForceRunLayoutUpdate();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Size, Is.EqualTo(new Vector2(5, 5)));
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
@@ -29,7 +29,8 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             LayoutContainer.SetMarginTop(child, 3);
             LayoutContainer.SetMarginLeft(child, 3);
 
-            control.ForceRunLayoutUpdate();
+            control.InvalidateArrange();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Size, Is.EqualTo(new Vector2(2, 2)));
             Assert.That(child.Position, Is.EqualTo(new Vector2(3, 3)));
@@ -44,17 +45,19 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             LayoutContainer.SetAnchorBottom(child, 1);
             control.AddChild(child);
 
-            control.ForceRunLayoutUpdate();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
             LayoutContainer.SetAnchorLeft(child, 0.5f);
-            control.ForceRunLayoutUpdate();
+            control.InvalidateArrange();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
             Assert.That(child.Position, Is.EqualTo(new Vector2(50, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(50, 100)));
             LayoutContainer.SetAnchorTop(child, 0.5f);
-            control.ForceRunLayoutUpdate();
+            control.InvalidateArrange();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(50, 50)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
@@ -66,14 +69,14 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var control = new LayoutContainer {Size = new Vector2(100, 100)};
             var child = new Control
             {
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
             };
 
             LayoutContainer.SetMarginRight(child, 20);
             LayoutContainer.SetMarginBottom(child, 20);
 
             control.AddChild(child);
-            control.ForceRunLayoutUpdate();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Size, Is.EqualTo(new Vector2(50, 50)));
         }
@@ -92,7 +95,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             LayoutContainer.SetAnchorBottom(child, 1);
 
             control.AddChild(child);
-            control.ForceRunLayoutUpdate();
+            control.InvalidateArrange();
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(10, 10)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
@@ -105,15 +108,16 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var parent = new LayoutContainer {Size = (50, 50)};
             var child = new Control();
             parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            parent.Arrange(new UIBox2(0, 0, 50, 50));
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
             // Making the child have a bigger minimum size should grow it to the bottom size.
             // i.e. size should change, position should not.
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
+            child.MinSize = (100, 100);
+            parent.InvalidateArrange();
+            parent.Arrange(new UIBox2(0, 0, 50, 50));
 
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -123,21 +127,22 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestGrowBegin()
         {
-            var parent = new LayoutContainer {Size = (50, 50)};
-            var child = new Control();
+            var parent = new LayoutContainer();
+            var child = new Control {SetSize = (100, 100)};
 
             LayoutContainer.SetGrowHorizontal(child, LayoutContainer.GrowDirection.Begin);
+            LayoutContainer.SetAnchorRight(child, 1);
 
             parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
-            // Making the child have a bigger minimum size should grow it to the bottom right.
-            // i.e. size should change, position should not.
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
+            // Right margin should make the child not have enough space and grow left.
+            LayoutContainer.SetMarginRight(child, -100);
+            parent.InvalidateArrange();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -147,17 +152,22 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestGrowBoth()
         {
-            var parent = new LayoutContainer {Size = (50, 50)};
-            var child = new Control();
+            var parent = new LayoutContainer {MinSize = (100, 100)};
+            var child = new Control {SetSize = (100, 100)};
+
             LayoutContainer.SetGrowHorizontal(child, LayoutContainer.GrowDirection.Both);
+            LayoutContainer.SetAnchorRight(child, 1);
+
             parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
+            // Right margin should make the child not have enough space and grow left.
+            LayoutContainer.SetMarginRight(child, -100);
+            parent.InvalidateArrange();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-50, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
@@ -167,22 +177,24 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestGrowDirectionChange()
         {
-            var parent = new LayoutContainer {Size = (50, 50)};
+            var parent = new LayoutContainer {MinSize = (100, 100)};
             var child = new Control();
             parent.AddChild(child);
-            parent.ForceRunLayoutUpdate();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
-            // Child should be at 0,0.
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            // Child should be at -100,0.
+            Assert.That(child.Position, Is.EqualTo(new Vector2(0, 0)));
 
-            child.CustomMinimumSize = (100, 100);
-            parent.ForceRunLayoutUpdate();
+            child.MinSize = (100, 100);
+            parent.InvalidateMeasure();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
-            Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(child.Position, Is.EqualTo(new Vector2(0, 0)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));
 
             LayoutContainer.SetGrowHorizontal(child, LayoutContainer.GrowDirection.Begin);
-            parent.ForceRunLayoutUpdate();
+            parent.InvalidateArrange();
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(-100, 0)));
         }

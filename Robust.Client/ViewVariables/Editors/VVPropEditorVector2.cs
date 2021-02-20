@@ -18,7 +18,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBoxContainer = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(240, 0),
+                MinSize = new Vector2(240, 0),
             };
 
             var x = new LineEdit

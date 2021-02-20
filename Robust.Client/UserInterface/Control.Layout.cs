@@ -16,8 +16,8 @@ namespace Robust.Client.UserInterface
 
         private float _sizeFlagsStretchRatio = 1;
 
-        private float _minWidth = 0;
-        private float _minHeight = 0;
+        private float _minWidth;
+        private float _minHeight;
         private float _setWidth = float.NaN;
         private float _setHeight = float.NaN;
         private float _maxWidth = float.PositiveInfinity;
@@ -346,7 +346,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     A combination of <see cref="CustomMinimumSize" /> and <see cref="CalculateMinimumSize" />,
+        ///     A combination of <see cref="MinSize" /> and <see cref="CalculateMinimumSize" />,
         ///     Whichever is greater.
         ///     Use this for whenever you need the *actual* minimum size of something.
         /// </summary>
@@ -369,7 +369,14 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="CalculateMinimumSize" />
         /// <seealso cref="CombinedMinimumSize" />
         [ViewVariables]
+        [Obsolete("Use MinSize instead.")]
         public Vector2 CustomMinimumSize
+        {
+            get => (_minWidth, _minHeight);
+            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
+        }
+
+        public Vector2 MinSize
         {
             get => (_minWidth, _minHeight);
             set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
@@ -493,6 +500,7 @@ namespace Robust.Client.UserInterface
         ///     where running the deferred layout updating system in the UI manager can be annoying.
         ///     If you are forced to use this in regular code, you have found a bug.
         /// </remarks>
+        [Obsolete("Call Arrange manually for unit tests or call Measure manually for early measures.")]
         public void ForceRunLayoutUpdate()
         {
             // TODO: Fix or remove this

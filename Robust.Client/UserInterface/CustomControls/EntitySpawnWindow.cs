@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface.CustomControls
             Title = Loc.GetString("Entity Spawn Panel");
 
             SetSize = (250, 300);
-            CustomMinimumSize = (250, 200);
+            MinSize = (250, 200);
 
             Contents.AddChild(MainVBox = new VBoxContainer
             {
@@ -94,7 +94,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     },
                     new ScrollContainer
                     {
-                        CustomMinimumSize = new Vector2(200.0f, 0.0f),
+                        MinSize = new Vector2(200.0f, 0.0f),
                         VerticalExpand = true,
                         Children =
                         {
@@ -483,7 +483,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     {
                         (EntityTextureRects = new LayeredTextureRect
                         {
-                            CustomMinimumSize = (32, 32),
+                            MinSize = (32, 32),
                             HorizontalAlignment = HAlignment.Center,
                             VerticalAlignment = VAlignment.Center,
                             Stretch = TextureRect.StretchMode.KeepAspectCentered,

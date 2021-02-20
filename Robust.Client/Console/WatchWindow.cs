@@ -35,7 +35,7 @@ namespace Robust.Client.Console
 
             var mainVBox = new VBoxContainer
             {
-                CustomMinimumSize = (500, 300),
+                MinSize = (500, 300),
                 Children =
                 {
                     (_watchesVBox = new VBoxContainer

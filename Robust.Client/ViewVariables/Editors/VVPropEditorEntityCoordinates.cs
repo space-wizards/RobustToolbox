@@ -15,7 +15,7 @@ namespace Robust.Client.ViewVariables.Editors
             var coords = (EntityCoordinates) value!;
             var hBoxContainer = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(240, 0),
+                MinSize = new Vector2(240, 0),
             };
 
             hBoxContainer.AddChild(new Label {Text = "grid: "});

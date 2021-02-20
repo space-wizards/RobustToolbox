@@ -56,7 +56,7 @@ namespace Robust.Client.ViewVariables.Traits
             {
                 // Page navigational controls.
                 _leftButton = new Button {Text = "<<", Disabled = true};
-                _pageLabel = new LineEdit {Text = "0", CustomMinimumSize = (60, 0)};
+                _pageLabel = new LineEdit {Text = "0", MinSize = (60, 0)};
                 _rightButton = new Button {Text = ">>"};
 
                 _leftButton.OnPressed += _leftButtonPressed;

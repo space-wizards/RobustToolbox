@@ -108,7 +108,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public float MaxGridWidth
         {
-            set => SetMaxSize(Dimension.Row, value);
+            set => SetMaxSize(Dimension.Column, value);
         }
 
         /// <summary>

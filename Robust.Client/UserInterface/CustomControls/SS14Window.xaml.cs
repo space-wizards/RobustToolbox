@@ -27,7 +27,7 @@ namespace Robust.Client.UserInterface.CustomControls
             RobustXamlLoader.Load(this);
             MouseFilter = MouseFilterMode.Stop;
 
-            WindowHeader.CustomMinimumSize = (0, HEADER_SIZE_Y);
+            WindowHeader.MinSize = (0, HEADER_SIZE_Y);
 
             Contents = ContentsContainer;
 

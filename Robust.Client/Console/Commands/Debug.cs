@@ -544,7 +544,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new SS14Window { CustomMinimumSize = (500, 400)};
+            var window = new SS14Window { MinSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
@@ -601,7 +601,7 @@ namespace Robust.Client.Console.Commands
                 {
                     grid.AddChild(new Button
                     {
-                        CustomMinimumSize = (50, 50),
+                        MinSize = (50, 50),
                         Text = $"{x}, {y}"
                     });
                 }

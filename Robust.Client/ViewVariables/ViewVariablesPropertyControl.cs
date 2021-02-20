@@ -32,7 +32,7 @@ namespace Robust.Client.ViewVariables
 
             MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
-            CustomMinimumSize = new Vector2(0, 25);
+            MinHeight = 25;
 
             VBox = new VBoxContainer {SeparationOverride = 0};
             AddChild(VBox);
@@ -93,7 +93,7 @@ namespace Robust.Client.ViewVariables
                 NameLabel.HorizontalExpand = true;
             }
 
-            NameLabel.CustomMinimumSize = new Vector2(150, 0);
+            NameLabel.MinSize = new Vector2(150, 0);
             TopContainer.AddChild(view);
             /*
             _beingEdited = obj;
@@ -115,7 +115,7 @@ namespace Robust.Client.ViewVariables
             {
                 NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;
             }
-            NameLabel.CustomMinimumSize = new Vector2(150, 0);
+            NameLabel.MinSize = new Vector2(150, 0);
             TopContainer.AddChild(view);
             editor.OnValueChanged += v => { propertyInfo.SetValue(obj, v); };
             */

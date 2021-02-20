@@ -47,7 +47,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             InputBar.OnTextEntered += _ => Run();
             RunButton.OnPressed += _ => Run();
-            CustomMinimumSize = (550, 300);
+            MinSize = (550, 300);
         }
 
         protected abstract void Run();

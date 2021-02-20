@@ -361,6 +361,45 @@ namespace Robust.Build.Tasks
                 return true;
             }
 
+            if (type.Equals(types.Thickness))
+            {
+                var foo = MathParsing.Thickness.Parse(text);
+
+                if (!foo.Success)
+                    throw new XamlLoadException($"Unable to parse \"{text}\" as a Thickness", node);
+
+                var val = foo.Value;
+                float[] full;
+                if (val.Length == 1)
+                {
+                    var u = val[0];
+                    full = new[] {u, u, u, u};
+                }
+                else if (val.Length == 2)
+                {
+                    var h = val[0];
+                    var v = val[1];
+                    full = new[] {h, v, h, v};
+                }
+                else // 4
+                {
+                    full = val;
+                }
+
+                result = new RXamlSingleVecLikeConstAstNode(
+                    node,
+                    types.Thickness, types.ThicknessConstructorFull,
+                    types.Single, full);
+                return true;
+            }
+
+            if (type.Equals(types.Color))
+            {
+                // TODO: Interpret these colors at XAML compile time instead of at runtime.
+                result = new RXamlColorAstNode(node, types, text);
+                return true;
+            }
+
             result = null;
             return false;
         }

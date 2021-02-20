@@ -113,7 +113,7 @@ namespace Robust.Client.ViewVariables
             var view = editor.Initialize(value, attr.Access != VVAccess.ReadWrite);
             if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
             {
-                NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;
+                NameLabel.HorizontalExpand = true;
             }
             NameLabel.MinSize = new Vector2(150, 0);
             TopContainer.AddChild(view);

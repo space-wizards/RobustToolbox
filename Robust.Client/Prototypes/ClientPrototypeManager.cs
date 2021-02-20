@@ -52,6 +52,7 @@ namespace Robust.Client.Prototypes
 
         private void ReloadPrototypeQueue()
         {
+#if !FULL_RELEASE
             var then = DateTime.Now;
 
             var msg = NetManager.CreateNetMessage<MsgReloadPrototypes>();
@@ -63,7 +64,10 @@ namespace Robust.Client.Prototypes
                 ReloadPrototypes(path);
             }
 
+            _reloadQueue.Clear();
+
             Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
+#endif
         }
 
         private void WatchResources()

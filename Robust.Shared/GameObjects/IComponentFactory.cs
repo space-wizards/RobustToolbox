@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Prototypes;
@@ -65,11 +65,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Registers a prototype to be available for spawning.
         /// </summary>
+        /// <param name="overwrite">If the component already exists, will this replace it?</param>
         /// <remarks>
         /// This implicitly calls <see cref="RegisterReference{TTarget, TInterface}"/>
         /// with a <c>TTarget</c> and <c>TInterface</c> of <typeparamref name="T"/>.
         /// </remarks>
+
+        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         void Register<T>(bool overwrite = false) where T : IComponent, new();
+
+        /// <summary>
+        /// Registers a component class with the factory.
+        /// </summary>
+        /// <param name="overwrite">If the component already exists, will this replace it?</param>
+        /// <remarks>
+        ///  Unlike <see cref="Register{T}"/>, this reads the attributes. No more Register/RegisterReference combos.
+        /// </remarks>
+        void RegisterClass<T>(bool overwrite = false) where T : IComponent, new();
 
         /// <summary>
         /// Registers a component name as being ignored.
@@ -84,6 +96,7 @@ namespace Robust.Shared.GameObjects
         /// Registers <typeparamref name="TTarget" /> to be referenced when
         /// <typeparamref name="TInterface"/> is used in methods like <see cref="IEntity.GetComponent{T}"/>
         /// </summary>
+        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new();
 
         /// <summary>

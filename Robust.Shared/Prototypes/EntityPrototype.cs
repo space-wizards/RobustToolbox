@@ -441,9 +441,9 @@ namespace Robust.Shared.Prototypes
                 return component == (Component) currentComponent;
             }
 
-            if (Name != entity.Prototype?.Name)
+            if (ID != entity.Prototype?.ID)
             {
-                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{entity.Prototype?.Name}', got '{Name}'");
+                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entity.Prototype?.ID}'");
                 return;
             }
 
@@ -469,11 +469,12 @@ namespace Robust.Shared.Prototypes
                     factory) && Components.Keys.Contains(name))
                 {
                     ignoredComponents.Add(name);
-                    Logger.Debug(name);
                     continue;
                 }
+
                 componentManager.RemoveComponent(entity.Uid, type);
             }
+
             componentManager.CullRemovedComponents();
 
             // Add new components

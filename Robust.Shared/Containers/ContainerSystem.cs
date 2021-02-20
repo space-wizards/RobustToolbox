@@ -1,9 +1,8 @@
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.Containers
 {
-    internal sealed class ContainerSystem : EntitySystem
+    public class ContainerSystem : EntitySystem
     {
         public override void Initialize()
         {

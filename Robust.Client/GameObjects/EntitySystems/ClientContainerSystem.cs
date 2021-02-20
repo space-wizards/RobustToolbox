@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects
 {
-    public class ContainerSystem : EntitySystem
+    public class ClientContainerSystem : ContainerSystem
     {
         private readonly HashSet<IEntity> _updateQueue = new();
 

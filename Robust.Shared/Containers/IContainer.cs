@@ -25,6 +25,11 @@ namespace Robust.Shared.Containers
     public interface IContainer
     {
         /// <summary>
+        /// The type of this container.
+        /// </summary>
+        string ContainerType { get; }
+
+        /// <summary>
         /// The container manager owning this container.
         /// </summary>
         IContainerManager Manager { get; }

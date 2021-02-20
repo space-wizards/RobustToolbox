@@ -1,7 +1,6 @@
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server.GameObjects;
-using Robust.Server.Timing;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;

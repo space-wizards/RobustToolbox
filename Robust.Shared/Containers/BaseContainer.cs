@@ -13,6 +13,9 @@ namespace Robust.Shared.Containers
     public abstract class BaseContainer : IContainer
     {
         /// <inheritdoc />
+        public abstract string ContainerType { get; }
+
+        /// <inheritdoc />
         public IContainerManager Manager { get; private set; }
 
         /// <inheritdoc />

@@ -12,9 +12,14 @@ namespace Robust.Shared.Containers
     /// For example, inventory containers should be modified only through an inventory component.
     /// </summary>
     [UsedImplicitly]
-    [SerializedType("Container")]
+    [SerializedType(ClassName)]
     public sealed class Container : BaseContainer, IExposeData
     {
+        private const string ClassName = "Container";
+
+        /// <inheritdoc />
+        public override string ContainerType => ClassName;
+
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>

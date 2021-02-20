@@ -287,6 +287,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// <inheritdoc />
             public ContainerOnlyContainer(string id, IContainerManager manager) : base(id, manager) { }
 
+            public override string ContainerType => nameof(ContainerOnlyContainer);
+
             /// <inheritdoc />
             public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
 

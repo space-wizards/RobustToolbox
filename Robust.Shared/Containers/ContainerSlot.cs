@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
-    [SerializedType("ContainerSlot")]
+    [SerializedType(ClassName)]
     public class ContainerSlot : BaseContainer, IExposeData
     {
         [ViewVariables]
@@ -20,6 +20,11 @@ namespace Robust.Shared.Containers
         }
         
         private IEntity? _containedEntity;
+
+        private const string ClassName = "ContainerSlot";
+
+        /// <inheritdoc />
+        public override string ContainerType => ClassName;
 
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities

@@ -20,7 +20,9 @@ namespace Robust.Shared.Containers
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
+        
         [ViewVariables] private Dictionary<string, IContainer> _containers = new();
         private Dictionary<string, List<EntityUid>>? _entitiesWaitingResolve;
 
@@ -62,7 +64,7 @@ namespace Robust.Shared.Containers
 
             _entitiesWaitingResolve = null;
         }
-
+        
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
@@ -88,14 +90,22 @@ namespace Robust.Shared.Containers
                     _containers.Remove(dead);
                 }
             }
-
+            
             // Add new containers and update existing contents.
-            foreach (var (id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
+            IContainer ContainerFactory(string containerType, string id)
+            {
+                var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
+                if (type is null)
+                    throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
+
+                return (IContainer)_dynFactory.CreateInstanceUnchecked(type, new object[] {id, this});
+            }
+
+            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
             {
                 if (!_containers.TryGetValue(id, out var container))
                 {
-                    //TODO: Get type from server
-                    container = new Container(id, this);
+                    container = ContainerFactory(containerType, id);
                     _containers.Add(id, container);
                 }
 
@@ -178,7 +188,7 @@ namespace Robust.Shared.Containers
                     uidArr[index] = iEntity.Uid;
                 }
 
-                var sContainer = new ContainerManagerComponentState.ContainerData(container.ID, container.ShowContents, container.OccludesLight, uidArr);
+                var sContainer = new ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);
                 containerSet.Add(sContainer);
             }
 
@@ -309,21 +319,24 @@ namespace Robust.Shared.Containers
             [Serializable, NetSerializable]
             public readonly struct ContainerData
             {
+                public readonly string ContainerType;
                 public readonly string Id;
                 public readonly bool ShowContents;
                 public readonly bool OccludesLight;
                 public readonly EntityUid[] ContainedEntities;
 
-                public ContainerData(string id, bool showContents, bool occludesLight, EntityUid[] containedEntities)
+                public ContainerData(string containerType, string id, bool showContents, bool occludesLight, EntityUid[] containedEntities)
                 {
+                    ContainerType = containerType;
                     Id = id;
                     ShowContents = showContents;
                     OccludesLight = occludesLight;
                     ContainedEntities = containedEntities;
                 }
 
-                public void Deconstruct(out string id, out bool showEnts, out bool occludesLight, out EntityUid[] ents)
+                public void Deconstruct(out string type, out string id, out bool showEnts, out bool occludesLight, out EntityUid[] ents)
                 {
+                    type = ContainerType;
                     id = Id;
                     showEnts = ShowContents;
                     occludesLight = OccludesLight;

@@ -113,7 +113,10 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            return Vector2.Zero;
+            // Measure to availableSize so that child controls never get too large to fit the whole screen.
+            base.MeasureOverride(availableSize);
+
+            return availableSize;
         }
 
         protected override void Resized()

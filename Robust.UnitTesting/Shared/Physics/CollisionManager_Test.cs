@@ -1,7 +1,8 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -138,7 +139,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var mock = new Mock<IPhysBody>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
-            mock.Setup(foo => foo.Entity).Returns(new Entity()); // requires IPhysBody not have null owner
+            mock.Setup(foo => foo.Entity).Returns(new Entity(new ServerEntityManager(), EntityUid.FirstUid)); // requires IPhysBody not have null owner
             mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(1);
             mock.Setup(foo => foo.CollisionMask).Returns(1);
@@ -167,7 +168,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var mock = new Mock<IPhysBody>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
-            mock.Setup(foo => foo.Entity).Returns(new Entity()); // requires IPhysBody not have null owner
+            mock.Setup(foo => foo.Entity).Returns(new Entity(new ServerEntityManager(), EntityUid.FirstUid)); // requires IPhysBody not have null owner
             mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(1);
             mock.Setup(foo => foo.CollisionMask).Returns(1);
@@ -189,8 +190,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var ray = new CollisionRay(Vector2.UnitY, Vector2.UnitX, 1);
             var manager = new PhysicsManager();
 
-            var e1 = new Entity();
-            var e2 = new Entity();
+            var e1 = new Entity(new ServerEntityManager(), EntityUid.FirstUid);
+            var e2 = new Entity(new ServerEntityManager(), EntityUid.FirstUid);
 
             var m1 = new Mock<IPhysBody>();
             m1.Setup(foo => foo.WorldAABB).Returns(b1);

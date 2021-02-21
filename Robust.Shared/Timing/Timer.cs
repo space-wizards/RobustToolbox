@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 
-namespace Robust.Shared.Timers
+namespace Robust.Shared.Timing
 {
     public class Timer
     {

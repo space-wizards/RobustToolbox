@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -87,7 +88,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (value)
-                    LocalRotation = Angle.South;
+                    LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
                 Dirty();
@@ -698,8 +699,9 @@ namespace Robust.Shared.GameObjects
             serializer.DataField(ref _noLocalRotation, "noRot", false);
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation);
         }

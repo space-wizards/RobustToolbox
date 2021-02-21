@@ -1,7 +1,6 @@
 ﻿using System.Threading;
-using Robust.Shared.Timing;
 
-namespace Robust.Shared.Timers
+namespace Robust.Shared.Timing
 {
     public interface ITimerManager
     {

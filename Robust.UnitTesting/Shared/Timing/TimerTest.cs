@@ -4,11 +4,10 @@ using NUnit.Framework;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Timers;
 using Robust.Shared.Timing;
-using Timer = Robust.Shared.Timers.Timer;
+using Timer = Robust.Shared.Timing.Timer;
 
-namespace Robust.UnitTesting.Shared.Timers
+namespace Robust.UnitTesting.Shared.Timing
 {
     [TestFixture]
     [TestOf(typeof(Timer))]

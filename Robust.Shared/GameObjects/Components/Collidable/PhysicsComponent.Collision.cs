@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -132,8 +133,9 @@ namespace Robust.Shared.GameObjects
             serializer.DataField(ref _mass, "mass", 1.0f);
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new PhysicsComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
         }

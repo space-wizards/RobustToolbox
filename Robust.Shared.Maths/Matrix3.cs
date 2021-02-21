@@ -1,4 +1,4 @@
-﻿#region --- License ---
+#region --- License ---
 
 /*
 Copyright (c) 2006 - 2008 The Open Toolkit library.
@@ -403,6 +403,23 @@ namespace Robust.Shared.Maths
         public static Matrix3 CreateScale(in Vector2 scale)
         {
             return CreateScale(scale.X, scale.Y);
+        }
+
+        public static Matrix3 CreateTransform(in Vector2 position, in Angle rotation, in Vector2 scale)
+        {
+            var sMat = CreateScale(in scale);
+            var rMat = CreateRotation(rotation);
+            var tMat = CreateTranslation(position);
+
+            return sMat * rMat * tMat;
+        }
+
+        public static Matrix3 CreateTransform(in Vector2 position, in Angle rotation)
+        {
+            var rMat = CreateRotation(rotation);
+            var tMat = CreateTranslation(position);
+
+            return rMat * tMat;
         }
 
         #endregion Constructors

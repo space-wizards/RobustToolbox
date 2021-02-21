@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Player;
-using Robust.Server.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -13,6 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Shared.GameObjects.TransformComponent;
 
 namespace Robust.Server.GameObjects
 {
@@ -139,7 +139,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState>? GetEntityStates(GameTick fromTick)
+        public List<EntityState>? GetEntityStates(GameTick fromTick, IPlayerSession player)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -154,7 +154,7 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick));
+                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick, player));
             }
 
             // no point sending an empty collection
@@ -336,7 +336,7 @@ namespace Robust.Server.GameObjects
             if (playerEnt == null)
             {
                 // super-observer?
-                return GetEntityStates(fromTick);
+                return GetEntityStates(fromTick, player);
             }
 
             var playerUid = playerEnt.Uid;
@@ -390,7 +390,7 @@ namespace Robust.Server.GameObjects
                     }
                 }
 
-                var state = GetEntityState(ComponentManager, uid, fromTick);
+                var state = GetEntityState(ComponentManager, uid, fromTick, player);
 
                 if (checkedEnts.Add(uid))
                 {
@@ -404,14 +404,14 @@ namespace Robust.Server.GameObjects
                         {
                             // mover changed and can't be seen
                             var idx = Array.FindIndex(state.ComponentStates,
-                                x => x is TransformComponent.TransformComponentState);
+                                x => x is TransformComponentState);
 
                             if (idx != -1)
                             {
                                 // mover changed positional data and can't be seen
                                 var oldState =
-                                    (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                                var newState = new TransformComponent.TransformComponentState(Vector2NaN,
+                                    (TransformComponentState) state.ComponentStates[idx];
+                                var newState = new TransformComponentState(Vector2NaN,
                                     oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                                 state.ComponentStates[idx] = newState;
                                 seenMovers.Remove(uid);
@@ -441,7 +441,7 @@ namespace Robust.Server.GameObjects
                     {
                         // mover can't be seen
                         var oldState =
-                            (TransformComponent.TransformComponentState) entity.Transform.GetComponentState();
+                            (TransformComponentState) entity.Transform.GetComponentState(player);
                         entityStates.Add(new EntityState(uid,
                             new ComponentChanged[]
                             {
@@ -449,7 +449,7 @@ namespace Robust.Server.GameObjects
                             },
                             new ComponentState[]
                             {
-                                new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
+                                new TransformComponentState(Vector2NaN, oldState.Rotation,
                                     oldState.ParentID, oldState.NoLocalRotation)
                             }));
 
@@ -517,7 +517,7 @@ namespace Robust.Server.GameObjects
                 }
 
                 // should this be lastSeen or fromTick?
-                var entityState = GetEntityState(ComponentManager, uid, lastSeen);
+                var entityState = GetEntityState(ComponentManager, uid, lastSeen, player);
 
                 checkedEnts.Add(uid);
 
@@ -577,7 +577,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                var state = GetEntityState(ComponentManager, uid, fromTick);
+                var state = GetEntityState(ComponentManager, uid, fromTick, player);
 
                 if (state.ComponentStates == null)
                 {
@@ -591,7 +591,7 @@ namespace Robust.Server.GameObjects
                 seenMovers.Remove(uid);
                 ClearLastSeenTick(lSeen, uid);
 
-                var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
+                var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponentState);
 
                 if (idx == -1)
                 {
@@ -599,9 +599,9 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
+                var oldState = (TransformComponentState) state.ComponentStates[idx];
                 var newState =
-                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
+                    new TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID, oldState.NoLocalRotation);
                 state.ComponentStates[idx] = newState;
 
 
@@ -630,7 +630,7 @@ namespace Robust.Server.GameObjects
                     }
 
                     var entity = GetEntity(uid);
-                    var state = GetEntityState(ComponentManager, uid, fromTick);
+                    var state = GetEntityState(ComponentManager, uid, fromTick, player);
 
                     if (state.ComponentStates == null || viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                     {
@@ -643,7 +643,7 @@ namespace Robust.Server.GameObjects
                     entityStates.Add(state);
 
                     var idx = Array.FindIndex(state.ComponentStates,
-                        x => x is TransformComponent.TransformComponentState);
+                        x => x is TransformComponentState);
 
                     if (idx == -1)
                     {
@@ -651,9 +651,9 @@ namespace Robust.Server.GameObjects
                         continue;
                     }
 
-                    var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
+                    var oldState = (TransformComponentState) state.ComponentStates[idx];
                     var newState =
-                        new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
+                        new TransformComponentState(Vector2NaN, oldState.Rotation,
                             oldState.ParentID, oldState.NoLocalRotation);
                     state.ComponentStates[idx] = newState;
                     seenMovers.Remove(uid);
@@ -881,8 +881,9 @@ namespace Robust.Server.GameObjects
         /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
+        /// <param name="player">The player to generate this state for.</param>
         /// <returns>New entity State for the given entity.</returns>
-        private static EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick)
+        private static EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, IPlayerSession player)
         {
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
@@ -899,7 +900,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
                 if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
-                    compStates.Add(comp.GetComponentState());
+                    compStates.Add(comp.GetComponentState(player));
 
                 if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
                 {

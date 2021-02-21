@@ -1,5 +1,6 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -20,6 +21,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.Register<TestBasicPrototypeComponent>();
+            factory.RegisterClass<PointLightComponent>();
 
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));

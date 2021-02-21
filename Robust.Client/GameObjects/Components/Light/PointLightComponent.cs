@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
@@ -11,8 +11,12 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    public class PointLightComponent : Component
+    [RegisterComponent]
+    [ComponentReference(typeof(IPointLightComponent))]
+    public class PointLightComponent : Component, IPointLightComponent
     {
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
@@ -63,6 +67,21 @@ namespace Robust.Client.GameObjects
         {
             get => _rotation;
             set => _rotation = value;
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// The resource path to the mask texture the light will use.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string? MaskPath
+        {
+            get => _maskPath;
+            set
+            {
+                _maskPath = value;
+                UpdateMask();
+            }
         }
 
         /// <summary>
@@ -117,7 +136,7 @@ namespace Robust.Client.GameObjects
 
         private float _radius = 5;
         private bool _visibleNested = true;
-        private bool _lightOnParent = false;
+        private bool _lightOnParent;
         private Color _color = Color.White;
         private Vector2 _offset;
         private bool _enabled = true;
@@ -125,6 +144,7 @@ namespace Robust.Client.GameObjects
         private Angle _rotation;
         private float _energy;
         private float _softness;
+        private string? _maskPath;
 
         /// <summary>
         ///     Radius, in meters.
@@ -139,6 +159,20 @@ namespace Robust.Client.GameObjects
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedMessage(this));
             }
+        }
+
+        private void UpdateMask()
+        {
+            if (_maskPath is not null)
+                Mask = _resourceCache.GetResource<TextureResource>(_maskPath);
+            else
+                Mask = null;
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            UpdateMask();
         }
 
         /// <inheritdoc />
@@ -180,11 +214,7 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref _softness, "softness", 1f);
             serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
-
-            if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
-            {
-                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
-            }
+            serializer.DataFieldCached(ref _maskPath, "mask", null);
         }
 
         public override void OnRemove()

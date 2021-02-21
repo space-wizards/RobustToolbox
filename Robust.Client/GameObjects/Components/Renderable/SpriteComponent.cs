@@ -941,7 +941,7 @@ namespace Robust.Client.GameObjects
             if (Layers.Count <= layer)
             {
                 Logger.ErrorS(LogCategory,
-                    "Layer with index '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
+                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
                     layer, Environment.StackTrace);
                 return;
             }
@@ -953,7 +953,7 @@ namespace Robust.Client.GameObjects
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
-                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set auto animated! Trace:\n{1}",
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
                     layerKey, Environment.StackTrace);
                 return;
             }

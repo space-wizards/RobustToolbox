@@ -400,21 +400,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var body = Bodies[i];
 
                 /*
-                 * Handle new velocity
-                 */
-
-                var linearVelocity = _linearVelocities[i];
-
-                if (linearVelocity != Vector2.Zero)
-                {
-                    if (body.Owner.IsInContainer())
-                    {
-                        var relayEntityMoveMessage = new RelayMovementEntityMessage(body.Owner);
-                        body.Owner.Transform.Parent!.Owner.SendMessage(body.Owner.Transform, relayEntityMoveMessage);
-                    }
-                }
-
-                /*
                  * Handle new position
                  */
                 var bodyPos = _positions[i];

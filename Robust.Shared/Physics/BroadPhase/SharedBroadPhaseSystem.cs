@@ -331,7 +331,30 @@ namespace Robust.Shared.Physics.Broadphase
         {
             foreach (var (_, grids) in _graph)
             {
-                if (grids.Remove(gridId)) return;
+                if (!grids.TryGetValue(gridId, out var broadPhase)) continue;
+
+                var bodyCleanup = false;
+                var toCleanup = new List<PhysicsComponent>();
+                // Need to cleanup every body that was touching this grid.
+                foreach (var (body, broadPhases) in _lastBroadPhases)
+                {
+                    if (broadPhases.Contains(broadPhase))
+                    {
+                        toCleanup.Add(body);
+                    }
+                }
+
+                foreach (var body in toCleanup)
+                {
+                    RemoveBody(body);
+                }
+
+                grids.Remove(gridId);
+
+                foreach (var body in toCleanup)
+                {
+                    AddBody(body);
+                }
             }
         }
 

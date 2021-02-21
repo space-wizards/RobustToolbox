@@ -27,11 +27,6 @@ namespace Robust.Shared.GameObjects
         Vector2 Momentum { get; set; }
 
         /// <summary>
-        ///     Apply an impulse to an entity. Velocity += impulse / InvMass.
-        /// </summary>
-        void ApplyImpulse(Vector2 impulse);
-
-        /// <summary>
         ///     The current status of the object
         /// </summary>
         BodyStatus Status { get; set; }
@@ -385,11 +380,6 @@ namespace Robust.Shared.GameObjects
         }
 
         private float _angularDamping;
-
-        public void ApplyImpulse(Vector2 impulse)
-        {
-            LinearVelocity += impulse * InvMass;
-        }
 
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.

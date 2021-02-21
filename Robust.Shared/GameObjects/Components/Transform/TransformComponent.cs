@@ -706,7 +706,7 @@ namespace Robust.Shared.GameObjects
         // Hooks for GodotTransformComponent go here.
         protected virtual void SetPosition(Vector2 position)
         {
-            DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
+            // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
             _localPosition = position;
         }
 

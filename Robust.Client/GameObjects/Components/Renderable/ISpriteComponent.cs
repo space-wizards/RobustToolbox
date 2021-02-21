@@ -222,5 +222,6 @@ namespace Robust.Client.GameObjects
         ISpriteLayer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
+        int GetLayerDirectionCount(ISpriteLayer layer);
     }
 }

@@ -96,6 +96,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 
             control.AddChild(child);
             control.InvalidateArrange();
+            control.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(new Vector2(10, 10)));
             Assert.That(child.Size, Is.EqualTo(new Vector2(80, 80)));
@@ -105,19 +106,21 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestGrowEnd()
         {
-            var parent = new LayoutContainer {Size = (50, 50)};
-            var child = new Control();
+            var parent = new LayoutContainer();
+            var child = new Control {SetSize = (100, 100)};
+
+            LayoutContainer.SetAnchorRight(child, 1);
+
             parent.AddChild(child);
-            parent.Arrange(new UIBox2(0, 0, 50, 50));
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             // Child should be at 0,0.
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
 
-            // Making the child have a bigger minimum size should grow it to the bottom size.
-            // i.e. size should change, position should not.
-            child.MinSize = (100, 100);
+            // Right margin should make the child not have enough space and grow left.
+            LayoutContainer.SetMarginRight(child, -100);
             parent.InvalidateArrange();
-            parent.Arrange(new UIBox2(0, 0, 50, 50));
+            parent.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(child.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(child.Size, Is.EqualTo(new Vector2(100, 100)));

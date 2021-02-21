@@ -5,6 +5,7 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -432,7 +433,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional,
                 BaseRSIPath, Layers, RenderOrder);

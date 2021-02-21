@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -42,8 +43,9 @@ namespace Robust.Shared.GameObjects
             _mapIndex = MapId.Nullspace;
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MapComponentState(_mapIndex);
         }

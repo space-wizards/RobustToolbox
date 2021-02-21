@@ -38,6 +38,7 @@ namespace Robust.Shared
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IMapManagerInternal, MapManager>();
+            IoCManager.Register<IPauseManager, PauseManager>();
             IoCManager.Register<IModLoader, ModLoader>();
             IoCManager.Register<IModLoaderInternal, ModLoader>();
             IoCManager.Register<INetManager, NetManager>();

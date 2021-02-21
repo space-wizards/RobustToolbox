@@ -694,8 +694,7 @@ namespace Robust.Shared.GameObjects
                 foreach (var (gridId, proxies) in fixture.Proxies)
                 {
                     var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-                    DebugTools.AssertNotNull(broadPhase);
-                    if (broadPhase == null) continue; // TODO
+                    if (broadPhase == null) continue;
 
                     foreach (var proxy in proxies)
                     {

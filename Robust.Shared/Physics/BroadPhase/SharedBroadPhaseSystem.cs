@@ -53,6 +53,12 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
+        /// <summary>
+        ///     Gets the corresponding broadphase for this grid.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="gridId"></param>
+        /// <returns>null if broadphase already destroyed or none exists</returns>
         public IBroadPhase? GetBroadPhase(MapId mapId, GridId gridId)
         {
             // Might be null if the grid is being instantiated.
@@ -224,7 +230,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage message)
         {
-            if (message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
+            if (!message.Entity.Deleted && message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
             {
                 physicsComponent.CanCollide = true;
                 physicsComponent.Awake = true;

@@ -257,7 +257,7 @@ namespace Robust.Shared.Serialization.Manager
             var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
             if(commonType == null)
             {
-                throw new InvalidOperationException("Could not find common type in PushInheritance!");
+                throw new InvalidOperationException("Could not find common type in Copy!");
             }
 
             if (_copyByRefRegistrations.Contains(commonType))
@@ -288,33 +288,6 @@ namespace Robust.Shared.Serialization.Manager
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target);
-        }
-
-        public object PushInheritance(object source, object target)
-        {
-            if (target.GetType().IsPrimitive || source.GetType().IsPrimitive) throw new InvalidOperationException();
-
-            var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
-            if(commonType == null)
-            {
-                throw new InvalidOperationException("Could not find common type in PushInheritance!");
-            }
-
-            SerializationDataDefinition? dataDefinition = null;
-            while (commonType != null && !TryGetDataDefinition(commonType, out dataDefinition))
-            {
-                commonType = commonType.BaseType;
-            }
-
-            if (dataDefinition == null)
-            {
-                Logger.Warning($"Could not find datadefinition for type {target.GetType()} when pushing inheritance");
-                return source;
-            }
-
-            target = dataDefinition.InvokePushInheritanceDelegate(source, target, this);
-
-            return target;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

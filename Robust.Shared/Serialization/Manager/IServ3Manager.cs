@@ -20,7 +20,6 @@ namespace Robust.Shared.Serialization.Manager
 
         object? Copy(object? source, object? target);
         object? CreateCopy(object? source);
-        object PushInheritance(object source, object target);
         #endregion
 
         #region Flags And Constants

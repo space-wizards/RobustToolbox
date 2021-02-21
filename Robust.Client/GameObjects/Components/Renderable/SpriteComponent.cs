@@ -2073,7 +2073,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    comp = (T)serv3Manager.PushInheritance(node, comp);
+                    comp = (T)serv3Manager.Copy(node, comp)!;
                 }
 
                 return comp;

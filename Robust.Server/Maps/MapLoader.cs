@@ -767,16 +767,11 @@ namespace Robust.Server.Maps
                 var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
-                IComponent data = (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
+                IComponent data = protoData != null ? (IComponent)serv3Mgr.CreateCopy(protoData)! : (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
                     data = (IComponent)serv3Mgr.ReadValue(factory.GetRegistration(componentName).Type, mapping.ToDataNode(), this);
-                }
-
-                if (protoData != null)
-                {
-                    data = (IComponent)serv3Mgr.PushInheritance(protoData, data)!;
                 }
 
                 return data;

@@ -18,8 +18,6 @@ namespace Robust.Shared.Serialization.Manager
 
         private delegate MappingDataNode SerializeDelegateSignature(object obj, IServ3Manager serv3Manager,
             ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
-        private delegate object PushInheritanceDelegateSignature(object source, object target,
-            IServ3Manager serv3Manager, object?[] defaultValues);
         public delegate object CopyDelegateSignature(object source, object target,
             IServ3Manager serv3Manager);
 
@@ -32,7 +30,6 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly SerializeDelegateSignature _serializeDelegate;
 
-        private readonly PushInheritanceDelegateSignature _pushInheritanceDelegate;
 
         public readonly CopyDelegateSignature _copyDelegate;
 
@@ -42,10 +39,6 @@ namespace Robust.Shared.Serialization.Manager
 
         public MappingDataNode InvokeSerializeDelegate(object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite) =>
             _serializeDelegate(obj, serv3Manager, context, alwaysWrite, _defaultValues);
-
-        public object InvokePushInheritanceDelegate(object source, object target,
-            IServ3Manager serv3Manager) =>
-            _pushInheritanceDelegate(source, target, serv3Manager, _defaultValues);
 
         public object InvokeCopyDelegate(object source, object target, IServ3Manager serv3Manager) =>
             _copyDelegate(source, target, serv3Manager);
@@ -92,7 +85,6 @@ namespace Robust.Shared.Serialization.Manager
 
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
-            _pushInheritanceDelegate = EmitPushInheritanceDelegate();
             _copyDelegate = EmitCopyDelegate();
         }
 
@@ -154,32 +146,6 @@ namespace Robust.Shared.Serialization.Manager
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<SerializeDelegateSignature>();
-        }
-
-        private PushInheritanceDelegateSignature EmitPushInheritanceDelegate()
-        {
-            var dynamicMethod = new DynamicMethod(
-                $"_serializeDelegate<>{Type}",
-                typeof(object),
-                new[] {typeof(object), typeof(object), typeof(IServ3Manager), typeof(object?[])},
-                Type,
-                true);
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetRobustGen();
-
-            for (var i = 0; i < _baseFieldDefinitions.Length; i++)
-            {
-                var fieldDefinition = _baseFieldDefinitions[i];
-                generator.EmitPushInheritanceField(fieldDefinition, i);
-            }
-
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Ret);
-
-            return dynamicMethod.CreateDelegate<PushInheritanceDelegateSignature>();
         }
 
         private CopyDelegateSignature EmitCopyDelegate()

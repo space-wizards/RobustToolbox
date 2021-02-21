@@ -254,6 +254,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        //todo paul remove
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
             var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
@@ -263,7 +264,8 @@ namespace Robust.Shared.Prototypes
                 if (target.Components.TryGetValue(type, out var targetComponent))
                 {
                     // Copy over values the target component does not have.
-                    serv3Mgr.PushInheritance(component, targetComponent);
+                    //todo paul
+                    targetComponent = (IComponent)serv3Mgr.Copy(component, targetComponent)!;
                 }
                 else
                 {
@@ -288,7 +290,7 @@ namespace Robust.Shared.Prototypes
                 next: ;
             }
 
-            target.PlacementProperties = (EntityPlacementProperties) serv3Mgr.PushInheritance(source.PlacementProperties, target.PlacementProperties);
+            target.PlacementProperties = (EntityPlacementProperties) serv3Mgr.Copy(source.PlacementProperties, target.PlacementProperties)!;
             //target.PlacementProperties = (EntityPlacementProperties)serv3Mgr.CreateCopy(source.PlacementProperties);
             // Copy all simple data over.
             /*if (!target._placementOverriden)
@@ -401,7 +403,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IServ3Manager>().PushInheritance(data, component);
+            IoCManager.Resolve<IServ3Manager>().Copy(data, component);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)

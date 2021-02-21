@@ -229,33 +229,6 @@ public readonly bool ServerOnly;
             generator.MarkLabel(endLabel);
         }
 
-        public static void EmitPushInheritanceField(this RobustILGenerator generator,
-            SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
-        {
-            var endLabel = generator.DefineLabel();
-            var isDefaultValue = generator.DefineLabel();
-
-            //load targetvalue
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.EmitLdfld(fieldDefinition.FieldInfo);
-            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
-                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
-
-            //load defaultValue
-            generator.Emit(OpCodes.Ldarg_3);
-            generator.Emit(OpCodes.Ldc_I4, defaultValueIdx);
-            generator.Emit(OpCodes.Ldelem, fieldDefinition.FieldType);
-            if(!fieldDefinition.FieldType.IsPrimitive && fieldDefinition.FieldType.IsValueType)
-                generator.Emit(OpCodes.Box, fieldDefinition.FieldType);
-            generator.EmitEquals(fieldDefinition.FieldType, isDefaultValue);
-            generator.Emit(OpCodes.Br, endLabel);
-            generator.MarkLabel(isDefaultValue);
-
-            //copy if not default
-            generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
-            generator.MarkLabel(endLabel);
-        }
-
         public static void EmitCopy(this RobustILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
             AbstractFieldInfo toField, int mgrArg, bool assumeValueNotNull = false)
         {

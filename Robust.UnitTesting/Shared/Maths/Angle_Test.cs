@@ -125,15 +125,6 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        [Sequential]
-        public void TestAngleToDirection([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
-        {
-            var target = new Angle(test.Item4);
-
-            Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
-        }
-
-        [Test]
         [TestCase(MathHelper.PiOver2, ExpectedResult = Direction.East)]
         [TestCase(0, ExpectedResult = Direction.South)]
         [TestCase(-MathHelper.PiOver2, ExpectedResult = Direction.West)]

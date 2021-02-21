@@ -45,7 +45,7 @@ namespace Robust.Shared.Maths
 
         public static Angle FromWorldVec(Vector2 dir)
         {
-            return new Angle(dir) + MathHelper.PiOver2;
+            return new Angle(dir) + Math.PI / 2;
         }
 
         /// <summary>

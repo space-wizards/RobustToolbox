@@ -1090,7 +1090,7 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
+            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
             var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
 

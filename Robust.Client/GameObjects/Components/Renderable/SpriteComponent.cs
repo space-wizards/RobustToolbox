@@ -219,6 +219,11 @@ namespace Robust.Client.GameObjects
             RenderOrder = other.RenderOrder;
         }
 
+        public Matrix3 GetLocalMatrix()
+        {
+            return Matrix3.CreateTransform(in offset, in rotation, in scale);
+        }
+
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
         {
@@ -971,7 +976,7 @@ namespace Robust.Client.GameObjects
         {
             RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
         }
-        
+
         private bool _screenLock = false;
         private Direction _overrideDirection = Direction.South;
         private bool _enableOverrideDirection = false;
@@ -1019,8 +1024,8 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            var localMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
-            
+            var localMatrix = GetLocalMatrix();
+
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1068,11 +1073,11 @@ namespace Robust.Client.GameObjects
             var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
             var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
-            
+
             // TODO: Implement layer-specific rotation and scale.
             // Apply these directly to the box.
             // Oh and when you do update Layer.LocalToLayer so content doesn't break.
-            
+
             // handle.Modulate changes the color
             // drawingHandle.SetTransform() is set above, turning the quad into local space vertices
             drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
@@ -1082,7 +1087,7 @@ namespace Robust.Client.GameObjects
                 drawingHandle.UseShader(null);
             }
         }
-        
+
         private static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
@@ -1121,7 +1126,7 @@ namespace Robust.Client.GameObjects
                 {
                     state = GetFallbackState(resourceCache);
                 }
-                
+
                 var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
                 texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
             }

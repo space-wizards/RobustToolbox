@@ -26,14 +26,6 @@ namespace Robust.UnitTesting.Shared.Maths
             (0.92387953251128674f, -0.38268343236508978f, Direction.East, -System.Math.PI / 8.0)
         };
 
-        private static IEnumerable<(float, float, Direction)> CardinalSources => new(float, float, Direction)[]
-        {
-            (1, 0, Direction.East),
-            (0, 1, Direction.North),
-            (-1, 0, Direction.West),
-            (0, -1, Direction.South),
-        };
-
         [Test]
         public void TestAngleZero()
         {
@@ -142,12 +134,13 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        [Sequential]
-        public void TestAngleToCardinal([ValueSource(nameof(CardinalSources))] (float, float, Direction) test)
+        [TestCase(MathHelper.PiOver2, ExpectedResult = Direction.East)]
+        [TestCase(0, ExpectedResult = Direction.South)]
+        [TestCase(-MathHelper.PiOver2, ExpectedResult = Direction.West)]
+        [TestCase(Math.PI, ExpectedResult = Direction.North)]
+        public Direction TestAngleToCardinal(double angle)
         {
-            var target = new Vector2(test.Item1, test.Item2).ToAngle();
-
-            Assert.That(target.GetCardinalDir(), Is.EqualTo(test.Item3));
+            return new Angle(angle).GetCardinalDir();
         }
 
         [Test]

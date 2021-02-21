@@ -6,14 +6,14 @@ namespace Robust.Shared.Maths
     public enum Direction : sbyte
     {
         Invalid = -1,
-        East = 0,
-        NorthEast = 1,
-        North = 2,
-        NorthWest = 3,
-        West = 4,
-        SouthWest = 5,
-        South = 6,
-        SouthEast = 7,
+        South = 0,
+        SouthEast = 1,
+        East = 2,
+        NorthEast = 3,
+        North = 4,
+        NorthWest = 5,
+        West = 6,
+        SouthWest = 7,
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static Direction GetDir(this Vector2 vec)
         {
-            return vec.ToAngle().GetDir();
+            return Angle.FromWorldVec(vec).GetDir();
         }
 
         /// <summary>

@@ -43,15 +43,30 @@ namespace Robust.Shared.Maths
             Theta = Math.Atan2(dir.Y, dir.X);
         }
 
+        public static Angle FromWorldVec(Vector2 dir)
+        {
+            return new Angle(dir) + MathHelper.PiOver2;
+        }
+
         /// <summary>
         ///     Converts this angle to a unit direction vector.
         /// </summary>
+        /// <remarks>
+        ///     This is in "normal" cartesian trigonometry, with an angle of zero being (1, 0).
+        ///     Use <see cref="ToWorldVec"/> for in-world calculations
+        ///     where an angle of zero is usually considered "south" (0, -1).
+        /// </remarks>
         /// <returns>Unit Direction Vector</returns>
         public Vector2 ToVec()
         {
             var x = Math.Cos(Theta);
             var y = Math.Sin(Theta);
             return new Vector2((float) x, (float) y);
+        }
+
+        public Vector2 ToWorldVec()
+        {
+            return (this - MathHelper.PiOver2).ToVec();
         }
 
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
@@ -260,7 +275,7 @@ namespace Robust.Shared.Maths
 
         public static Angle operator +(Angle a, Angle b)
             => new(a.Theta + b.Theta);
-        
+
         public static Angle operator -(Angle a, Angle b)
             => new(a.Theta - b.Theta);
 

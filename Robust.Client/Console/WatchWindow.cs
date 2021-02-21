@@ -20,8 +20,6 @@ namespace Robust.Client.Console
     {
         private readonly IReflectionManager _reflectionManager;
 
-        protected override Vector2? CustomSize => (300, 300);
-
         private readonly VBoxContainer _watchesVBox;
         private readonly LineEdit _addWatchEdit;
         private readonly Button _addWatchButton;
@@ -37,12 +35,12 @@ namespace Robust.Client.Console
 
             var mainVBox = new VBoxContainer
             {
-                CustomMinimumSize = (500, 300),
+                MinSize = (500, 300),
                 Children =
                 {
                     (_watchesVBox = new VBoxContainer
                     {
-                        SizeFlagsVertical = SizeFlags.FillExpand
+                        VerticalExpand = true
                     }),
                     new HBoxContainer
                     {
@@ -50,7 +48,7 @@ namespace Robust.Client.Console
                         {
                             (_addWatchEdit = new HistoryLineEdit
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 PlaceHolder = Loc.GetString("Add watch (C# interactive)")
                             }),
                             (_addWatchButton = new Button
@@ -66,6 +64,8 @@ namespace Robust.Client.Console
             _addWatchEdit.OnTextEntered += _ => AddWatch();
 
             Contents.AddChild(mainVBox);
+
+            SetSize = (300, 300);
         }
 
         private void AddWatch()
@@ -113,7 +113,7 @@ namespace Robust.Client.Console
                     {
                         (_outputLabel = new Label
                         {
-                            SizeFlagsHorizontal = SizeFlags.FillExpand,
+                            HorizontalExpand = true,
                             ClipText = true
                         }),
                         (delButton = new Button
@@ -176,7 +176,7 @@ namespace Robust.Client.Console
                         {
                             Text = message,
                             ClipText = true,
-                            SizeFlagsHorizontal = SizeFlags.FillExpand
+                            HorizontalExpand = true
                         },
                         (delButton = new Button {Text = Loc.GetString("Remove")})
                     }

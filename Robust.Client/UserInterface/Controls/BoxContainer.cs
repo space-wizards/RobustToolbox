@@ -35,8 +35,60 @@ namespace Robust.Client.UserInterface.Controls
 
         public int? SeparationOverride { get; set; }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
+            var separation = ActualSeparation;
+
+            var minSize = Vector2.Zero;
+            var first = true;
+
+            foreach (var child in Children)
+            {
+                if (!child.Visible)
+                {
+                    continue;
+                }
+
+                child.Measure(availableSize);
+
+                var childSize = child.DesiredSize;
+                if (Vertical)
+                {
+                    var taken = childSize.Y;
+                    if (!first)
+                    {
+                        taken += separation;
+                    }
+
+                    minSize.Y += taken;
+                    availableSize.Y = Math.Max(0, availableSize.Y - taken);
+
+                    first = false;
+                    minSize.X = Math.Max(minSize.X, childSize.X);
+                }
+                else
+                {
+                    var taken = childSize.X;
+                    if (!first)
+                    {
+                        taken += separation;
+                    }
+
+                    minSize.X += taken;
+                    availableSize.X = Math.Max(0, availableSize.X - taken);
+
+                    first = false;
+
+                    minSize.Y = Math.Max(minSize.Y, childSize.Y);
+                }
+            }
+
+            return minSize;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            var finalPixel = (Vector2i) (finalSize * UIScale);
             var separation = (int) (ActualSeparation * UIScale);
 
             // Step one: figure out the sizes of all our children and whether they want to stretch.
@@ -51,19 +103,20 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     continue;
                 }
-                var (minX, minY) = child.CombinedPixelMinimumSize;
+
+                var (minX, minY) = child.DesiredPixelSize;
                 int minSize;
                 bool stretch;
 
                 if (Vertical)
                 {
                     minSize = minY;
-                    stretch = (child.SizeFlagsVertical & SizeFlags.Expand) == SizeFlags.Expand;
+                    stretch = child.VerticalExpand;
                 }
                 else
                 {
                     minSize = minX;
-                    stretch = (child.SizeFlagsHorizontal & SizeFlags.Expand) == SizeFlags.Expand;
+                    stretch = child.HorizontalExpand;
                 }
 
                 if (!stretch)
@@ -78,7 +131,7 @@ namespace Robust.Client.UserInterface.Controls
                 sizeList.Add((child, minSize, minSize, stretch));
             }
 
-            var stretchMax = Vertical ? PixelHeight : PixelWidth;
+            var stretchMax = Vertical ? finalPixel.Y : finalPixel.X;
 
             stretchMax -= separation * (ChildCount - 1);
             // This is the amount of space allocated for stretchable children.
@@ -152,62 +205,19 @@ namespace Robust.Client.UserInterface.Controls
                 UIBox2i targetBox;
                 if (Vertical)
                 {
-                    targetBox = new UIBox2i(0, offset, PixelWidth, offset+size);
+                    targetBox = new UIBox2i(0, offset, finalPixel.X, offset + size);
                 }
                 else
                 {
-                    targetBox = new UIBox2i(offset, 0, offset+size, PixelHeight);
+                    targetBox = new UIBox2i(offset, 0, offset + size, finalPixel.Y);
                 }
 
-                FitChildInPixelBox(control, targetBox);
+                control.ArrangePixel(targetBox);
 
                 offset += size;
             }
-        }
 
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var separation = ActualSeparation;
-
-            var minWidth = 0f;
-            var minHeight = 0f;
-            var first = true;
-
-            foreach (var child in Children)
-            {
-                if (!child.Visible)
-                {
-                    continue;
-                }
-
-                var (childWidth, childHeight) = child.CombinedMinimumSize;
-                if (Vertical)
-                {
-                    minHeight += childHeight;
-                    if (!first)
-                    {
-                        minHeight += separation;
-                    }
-
-                    first = false;
-
-                    minWidth = MathF.Max(minWidth, childWidth);
-                }
-                else
-                {
-                    minWidth += childWidth;
-                    if (!first)
-                    {
-                        minWidth += separation;
-                    }
-
-                    first = false;
-
-                    minHeight = MathF.Max(minHeight, childHeight);
-                }
-            }
-
-            return new Vector2(minWidth, minHeight);
+            return finalSize;
         }
 
         public enum AlignMode : byte

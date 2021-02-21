@@ -66,8 +66,8 @@ namespace Robust.Client.ViewVariables.Instances
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new VBoxContainer
             {
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
-                SizeFlagsVertical = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
+                VerticalExpand = true,
             };
             scrollContainer.AddChild(vBoxContainer);
 
@@ -75,7 +75,7 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 var headBox = new HBoxContainer();
                 var name = MakeTopBar(top, bottom);
-                name.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;
+                name.HorizontalExpand = true;
                 headBox.AddChild(name);
 
                 _refreshButton = new Button {Text = "Refresh", ToolTip = "RMB to toggle auto-refresh."};

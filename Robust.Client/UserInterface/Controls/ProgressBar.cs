@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _backgroundStyleBoxOverride = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _foregroundStyleBoxOverride = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var bgSize = _getBackground()?.MinimumSize ?? Vector2.Zero;
             var fgSize = _getForeground()?.MinimumSize ?? Vector2.Zero;

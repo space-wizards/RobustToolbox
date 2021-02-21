@@ -41,6 +41,8 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static readonly Vector2 UnitY = new(0, 1);
 
+        public static readonly Vector2 Infinity = new(float.PositiveInfinity, float.PositiveInfinity);
+
         /// <summary>
         ///     Construct a vector from its coordinates.
         /// </summary>

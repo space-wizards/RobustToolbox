@@ -11,6 +11,9 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
+        // TODO: When a static body has no contacts left need to set it to sleep as otherwise it'll just show as awake
+        // for debug drawing (map never adds static bodies as awake so should be no problem there).
+
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
         internal MapId MapId { get; set; }

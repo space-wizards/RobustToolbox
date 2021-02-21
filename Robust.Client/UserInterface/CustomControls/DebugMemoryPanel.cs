@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public DebugMemoryPanel()
         {
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
 
             AddChild(_label = new Label());
 

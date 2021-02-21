@@ -29,9 +29,9 @@ namespace Robust.Build.Tasks
         public static Parser<char, float[]> Thickness { get; }
             = SkipWhitespaces.Then(
                 OneOf(
-                    Try(Single1.Select(c => new[] {c})),
+                    Try(Single4.Select(c => new[] {c.Item1, c.Item2, c.Item3, c.Item4})),
                     Try(Single2.Select(c => new[] {c.Item1, c.Item2})),
-                    Try(Single4.Select(c => new[] {c.Item1, c.Item2, c.Item3, c.Item4}))
+                    Try(Single1.Select(c => new[] {c}))
                 ));
     }
 }

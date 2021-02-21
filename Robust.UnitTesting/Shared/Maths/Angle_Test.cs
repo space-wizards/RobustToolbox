@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Robust.Shared.Maths;
 using NUnit.Framework;
 
@@ -158,6 +159,22 @@ namespace Robust.UnitTesting.Shared.Maths
             var result = angle.RotateVec(vec);
 
             Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f)));
+        }
+
+        [TestCase(0, 4, ExpectedResult = 0f)]
+        [TestCase(30, 4, ExpectedResult = 30f)]
+        [TestCase(45, 4, ExpectedResult = -45f)]
+        [TestCase(90, 4, ExpectedResult = 0f)]
+        [TestCase(120, 4, ExpectedResult = 30f)]
+        [TestCase(135, 4, ExpectedResult = -45f)]
+        public float UnwindClamp(float theta, int divisions)
+        {
+            var segSize = 360f / (divisions * 2);
+            var segments = (int)(theta / segSize);
+            var odd = segments % 2;
+            var result = theta - (segments * segSize) - (odd * segSize);
+
+            return result;
         }
     }
 }

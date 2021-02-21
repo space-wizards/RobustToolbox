@@ -481,6 +481,8 @@ namespace Robust.Client.Console.Commands
             {
                 _writeNode(root, 0, writer);
             }
+
+            shell.WriteLine("Saved guidump");
         }
 
         private static void _writeNode(Control control, int indents, TextWriter writer)
@@ -542,7 +544,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new SS14Window { CustomMinimumSize = (500, 400)};
+            var window = new SS14Window { MinSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
@@ -562,7 +564,7 @@ namespace Robust.Client.Console.Commands
             optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
             vBox.AddChild(optionButton);
 
-            var tree = new Tree { SizeFlagsVertical = Control.SizeFlags.FillExpand };
+            var tree = new Tree { VerticalExpand = true };
             var root = tree.CreateItem();
             root.Text = "Honk!";
             var child = tree.CreateItem();
@@ -599,7 +601,7 @@ namespace Robust.Client.Console.Commands
                 {
                     grid.AddChild(new Button
                     {
-                        CustomMinimumSize = (50, 50),
+                        MinSize = (50, 50),
                         Text = $"{x}, {y}"
                     });
                 }
@@ -628,6 +630,29 @@ namespace Robust.Client.Console.Commands
                 Children =
                 {
                     new Slider()
+                }
+            });
+
+            tabContainer.AddChild(new HSplitContainer
+            {
+                Children =
+                {
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Blue},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
                 }
             });
 

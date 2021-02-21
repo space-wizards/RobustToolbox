@@ -477,10 +477,20 @@ namespace Robust.Client.Graphics.Clyde
             _currentMatrixView = view;
         }
 
+        /// <summary>
+        /// Draws a texture quad to the screen.
+        /// </summary>
+        /// <param name="texture">Texture to draw.</param>
+        /// <param name="bl">Bottom left vertex of the quad in object space.</param>
+        /// <param name="br">Bottom right vertex of the quad in object space.</param>
+        /// <param name="tl">Top left vertex of the quad in object space.</param>
+        /// <param name="tr">Top right vertex of the quad in object space.</param>
+        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <param name="texCoords">The four corners of the texture coordinates, matching the four vertices.</param>
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
-            in Box2 sr)
+            in Box2 texCoords)
         {
-            EnsureBatchState(texture, modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
+            EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
@@ -489,10 +499,10 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, sr.TopRight);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, sr.TopLeft);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 

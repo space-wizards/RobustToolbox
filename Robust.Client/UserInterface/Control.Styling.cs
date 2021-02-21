@@ -233,7 +233,7 @@ namespace Robust.Client.UserInterface
 
         protected virtual void StylePropertiesChanged()
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         public void ForceRunStyleUpdate()

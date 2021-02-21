@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = (string) value!,
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
 
             if (!ReadOnly)

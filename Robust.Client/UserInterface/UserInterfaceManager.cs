@@ -21,7 +21,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
+    internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
@@ -172,11 +172,6 @@ namespace Robust.Client.UserInterface
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
-        }
-
-        public void Dispose()
-        {
-            RootControl?.Dispose();
         }
 
         public void Update(FrameEventArgs args)

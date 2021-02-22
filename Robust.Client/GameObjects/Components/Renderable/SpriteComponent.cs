@@ -198,6 +198,9 @@ namespace Robust.Client.GameObjects
             rotation = other.rotation;
             scale = other.scale;
             drawDepth = other.drawDepth;
+            _screenLock = other._screenLock;
+            _overrideDirection = other._overrideDirection;
+            _enableOverrideDirection = other._enableOverrideDirection;
             Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
@@ -217,6 +220,11 @@ namespace Robust.Client.GameObjects
             }
 
             RenderOrder = other.RenderOrder;
+        }
+
+        public Matrix3 GetLocalMatrix()
+        {
+            return Matrix3.CreateTransform(in offset, in rotation, in scale);
         }
 
         /// <inheritdoc />
@@ -1044,7 +1052,7 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            var localMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
+            var localMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
             {
@@ -1053,23 +1061,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var dirType = GetLayerDirectionType(layer);
-
-                int numDirs;
-                switch (dirType)
-                {
-                    case RSI.State.DirectionType.Dir1:
-                        numDirs = 1;
-                        break;
-                    case RSI.State.DirectionType.Dir4:
-                        numDirs = 4;
-                        break;
-                    case RSI.State.DirectionType.Dir8:
-                        numDirs = 8;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                var numDirs = GetLayerDirectionCount(layer);
 
                 CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
@@ -1108,7 +1100,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
+        public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
             var segSize = (MathF.PI*2) / (numDirections * 2);
@@ -1119,19 +1111,25 @@ namespace Robust.Client.GameObjects
             return result;
         }
 
-        private RSI.State.DirectionType GetLayerDirectionType(Layer layer)
+        public int GetLayerDirectionCount(ISpriteLayer layer)
         {
-            if (!layer.State.IsValid)
-                return RSI.State.DirectionType.Dir1;
+            if (!layer.RsiState.IsValid)
+                return 1;
 
             // Pull texture from RSI state instead.
-            var rsi = layer.RSI ?? BaseRSI;
-            if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+            var rsi = layer.Rsi ?? BaseRSI;
+            if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
             {
                 state = GetFallbackState(resourceCache);
             }
 
-            return state.Directions;
+            return state.Directions switch
+            {
+                RSI.State.DirectionType.Dir1 => 1,
+                RSI.State.DirectionType.Dir4 => 4,
+                RSI.State.DirectionType.Dir8 => 8,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)

@@ -41,12 +41,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         bool Anchored { get; set; }
 
-        [Obsolete("Use AnchoredChangedMessage instead")]
-        event Action? AnchoredChanged;
-
         bool Predict { get; set; }
-
-        protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
 
         /// <summary>
         ///     Adds a controller of type <see cref="T"/> to this component, throwing
@@ -530,12 +525,6 @@ namespace Robust.Shared.GameObjects
             {
                 yield return entity;
             }
-        }
-
-        Dictionary<Type, VirtualController> IPhysicsComponent.Controllers
-        {
-            get => _controllers;
-            set => _controllers = value;
         }
 
         /// <summary>

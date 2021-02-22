@@ -6,13 +6,13 @@ using Robust.Shared.Utility;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    [TestOf(typeof(AetherManifold))]
+    [TestOf(typeof(Manifold))]
     public class Manifold_Test
     {
         [Test]
         public void TestCopy()
         {
-            var oldManifold = new AetherManifold
+            var oldManifold = new Manifold
             {
                 LocalNormal = Vector2.One,
                 LocalPoint = Vector2.One,

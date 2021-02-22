@@ -1,3 +1,41 @@
+/*
+Microsoft Permissive License (Ms-PL)
+
+This license governs use of the accompanying software. If you use the software, you accept this license.
+If you do not accept the license, do not use the software.
+
+1. Definitions
+The terms "reproduce," "reproduction," "derivative works," and "distribution" have the same meaning here as under
+U.S. copyright law.
+A "contribution" is the original software, or any additions or changes to the software.
+A "contributor" is any person that distributes its contribution under this license.
+"Licensed patents" are a contributor's patent claims that read directly on its contribution.
+
+2. Grant of Rights
+(A) Copyright Grant- Subject to the terms of this license, including the license conditions and limitations in section 3,
+each contributor grants you a non-exclusive, worldwide, royalty-free copyright license to reproduce its contribution,
+prepare derivative works of its contribution, and distribute its contribution or any derivative works that you create.
+(B) Patent Grant- Subject to the terms of this license, including the license conditions and limitations in section 3,
+each contributor grants you a non-exclusive, worldwide, royalty-free license under its licensed patents to
+make, have made, use, sell, offer for sale, import, and/or otherwise dispose of its contribution in the software or
+derivative works of the contribution in the software.
+
+3. Conditions and Limitations
+(A) No Trademark License- This license does not grant you rights to use any contributors' name, logo, or trademarks.
+(B) If you bring a patent claim against any contributor over patents that you claim are infringed by the software,
+your patent license from such contributor to the software ends automatically.
+(C) If you distribute any portion of the software, you must retain all copyright, patent, trademark,
+and attribution notices that are present in the software.
+(D) If you distribute any portion of the software in source code form, you may do so only under this license by
+including a complete copy of this license with your distribution.
+If you distribute any portion of the software in compiled or object code form, you may only do so under a license that
+complies with this license.
+(E) The software is licensed "as-is." You bear the risk of using it. The contributors give no express warranties, guarantees or conditions.
+You may have additional consumer rights under your local laws which this license cannot change.
+To the extent permitted under your local laws, the contributors exclude the implied warranties of
+merchantability, fitness for a particular purpose and non-infringement.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,19 +52,19 @@ namespace Robust.Shared.Physics.Collision
         bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
 
-        void CollideCircles(ref AetherManifold manifold, PhysShapeCircle circleA, in Transform xfA,
+        void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB);
 
-        void CollideEdgeAndCircle(ref AetherManifold manifold, EdgeShape edgeA, in Transform transformA,
+        void CollideEdgeAndCircle(ref Manifold manifold, EdgeShape edgeA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB);
 
-        void CollideEdgeAndPolygon(ref AetherManifold manifold, EdgeShape edgeA, in Transform xfA,
+        void CollideEdgeAndPolygon(ref Manifold manifold, EdgeShape edgeA, in Transform xfA,
             PolygonShape polygonB, in Transform xfB);
 
-        void CollidePolygonAndCircle(ref AetherManifold manifold, PolygonShape polygonA, in Transform xfA,
+        void CollidePolygonAndCircle(ref Manifold manifold, PolygonShape polygonA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB);
 
-        void CollidePolygons(ref AetherManifold manifold, PolygonShape polyA, in Transform transformA,
+        void CollidePolygons(ref Manifold manifold, PolygonShape polyA, in Transform transformA,
             PolygonShape polyB, in Transform transformB);
     }
 
@@ -74,7 +112,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="state2"></param>
         /// <param name="manifold1"></param>
         /// <param name="manifold2"></param>
-        public static void GetPointStates(out PointState[] state1, out PointState[] state2, AetherManifold manifold1, AetherManifold manifold2)
+        public static void GetPointStates(out PointState[] state1, out PointState[] state2, Manifold manifold1, Manifold manifold2)
         {
             state1 = new PointState[2];
             state2 = new PointState[2];
@@ -123,7 +161,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="transformA">The transform A.</param>
         /// <param name="circleB">The circle B.</param>
         /// <param name="transformB">The transform B.</param>
-        public void CollideEdgeAndCircle(ref AetherManifold manifold, EdgeShape edgeA, in Transform transformA,
+        public void CollideEdgeAndCircle(ref Manifold manifold, EdgeShape edgeA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB)
         {
             manifold.PointCount = 0;
@@ -266,7 +304,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.Points[0] = mp2;
         }
 
-        public void CollideCircles(ref AetherManifold manifold, PhysShapeCircle circleA, in Transform xfA,
+        public void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
             PhysShapeCircle circleB,
             in Transform xfB)
         {
@@ -305,7 +343,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The xf A.</param>
         /// <param name="polygonB">The polygon B.</param>
         /// <param name="xfB">The xf B.</param>
-        public void CollideEdgeAndPolygon(ref AetherManifold manifold, EdgeShape edgeA, in Transform xfA,
+        public void CollideEdgeAndPolygon(ref Manifold manifold, EdgeShape edgeA, in Transform xfA,
             PolygonShape polygonB,
             in Transform xfB)
         {
@@ -326,7 +364,7 @@ namespace Robust.Shared.Physics.Collision
             float _radius;
             bool _front;
 
-            public void Collide(ref AetherManifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
+            public void Collide(ref Manifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
                 in Transform xfB)
             {
                 // Algorithm:
@@ -822,7 +860,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform of A.</param>
         /// <param name="circleB">The circle B.</param>
         /// <param name="xfB">The transform of B.</param>
-        public void CollidePolygonAndCircle(ref AetherManifold manifold, PolygonShape polygonA, in Transform xfA,
+        public void CollidePolygonAndCircle(ref Manifold manifold, PolygonShape polygonA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB)
         {
             manifold.PointCount = 0;
@@ -968,7 +1006,7 @@ namespace Robust.Shared.Physics.Collision
             /// <param name="transformA">The transform A.</param>
             /// <param name="polyB">The poly B.</param>
             /// <param name="transformB">The transform B.</param>
-            public void CollidePolygons(ref AetherManifold manifold, PolygonShape polyA, in Transform transformA,
+            public void CollidePolygons(ref Manifold manifold, PolygonShape polyA, in Transform transformA,
                 PolygonShape polyB, in Transform transformB)
             {
                 manifold.PointCount = 0;

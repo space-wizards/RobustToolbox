@@ -49,11 +49,11 @@ namespace Robust.Client.Debugging
         private void HandlePreSolve(PreSolveMessage message)
         {
             Contact contact = message.Contact;
-            AetherManifold oldManifold = message.OldManifold;
+            Manifold oldManifold = message.OldManifold;
 
             if ((Flags & PhysicsDebugFlags.ContactPoints) != 0)
             {
-                AetherManifold manifold = contact.Manifold;
+                Manifold manifold = contact.Manifold;
 
                 if (manifold.PointCount == 0)
                     return;

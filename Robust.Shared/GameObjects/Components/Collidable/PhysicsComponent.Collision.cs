@@ -145,11 +145,8 @@ namespace Robust.Shared.GameObjects
 
                 if (value)
                 {
-                    if (!_awake)
-                    {
-                        _sleepTime = 0.0f;
-                        PhysicsMap.ContactManager.UpdateContacts(ContactEdges, true);
-                    }
+                    _sleepTime = 0.0f;
+                    PhysicsMap.ContactManager.UpdateContacts(ContactEdges, true);
 
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                     SendMessage(new PhysicsWakeCompMessage(this));

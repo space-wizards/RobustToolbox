@@ -403,6 +403,10 @@ namespace Robust.Shared.Prototypes
 
         #endregion IPrototypeManager members
 
+        public void TestMethod()
+        {
+        }
+
         public void PostInject()
         {
             ReflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();

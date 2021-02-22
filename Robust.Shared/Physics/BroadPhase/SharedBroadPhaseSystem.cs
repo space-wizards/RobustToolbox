@@ -472,7 +472,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public void AddFixture(PhysicsComponent body, Fixture fixture)
+        internal void AddFixture(PhysicsComponent body, Fixture fixture)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
@@ -503,7 +503,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public void RemoveFixture(PhysicsComponent body, Fixture fixture)
+        internal void RemoveFixture(PhysicsComponent body, Fixture fixture)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
@@ -539,7 +539,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         /// <param name="body"></param>
         /// <param name="displacement"></param>
-        public void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
+        internal void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -564,14 +564,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                 foreach (var fixture in body.Fixtures)
                 {
-                    if (!fixture.Proxies.TryGetValue(gridId, out var proxies)) continue;
-
-                    foreach (var proxy in proxies)
-                    {
-                        broadPhase.RemoveProxy(proxy.ProxyId);
-                    }
-
-                    fixture.Proxies.Remove(gridId);
+                    fixture.ClearProxies(mapId, this, gridId);
                 }
 
                 oldBroadPhases.Remove(broadPhase);
@@ -617,6 +610,7 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 if (broadPhase == null || oldBroadPhases.Contains(broadPhase)) continue;
                 var gridId = GetGridId(broadPhase);
+                oldBroadPhases.Add(broadPhase);
 
                 foreach (var fixture in body.Fixtures)
                 {

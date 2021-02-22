@@ -516,6 +516,22 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public MapId BroadphaseMapId { get; set; }
 
+        public IEnumerable<PhysicsComponent> GetCollidingBodies()
+        {
+            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, Vector2.Zero))
+            {
+                yield return entity;
+            }
+        }
+
+        public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
+        {
+            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
+            {
+                yield return entity;
+            }
+        }
+
         Dictionary<Type, VirtualController> IPhysicsComponent.Controllers
         {
             get => _controllers;
@@ -681,18 +697,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var fixture in Fixtures)
             {
-                foreach (var (gridId, proxies) in fixture.Proxies)
-                {
-                    var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-                    if (broadPhase == null) continue;
-
-                    foreach (var proxy in proxies)
-                    {
-                        broadPhase.RemoveProxy(proxy.ProxyId);
-                    }
-                }
-
-                fixture.Proxies.Clear();
+                fixture.ClearProxies(mapId, broadPhaseSystem);
             }
 
             HasProxies = false;
@@ -801,7 +806,6 @@ namespace Robust.Shared.GameObjects
                     fixture.ProxyCount = fixture.Shape.ChildCount;
                     var proxies = new FixtureProxy[fixture.ProxyCount];
 
-                    fixture.Proxies[gridId] = proxies;
                     // TODO: Will need to pass in childIndex to this as well
                     for (var i = 0; i < fixture.ProxyCount; i++)
                     {
@@ -813,6 +817,8 @@ namespace Robust.Shared.GameObjects
                         proxies[i] = proxy;
                         DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
                     }
+
+                    fixture.SetProxies(gridId, proxies);
                 }
             }
 

@@ -378,8 +378,9 @@ namespace Robust.Shared.GameObjects
             // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
             for (var i = 0; i < newState.Fixtures.Count; i++)
             {
-                var newFixture = newState.Fixtures[i];
-                newFixture.Proxies = new Dictionary<GridId, FixtureProxy[]>();
+                var newFixture = new Fixture();
+                newState.Fixtures[i].CopyTo(newFixture);
+
                 newFixture.Body = this;
 
                 // Existing fixture
@@ -639,12 +640,8 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (_canCollide)
-            {
-                fixture.ClearProxies();
-            }
-
             _fixtures.Remove(fixture);
+            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
             ResetMassData();
 
             Dirty();

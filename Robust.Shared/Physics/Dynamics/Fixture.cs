@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -20,8 +21,10 @@ namespace Robust.Shared.Physics.Dynamics
     [Serializable, NetSerializable]
     public sealed class Fixture : IFixture, IExposeData, IEquatable<Fixture>
     {
-        // TODO: For now we'll just do 1 proxy until we get multiple shapes
-        [NonSerialized] public Dictionary<GridId, FixtureProxy[]> Proxies = new();
+        public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
+
+        [NonSerialized]
+        private readonly Dictionary<GridId, FixtureProxy[]> _proxies = new();
 
         [ViewVariables]
         [NonSerialized]
@@ -151,6 +154,26 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         /// <summary>
+        ///     As a bunch of things aren't serialized we need to instantiate Fixture from an empty ctor and then copy values across.
+        /// </summary>
+        /// <param name="fixture"></param>
+        internal void CopyTo(Fixture fixture)
+        {
+            fixture.Shape = Shape;
+            fixture._friction = _friction;
+            fixture._restitution = _restitution;
+            fixture._hard = _hard;
+            fixture._collisionLayer = _collisionLayer;
+            fixture._collisionMask = _collisionMask;
+        }
+
+        internal void SetProxies(GridId gridId, FixtureProxy[] proxies)
+        {
+            DebugTools.Assert(!_proxies.ContainsKey(gridId));
+            _proxies[gridId] = proxies;
+        }
+
+        /// <summary>
         ///     Clear this fixture's proxies from the broadphase.
         ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
         /// </summary>
@@ -164,7 +187,7 @@ namespace Robust.Shared.Physics.Dynamics
             mapId ??= Body.Owner.Transform.MapID;
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
 
-            foreach (var (gridId, proxies) in Proxies)
+            foreach (var (gridId, proxies) in _proxies)
             {
                 var broadPhase = broadPhaseSystem.GetBroadPhase(mapId.Value, gridId);
                 if (broadPhase == null) continue;
@@ -175,7 +198,30 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            Proxies.Clear();
+            _proxies.Clear();
+        }
+
+        /// <summary>
+        ///     Clears the particular grid's proxies for this fixture.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="broadPhaseSystem"></param>
+        /// <param name="gridId"></param>
+        public void ClearProxies(MapId mapId, SharedBroadPhaseSystem broadPhaseSystem, GridId gridId)
+        {
+            if (!Proxies.TryGetValue(gridId, out var proxies)) return;
+
+            var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
+
+            if (broadPhase != null)
+            {
+                foreach (var proxy in proxies)
+                {
+                    broadPhase.RemoveProxy(proxy.ProxyId);
+                }
+            }
+
+            _proxies.Remove(gridId);
         }
 
         /// <summary>
@@ -187,6 +233,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </remarks>
         public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
+            DebugTools.Assert(_proxies.Count == 0);
             ProxyCount = Shape.ChildCount;
 
             var mapId = Body.Owner.Transform.MapID;
@@ -214,7 +261,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 var proxies = new FixtureProxy[Shape.ChildCount];
-                Proxies[gridId] = proxies;
+                _proxies[gridId] = proxies;
 
                 for (var i = 0; i < ProxyCount; i++)
                 {
@@ -255,7 +302,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             var proxies = new FixtureProxy[Shape.ChildCount];
-            Proxies[gridId] = proxies;
+            _proxies[gridId] = proxies;
 
             for (var i = 0; i < ProxyCount; i++)
             {

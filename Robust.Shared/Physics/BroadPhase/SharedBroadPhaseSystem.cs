@@ -112,6 +112,18 @@ namespace Robust.Shared.Physics.Broadphase
             return proxyA.AABB.Intersects(proxyB.AABB);
         }
 
+        /// <summary>
+        ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
+        /// </summary>
+        /// <param name="bodyA"></param>
+        /// <param name="bodyB"></param>
+        /// <returns> 0 -> 1.0f based on WorldAABB overlap</returns>
+        public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
+        {
+            // TODO: Use actual shapes and not just the AABB?
+            return bodyA.GetWorldAABB(_mapManager).IntersectPercentage(bodyB.GetWorldAABB(_mapManager));
+        }
+
         public override void Initialize()
         {
             base.Initialize();

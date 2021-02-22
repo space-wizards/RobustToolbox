@@ -251,7 +251,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(debugBodies));
 #endif
 
-            // TODO: This is probably suss given we're integrating before collisions?
             for (var i = 0; i < BodyCount; i++)
             {
                 var body = Bodies[i];

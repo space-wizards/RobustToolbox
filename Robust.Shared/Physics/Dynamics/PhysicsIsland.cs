@@ -296,7 +296,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // In future we'll set these to existing
                 // Didn't use the old variable names because they're hard to read
                 var position = body.Owner.Transform.WorldPosition;
-                DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
+                // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
                 var angle = (float) body.Owner.Transform.WorldRotation.Theta;
                 var linearVelocity = body.LinearVelocity;
                 var angularVelocity = body.AngularVelocity;
@@ -464,10 +464,9 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // body.Sweep.Center = _positions[i];
                 // body.Sweep.Angle = _angles[i];
 
-                DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
+                // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
 
                 body.Owner.Transform.WorldPosition = bodyPos;
-                // TODO: We need some override for players as this will go skewiff.
                 body.Owner.Transform.WorldRotation = _angles[i];
 
                 body.LinearVelocity = _linearVelocities[i];

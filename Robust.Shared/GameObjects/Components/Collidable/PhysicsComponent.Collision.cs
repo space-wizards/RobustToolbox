@@ -141,6 +141,8 @@ namespace Robust.Shared.GameObjects
                 if (_awake == value)
                     return;
 
+                _awake = value;
+
                 if (value)
                 {
                     if (!_awake)
@@ -150,6 +152,7 @@ namespace Robust.Shared.GameObjects
                     }
 
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    SendMessage(new PhysicsWakeCompMessage(this));
                 }
                 else
                 {
@@ -157,9 +160,9 @@ namespace Robust.Shared.GameObjects
                     ResetDynamics();
                     _sleepTime = 0.0f;
                     PhysicsMap.ContactManager.UpdateContacts(ContactEdges, false);
+                    SendMessage(new PhysicsSleepCompMessage(this));
                 }
 
-                _awake = value;
                 Dirty();
             }
         }
@@ -579,17 +582,23 @@ namespace Robust.Shared.GameObjects
                 _awake = false;
             }
 
-            foreach (var controller in _controllers.Values)
-            {
-                controller.ControlledComponent = this;
-            }
-
             Dirty();
             // Yeah yeah TODO Combine these
             // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.
 
             if (CanCollide)
             {
+                if (!Awake)
+                {
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    SendMessage(new PhysicsSleepCompMessage(this));
+                }
+                else
+                {
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    SendMessage(new PhysicsWakeCompMessage(this));
+                }
+
                 if (Owner.IsInContainer())
                 {
                     _canCollide = false;

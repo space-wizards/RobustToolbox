@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using Fluent.Net;
+using Fluent.Net.RuntimeAst;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Log;
@@ -20,42 +22,107 @@ namespace Robust.Shared.Localization
         public string GetString(string messageId)
         {
             if (_defaultCulture == null)
-            {
                 return messageId;
-            }
-            var context = _contexts[_defaultCulture];
-            var message = context.GetMessage(messageId);
 
-            if (message == null)
+            if (!TryGetString(messageId, out var msg))
             {
                 Logger.WarningS("Loc", $"Unknown messageId ({_defaultCulture.IetfLanguageTag}): {messageId}");
-                return messageId;
+                msg = messageId;
             }
 
-            return context.Format(message, null, null);
+            return msg;
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
+        {
+            if (!TryGetNode(messageId, out var context, out var node))
+            {
+                value = null;
+                return false;
+            }
+
+            value = context.Format(node, null, null);
+            return true;
         }
 
         public string GetString(string messageId, params (string, object)[] args0)
         {
             if (_defaultCulture == null)
-            {
                 return messageId;
-            }
-            var context = _contexts[_defaultCulture];
-            var message = context.GetMessage(messageId);
-            var args = new Dictionary<string, object>();
-            foreach (var vari in args0)
+
+            if (!TryGetString(messageId, out var msg, args0))
             {
-                args.Add(vari.Item1, vari.Item2);
+                Logger.WarningS("Loc", $"Unknown messageId ({_defaultCulture.IetfLanguageTag}): {messageId}");
+                msg = messageId;
             }
+
+            return msg;
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] args0)
+        {
+            if (!TryGetNode(messageId, out var context, out var node))
+            {
+                value = null;
+                return false;
+            }
+
+            var args = new Dictionary<string, object>();
+            foreach (var (k, v) in args0)
+            {
+                args.Add(k, v);
+            }
+
+            value = context.Format(node, args, null);
+            return false;
+        }
+
+        private bool TryGetNode(
+            string messageId,
+            [NotNullWhen(true)] out MessageContext? ctx,
+            [NotNullWhen(true)] out Node? node)
+        {
+            if (_defaultCulture == null)
+            {
+                ctx = null;
+                node = null;
+                return false;
+            }
+
+            ctx = _contexts[_defaultCulture];
+            string? attribName = null;
+
+            if (messageId.Contains('.'))
+            {
+                var split = messageId.Split('.');
+                messageId = split[0];
+                attribName = split[1];
+            }
+
+            var message = ctx.GetMessage(messageId);
 
             if (message == null)
             {
-                Logger.WarningS("Loc", $"Unknown messageId ({_defaultCulture.IetfLanguageTag}): {messageId}");
-                return messageId;
+                node = null;
+                return false;
             }
 
-            return context.Format(message, args, null);
+            if (attribName != null)
+            {
+                if (!message.Attributes.TryGetValue(attribName, out var attrib))
+                {
+                    node = null;
+                    return false;
+                }
+
+                node = attrib;
+            }
+            else
+            {
+                node = message;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -94,7 +161,7 @@ namespace Robust.Shared.Localization
         {
             var context = new MessageContext(
                 culture.Name,
-                new MessageContextOptions { UseIsolating = false }
+                new MessageContextOptions {UseIsolating = false}
             );
 
             _contexts.Add(culture, context);
@@ -144,7 +211,8 @@ namespace Robust.Shared.Localization
             }
         }
 
-        private static void _loadFromFile(IResourceManager resourceManager, ResourcePath filePath, MessageContext context)
+        private static void _loadFromFile(IResourceManager resourceManager, ResourcePath filePath,
+            MessageContext context)
         {
             using (var fileStream = resourceManager.ContentFileRead(filePath))
             using (var reader = new StreamReader(fileStream, EncodingHelpers.UTF8))

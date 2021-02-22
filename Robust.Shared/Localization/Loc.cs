@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
@@ -36,12 +36,25 @@ namespace Robust.Shared.Localization
             return LocalizationManager.GetString(messageId);
         }
 
+        public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
+        {
+            return LocalizationManager.TryGetString(messageId, out message);
+        }
+
         /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
         public static string GetString(string messageId, params (string,object)[] args)
         {
             return LocalizationManager.GetString(messageId, args);
+        }
+
+        public static bool TryGetString(
+            string messageId,
+            [NotNullWhen(true)] out string? value,
+            params (string, object)[] args)
+        {
+            return LocalizationManager.TryGetString(messageId, out value, args);
         }
 
         /// <summary>

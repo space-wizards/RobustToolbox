@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
@@ -31,10 +31,14 @@ namespace Robust.Shared.Localization
         /// </returns>
         string GetString(string messageId);
 
+        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value);
+
         /// <summary>
         ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
         string GetString(string messageId, params (string, object)[] args);
+
+        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] args);
 
         /// <summary>
         ///     Default culture used by other methods when no culture is explicitly specified.

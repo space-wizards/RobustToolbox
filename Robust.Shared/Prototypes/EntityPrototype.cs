@@ -146,12 +146,18 @@ namespace Robust.Shared.Prototypes
 
         public void LoadFrom(YamlMappingNode mapping)
         {
+            var loc = IoCManager.Resolve<ILocalizationManager>();
             ID = mapping.GetNode("id").AsString();
 
             if (mapping.TryGetNode("name", out var node))
             {
                 _nameModified = true;
-                Name = Loc.GetString(node.AsString());
+                Name = loc.GetString(node.AsString());
+            }
+            else if (loc.TryGetString($"ent-{CaseConversion.PascalToKebab(ID)}", out var name))
+            {
+                _nameModified = true;
+                Name = loc.GetString(name);
             }
 
             if (mapping.TryGetNode("parent", out node))
@@ -163,12 +169,17 @@ namespace Robust.Shared.Prototypes
             if (mapping.TryGetNode("description", out node))
             {
                 _descriptionModified = true;
-                Description = Loc.GetString(node.AsString());
+                Description = loc.GetString(node.AsString());
+            }
+            else if (loc.TryGetString($"ent-{CaseConversion.PascalToKebab(ID)}.desc", out var name))
+            {
+                _descriptionModified = true;
+                Description = loc.GetString(name);
             }
 
             if (mapping.TryGetNode("suffix", out node))
             {
-                EditorSuffix = Loc.GetString(node.AsString());
+                EditorSuffix = loc.GetString(node.AsString());
             }
 
             // COMPONENTS

@@ -82,6 +82,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_hard == value)
                     return;
 
+                Body.RegenerateContacts();
                 _hard = value;
                 Body.FixtureChanged(this);
             }
@@ -101,6 +102,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionLayer == value)
                     return;
 
+                Body.RegenerateContacts();
                 _collisionLayer = value;
                 Body.FixtureChanged(this);
             }
@@ -120,6 +122,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionMask == value)
                     return;
 
+                Body.RegenerateContacts();
                 _collisionMask = value;
                 Body.FixtureChanged(this);
             }

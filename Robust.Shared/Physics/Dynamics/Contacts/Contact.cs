@@ -355,6 +355,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             var collisionManager = IoCManager.Resolve<ICollisionManager>();
 
+            // TODO: Need to remove the ctors and just use PhysShapeAABB + PhysShapeRect directly in their own functions (maybe Acruid's version)?
+            // When I profiled 25% of 200ms ping was physics. 15% was UpdateEntityTree and the next highest was this at 1.50%
+            // (After was the MoveEvent listeners which you can't really do much about besides caching better?)
             switch (_type)
             {
                 case ContactType.Polygon:

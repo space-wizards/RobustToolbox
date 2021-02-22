@@ -115,30 +115,7 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                var contactEdge = ContactEdges;
-                while (contactEdge != null)
-                {
-                    var contactEdge0 = contactEdge;
-                    contactEdge = contactEdge.Next;
-                    PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
-                }
-
-                ContactEdges = null;
-                var broadphaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-
-                foreach (var fixture in Fixtures)
-                {
-                    var proxyCount = fixture.ProxyCount;
-                    foreach (var (gridId, proxies) in fixture.Proxies)
-                    {
-                        var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
-                        if (broadPhase == null) continue;
-                        for (var i = 0; i < proxyCount; i++)
-                        {
-                            broadPhase.TouchProxy(proxies[i].ProxyId);
-                        }
-                    }
-                }
+                RegenerateContacts();
 
                 var oldAnchored = _bodyType == BodyType.Static;
                 var anchored = _bodyType == BodyType.Static;
@@ -234,6 +211,37 @@ namespace Robust.Shared.GameObjects
         public void WakeBody()
         {
             Awake = true;
+        }
+
+        /// <summary>
+        ///     Removes all of our contacts and flags them as requiring regeneration next physics tick.
+        /// </summary>
+        internal void RegenerateContacts()
+        {
+            var contactEdge = ContactEdges;
+            while (contactEdge != null)
+            {
+                var contactEdge0 = contactEdge;
+                contactEdge = contactEdge.Next;
+                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+            }
+
+            ContactEdges = null;
+            var broadphaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+
+            foreach (var fixture in Fixtures)
+            {
+                var proxyCount = fixture.ProxyCount;
+                foreach (var (gridId, proxies) in fixture.Proxies)
+                {
+                    var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
+                    if (broadPhase == null) continue;
+                    for (var i = 0; i < proxyCount; i++)
+                    {
+                        broadPhase.TouchProxy(proxies[i].ProxyId);
+                    }
+                }
+            }
         }
 
         /// <inheritdoc />

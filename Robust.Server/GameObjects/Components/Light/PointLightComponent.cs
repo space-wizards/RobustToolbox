@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -6,7 +6,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public class PointLightComponent : Component
+    [RegisterComponent]
+    [ComponentReference(typeof(IPointLightComponent))]
+    public class PointLightComponent : Component, IPointLightComponent
     {
         private Color _color;
         private bool _enabled;
@@ -40,6 +42,14 @@ namespace Robust.Server.GameObjects
                 }
             }
         }
+
+        public bool ContainerOccluded { get; set; }
+        public bool MaskAutoRotate { get; set; }
+        public Angle Rotation { get; set; }
+        public string? MaskPath { get; set; }
+        public float Energy { get; set; }
+        public float Softness { get; set; }
+        public bool VisibleNested { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Radius

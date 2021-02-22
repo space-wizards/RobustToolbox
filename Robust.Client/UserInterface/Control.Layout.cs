@@ -1,30 +1,54 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
 {
+    // Code and design heavily inspired by WPF/Avalonia.
+
     public partial class Control
     {
-        public event Action<Control>? OnMinimumSizeChanged;
-
         private Vector2 _size;
 
+        [ViewVariables] internal Vector2? PreviousMeasure;
+        [ViewVariables] internal UIBox2? PreviousArrange;
+
         private float _sizeFlagsStretchRatio = 1;
-        private Vector2? _calculatedMinimumSize;
-        private Vector2 _customMinimumSize;
-        private SizeFlags _sizeFlagsHorizontal = SizeFlags.Fill;
-        private SizeFlags _sizeFlagsVertical = SizeFlags.Fill;
-        private bool _layoutDirty;
+
+        private float _minWidth;
+        private float _minHeight;
+        private float _setWidth = float.NaN;
+        private float _setHeight = float.NaN;
+        private float _maxWidth = float.PositiveInfinity;
+        private float _maxHeight = float.PositiveInfinity;
+
+        private bool _horizontalExpand;
+        private bool _verticalExpand;
+        private HAlignment _horizontalAlignment;
+        private VAlignment _verticalAlignment;
+        private Thickness _margin;
+        private bool _isLayoutUpdateOverrideUsed;
+        private bool _measuring;
+
+        [ViewVariables] public Vector2 DesiredSize { get; private set; }
+        [ViewVariables] public Vector2i DesiredPixelSize => (Vector2i) (DesiredSize * UIScale);
+        [ViewVariables] public bool IsMeasureValid { get; private set; }
+        [ViewVariables] public bool IsArrangeValid { get; private set; }
+
+        [ViewVariables]
+        public Thickness Margin
+        {
+            get => _margin;
+            set => _margin = value;
+        }
 
         /// <summary>
         ///     Called when the <see cref="UIScale"/> for this control changes.
         /// </summary>
         protected internal virtual void UIScaleChanged()
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -56,7 +80,6 @@ namespace Robust.Client.UserInterface
 
                 _size = value;
                 Resized();
-                UpdateLayout();
             }
         }
 
@@ -179,12 +202,36 @@ namespace Robust.Client.UserInterface
         ///     Horizontal size flags for container layout.
         /// </summary>
         [ViewVariables]
+        [Obsolete("Use HorizontalAlignment and HorizontalExpand instead.")]
         public SizeFlags SizeFlagsHorizontal
         {
-            get => _sizeFlagsHorizontal;
+            get
+            {
+                var flags = HorizontalAlignment switch
+                {
+                    HAlignment.Stretch => SizeFlags.Fill,
+                    HAlignment.Left => SizeFlags.None,
+                    HAlignment.Center => SizeFlags.ShrinkCenter,
+                    HAlignment.Right => SizeFlags.ShrinkEnd,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                if (_horizontalExpand)
+                    flags |= SizeFlags.Expand;
+
+                return flags;
+            }
             set
             {
-                _sizeFlagsHorizontal = value;
+                HorizontalExpand = (value & SizeFlags.Expand) != 0;
+                HorizontalAlignment = (value & ~SizeFlags.Expand) switch
+                {
+                    SizeFlags.None => HAlignment.Left,
+                    SizeFlags.Fill => HAlignment.Stretch,
+                    SizeFlags.ShrinkCenter => HAlignment.Center,
+                    SizeFlags.ShrinkEnd => HAlignment.Right,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
 
                 Parent?.UpdateLayout();
             }
@@ -193,15 +240,84 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Vertical size flags for container layout.
         /// </summary>
+        [Obsolete("Use VerticalAlignment and VerticalExpand instead.")]
         [ViewVariables]
         public SizeFlags SizeFlagsVertical
         {
-            get => _sizeFlagsVertical;
+            get
+            {
+                var flags = _verticalAlignment switch
+                {
+                    VAlignment.Stretch => SizeFlags.Fill,
+                    VAlignment.Top => SizeFlags.None,
+                    VAlignment.Center => SizeFlags.ShrinkCenter,
+                    VAlignment.Bottom => SizeFlags.ShrinkEnd,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+
+                if (_verticalExpand)
+                    flags |= SizeFlags.Expand;
+
+                return flags;
+            }
             set
             {
-                _sizeFlagsVertical = value;
+                VerticalExpand = (value & SizeFlags.Expand) != 0;
+                VerticalAlignment = (value & ~SizeFlags.Expand) switch
+                {
+                    SizeFlags.None => VAlignment.Top,
+                    SizeFlags.Fill => VAlignment.Stretch,
+                    SizeFlags.ShrinkCenter => VAlignment.Center,
+                    SizeFlags.ShrinkEnd => VAlignment.Bottom,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
 
                 Parent?.UpdateLayout();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public HAlignment HorizontalAlignment
+        {
+            get => _horizontalAlignment;
+            set
+            {
+                _horizontalAlignment = value;
+                InvalidateArrange();
+            }
+        }
+
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public VAlignment VerticalAlignment
+        {
+            get => _verticalAlignment;
+            set
+            {
+                _verticalAlignment = value;
+                InvalidateArrange();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool HorizontalExpand
+        {
+            get => _horizontalExpand;
+            set
+            {
+                _horizontalExpand = value;
+                Parent?.InvalidateMeasure();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool VerticalExpand
+        {
+            get => _verticalExpand;
+            set
+            {
+                _verticalExpand = value;
+                Parent?.InvalidateArrange();
             }
         }
 
@@ -225,12 +341,12 @@ namespace Robust.Client.UserInterface
 
                 _sizeFlagsStretchRatio = value;
 
-                Parent?.UpdateLayout();
+                Parent?.InvalidateArrange();
             }
         }
 
         /// <summary>
-        ///     A combination of <see cref="CustomMinimumSize" /> and <see cref="CalculateMinimumSize" />,
+        ///     A combination of <see cref="MinSize" /> and <see cref="CalculateMinimumSize" />,
         ///     Whichever is greater.
         ///     Use this for whenever you need the *actual* minimum size of something.
         /// </summary>
@@ -238,24 +354,13 @@ namespace Robust.Client.UserInterface
         ///     This is in virtual pixels.
         /// </remarks>
         /// <seealso cref="CombinedPixelMinimumSize"/>
-        [ViewVariables]
-        public Vector2 CombinedMinimumSize
-        {
-            get
-            {
-                if (!_calculatedMinimumSize.HasValue)
-                {
-                    _updateMinimumSize();
-                    DebugTools.Assert(_calculatedMinimumSize.HasValue);
-                }
-
-                return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize!.Value);
-            }
-        }
+        [Obsolete("Use DesiredSize and Measure()")]
+        public Vector2 CombinedMinimumSize => DesiredSize;
 
         /// <summary>
         ///     The <see cref="CombinedMinimumSize"/>, in physical pixels.
         /// </summary>
+        [Obsolete("Use DesiredSize and Measure()")]
         public Vector2i CombinedPixelMinimumSize => (Vector2i) (CombinedMinimumSize * UIScale);
 
         /// <summary>
@@ -264,24 +369,95 @@ namespace Robust.Client.UserInterface
         /// <seealso cref="CalculateMinimumSize" />
         /// <seealso cref="CombinedMinimumSize" />
         [ViewVariables]
+        [Obsolete("Use MinSize instead.")]
         public Vector2 CustomMinimumSize
         {
-            get => _customMinimumSize;
+            get => (_minWidth, _minHeight);
+            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
+        }
+
+        public Vector2 MinSize
+        {
+            get => (_minWidth, _minHeight);
+            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
+        }
+
+        public Vector2 SetSize
+        {
+            get => (_setWidth, _setHeight);
+            set => (SetWidth, SetHeight) = value;
+        }
+
+        public Vector2 MaxSize
+        {
+            get => (_maxWidth, _maxHeight);
+            set => (MaxWidth, MaxHeight) = value;
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MinWidth
+        {
+            get => _minWidth;
             set
             {
-                _customMinimumSize = Vector2.ComponentMax(Vector2.Zero, value);
-                MinimumSizeChanged();
+                _minWidth = value;
+                InvalidateMeasure();
             }
         }
 
-        private void _updateMinimumSize()
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MinHeight
         {
-            if (_stylingDirty)
+            get => _minHeight;
+            set
             {
-                ForceRunStyleUpdate();
+                _minHeight = value;
+                InvalidateMeasure();
             }
+        }
 
-            _calculatedMinimumSize = Vector2.ComponentMax(Vector2.Zero, CalculateMinimumSize());
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float SetWidth
+        {
+            get => _setWidth;
+            set
+            {
+                _setWidth = value;
+                InvalidateMeasure();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float SetHeight
+        {
+            get => _setHeight;
+            set
+            {
+                _setHeight = value;
+                InvalidateMeasure();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MaxWidth
+        {
+            get => _maxWidth;
+            set
+            {
+                _maxWidth = value;
+                InvalidateMeasure();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float MaxHeight
+        {
+            get => _maxHeight;
+            set
+            {
+                _maxHeight = value;
+                InvalidateMeasure();
+            }
         }
 
         /// <summary>
@@ -289,27 +465,31 @@ namespace Robust.Client.UserInterface
         ///     Do NOT call this directly to get the minimum size for layout purposes!
         ///     Use <see cref="CombinedMinimumSize" /> for the ACTUAL minimum size.
         /// </summary>
+        [Obsolete("Implement MeasureOverride instead")]
         protected virtual Vector2 CalculateMinimumSize()
         {
-            var min = Vector2.Zero;
-            foreach (var child in Children)
-            {
-                min = Vector2.ComponentMax(min, child.CombinedMinimumSize);
-            }
-            return min;
+            return Vector2.Zero;
         }
 
         /// <summary>
         ///     Tells the GUI system that the minimum size of this control may have changed,
         ///     so that say containers will re-sort it if necessary.
         /// </summary>
+        [Obsolete("Use InvalidateMeasure()")]
         public void MinimumSizeChanged()
         {
-            _calculatedMinimumSize = null;
-            OnMinimumSizeChanged?.Invoke(this);
+            InvalidateMeasure();
+        }
 
-            Parent?.MinimumSizeChanged();
-            UpdateLayout();
+        public void InvalidateMeasure()
+        {
+            if (!IsMeasureValid)
+                return;
+
+            IsMeasureValid = false;
+            IsArrangeValid = false;
+
+            UserInterfaceManagerInternal.QueueMeasureUpdate(this);
         }
 
         /// <summary>
@@ -320,89 +500,241 @@ namespace Robust.Client.UserInterface
         ///     where running the deferred layout updating system in the UI manager can be annoying.
         ///     If you are forced to use this in regular code, you have found a bug.
         /// </remarks>
+        [Obsolete("Call Arrange manually for unit tests or call Measure manually for early measures.")]
         public void ForceRunLayoutUpdate()
         {
-            DoLayoutUpdate();
-
-            foreach (var child in Children)
-            {
-                child.ForceRunLayoutUpdate();
-            }
+            // TODO: Fix or remove this
+            if (PreviousArrange.HasValue)
+                Arrange(PreviousArrange.Value);
         }
 
-        protected void UpdateLayout()
+        public void InvalidateArrange()
         {
-            if (_layoutDirty)
+            if (!IsArrangeValid)
             {
                 // Already queued for a layout update, don't bother.
                 return;
             }
 
-            _layoutDirty = true;
-            UserInterfaceManagerInternal.QueueLayoutUpdate(this);
+            IsArrangeValid = false;
+            UserInterfaceManagerInternal.QueueArrangeUpdate(this);
         }
 
-        protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
+        [Obsolete("Use InvalidateArrange()")]
+        protected void UpdateLayout()
         {
-            var topLeft = pixelBox.TopLeft / UIScale;
-            var bottomRight = pixelBox.BottomRight / UIScale;
-
-            FitChildInBox(child, new UIBox2(topLeft, bottomRight));
+            InvalidateArrange();
         }
 
-        protected void FitChildInBox(Control child, UIBox2 box)
+        public void Measure(Vector2 availableSize)
         {
-            DebugTools.Assert(child.Parent == this);
+            if (!IsMeasureValid || PreviousMeasure != availableSize)
+            {
+                IsMeasureValid = true;
+                var desired = MeasureCore(availableSize);
 
-            var (minX, minY) = child.CombinedMinimumSize;
-            var newPosX = box.Left;
-            var newSizeX = minX;
+                if (desired.X < 0 || desired.Y < 0 || !float.IsFinite(desired.X) || !float.IsFinite(desired.Y))
+                    throw new InvalidOperationException("Invalid size returned from Measure()");
 
-            if ((child.SizeFlagsHorizontal & SizeFlags.ShrinkEnd) != 0)
-            {
-                newPosX += (box.Width - minX);
-            }
-            else if ((child.SizeFlagsHorizontal & SizeFlags.ShrinkCenter) != 0)
-            {
-                newPosX += (box.Width - minX) / 2;
-            }
-            else if ((child.SizeFlagsHorizontal & SizeFlags.Fill) != 0)
-            {
-                newSizeX = Math.Max(box.Width, newSizeX);
-            }
+                var prev = DesiredSize;
+                DesiredSize = desired;
+                PreviousMeasure = availableSize;
 
-            var newPosY = box.Top;
-            var newSizeY = minY;
-
-            if ((child.SizeFlagsVertical & SizeFlags.ShrinkEnd) != 0)
-            {
-                newPosY += (box.Height - minY);
+                if (prev != desired && Parent != null && !Parent._measuring)
+                    Parent?.InvalidateMeasure();
             }
-            else if ((child.SizeFlagsVertical & SizeFlags.ShrinkCenter) != 0)
-            {
-                newPosY += (box.Height - minY) / 2;
-            }
-            else if ((child.SizeFlagsVertical & SizeFlags.Fill) != 0)
-            {
-                newSizeY = Math.Max(box.Height, newSizeY);
-            }
-
-            child.Position = new Vector2(newPosX, newPosY);
-            child.Size = new Vector2(newSizeX, newSizeY);
         }
 
-        internal void DoLayoutUpdate()
+        protected virtual Vector2 MeasureCore(Vector2 availableSize)
         {
+            if (!Visible)
+                return default;
+
+            if (_stylingDirty)
+                ForceRunStyleUpdate();
+
+            var withoutMargin = _margin.Deflate(availableSize);
+
+            var constrained = ApplySizeConstraints(this, withoutMargin);
+
+            Vector2 measured;
+            try
+            {
+                _measuring = true;
+                measured = Vector2.ComponentMax(
+                    MeasureOverride(constrained),
+                    // For the time being keep the old CalculateMinimumSize around.
+#pragma warning disable 618
+                    CalculateMinimumSize());
+#pragma warning restore 618
+            }
+            finally
+            {
+                _measuring = false;
+            }
+
+            if (!float.IsNaN(SetWidth))
+            {
+                measured.X = SetWidth;
+            }
+
+            measured.X = Math.Clamp(measured.X, MinWidth, MaxWidth);
+
+            if (!float.IsNaN(SetHeight))
+            {
+                measured.Y = SetHeight;
+            }
+
+            measured.Y = Math.Clamp(measured.Y, MinHeight, MaxHeight);
+
+            measured = _margin.Inflate(measured);
+            return Vector2.ComponentMin(measured, availableSize);
+        }
+
+        protected virtual Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            var min = Vector2.Zero;
+
+            foreach (var child in Children)
+            {
+                child.Measure(availableSize);
+                min = Vector2.ComponentMax(min, child.DesiredSize);
+            }
+
+            return min;
+        }
+
+        public void ArrangePixel(UIBox2i finalRect)
+        {
+            var topLeft = finalRect.TopLeft / UIScale;
+            var bottomRight = finalRect.BottomRight / UIScale;
+
+            Arrange(new UIBox2(topLeft, bottomRight));
+        }
+
+        public void Arrange(UIBox2 finalRect)
+        {
+            if (!IsMeasureValid)
+                Measure(PreviousMeasure ?? finalRect.Size);
+
+            if (!IsArrangeValid || PreviousArrange != finalRect)
+            {
+                IsArrangeValid = true;
+                ArrangeCore(finalRect);
+                PreviousArrange = finalRect;
+            }
+        }
+
+        protected virtual void ArrangeCore(UIBox2 finalRect)
+        {
+            if (!Visible)
+                return;
+
+            var withoutMargins = _margin.Deflate(finalRect);
+            var availWithoutMargins = withoutMargins.Size;
+            var size = availWithoutMargins;
+            var origin = withoutMargins.TopLeft;
+
+            if (_horizontalAlignment != HAlignment.Stretch)
+                size.X = Math.Min(size.X, DesiredSize.X - _margin.SumHorizontal);
+
+            if (_verticalAlignment != VAlignment.Stretch)
+                size.Y = Math.Min(size.Y, DesiredSize.Y - _margin.SumVertical);
+
+
+            size = ApplySizeConstraints(this, size);
+
+            Size = size;
+            _isLayoutUpdateOverrideUsed = true;
+#pragma warning disable 618
             LayoutUpdateOverride();
-            _layoutDirty = false;
+#pragma warning restore 618
+            if (!_isLayoutUpdateOverrideUsed)
+            {
+                var arranged = ArrangeOverride(size);
+
+                size = Vector2.ComponentMin(arranged, size);
+            }
+
+            switch (HorizontalAlignment)
+            {
+                case HAlignment.Stretch:
+                case HAlignment.Center:
+                    origin.X += (availWithoutMargins.X - size.X) / 2;
+                    break;
+                case HAlignment.Right:
+                    origin.X += availWithoutMargins.X - size.X;
+                    break;
+            }
+
+            switch (VerticalAlignment)
+            {
+                case VAlignment.Stretch:
+                case VAlignment.Center:
+                    origin.Y += (availWithoutMargins.Y - size.Y) / 2;
+                    break;
+                case VAlignment.Bottom:
+                    origin.Y += availWithoutMargins.Y - size.Y;
+                    break;
+            }
+
+            Position = origin;
+            Size = size;
         }
 
-        protected virtual void LayoutUpdateOverride()
+        protected virtual Vector2 ArrangeOverride(Vector2 finalSize)
         {
             foreach (var child in Children)
             {
-                FitChildInPixelBox(child, PixelSizeBox);
+                child.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
             }
+
+            return finalSize;
+        }
+
+        [Obsolete("Use Control.ArrangePixel")]
+        protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
+        {
+            child.ArrangePixel(pixelBox);
+        }
+
+        [Obsolete("Use Control.Arrange")]
+        protected void FitChildInBox(Control child, UIBox2 box)
+        {
+            child.Arrange(box);
+        }
+
+        [Obsolete("Implement ArrangeOverride instead.")]
+        protected virtual void LayoutUpdateOverride()
+        {
+            _isLayoutUpdateOverrideUsed = false;
+        }
+
+        private static Vector2 ApplySizeConstraints(Control control, Vector2 avail)
+        {
+            var minW = control._minWidth;
+            var setW = control._setWidth;
+            var maxW = control._maxWidth;
+
+            var maxConstraint = float.IsNaN(setW) ? float.PositiveInfinity : setW;
+            maxW = MathHelper.Clamp(maxConstraint, minW, maxW);
+
+            var minConstraint = float.IsNaN(setW) ? 0 : setW;
+            minW = MathHelper.Clamp(maxW, minConstraint, minW);
+
+            var minH = control._minHeight;
+            var setH = control._setHeight;
+            var maxH = control._maxHeight;
+
+            maxConstraint = float.IsNaN(setH) ? float.PositiveInfinity : setH;
+            maxH = MathHelper.Clamp(maxConstraint, minH, maxH);
+
+            minConstraint = float.IsNaN(setH) ? 0 : setH;
+            minH = MathHelper.Clamp(minW, minConstraint, minH);
+
+            return (
+                Math.Clamp(avail.X, minW, maxW),
+                Math.Clamp(avail.Y, minH, maxH));
         }
 
         /// <summary>
@@ -442,6 +774,22 @@ namespace Robust.Client.UserInterface
             ///     Shrink inside a container, aligning to the end.
             /// </summary>
             ShrinkEnd = 8,
+        }
+
+        public enum HAlignment
+        {
+            Stretch,
+            Left,
+            Center,
+            Right
+        }
+
+        public enum VAlignment
+        {
+            Stretch,
+            Top,
+            Center,
+            Bottom
         }
     }
 }

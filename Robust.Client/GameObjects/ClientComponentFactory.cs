@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
@@ -25,7 +25,6 @@ namespace Robust.Client.GameObjects
             RegisterReference<PhysicsComponent, IPhysBody>();
             RegisterReference<PhysicsComponent, IPhysicsComponent>();
             RegisterIgnore("KeyBindingInput");
-            Register<PointLightComponent>();
 
             Register<InputComponent>();
 

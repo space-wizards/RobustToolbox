@@ -1,17 +1,13 @@
-﻿<SS14Window xmlns="https://spacestation14.io">
+﻿<SS14Window xmlns="https://spacestation14.io" MinWidth="100" MinHeight="50">
     <PanelContainer StyleClasses="windowPanel" />
     <VBoxContainer SeparationOverride="0">
         <PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
             <HBoxContainer>
-                <MarginContainer MarginLeftOverride="5" SizeFlagsHorizontal="FillExpand">
-                    <Label Name="TitleLabel" StyleIdentifier="foo" ClipText="True"
-                             Text="{Loc Exemplary Window Title Here}" VAlign="Center" StyleClasses="windowTitle" />
-                </MarginContainer>
-                <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" SizeFlagsVertical="ShrinkCenter" />
+                <Label Margin="5 0 0 0" HorizontalExpand="true" Name="TitleLabel" StyleIdentifier="foo" ClipText="True"
+                       Text="{Loc Exemplary Window Title Here}" VAlign="Center" StyleClasses="windowTitle" />
+                <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
             </HBoxContainer>
         </PanelContainer>
-        <MarginContainer Name="ContentsContainer" MarginBottomOverride="10" MarginLeftOverride="10"
-                           MarginRightOverride="10" MarginTopOverride="10" RectClipContent="True"
-                           SizeFlagsVertical="FillExpand" />
+        <Control Name="ContentsContainer" Margin="10" RectClipContent="True" VerticalExpand="true" />
     </VBoxContainer>
 </SS14Window>

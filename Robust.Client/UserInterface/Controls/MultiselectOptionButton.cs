@@ -71,14 +71,14 @@ namespace Robust.Client.UserInterface.Controls
             _label = new Label
             {
                 StyleClasses = { StyleClassOptionButton },
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
             hBox.AddChild(_label);
 
             var textureRect = new TextureRect
             {
                 StyleClasses = { StyleClassOptionTriangle },
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                VerticalAlignment = VAlignment.Center,
             };
             hBox.AddChild(textureRect);
         }
@@ -112,7 +112,8 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
-                var (minX, minY) = _popupVBox.CombinedMinimumSize;
+                _popupVBox.Measure(Vector2.Infinity);
+                var (minX, minY) = _popupVBox.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);
                 _popup.Open(box);

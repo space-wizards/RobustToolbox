@@ -1,8 +1,8 @@
 <cc:SS14Window xmlns:cc="clr-namespace:Robust.Client.UserInterface.CustomControls"
                xmlns:c="clr-namespace:Robust.Client.UserInterface.Controls">
-    <c:VBoxContainer SizeFlagsVertical="FillExpand">
-        <c:LineEdit Name="SearchLineEdit" PlaceHolder="Search component..." SizeFlagsHorizontal="FillExpand" />
-        <c:ItemList Name="ComponentItemList" SizeFlagsVertical="FillExpand" SizeFlagsHorizontal="FillExpand" SelectMode="Single" />
-        <c:Button Name="AddButton" Text="Add Component" TextAlign="Center" SizeFlagsHorizontal="FillExpand"/>
+    <c:VBoxContainer VerticalExpand="True">
+        <c:LineEdit Name="SearchLineEdit" PlaceHolder="Search component..." HorizontalExpand="True" />
+        <c:ItemList Name="ComponentItemList" VerticalExpand="True" HorizontalExpand="True" SelectMode="Single" />
+        <c:Button Name="AddButton" Text="Add Component" TextAlign="Center" HorizontalExpand="True"/>
     </c:VBoxContainer>
 </cc:SS14Window>

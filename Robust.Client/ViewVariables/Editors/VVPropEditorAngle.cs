@@ -11,14 +11,14 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBox = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(200, 0)
+                MinSize = new Vector2(200, 0)
             };
             var angle = (Angle) value!;
             var lineEdit = new LineEdit
             {
                 Text = angle.Degrees.ToString(CultureInfo.InvariantCulture),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
+                HorizontalExpand = true
             };
             if (!ReadOnly)
             {

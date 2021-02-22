@@ -17,26 +17,32 @@ namespace Robust.Client.UserInterface.Controls
             style?.Draw(handle, PixelSizeBox);
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var contentBox = _getStyleBox()?.GetContentBox(PixelSizeBox) ?? PixelSizeBox;
-
-            foreach (var child in Children)
-            {
-                FitChildInPixelBox(child, (UIBox2i) contentBox);
-            }
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var styleSize = _getStyleBox()?.MinimumSize ?? Vector2.Zero;
+            var styleSize = (_getStyleBox()?.MinimumSize ?? Vector2.Zero) / UIScale;
+            var measureSize = Vector2.ComponentMax(availableSize - styleSize, Vector2.Zero);
             var childSize = Vector2.Zero;
             foreach (var child in Children)
             {
-                childSize = Vector2.ComponentMax(childSize, child.CombinedMinimumSize);
+                child.Measure(measureSize);
+                childSize = Vector2.ComponentMax(childSize, child.DesiredSize);
             }
 
-            return styleSize / UIScale + childSize;
+            return styleSize + childSize;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            var pixelSize = finalSize * UIScale;
+            var ourSize = UIBox2.FromDimensions(Vector2.Zero, pixelSize);
+            var contentBox = _getStyleBox()?.GetContentBox(ourSize) ?? ourSize;
+
+            foreach (var child in Children)
+            {
+                child.ArrangePixel((UIBox2i) contentBox);
+            }
+
+            return finalSize;
         }
 
         [System.Diagnostics.Contracts.Pure]

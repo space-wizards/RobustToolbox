@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Robust.Shared.Maths;
 using NUnit.Framework;
 
@@ -23,14 +24,6 @@ namespace Robust.UnitTesting.Shared.Maths
             (1, -1, Direction.SouthEast, -System.Math.PI / 4.0),
 
             (0.92387953251128674f, -0.38268343236508978f, Direction.East, -System.Math.PI / 8.0)
-        };
-
-        private static IEnumerable<(float, float, Direction)> CardinalSources => new(float, float, Direction)[]
-        {
-            (1, 0, Direction.East),
-            (0, 1, Direction.North),
-            (-1, 0, Direction.West),
-            (0, -1, Direction.South),
         };
 
         [Test]
@@ -132,21 +125,13 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        [Sequential]
-        public void TestAngleToDirection([ValueSource(nameof(Sources))] (float, float, Direction, double) test)
+        [TestCase(MathHelper.PiOver2, ExpectedResult = Direction.East)]
+        [TestCase(0, ExpectedResult = Direction.South)]
+        [TestCase(-MathHelper.PiOver2, ExpectedResult = Direction.West)]
+        [TestCase(Math.PI, ExpectedResult = Direction.North)]
+        public Direction TestAngleToCardinal(double angle)
         {
-            var target = new Angle(test.Item4);
-
-            Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
-        }
-
-        [Test]
-        [Sequential]
-        public void TestAngleToCardinal([ValueSource(nameof(CardinalSources))] (float, float, Direction) test)
-        {
-            var target = new Vector2(test.Item1, test.Item2).ToAngle();
-
-            Assert.That(target.GetCardinalDir(), Is.EqualTo(test.Item3));
+            return new Angle(angle).GetCardinalDir();
         }
 
         [Test]
@@ -158,6 +143,22 @@ namespace Robust.UnitTesting.Shared.Maths
             var result = angle.RotateVec(vec);
 
             Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f)));
+        }
+
+        [TestCase(0, 4, ExpectedResult = 0f)]
+        [TestCase(30, 4, ExpectedResult = 30f)]
+        [TestCase(45, 4, ExpectedResult = -45f)]
+        [TestCase(90, 4, ExpectedResult = 0f)]
+        [TestCase(120, 4, ExpectedResult = 30f)]
+        [TestCase(135, 4, ExpectedResult = -45f)]
+        public float UnwindClamp(float theta, int divisions)
+        {
+            var segSize = 360f / (divisions * 2);
+            var segments = (int)(theta / segSize);
+            var odd = segments % 2;
+            var result = theta - (segments * segSize) - (odd * segSize);
+
+            return result;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
@@ -14,7 +14,7 @@
     <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="nfluidsynth" Version="0.3.1" />
-    <PackageReference Include="NGettext" Version="0.6.6" />
+    <PackageReference Include="Fluent.Net" Version="1.0.50" />
     <PackageReference Include="Pidgin" Version="2.5.0" />
     <PackageReference Include="prometheus-net" Version="4.0.0" />
     <PackageReference Include="Robust.Shared.AuthLib" Version="0.1.2" />

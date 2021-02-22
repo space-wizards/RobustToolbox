@@ -43,9 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Name = "_v_scroll",
 
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
-
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
@@ -403,7 +401,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var size = Vector2.Zero;
             if (ActualBackground != null)

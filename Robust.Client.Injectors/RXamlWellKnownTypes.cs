@@ -13,6 +13,10 @@ namespace Robust.Build.Tasks
         public IXamlConstructor Vector2ConstructorFull { get; }
         public IXamlType Vector2i { get; }
         public IXamlConstructor Vector2iConstructorFull { get; }
+        public IXamlType Thickness { get; }
+        public IXamlConstructor ThicknessConstructorFull { get; }
+        public IXamlType Color { get; }
+        public IXamlMethod ColorFromXaml { get; }
 
         public RXamlWellKnownTypes(TransformerConfiguration cfg)
         {
@@ -23,6 +27,7 @@ namespace Robust.Build.Tasks
 
             (Vector2, Vector2ConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2", Single, 2);
             (Vector2i, Vector2iConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Vector2i", Int32, 2);
+            (Thickness, ThicknessConstructorFull) = GetNumericTypeInfo("Robust.Shared.Maths.Thickness", Single, 4);
 
             (IXamlType, IXamlConstructor) GetNumericTypeInfo(string name, IXamlType componentType, int componentCount)
             {
@@ -31,6 +36,12 @@ namespace Robust.Build.Tasks
 
                 return (type, ctor);
             }
+
+            Color = cfg.TypeSystem.GetType("Robust.Shared.Maths.Color");
+            ColorFromXaml = Color.GetMethod(new FindMethodMethodSignature("FromXaml", Color, XamlIlTypes.String)
+            {
+                IsStatic = true
+            });
         }
     }
 

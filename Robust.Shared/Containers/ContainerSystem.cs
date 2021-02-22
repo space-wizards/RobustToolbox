@@ -4,6 +4,7 @@ namespace Robust.Shared.Containers
 {
     public class ContainerSystem : EntitySystem
     {
+        /// <inheritdoc />
         public override void Initialize()
         {
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
@@ -18,9 +19,7 @@ namespace Robust.Shared.Containers
                 return;
 
             if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))
-            {
                 containerManager.ForceRemove(message.Entity);
-            }
         }
     }
 }

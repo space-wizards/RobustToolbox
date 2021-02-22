@@ -1,18 +1,20 @@
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server.GameObjects;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Localization.Macros;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
@@ -134,14 +136,16 @@ namespace Robust.UnitTesting.Server
 
             //Tier 1: System
             container.Register<ILogManager, LogManager>();
+            container.Register<IRuntimeLog, RuntimeLog>();
             container.Register<IConfigurationManager, ConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             container.Register<ILocalizationManager, LocalizationManager>();
-            container.RegisterInstance<ITextMacroFactory>(new Mock<ITextMacroFactory>().Object);
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
+            container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
             container.RegisterInstance<IReflectionManager>(new Mock<IReflectionManager>().Object); // tests should not be searching for types
+            container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
             container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
             container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 

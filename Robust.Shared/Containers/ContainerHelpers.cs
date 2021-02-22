@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
@@ -10,6 +11,7 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Helper functions for the container system.
     /// </summary>
+    [PublicAPI]
     public static class ContainerHelpers
     {
         /// <summary>
@@ -24,9 +26,11 @@ namespace Robust.Shared.Containers
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
-            if (entity.Transform.Parent != null)
-                if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
-                    return containerComp.ContainsEntity(entity);
+            if (entity.Transform.Parent == null)
+                return false;
+
+            if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
+                return containerComp.ContainsEntity(entity);
 
             return false;
         }
@@ -69,7 +73,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove an entity from its container, if any.
+        /// Attempts to remove an entity from its container, if any.
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
@@ -89,7 +93,6 @@ namespace Robust.Shared.Containers
 
                 container.ForceRemove(entity);
                 return true;
-
             }
 
             wasInContainer = false;
@@ -97,7 +100,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove an entity from its container, if any.
+        /// Attempts to remove an entity from its container, if any.
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
@@ -108,7 +111,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove all entities in a container.
+        /// Attempts to remove all entities in a container.
         /// </summary>
         public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null, bool attachToGridOrMap = false)
         {
@@ -130,7 +133,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove and delete all entities in a container.
+        /// Attempts to remove and delete all entities in a container.
         /// </summary>
         public static void CleanContainer(this IContainer container)
         {
@@ -147,23 +150,16 @@ namespace Robust.Shared.Containers
             if (transform.Parent == null
                 || !TryGetContainer(transform.Parent.Owner, out var container)
                 || !TryInsertIntoContainer(transform, container))
-            {
                 transform.AttachToGridOrMap();
-            }
         }
 
         private static bool TryInsertIntoContainer(this ITransformComponent transform, IContainer container)
         {
-            if (container.Insert(transform.Owner))
-            {
-                return true;
-            }
+            if (container.Insert(transform.Owner)) return true;
 
             if (container.Owner.Transform.Parent != null
                 && TryGetContainer(container.Owner, out var newContainer))
-            {
                 return TryInsertIntoContainer(transform, newContainer);
-            }
 
             return false;
         }
@@ -192,16 +188,10 @@ namespace Robust.Shared.Containers
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 
             // Both entities are not in a container
-            if (!isUserContained && !isOtherContained)
-            {
-                return true;
-            }
+            if (!isUserContained && !isOtherContained) return true;
 
             // Both entities are in different contained states
-            if (isUserContained != isOtherContained)
-            {
-                return false;
-            }
+            if (isUserContained != isOtherContained) return false;
 
             // Both entities are in the same container
             return userContainer == otherContainer;

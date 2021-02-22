@@ -92,14 +92,6 @@ namespace Robust.Shared.Containers
             }
             
             // Add new containers and update existing contents.
-            IContainer ContainerFactory(string containerType, string id)
-            {
-                var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
-                if (type is null)
-                    throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
-
-                return (IContainer)_dynFactory.CreateInstanceUnchecked(type, new object[] {id, this});
-            }
 
             foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
             {
@@ -140,6 +132,14 @@ namespace Robust.Shared.Containers
                     if (!container.ContainedEntities.Contains(entity)) container.Insert(entity);
                 }
             }
+        }
+
+        private IContainer ContainerFactory(string containerType, string id)
+        {
+            var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
+            if (type is null) throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
+
+            return (IContainer) _dynFactory.CreateInstanceUnchecked(type, new object[] {id, this});
         }
 
         /// <inheritdoc />
@@ -307,7 +307,7 @@ namespace Robust.Shared.Containers
         }
 
         [Serializable, NetSerializable]
-        public class ContainerManagerComponentState : ComponentState
+        internal class ContainerManagerComponentState : ComponentState
         {
             public List<ContainerData> ContainerSet;
 

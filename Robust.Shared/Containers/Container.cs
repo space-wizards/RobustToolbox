@@ -17,19 +17,27 @@ namespace Robust.Shared.Containers
     {
         private const string ClassName = "Container";
 
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
-
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
         private List<IEntity> _containerList = new();
 
         /// <inheritdoc />
+        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+
+        /// <inheritdoc />
+        public override string ContainerType => ClassName;
+
+        /// <inheritdoc />
         public Container(string id, IContainerManager manager) : base(id, manager) { }
 
         /// <inheritdoc />
-        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+        void IExposeData.ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
+            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            serializer.DataField(ref _containerList, "ents", new List<IEntity>());
+        }
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)
@@ -60,14 +68,6 @@ namespace Robust.Shared.Containers
             {
                 entity.Delete();
             }
-        }
-
-        /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
-            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
-            serializer.DataField(ref _containerList, "ents", new List<IEntity>());
         }
     }
 }

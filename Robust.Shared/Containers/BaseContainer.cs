@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -13,18 +12,11 @@ namespace Robust.Shared.Containers
     public abstract class BaseContainer : IContainer
     {
         /// <inheritdoc />
+        [ViewVariables]
+        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
+
+        /// <inheritdoc />
         public abstract string ContainerType { get; }
-
-        /// <inheritdoc />
-        public IContainerManager Manager { get; private set; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public string ID { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -32,14 +24,22 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables]
-        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
+        public string ID { get; }
+
+        /// <inheritdoc />
+        public IContainerManager Manager { get; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool OccludesLight { get; set; }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ShowContents { get; set; }
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool OccludesLight { get; set; }
 
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
@@ -64,7 +64,7 @@ namespace Robust.Shared.Containers
                 return false;
 
             var transform = toinsert.Transform;
-            
+
             // CanInsert already checks nullability of Parent (or container forgot to call base that does)
             if (toinsert.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
                 return false; // Can't remove from existing container, can't insert.
@@ -79,20 +79,6 @@ namespace Robust.Shared.Containers
             return true;
         }
 
-        /// <summary>
-        /// Implement to store the reference in whatever form you want
-        /// </summary>
-        /// <param name="toinsert"></param>
-        protected virtual void InternalInsert(IEntity toinsert)
-        {
-            DebugTools.Assert(!Deleted);
-
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntInsertedIntoContainerMessage(toinsert, this));
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
-            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
-            Manager.Dirty();
-        }
-
         /// <inheritdoc />
         public virtual bool CanInsert(IEntity toinsert)
         {
@@ -101,11 +87,11 @@ namespace Robust.Shared.Containers
             // cannot insert into itself.
             if (Owner == toinsert)
                 return false;
-            
+
             // no, you can't put maps or grids into containers
             if (toinsert.HasComponent<IMapComponent>() || toinsert.HasComponent<IMapGridComponent>())
                 return false;
-            
+
             // Crucial, prevent circular insertion.
             return !toinsert.Transform.ContainsEntity(Owner.Transform);
 
@@ -119,13 +105,10 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
             DebugTools.Assert(toremove.IsValid());
-            
-            if (!CanRemove(toremove))
-            {
-                return false;
-            }
+
+            if (!CanRemove(toremove)) return false;
             InternalRemove(toremove);
-            
+
             toremove.Transform.AttachParentToContainerOrGrid();
             return true;
         }
@@ -139,23 +122,6 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(toRemove.IsValid());
 
             InternalRemove(toRemove);
-        }
-
-        /// <summary>
-        /// Implement to remove the reference you used to store the entity
-        /// </summary>
-        /// <param name="toremove"></param>
-        protected virtual void InternalRemove(IEntity toremove)
-        {
-            DebugTools.Assert(!Deleted);
-            DebugTools.AssertNotNull(Manager);
-            DebugTools.AssertNotNull(toremove);
-            DebugTools.Assert(toremove.IsValid());
-
-            Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
-            Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
-            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
-            Manager.Dirty();
         }
 
         /// <inheritdoc />
@@ -173,6 +139,37 @@ namespace Robust.Shared.Containers
         {
             Manager.InternalContainerShutdown(this);
             Deleted = true;
+        }
+
+        /// <summary>
+        /// Implement to store the reference in whatever form you want
+        /// </summary>
+        /// <param name="toinsert"></param>
+        protected virtual void InternalInsert(IEntity toinsert)
+        {
+            DebugTools.Assert(!Deleted);
+
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntInsertedIntoContainerMessage(toinsert, this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
+            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
+            Manager.Dirty();
+        }
+
+        /// <summary>
+        /// Implement to remove the reference you used to store the entity
+        /// </summary>
+        /// <param name="toremove"></param>
+        protected virtual void InternalRemove(IEntity toremove)
+        {
+            DebugTools.Assert(!Deleted);
+            DebugTools.AssertNotNull(Manager);
+            DebugTools.AssertNotNull(toremove);
+            DebugTools.Assert(toremove.IsValid());
+
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
+            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
+            Manager.Dirty();
         }
     }
 }

@@ -1,47 +1,49 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
 {
+    [UsedImplicitly]
     [SerializedType(ClassName)]
     public class ContainerSlot : BaseContainer, IExposeData
     {
-        [ViewVariables]
-        public IEntity? ContainedEntity
-        {
-            get => _containedEntity;
-            private set
-            {
-                _containedEntity = value;
-            }
-        }
-        
-        private IEntity? _containedEntity;
-
         private const string ClassName = "ContainerSlot";
 
-        /// <inheritdoc />
-        public override string ContainerType => ClassName;
+        private IEntity? _containedEntity;
 
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities
         {
             get
             {
-                if (ContainedEntity == null)
-                {
-                    return Array.Empty<IEntity>();
-                }
+                if (ContainedEntity == null) return Array.Empty<IEntity>();
 
-                return new List<IEntity>{ContainedEntity};
+                return new List<IEntity> {ContainedEntity};
             }
         }
 
-        public ContainerSlot(string id, IContainerManager manager) : base(id, manager)
+        [ViewVariables]
+        public IEntity? ContainedEntity
         {
+            get => _containedEntity;
+            private set => _containedEntity = value;
+        }
+
+        /// <inheritdoc />
+        public override string ContainerType => ClassName;
+
+        public ContainerSlot(string id, IContainerManager manager) : base(id, manager) { }
+
+        /// <inheritdoc />
+        void IExposeData.ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
+            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            serializer.DataField(ref _containedEntity, "ent", default);
         }
 
         /// <inheritdoc />
@@ -80,14 +82,6 @@ namespace Robust.Shared.Containers
             base.Shutdown();
 
             ContainedEntity?.Delete();
-        }
-
-        /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
-            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
-            serializer.DataField(ref _containedEntity, "ent", default);
         }
     }
 }

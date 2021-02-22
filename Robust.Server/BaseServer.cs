@@ -31,7 +31,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timers;
 using Robust.Shared.Serialization.Manager;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;

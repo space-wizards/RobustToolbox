@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -24,14 +25,14 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables]
-        public string ID { get; }
+        public string ID { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
-        public IContainerManager Manager { get; }
+        public IContainerManager Manager { get; internal set; } = default!; // Make sure you set me in init
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool OccludesLight { get; set; }
+        public bool OccludesLight { get; set; } = true;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -45,14 +46,7 @@ namespace Robust.Shared.Containers
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
         /// </summary>
-        protected BaseContainer(string id, IContainerManager manager)
-        {
-            DebugTools.Assert(!string.IsNullOrEmpty(id));
-            DebugTools.AssertNotNull(manager);
-
-            ID = id;
-            Manager = manager;
-        }
+        protected BaseContainer() { }
 
         /// <inheritdoc />
         public bool Insert(IEntity toinsert)
@@ -170,6 +164,14 @@ namespace Robust.Shared.Containers
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
             Manager.Dirty();
+        }
+
+        /// <inheritdoc />
+        public virtual void ExposeData(ObjectSerializer serializer)
+        {
+            // ID and Manager are filled in Initialize
+            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
+            serializer.DataReadWriteFunction("occludes", true, value => OccludesLight = value, () => OccludesLight);
         }
     }
 }

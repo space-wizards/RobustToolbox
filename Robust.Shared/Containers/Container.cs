@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Containers
@@ -13,7 +15,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [UsedImplicitly]
     [SerializedType(ClassName)]
-    public sealed class Container : BaseContainer, IExposeData
+    public sealed class Container : BaseContainer
     {
         private const string ClassName = "Container";
 
@@ -27,16 +29,29 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;
-
+        
         /// <inheritdoc />
-        public Container(string id, IContainerManager manager) : base(id, manager) { }
-
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
-            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            base.ExposeData(serializer);
+
+#if SERV3
+            // ONLY PAUL CAN MAKE ME WHOLE
             serializer.DataField(ref _containerList, "ents", new List<IEntity>());
+#else
+            if (serializer.Writing)
+            {
+                serializer.DataWriteFunction("ents", new List<EntityUid>(),
+                    () => _containerList.Select(e => e.Uid).ToList());
+            }
+            else
+            {
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                serializer.DataReadFunction("ents", new List<EntityUid>(),
+                    value => _containerList = value.Select((uid => entMan.GetEntity(uid))).ToList());
+            }
+#endif
         }
 
         /// <inheritdoc />

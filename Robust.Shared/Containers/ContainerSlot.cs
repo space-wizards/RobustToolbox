@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -9,7 +11,7 @@ namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
     [SerializedType(ClassName)]
-    public class ContainerSlot : BaseContainer, IExposeData
+    public class ContainerSlot : BaseContainer
     {
         private const string ClassName = "ContainerSlot";
 
@@ -35,15 +37,29 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;
-
-        public ContainerSlot(string id, IContainerManager manager) : base(id, manager) { }
-
+        
         /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
+        public override void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
-            serializer.DataReadWriteFunction("occludes", false, value => OccludesLight = value, () => OccludesLight);
+            base.ExposeData(serializer);
+
+#if SERV3
+            // ONLY PAUL CAN MAKE ME WHOLE
             serializer.DataField(ref _containedEntity, "ent", default);
+#else
+            if (serializer.Writing)
+            {
+                serializer.DataWriteFunction("ents", EntityUid.Invalid,
+                    () => _containedEntity?.Uid ?? EntityUid.Invalid);
+            }
+            else
+            {
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                serializer.DataReadFunction("ent", EntityUid.Invalid,
+                    value => _containedEntity = value != EntityUid.Invalid ? entMan.GetEntity(value) : null);
+            }
+#endif
         }
 
         /// <inheritdoc />

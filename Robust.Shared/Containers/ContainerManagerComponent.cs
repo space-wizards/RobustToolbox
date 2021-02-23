@@ -1,3 +1,4 @@
+//#define OLD
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ namespace Robust.Shared.Containers
         {
             base.Initialize();
 
+#if OLD
             if (_entitiesWaitingResolve == null) return;
 
             foreach (var (key, entities) in _entitiesWaitingResolve)
@@ -63,8 +65,16 @@ namespace Robust.Shared.Containers
             }
 
             _entitiesWaitingResolve = null;
+#else
+            foreach (var container in _containers)
+            {
+                var baseContainer = (BaseContainer)container.Value;
+                baseContainer.Manager = this;
+                baseContainer.ID = container.Key;
+            }
+#endif
         }
-        
+
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
@@ -139,9 +149,11 @@ namespace Robust.Shared.Containers
             var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
             if (type is null) throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
 
-            return (IContainer) _dynFactory.CreateInstanceUnchecked(type, new object[] {id, this});
+            var newContainer = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
+            newContainer.ID = id;
+            newContainer.Manager = this;
+            return newContainer;
         }
-
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -149,6 +161,7 @@ namespace Robust.Shared.Containers
 
             if (serializer.Reading)
             {
+#if OLD
                 if (serializer.TryReadDataField<Dictionary<string, ContainerPrototypeData>>("containers", out var data))
                 {
                     _entitiesWaitingResolve = new Dictionary<string, List<EntityUid>>();
@@ -165,6 +178,9 @@ namespace Robust.Shared.Containers
                         _entitiesWaitingResolve.Add(key, list);
                     }
                 }
+#else
+                serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
+#endif
             }
             else
             {
@@ -295,7 +311,10 @@ namespace Robust.Shared.Containers
         {
             if (HasContainer(id)) throw new ArgumentException($"Container with specified ID already exists: '{id}'");
 
-            var container = (IContainer) Activator.CreateInstance(type, id, this)!;
+            var container = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
+            container.ID = id;
+            container.Manager = this;
+
             _containers[id] = container;
             Dirty();
             return container;

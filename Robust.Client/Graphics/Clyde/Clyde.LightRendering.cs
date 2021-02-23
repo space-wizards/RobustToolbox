@@ -775,12 +775,10 @@ namespace Robust.Client.Graphics.Clyde
                         var worldTransform = transform.WorldMatrix;
                         var box = occluder.BoundingBox;
 
-                        // So uh, angle 0 = east... Apparently...
-                        // We account for that here so I don't go insane.
-                        var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
-                        var (trX, trY) = worldTransform.Transform(box.TopLeft);
-                        var (brX, brY) = worldTransform.Transform(box.TopRight);
-                        var (blX, blY) = worldTransform.Transform(box.BottomRight);
+                        var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
+                        var (trX, trY) = worldTransform.Transform(box.TopRight);
+                        var (brX, brY) = worldTransform.Transform(box.BottomRight);
+                        var (blX, blY) = worldTransform.Transform(box.BottomLeft);
 
                         // Faces.
                         var faceN = new Vector4(tlX, tlY, trX, trY);

@@ -60,7 +60,7 @@ namespace Robust.Shared.Prototypes
         /// </exception>
         IPrototype Index(Type type, string id);
         bool HasIndex<T>(string id) where T : IPrototype;
-        bool TryIndex<T>(string id, out T prototype) where T : IPrototype;
+        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype;
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -464,7 +464,7 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [MaybeNullWhen(false)] out T prototype) where T : IPrototype
+        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
         {
             if (!prototypes.TryGetValue(typeof(T), out var index))
             {

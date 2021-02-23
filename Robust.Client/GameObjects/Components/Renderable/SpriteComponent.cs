@@ -198,6 +198,9 @@ namespace Robust.Client.GameObjects
             rotation = other.rotation;
             scale = other.scale;
             drawDepth = other.drawDepth;
+            _screenLock = other._screenLock;
+            _overrideDirection = other._overrideDirection;
+            _enableOverrideDirection = other._enableOverrideDirection;
             Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
@@ -217,6 +220,11 @@ namespace Robust.Client.GameObjects
             }
 
             RenderOrder = other.RenderOrder;
+        }
+
+        public Matrix3 GetLocalMatrix()
+        {
+            return Matrix3.CreateTransform(in offset, in rotation, in scale);
         }
 
         /// <inheritdoc />
@@ -937,6 +945,31 @@ namespace Robust.Client.GameObjects
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
+        public void LayerSetOffset(int layer, Vector2 layerOffset)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory,
+                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            Layers[layer].SetOffset(layerOffset);
+        }
+
+        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetOffset(layer, layerOffset);
+        }
+
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
@@ -971,7 +1004,7 @@ namespace Robust.Client.GameObjects
         {
             RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
         }
-        
+
         private bool _screenLock = false;
         private Direction _overrideDirection = Direction.South;
         private bool _enableOverrideDirection = false;
@@ -1019,8 +1052,8 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            var localMatrix = Matrix3.CreateTransform(in offset, in rotation, in scale);
-            
+            var localMatrix = GetLocalMatrix();
+
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1028,23 +1061,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var dirType = GetLayerDirectionType(layer);
-
-                int numDirs;
-                switch (dirType)
-                {
-                    case RSI.State.DirectionType.Dir1:
-                        numDirs = 1;
-                        break;
-                    case RSI.State.DirectionType.Dir4:
-                        numDirs = 4;
-                        break;
-                    case RSI.State.DirectionType.Dir8:
-                        numDirs = 8;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                var numDirs = GetLayerDirectionCount(layer);
 
                 CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
@@ -1065,14 +1082,14 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
+            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
             var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
-            
+
             // TODO: Implement layer-specific rotation and scale.
             // Apply these directly to the box.
             // Oh and when you do update Layer.LocalToLayer so content doesn't break.
-            
+
             // handle.Modulate changes the color
             // drawingHandle.SetTransform() is set above, turning the quad into local space vertices
             drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
@@ -1082,8 +1099,8 @@ namespace Robust.Client.GameObjects
                 drawingHandle.UseShader(null);
             }
         }
-        
-        private static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
+
+        public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
             var segSize = (MathF.PI*2) / (numDirections * 2);
@@ -1094,19 +1111,25 @@ namespace Robust.Client.GameObjects
             return result;
         }
 
-        private RSI.State.DirectionType GetLayerDirectionType(Layer layer)
+        public int GetLayerDirectionCount(ISpriteLayer layer)
         {
-            if (!layer.State.IsValid)
-                return RSI.State.DirectionType.Dir1;
+            if (!layer.RsiState.IsValid)
+                return 1;
 
             // Pull texture from RSI state instead.
-            var rsi = layer.RSI ?? BaseRSI;
-            if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+            var rsi = layer.Rsi ?? BaseRSI;
+            if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
             {
                 state = GetFallbackState(resourceCache);
             }
 
-            return state.Directions;
+            return state.Directions switch
+            {
+                RSI.State.DirectionType.Dir1 => 1,
+                RSI.State.DirectionType.Dir4 => 4,
+                RSI.State.DirectionType.Dir8 => 8,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
@@ -1121,7 +1144,7 @@ namespace Robust.Client.GameObjects
                 {
                     state = GetFallbackState(resourceCache);
                 }
-                
+
                 var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
                 texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
             }
@@ -1142,7 +1165,7 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _visible, "visible", true);
             serializer.DataFieldCached(ref _directional, "directional", true); //TODO: Kill ME
-            serializer.DataFieldCached(ref _screenLock, "noRot", false);
+            serializer.DataFieldCached(ref _screenLock, "noRot", true);
             serializer.DataFieldCached(ref _enableOverrideDirection, "enableOverrideDir", false);
             serializer.DataFieldCached(ref _overrideDirection, "overrideDir", Direction.East);
 
@@ -1622,16 +1645,25 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale { get; set; } = Vector2.One;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Angle Rotation { get; set; }
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated = true;
+
+            [ViewVariables(VVAccess.ReadWrite)]
+            public Vector2 Offset { get; set; }
+
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
+
             [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
@@ -1851,6 +1883,11 @@ namespace Robust.Client.GameObjects
                 Texture = texture;
 
                 _parent.UpdateIsInert();
+            }
+
+            public void SetOffset(Vector2 offset)
+            {
+                Offset = offset;
             }
         }
 

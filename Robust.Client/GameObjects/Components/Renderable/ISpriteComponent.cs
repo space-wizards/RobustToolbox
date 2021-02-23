@@ -82,6 +82,8 @@ namespace Robust.Client.GameObjects
         uint RenderOrder { get; set; }
         bool IsInert { get; }
 
+        Matrix3 GetLocalMatrix();
+
         /// <summary>
         ///     Sets a layer key to the layer map, creating it if it does not exist.
         /// </summary>
@@ -220,5 +222,6 @@ namespace Robust.Client.GameObjects
         ISpriteLayer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
+        int GetLayerDirectionCount(ISpriteLayer layer);
     }
 }

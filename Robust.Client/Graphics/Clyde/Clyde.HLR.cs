@@ -219,6 +219,7 @@ namespace Robust.Client.Graphics.Clyde
                             new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                             name: nameof(entityPostRenderTarget));
                         _renderHandle.UseRenderTarget(entityPostRenderTarget);
+                        _renderHandle.Clear(new Color());
 
                         // Calculate viewport so that the entity thinks it's drawing to the same position,
                         // which is necessary for light application,

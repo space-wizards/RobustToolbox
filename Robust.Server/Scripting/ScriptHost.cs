@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
@@ -76,7 +77,7 @@ namespace Robust.Server.Scripting
                 return;
             }
 
-            if (!_conGroupController.CanViewVar(session))
+            if (!_conGroupController.CanScript(session))
             {
                 Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
                 _netManager.ServerSendMessage(reply, message.MsgChannel);
@@ -108,7 +109,7 @@ namespace Robust.Server.Scripting
                 return;
             }
 
-            if (!_conGroupController.CanViewVar(session))
+            if (!_conGroupController.CanScript(session))
             {
                 Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
                 return;
@@ -125,23 +126,40 @@ namespace Robust.Server.Scripting
 
             var code = message.Code;
 
-            instance.InputBuffer.AppendLine(code);
-
-            var tree = SyntaxFactory.ParseSyntaxTree(SourceText.From(instance.InputBuffer.ToString()),
-                ScriptInstanceShared.ParseOptions);
-
-            if (!SyntaxFactory.IsCompleteSubmission(tree))
+            if (code == "y" && instance.AutoImportRepeatBuffer.HasValue)
             {
-                replyMessage.WasComplete = false;
-                _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
-                return;
+                var (imports, repeatCode) = instance.AutoImportRepeatBuffer.Value;
+                var sb = new StringBuilder();
+                foreach (var import in imports)
+                {
+                    sb.AppendFormat("using {0};\n", import);
+                }
+
+                sb.Append(repeatCode);
+
+                code = sb.ToString();
+                replyMessage.WasComplete = true;
             }
+            else
+            {
+                instance.InputBuffer.AppendLine(code);
 
-            replyMessage.WasComplete = true;
+                var tree = SyntaxFactory.ParseSyntaxTree(SourceText.From(instance.InputBuffer.ToString()),
+                    ScriptInstanceShared.ParseOptions);
 
-            code = instance.InputBuffer.ToString().Trim();
+                if (!SyntaxFactory.IsCompleteSubmission(tree))
+                {
+                    replyMessage.WasComplete = false;
+                    _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
+                    return;
+                }
 
-            instance.InputBuffer.Clear();
+                replyMessage.WasComplete = true;
+
+                code = instance.InputBuffer.ToString().Trim();
+
+                instance.InputBuffer.Clear();
+            }
 
             Script newScript;
 
@@ -188,6 +206,8 @@ namespace Robust.Server.Scripting
                     msg.AddText("\n");
                 }
 
+                PromptAutoImports(e.Diagnostics, code, msg, instance);
+
                 replyMessage.Response = msg;
                 _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
                 return;
@@ -217,6 +237,21 @@ namespace Robust.Server.Scripting
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 
+        private void PromptAutoImports(
+            IEnumerable<Diagnostic> diags,
+            string code,
+            FormattedMessage output,
+            ScriptInstance instance)
+        {
+            if (!ScriptInstanceShared.CalcAutoImports(_reflectionManager, diags, out var found))
+                return;
+
+            output.AddText($"Auto-import {string.Join(", ", found)} (enter 'y')?");
+
+            instance.AutoImportRepeatBuffer = (found.ToArray(), code);
+        }
+
+
         private sealed class ScriptInstance
         {
             public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
@@ -226,6 +261,8 @@ namespace Robust.Server.Scripting
 
             public ScriptGlobals Globals { get; }
             public ScriptState? State { get; set; }
+
+            public (string[] imports, string code)? AutoImportRepeatBuffer;
 
             public ScriptInstance()
             {

@@ -204,6 +204,8 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _hScrollBar.ValueTarget += args.Delta.X * 50;
             }
+
+            args.Handle();
         }
 
         protected override void ChildAdded(Control newChild)

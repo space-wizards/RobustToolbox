@@ -473,6 +473,8 @@ namespace Robust.Client.UserInterface.Controls
 
             _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
             _isAtBottom = _scrollBar.IsAtEnd;
+
+            args.Handle();
         }
 
         [Pure]

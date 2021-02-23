@@ -65,42 +65,37 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="index">The index.</param>
         public void Set(IPhysShape shape, int index)
         {
+            Vertices.Clear();
+
             switch (shape.ShapeType)
             {
+                case ShapeType.Aabb:
+                    var aabb = (PhysShapeAabb) shape;
+                    var bounds = aabb.LocalBounds;
+
+                    Vertices.Add(bounds.BottomRight);
+                    Vertices.Add(bounds.TopRight);
+                    Vertices.Add(bounds.TopLeft);
+                    Vertices.Add(bounds.BottomLeft);
+
+                    Radius = aabb.Radius;
+
+                    break;
                 case ShapeType.Circle:
                     PhysShapeCircle circle = (PhysShapeCircle) shape;
-                    Vertices.Clear();
                     // TODO: Circle's position offset to entity, someday.
                     Vertices.Add(Vector2.Zero);
                     Radius = circle.Radius;
                     break;
 
                 case ShapeType.Polygon:
-                    PolygonShape polygon;
-                    // TODO: REMMIIIEEEEE
-                    switch (shape)
-                    {
-                        case PhysShapeAabb aabb:
-                            polygon = new PolygonShape(aabb);
-                            break;
-                        case PhysShapeGrid grid:
-                            polygon = new PolygonShape(grid);
-                            break;
-                        case PhysShapeRect rect:
-                            polygon = new PolygonShape(rect);
-                            break;
-                        case PolygonShape poly:
-                            polygon = poly;
-                            break;
-                        default:
-                            throw new InvalidOperationException();
-                    }
+                    var polygon = (PolygonShape) shape;
 
-                    Vertices.Clear();
                     for (int i = 0; i < polygon.Vertices.Count; i++)
                     {
                         Vertices.Add(polygon.Vertices[i]);
                     }
+
                     Radius = polygon.Radius;
                     break;
 
@@ -119,13 +114,23 @@ namespace Robust.Shared.Physics.Collision
 
                 case ShapeType.Edge:
                     EdgeShape edge = (EdgeShape) shape;
-                    Vertices.Clear();
+
                     Vertices.Add(edge.Vertex1);
                     Vertices.Add(edge.Vertex2);
+
                     Radius = edge.Radius;
-
                     break;
+                case ShapeType.Rectangle:
+                    var rectangle = (PhysShapeRect) shape;
+                    var calcedBounds = rectangle.CachedBounds;
 
+                    Vertices.Add(calcedBounds.BottomRight);
+                    Vertices.Add(calcedBounds.TopRight);
+                    Vertices.Add(calcedBounds.TopLeft);
+                    Vertices.Add(calcedBounds.BottomLeft);
+
+                    Radius = rectangle.Radius;
+                    break;
                 default:
                     throw new InvalidOperationException($"Invalid shapetype specified {shape.ShapeType}");
             }

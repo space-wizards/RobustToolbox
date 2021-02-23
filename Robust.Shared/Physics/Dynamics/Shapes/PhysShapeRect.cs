@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -34,19 +36,15 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private float _radius;
 
-        public ShapeType ShapeType => ShapeType.Polygon;
+        public ShapeType ShapeType => ShapeType.Rectangle;
 
-        private Box2 _rectangle = Box2.UnitCentered;
         [ViewVariables(VVAccess.ReadWrite)]
-        public Box2 Rectangle
-        {
-            get => _rectangle;
-            set
-            {
-                _rectangle = value;
-                OnDataChanged?.Invoke();
-            }
-        }
+        private Box2 _rectangle = Box2.UnitCentered;
+
+        public Box2 CachedBounds => _cachedBounds;
+
+        [ViewVariables]
+        private Box2 _cachedBounds;
 
         /// <inheritdoc />
         public void ApplyState() { }
@@ -72,7 +70,8 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
+            _cachedBounds = new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
+            return _cachedBounds;
         }
 
         public bool Equals(IPhysShape? other)

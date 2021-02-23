@@ -11,7 +11,9 @@ namespace Robust.Shared.Physics
         Edge = 1,
         Polygon = 2,
         Chain = 3,
-        TypeCount = 4,
+        Aabb = 4,
+        Rectangle = 5, // Look you might be able to replace this with polys but for now I have done the thing
+        TypeCount = 6, // Obviously increment this if you add something
     }
 
     /// <summary>

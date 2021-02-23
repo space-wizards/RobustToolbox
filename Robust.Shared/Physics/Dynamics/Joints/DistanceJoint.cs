@@ -312,7 +312,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        var vB = data.LinearVelocities[_indexB];
 	        float wB = data.AngularVelocities[_indexB];
 
-	        Quaternion qA = new(aA), qB = new(aB);
+	        Quaternion2D qA = new(aA), qB = new(aB);
 
 	        _rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
 	        _rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
@@ -495,7 +495,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             var cB = data.Positions[_indexB];
             float aB = data.Angles[_indexB];
 
-            Quaternion qA = new(aA), qB = new(aB);
+            Quaternion2D qA = new(aA), qB = new(aB);
 
             var rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
             var rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);

@@ -54,11 +54,14 @@ namespace Robust.Shared.Physics.Dynamics
     public sealed class PhysicsMap
     {
         // TODO: FixedRotation. I hope most of the rigidbody bugs are from this not being set so need to add it and pray.
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        // TODO: Pausing but need to merge in shared IPauseManager
         // AKA world.
 
         internal ContactManager ContactManager = new();
+
+        private bool _autoClearForces;
 
         /// <summary>
         ///     Change the global gravity vector.
@@ -153,6 +156,9 @@ namespace Robust.Shared.Physics.Dynamics
             ContactManager.MapId = MapId;
             _island = new PhysicsIsland();
             _island.Initialize();
+
+            _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
+            _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
 
             var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
 
@@ -487,7 +493,7 @@ namespace Robust.Shared.Physics.Dynamics
                 controller.UpdateAfterSolve(prediction, this, frameTime);
             }
 
-            if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.AutoClearForces))
+            if (_autoClearForces)
                 ClearForces();
 
             _invDt0 = invDt;

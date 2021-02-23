@@ -127,50 +127,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
-        // You did dis remmiiieeeee
-        // https://discord.com/channels/310555209753690112/560845886263918612/804917295456845835
-        // I might fix it later
-        public PolygonShape(IPhysShape shape)
-        {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
-
-            switch (shape)
-            {
-                case PhysShapeAabb aabb:
-                    Vertices = new List<Vector2>
-                    {
-                        aabb.LocalBounds.BottomLeft,
-                        aabb.LocalBounds.BottomRight,
-                        aabb.LocalBounds.TopRight,
-                        aabb.LocalBounds.TopLeft,
-                    };
-                    break;
-                case PhysShapeGrid grid:
-                    Vertices = new List<Vector2>
-                    {
-                        grid.LocalBounds.BottomLeft,
-                        grid.LocalBounds.BottomRight,
-                        grid.LocalBounds.TopRight,
-                        grid.LocalBounds.TopLeft,
-                    };
-                    break;
-                case PhysShapeRect rect:
-                    Vertices = new List<Vector2>
-                    {
-                        rect.Rectangle.BottomLeft,
-                        rect.Rectangle.BottomRight,
-                        rect.Rectangle.TopRight,
-                        rect.Rectangle.TopLeft,
-                    };
-                    break;
-                case PolygonShape poly:
-                    Vertices = poly.Vertices;
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
         public void SetAsBox(float width, float height)
         {
             Vertices = new List<Vector2>()
@@ -186,6 +142,20 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         {
             serializer.DataField(this, x => x.Vertices, "vertices", new List<Vector2>());
             // ComputeProperties();
+        }
+
+        /// <summary>
+        ///     A temporary optimisation that bypasses GiftWrapping until we get proper AABB and Rect collisions
+        /// </summary>
+        internal void SetVertices(List<Vector2> vertices)
+        {
+            DebugTools.Assert(vertices.Count == 4, "Vertices optimisation only usable on rectangles");
+
+            // TODO: Get what the normals should be
+            Vertices = vertices;
+            // _normals = new List<Vector2>()
+            // Verify on debug that the vertices skip was actually USEFUL
+            DebugTools.Assert(Vertices == vertices);
         }
 
         public bool Equals(IPhysShape? other)
@@ -241,7 +211,55 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)
         {
-            return new(aabb);
+            // TODO: Need a test for this.
+            var bounds = aabb.LocalBounds;
+
+            // Don't use Vertices property given we can just unwind it ourselves faster.
+            // Ideal world we don't need this but for now.
+            return new PolygonShape
+            {
+                // Giftwrap seems to use bottom-right first.
+                _vertices = new List<Vector2>
+                {
+                    bounds.BottomRight,
+                    bounds.TopRight,
+                    bounds.TopLeft,
+                    bounds.BottomLeft,
+                },
+
+                _normals = new List<Vector2>
+                {
+                    new(1, -0),
+                    new (0, 1),
+                    new (-1, -0),
+                    new (0, -1),
+                }
+            };
+        }
+
+        public static explicit operator PolygonShape(PhysShapeRect rect)
+        {
+            // Ideal world we don't even need PhysShapeRect?
+            var bounds = rect.CachedBounds;
+
+            return new PolygonShape
+            {
+                _vertices = new List<Vector2>
+                {
+                    bounds.BottomRight,
+                    bounds.TopRight,
+                    bounds.TopLeft,
+                    bounds.BottomLeft,
+                },
+
+                _normals = new List<Vector2>
+                {
+                    new(1, -0),
+                    new (0, 1),
+                    new (-1, -0),
+                    new (0, -1),
+                }
+            };
         }
     }
 }

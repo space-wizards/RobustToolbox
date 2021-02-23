@@ -233,8 +233,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 Transform xfA = new Transform(angleA);
                 Transform xfB = new Transform(angleB);
-                xfA.Position = centerA - Transform.Mul(xfA.Quaternion, localCenterA);
-                xfB.Position = centerB - Transform.Mul(xfB.Quaternion, localCenterB);
+                xfA.Position = centerA - Transform.Mul(xfA.Quaternion2D, localCenterA);
+                xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
                 Vector2 normal;
                 var points = new Vector2[2];
@@ -684,8 +684,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 {
                     Transform xfA = new Transform(angleA);
                     Transform xfB = new Transform(angleB);
-                    xfA.Position = centerA - Transform.Mul(xfA.Quaternion, localCenterA);
-                    xfB.Position = centerB - Transform.Mul(xfB.Quaternion, localCenterB);
+                    xfA.Position = centerA - Transform.Mul(xfA.Quaternion2D, localCenterA);
+                    xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
                     Vector2 normal;
                     Vector2 point;
@@ -776,7 +776,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 case ManifoldType.FaceA:
                 {
-                    normal = Transform.Mul(xfA.Quaternion, manifold.LocalNormal);
+                    normal = Transform.Mul(xfA.Quaternion2D, manifold.LocalNormal);
                     Vector2 planePoint = Transform.Mul(xfA, manifold.LocalPoint);
 
                     for (int i = 0; i < manifold.PointCount; ++i)
@@ -791,7 +791,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 case ManifoldType.FaceB:
                 {
-                    normal = Transform.Mul(xfB.Quaternion, manifold.LocalNormal);
+                    normal = Transform.Mul(xfB.Quaternion2D, manifold.LocalNormal);
                     Vector2 planePoint = Transform.Mul(xfB, manifold.LocalPoint);
 
                     for (int i = 0; i < manifold.PointCount; ++i)
@@ -843,7 +843,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     case ManifoldType.FaceA:
                         {
-                            normal = Transform.Mul(xfA.Quaternion, pc.LocalNormal);
+                            normal = Transform.Mul(xfA.Quaternion2D, pc.LocalNormal);
                             Vector2 planePoint = Transform.Mul(xfA, pc.LocalPoint);
 
                             Vector2 clipPoint = Transform.Mul(xfB, pc.LocalPoints[index]);
@@ -854,7 +854,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     case ManifoldType.FaceB:
                         {
-                            normal = Transform.Mul(xfB.Quaternion, pc.LocalNormal);
+                            normal = Transform.Mul(xfB.Quaternion2D, pc.LocalNormal);
                             Vector2 planePoint = Transform.Mul(xfB, pc.LocalPoint);
 
                             Vector2 clipPoint = Transform.Mul(xfA, pc.LocalPoints[index]);

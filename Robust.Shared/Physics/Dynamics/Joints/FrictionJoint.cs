@@ -195,7 +195,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             Vector2 vB = data.LinearVelocities[_indexB];
             float wB = data.AngularVelocities[_indexB];
 
-            Quaternion qA = new(aA), qB = new(aB);
+            Quaternion2D qA = new(aA), qB = new(aB);
 
             // Compute the effective mass matrix.
             _rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);

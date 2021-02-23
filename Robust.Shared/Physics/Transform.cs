@@ -37,6 +37,7 @@ merchantability, fitness for a particular purpose and non-infringement.
 */
 
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -46,24 +47,24 @@ namespace Robust.Shared.Physics
     internal struct Transform
     {
         public Vector2 Position;
-        public Quaternion Quaternion;
+        public Quaternion2D Quaternion2D;
 
         public Transform(Vector2 position, float angle)
         {
             Position = position;
-            Quaternion = new Quaternion(angle);
+            Quaternion2D = new Quaternion2D(angle);
         }
 
         public Transform(float angle)
         {
             Position = Vector2.Zero;
-            Quaternion = new Quaternion(angle);
+            Quaternion2D = new Quaternion2D(angle);
         }
 
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {
-            float x = (transform.Quaternion.C * vector.X - transform.Quaternion.S * vector.Y) + transform.Position.X;
-            float y = (transform.Quaternion.S * vector.X + transform.Quaternion.C * vector.Y) + transform.Position.Y;
+            float x = (transform.Quaternion2D.C * vector.X - transform.Quaternion2D.S * vector.Y) + transform.Position.X;
+            float y = (transform.Quaternion2D.S * vector.X + transform.Quaternion2D.C * vector.Y) + transform.Position.Y;
 
             return new Vector2(x, y);
         }
@@ -78,20 +79,20 @@ namespace Robust.Shared.Physics
         {
             float px = v.X - T.Position.X;
             float py = v.Y - T.Position.Y;
-            float x = (T.Quaternion.C * px + T.Quaternion.S * py);
-            float y = (-T.Quaternion.S * px + T.Quaternion.C * py);
+            float x = (T.Quaternion2D.C * px + T.Quaternion2D.S * py);
+            float y = (-T.Quaternion2D.S * px + T.Quaternion2D.C * py);
 
             return new Vector2(x, y);
         }
 
         /// Transpose multiply two rotations: qT * r
-        public static Quaternion MulT(in Quaternion q, in Quaternion r)
+        public static Quaternion2D MulT(in Quaternion2D q, in Quaternion2D r)
         {
             // [ qc qs] * [rc -rs] = [qc*rc+qs*rs -qc*rs+qs*rc]
             // [-qs qc]   [rs  rc]   [-qs*rc+qc*rs qs*rs+qc*rc]
             // s = qc * rs - qs * rc
             // c = qc * rc + qs * rs
-            Quaternion qr;
+            Quaternion2D qr;
             qr.S = q.C * r.S - q.S * r.C;
             qr.C = q.C * r.C + q.S * r.S;
             return qr;
@@ -103,8 +104,8 @@ namespace Robust.Shared.Physics
         {
             Transform C = new Transform
             {
-                Quaternion = MulT(A.Quaternion, B.Quaternion),
-                Position = MulT(A.Quaternion, B.Position - A.Position)
+                Quaternion2D = MulT(A.Quaternion2D, B.Quaternion2D),
+                Position = MulT(A.Quaternion2D, B.Position - A.Position)
             };
             return C;
         }
@@ -115,7 +116,7 @@ namespace Robust.Shared.Physics
         /// <param name="q"></param>
         /// <param name="v"></param>
         /// <returns></returns>
-        public static Vector2 MulT(Quaternion q, Vector2 v)
+        public static Vector2 MulT(Quaternion2D q, Vector2 v)
         {
             return new(q.C * v.X + q.S * v.Y, -q.S * v.X + q.C * v.Y);
         }
@@ -123,12 +124,12 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Rotate a vector
         /// </summary>
-        /// <param name="quaternion"></param>
+        /// <param name="quaternion2D"></param>
         /// <param name="vector"></param>
         /// <returns></returns>
-        public static Vector2 Mul(in Quaternion quaternion, in Vector2 vector)
+        public static Vector2 Mul(in Quaternion2D quaternion2D, in Vector2 vector)
         {
-            return new(quaternion.C * vector.X - quaternion.S * vector.Y, quaternion.S * vector.X + quaternion.C * vector.Y);
+            return new(quaternion2D.C * vector.X - quaternion2D.S * vector.Y, quaternion2D.S * vector.X + quaternion2D.C * vector.Y);
         }
 
         public static Vector2 Mul(in Vector2[] A, in Vector2 v)
@@ -139,33 +140,33 @@ namespace Robust.Shared.Physics
         }
     }
 
-    internal struct Quaternion
+    public struct Quaternion2D
     {
         public float C;
         public float S;
 
-        public Quaternion(float cos, float sin)
+        public Quaternion2D(float cos, float sin)
         {
             C = cos;
             S = sin;
         }
 
-        public Quaternion(float angle)
+        public Quaternion2D(float angle)
         {
             C = MathF.Cos(angle);
             S = MathF.Sin(angle);
         }
 
-        public Quaternion Set(float angle)
+        public Quaternion2D Set(float angle)
         {
             //FPE: Optimization
             if (angle == 0.0f)
             {
-                return new Quaternion(1.0f, 0.0f);
+                return new Quaternion2D(1.0f, 0.0f);
             }
 
             // TODO_ERIN optimize
-            return new Quaternion(MathF.Cos(angle), MathF.Sin(angle));
+            return new Quaternion2D(MathF.Cos(angle), MathF.Sin(angle));
         }
     }
 }

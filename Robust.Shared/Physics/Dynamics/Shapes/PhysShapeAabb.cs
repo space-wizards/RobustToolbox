@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -34,7 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private float _radius;
 
-        public ShapeType ShapeType => ShapeType.Polygon;
+        public ShapeType ShapeType => ShapeType.Aabb;
 
         private Box2 _localBounds = Box2.UnitCentered;
 
@@ -87,6 +89,18 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
 
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        }
+
+        [Pure]
+        internal List<Vector2> GetVertices()
+        {
+            return new()
+            {
+                _localBounds.BottomRight,
+                _localBounds.TopRight,
+                _localBounds.TopLeft,
+                _localBounds.BottomLeft,
+            };
         }
 
         public bool Equals(IPhysShape? other)

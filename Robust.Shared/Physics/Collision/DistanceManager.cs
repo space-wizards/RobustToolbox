@@ -127,10 +127,10 @@ namespace Robust.Shared.Physics.Collision
 
                 // Compute a tentative new simplex vertex using support points.
                 SimplexVertex vertex = simplex.V[simplex.Count];
-                vertex.IndexA = input.ProxyA.GetSupport(Transform.MulT(input.TransformA.Quaternion, -d));
+                vertex.IndexA = input.ProxyA.GetSupport(Transform.MulT(input.TransformA.Quaternion2D, -d));
                 vertex.WA = Transform.Mul(input.TransformA, input.ProxyA.Vertices[vertex.IndexA]);
 
-                vertex.IndexB = input.ProxyB.GetSupport(Transform.MulT(input.TransformB.Quaternion, d));
+                vertex.IndexB = input.ProxyB.GetSupport(Transform.MulT(input.TransformB.Quaternion2D, d));
                 vertex.WB = Transform.Mul(input.TransformB, input.ProxyB.Vertices[vertex.IndexB]);
                 vertex.W = vertex.WB - vertex.WA;
                 simplex.V[simplex.Count] = vertex;

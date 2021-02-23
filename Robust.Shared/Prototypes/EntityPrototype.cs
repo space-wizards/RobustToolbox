@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -36,7 +36,29 @@ namespace Robust.Shared.Prototypes
         public string Name { get; private set; } = "";
 
         private bool _nameModified;
-        private bool _descriptionModified;
+
+
+        string? _localizationId;
+
+        /// <summary>
+        /// Fluent messageId used to lookup the entity's name and localization attributes.
+        /// </summary>
+        [ViewVariables, CanBeNull]
+        public string? LocalizationID
+        {
+            get
+            {
+                if(_localizationId == null)
+                {
+                    _localizationId = $"ent-{CaseConversion.PascalToKebab(ID)}";
+                }
+                return _localizationId;
+            }
+            private set
+            {
+                _localizationId = value;
+            }
+        }
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
@@ -50,6 +72,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         public string Description { get; private set; } = "";
+
+        private bool _descriptionModified;
 
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
@@ -148,6 +172,10 @@ namespace Robust.Shared.Prototypes
         {
             var loc = IoCManager.Resolve<ILocalizationManager>();
             ID = mapping.GetNode("id").AsString();
+
+            if (mapping.TryGetNode("localizationId", out var locId)) {
+                _localizationId = locId.ToString();
+            }
 
             if (mapping.TryGetNode("name", out var node))
             {

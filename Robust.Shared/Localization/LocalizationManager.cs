@@ -8,7 +8,8 @@ using Fluent.Net;
 using Fluent.Net.RuntimeAst;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
-using Robust.Shared.IoC;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Localization;using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -28,6 +29,101 @@ namespace Robust.Shared.Localization
         void IPostInjectInit.PostInject()
         {
             _logSawmill = _log.GetSawmill("loc");
+        }
+
+        public bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
+        {
+            var attributeSource = "";
+ 
+            if (entity.TryGetComponent<GrammarComponent>(out var grammar) && !string.IsNullOrEmpty(grammar.LocalizationId))
+            {
+                attributeSource = grammar.LocalizationId;
+            }
+            else if(!string.IsNullOrEmpty(entity.Prototype?.LocalizationID))
+            {
+                attributeSource = entity.Prototype.LocalizationID;
+            }
+
+            if (!string.IsNullOrEmpty(attributeSource))
+            {
+                if (TryGetString($"{attributeSource}.{attribute}", out value))
+                {
+                    return true;
+                }
+            }
+
+            value = null;
+            return false;
+        }
+
+        void AddBuiltinFunctions(MessageContext context)
+        {
+            //Grammatical gender
+            context.Functions.Add("GENDER", (args, options) => CallFunction((args) =>
+            {
+                if (args.Args.Count < 1) return new LocValueString("other");
+
+                ILocValue entity0 = args.Args[0];
+                if (entity0.Value != null)
+                {
+                    IEntity entity = (IEntity)entity0.Value;
+
+                    if(entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.Gender.HasValue)
+                    {
+                        return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
+                    }
+
+                    if(TryGetEntityLocAttrib(entity, "gender", out var gender))
+                    {
+                        return new LocValueString(gender);
+                    }
+                }
+
+                return new LocValueString("other");
+            }, args, options));
+
+            //Proper nouns
+            context.Functions.Add("PROPER", (args, options) => CallFunction((args) =>
+            {
+                if (args.Args.Count < 1) return new LocValueString("other");
+
+                ILocValue entity0 = args.Args[0];
+                if (entity0.Value != null)
+                {
+                    IEntity entity = (IEntity)entity0.Value;
+
+                    if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.ProperNoun.HasValue)
+                    {
+                        return new LocValueString(grammar.ProperNoun.Value.ToString());
+                    }
+
+                    if (TryGetEntityLocAttrib(entity, "proper", out var proper))
+                    {
+                        return new LocValueString(proper);
+                    }
+                }
+
+                return new LocValueString("other");
+            }, args, options));
+
+            //Misc Attribs
+            context.Functions.Add("ATTRIB", (args, options) => CallFunction((args) =>
+            {
+                if(args.Args.Count < 2) return new LocValueString("other");
+
+                ILocValue entity0 = args.Args[0];
+                if (entity0.Value != null)
+                {
+                    IEntity entity = (IEntity)entity0.Value;
+                    ILocValue attrib0 = args.Args[1];
+                    if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(context)), out var attrib))
+                    {
+                        return new LocValueString(attrib);
+                    }
+                }
+
+                return new LocValueString("other");
+            }, args, options));
         }
 
         public string GetString(string messageId)
@@ -81,9 +177,15 @@ namespace Robust.Shared.Localization
             var args = new Dictionary<string, object>();
             foreach (var (k, v) in args0)
             {
-                var val = v;
-                if (v is ILocValue locVal)
-                    val = ValToFluent(locVal);
+                var val = v switch
+                {
+                    IEntity entity => new LocValueEntity(entity),
+                    bool or Enum => v.ToString()!.ToLowerInvariant(),
+                    _ => v,
+                };
+
+                if (val is ILocValue locVal)
+                    val = new FluentLocWrapperType(locVal);
 
                 args.Add(k, val);
             }
@@ -152,6 +254,7 @@ namespace Robust.Shared.Localization
                         Functions = context.Functions
                     }
                 );
+                AddBuiltinFunctions(newContext);
 
                 _contexts[culture] = newContext;
 
@@ -283,6 +386,7 @@ namespace Robust.Shared.Localization
                     Functions = new Dictionary<string, Resolver.ExternalFunction>(),
                 }
             );
+            AddBuiltinFunctions(context);
 
             _contexts.Add(culture, context);
 
@@ -362,6 +466,8 @@ namespace Robust.Shared.Localization
             public override bool Match(MessageContext ctx, object obj)
             {
                 return false;
+                /*var strVal = obj is IFluentType ft ? ft.Value : obj.ToString() ?? "";
+                return WrappedValue.Matches(new LocContext(ctx), strVal);*/
             }
         }
     }

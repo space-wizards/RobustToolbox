@@ -15,5 +15,6 @@ namespace Robust.Shared.GameObjects
         public const uint CONTAINER_MANAGER = 25;
         public const uint OCCLUDER = 26;
         public const uint EYE = 28;
+        public const uint GRAMMAR = 29;
     }
 }

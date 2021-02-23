@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -153,7 +154,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        [field:DataField("components")]
+        [field: DataField("components")]
         public ComponentRegistry Components { get; } = new();
 
         private readonly HashSet<Type> ReferenceTypes = new();
@@ -171,6 +172,20 @@ namespace Robust.Shared.Prototypes
             Components.Add("Transform", new TransformComponent());
             // And a metadata component too!
             Components.Add("MetaData", new MetaDataComponent());
+        }
+
+        public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
+        {
+            if (!Components.TryGetValue(name, out var componentUnCast))
+            {
+                component = default;
+                return false;
+            }
+
+            // There are no duplicate component names
+            // TODO Sanity check with names being in an attribute of the type instead
+            component = (T) componentUnCast;
+            return true;
         }
 
         public void Reset()
@@ -350,15 +365,6 @@ namespace Robust.Shared.Prototypes
 
         public void UpdateEntity(Entity entity)
         {
-            bool HasBeenModified(string name, YamlMappingNode data, EntityPrototype prototype, IComponent currentComponent, IComponentFactory factory)
-            {
-                var component = factory.GetComponent(name);
-                prototype.CurrentDeserializingComponent = name;
-                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(prototype));
-                component.ExposeData(ser);
-                return component == (Component) currentComponent;
-            }
-
             if (ID != entity.Prototype?.ID)
             {
                 Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entity.Prototype?.ID}'");
@@ -383,8 +389,7 @@ namespace Robust.Shared.Prototypes
             // Find components to be removed, and remove them
             foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
             {
-                if (!HasBeenModified(name, oldPrototype.Components[name], oldPrototype, entity.GetComponent(type),
-                    factory) && Components.Keys.Contains(name))
+                if (Components.Keys.Contains(name))
                 {
                     ignoredComponents.Add(name);
                     continue;
@@ -395,15 +400,16 @@ namespace Robust.Shared.Prototypes
 
             componentManager.CullRemovedComponents();
 
+            var componentDependencyManager = IoCManager.Resolve<IComponentDependencyManager>();
+
             // Add new components
             foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name)).Except(oldPrototypeComponents))
             {
                 var data = Components[name];
                 var component = (Component) factory.GetComponent(name);
-                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(this));
                 CurrentDeserializingComponent = name;
                 component.Owner = entity;
-                component.ExposeData(ser);
+                componentDependencyManager.OnComponentAdd(entity, component);
                 entity.AddComponent(component);
             }
 
@@ -514,7 +520,7 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, IComponent>{}
+        public class ComponentRegistry : Dictionary<string, IComponent> {}
 
         [DataDefinition]
         public class EntityPlacementProperties

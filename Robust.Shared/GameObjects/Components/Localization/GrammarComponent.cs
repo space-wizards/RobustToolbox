@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects.Components.Localization
             if (serializer.TryReadDataFieldCached("gender", out string? gender0))
             {
                 var refl = IoCManager.Resolve<IReflectionManager>();
-                if (refl.TryParseEnumReference(gender0, out var gender))
+                if (refl.TryParseEnumReference(gender0!, out var gender))
                 {
                     Gender = (Gender)gender;
                 }

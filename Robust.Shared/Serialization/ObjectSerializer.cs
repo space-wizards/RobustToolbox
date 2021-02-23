@@ -298,18 +298,18 @@ namespace Robust.Shared.Serialization
             return TryReadDataField(name, WithFormat<T>.NoFormat, out value);
         }
 
-        public abstract bool TryReadDataField<T>(string name, WithFormat<T> format, [NotNullWhen(true)] out T value);
+        public abstract bool TryReadDataField<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value);
 
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataFieldCached" />.
         /// </summary>
-        public virtual bool TryReadDataFieldCached<T>(string name, [NotNullWhen(true)] out T? value)
+        public virtual bool TryReadDataFieldCached<T>(string name, [MaybeNullWhen(false)] out T value)
         {
             return TryReadDataFieldCached(name, WithFormat<T>.NoFormat, out value);
         }
 
         public virtual bool TryReadDataFieldCached<T>(string name, WithFormat<T> format,
-            [NotNullWhen(true)] out T value)
+            [MaybeNullWhen(false)] out T value)
         {
             return TryReadDataField(name, format, out value);
         }

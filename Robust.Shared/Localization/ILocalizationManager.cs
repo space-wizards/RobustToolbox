@@ -31,6 +31,13 @@ namespace Robust.Shared.Localization
         /// </returns>
         string GetString(string messageId);
 
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string)"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value);
 
         /// <summary>
@@ -38,6 +45,13 @@ namespace Robust.Shared.Localization
         /// </summary>
         string GetString(string messageId, params (string, object)[] args);
 
+        /// <summary>
+        ///     Try- version of <see cref="GetString(string, ValueTuple{string, object}[])"/>
+        /// </summary>
+        /// <remarks>
+        ///     Does not log a warning if the message does not exist.
+        ///     Does however log errors if any occur while formatting.
+        /// </remarks>
         bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] args);
 
         /// <summary>
@@ -51,10 +65,27 @@ namespace Robust.Shared.Localization
         /// </summary>
         /// <param name="resourceManager"></param>
         /// <param name="culture"></param>
-        void LoadCulture(IResourceManager resourceManager, CultureInfo culture);
+        [Obsolete("Use LoadCulture without IResourceManager overload instead.")]
+        void LoadCulture(IResourceManager resourceManager, CultureInfo culture) => LoadCulture(culture);
 
+        /// <summary>
+        ///     Load data for a culture.
+        /// </summary>
+        /// <param name="culture"></param>
+        void LoadCulture(CultureInfo culture);
 
+        /// <summary>
+        ///     Immediately reload ALL localizations from resources.
+        /// </summary>
+        void ReloadLocalizations();
 
+        /// <summary>
+        ///     Add a function that can be called from Fluent localizations.
+        /// </summary>
+        /// <param name="culture">The culture to add the function instance for.</param>
+        /// <param name="name">The name of the function.</param>
+        /// <param name="function">The function itself.</param>
+        void AddFunction(CultureInfo culture, string name, LocFunction function);
 
         /// <summary>
         /// Remnants of the old Localization system.

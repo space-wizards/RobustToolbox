@@ -61,8 +61,8 @@ namespace Robust.Shared.Localization
         ///     Load data for a culture.
         /// </summary>
         /// <param name="resourceManager"></param>
-        /// <param name="macroFactory"></param>
         /// <param name="culture"></param>
+        [Obsolete("Use ILocalizationManager directly for setup methods.")]
         public static void LoadCulture(IResourceManager resourceManager, CultureInfo culture)
         {
             LocalizationManager.LoadCulture(resourceManager, culture);

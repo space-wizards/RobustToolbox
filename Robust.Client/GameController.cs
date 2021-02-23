@@ -318,7 +318,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
-            logManager.GetSawmill("Loc").Level = LogLevel.Error;
+            logManager.GetSawmill("loc").Level = LogLevel.Error;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG

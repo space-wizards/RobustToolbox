@@ -222,6 +222,12 @@ namespace Robust.Client.GameObjects
         ISpriteLayer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
+
         int GetLayerDirectionCount(ISpriteLayer layer);
+
+        /// <summary>
+        ///     Calculate sprite bounding box in world-space coordinates.
+        /// </summary>
+        Box2 CalculateBoundingBox();
     }
 }

@@ -1604,6 +1604,39 @@ namespace Robust.Client.GameObjects
             return builder.ToString();
         }
 
+        /// <inheritdoc/>
+        public Box2 CalculateBoundingBox()
+        {
+            // fast check for empty sprites
+            if (Layers.Count == 0)
+                return new Box2();
+
+            // we need to calculate bounding box taking into account all nested layers
+            // because layers can have offsets, scale or rotation we need to calculate a new BB
+            // based on lowest bottomLeft and hightest topRight points from all layers
+            var box = Layers[0].CalculateBoundingBox();
+
+            for (int i = 1; i < Layers.Count; i++)
+            {
+                var layer = Layers[i];
+                var layerBB = layer.CalculateBoundingBox();
+
+                box = box.Union(layerBB);
+            }
+
+            // apply sprite transformations and calculate sprite bounding box
+            // we can optimize it a bit, if sprite doesn't have rotation
+            var spriteBox = box.Scale(Scale);
+            var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
+            var spriteBB = spriteHasRotation ?
+                new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+
+            // move it all to world transform system (with sprite offset)
+            var worldPosition = Owner.Transform.WorldPosition;
+            var worldBB = spriteBB.Translated(Offset + worldPosition);
+            return worldBB;
+        }
+
         /// <summary>
         ///     Enum to "offset" a cardinal direction.
         /// </summary>
@@ -1889,6 +1922,33 @@ namespace Robust.Client.GameObjects
             {
                 Offset = offset;
             }
+
+            /// <inheritdoc/>
+            public Vector2i PixelSize
+            {
+                get
+                {
+                    var pixelSize = Vector2i.Zero;
+                    if (Texture != null)
+                    {
+                        pixelSize = Texture.Size;
+                    }
+                    else if (ActualRsi != null)
+                    {
+                        pixelSize = ActualRsi.Size;
+                    }
+
+                    return pixelSize;
+                }
+            }
+
+            /// <inheritdoc/>
+            public Box2 CalculateBoundingBox()
+            {
+                // TODO: scale & rotation for layers is currently unimplemented.
+                return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
+            }
+
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)

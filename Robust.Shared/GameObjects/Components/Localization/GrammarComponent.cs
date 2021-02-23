@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects.Components.Localization
         {
             serializer.DataField(ref LocalizationId, "localizationId", "");
 
-            if (serializer.TryReadDataFieldCached("gender", out string gender0))
+            if (serializer.TryReadDataFieldCached("gender", out string? gender0))
             {
                 var refl = IoCManager.Resolve<IReflectionManager>();
                 if (refl.TryParseEnumReference(gender0, out var gender))

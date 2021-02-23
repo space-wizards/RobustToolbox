@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -303,7 +303,7 @@ namespace Robust.Shared.Serialization
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataFieldCached" />.
         /// </summary>
-        public virtual bool TryReadDataFieldCached<T>(string name, [NotNullWhen(true)] out T value)
+        public virtual bool TryReadDataFieldCached<T>(string name, [NotNullWhen(true)] out T? value)
         {
             return TryReadDataFieldCached(name, WithFormat<T>.NoFormat, out value);
         }

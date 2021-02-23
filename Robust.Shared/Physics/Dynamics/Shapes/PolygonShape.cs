@@ -127,6 +127,11 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
+        public PolygonShape(float radius)
+        {
+            _radius = radius;
+        }
+
         public void SetAsBox(float width, float height)
         {
             Vertices = new List<Vector2>()
@@ -216,7 +221,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
             // Don't use Vertices property given we can just unwind it ourselves faster.
             // Ideal world we don't need this but for now.
-            return new PolygonShape
+            return new PolygonShape(aabb.Radius)
             {
                 // Giftwrap seems to use bottom-right first.
                 _vertices = new List<Vector2>
@@ -242,7 +247,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             // Ideal world we don't even need PhysShapeRect?
             var bounds = rect.CachedBounds;
 
-            return new PolygonShape
+            return new PolygonShape(rect.Radius)
             {
                 _vertices = new List<Vector2>
                 {

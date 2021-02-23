@@ -556,7 +556,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         /// <param name="body"></param>
         /// <param name="displacement"></param>
-        internal void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -570,7 +570,7 @@ namespace Robust.Shared.Physics.Broadphase
             var newBroadPhases = _mapManager
                 .FindGridIdsIntersecting(mapId, worldAABB, true)
                 .Select(gridId => GetBroadPhase(mapId, gridId))
-                .ToList();
+                .ToArray();
 
             // Remove from old broadphases
             foreach (var broadPhase in oldBroadPhases.ToArray())

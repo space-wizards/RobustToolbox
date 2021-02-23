@@ -424,8 +424,9 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyB = contact.FixtureB!.Body.Owner;
 
                 // Apply onCollide behavior
-                // TODO: CollideWith should be called with the body as a minor optimisation.
-                // Also these ToArrays are hilariously expensive.
+                // TODO: CollideWith should be called with the body. You'll get roughly 1% extra perf from DamageOnHighSpeedImpactComponent
+                // TODO: Also these ToArrays are hilariously expensive so if you can make it so CollideWith returns whether it should continue or something
+                // then you could get up to 10% savings on physics performance.
                 foreach (var behavior in bodyA.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     if (bodyB.Deleted) break;

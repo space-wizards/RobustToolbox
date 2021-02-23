@@ -271,8 +271,6 @@ namespace Robust.Server
 
             _loc.AddLoadedToStringSerializer(_stringSerializer);
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
-
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
             IoCManager.Resolve<IPrototypeManager>().LoadedData += (yaml, name) =>
@@ -300,6 +298,8 @@ namespace Robust.Server
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             _entities.Initialize();
+
+            IoCManager.Resolve<IServ3Manager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared

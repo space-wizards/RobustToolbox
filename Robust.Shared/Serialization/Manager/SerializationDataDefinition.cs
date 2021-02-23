@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -23,13 +24,13 @@ namespace Robust.Shared.Serialization.Manager
 
         public readonly Type Type;
 
+        private readonly string[] _duplicates;
         private readonly FieldDefinition[] _baseFieldDefinitions;
         private readonly object?[] _defaultValues;
 
         private readonly PopulateDelegateSignature _populateDelegate;
 
         private readonly SerializeDelegateSignature _serializeDelegate;
-
 
         public readonly CopyDelegateSignature _copyDelegate;
 
@@ -55,27 +56,38 @@ namespace Robust.Shared.Serialization.Manager
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
                 var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
-                if(attr == null) continue;
+
+                if (attr == null) continue;
+
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
                 {
+                    // TODO paul this is most definitely 100.10% wrong help
+                    if (propertyInfo.IsOverridenIn(type))
+                    {
+                        continue;
+                    }
+
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
                         Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
-                    }else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
+                    }
+                    else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
                     {
                         Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
                         continue;
                     }
                 }
+
                 fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo));
             }
 
-            var duplicates = fieldDefs.Where(f =>
-                fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1).Select(f => f.Attribute.Tag).ToList();
-            if (duplicates.Count > 0)
-                throw new ArgumentException($"Duplicate Datafield-Tags found in {Type}: {string.Join(",", duplicates)}");
-
+            _duplicates = fieldDefs
+                .Where(f =>
+                    fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
+                .Select(f => f.Attribute.Tag)
+                .Distinct()
+                .ToArray();
 
             var fields = fieldDefs;
             //todo paul write a test for this
@@ -86,6 +98,12 @@ namespace Robust.Shared.Serialization.Manager
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
             _copyDelegate = EmitCopyDelegate();
+        }
+
+        public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
+        {
+            duplicates = _duplicates;
+            return duplicates.Length > 0;
         }
 
         private PopulateDelegateSignature EmitPopulateDelegate()

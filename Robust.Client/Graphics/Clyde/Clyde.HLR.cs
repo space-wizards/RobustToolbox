@@ -193,13 +193,13 @@ namespace Robust.Client.Graphics.Clyde
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
-                    // finally we can calculate screen bounding in pixels 
+                    // finally we can calculate screen bounding in pixels
                     var screenLB = _eyeManager.WorldToScreen(spriteLB);
                     var screenRT = _eyeManager.WorldToScreen(spriteRT);
 
                     // we need to scale RT a for effects like emission or highlight
                     // scale can be passed with PostShader as variable in future
-                    var postShadeScale = 1f;
+                    var postShadeScale = 1.25f;
                     var screenSpriteSize = (Vector2i)((screenRT - screenLB) * postShadeScale).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 

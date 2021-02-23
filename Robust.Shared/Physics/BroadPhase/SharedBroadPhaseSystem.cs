@@ -32,14 +32,11 @@ namespace Robust.Shared.Physics.Broadphase
 
         private Dictionary<PhysicsComponent, List<IBroadPhase>> _lastBroadPhases = new();
 
+        private Queue<MoveEvent> _queuedMoveEvents = new();
         private Queue<EntMapIdChangedMessage> _queuedMapChanges = new();
-
         private Queue<FixtureUpdateMessage> _queuedFixtureUpdates = new();
-
         private Queue<CollisionChangeMessage> _queuedCollisionChanges = new();
-
         private Queue<EntInsertedIntoContainerMessage> _queuedContainerInsert = new();
-
         private Queue<EntRemovedFromContainerMessage> _queuedContainerRemove = new();
 
         private IEnumerable<IBroadPhase> BroadPhases()
@@ -127,8 +124,9 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Initialize()
         {
             base.Initialize();
+
             SubscribeLocalEvent<CollisionChangeMessage>(QueueCollisionChange);
-            SubscribeLocalEvent<MoveEvent>(HandlePhysicsMove);
+            SubscribeLocalEvent<MoveEvent>(QueuePhysicsMove);
             SubscribeLocalEvent<RotateEvent>(HandlePhysicsRotate);
             SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(QueueContainerInsertMessage);
@@ -142,6 +140,16 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
+
+            while (_queuedMoveEvents.Count > 0)
+            {
+                var moveEvent = _queuedMoveEvents.Dequeue();
+
+                if (!moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
+                    continue;
+
+                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
+            }
 
             // TODO: Just call ProcessEventQueue directly?
             // Manually manage queued stuff ourself given EventBus.QueueEvent happens at the same time every time
@@ -195,12 +203,9 @@ namespace Robust.Shared.Physics.Broadphase
             _mapManager.MapCreated -= HandleMapCreated;
         }
 
-        private void HandlePhysicsMove(MoveEvent moveEvent)
+        private void QueuePhysicsMove(MoveEvent moveEvent)
         {
-            if (!moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
-                return;
-
-            SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
+            _queuedMoveEvents.Enqueue(moveEvent);
         }
 
         private void HandlePhysicsRotate(RotateEvent rotateEvent)

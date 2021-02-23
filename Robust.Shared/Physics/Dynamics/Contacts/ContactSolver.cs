@@ -47,7 +47,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     internal sealed class ContactSolver
     {
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
+
+        private bool _warmStarting;
+        private float _velocityThreshold;
+        private float _baumgarte;
+        private float _linearSlop;
+        private float _maxLinearCorrection;
 
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
         private float[] _angularVelocities = Array.Empty<float>();
@@ -64,6 +70,21 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+
+            _warmStarting = _configManager.GetCVar(CVars.WarmStarting);
+            _configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value);
+
+            _velocityThreshold = _configManager.GetCVar(CVars.VelocityThreshold);
+            _configManager.OnValueChanged(CVars.VelocityThreshold, value => _velocityThreshold = value);
+
+            _baumgarte = _configManager.GetCVar(CVars.Baumgarte);
+            _configManager.OnValueChanged(CVars.Baumgarte, value => _baumgarte = value);
+
+            _linearSlop = _configManager.GetCVar(CVars.LinearSlop);
+            _configManager.OnValueChanged(CVars.LinearSlop, value => _linearSlop = value);
+
+            _maxLinearCorrection = _configManager.GetCVar(CVars.MaxLinearCorrection);
+            _configManager.OnValueChanged(CVars.MaxLinearCorrection, value => _maxLinearCorrection = value);
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)
@@ -92,8 +113,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _positionConstraints[i] = new ContactPositionConstraint();
                 }
             }
-
-            var warmStarting = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting);
 
             // Build constraints
             // For now these are going to be bare but will change
@@ -157,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     var contactPoint = manifold.Points[j];
                     var constraintPoint = velocityConstraint.Points[j];
 
-                    if (warmStarting)
+                    if (_warmStarting)
                     {
                         constraintPoint.NormalImpulse = data.DtRatio * contactPoint.NormalImpulse;
                         constraintPoint.TangentImpulse = data.DtRatio * contactPoint.TangentImpulse;
@@ -181,8 +200,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void InitializeVelocityConstraints()
         {
-            var velocityThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.VelocityThreshold);
-
             for (var i = 0; i < _contactCount; ++i)
             {
                 var velocityConstraint = _velocityConstraints[i];
@@ -253,7 +270,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     // Setup a velocity bias for restitution.
                     vcp.VelocityBias = 0.0f;
                     float vRel = Vector2.Dot(velocityConstraint.Normal, linVelocityB + Vector2.Cross(angVelocityB, vcp.RelativeVelocityB) - linVelocityA - Vector2.Cross(angVelocityA, vcp.RelativeVelocityA));
-                    if (vRel < -velocityThreshold)
+                    if (vRel < -_velocityThreshold)
                     {
                         vcp.VelocityBias = -velocityConstraint.Restitution * vRel;
                     }
@@ -640,12 +657,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <returns>true if all positions solved</returns>
         public bool SolvePositionConstraints()
         {
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-
-            var baumgarte = configManager.GetCVar(CVars.Baumgarte);
-            var linearSlop = configManager.GetCVar(CVars.LinearSlop);
-            var maxLinearCorrection = configManager.GetCVar(CVars.MaxLinearCorrection);
-
             float minSeparation = 0.0f;
 
             for (int i = 0; i < _contactCount; ++i)
@@ -689,7 +700,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     minSeparation = Math.Min(minSeparation, separation);
 
                     // Prevent large corrections and allow slop.
-                    float C = Math.Clamp(baumgarte * (separation + linearSlop), -maxLinearCorrection, 0.0f);
+                    float C = Math.Clamp(_baumgarte * (separation + _linearSlop), -_maxLinearCorrection, 0.0f);
 
                     // Compute the effective mass.
                     float rnA = Vector2.Cross(rA, normal);
@@ -717,7 +728,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             // We can't expect minSpeparation >= -b2_linearSlop because we don't
             // push the separation above -b2_linearSlop.
-            return minSeparation >= -3.0f * linearSlop;
+            return minSeparation >= -3.0f * _linearSlop;
         }
 
         /// <summary>

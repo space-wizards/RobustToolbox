@@ -158,15 +158,19 @@ stored in a single array since multiple arrays lead to multiple misses.
     {
         // TODO: Cache the cvars
         [Dependency] private readonly IConfigurationManager _configManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
 
         private ContactSolver _contactSolver = default!;
 
-        private float AngTolSqr => MathF.Pow(_configManager.GetCVar(CVars.AngularSleepTolerance), 2);
-
-        private float LinTolSqr => MathF.Pow(_configManager.GetCVar(CVars.LinearSleepTolerance), 2);
+        private float _angTolSqr;
+        private float _linTolSqr;
+        private bool _warmStarting;
+        private int _velocityIterations;
+        private float _maxLinearVelocity;
+        private float _maxAngularVelocity;
+        private int _positionIterations;
+        private bool _sleepAllowed;  // MONA
+        private float _timeToSleep;
 
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
@@ -179,7 +183,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private Vector2[] _positions = Array.Empty<Vector2>();
         private float[] _angles = Array.Empty<float>();
 
-        internal SolverData _solverData = new();
+        internal SolverData SolverData = new();
 
         /// <summary>
         ///     How many bodies we can fit in the island before needing to re-size.
@@ -216,6 +220,34 @@ stored in a single array since multiple arrays lead to multiple misses.
             IoCManager.InjectDependencies(this);
             _contactSolver = new ContactSolver();
             _contactSolver.Initialize();
+
+            // Values
+            _angTolSqr = MathF.Pow(_configManager.GetCVar(CVars.AngularSleepTolerance), 2);
+            _configManager.OnValueChanged(CVars.AngularSleepTolerance, value => _angTolSqr = MathF.Pow(value, 2));
+
+            _linTolSqr = MathF.Pow(_configManager.GetCVar(CVars.LinearSleepTolerance), 2);
+            _configManager.OnValueChanged(CVars.LinearSleepTolerance, value => _linTolSqr = MathF.Pow(value, 2));
+
+            _warmStarting = _configManager.GetCVar(CVars.WarmStarting);
+            _configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value);
+
+            _velocityIterations = _configManager.GetCVar(CVars.VelocityIterations);
+            _configManager.OnValueChanged(CVars.VelocityIterations, value => _velocityIterations = value);
+
+            _maxLinearVelocity = _configManager.GetCVar(CVars.MaxLinVelocity);
+            _configManager.OnValueChanged(CVars.MaxLinVelocity, value => _maxLinearVelocity = value);
+
+            _maxAngularVelocity = _configManager.GetCVar(CVars.MaxAngVelocity);
+            _configManager.OnValueChanged(CVars.MaxAngVelocity, value => _maxAngularVelocity = value);
+
+            _positionIterations = _configManager.GetCVar(CVars.PositionIterations);
+            _configManager.OnValueChanged(CVars.PositionIterations, value => _positionIterations = value);
+
+            _sleepAllowed = _configManager.GetCVar(CVars.SleepAllowed);
+            _configManager.OnValueChanged(CVars.SleepAllowed, value => _sleepAllowed = value);
+
+            _timeToSleep = _configManager.GetCVar(CVars.TimeToSleep);
+            _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
         }
 
         public void Add(PhysicsComponent body)
@@ -322,21 +354,21 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
 
             // TODO: Do these up front of the world step.
-            _solverData.FrameTime = frameTime;
-            _solverData.DtRatio = dtRatio;
-            _solverData.InvDt = invDt;
+            SolverData.FrameTime = frameTime;
+            SolverData.DtRatio = dtRatio;
+            SolverData.InvDt = invDt;
 
-            _solverData.LinearVelocities = _linearVelocities;
-            _solverData.AngularVelocities = _angularVelocities;
-            _solverData.Positions = _positions;
-            _solverData.Angles = _angles;
+            SolverData.LinearVelocities = _linearVelocities;
+            SolverData.AngularVelocities = _angularVelocities;
+            SolverData.Positions = _positions;
+            SolverData.Angles = _angles;
 
             // Pass the data into the solver
-            _contactSolver.Reset(_solverData, ContactCount, _contacts);
+            _contactSolver.Reset(SolverData, ContactCount, _contacts);
 
             _contactSolver.InitializeVelocityConstraints();
 
-            if (_configManager.GetCVar(CVars.WarmStarting))
+            if (_warmStarting)
             {
                 _contactSolver.WarmStart();
             }
@@ -345,11 +377,11 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 var joint = _joints[i];
                 if (!joint.Enabled) continue;
-                joint.InitVelocityConstraints(_solverData);
+                joint.InitVelocityConstraints(SolverData);
             }
 
             // Velocity solver
-            for (var i = 0; i < _configManager.GetCVar(CVars.VelocityIterations); i++)
+            for (var i = 0; i < _velocityIterations; i++)
             {
                 for (var j = 0; j < JointCount; ++j)
                 {
@@ -358,7 +390,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     if (!joint.Enabled)
                         continue;
 
-                    joint.SolveVelocityConstraints(_solverData);
+                    joint.SolveVelocityConstraints(SolverData);
                     joint.Validate(invDt);
                 }
 
@@ -367,9 +399,6 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             // Store for warm starting.
             _contactSolver.StoreImpulses();
-
-            var maxLinVelocity = _configManager.GetCVar(CVars.MaxLinVelocity);
-            var maxAngVelocity = _configManager.GetCVar(CVars.MaxAngVelocity);
 
             // Integrate positions
             for (var i = 0; i < BodyCount; i++)
@@ -381,16 +410,16 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var angle = _angles[i];
 
                 var translation = linearVelocity * frameTime;
-                if (Vector2.Dot(translation, translation) > maxLinVelocity)
+                if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
                 {
-                    var ratio = maxLinVelocity / translation.Length;
+                    var ratio = _maxLinearVelocity / translation.Length;
                     linearVelocity *= ratio;
                 }
 
                 var rotation = angularVelocity * frameTime;
-                if (rotation * rotation > maxAngVelocity)
+                if (rotation * rotation > _maxAngularVelocity)
                 {
-                    var ratio = maxAngVelocity / MathF.Abs(rotation);
+                    var ratio = _maxAngularVelocity / MathF.Abs(rotation);
                     angularVelocity *= ratio;
                 }
 
@@ -407,7 +436,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             var positionSolved = false;
 
-            for (var i = 0; i < _configManager.GetCVar(CVars.PositionIterations); i++)
+            for (var i = 0; i < _positionIterations; i++)
             {
                 var contactsOkay = _contactSolver.SolvePositionConstraints();
                 var jointsOkay = true;
@@ -419,7 +448,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     if (!joint.Enabled)
                         continue;
 
-                    bool jointOkay = joint.SolvePositionConstraints(_solverData);
+                    bool jointOkay = joint.SolvePositionConstraints(SolverData);
 
                     jointsOkay = jointsOkay && jointOkay;
                 }
@@ -473,9 +502,8 @@ stored in a single array since multiple arrays lead to multiple misses.
                 body.AngularVelocity = _angularVelocities[i];
             }
 
-            // TODO: Cache rather than GetCVar
             // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (!prediction && _configManager.GetCVar(CVars.SleepAllowed))
+            if (!prediction && _sleepAllowed)
             {
                 var minSleepTime = float.MaxValue;
 
@@ -487,8 +515,8 @@ stored in a single array since multiple arrays lead to multiple misses.
                         continue;
 
                     if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > AngTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > LinTolSqr)
+                        body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
+                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
                     {
                         body.SleepTime = 0.0f;
                         minSleepTime = 0.0f;
@@ -500,7 +528,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     }
                 }
 
-                if (minSleepTime >= _configManager.GetCVar(CVars.TimeToSleep) && positionSolved)
+                if (minSleepTime >= _timeToSleep && positionSolved)
                 {
                     for (var i = 0; i < BodyCount; i++)
                     {

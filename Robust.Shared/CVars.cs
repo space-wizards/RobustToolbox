@@ -284,6 +284,9 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        public static readonly CVarDef<float> TileFrictionModifier =
+            CVarDef.Create("physics.tilefriction", 15.0f);
+
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);

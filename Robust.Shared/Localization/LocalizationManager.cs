@@ -8,6 +8,7 @@ using Fluent.Net;
 using Fluent.Net.RuntimeAst;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
@@ -81,9 +82,15 @@ namespace Robust.Shared.Localization
             var args = new Dictionary<string, object>();
             foreach (var (k, v) in args0)
             {
-                var val = v;
-                if (v is ILocValue locVal)
-                    val = ValToFluent(locVal);
+                var val = v switch
+                {
+                    IEntity entity => new LocValueEntity(entity),
+                    bool or Enum => v.ToString()!.ToLowerInvariant(),
+                    _ => v,
+                };
+
+                if (val is ILocValue locVal)
+                    val = new FluentLocWrapperType(locVal);
 
                 args.Add(k, val);
             }
@@ -362,6 +369,8 @@ namespace Robust.Shared.Localization
             public override bool Match(MessageContext ctx, object obj)
             {
                 return false;
+                /*var strVal = obj is IFluentType ft ? ft.Value : obj.ToString() ?? "";
+                return WrappedValue.Matches(new LocContext(ctx), strVal);*/
             }
         }
     }

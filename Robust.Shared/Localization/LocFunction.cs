@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Fluent.Net;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Localization
 {
@@ -77,6 +78,19 @@ namespace Robust.Shared.Localization
         ///     Boxed value stored by this instance.
         /// </summary>
         object? Value { get; }
+
+        // Matches API doesn't work because Fluent.Net is crap.
+        // RIP.
+
+        /*
+        /// <summary>
+        ///     Checks if this value matches a string in a select expression.
+        /// </summary>
+        bool Matches(LocContext ctx, string matchValue)
+        {
+            return false;
+        }
+    */
     }
 
     /// <summary>
@@ -103,6 +117,13 @@ namespace Robust.Shared.Localization
         }
 
         public abstract string Format(LocContext ctx);
+
+        /*
+        public virtual bool Matches(LocContext ctx, string matchValue)
+        {
+            return false;
+        }
+    */
     }
 
     public sealed record LocValueNumber(double Value) : LocValue<double>(Value)
@@ -139,4 +160,43 @@ namespace Robust.Shared.Localization
             return Value;
         }
     }
+
+    public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            return Value.Name;
+        }
+    }
+
+    // Matching on these doesn't work so just passing these as string for now.
+
+    /*public sealed record LocValueBool(bool Value) : LocValue<bool>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            return Value.ToString(ctx.Culture);
+        }
+
+        /*
+        public override bool Matches(LocContext ctx, string matchValue)
+        {
+            var word = Value ? "true" : "false";
+            return word.Equals(matchValue, StringComparison.InvariantCultureIgnoreCase);
+        }
+        #1#
+    }
+
+    public sealed record LocValueEnum(Enum Value) : LocValue<Enum>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            return Value.ToString().ToLowerInvariant();
+        }
+
+        /*public override bool Matches(LocContext ctx, string matchValue)
+        {
+            return matchValue.Equals(Value.ToString(), StringComparison.InvariantCultureIgnoreCase);
+        }#1#
+    }*/
 }

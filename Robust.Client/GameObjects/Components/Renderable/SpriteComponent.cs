@@ -945,6 +945,31 @@ namespace Robust.Client.GameObjects
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
+        public void LayerSetOffset(int layer, Vector2 layerOffset)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory,
+                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            Layers[layer].SetOffset(layerOffset);
+        }
+
+        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetOffset(layer, layerOffset);
+        }
+
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
@@ -1057,7 +1082,7 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter);
+            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
             var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
 
@@ -1620,16 +1645,25 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale { get; set; } = Vector2.One;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Angle Rotation { get; set; }
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated = true;
+
+            [ViewVariables(VVAccess.ReadWrite)]
+            public Vector2 Offset { get; set; }
+
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
+
             [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
@@ -1849,6 +1883,11 @@ namespace Robust.Client.GameObjects
                 Texture = texture;
 
                 _parent.UpdateIsInert();
+            }
+
+            public void SetOffset(Vector2 offset)
+            {
+                Offset = offset;
             }
         }
 

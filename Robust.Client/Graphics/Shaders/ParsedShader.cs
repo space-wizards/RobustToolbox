@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     internal sealed class ParsedShader
     {

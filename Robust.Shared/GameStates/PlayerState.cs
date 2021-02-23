@@ -2,7 +2,6 @@
 using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Players;
 using Robust.Shared.Network;
 
 #nullable disable

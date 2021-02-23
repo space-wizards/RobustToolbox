@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
     public class PhysicsComponentState : ComponentState

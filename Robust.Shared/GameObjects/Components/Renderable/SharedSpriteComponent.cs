@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects.Components.Renderable
+namespace Robust.Shared.GameObjects
 {
     public class SharedSpriteComponent : Component
     {
@@ -26,7 +25,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
             public readonly Angle Rotation;
             public readonly Vector2 Offset;
             public readonly Color Color;
-            public readonly bool Directional;
             public readonly string? BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
@@ -38,7 +36,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 Angle rotation,
                 Vector2 offset,
                 Color color,
-                bool directional,
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
@@ -50,7 +47,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 Rotation = rotation;
                 Offset = offset;
                 Color = color;
-                Directional = directional;
                 BaseRsiPath = baseRsiPath;
                 Layers = layers;
                 RenderOrder = renderOrder;
@@ -80,7 +76,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 };
             }
 
-            public void ExposeData(ObjectSerializer serializer)
+            void IExposeData.ExposeData(ObjectSerializer serializer)
             {
                 serializer.DataField(ref Shader, "shader", null);
                 serializer.DataField(ref TexturePath, "texture", null);

@@ -10,8 +10,6 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;

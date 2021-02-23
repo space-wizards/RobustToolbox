@@ -1,7 +1,6 @@
-using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedInputSystem : EntitySystem
     {

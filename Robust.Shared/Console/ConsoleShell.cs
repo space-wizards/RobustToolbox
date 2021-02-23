@@ -1,4 +1,3 @@
-using Robust.Shared.Maths;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console
@@ -6,6 +5,18 @@ namespace Robust.Shared.Console
     /// <inheritdoc />
     public class ConsoleShell : IConsoleShell
     {
+        /// <summary>
+        /// Constructs a new instance of <see cref="ConsoleShell"/>.
+        /// </summary>
+        /// <param name="host">Console Host that owns this shell.</param>
+        /// <param name="session">Player Session that this shell represents. If this is null, then
+        /// the shell is representing the local console.</param>
+        public ConsoleShell(IConsoleHost host, ICommonSession? session)
+        {
+            ConsoleHost = host;
+            Player = session;
+        }
+
         /// <inheritdoc />
         public IConsoleHost ConsoleHost { get; }
 
@@ -14,12 +25,6 @@ namespace Robust.Shared.Console
 
         /// <inheritdoc />
         public ICommonSession? Player { get; }
-
-        public ConsoleShell(IConsoleHost host, ICommonSession? session)
-        {
-            ConsoleHost = host;
-            Player = session;
-        }
 
         /// <inheritdoc />
         public void ExecuteCommand(string command)
@@ -40,9 +45,9 @@ namespace Robust.Shared.Console
         }
 
         /// <inheritdoc />
-        public void WriteLine(string text, Color color)
+        public void WriteError(string text)
         {
-            ConsoleHost.WriteLine(Player, text, color);
+            ConsoleHost.WriteError(Player, text);
         }
 
         /// <inheritdoc />

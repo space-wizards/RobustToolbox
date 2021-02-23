@@ -4,9 +4,6 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
@@ -27,7 +24,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
 
             public TestInputCmdHandler(Type? forType = null, string name = "")
             {
-                this.ForType = forType;
+                ForType = forType;
                 this.name = name;
             }
 

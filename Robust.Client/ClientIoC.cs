@@ -1,33 +1,16 @@
-﻿using System;
+using System;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Clyde;
-using Robust.Client.Graphics.Lighting;
-using Robust.Client.Graphics.Overlays;
 using Robust.Client.Input;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Debugging;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.Interfaces.Utility;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
@@ -35,15 +18,14 @@ using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 
 namespace Robust.Client
 {
@@ -53,7 +35,7 @@ namespace Robust.Client
         {
             SharedIoC.RegisterIoC();
 
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
+            IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
@@ -79,9 +61,11 @@ namespace Robust.Client
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
+            IoCManager.Register<IConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();
+            IoCManager.Register<IAuthManager, AuthManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     public class ContainerSystem : EntitySystem
     {

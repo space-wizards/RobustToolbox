@@ -1,7 +1,6 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.GameStates;
+﻿using Robust.Client.GameStates;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -34,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             MouseFilter = _contents.MouseFilter = MouseFilterMode.Ignore;
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
         }
 
         protected override void Update(FrameEventArgs args)
@@ -52,14 +51,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}/{_gameTiming.CurTick-1}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value-1}
 CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
-TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
-
-            MinimumSizeChanged();
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            return new(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
+ServerTime: {_gameTiming.ServerTime}, TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
         }
     }
 }

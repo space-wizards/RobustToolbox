@@ -6,20 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Robust.Client.Input;
-using System.Threading;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Debugging;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Debugging;
+using Robust.Client.Graphics;
+using Robust.Client.ResourceManagement;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -28,15 +20,11 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -55,7 +43,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
-                shell.WriteLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.", Color.White);
+                shell.WriteLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.");
             }
         }
     }
@@ -92,16 +80,16 @@ namespace Robust.Client.Console.Commands
 
                 message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
 
-                shell.WriteLine(message.ToString(), Color.White);
+                shell.WriteLine(message.ToString());
 
                 foreach (var type in registration.References)
                 {
-                    shell.WriteLine($"  {type}", Color.White);
+                    shell.WriteLine($"  {type}");
                 }
             }
             catch (UnknownComponentException)
             {
-                shell.WriteLine($"No registration found for '{args[0]}'", Color.Red);
+                shell.WriteError($"No registration found for '{args[0]}'");
             }
         }
     }
@@ -215,13 +203,13 @@ namespace Robust.Client.Console.Commands
 
             if (!int.TryParse(args[0], out var id))
             {
-                shell.WriteLine($"{args[0]} is not a valid integer.",Color.Red);
+                shell.WriteError($"{args[0]} is not a valid integer.");
                 return;
             }
 
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
-            shell.WriteLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
+            shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays.ToString());
             mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
         }
     }
@@ -257,7 +245,7 @@ namespace Robust.Client.Console.Commands
 
             if ((!new Regex(@"^c?[0-9]+$").IsMatch(args[0])))
             {
-                shell.WriteLine("Malformed UID", Color.Red);
+                shell.WriteError("Malformed UID");
                 return;
             }
 
@@ -265,7 +253,7 @@ namespace Robust.Client.Console.Commands
             var entmgr = IoCManager.Resolve<IEntityManager>();
             if (!entmgr.TryGetEntity(uid, out var entity))
             {
-                shell.WriteLine("That entity does not exist. Sorry lad.", Color.Red);
+                shell.WriteError("That entity does not exist. Sorry lad.");
                 return;
             }
 
@@ -310,13 +298,13 @@ namespace Robust.Client.Console.Commands
 
             if (!int.TryParse(args[0], out var id))
             {
-                shell.WriteLine($"{args[0]} is not a valid integer.",Color.Red);
+                shell.WriteError($"{args[0]} is not a valid integer.");
                 return;
             }
 
             if (!new Regex(@"^-?[0-9]+,-?[0-9]+$").IsMatch(indices))
             {
-                shell.WriteLine("mapIndicies must be of form x<int>,y<int>", Color.Red);
+                shell.WriteError("mapIndicies must be of form x<int>,y<int>");
                 return;
             }
 
@@ -327,7 +315,7 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                shell.WriteLine("given offset type is not defined", Color.Red);
+                shell.WriteError("given offset type is not defined");
                 return;
             }
 
@@ -347,7 +335,7 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                shell.WriteLine("grid does not exist", Color.Red);
+                shell.WriteError("grid does not exist");
             }
         }
     }
@@ -368,7 +356,7 @@ namespace Robust.Client.Console.Commands
             var client = IoCManager.Resolve<IBaseClient>();
             client.PlayerNameOverride = args[0];
 
-            shell.WriteLine($"Overriding player name to \"{args[0]}\".", Color.White);
+            shell.WriteLine($"Overriding player name to \"{args[0]}\".");
         }
     }
 
@@ -395,7 +383,7 @@ namespace Robust.Client.Console.Commands
             }
             catch(ArgumentException)
             {
-                shell.WriteLine("Unable to find type", Color.Red);
+                shell.WriteError("Unable to find type");
                 return;
             }
 
@@ -432,7 +420,7 @@ namespace Robust.Client.Console.Commands
             }
             catch(ArgumentException)
             {
-                shell.WriteLine("Unable to find type", Color.Red);
+                shell.WriteError("Unable to find type");
                 return;
             }
 
@@ -472,7 +460,7 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                shell.WriteLine($"No grid exists with id {id}",Color.Red);
+                shell.WriteError($"No grid exists with id {id}");
             }
         }
     }
@@ -493,6 +481,8 @@ namespace Robust.Client.Console.Commands
             {
                 _writeNode(root, 0, writer);
             }
+
+            shell.WriteLine("Saved guidump");
         }
 
         private static void _writeNode(Control control, int indents, TextWriter writer)
@@ -554,7 +544,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new SS14Window { CustomMinimumSize = (500, 400)};
+            var window = new SS14Window { MinSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
@@ -574,7 +564,7 @@ namespace Robust.Client.Console.Commands
             optionButton.OnItemSelected += eventArgs => optionButton.SelectId(eventArgs.Id);
             vBox.AddChild(optionButton);
 
-            var tree = new Tree { SizeFlagsVertical = Control.SizeFlags.FillExpand };
+            var tree = new Tree { VerticalExpand = true };
             var root = tree.CreateItem();
             root.Text = "Honk!";
             var child = tree.CreateItem();
@@ -611,7 +601,7 @@ namespace Robust.Client.Console.Commands
                 {
                     grid.AddChild(new Button
                     {
-                        CustomMinimumSize = (50, 50),
+                        MinSize = (50, 50),
                         Text = $"{x}, {y}"
                     });
                 }
@@ -640,6 +630,29 @@ namespace Robust.Client.Console.Commands
                 Children =
                 {
                     new Slider()
+                }
+            });
+
+            tabContainer.AddChild(new HSplitContainer
+            {
+                Children =
+                {
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Red},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
+                    new PanelContainer
+                    {
+                        PanelOverride = new StyleBoxFlat {BackgroundColor = Color.Blue},
+                        Children =
+                        {
+                            new Label{  Text = "FOOBARBAZ"},
+                        }
+                    },
                 }
             });
 
@@ -759,7 +772,7 @@ namespace Robust.Client.Console.Commands
                 if (int.TryParse(args[0], out int result))
                     GC.Collect(result);
                 else
-                    shell.WriteLine("Failed to parse argument.",Color.Red);
+                    shell.WriteError("Failed to parse argument.");
             }
         }
     }

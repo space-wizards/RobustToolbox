@@ -1,15 +1,12 @@
 ﻿using NetSerializer;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization

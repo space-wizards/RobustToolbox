@@ -15,47 +15,47 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestLayoutBasic()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {CustomMinimumSize = (50, 60)};
-            var control1 = new Control {CustomMinimumSize = (20, 20)};
-            var control2 = new Control {CustomMinimumSize = (30, 30)};
+            var boxContainer = new VBoxContainer {MinSize = (50, 60)};
+            var control1 = new Control {MinSize = (20, 20)};
+            var control2 = new Control {MinSize = (30, 30)};
 
             root.AddChild(boxContainer);
 
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
-            root.ForceRunLayoutUpdate();
+            root.Arrange(new UIBox2(0, 0, 50, 60));
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 20)));
             Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 20)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(50, 30)));
-            Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 60)));
+            Assert.That(boxContainer.DesiredSize, Is.EqualTo(new Vector2(50, 60)));
         }
 
         [Test]
         public void TestLayoutExpand()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {CustomMinimumSize = (50, 60)};
+            var boxContainer = new VBoxContainer {MinSize = (50, 60)};
             var control1 = new Control
             {
-                SizeFlagsVertical = Control.SizeFlags.FillExpand
+                VerticalExpand = true
             };
-            var control2 = new Control {CustomMinimumSize = (30, 30)};
+            var control2 = new Control {MinSize = (30, 30)};
 
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
             root.AddChild(boxContainer);
 
-            root.ForceRunLayoutUpdate();
+            root.Arrange(new UIBox2(0, 0, 100, 100));
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 30)));
             Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 30)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(50, 30)));
-            Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 60)));
+            Assert.That(boxContainer.DesiredSize, Is.EqualTo(new Vector2(50, 60)));
         }
 
         [Test]
@@ -64,30 +64,32 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             var boxContainer = new VBoxContainer();
             var control1 = new Control
             {
-                CustomMinimumSize = (50, 30)
+                MinSize = (50, 30)
             };
-            var control2 = new Control {CustomMinimumSize = (30, 50)};
+            var control2 = new Control {MinSize = (30, 50)};
 
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
-            Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 80)));
+            boxContainer.Measure((100, 100));
+
+            Assert.That(boxContainer.DesiredSize, Is.EqualTo(new Vector2(50, 80)));
         }
 
         [Test]
         public void TestTwoExpand()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {CustomMinimumSize = (30, 80)};
+            var boxContainer = new VBoxContainer {MinSize = (30, 80)};
             var control1 = new Control
             {
-                SizeFlagsVertical = Control.SizeFlags.FillExpand
+                VerticalExpand = true,
             };
             var control2 = new Control
             {
-                SizeFlagsVertical = Control.SizeFlags.FillExpand
+                VerticalExpand = true,
             };
-            var control3 = new Control {CustomMinimumSize = (0, 50)};
+            var control3 = new Control {MinSize = (0, 50)};
 
             root.AddChild(boxContainer);
 
@@ -95,7 +97,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             boxContainer.AddChild(control3);
             boxContainer.AddChild(control2);
 
-            root.ForceRunLayoutUpdate();
+            root.Arrange(new UIBox2(0, 0, 250, 250));
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(30, 15)));

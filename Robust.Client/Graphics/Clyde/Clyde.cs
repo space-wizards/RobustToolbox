@@ -4,21 +4,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Map;
+using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Shared;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -93,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
-            
+
             _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
@@ -156,6 +149,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {

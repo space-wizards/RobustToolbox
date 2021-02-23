@@ -2,32 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Text;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
-using System.Linq;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -110,6 +101,7 @@ namespace Robust.Client.GameObjects
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Obsolete("Use NoRotation and/or DirectionOverride")]
         public bool Directional
         {
             get => _directional;
@@ -197,34 +189,42 @@ namespace Robust.Client.GameObjects
         public void CopyFrom(SpriteComponent other)
         {
             //deep copying things to avoid entanglement
-            this._baseRsi = other._baseRsi;
-            this._directional = other._directional;
-            this._visible = other._visible;
-            this._layerMapShared = other._layerMapShared;
-            this.color = other.color;
-            this.offset = other.offset;
-            this.rotation = other.rotation;
-            this.scale = other.scale;
-            this.drawDepth = other.drawDepth;
-            this.Layers = new List<Layer>(other.Layers.Count);
+            _baseRsi = other._baseRsi;
+            _directional = other._directional;
+            _visible = other._visible;
+            _layerMapShared = other._layerMapShared;
+            color = other.color;
+            offset = other.offset;
+            rotation = other.rotation;
+            scale = other.scale;
+            drawDepth = other.drawDepth;
+            _screenLock = other._screenLock;
+            _overrideDirection = other._overrideDirection;
+            _enableOverrideDirection = other._enableOverrideDirection;
+            Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
-                this.Layers.Add(new Layer(otherLayer, this));
+                Layers.Add(new Layer(otherLayer, this));
             }
-            this.IsInert = other.IsInert;
-            this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
+            IsInert = other.IsInert;
+            LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
                 entry => entry.Value);
             if (other.PostShader != null)
             {
                 // only need to copy the shader if it's mutable
-                this.PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
+                PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
             }
             else
             {
-                this.PostShader = null;
+                PostShader = null;
             }
 
-            this.RenderOrder = other.RenderOrder;
+            RenderOrder = other.RenderOrder;
+        }
+
+        public Matrix3 GetLocalMatrix()
+        {
+            return Matrix3.CreateTransform(in offset, in rotation, in scale);
         }
 
         /// <inheritdoc />
@@ -945,6 +945,31 @@ namespace Robust.Client.GameObjects
             LayerSetAutoAnimated(layer, autoAnimated);
         }
 
+        public void LayerSetOffset(int layer, Vector2 layerOffset)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory,
+                    "Layer with index '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            Layers[layer].SetOffset(layerOffset);
+        }
+
+        public void LayerSetOffset(object layerKey, Vector2 layerOffset)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set offset! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetOffset(layer, layerOffset);
+        }
+
         /// <inheritdoc />
         public RSI.StateId LayerGetState(int layer)
         {
@@ -974,45 +999,60 @@ namespace Robust.Client.GameObjects
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
-        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation,
-            Direction? overrideDirection = null)
+        // Lobby SpriteView rendering path
+        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
         {
-            var angle = Rotation;
-            if (Directional)
+            RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
+        }
+
+        private bool _screenLock = false;
+        private Direction _overrideDirection = Direction.South;
+        private bool _enableOverrideDirection = false;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool NoRotation { get => _screenLock; set => _screenLock = value; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Direction DirectionOverride { get => _overrideDirection; set => _overrideDirection = value; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
+
+        // Sprite rendering path
+        internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
+        {
+            Direction? overrideDir = null;
+            if (_enableOverrideDirection)
             {
-                angle -= worldRotation;
+                overrideDir = _overrideDirection;
+            }
+
+            RenderInternal(drawingHandle, worldRotation, worldPosition, overrideDir);
+        }
+
+        private void CalcModelMatrix(int numDirs, Angle worldRotation, Vector2 worldPosition, out Matrix3 modelMatrix)
+        {
+            Angle angle;
+
+            if (_screenLock)
+            {
+                angle = Angle.Zero;
             }
             else
             {
-                angle -= new Angle(MathHelper.PiOver2);
+                angle = CalcRectWorldAngle(worldRotation, numDirs);
             }
 
-            var transform = Matrix3.CreateScale(Scale);
-            transform.Multiply(Matrix3.CreateRotation(angle));
-
-            transform.Multiply(worldTransform);
-
-            // we don't want offset to be affected by worldTransform rotation
-            // so we can just apply it after world transform
-            // worldTransform scale will be ignored too
-            var hasTranslation = !Offset.EqualsApprox(Vector2.Zero);
-            if (hasTranslation)
-            {
-                transform.Multiply(Matrix3.CreateTranslation(Offset));
-            }
-
-            RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
+            var sWorldRotation = angle;
+            modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
         }
 
-        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
-            RenderInternal(drawingHandle, worldRotation, overrideDirection, Matrix3.Identity);
-        }
-
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection,
-            in Matrix3 transform)
-        {
-            drawingHandle.SetTransform(transform);
+            var localMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
             {
@@ -1021,24 +1061,75 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                // TODO: Implement layer-specific rotation and scale.
-                // Oh and when you do update Layer.LocalToLayer so content doesn't break.
+                var numDirs = GetLayerDirectionCount(layer);
 
-                var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
+                CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
+                Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
+                drawingHandle.SetTransform(in transformMatrix);
 
-                if (layer.Shader != null)
-                {
-                    drawingHandle.UseShader(layer.Shader);
-                }
-
-                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter),
-                    color * layer.Color);
-
-                if (layer.Shader != null)
-                {
-                    drawingHandle.UseShader(null);
-                }
+                RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
             }
+        }
+
+        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
+        {
+            var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
+
+            if (layer.Shader != null)
+            {
+                drawingHandle.UseShader(layer.Shader);
+            }
+
+            var layerColor = color * layer.Color;
+
+            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
+            var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
+            var quad = Box2.FromDimensions(position, textureSize);
+
+            // TODO: Implement layer-specific rotation and scale.
+            // Apply these directly to the box.
+            // Oh and when you do update Layer.LocalToLayer so content doesn't break.
+
+            // handle.Modulate changes the color
+            // drawingHandle.SetTransform() is set above, turning the quad into local space vertices
+            drawingHandle.DrawTextureRectRegion(texture, quad, layerColor);
+
+            if (layer.Shader != null)
+            {
+                drawingHandle.UseShader(null);
+            }
+        }
+
+        public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
+        {
+            var theta = worldAngle.Theta;
+            var segSize = (MathF.PI*2) / (numDirections * 2);
+            var segments = (int)(theta / segSize);
+            var odd = segments % 2;
+            var result = theta - (segments * segSize) - (odd * segSize);
+
+            return result;
+        }
+
+        public int GetLayerDirectionCount(ISpriteLayer layer)
+        {
+            if (!layer.RsiState.IsValid)
+                return 1;
+
+            // Pull texture from RSI state instead.
+            var rsi = layer.Rsi ?? BaseRSI;
+            if (rsi == null || !rsi.TryGetState(layer.RsiState, out var state))
+            {
+                state = GetFallbackState(resourceCache);
+            }
+
+            return state.Directions switch
+            {
+                RSI.State.DirectionType.Dir1 => 1,
+                RSI.State.DirectionType.Dir4 => 4,
+                RSI.State.DirectionType.Dir8 => 8,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
@@ -1072,8 +1163,11 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepthTag.Default,
                 WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref color, "color", Color.White);
-            serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
+            serializer.DataFieldCached(ref _directional, "directional", true); //TODO: Kill ME
+            serializer.DataFieldCached(ref _screenLock, "noRot", false);
+            serializer.DataFieldCached(ref _enableOverrideDirection, "enableOverrideDir", false);
+            serializer.DataFieldCached(ref _overrideDirection, "overrideDir", Direction.East);
 
             // TODO: Writing?
             if (!serializer.Reading)
@@ -1315,40 +1409,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        /// <inheritdoc/>
-        public Box2 CalculateBoundingBox()
-        {
-            // we need to calculate bounding box taking into account all layers
-            // layers have same center, so we just need their union size
-            var spritePixelSize = Vector2.Zero;
-            foreach (var layer in Layers)
-            {
-                // first calculate layer bounding box
-                // because layer scale and rotation are placeholders thats easy
-                var layerBB = Box2.CentredAroundZero(layer.PixelSize);
-
-                // apply sprite transformations and calculate sprite bounding box
-                // we can optimize it a bit, if sprite doesn't have rotation
-                var spriteBox = layerBB.Scale(Scale);
-                var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
-                var spriteBB = spriteHasRotation ?
-                    new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
-
-                // now let see if new sprite BB bigger than current
-                var size = spriteBB.Size;
-                if (spritePixelSize.X < size.X)
-                    spritePixelSize.X = size.X;
-                if (spritePixelSize.Y < size.Y)
-                    spritePixelSize.Y = size.Y;
-            }
-
-            // move it all to world transform system
-            var worldPosition = Owner.Transform.WorldPosition;
-            var worldScale = spritePixelSize / EyeManager.PixelsPerMeter;
-            var finalBB = Box2.CenteredAround(worldPosition + Offset, worldScale);
-            return finalBB;
-        }
-
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
@@ -1362,7 +1422,6 @@ namespace Robust.Client.GameObjects
             Rotation = thestate.Rotation;
             Offset = thestate.Offset;
             Color = thestate.Color;
-            Directional = thestate.Directional;
             RenderOrder = thestate.RenderOrder;
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
@@ -1419,16 +1478,28 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType type, Angle worldRotation)
+        private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
         {
-            if (!Directional)
-
+            var dir = rsiDirectionType switch
             {
-                return RSI.State.Direction.South;
-            }
+                RSI.State.DirectionType.Dir1 => Direction.South,
+                RSI.State.DirectionType.Dir4 => worldRotation.GetCardinalDir(),
+                RSI.State.DirectionType.Dir8 => worldRotation.GetDir(),
+                _ => throw new ArgumentException($"Unknown RSI DirectionType: {rsiDirectionType}.", nameof(rsiDirectionType))
+            };
 
-            var angle = new Angle(worldRotation);
-            return angle.GetDir().Convert(type);
+            return dir switch
+            {
+                Direction.North => RSI.State.Direction.North,
+                Direction.South => RSI.State.Direction.South,
+                Direction.East => RSI.State.Direction.East,
+                Direction.West => RSI.State.Direction.West,
+                Direction.SouthEast => RSI.State.Direction.SouthEast,
+                Direction.SouthWest => RSI.State.Direction.SouthWest,
+                Direction.NorthEast => RSI.State.Direction.NorthEast,
+                Direction.NorthWest => RSI.State.Direction.NorthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
+            };
         }
 
         private void UpdateIsInert()
@@ -1574,16 +1645,25 @@ namespace Robust.Client.GameObjects
 
             [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale { get; set; } = Vector2.One;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Angle Rotation { get; set; }
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
+
             [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated = true;
+
+            [ViewVariables(VVAccess.ReadWrite)]
+            public Vector2 Offset { get; set; }
+
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
+
             [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
@@ -1805,23 +1885,9 @@ namespace Robust.Client.GameObjects
                 _parent.UpdateIsInert();
             }
 
-            /// <inheritdoc/>
-            public Vector2i PixelSize
+            public void SetOffset(Vector2 offset)
             {
-                get
-                {
-                    var pixelSize = Vector2i.Zero;
-                    if (Texture != null)
-                    {
-                        pixelSize = Texture.Size;
-                    }
-                    else if (ActualRsi != null)
-                    {
-                        pixelSize = ActualRsi.Size;
-                    }
-
-                    return pixelSize;
-                }
+                Offset = offset;
             }
         }
 

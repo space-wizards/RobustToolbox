@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
-using Robust.Shared.Maths;
+using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 
@@ -75,7 +73,7 @@ namespace Robust.Shared.Console
 
         //TODO: IConsoleOutput for [e#1225]
         public abstract void WriteLine(ICommonSession? session, string text);
-        public abstract void WriteLine(ICommonSession? session, string text, Color color);
+        public abstract void WriteError(ICommonSession? session, string text);
 
         /// <inheritdoc />
         public void ClearLocalConsole()

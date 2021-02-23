@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components.Containers
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedContainerManagerComponent : Component, IContainerManager
     {

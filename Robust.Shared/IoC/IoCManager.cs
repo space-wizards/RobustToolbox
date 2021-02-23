@@ -1,8 +1,9 @@
-﻿using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.IoC.Exceptions;
 using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
@@ -34,7 +35,7 @@ namespace Robust.Shared.IoC
     /// (for example, server and client running in the same process, they have a different IoC instance).
     /// </para>
     /// </remarks>
-    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IReflectionManager"/>
     public static class IoCManager
     {
         private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";
@@ -101,6 +102,29 @@ namespace Robust.Shared.IoC
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
             _container.Value!.Register<TInterface, TImplementation>(overwrite);
+        }
+
+        /// <summary>
+        /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
+        /// <see cref="BuildGraph"/> MUST be called after this method to make the new interface available.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
+        /// </exception>
+        public static void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
+            where TImplementation : class, TInterface
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Register<TInterface, TImplementation>(factory, overwrite);
         }
 
         /// <summary>

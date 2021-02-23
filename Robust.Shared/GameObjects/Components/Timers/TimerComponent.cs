@@ -4,9 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
-using Timer = Robust.Shared.Timers.Timer;
+using Timer = Robust.Shared.Timing.Timer;
 
-namespace Robust.Shared.GameObjects.Components.Timers
+namespace Robust.Shared.GameObjects
 {
     public class TimerComponent : Component
     {

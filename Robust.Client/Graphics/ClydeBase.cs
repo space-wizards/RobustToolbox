@@ -1,8 +1,6 @@
 using System;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -27,6 +25,8 @@ namespace Robust.Client.Graphics
         protected bool VSync { get; private set; } = true;
 
         public abstract Vector2i ScreenSize { get; }
+        public abstract bool IsFocused { get; }
+
         public abstract void SetWindowTitle(string title);
 
         public virtual bool Initialize()
@@ -46,6 +46,8 @@ namespace Robust.Client.Graphics
         }
 
         public abstract event Action<WindowResizedEventArgs> OnWindowResized;
+
+        public abstract event Action<WindowFocusedEventArgs> OnWindowFocused;
 
         protected virtual void ReadConfig()
         {

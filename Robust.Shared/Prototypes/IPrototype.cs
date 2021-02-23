@@ -1,33 +1,26 @@
-﻿using Robust.Shared.Localization;
-using YamlDotNet.RepresentationModel;
+﻿using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
 {
     /// <summary>
-    /// An IPrototype is a prototype that can be loaded from the global YAML prototypes.
+    ///     An IPrototype is a prototype that can be loaded from the global YAML prototypes.
     /// </summary>
     /// <remarks>
-    /// To use this, the prototype must be accessible through IoC with <see cref="IoCTargetAttribute"/>
-    /// and it must have a <see cref="PrototypeAttribute"/> to give it a type string.
+    ///     To use this, the prototype must be accessible through IoC with <see cref="IoCTargetAttribute"/>
+    ///     and it must have a <see cref="PrototypeAttribute"/> to give it a type string.
     /// </remarks>
     public interface IPrototype
-    {
-        /// <summary>
-        /// Load data from the YAML mappings in the prototype files.
-        /// </summary>
-        void LoadFrom(YamlMappingNode mapping);
-    }
-
-    /// <summary>
-    /// Extension on <see cref="IPrototype"/> that allows it to be "indexed" by a string ID.
-    /// </summary>
-    public interface IIndexedPrototype
     {
         /// <summary>
         /// An ID for this prototype instance.
         /// If this is a duplicate, an error will be thrown.
         /// </summary>
         string ID { get; }
+
+        /// <summary>
+        /// Load data from the YAML mappings in the prototype files.
+        /// </summary>
+        void LoadFrom(YamlMappingNode mapping);
     }
 
     /// <summary>
@@ -36,6 +29,8 @@ namespace Robust.Shared.Prototypes
     /// </summary>
     public interface ISyncingPrototype
     {
+        void Reset();
+
         /// <summary>
         /// Sync and update cross-referencing data.
         /// Syncing works in stages, each time it will be called with the stage it's currently on.

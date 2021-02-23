@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -244,18 +242,22 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var font = _getFont();
             var style = _getStyleBox();
             return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var style = _getStyleBox();
 
-            FitChildInPixelBox(_renderBox, (UIBox2i) style.GetContentBox(PixelSizeBox));
+            _renderBox.ArrangePixel(
+                (UIBox2i) style.GetContentBox(
+                    UIBox2.FromDimensions(Vector2.Zero, finalSize * UIScale)));
+
+            return finalSize;
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)

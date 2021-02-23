@@ -1,7 +1,5 @@
 using System;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;

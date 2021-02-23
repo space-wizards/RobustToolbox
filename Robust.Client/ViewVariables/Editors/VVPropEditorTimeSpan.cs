@@ -13,7 +13,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = ts.ToString(),
                 Editable = !ReadOnly,
-                CustomMinimumSize = (240, 0)
+                MinSize = (240, 0)
             };
 
             lineEdit.OnTextEntered += e =>

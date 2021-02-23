@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.Input;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 

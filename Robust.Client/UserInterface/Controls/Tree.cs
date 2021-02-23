@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
@@ -35,8 +34,8 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar = new VScrollBar
             {
                 Name = "_v_scroll",
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                VerticalAlignment = VAlignment.Stretch,
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
         }

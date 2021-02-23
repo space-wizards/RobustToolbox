@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Globalization;
-using System.Linq.Expressions;
-using System.Reflection;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {

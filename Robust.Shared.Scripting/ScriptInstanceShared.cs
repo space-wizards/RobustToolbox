@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Microsoft.CodeAnalysis;
@@ -10,8 +12,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -23,6 +25,7 @@ namespace Robust.Shared.Scripting
             new(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
 
         private static readonly Func<Script, bool> _hasReturnValue;
+        private static readonly Func<Diagnostic, IReadOnlyList<object?>?> _getDiagnosticArguments;
 
         private static readonly string[] _defaultImports =
         {
@@ -32,7 +35,6 @@ namespace Robust.Shared.Scripting
             "Robust.Shared.IoC",
             "Robust.Shared.Maths",
             "Robust.Shared.GameObjects",
-            "Robust.Shared.Interfaces.GameObjects",
             "Robust.Shared.Map",
             "Robust.Shared.Prototypes"
         };
@@ -48,10 +50,23 @@ namespace Robust.Shared.Scripting
                 // Fallback path in case they remove that.
                 // The method literally has a // TODO: remove
                 _hasReturnValue = _ => true;
-                return;
+            }
+            else
+            {
+                _hasReturnValue = (Func<Script, bool>) Delegate.CreateDelegate(typeof(Func<Script, bool>), method);
             }
 
-            _hasReturnValue = (Func<Script, bool>) Delegate.CreateDelegate(typeof(Func<Script, bool>), method);
+            // Also internal and we need it.
+            var prop = typeof(Diagnostic).GetProperty("Arguments", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (prop == null)
+            {
+                _getDiagnosticArguments = _ => null;
+            }
+            else
+            {
+                var moment = prop.GetMethod!;
+                _getDiagnosticArguments = moment.CreateDelegate<Func<Diagnostic, IReadOnlyList<object?>?>>();
+            }
 
             // Run this async so that Roslyn can "warm up" in another thread while you're typing in your first line,
             // so the hang when you hit enter is less bad.
@@ -78,6 +93,11 @@ namespace Robust.Shared.Scripting
         public static bool HasReturnValue(Script script)
         {
             return _hasReturnValue(script);
+        }
+
+        public static IReadOnlyList<object?>? GetDiagnosticArgs(Diagnostic diag)
+        {
+            return _getDiagnosticArguments(diag);
         }
 
         public static void AddWithSyntaxHighlighting(Script script, FormattedMessage msg, string code,
@@ -139,6 +159,60 @@ namespace Robust.Shared.Scripting
 
             return list;
         }
+
+        private static IEnumerable<Assembly> GetAutoImportAssemblies(IReflectionManager refl)
+        {
+            return GetDefaultReferences(refl).Union(
+                AssemblyLoadContext.Default.Assemblies.Where(c => c.GetName().Name!.StartsWith("System."))
+            );
+        }
+
+        public static bool CalcAutoImports(
+            IReflectionManager refl,
+            IEnumerable<Diagnostic> diags,
+            [NotNullWhen(true)] out HashSet<string>? found)
+        {
+            var missing = new List<string>();
+            foreach (var diag in diags.Where(c => c.Id == "CS0103" || c.Id == "CS0246"))
+            {
+                var args = GetDiagnosticArgs(diag);
+                if (args == null)
+                {
+                    found = null;
+                    return false;
+                }
+
+                missing.Add((string) args[0]!);
+            }
+
+            if (missing.Count == 0)
+            {
+                found = null;
+                return false;
+            }
+
+            found = new HashSet<string>();
+            var assemblies = ScriptInstanceShared.GetAutoImportAssemblies(refl).ToArray();
+            foreach (var m in missing)
+            {
+                foreach (var assembly in assemblies)
+                {
+                    foreach (var type in assembly.DefinedTypes)
+                    {
+                        if (type.IsPublic && type.Name == m)
+                        {
+                            found.Add(type.Namespace!);
+                            goto nextMissing;
+                        }
+                    }
+                }
+
+                nextMissing: ;
+            }
+
+            return true;
+        }
+
 
         public static ScriptOptions GetScriptOptions(IReflectionManager reflectionManager)
         {

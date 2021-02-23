@@ -1,10 +1,6 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.ComponentDependencies;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 // ReSharper disable AccessToStaticMemberViaDerivedType

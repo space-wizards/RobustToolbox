@@ -1,7 +1,5 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
@@ -49,7 +47,7 @@ namespace Robust.Client.UserInterface.Controls
                 GetChild(old).Visible = false;
                 var newSelected = GetChild(value);
                 newSelected.Visible = true;
-                _fixChildMargins(newSelected);
+                InvalidateMeasure();
 
                 OnTabChanged?.Invoke(value);
             }
@@ -61,7 +59,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _tabsVisible = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -126,7 +124,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 // This is our first child so it must always be visible.
                 newChild.Visible = true;
-                _fixChildMargins(newChild);
             }
             else
             {
@@ -214,44 +211,52 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var total = Vector2i.Zero;
+            var headerSize = Vector2.Zero;
 
+            if (TabsVisible)
+            {
+                headerSize = (0, _getHeaderSize() / UIScale);
+            }
+
+            var panel = _getPanel();
+            var panelSize = (panel?.MinimumSize ?? Vector2.Zero) / UIScale;
+
+            var contentsSize = availableSize - headerSize - panelSize;
+
+            var total = Vector2.Zero;
             foreach (var child in Children)
             {
                 if (child.Visible)
                 {
-                    total = Vector2i.ComponentMax(child.CombinedPixelMinimumSize, total);
+                    child.Measure(contentsSize);
+                    total = Vector2.ComponentMax(child.DesiredSize, total);
                 }
             }
 
-            if (TabsVisible)
-            {
-                total += (0, _getHeaderSize());
-            }
-
-            var panel = _getPanel();
-            total += (Vector2i)(panel?.MinimumSize ?? Vector2.Zero);
-
-            return total / UIScale;
+            return total + headerSize + panelSize;
         }
 
-        private void _fixChildMargins(Control child)
-        {
-            FitChildInPixelBox(child, _getContentBox());
-        }
-
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             if (ChildCount == 0 || _currentTab >= ChildCount)
             {
-                return;
+                return finalSize;
+            }
+
+            var headerSize = _getHeaderSize();
+            var panel = _getPanel();
+            var contentBox = new UIBox2i(0, headerSize, (int) (finalSize.X * UIScale), (int) (finalSize.Y * UIScale));
+            if (panel != null)
+            {
+                contentBox = (UIBox2i) panel.GetContentBox(contentBox);
             }
 
             var control = GetChild(_currentTab);
             control.Visible = true;
-            _fixChildMargins(control);
+            control.ArrangePixel(contentBox);
+            return finalSize;
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -313,19 +318,6 @@ namespace Robust.Client.UserInterface.Controls
 
                 headerOffset += boxAdvance;
             }
-        }
-
-        [System.Diagnostics.Contracts.Pure]
-        private UIBox2i _getContentBox()
-        {
-            var headerSize = _getHeaderSize();
-            var panel = _getPanel();
-            var panelBox = new UIBox2i(0, headerSize, PixelWidth, PixelHeight);
-            if (panel != null)
-            {
-                return (UIBox2i) panel.GetContentBox(panelBox);
-            }
-            return panelBox;
         }
 
         [System.Diagnostics.Contracts.Pure]

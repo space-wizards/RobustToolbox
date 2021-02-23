@@ -1,19 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Server.Interfaces;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Reflection;
 
 namespace Robust.Server
 {
@@ -119,6 +115,7 @@ namespace Robust.Server
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
             mgr.GetSawmill("go.sys").Level = LogLevel.Info;
+            mgr.GetSawmill("loc").Level = LogLevel.Error;
             // mgr.GetSawmill("szr").Level = LogLevel.Info;
 
 #if DEBUG_ONLY_FCE_INFO

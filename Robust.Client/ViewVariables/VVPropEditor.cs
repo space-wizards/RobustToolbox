@@ -1,7 +1,5 @@
 using System;
-using System.ComponentModel;
 using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.ViewVariables
 {

@@ -1,4 +1,3 @@
-using Robust.Shared.Maths;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Console
@@ -56,11 +55,10 @@ namespace Robust.Shared.Console
         void WriteLine(string text);
 
         /// <summary>
-        /// Write a line with a specific color to the console window.
+        /// Write an error line to the console window.
         /// </summary>
         /// <param name="text">Line of text to write.</param>
-        /// <param name="color">Foreground color of the string of text.</param>
-        void WriteLine(string text, Color color);
+        void WriteError(string text);
 
         /// <summary>
         /// Clears the entire console of text.

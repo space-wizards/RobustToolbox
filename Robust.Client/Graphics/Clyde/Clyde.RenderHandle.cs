@@ -1,11 +1,7 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -41,28 +37,55 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetProjViewTransform(proj, view);
             }
 
+            /// <summary>
+            /// Draws a sprite to the screen. The coordinate system is left handed.
+            /// Make sure to set <see cref="DrawSetModelTransform"/>
+            /// to set the model matrix if needed.
+            /// </summary>
+            /// <param name="texture">Texture to draw.</param>
+            /// <param name="bl">Bottom left vertex of the quad in object space.</param>
+            /// <param name="br">Bottom right vertex of the quad in object space.</param>
+            /// <param name="tl">Top left vertex of the quad in object space.</param>
+            /// <param name="tr">Top right vertex of the quad in object space.</param>
+            /// <param name="modulate">A color to multiply the texture by when shading.</param
+            /// <param name="subRegion">The four corners of the texture sub region in px.</param>
             public void DrawTextureScreen(Texture texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr,
                 in Color modulate, in UIBox2? subRegion)
             {
-                var clydeTexture = ExtractTexture(texture, subRegion, out var csr);
+                var clydeTexture = ExtractTexture(texture, in subRegion, out var csr);
 
                 var (w, h) = clydeTexture.Size;
                 var sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
 
-                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, modulate, sr);
+                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
 
+            /// <summary>
+            /// Draws a sprite to the world. The coordinate system is right handed.
+            /// Make sure to set <see cref="DrawSetModelTransform"/>
+            /// to set the model matrix if needed.
+            /// </summary>
+            /// <param name="texture">Texture to draw.</param>
+            /// <param name="bl">Bottom left vertex of the quad in object space.</param>
+            /// <param name="br">Bottom right vertex of the quad in object space.</param>
+            /// <param name="tl">Top left vertex of the quad in object space.</param>
+            /// <param name="tr">Top right vertex of the quad in object space.</param>
+            /// <param name="modulate">A color to multiply the texture by when shading.</param>
+            /// <param name="subRegion">The four corners of the texture sub region in px.</param>
             public void DrawTextureWorld(Texture texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr,
                 Color modulate, in UIBox2? subRegion)
             {
-                var clydeTexture = ExtractTexture(texture, subRegion, out var csr);
+                var clydeTexture = ExtractTexture(texture, in subRegion, out var csr);
 
                 var (w, h) = clydeTexture.Size;
                 var sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
 
-                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, modulate, sr);
+                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, in modulate, in sr);
             }
 
+            /// <summary>
+            /// Converts a subRegion (px) into texture coords (0-1) of a given texture (cells of the textureAtlas).
+            /// </summary>
             private static ClydeTexture ExtractTexture(Texture texture, in UIBox2? subRegion, out UIBox2 sr)
             {
                 if (texture is AtlasTexture atlas)
@@ -387,22 +410,40 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                public override void DrawTextureRectRegion(Texture texture, Box2 rect, UIBox2? subRegion = null,
-                    Color? modulate = null)
+                /// <summary>
+                /// Draws a sprite to the world. The coordinate system is right handed.
+                /// Make sure to set <see cref="DrawSetModelTransform"/>
+                /// to set the model matrix if needed.
+                /// </summary>
+                /// <param name="texture">Texture to draw.</param>
+                /// <param name="quad">The four vertices of the quad in object space (or world if the transform is identity.).</param>
+                /// <param name="modulate">A color to multiply the texture by when shading.</param>
+                /// <param name="subRegion">The four corners of the texture sub region in px.</param>
+                public override void DrawTextureRectRegion(Texture texture, Box2 quad,
+                    Color? modulate = null, UIBox2? subRegion = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTextureWorld(texture, rect.BottomLeft, rect.BottomRight,
-                        rect.TopLeft, rect.TopRight, color, subRegion);
+                    _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
+                        quad.TopLeft, quad.TopRight, color, in subRegion);
                 }
 
-                public override void DrawTextureRectRegion(Texture texture, in Box2Rotated rect,
-                    UIBox2? subRegion = null, Color? modulate = null)
+                /// <summary>
+                /// Draws a sprite to the world. The coordinate system is right handed.
+                /// Make sure to set <see cref="DrawSetModelTransform"/>
+                /// to set the model matrix if needed.
+                /// </summary>
+                /// <param name="texture">Texture to draw.</param>
+                /// <param name="quad">The four vertices of the quad in object space (or world if the transform is identity.).</param>
+                /// <param name="modulate">A color to multiply the texture by when shading.</param>
+                /// <param name="subRegion">The four corners of the texture sub region in px.</param>
+                public override void DrawTextureRectRegion(Texture texture, in Box2Rotated quad,
+                    Color? modulate = null, UIBox2? subRegion = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTextureWorld(texture, rect.BottomLeft, rect.BottomRight,
-                        rect.TopLeft, rect.TopRight, color, subRegion);
+                    _renderHandle.DrawTextureWorld(texture, quad.BottomLeft, quad.BottomRight,
+                        quad.TopLeft, quad.TopRight, color, in subRegion);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology,

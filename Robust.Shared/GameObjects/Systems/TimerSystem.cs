@@ -1,7 +1,6 @@
 ﻿using System.Linq;
-using Robust.Shared.GameObjects.Components.Timers;
 
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public class TimerSystem : EntitySystem
     {

@@ -1,7 +1,6 @@
 ﻿using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
-using Robust.Shared.Interfaces.Serialization;
 
 namespace Robust.Shared.Audio
 {
@@ -55,7 +54,7 @@ namespace Robust.Shared.Audio
         /// </summary>
         public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
 
-        public void ExposeData(ObjectSerializer serializer)
+        void IExposeData.ExposeData(ObjectSerializer serializer)
         {
             Volume = serializer.ReadDataField("volume", 0f);
             PitchScale = serializer.ReadDataField("pitchscale", 1f);

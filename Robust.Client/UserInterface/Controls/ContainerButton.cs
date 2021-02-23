@@ -1,5 +1,5 @@
 ﻿using System;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -31,13 +31,30 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            var contentBox = ActualStyleBox.GetContentBox(PixelSizeBox);
+            var boxSize = ActualStyleBox.MinimumSize / UIScale;
+            var childBox = Vector2.ComponentMax(availableSize - boxSize, Vector2.Zero);
+            var min = Vector2.Zero;
             foreach (var child in Children)
             {
-                FitChildInPixelBox(child, (UIBox2i) contentBox);
+                child.Measure(childBox);
+                min = Vector2.ComponentMax(min, child.DesiredSize);
             }
+
+            return min + boxSize;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
+        {
+            var contentBox = ActualStyleBox.GetContentBox(UIBox2.FromDimensions(Vector2.Zero, finalSize * UIScale));
+
+            foreach (var child in Children)
+            {
+                child.ArrangePixel((UIBox2i) contentBox);
+            }
+
+            return finalSize;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -47,17 +64,6 @@ namespace Robust.Client.UserInterface.Controls
             var style = ActualStyleBox;
             var drawBox = PixelSizeBox;
             style.Draw(handle, drawBox);
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var min = Vector2.Zero;
-            foreach (var child in Children)
-            {
-                min = Vector2.ComponentMax(min, child.CombinedMinimumSize);
-            }
-
-            return min + ActualStyleBox.MinimumSize / UIScale;
         }
 
         protected override void DrawModeChanged()

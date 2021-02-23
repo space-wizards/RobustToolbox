@@ -2,7 +2,6 @@
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Timing

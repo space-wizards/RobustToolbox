@@ -1,5 +1,4 @@
 ﻿using System;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Log;
 

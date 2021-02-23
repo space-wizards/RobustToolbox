@@ -1,14 +1,11 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -35,12 +32,12 @@ namespace Robust.Client.ViewVariables
 
             MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
-            CustomMinimumSize = new Vector2(0, 25);
+            MinHeight = 25;
 
             VBox = new VBoxContainer {SeparationOverride = 0};
             AddChild(VBox);
 
-            TopContainer = new HBoxContainer {SizeFlagsVertical = SizeFlags.FillExpand};
+            TopContainer = new HBoxContainer {VerticalExpand = true};
             VBox.AddChild(TopContainer);
 
             BottomContainer = new HBoxContainer
@@ -91,12 +88,12 @@ namespace Robust.Client.ViewVariables
             }
 
             var view = editor.Initialize(member.Value, !member.Editable);
-            if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
+            if (!view.HorizontalExpand)
             {
-                NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;
+                NameLabel.HorizontalExpand = true;
             }
 
-            NameLabel.CustomMinimumSize = new Vector2(150, 0);
+            NameLabel.MinSize = new Vector2(150, 0);
             TopContainer.AddChild(view);
             /*
             _beingEdited = obj;
@@ -116,9 +113,9 @@ namespace Robust.Client.ViewVariables
             var view = editor.Initialize(value, attr.Access != VVAccess.ReadWrite);
             if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
             {
-                NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;
+                NameLabel.HorizontalExpand = true;
             }
-            NameLabel.CustomMinimumSize = new Vector2(150, 0);
+            NameLabel.MinSize = new Vector2(150, 0);
             TopContainer.AddChild(view);
             editor.OnValueChanged += v => { propertyInfo.SetValue(obj, v); };
             */

@@ -1,5 +1,5 @@
-﻿using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _scale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             RectClipContent = true;
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             // TODO: make this not hardcoded.
             // It'll break on larger things.

@@ -3,15 +3,9 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
@@ -238,7 +232,9 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
+                var matrix = entry.worldMatrix;
+                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
                 {

@@ -3,20 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Robust.Client.Console;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.GameObjects;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
-using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Control;
@@ -76,11 +73,7 @@ namespace Robust.Client.ViewVariables.Instances
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
-            var vBoxContainer = new VBoxContainer
-            {
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                SizeFlagsVertical = SizeFlags.FillExpand,
-            };
+            var vBoxContainer = new VBoxContainer();
             scrollContainer.AddChild(vBoxContainer);
 
             // Handle top bar displaying type and ToString().
@@ -110,7 +103,7 @@ namespace Robust.Client.ViewVariables.Instances
                 if (_entity.TryGetComponent(out ISpriteComponent? sprite))
                 {
                     var hBox = new HBoxContainer();
-                    top.SizeFlagsHorizontal = SizeFlags.FillExpand;
+                    top.HorizontalExpand = true;
                     hBox.AddChild(top);
                     hBox.AddChild(new SpriteView {Sprite = sprite});
                     vBoxContainer.AddChild(hBox);
@@ -170,13 +163,13 @@ namespace Robust.Client.ViewVariables.Instances
             _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
             {
                 PlaceHolder = Loc.GetString("Search"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
+                HorizontalExpand = true,
             });
 
             _clientComponents.AddChild(_clientComponentsAddButton = new Button()
             {
                 Text = Loc.GetString("Add Component"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
+                HorizontalExpand = true,
             });
 
             _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
@@ -190,7 +183,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { SS14Window.StyleClassWindowCloseButton },
-                    SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                    HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ => ViewVariablesManager.OpenVV(component);
                 removeButton.OnPressed += _ => RemoveClientComponent(component);
@@ -206,13 +199,13 @@ namespace Robust.Client.ViewVariables.Instances
             _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
             {
                 PlaceHolder = Loc.GetString("Search"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
+                HorizontalExpand = true,
             });
 
             _serverComponents.AddChild(_serverComponentsAddButton = new Button()
             {
                 Text = Loc.GetString("Add Component"),
-                SizeFlagsHorizontal = SizeFlags.FillExpand
+                HorizontalExpand = true,
             });
 
             _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
@@ -241,7 +234,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var removeButton = new TextureButton()
                 {
                     StyleClasses = { SS14Window.StyleClassWindowCloseButton },
-                    SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                    HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ =>
                 {

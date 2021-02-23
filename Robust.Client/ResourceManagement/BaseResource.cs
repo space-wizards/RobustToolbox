@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.ResourceManagement

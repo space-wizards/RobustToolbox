@@ -1,5 +1,4 @@
-﻿using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
+using Lidgren.Network;
 
 #nullable disable
 
@@ -14,6 +13,7 @@ namespace Robust.Shared.Network.Messages
         #endregion
 
         public string Text { get; set; }
+        public bool Error { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {

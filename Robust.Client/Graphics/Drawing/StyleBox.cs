@@ -2,7 +2,7 @@
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     This is for drawing modestly fancy boxes using minimal code.

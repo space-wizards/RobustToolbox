@@ -1,5 +1,3 @@
-using Robust.Client.Interfaces.Graphics;
-
 namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde

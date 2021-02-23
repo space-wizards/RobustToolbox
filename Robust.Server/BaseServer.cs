@@ -5,40 +5,31 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.GameState;
-using Robust.Server.Interfaces.Placement;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Server.Interfaces.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
-using Robust.Server.Interfaces.Debugging;
 using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
+using Robust.Server.Debugging;
+using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Log;
+using Robust.Server.Placement;
+using Robust.Server.Player;
 using Robust.Server.Utility;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -277,16 +268,21 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
-            _loc.AddLoadedToStringSerializer();
+            _loc.AddLoadedToStringSerializer(_stringSerializer);
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
-            IoCManager.Resolve<IPrototypeManager>().LoadedData +=
-                (yaml, name) => _stringSerializer.AddStrings(yaml);
+            IoCManager.Resolve<IPrototypeManager>().LoadedData += (yaml, name) =>
+            {
+                if (!_stringSerializer.Locked)
+                {
+                    _stringSerializer.AddStrings(yaml);
+                }
+            };
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
-            
+
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
 
             _stateManager.Initialize();
@@ -305,6 +301,7 @@ namespace Robust.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.Initialize();
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Robust.Client.Log;
 using Robust.Shared.Console;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -14,13 +13,17 @@ namespace Robust.Client.Console
 {
     public class AddStringArgs : EventArgs
     {
-        public Color Color { get; }
         public string Text { get; }
 
-        public AddStringArgs(string text, Color color)
+        public bool Local { get; }
+
+        public bool Error { get; }
+
+        public AddStringArgs(string text, bool local, bool error)
         {
             Text = text;
-            Color = color;
+            Local = local;
+            Error = error;
         }
     }
 
@@ -33,12 +36,10 @@ namespace Robust.Client.Console
             Message = message;
         }
     }
-
+    
     /// <inheritdoc cref="IClientConsoleHost" />
     internal class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
-        private static readonly Color _msgColor = new(65, 105, 225);
-
         private bool _requestedCommands;
 
         /// <inheritdoc />
@@ -46,10 +47,18 @@ namespace Robust.Client.Console
         {
             NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
             NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME);
+            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
 
             Reset();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
+        }
+
+        private void ProcessCommand(MsgConCmd message)
+        {
+            string? text = message.Text;
+            LogManager.GetSawmill(SawmillName).Info($"SERVER:{text}");
+
+            ExecuteCommand(null, text);
         }
 
         /// <inheritdoc />
@@ -63,49 +72,54 @@ namespace Robust.Client.Console
             SendServerCommandRequest();
         }
 
+        /// <inheritdoc />
         public event EventHandler<AddStringArgs>? AddString;
+
+        /// <inheritdoc />
         public event EventHandler<AddFormattedMessageArgs>? AddFormatted;
 
+        /// <inheritdoc />
         public void AddFormattedLine(FormattedMessage message)
         {
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
         }
 
-        public override void WriteLine(ICommonSession? session, string text, Color color)
+        /// <inheritdoc />
+        public override void WriteError(ICommonSession? session, string text)
         {
-            AddString?.Invoke(this, new AddStringArgs(text, color));
+            OutputText(text, true, true);
         }
 
+        /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
             if (string.IsNullOrWhiteSpace(command))
                 return;
 
             // echo the command locally
-            WriteLine(null, "> " + command, Color.Lime);
+            WriteError(null, "> " + command);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
 
             CommandParsing.ParseArguments(command, args);
 
-            var commandname = args[0];
+            var commandName = args[0];
 
-            if (AvailableCommands.ContainsKey(commandname))
+            if (AvailableCommands.ContainsKey(commandName))
             {
-                var command1 = AvailableCommands[commandname];
+                var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
                 command1.Execute(new ConsoleShell(this, null), command, args.ToArray());
             }
-            else if (!NetManager.IsConnected) WriteLine(null, "Unknown command: " + commandname, Color.Red);
+            else
+                WriteError(null, "Unknown command: " + commandName);
         }
 
-        /// <summary>
-        /// Sends a command directly to the server.
-        /// </summary>
+        /// <inheritdoc />
         public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
-            if (!NetManager.IsConnected)
+            if (!NetManager.IsConnected) // we don't care about session on client
                 return;
 
             var msg = NetManager.CreateNetMessage<MsgConCmd>();
@@ -113,15 +127,21 @@ namespace Robust.Client.Console
             NetManager.ClientSendMessage(msg);
         }
 
+        /// <inheritdoc />
         public override void WriteLine(ICommonSession? session, string text)
         {
-            WriteLine(null, text, Color.White);
+            OutputText(text, true, false);
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
             // We don't have anything to dispose.
+        }
+
+        private void OutputText(string text, bool local, bool error)
+        {
+            AddString?.Invoke(this, new AddStringArgs(text, local, error));
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
@@ -131,14 +151,14 @@ namespace Robust.Client.Console
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
-            WriteLine(null, "< " + msg.Text, _msgColor);
+            OutputText("< " + msg.Text, false, msg.Error);
         }
 
         private void HandleConCmdReg(MsgConCmdReg msg)
         {
             foreach (var cmd in msg.Commands)
             {
-                var commandName = cmd.Name;
+                string? commandName = cmd.Name;
 
                 // Do not do duplicate commands.
                 if (AvailableCommands.ContainsKey(commandName))
@@ -176,18 +196,18 @@ namespace Robust.Client.Console
     [Reflect(false)]
     internal class ServerDummyCommand : IConsoleCommand
     {
-        public string Command { get; }
-
-        public string Description { get; }
-
-        public string Help { get; }
-
         internal ServerDummyCommand(string command, string help, string description)
         {
             Command = command;
             Help = help;
             Description = description;
         }
+
+        public string Command { get; }
+
+        public string Description { get; }
+
+        public string Help { get; }
 
         // Always forward to server.
         public void Execute(IConsoleShell shell, string argStr, string[] args)

@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
-using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -443,9 +442,9 @@ namespace Robust.Server.GameObjects
             Layers = layerData;
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color, Directional,
+            return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color,
                 BaseRSIPath, Layers, RenderOrder);
         }
     }

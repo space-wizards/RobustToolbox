@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -286,10 +279,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity();
-
-            entity.SetManagers(this);
-            entity.SetUid(uid.Value);
+            var entity = new Entity(this, uid.Value);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);

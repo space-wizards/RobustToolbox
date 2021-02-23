@@ -1,19 +1,18 @@
-﻿using Robust.Client.Interfaces.ResourceManagement;
+﻿using System;
+using System.Collections.Generic;
+using Robust.Client.ResourceManagement;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Client.Graphics.Shaders
+namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype
+    public sealed class ShaderPrototype : IPrototype
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;

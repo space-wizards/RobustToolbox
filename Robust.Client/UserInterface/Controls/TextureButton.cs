@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -28,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _textureNormal = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -38,7 +37,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _scale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -79,7 +78,7 @@ namespace Robust.Client.UserInterface.Controls
             handle.DrawTextureRectRegion(texture, PixelSizeBox);
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var texture = TextureNormal;
 

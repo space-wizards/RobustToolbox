@@ -8,6 +8,7 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Build.Framework" Version="16.8.0" />
       <PackageReference Include="Mono.Cecil" Version="0.11.3" />
+      <PackageReference Include="Pidgin" Version="2.5.0" />
     </ItemGroup>
 
     <ItemGroup>

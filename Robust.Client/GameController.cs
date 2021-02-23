@@ -3,18 +3,15 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Robust.Client.Console;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.Interfaces.Utility;
+using Robust.Client.GameObjects;
+using Robust.Client.GameStates;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
+using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
+using Robust.Client.State;
+using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.LoaderApi;
@@ -22,15 +19,11 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.Interfaces.Timers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -67,6 +60,7 @@ namespace Robust.Client
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly IAuthManager _authManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -168,6 +162,7 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _consoleHost.Initialize();
+            _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();
@@ -185,6 +180,8 @@ namespace Robust.Client
             {
                 _client.PlayerNameOverride = _commandLineArgs.Username;
             }
+
+            _authManager.LoadFromEnv();
 
             _clyde.Ready();
 
@@ -321,6 +318,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
+            logManager.GetSawmill("loc").Level = LogLevel.Error;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG

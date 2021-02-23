@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 

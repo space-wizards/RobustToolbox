@@ -7,15 +7,19 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class CenterContainer : Container
     {
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
+            var max = Vector2.Zero;
             foreach (var child in Children)
             {
-                var childSize = child.CombinedMinimumSize;
-                var childPos = (Size - childSize) / 2;
+                var childSize = child.DesiredSize;
+                var childPos = (finalSize - childSize) / 2;
 
-                FitChildInBox(child, UIBox2.FromDimensions(childPos, childSize));
+                child.Arrange(UIBox2.FromDimensions(childPos, childSize));
+
+                max = Vector2.ComponentMax(max, childSize);
             }
+            return max;
         }
     }
 }

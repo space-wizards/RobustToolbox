@@ -26,7 +26,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public Label()
         {
-            SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            VerticalAlignment = VAlignment.Center;
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _text = value;
                 _textDimensionCacheValid = false;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -52,7 +52,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _clipText = value;
                 RectClipContent = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -209,7 +209,7 @@ namespace Robust.Client.UserInterface.Controls
             Fill = 3
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (!_textDimensionCacheValid)
             {
@@ -267,7 +267,7 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    _cachedTextWidths[_cachedTextWidths.Count-1] += metrics.Value.Advance;
+                    _cachedTextWidths[^1] += metrics.Value.Advance;
                 }
             }
 

@@ -13,6 +13,8 @@ namespace Robust.Client.Graphics
 
         Vector2i ScreenSize { get; }
 
+        bool IsFocused { get; }
+
         /// <summary>
         ///     The default scale ratio for window contents, given to us by the OS.
         /// </summary>
@@ -26,6 +28,8 @@ namespace Robust.Client.Graphics
         void RequestWindowAttention();
 
         event Action<WindowResizedEventArgs> OnWindowResized;
+
+        event Action<WindowFocusedEventArgs> OnWindowFocused;
 
         Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);

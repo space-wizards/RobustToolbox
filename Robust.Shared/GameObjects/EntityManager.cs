@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -279,10 +279,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity();
-
-            entity.SetManagers(this);
-            entity.SetUid(uid.Value);
+            var entity = new Entity(this, uid.Value);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);

@@ -19,13 +19,13 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBoxContainer = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(200, 0),
+                MinSize = new Vector2(200, 0),
             };
 
             var left = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Left",
                 ToolTip = "Left"
             };
@@ -33,7 +33,7 @@ namespace Robust.Client.ViewVariables.Editors
             var top = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Top",
                 ToolTip = "Top"
             };
@@ -41,7 +41,7 @@ namespace Robust.Client.ViewVariables.Editors
             var right = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Right",
                 ToolTip = "Right"
             };
@@ -49,7 +49,7 @@ namespace Robust.Client.ViewVariables.Editors
             var bottom = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Bottom",
                 ToolTip = "Bottom"
             };

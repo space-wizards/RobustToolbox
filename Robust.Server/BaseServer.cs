@@ -275,8 +275,13 @@ namespace Robust.Server
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
-            IoCManager.Resolve<IPrototypeManager>().LoadedData +=
-                (yaml, name) => _stringSerializer.AddStrings(yaml);
+            IoCManager.Resolve<IPrototypeManager>().LoadedData += (yaml, name) =>
+            {
+                if (!_stringSerializer.Locked)
+                {
+                    _stringSerializer.AddStrings(yaml);
+                }
+            };
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
@@ -299,6 +304,7 @@ namespace Robust.Server
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.Initialize();
             prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
             prototypeManager.Resync();
 

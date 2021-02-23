@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = value == null ? "null" : value.ToString() ?? "<null ToString()>",
                 Align = Label.AlignMode.Right,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true
             };
         }
     }

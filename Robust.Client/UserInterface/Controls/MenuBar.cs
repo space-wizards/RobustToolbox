@@ -26,7 +26,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Children =
                 {
-                    (_popupVBox = new VBoxContainer {CustomMinimumSize = (300, 0)})
+                    (_popupVBox = new VBoxContainer {MinSize = (300, 0)})
                 }
             };
             _popup.OnPopupHide += PopupHidden;
@@ -113,7 +113,7 @@ namespace Robust.Client.UserInterface.Controls
                         break;
 
                     case MenuSeparator _:
-                        var control = new Control {CustomMinimumSize = (0, 6)};
+                        var control = new Control {MinSize = (0, 6)};
                         container.AddChild(control);
                         break;
                 }

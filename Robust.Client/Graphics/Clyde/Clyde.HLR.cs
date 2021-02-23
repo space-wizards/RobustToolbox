@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -199,7 +199,9 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
                 }
 
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
+                var matrix = entry.worldMatrix;
+                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null)
                 {

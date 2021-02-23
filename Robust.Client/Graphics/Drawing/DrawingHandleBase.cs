@@ -19,17 +19,18 @@ namespace Robust.Client.Graphics
             Disposed = true;
         }
 
-        public void SetTransform(Vector2 position, Angle rotation, Vector2 scale)
+        public void SetTransform(in Vector2 position, in Angle rotation, in Vector2 scale)
         {
             CheckDisposed();
 
-            var matrix = Matrix3.Identity;
-            (matrix.R0C0, matrix.R1C1) = scale;
-            matrix.Rotate(rotation);
-            matrix.R0C2 += position.X;
-            matrix.R1C2 += position.Y;
+            var matrix = Matrix3.CreateTransform(in position, in rotation, in scale);
+            SetTransform(in matrix);
+        }
 
-            SetTransform(matrix);
+        public void SetTransform(in Vector2 position, in Angle rotation)
+        {
+            var matrix = Matrix3.CreateTransform(in position, in rotation);
+            SetTransform(in matrix);
         }
 
         public abstract void SetTransform(in Matrix3 matrix);

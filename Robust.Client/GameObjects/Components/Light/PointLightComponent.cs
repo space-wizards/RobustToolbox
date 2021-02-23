@@ -8,14 +8,16 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using System;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects
 {
-    public class PointLightComponent : Component
+    [RegisterComponent]
+    [ComponentReference(typeof(IPointLightComponent))]
+    public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
     {
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
@@ -66,6 +68,21 @@ namespace Robust.Client.GameObjects
         {
             get => _rotation;
             set => _rotation = value;
+        }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// The resource path to the mask texture the light will use.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string? MaskPath
+        {
+            get => _maskPath;
+            set
+            {
+                _maskPath = value;
+                UpdateMask();
+            }
         }
 
         /// <summary>
@@ -123,7 +140,7 @@ namespace Robust.Client.GameObjects
         private float _radius = 5f;
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        private bool _lightOnParent = false;
+        private bool _lightOnParent;
         [DataField("color")]
         private Color _color = Color.White;
         [DataField("offset")]
@@ -137,6 +154,8 @@ namespace Robust.Client.GameObjects
         private float _energy = 1f;
         [DataField("softness")]
         private float _softness = 1f;
+        [DataField("mask")]
+        private string? _maskPath;
 
         /// <summary>
         ///     Radius, in meters.
@@ -153,12 +172,34 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        private void UpdateMask()
+        {
+            if (_maskPath is not null)
+                Mask = _resourceCache.GetResource<TextureResource>(_maskPath);
+            else
+                Mask = null;
+        }
+
+        public void AfterDeserialization()
+        {
+            if (_maskPath != null)
+            {
+                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(_maskPath);
+            }
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            UpdateMask();
+        }
+
         /// <inheritdoc />
         public override void HandleMessage(ComponentMessage message, IComponent? component)
         {
             base.HandleMessage(message, component);
 
-            if ((message is ParentChangedMessage msg))
+            if (message is ParentChangedMessage msg)
             {
                 HandleTransformParentChanged(msg);
             }

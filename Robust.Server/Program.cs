@@ -115,6 +115,7 @@ namespace Robust.Server
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
             mgr.GetSawmill("go.sys").Level = LogLevel.Info;
+            mgr.GetSawmill("loc").Level = LogLevel.Error;
             // mgr.GetSawmill("szr").Level = LogLevel.Info;
 
 #if DEBUG_ONLY_FCE_INFO

@@ -54,15 +54,15 @@ namespace Robust.Client.UserInterface.Controls
         {
             if (owner.Parent is PopupContainer container)
             {
-                container.UpdateLayout();
+                container.InvalidateArrange();
             }
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             foreach (var child in Children)
             {
-                var size = child.CombinedMinimumSize;
+                var size = child.DesiredSize;
                 var offset = child.GetValue<Vector2>(PopupOriginProperty);
                 var altPos = child.GetValue<Vector2?>(AltOriginProperty);
 
@@ -105,22 +105,25 @@ namespace Robust.Client.UserInterface.Controls
                     offset -= (0, offset.Y);
                 }
 
-                FitChildInBox(child, UIBox2.FromDimensions(offset, size));
+                child.Arrange(UIBox2.FromDimensions(offset, size));
             }
+
+            return finalSize;
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            // Do NOT inherit minimum size from contents!
-            // Just clip 'em.
-            return (0, 0);
+            // Measure to availableSize so that child controls never get too large to fit the whole screen.
+            base.MeasureOverride(availableSize);
+
+            return availableSize;
         }
 
         protected override void Resized()
         {
             base.Resized();
 
-            UpdateLayout();
+            InvalidateArrange();
         }
     }
 }

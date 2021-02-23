@@ -1,8 +1,9 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization.Macros;
 
 namespace Robust.Shared.Localization
 {
@@ -24,77 +25,59 @@ namespace Robust.Shared.Localization
         private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
 
         /// <summary>
-        ///     Gets a string translated for the current culture.
+        ///     Gets a language approrpiate string represented by the supplied messageId.
         /// </summary>
-        /// <param name="text">The string to get translated.</param>
+        /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
-        ///     The translated string if a translation is available, otherwise the string is returned.
+        ///     The language appropriate message if available, otherwise the messageId is returned.
         /// </returns>
-        public static string GetString(string text)
+        public static string GetString(string messageId)
         {
-            return LocalizationManager.GetString(text);
+            return LocalizationManager.GetString(messageId);
+        }
+
+        public static bool TryGetString(string messageId, [NotNullWhen(true)] out string? message)
+        {
+            return LocalizationManager.TryGetString(messageId, out message);
         }
 
         /// <summary>
-        ///     Version of <see cref="GetString(string)"/> that also runs string formatting.
+        ///     Version of <see cref="GetString(string)"/> that supports arguments.
         /// </summary>
-        [StringFormatMethod("text")]
-        public static string GetString(string text, params object[] args)
+        public static string GetString(string messageId, params (string,object)[] args)
         {
-            return LocalizationManager.GetString(text, args);
+            return LocalizationManager.GetString(messageId, args);
         }
 
-        /// <summary>
-        ///     Gets a string inside a context or category.
-        /// </summary>
-        public static string GetParticularString(string context, string text)
+        public static bool TryGetString(
+            string messageId,
+            [NotNullWhen(true)] out string? value,
+            params (string, object)[] args)
         {
-            return LocalizationManager.GetParticularString(context, text);
-        }
-
-        /// <summary>
-        ///     Gets a string inside a context or category with formatting.
-        /// </summary>
-        [StringFormatMethod("text")]
-        public static string GetParticularString(string context, string text, params object[] args)
-        {
-            return LocalizationManager.GetParticularString(context, text, args);
-
-        }
-
-        public static string GetPluralString(string text, string pluralText, long n)
-        {
-            return LocalizationManager.GetPluralString(text, pluralText, n);
-
-        }
-
-        [StringFormatMethod("pluralText")]
-        public static string GetPluralString(string text, string pluralText, long n, params object[] args)
-        {
-            return LocalizationManager.GetPluralString(text, pluralText, n, args);
-        }
-
-        public static string GetParticularPluralString(string context, string text, string pluralText, long n)
-        {
-            return LocalizationManager.GetParticularString(context, text, pluralText, n);
-        }
-
-        [StringFormatMethod("pluralText")]
-        public static string GetParticularPluralString(string context, string text, string pluralText, long n,
-            params object[] args)
-        {
-            return LocalizationManager.GetParticularString(context, text, pluralText, n, args);
+            return LocalizationManager.TryGetString(messageId, out value, args);
         }
 
         /// <summary>
         ///     Load data for a culture.
         /// </summary>
         /// <param name="resourceManager"></param>
-        /// <param name="macroFactory"></param>
         /// <param name="culture"></param>
-        public static void LoadCulture(IResourceManager resourceManager, ITextMacroFactory macroFactory, CultureInfo culture)
+        [Obsolete("Use ILocalizationManager directly for setup methods.")]
+        public static void LoadCulture(IResourceManager resourceManager, CultureInfo culture)
         {
-            LocalizationManager.LoadCulture(resourceManager, macroFactory, culture);
+            LocalizationManager.LoadCulture(resourceManager, culture);
+        }
+
+
+        /// <summary>
+        /// Remnants of the old Localization system.
+        /// It exists to prevent source errors and allow existing game text to *mostly* work
+        /// </summary>
+        [Obsolete]
+        [StringFormatMethod("text")]
+        public static string GetString(string text, params object[] args)
+        {
+            return LocalizationManager.GetString(text, args);
         }
     }
 }

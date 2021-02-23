@@ -109,7 +109,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             var ratio = GetAsRatio();
 
-            var margin = (Width - _grabber.CombinedMinimumSize.X) * ratio + _grabber.CombinedMinimumSize.X / 2;
+            var margin = (Width - _grabber.DesiredSize.X) * ratio + _grabber.DesiredSize.X / 2;
             SetMarginRight(_fillPanel, margin);
             SetMarginLeft(_grabber, margin);
             SetMarginRight(_grabber, margin);
@@ -156,7 +156,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void HandlePositionChange(Vector2 position)
         {
-            var grabberWidth = _grabber.CombinedMinimumSize.X;
+            var grabberWidth = _grabber.DesiredSize.X;
             var ratio = (position.X - grabberWidth / 2) / (Width - grabberWidth);
             SetAsRatio(ratio);
         }

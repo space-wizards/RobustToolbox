@@ -32,7 +32,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (value?.Size != oldSize)
                 {
-                    MinimumSizeChanged();
+                    InvalidateMeasure();
                 }
             }
         }
@@ -49,7 +49,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _textureScale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -66,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _canShrink = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -223,7 +223,7 @@ namespace Robust.Client.UserInterface.Controls
             KeepAspectCovered = 8
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var texture = _texture;
 

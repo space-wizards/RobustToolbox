@@ -864,6 +864,7 @@ Types:
     IDisposable: { All: True }
     IEquatable`1: { }
     IFormatProvider: { All: True }
+    IFormattable: { All: True }
     IndexOutOfRangeException: { All: True }
     Int16: { All: True }
     Int32: { All: True }

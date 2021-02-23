@@ -226,7 +226,7 @@ namespace Robust.Client.GameObjects
         int GetLayerDirectionCount(ISpriteLayer layer);
 
         /// <summary>
-        /// Calculates sprite bounding box in world-space coordinates 
+        ///     Calculate sprite bounding box in world-space coordinates.
         /// </summary>
         Box2 CalculateBoundingBox();
     }

@@ -28,10 +28,15 @@ namespace Robust.Client.GameObjects
         Vector2 LocalToLayer(Vector2 localPos);
 
         /// <summary>
-        /// Layer size in pixels.
-        /// Doesn't account layer scale or sprite world transform
+        ///     Layer size in pixels.
+        ///     Don't account layer scale or sprite world transform.
         /// </summary>
         Vector2i PixelSize { get; }
 
+        /// <summary>
+        ///     Calculate layer bounding box in sprite local-space coordinates.
+        /// </summary>
+        /// <returns>Bounding box in sprite local-space coordinates.</returns>
+        Box2 CalculateBoundingBox();
     }
 }

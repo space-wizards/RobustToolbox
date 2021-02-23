@@ -1607,37 +1607,52 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc/>
         public Box2 CalculateBoundingBox()
         {
-            // we need to calculate bounding box taking into account all layers
-            // layers have same center, so we just need their union size
-            var spritePixelSize = Vector2.Zero;
-            foreach (var layer in Layers)
+            // fast check for empty sprites
+            if (Layers.Count == 0)
+                return new Box2();
+
+            // we need to calculate bounding box taking into account all nested layers
+            // because layers can have offsets, scale or rotation we need to calculate a new BB
+            // based on lowest bottomLeft and hightest topRight points from all layers
+            var firstLayerBB = Layers[0].CalculateBoundingBox();
+            var lowestBottomLeft = firstLayerBB.BottomLeft;
+            var highestTopRight = firstLayerBB.TopRight;
+
+            for (int i = 1; i < Layers.Count; i++)
             {
-                // first calculate layer bounding box
-                // because layer scale and rotation are placeholders thats easy
-                var layerBB = Box2.CentredAroundZero(layer.PixelSize);
+                var layer = Layers[i];
+                var layerBB = layer.CalculateBoundingBox();
 
-                // apply sprite transformations and calculate sprite bounding box
-                // we can optimize it a bit, if sprite doesn't have rotation
-                var spriteBox = layerBB.Scale(Scale);
-                var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
-                var spriteBB = spriteHasRotation ?
-                    new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+                // find lowest bottom left
+                var bottomLeft = layerBB.BottomLeft;
+                if (lowestBottomLeft.X > bottomLeft.X)
+                    lowestBottomLeft.X = bottomLeft.X;
+                if (lowestBottomLeft.Y > bottomLeft.Y)
+                    lowestBottomLeft.Y = bottomLeft.Y;
 
-                // now let see if new sprite BB bigger than current
-                var size = spriteBB.Size;
-                if (spritePixelSize.X < size.X)
-                    spritePixelSize.X = size.X;
-                if (spritePixelSize.Y < size.Y)
-                    spritePixelSize.Y = size.Y;
+                // and hightest top right
+                var topRight = layerBB.TopRight;
+                if (highestTopRight.X < topRight.X)
+                    highestTopRight.X = topRight.X;
+                if (highestTopRight.Y < topRight.Y)
+                    highestTopRight.Y = topRight.Y;
             }
 
-            // move it all to world transform system
-            var worldPosition = Owner.Transform.WorldPosition;
-            var worldScale = spritePixelSize / EyeManager.PixelsPerMeter;
-            var finalBB = Box2.CenteredAround(worldPosition + Offset, worldScale);
-            return finalBB;
-        }
+            // calculate all layers union BB
+            var layersBB = new Box2(lowestBottomLeft, highestTopRight);
 
+            // apply sprite transformations and calculate sprite bounding box
+            // we can optimize it a bit, if sprite doesn't have rotation
+            var spriteBox = layersBB.Scale(Scale);
+            var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
+            var spriteBB = spriteHasRotation ?
+                new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+
+            // move it all to world transform system (with sprite offset)
+            var worldPosition = Owner.Transform.WorldPosition;
+            var worldBB = spriteBB.Translated(Offset + worldPosition);
+            return worldBB;
+        }
 
         /// <summary>
         ///     Enum to "offset" a cardinal direction.
@@ -1943,6 +1958,14 @@ namespace Robust.Client.GameObjects
                     return pixelSize;
                 }
             }
+
+            /// <inheritdoc/>
+            public Box2 CalculateBoundingBox()
+            {
+                // TODO: scale & rotation for layers is currently unimplemented.
+                return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
+            }
+
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)

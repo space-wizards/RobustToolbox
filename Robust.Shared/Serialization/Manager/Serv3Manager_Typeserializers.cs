@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -155,7 +155,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader)) return false;
-            var ser = (ITypeSerializer<T, TNode>) rawTypeReader;
+            var ser = (ITypeReader<T, TNode>) rawTypeReader;
             obj = ser.Read(node, context);
             return true;
         }

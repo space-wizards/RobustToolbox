@@ -120,8 +120,12 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType.IsEnum)
             {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                return Enum.Parse(underlyingType, valueDataNode.Value, true);
+                return node switch
+                {
+                    ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
+                    SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
+                    _ => throw new InvalidNodeTypeException()
+                };
             }
 
             if (node.Tag?.StartsWith("!type:") == true)

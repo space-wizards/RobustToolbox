@@ -108,33 +108,74 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
+        // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            var dynamicMethod = new DynamicMethod(
-                $"_populateDelegate<>{Type}",
-                typeof(object),
-                new[] {typeof(object), typeof(MappingDataNode), typeof(IServ3Manager), typeof(ISerializationContext), typeof(object?[])},
-                Type,
-                true);
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "mapping");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
-            dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetRobustGen();
-
-            for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+            object PopulateDelegate(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+                ISerializationContext? context, object?[] defaultValues)
             {
-                var fieldDefinition = _baseFieldDefinitions[i];
-                var idc = generator.DeclareLocal(fieldDefinition.FieldType).LocalIndex;
-                generator.EmitPopulateField(fieldDefinition, idc, i);
+                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                {
+                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var mapped = mappingDataNode.HasNode(fieldDefinition.Attribute.Tag);
+
+                    if (!mapped)
+                    {
+                        continue;
+                    }
+
+                    object fieldVal;
+
+                    switch (fieldDefinition.Attribute)
+                    {
+                        case DataFieldWithConstantAttribute constant:
+                        {
+                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int))
+                                throw new InvalidOperationException();
+
+                            var type = constant.ConstantTag;
+
+                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+
+                            fieldVal = serv3Manager.ReadConstant(type, node);
+                            break;
+                        }
+                        case DataFieldWithFlagAttribute flag:
+                        {
+                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
+
+                            var type = flag.FlagTag;
+
+                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+
+                            fieldVal = serv3Manager.ReadFlag(type, node);
+                            break;
+                        }
+                        default:
+                        {
+                            var type = fieldDefinition.FieldType;
+
+                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+
+                            fieldVal = serv3Manager.ReadValue(type, node);
+                            break;
+                        }
+                    }
+
+                    var defValue = defaultValues[i];
+
+                    if (fieldVal.Equals(defValue))
+                    {
+                        continue;
+                    }
+
+                    fieldDefinition.FieldInfo.SetValue(target, fieldVal);
+                }
+
+                return target;
             }
 
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Box, Type);
-            generator.Emit(OpCodes.Ret);
-
-            return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();
+            return PopulateDelegate;
         }
 
         private SerializeDelegateSignature EmitSerializeDelegate()

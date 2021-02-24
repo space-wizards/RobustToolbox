@@ -53,7 +53,6 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public sealed class PhysicsMap
     {
-        // TODO: FixedRotation. I hope most of the rigidbody bugs are from this not being set so need to add it and pray.
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         // TODO: Pausing but need to merge in shared IPauseManager
@@ -495,7 +494,8 @@ namespace Robust.Shared.Physics.Dynamics
                 controller.UpdateAfterSolve(prediction, this, frameTime);
             }
 
-            if (_autoClearForces)
+            // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
+            if (!prediction && _autoClearForces)
                 ClearForces();
 
             _invDt0 = invDt;
@@ -651,8 +651,7 @@ namespace Robust.Shared.Physics.Dynamics
                 body.Island = false;
                 DebugTools.Assert(body.BodyType != BodyType.Static);
 
-                // TODO: Update BroadPhase -> Maybe just have LocalPosition update broadphase directly?
-                // Still need to suss this as MoveEvent is currently being used.
+                // So Box2D would update broadphase here buutttt we'll just wait until MoveEvent queue is used.
             }
 
             _islandSet.Clear();

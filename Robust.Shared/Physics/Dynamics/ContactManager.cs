@@ -121,7 +121,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                     if (!contactEdge.Other!.Awake)
                     {
-                        if (!ActiveContacts.Contains(contact))
+                        if (ActiveContacts.Contains(contact))
                         {
                             ActiveContacts.Remove(contact);
                         }
@@ -425,60 +425,69 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                // TODO: Look at not allocating and just enumerating instead.
-
-                // TODO: Look at the remaining ICollideBehavior and see if they're deleting in it; if so move to IPostCollide
-                foreach (var behavior in bodyA.Owner.GetAllComponents<ICollideBehavior>())
+                if (!bodyA.Entity.Deleted)
                 {
-                    _collisionBehaviors.Add(behavior);
+                    foreach (var behavior in bodyA.Owner.GetAllComponents<ICollideBehavior>())
+                    {
+                        _collisionBehaviors.Add(behavior);
+                    }
+
+                    foreach (var behavior in _collisionBehaviors)
+                    {
+                        if (bodyB.Deleted) break;
+                        behavior.CollideWith(bodyA, bodyB);
+                    }
+
+                    _collisionBehaviors.Clear();
                 }
 
-                foreach (var behavior in _collisionBehaviors)
+                if (!bodyB.Entity.Deleted)
                 {
-                    behavior.CollideWith(bodyA, bodyB);
-                    if (bodyB.Deleted) break;
+                    foreach (var behavior in bodyB.Owner.GetAllComponents<ICollideBehavior>())
+                    {
+                        _collisionBehaviors.Add(behavior);
+                    }
+
+                    foreach (var behavior in _collisionBehaviors)
+                    {
+                        if (bodyA.Deleted) break;
+                        behavior.CollideWith(bodyB, bodyA);
+                    }
+
+                    _collisionBehaviors.Clear();
                 }
 
-                _collisionBehaviors.Clear();
-
-                foreach (var behavior in bodyB.Owner.GetAllComponents<ICollideBehavior>())
+                if (!bodyA.Entity.Deleted)
                 {
-                    _collisionBehaviors.Add(behavior);
+                    foreach (var behavior in bodyA.Owner.GetAllComponents<IPostCollide>())
+                    {
+                        _postCollideBehaviors.Add(behavior);
+                    }
+
+                    foreach (var behavior in _postCollideBehaviors)
+                    {
+                        behavior.PostCollide(bodyA, bodyB);
+                        if (bodyB.Deleted) break;
+                    }
+
+                    _postCollideBehaviors.Clear();
                 }
 
-                foreach (var behavior in _collisionBehaviors)
+                if (!bodyB.Entity.Deleted)
                 {
-                    behavior.CollideWith(bodyB, bodyA);
-                    if (bodyA.Deleted) break;
+                    foreach (var behavior in bodyB.Owner.GetAllComponents<IPostCollide>())
+                    {
+                        _postCollideBehaviors.Add(behavior);
+                    }
+
+                    foreach (var behavior in _postCollideBehaviors)
+                    {
+                        behavior.PostCollide(bodyB, bodyA);
+                        if (bodyA.Deleted) break;
+                    }
+
+                    _postCollideBehaviors.Clear();
                 }
-
-                _collisionBehaviors.Clear();
-
-                foreach (var behavior in bodyA.Owner.GetAllComponents<IPostCollide>())
-                {
-                    _postCollideBehaviors.Add(behavior);
-                }
-
-                foreach (var behavior in _postCollideBehaviors)
-                {
-                    behavior.PostCollide(bodyA, bodyB);
-                    if (bodyB.Deleted) break;
-                }
-
-                _postCollideBehaviors.Clear();
-
-                foreach (var behavior in bodyB.Owner.GetAllComponents<IPostCollide>())
-                {
-                    _postCollideBehaviors.Add(behavior);
-                }
-
-                foreach (var behavior in _postCollideBehaviors)
-                {
-                    behavior.PostCollide(bodyB, bodyA);
-                    if (bodyA.Deleted) break;
-                }
-
-                _postCollideBehaviors.Clear();
             }
         }
 

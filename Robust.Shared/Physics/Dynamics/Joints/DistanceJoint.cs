@@ -104,10 +104,31 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             LocalAnchorA = anchorA;
             LocalAnchorB = anchorB;
-            Length = MathF.Max(IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            // TODO: Just pass this into the ctor.
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            Length = MathF.Max(configManager.GetCVar(CVars.LinearSlop), (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            WarmStarting = configManager.GetCVar(CVars.WarmStarting);
             _minLength = _length;
             _maxLength = _length;
         }
+
+        /// <summary>
+        ///     Does the DistanceJoint warmstart? Can be overridden from the cvar default.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool WarmStarting
+        {
+            get => _warmStarting;
+            set
+            {
+                if (_warmStarting == value) return;
+
+                _warmStarting = value;
+                Dirty();
+            }
+        }
+
+        private bool _warmStarting;
 
         /// <summary>
         /// The local anchor point relative to bodyA's origin.
@@ -369,7 +390,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        _softMass = _mass;
 	        }
 
-	        if (IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.WarmStarting))
+	        if (_warmStarting)
 	        {
 		        // Scale the impulse to support a variable time step.
 		        _impulse *= data.DtRatio;

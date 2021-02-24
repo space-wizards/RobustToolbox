@@ -94,6 +94,8 @@ namespace Robust.Shared.Physics.Collision
     /// </summary>
     internal class CollisionManager : ICollisionManager
     {
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
+
         /*
          * Farseer had this as a static class with a ThreadStatic DistanceInput
          */
@@ -368,13 +370,15 @@ namespace Robust.Shared.Physics.Collision
             PolygonShape polygonB,
             in Transform xfB)
         {
-            EPCollider collider = new();
+            EPCollider collider = new(_configManager);
             collider.Collide(manifold, edgeA, xfA, polygonB, xfB);
         }
 
         private class EPCollider
         {
-            private TempPolygon _polygonB = new();
+            private float _polygonRadius;
+
+            private TempPolygon _polygonB;
 
             Transform _xf;
             Vector2 _centroidB;
@@ -384,6 +388,12 @@ namespace Robust.Shared.Physics.Collision
             Vector2 _lowerLimit, _upperLimit;
             float _radius;
             bool _front;
+
+            internal EPCollider(IConfigurationManager configManager)
+            {
+                _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _polygonB = new TempPolygon(configManager);
+            }
 
             public void Collide(Manifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
                 in Transform xfB)
@@ -601,11 +611,7 @@ namespace Robust.Shared.Physics.Collision
                     _polygonB.Normals[i] = Transform.Mul(_xf.Quaternion2D, polygonB.Normals[i]);
                 }
 
-                var configManager = IoCManager.Resolve<IConfigurationManager>();
-                var polyRadius = configManager.GetCVar(CVars.PolygonRadius);
-                // var maxPoints = configManager.GetCVar(CVars.);
-
-                _radius = 2.0f * polyRadius;
+                _radius = 2.0f * _polygonRadius;
 
                 manifold.PointCount = 0;
 
@@ -1457,9 +1463,8 @@ namespace Robust.Shared.Physics.Collision
         public Vector2[] Normals;
         public int Count;
 
-        public TempPolygon()
+        public TempPolygon(IConfigurationManager configManager)
         {
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
             var maxVerts = configManager.GetCVar(CVars.MaxPolygonVertices);
             Vertices = new Vector2[maxVerts];
             Normals = new Vector2[maxVerts];

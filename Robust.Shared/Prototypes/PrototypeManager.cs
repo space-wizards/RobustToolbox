@@ -69,7 +69,7 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
-        Task<List<IPrototype>> LoadDirectory(ResourcePath path);
+        List<IPrototype> LoadDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -206,10 +206,10 @@ namespace Robust.Shared.Prototypes
             prototypes.Clear();
         }
 
-        public virtual async void ReloadPrototypes(ResourcePath file)
+        public virtual void ReloadPrototypes(ResourcePath file)
         {
 #if !FULL_RELEASE
-            var changed = await LoadFile(file.ToRootedPath(), true);
+            var changed = LoadFile(file.ToRootedPath(), true);
             Resync();
 
             foreach (var prototype in changed)
@@ -288,7 +288,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public async Task<List<IPrototype>> LoadDirectory(ResourcePath path)
+        public List<IPrototype> LoadDirectory(ResourcePath path)
         {
             var changedPrototypes = new List<IPrototype>();
 
@@ -298,14 +298,14 @@ namespace Robust.Shared.Prototypes
 
             foreach (var resourcePath in streams)
             {
-                var filePrototypes = await LoadFile(resourcePath);
+                var filePrototypes = LoadFile(resourcePath);
                 changedPrototypes.AddRange(filePrototypes);
             }
 
             return changedPrototypes;
         }
 
-        private Task<StreamReader?> ReadFile(ResourcePath file, bool @throw = true)
+        private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
         {
             var retries = 0;
 
@@ -315,8 +315,7 @@ namespace Robust.Shared.Prototypes
                 try
                 {
                     var reader = new StreamReader(Resources.ContentFileRead(file), EncodingHelpers.UTF8);
-
-                    return Task.FromResult<StreamReader?>(reader);
+                    return reader;
                 }
                 catch (IOException e)
                 {
@@ -328,7 +327,7 @@ namespace Robust.Shared.Prototypes
                         }
 
                         Logger.Error($"Error reloading prototypes in file {file}.", e);
-                        return Task.FromResult<StreamReader?>(null);
+                        return null;
                     }
 
                     retries++;
@@ -337,13 +336,13 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public async Task<List<IPrototype>> LoadFile(ResourcePath file, bool overwrite = false)
+        public List<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
         {
             var changedPrototypes = new List<IPrototype>();
 
             try
             {
-                using var reader = await ReadFile(file, !overwrite);
+                using var reader = ReadFile(file, !overwrite);
 
                 if (reader == null)
                 {

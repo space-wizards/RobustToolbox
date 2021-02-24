@@ -124,7 +124,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
                     SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
-                    _ => throw new InvalidNodeTypeException()
+                    _ => throw new InvalidNodeTypeException($"Cannot serialize node as {underlyingType}, unsupported node type {node.GetType()}")
                 };
             }
 

@@ -101,12 +101,12 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var box = _getGrabberBox();
-            if (!box.Contains(args.RelativePosition))
+            if (!box.Contains(args.RelativePixelPosition))
             {
                 return;
             }
 
-            _grabData = (args.RelativePosition, Value);
+            _grabData = (args.RelativePixelPosition, Value);
             _updatePseudoClass();
             args.Handle();
         }

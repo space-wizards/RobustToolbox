@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private float _radius;
 
-        public ShapeType ShapeType => ShapeType.Aabb;
+        public ShapeType ShapeType => ShapeType.Polygon;
 
         private Box2 _localBounds = Box2.UnitCentered;
 

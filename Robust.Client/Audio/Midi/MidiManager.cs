@@ -72,6 +72,8 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
+        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+
         public bool IsAvailable
         {
             get
@@ -155,6 +157,7 @@ namespace Robust.Client.Audio.Midi
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
 
+            _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             FluidsynthInitialized = true;
         }
 
@@ -299,7 +302,7 @@ namespace Robust.Client.Audio.Midi
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = EntitySystem.Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
+                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

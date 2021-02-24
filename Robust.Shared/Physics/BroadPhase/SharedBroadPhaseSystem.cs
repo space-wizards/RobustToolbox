@@ -145,7 +145,7 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 var moveEvent = _queuedMoveEvents.Dequeue();
 
-                if (!moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
+                if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                     continue;
 
                 SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));

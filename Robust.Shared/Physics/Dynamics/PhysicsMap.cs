@@ -86,6 +86,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Vector2 _gravity;
 
+        private List<ITransformComponent> _deferredUpdates = new();
+
         /// <summary>
         ///     All bodies present on this map.
         /// </summary>
@@ -499,6 +501,19 @@ namespace Robust.Shared.Physics.Dynamics
             _invDt0 = invDt;
         }
 
+        /// <summary>
+        ///     Go through all of the deferred MoveEvents and then run them
+        /// </summary>
+        public void ProcessQueue()
+        {
+            foreach (var transform in _deferredUpdates)
+            {
+                transform.RunDeferred();
+            }
+
+            _deferredUpdates.Clear();
+        }
+
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
@@ -611,7 +626,7 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
-                _island.Solve(Gravity, frameTime, dtRatio, invDt, prediction);
+                _island.Solve(Gravity, frameTime, dtRatio, invDt, prediction, _deferredUpdates);
 
                 // Post-solve cleanup for island
                 for (var i = 0; i < _island.BodyCount; i++)

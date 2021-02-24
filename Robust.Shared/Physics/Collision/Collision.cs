@@ -1158,6 +1158,8 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = pointCount;
         }
 
+        // TODO: Uhh optimise these because holy fuck dey expensive. I didn't use for now because we can just convert to a poly quicker.
+        // Probably copy Acruid's implementation though you need to make it return a box2d manifold instead.
         public void CollideAabbAndPolygon(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PolygonShape polyB,
             in Transform transformB)
         {

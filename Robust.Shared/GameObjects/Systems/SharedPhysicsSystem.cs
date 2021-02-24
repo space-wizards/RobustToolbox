@@ -14,6 +14,26 @@ namespace Robust.Shared.GameObjects
 {
     public abstract class SharedPhysicsSystem : EntitySystem
     {
+        /*
+         * Multi-threading notes:
+         * Sources:
+         * https://github.com/VelcroPhysics/VelcroPhysics/issues/29
+         * Aether2D
+         * Rapier
+         * https://www.slideshare.net/takahiroharada/solver-34909157
+         *
+         * SO essentially what we should look at doing from what I can discern:
+         * Build islands sequentially and then solve them all in parallel (as static bodies are the only thing shared
+         * it should be okay given they're never written to)
+         * After this, we can then look at doing narrowphase in parallel maybe (at least Aether2D does it) +
+         * position constraints in parallel + velocity constraints in parallel
+         *
+         * The main issue to tackle is graph colouring; Aether2D just seems to use locks for the parallel constraints solver
+         * though rapier has a graph colouring implementation (and because of this we should be able to avoid using locks) which we could try using.
+         *
+         * Given the kind of game SS14 is (our target game I guess) parallelising the islands will probably be the biggest benefit.
+         */
+
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
@@ -179,6 +199,13 @@ namespace Robust.Shared.GameObjects
             {
                 if (mapId == MapId.Nullspace) continue;
                 map.Step(deltaTime, prediction);
+            }
+
+            // Go through and run all of the deferred events now
+            foreach (var (mapId, map) in _maps)
+            {
+                if (mapId == MapId.Nullspace) continue;
+                map.ProcessQueue();
             }
         }
     }

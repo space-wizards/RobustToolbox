@@ -28,6 +28,12 @@ namespace Robust.Shared.GameObjects
         private Vector2 _prevPosition;
         private Angle _prevRotation;
 
+        // Cache changes so we can distribute them after physics is done (better cache)
+        private EntityCoordinates? _oldCoords;
+        private Angle? _oldLocalRotation;
+
+        public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
@@ -47,6 +53,7 @@ namespace Robust.Shared.GameObjects
 
         private bool _mapIdInitialized;
 
+        public bool DeferUpdates { get; set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -107,10 +114,17 @@ namespace Robust.Shared.GameObjects
                 SetRotation(value);
                 Dirty();
 
-                RebuildMatrices();
-                UpdateEntityTree();
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
+                }
+                else
+                {
+                    _oldLocalRotation ??= oldRotation;
+                }
             }
         }
 
@@ -255,15 +269,22 @@ namespace Robust.Shared.GameObjects
                 _localPosition = value.Position;
                 Dirty();
 
-                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                if (Running)
+                if (!DeferUpdates)
                 {
-                    RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
-                }
+                    //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                    if (Running)
+                    {
+                        RebuildMatrices();
+                        Owner.EntityManager.EventBus.RaiseEvent(
+                            EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
+                    }
 
-                UpdateEntityTree();
+                    UpdateEntityTree();
+                }
+                else
+                {
+                    _oldCoords ??= oldPosition;
+                }
             }
         }
 
@@ -287,10 +308,17 @@ namespace Robust.Shared.GameObjects
                 SetPosition(value);
                 Dirty();
 
-                RebuildMatrices();
-                UpdateEntityTree();
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                }
+                else
+                {
+                    _oldCoords ??= oldGridPos;
+                }
             }
         }
 
@@ -414,6 +442,33 @@ namespace Robust.Shared.GameObjects
             }
 
             base.OnRemove();
+        }
+
+        public void RunDeferred()
+        {
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
+            {
+                return;
+            }
+
+            RebuildMatrices();
+            UpdateEntityTree();
+
+            if (_oldCoords != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
+                _oldCoords = null;
+            }
+
+            if (_oldLocalRotation != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
+                _oldLocalRotation = null;
+            }
         }
 
         /// <summary>

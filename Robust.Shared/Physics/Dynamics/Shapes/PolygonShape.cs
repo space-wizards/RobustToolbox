@@ -122,6 +122,51 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
+        public PolygonShape(IPhysShape shape)
+        {
+            // Look it's fucking shitcode but go look at Collision to explain why (tl;dr until Acruid's manifold generation is ported this is faster than doing 2 casts)
+            switch (shape)
+            {
+                case PhysShapeAabb aabb:
+                    _radius = aabb.Radius;
+                    var bounds = aabb.LocalBounds;
+                    // Set normals directly to avoid giftwrap
+                    _vertices = new List<Vector2>
+                    {
+                        bounds.BottomRight,
+                        bounds.TopRight,
+                        bounds.TopLeft,
+                        bounds.BottomLeft,
+                    };
+                    _normals = new List<Vector2>
+                    {
+                        new(1, -0),
+                        new(0, 1),
+                        new(-1, -0),
+                        new(0, -1),
+                    };
+                    break;
+                case PhysShapeRect rect:
+                    _radius = rect.Radius;
+                    var rectBounds = rect.CachedBounds;
+                    Vertices = new List<Vector2>
+                    {
+                        rectBounds.BottomRight,
+                        rectBounds.TopRight,
+                        rectBounds.TopLeft,
+                        rectBounds.BottomLeft,
+                    };
+                    break;
+                case PolygonShape poly:
+                    _radius = poly.Radius;
+                    _vertices = poly._vertices;
+                    _normals = poly._normals;
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
         public PolygonShape()
         {
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
@@ -216,7 +261,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)
         {
-            // TODO: Need a test for this.
+            // TODO: Need a test for this probably, if there is no AABB manifold generator done at least.
             var bounds = aabb.LocalBounds;
 
             // Don't use Vertices property given we can just unwind it ourselves faster.
@@ -249,21 +294,13 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
             return new PolygonShape(rect.Radius)
             {
-                _vertices = new List<Vector2>
+                Vertices = new List<Vector2>
                 {
                     bounds.BottomRight,
                     bounds.TopRight,
                     bounds.TopLeft,
                     bounds.BottomLeft,
                 },
-
-                _normals = new List<Vector2>
-                {
-                    new(1, -0),
-                    new (0, 1),
-                    new (-1, -0),
-                    new (0, -1),
-                }
             };
         }
     }

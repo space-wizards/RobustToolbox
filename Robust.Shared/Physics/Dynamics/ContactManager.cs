@@ -75,6 +75,9 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private List<Contact> ActiveList = new(128);
 
+        private List<ICollideBehavior> _collisionBehaviors = new();
+        private List<IPostCollide> _postCollideBehaviors = new();
+
         public ContactManager()
         {
             OnBroadPhaseCollision = AddPair;
@@ -416,49 +419,66 @@ namespace Robust.Shared.Physics.Dynamics
         public void PreSolve()
         {
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
-            var collisionsWith = new Dictionary<ICollideBehavior, int>();
-
             foreach (var contact in ActiveContacts)
             {
-                var bodyA = contact.FixtureA!.Body.Owner;
-                var bodyB = contact.FixtureB!.Body.Owner;
+                // God this area's hard to read but tl;dr run ICollideBehavior and IPostCollide and try to optimise it a little.
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
 
-                // Apply onCollide behavior
-                // TODO: CollideWith should be called with the body. You'll get roughly 1% extra perf from DamageOnHighSpeedImpactComponent
-                // TODO: Also these ToArrays are hilariously expensive so if you can make it so CollideWith returns whether it should continue or something
-                // then you could get up to 10% savings on physics performance.
-                foreach (var behavior in bodyA.GetAllComponents<ICollideBehavior>().ToArray())
+                // TODO: Look at not allocating and just enumerating instead.
+
+                // TODO: Look at the remaining ICollideBehavior and see if they're deleting in it; if so move to IPostCollide
+                foreach (var behavior in bodyA.Owner.GetAllComponents<ICollideBehavior>())
                 {
+                    _collisionBehaviors.Add(behavior);
+                }
+
+                foreach (var behavior in _collisionBehaviors)
+                {
+                    behavior.CollideWith(bodyA, bodyB);
                     if (bodyB.Deleted) break;
-                    behavior.CollideWith(bodyB);
-                    if (collisionsWith.ContainsKey(behavior))
-                    {
-                        collisionsWith[behavior] += 1;
-                    }
-                    else
-                    {
-                        collisionsWith[behavior] = 1;
-                    }
                 }
 
-                foreach (var behavior in bodyB.GetAllComponents<ICollideBehavior>().ToArray())
+                _collisionBehaviors.Clear();
+
+                foreach (var behavior in bodyB.Owner.GetAllComponents<ICollideBehavior>())
                 {
-                    if (bodyA.Deleted) break;
-                    behavior.CollideWith(bodyA);
-                    if (collisionsWith.ContainsKey(behavior))
-                    {
-                        collisionsWith[behavior] += 1;
-                    }
-                    else
-                    {
-                        collisionsWith[behavior] = 1;
-                    }
+                    _collisionBehaviors.Add(behavior);
                 }
-            }
 
-            foreach (var behavior in collisionsWith.Keys)
-            {
-                behavior.PostCollide(collisionsWith[behavior]);
+                foreach (var behavior in _collisionBehaviors)
+                {
+                    behavior.CollideWith(bodyB, bodyA);
+                    if (bodyA.Deleted) break;
+                }
+
+                _collisionBehaviors.Clear();
+
+                foreach (var behavior in bodyA.Owner.GetAllComponents<IPostCollide>())
+                {
+                    _postCollideBehaviors.Add(behavior);
+                }
+
+                foreach (var behavior in _postCollideBehaviors)
+                {
+                    behavior.PostCollide(bodyA, bodyB);
+                    if (bodyB.Deleted) break;
+                }
+
+                _postCollideBehaviors.Clear();
+
+                foreach (var behavior in bodyB.Owner.GetAllComponents<IPostCollide>())
+                {
+                    _postCollideBehaviors.Add(behavior);
+                }
+
+                foreach (var behavior in _postCollideBehaviors)
+                {
+                    behavior.PostCollide(bodyB, bodyA);
+                    if (bodyA.Deleted) break;
+                }
+
+                _postCollideBehaviors.Clear();
             }
         }
 

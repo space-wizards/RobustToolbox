@@ -89,11 +89,12 @@ namespace Robust.Shared.Physics.Collision
                     break;
 
                 case ShapeType.Polygon:
-                    var polygon = (PolygonShape) shape;
+                    // TODO: When manifold building gets fixed replace it back with a cast.
+                    var polygon = new PolygonShape(shape);
 
-                    for (int i = 0; i < polygon.Vertices.Count; i++)
+                    foreach (var vert in polygon.Vertices)
                     {
-                        Vertices.Add(polygon.Vertices[i]);
+                        Vertices.Add(vert);
                     }
 
                     Radius = polygon.Radius;

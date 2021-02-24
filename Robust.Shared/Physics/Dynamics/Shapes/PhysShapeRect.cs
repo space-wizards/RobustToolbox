@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private float _radius;
 
-        public ShapeType ShapeType => ShapeType.Rectangle;
+        public ShapeType ShapeType => ShapeType.Polygon;
 
         [ViewVariables(VVAccess.ReadWrite)]
         private Box2 _rectangle = Box2.UnitCentered;

@@ -13,7 +13,22 @@ namespace Robust.Shared.GameObjects
     public interface ITransformComponent : IComponent
     {
         /// <summary>
-        /// Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
+        ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
+        /// </summary>
+        bool DeferUpdates { get; set; }
+
+        /// <summary>
+        ///     While updating did we actually defer anything?
+        /// </summary>
+        bool UpdatesDeferred { get; }
+
+        /// <summary>
+        ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
+        /// </summary>
+        void RunDeferred();
+
+        /// <summary>
+        ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
         bool NoLocalRotation { get; set; }
 

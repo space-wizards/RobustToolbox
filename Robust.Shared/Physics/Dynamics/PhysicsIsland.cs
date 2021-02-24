@@ -156,7 +156,6 @@ stored in a single array since multiple arrays lead to multiple misses.
 */
     internal sealed class PhysicsIsland
     {
-        // TODO: Cache the cvars
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -169,7 +168,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private float _maxLinearVelocity;
         private float _maxAngularVelocity;
         private int _positionIterations;
-        private bool _sleepAllowed;  // MONA
+        private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
 
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
@@ -309,7 +308,16 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
+        /// <summary>
+        ///     Go through all the bodies in this island and solve.
+        /// </summary>
+        /// <param name="gravity"></param>
+        /// <param name="frameTime"></param>
+        /// <param name="dtRatio"></param>
+        /// <param name="invDt"></param>
+        /// <param name="prediction"></param>
+        /// <param name="deferredUpdates">Add any transform updates to a deferred list</param>
+        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<ITransformComponent> deferredUpdates)
         {
 #if DEBUG
             var debugBodies = new List<PhysicsComponent>();
@@ -465,38 +473,32 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 var body = Bodies[i];
 
+                // So technically we don't /need/ to skip static bodies here but it saves us having to check for deferred updates so we'll do it anyway.
+                // Plus calcing worldpos can be costly so we skip that too which is nice.
+                if (body.BodyType == BodyType.Static) continue;
+
                 /*
                  * Handle new position
                  */
                 var bodyPos = _positions[i];
+                var angle = _angles[i];
 
-                // Change parent if necessary
-                if (!body.Owner.IsInContainer())
-                {
-                    // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                    if (_mapManager.TryFindGridAt(body.Owner.Transform.MapID, bodyPos, out var grid) &&
-                        grid.GridEntityId.IsValid() &&
-                        grid.GridEntityId != body.Owner.Uid)
-                    {
-                        // Also this may deparent if 2 entities are parented but not using containers so fix that
-                        if (grid.GridEntityId != body.Owner.Transform.ParentUid)
-                        {
-                            body.Owner.Transform.AttachParent(body.Owner.EntityManager.GetEntity(grid.GridEntityId));
-                        }
-                    }
-                    else
-                    {
-                        body.Owner.Transform.AttachParent(_mapManager.GetMapEntity(body.Owner.Transform.MapID));
-                    }
-                }
-
-                // body.Sweep.Center = _positions[i];
-                // body.Sweep.Angle = _angles[i];
+                // body.Sweep.Center = bodyPos;
+                // body.Sweep.Angle = angle;
 
                 // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
+                var transform = body.Owner.Transform;
 
-                body.Owner.Transform.WorldPosition = bodyPos;
-                body.Owner.Transform.WorldRotation = _angles[i];
+                // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                transform.DeferUpdates = true;
+                transform.WorldPosition = bodyPos;
+                transform.WorldRotation = angle;
+                transform.DeferUpdates = false;
+
+                if (transform.UpdatesDeferred)
+                {
+                    deferredUpdates.Add(transform);
+                }
 
                 body.LinearVelocity = _linearVelocities[i];
                 body.AngularVelocity = _angularVelocities[i];

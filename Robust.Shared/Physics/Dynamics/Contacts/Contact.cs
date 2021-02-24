@@ -421,20 +421,21 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <param name="transformB">The second transform.</param>
         private void Evaluate(Manifold manifold, in Transform transformA, in Transform transformB)
         {
+            // This is expensive and shitcodey, see below.
             switch (_type)
             {
                 // TODO: Need a unit test for these.
                 case ContactType.Polygon:
-                    _collisionManager.CollidePolygons(manifold, (PolygonShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
+                    _collisionManager.CollidePolygons(manifold, new PolygonShape(FixtureA!.Shape), transformA, new PolygonShape(FixtureB!.Shape), transformB);
                     break;
                 case ContactType.PolygonAndCircle:
-                    _collisionManager.CollidePolygonAndCircle(manifold, (PolygonShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollidePolygonAndCircle(manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndCircle:
                     _collisionManager.CollideEdgeAndCircle(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndPolygon:
-                    _collisionManager.CollideEdgeAndPolygon(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideEdgeAndPolygon(manifold, (EdgeShape) FixtureA!.Shape, transformA, new PolygonShape(FixtureB!.Shape), transformB);
                     break;
                 case ContactType.ChainAndCircle:
                     throw new NotImplementedException();
@@ -456,9 +457,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _collisionManager.CollideCircles(manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;
                 // Custom ones
-                // TODO: Need to remove the ctors and just use PhysShapeAABB + PhysShapeRect directly in their own functions (Acruid's didn't seem to fill out all of the Box2D data needed).
-                // When I profiled 25% of 200ms ping was physics. 15% was UpdateEntityTree and the next highest was this at 1.50%
-                // (After was the MoveEvent listeners which you can't really do much about besides caching better?)
+                // This is kind of shitcodey and originally I just had the poly version but if we get an AABB -> whatever version directly you'll get good optimisations over a cast.
                 case ContactType.Aabb:
                     _collisionManager.CollideAabbs(manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeAabb) FixtureB!.Shape, transformB);
                     break;

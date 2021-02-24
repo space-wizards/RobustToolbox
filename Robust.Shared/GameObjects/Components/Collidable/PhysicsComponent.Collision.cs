@@ -18,13 +18,20 @@ namespace Robust.Shared.GameObjects
 {
     public interface ICollideBehavior
     {
-        void CollideWith(IEntity collidedWith);
-
         /// <summary>
-        ///     Called after all collisions have been processed, as well as how many collisions occured
+        ///     We'll pass in both our body and the other body to save the behaviors having to get these components themselves.
         /// </summary>
-        /// <param name="collisionCount"></param>
-        void PostCollide(int collisionCount) { }
+        void CollideWith(IPhysBody ourBody, IPhysBody otherBody);
+    }
+
+    public interface IPostCollide
+    {
+        /// <summary>
+        ///     Run behaviour after all other collision behaviors have run.
+        /// </summary>
+        /// <param name="ourBody"></param>
+        /// <param name="otherBody"></param>
+        void PostCollide(IPhysBody ourBody, IPhysBody otherBody);
     }
 
     public interface ICollideSpecial

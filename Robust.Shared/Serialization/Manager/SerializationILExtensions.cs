@@ -269,7 +269,7 @@ public readonly bool ServerOnly;
 
         public static void EmitEquals(this RobustILGenerator generator, Type type, Label label)
         {
-            if (type.IsPrimitive || type == typeof(string))
+            if (type.IsPrimitive)
             {
                 generator.Emit(OpCodes.Beq_S, label);
             }

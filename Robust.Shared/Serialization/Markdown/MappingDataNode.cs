@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -118,7 +116,8 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override DataNode Copy()
         {
-            var newMapping = new MappingDataNode();
+            var newMapping = new MappingDataNode() {Tag = Tag};
+
             foreach (var (key, val) in _mapping)
             {
                 newMapping.AddNode(key.Copy(), val.Copy());

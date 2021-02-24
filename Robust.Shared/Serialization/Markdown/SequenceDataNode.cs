@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.Serialization.Markdown.YAML;
-using YamlDotNet.Core.Tokens;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
@@ -46,7 +44,8 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override DataNode Copy()
         {
-            var newSequence = new SequenceDataNode();
+            var newSequence = new SequenceDataNode() {Tag = Tag};
+
             foreach (var node in Sequence)
             {
                 newSequence.Add(node.Copy());

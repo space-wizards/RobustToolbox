@@ -14,7 +14,6 @@ namespace Robust.Shared.GameObjects
         [DataDefinition]
         public sealed class PrototypeData : ISerializationHooks
         {
-
             public object UiKey { get; set; } = default!;
 
             [DataField("key", readOnly: true, required: true)]
@@ -26,12 +25,14 @@ namespace Robust.Shared.GameObjects
             public void AfterDeserialization()
             {
                 var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
                 if (reflectionManager.TryParseEnumReference(_uiKeyRaw, out var @enum))
                 {
                     UiKey = @enum;
+                    return;
                 }
 
-                throw new ArgumentException(nameof(_uiKeyRaw));
+                UiKey = _uiKeyRaw;
             }
         }
 

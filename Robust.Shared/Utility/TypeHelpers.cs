@@ -82,8 +82,11 @@ namespace Robust.Shared.Utility
         {
             foreach (var p in GetClassHierarchy(t))
             {
-                foreach (var field in p.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Instance |
-                                                       BindingFlags.DeclaredOnly | BindingFlags.Public))
+                foreach (var field in p.GetNestedTypes(
+                    BindingFlags.NonPublic |
+                    BindingFlags.Instance |
+                    BindingFlags.DeclaredOnly |
+                    BindingFlags.Public))
                 {
                     yield return field;
                 }
@@ -350,17 +353,29 @@ namespace Robust.Shared.Utility
                    (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
         }
 
+        public bool IsOverride()
+        {
+            return !PropertyInfo.IsBasePropertyDefinition();
+        }
+
         public bool IsOverridenIn(Type type)
         {
-            var baseType = type;
-
-            do
+            // TODO paul this is most definitely 100.10% wrong help
+            foreach (var parent in type.GetClassHierarchy())
             {
-                if (PropertyInfo.DeclaringType == baseType)
+                if (parent == DeclaringType)
                 {
-                    return true;
+                    return false;
                 }
-            } while ((baseType = baseType.BaseType) != null);
+
+                foreach (var property in parent.GetAllProperties())
+                {
+                    if (property.DeclaringType == type)
+                    {
+                        return true;
+                    }
+                }
+            }
 
             return false;
         }

@@ -87,7 +87,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public T ReadValue<T>(DataNode node, ISerializationContext? context = null)
         {
-            return (T)ReadValue(typeof(T), node, context);
+            return (T) ReadValue(typeof(T), node, context);
         }
 
         public object ReadValue(Type type, DataNode node, ISerializationContext? context = null)

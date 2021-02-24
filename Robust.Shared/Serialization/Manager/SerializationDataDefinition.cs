@@ -53,6 +53,7 @@ namespace Robust.Shared.Serialization.Manager
             var dummyObj = Activator.CreateInstance(type)!;
 
             var fieldDefs = new List<FieldDefinition>();
+
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
                 var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
@@ -62,6 +63,7 @@ namespace Robust.Shared.Serialization.Manager
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
                 {
                     // TODO paul this is most definitely 100.10% wrong help
+                    // We only want the most overriden instance of a property for the type we are working with
                     if (propertyInfo.IsOverridenIn(type))
                     {
                         continue;
@@ -129,6 +131,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Box, Type);
             generator.Emit(OpCodes.Ret);
 
             return dynamicMethod.CreateDelegate<PopulateDelegateSignature>();

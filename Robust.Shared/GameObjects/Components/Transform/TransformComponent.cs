@@ -95,7 +95,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (value)
-                    LocalRotation = Angle.South;
+                    LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
                 Dirty();

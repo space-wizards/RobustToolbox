@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using NFluidsynth;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -128,7 +126,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(Serv3Manager.TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
+                m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
             obj = null;
             var arr = new object?[]
             {
@@ -137,7 +135,7 @@ namespace Robust.Shared.Serialization.Manager
                 context
             };
             var res = method.Invoke(this, arr);
-            if ((res is bool ? (bool) res : false))
+            if (res as bool? ?? false)
             {
                 obj = arr[1];
                 return true;
@@ -177,7 +175,7 @@ namespace Robust.Shared.Serialization.Manager
                 context
             };
             var res = method.Invoke(this, arr);
-            if ((res is bool ? (bool) res : false))
+            if (res as bool? ?? false)
             {
                 node = (DataNode?)arr[1];
                 return true;

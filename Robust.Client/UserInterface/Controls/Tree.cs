@@ -34,8 +34,8 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar = new VScrollBar
             {
                 Name = "_v_scroll",
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                VerticalAlignment = VAlignment.Stretch,
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
         }

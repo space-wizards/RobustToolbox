@@ -26,14 +26,14 @@ namespace Robust.Client.UserInterface.Controls
             _hScrollBar = new HScrollBar
             {
                 Visible = false,
-                SizeFlagsVertical = SizeFlags.ShrinkEnd,
-                SizeFlagsHorizontal = SizeFlags.Fill
+                VerticalAlignment = VAlignment.Bottom,
+                HorizontalAlignment = HAlignment.Stretch
             };
             _vScrollBar = new VScrollBar
             {
                 Visible = false,
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                VerticalAlignment = VAlignment.Stretch,
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_hScrollBar);
             AddChild(_vScrollBar);
@@ -47,7 +47,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _vScrollEnabled = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -57,17 +57,50 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _hScrollEnabled = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            if (_vScrollEnabled)
+            {
+                _vScrollBar.Measure(availableSize);
+                availableSize.X -= _vScrollBar.DesiredSize.X;
+            }
+
+            if (_hScrollEnabled)
+            {
+                _hScrollBar.Measure(availableSize);
+                availableSize.Y -= _hScrollBar.DesiredSize.Y;
+            }
+
+            var constraint = new Vector2(
+                _hScrollEnabled ? float.PositiveInfinity : availableSize.X,
+                _vScrollEnabled ? float.PositiveInfinity : availableSize.Y);
+
+            var size = Vector2.Zero;
+            foreach (var child in Children)
+            {
+                child.Measure(constraint);
+                size = Vector2.ComponentMax(size, child.DesiredSize);
+            }
+
+            // Unlike WPF/Avalonia we report ZERO here instead of available size.
+            // This is to fix a bunch of jank with e.g. BoxContainer.
+            // Tbh this might be a mistake.
+            // DockPanel when.
+            return Vector2.Zero;
+        }
+
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             if (_vScrollBar?.Parent == null || _hScrollBar?.Parent == null)
             {
                 // Just don't run this before we're properly initialized.
-                return;
+                return Vector2.Zero;
             }
+
             var maxChildMinSize = Vector2.Zero;
 
             foreach (var child in Children)
@@ -77,31 +110,31 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                maxChildMinSize = Vector2.ComponentMax(child.CombinedMinimumSize, maxChildMinSize);
+                maxChildMinSize = Vector2.ComponentMax(child.DesiredSize, maxChildMinSize);
             }
 
             var (cWidth, cHeight) = maxChildMinSize;
-            var hBarSize = _hScrollBar.CombinedMinimumSize.Y;
-            var vBarSize = _vScrollBar.CombinedMinimumSize.X;
+            var hBarSize = _hScrollBar.DesiredSize.Y;
+            var vBarSize = _vScrollBar.DesiredSize.X;
 
-            var (sWidth, sHeight) = Size;
+            var (sWidth, sHeight) = finalSize;
 
             try
             {
                 // Suppress events to avoid weird recursion.
                 _suppressScrollValueChanged = true;
 
-                if (Width < cWidth)
+                if (sWidth < cWidth && _hScrollEnabled)
                 {
                     sHeight -= hBarSize;
                 }
 
-                if (Height < cHeight)
+                if (sHeight < cHeight && _vScrollEnabled)
                 {
                     sWidth -= vBarSize;
                 }
 
-                if (sWidth < cWidth)
+                if (sWidth < cWidth && _hScrollEnabled)
                 {
                     _hScrollBar.Visible = _hScrollVisible = true;
                     _hScrollBar.Page = sWidth;
@@ -112,7 +145,7 @@ namespace Robust.Client.UserInterface.Controls
                     _hScrollBar.Visible = _hScrollVisible = false;
                 }
 
-                if (sHeight < cHeight)
+                if (sHeight < cHeight && _vScrollEnabled)
                 {
                     _vScrollBar.Visible = _vScrollVisible = true;
                     _vScrollBar.Page = sHeight;
@@ -129,10 +162,19 @@ namespace Robust.Client.UserInterface.Controls
                 _suppressScrollValueChanged = false;
             }
 
-            var sSize = (sWidth, sHeight);
+            if (_vScrollVisible)
+            {
+                _vScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+            }
 
-            FitChildInPixelBox(_vScrollBar, PixelSizeBox);
-            FitChildInPixelBox(_hScrollBar, PixelSizeBox);
+            if (_hScrollVisible)
+            {
+                _hScrollBar.Arrange(UIBox2.FromDimensions(Vector2.Zero, finalSize));
+            }
+
+            var realFinalSize = (
+                _hScrollEnabled ? Math.Max(cWidth, sWidth) : sWidth,
+                _vScrollEnabled ? Math.Max(cHeight, sHeight) : sHeight);
 
             foreach (var child in Children)
             {
@@ -142,47 +184,11 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 var position = -_getScrollValue();
-                var rect = UIBox2.FromDimensions(position, Vector2.ComponentMax(child.CombinedMinimumSize, sSize));
-                FitChildInBox(child, rect);
-            }
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var totalX = 0f;
-            var totalY = 0f;
-
-            foreach (var child in Children)
-            {
-                if (child == _hScrollBar || child == _vScrollBar)
-                {
-                    continue;
-                }
-
-                if (!_vScrollEnabled)
-                {
-                    totalY = Math.Max(totalY, child.CombinedMinimumSize.Y);
-                }
-
-                if (!_hScrollEnabled)
-                {
-                    totalX = Math.Max(totalX, child.CombinedMinimumSize.X);
-                }
+                var rect = UIBox2.FromDimensions(position, realFinalSize);
+                child.Arrange(rect);
             }
 
-            if (_vScrollEnabled)
-            {
-                totalX += _vScrollBar.CombinedMinimumSize.X;
-                totalY = Math.Max(_vScrollBar.CombinedMinimumSize.Y, totalY);
-            }
-
-            if (_hScrollEnabled)
-            {
-                totalY += _hScrollBar.CombinedMinimumSize.Y;
-                totalX = Math.Max(_vScrollBar.CombinedMinimumSize.X, totalX);
-            }
-
-            return new Vector2(totalX, totalY);
+            return finalSize;
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
@@ -223,10 +229,12 @@ namespace Robust.Client.UserInterface.Controls
             {
                 h = 0;
             }
+
             if (!_vScrollVisible)
             {
                 v = 0;
             }
+
             return new Vector2(h, v);
         }
 
@@ -237,7 +245,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            UpdateLayout();
+            InvalidateArrange();
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = NumberToText(value!),
                 Editable = !ReadOnly,
-                CustomMinimumSize = new Vector2(240, 0)
+                MinSize = new Vector2(240, 0)
             };
             lineEdit.OnTextEntered += e =>
             {

@@ -77,7 +77,7 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (Output = new OutputPanel
                             {
-                                SizeFlagsVertical = SizeFlags.FillExpand,
+                                VerticalExpand = true,
                                 StyleBoxOverride = styleBox
                             }),
                             (CommandBar = new HistoryLineEdit {PlaceHolder = "Command Here"})

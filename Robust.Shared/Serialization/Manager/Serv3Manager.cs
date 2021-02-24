@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
-using NFluidsynth;
+using System.Text;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
-using IComponent = Robust.Shared.GameObjects.IComponent;
 using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
@@ -50,8 +47,23 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var type in registrations)
             {
-                if(type.IsAbstract || type.IsInterface) continue; //todo more verbose?
+                if (type.IsAbstract || type.IsInterface) continue; //todo more verbose?
                 _dataDefinitions.Add(type, new SerializationDataDefinition(type));
+            }
+
+            var error = new StringBuilder();
+
+            foreach (var (type, definition) in _dataDefinitions)
+            {
+                if (definition.TryGetDuplicates(out var definitionDuplicates))
+                {
+                    error.Append($"{type}: [{string.Join(", ", definitionDuplicates)}]\n");
+                }
+            }
+
+            if (error.Length > 0)
+            {
+                throw new ArgumentException($"Duplicate data field tags found in:\n{error}");
             }
 
             foreach (var type in _reflectionManager.FindTypesWithAttribute<CopyByRefAttribute>())
@@ -135,6 +147,12 @@ namespace Robust.Shared.Serialization.Manager
             //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
             var currentType = underlyingType;
+
+            if (underlyingType.IsInterface)
+            {
+                throw new InvalidOperationException($"Unable to create an instance of an interface. Type: {underlyingType}");
+            }
+
             var obj = Activator.CreateInstance(underlyingType)!;
 
             if(obj is IPopulateDefaultValues populateDefaultValues)

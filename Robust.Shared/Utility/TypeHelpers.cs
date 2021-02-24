@@ -18,8 +18,11 @@ namespace Robust.Shared.Utility
             // Even when you pass BindingFlags.NonPublic.
             foreach (var p in GetClassHierarchy(t))
             {
-                foreach (var field in p.GetFields(BindingFlags.NonPublic | BindingFlags.Instance |
-                                                  BindingFlags.DeclaredOnly | BindingFlags.Public))
+                foreach (var field in p.GetFields(
+                    BindingFlags.NonPublic |
+                    BindingFlags.Instance |
+                    BindingFlags.DeclaredOnly |
+                    BindingFlags.Public))
                 {
                     yield return field;
                 }
@@ -32,8 +35,11 @@ namespace Robust.Shared.Utility
         public static IEnumerable<PropertyInfo> GetAllProperties(this Type t)
         {
             return GetClassHierarchy(t).SelectMany(p =>
-                p.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly |
-                                BindingFlags.Public));
+                p.GetProperties(
+                    BindingFlags.NonPublic |
+                    BindingFlags.Instance |
+                    BindingFlags.DeclaredOnly |
+                    BindingFlags.Public));
         }
 
         /// <summary>
@@ -336,6 +342,27 @@ namespace Robust.Shared.Utility
         public override IEnumerable<T> GetCustomAttributes<T>()
         {
             return PropertyInfo.GetCustomAttributes<T>();
+        }
+
+        public bool IsVirtual()
+        {
+            return (PropertyInfo.GetGetMethod()?.IsVirtual ?? false) ||
+                   (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
+        }
+
+        public bool IsOverridenIn(Type type)
+        {
+            var baseType = type;
+
+            do
+            {
+                if (PropertyInfo.DeclaringType == baseType)
+                {
+                    return true;
+                }
+            } while ((baseType = baseType.BaseType) != null);
+
+            return false;
         }
 
         public static implicit operator PropertyInfo(SpecificPropertyInfo f) => f.PropertyInfo;

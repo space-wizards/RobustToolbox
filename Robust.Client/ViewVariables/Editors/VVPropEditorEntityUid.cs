@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBox = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(200, 0)
+                MinSize = new Vector2(200, 0)
             };
 
             var uid = (EntityUid)value!;
@@ -19,7 +19,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = uid.ToString(),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
+                HorizontalExpand = true,
             };
             if (!ReadOnly)
             {

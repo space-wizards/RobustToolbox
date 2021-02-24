@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -26,7 +26,6 @@ namespace Robust.Shared.GameObjects
             public readonly Angle Rotation;
             public readonly Vector2 Offset;
             public readonly Color Color;
-            public readonly bool Directional;
             public readonly string? BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
@@ -38,7 +37,6 @@ namespace Robust.Shared.GameObjects
                 Angle rotation,
                 Vector2 offset,
                 Color color,
-                bool directional,
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
@@ -50,7 +48,6 @@ namespace Robust.Shared.GameObjects
                 Rotation = rotation;
                 Offset = offset;
                 Color = color;
-                Directional = directional;
                 BaseRsiPath = baseRsiPath;
                 Layers = layers;
                 RenderOrder = renderOrder;

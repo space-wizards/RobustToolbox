@@ -31,8 +31,9 @@ namespace Robust.Client.UserInterface.Controls
         // min / max x and y extents in relative virtual pixels of where the split can go regardless
         // of anything else.
         private float SplitMin => SplitWidth + SplitEdgeSeparation;
-        private float SplitMax => Vertical ? Height - (SplitWidth + SplitEdgeSeparation) :
-            Width - (SplitWidth + SplitEdgeSeparation);
+
+        private float SplitMax =>
+            Vertical ? Height - (SplitWidth + SplitEdgeSeparation) : Width - (SplitWidth + SplitEdgeSeparation);
 
         public SplitContainer()
         {
@@ -56,11 +57,10 @@ namespace Robust.Client.UserInterface.Controls
 
                 _splitCenter = ClampSplitCenter(newOffset);
                 DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
-                ForceRunLayoutUpdate();
+                InvalidateArrange();
             }
             else
             {
-
                 // on mouseover, check if they are over the split and change the cursor accordingly
                 var cursor = CursorShape.Arrow;
                 if (CanDragAt(args.RelativePosition))
@@ -124,37 +124,32 @@ namespace Robust.Client.UserInterface.Controls
                 var first = GetChild(0);
                 var second = GetChild(1);
 
-                firstMinSize ??= (Vertical ? first.CombinedMinimumSize.Y : first.CombinedMinimumSize.X);
-                secondMinSize ??= (Vertical ? second.CombinedMinimumSize.Y : second.CombinedMinimumSize.X);
+                firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
+                secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
                 var size = Vertical ? Height : Width;
 
-                splitCenter = MathHelper.Clamp(splitCenter, firstMinSize.Value, size - (secondMinSize.Value + SplitWidth));
+                splitCenter = MathHelper.Clamp(splitCenter, firstMinSize.Value,
+                    size - (secondMinSize.Value + SplitWidth));
             }
 
             return splitCenter;
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            base.LayoutUpdateOverride();
-
             if (ChildCount != 2)
             {
-                return;
+                return finalSize;
             }
 
             var first = GetChild(0);
             var second = GetChild(1);
 
-            var firstExpand = Vertical
-                ? (first.SizeFlagsVertical & SizeFlags.Expand) != 0
-                : (first.SizeFlagsHorizontal & SizeFlags.Expand) != 0;
-            var secondExpand = Vertical
-                ? (second.SizeFlagsVertical & SizeFlags.Expand) != 0
-                : (second.SizeFlagsHorizontal & SizeFlags.Expand) != 0;
+            var firstExpand = Vertical ? first.VerticalExpand : first.HorizontalExpand;
+            var secondExpand = Vertical ? second.VerticalExpand : second.HorizontalExpand;
 
-            var firstMinSize = Vertical ? first.CombinedMinimumSize.Y : first.CombinedMinimumSize.X;
-            var secondMinSize = Vertical ? second.CombinedMinimumSize.Y : second.CombinedMinimumSize.X;
+            var firstMinSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
+            var secondMinSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
             var size = Vertical ? Height : Width;
 
@@ -181,24 +176,27 @@ namespace Robust.Client.UserInterface.Controls
                         _splitCenter = firstMinSize;
                     }
 
-                    _splitCenter += MathHelper.Clamp(0f, firstMinSize - _splitCenter, size - secondMinSize - SplitWidth - _splitCenter);
+                    _splitCenter += MathHelper.Clamp(0f, firstMinSize - _splitCenter,
+                        size - secondMinSize - SplitWidth - _splitCenter);
                     break;
                 }
             }
 
             if (Vertical)
             {
-                FitChildInBox(first, new UIBox2(0, 0, Width, _splitCenter));
-                FitChildInBox(second, new UIBox2(0, _splitCenter + SplitWidth, Width, Height));
+                first.Arrange(new UIBox2(0, 0, Width, _splitCenter));
+                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, Width, Height));
             }
             else
             {
-                FitChildInBox(first, new UIBox2(0, 0, _splitCenter, Height));
-                FitChildInBox(second, new UIBox2(_splitCenter + SplitWidth, 0, Width, Height));
+                first.Arrange(new UIBox2(0, 0, _splitCenter, Height));
+                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, Width, Height));
             }
+
+            return finalSize;
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (ChildCount != 2)
             {
@@ -208,8 +206,12 @@ namespace Robust.Client.UserInterface.Controls
             var first = GetChild(0);
             var second = GetChild(1);
 
-            var (firstSizeX, firstSizeY) = first.CombinedMinimumSize;
-            var (secondSizeX, secondSizeY) = second.CombinedMinimumSize;
+            // TODO: Probably bad implementation with the new WPF layout.
+            first.Measure(availableSize);
+            second.Measure(availableSize);
+
+            var (firstSizeX, firstSizeY) = first.DesiredSize;
+            var (secondSizeX, secondSizeY) = second.DesiredSize;
 
             if (Vertical)
             {
@@ -236,6 +238,7 @@ namespace Robust.Client.UserInterface.Controls
             /// Don't allow user to move the split.
             /// </summary>
             NotResizable = -1,
+
             /// <summary>
             /// User can resize the split but can't shrink either child
             /// beyond its minimum size.
@@ -255,6 +258,7 @@ namespace Robust.Client.UserInterface.Controls
             /// Automatically adjust the split based on the width of the children
             /// </summary>
             Auto = 0,
+
             /// <summary>
             /// Manually adjust the split by dragging it
             /// </summary>

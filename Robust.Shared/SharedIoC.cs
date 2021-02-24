@@ -5,7 +5,6 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Localization.Macros;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -46,7 +45,6 @@ namespace Robust.Shared
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
-            IoCManager.Register<ITextMacroFactory, TextMacroFactory>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();

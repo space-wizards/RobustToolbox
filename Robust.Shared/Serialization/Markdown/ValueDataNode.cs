@@ -32,5 +32,10 @@ namespace Robust.Shared.Serialization.Markdown
         {
             return Value.GetHashCode();
         }
+
+        public override string ToString()
+        {
+            return Value;
+        }
     }
 }

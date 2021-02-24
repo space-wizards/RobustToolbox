@@ -1,5 +1,3 @@
-using System;
-using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
@@ -21,7 +19,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override DataNode Copy()
         {
-            return new ValueDataNode(Value);
+            return new ValueDataNode(Value) {Tag = Tag};
         }
 
         public override bool Equals(object? obj)

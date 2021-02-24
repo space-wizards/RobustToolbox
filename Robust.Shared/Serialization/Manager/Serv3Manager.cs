@@ -5,11 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -121,7 +121,7 @@ namespace Robust.Shared.Serialization.Manager
             if (underlyingType.IsEnum)
             {
                 if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                return Enum.Parse(underlyingType, valueDataNode.Value);
+                return Enum.Parse(underlyingType, valueDataNode.Value, true);
             }
 
             if (node.Tag?.StartsWith("!type:") == true)

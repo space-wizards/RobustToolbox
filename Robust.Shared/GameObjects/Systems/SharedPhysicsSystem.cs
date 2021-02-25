@@ -39,7 +39,10 @@ namespace Robust.Shared.GameObjects
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
 
-        internal readonly List<Type> ControllerTypes = new();
+        internal IReadOnlyList<AetherController> Controllers => _controllers;
+        private List<AetherController> _controllers = new();
+
+        // TODO: Stoer all the controllers here akshully
 
         public override void Initialize()
         {
@@ -60,13 +63,14 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
-            BuildControllerGraph();
-            Logger.DebugS("physics", $"Found {ControllerTypes.Count} physics controllers.");
+            BuildControllers();
+            Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
         }
 
-        private void BuildControllerGraph()
+        private void BuildControllers()
         {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
             var allControllerTypes = new List<Type>();
 
             foreach (var type in reflectionManager.GetAllChildren(typeof(AetherController)))
@@ -77,7 +81,12 @@ namespace Robust.Shared.GameObjects
 
             foreach (var type in allControllerTypes)
             {
-                ControllerTypes.Add(type);
+                _controllers.Add((AetherController) typeFactory.CreateInstance(type));
+            }
+
+            foreach (var controller in _controllers)
+            {
+                controller.Initialize();
             }
         }
 
@@ -195,10 +204,20 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
+            foreach (var controller in _controllers)
+            {
+                controller.UpdateBeforeSolve(prediction, deltaTime);
+            }
+
             foreach (var (mapId, map) in _maps)
             {
                 if (mapId == MapId.Nullspace) continue;
                 map.Step(deltaTime, prediction);
+            }
+
+            foreach (var controller in _controllers)
+            {
+                controller.UpdateAfterSolve(prediction, deltaTime);
             }
 
             // Go through and run all of the deferred events now

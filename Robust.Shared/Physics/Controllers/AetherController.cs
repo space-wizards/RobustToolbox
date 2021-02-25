@@ -17,9 +17,34 @@ namespace Robust.Shared.Physics.Controllers
             IoCManager.InjectDependencies(this);
         }
 
-        // Look I know doing it per map is pretty damn inefficient but I'll deal wit it later.
-        public virtual void UpdateBeforeSolve(bool prediction, PhysicsMap map, float frameTime) {}
+        /// <summary>
+        ///     Run before any map processing starts.
+        /// </summary>
+        /// <param name="prediction"></param>
+        /// <param name="frameTime"></param>
+        public virtual void UpdateBeforeSolve(bool prediction, float frameTime) {}
 
-        public virtual void UpdateAfterSolve(bool prediction, PhysicsMap map, float frameTime) {}
+        /// <summary>
+        ///     Run after all map processing has finished.
+        /// </summary>
+        /// <param name="prediction"></param>
+        /// <param name="frameTime"></param>
+        public virtual void UpdateAfterSolve(bool prediction, float frameTime) {}
+
+        /// <summary>
+        ///     Run before a particular map starts.
+        /// </summary>
+        /// <param name="prediction"></param>
+        /// <param name="map"></param>
+        /// <param name="frameTime"></param>
+        public virtual void UpdateBeforeMapSolve(bool prediction, PhysicsMap map, float frameTime) {}
+
+        /// <summary>
+        ///     Run after a particular map finishes.
+        /// </summary>
+        /// <param name="prediction"></param>
+        /// <param name="map"></param>
+        /// <param name="frameTime"></param>
+        public virtual void UpdateAfterMapSolve(bool prediction, PhysicsMap map, float frameTime) {}
     }
 }

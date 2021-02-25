@@ -58,6 +58,8 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO: Pausing but need to merge in shared IPauseManager
         // AKA world.
 
+        private SharedPhysicsSystem _physicsSystem = default!;
+
         internal ContactManager ContactManager = new();
 
         private bool _autoClearForces;
@@ -112,11 +114,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
 
-        /// <summary>
-        ///     Physics controllers for this map.
-        /// </summary>
-        private List<AetherController> _controllers = new();
-
         private HashSet<Joint> _queuedJointAdd = new();
         private HashSet<Joint> _queuedJointRemove = new();
 
@@ -148,6 +145,7 @@ namespace Robust.Shared.Physics.Dynamics
         public PhysicsMap(MapId mapId)
         {
             MapId = mapId;
+            _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
         }
 
         public void Initialize()
@@ -160,18 +158,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
             _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
-
-            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-
-            foreach (var controller in EntitySystem.Get<SharedPhysicsSystem>().ControllerTypes)
-            {
-                _controllers.Add((AetherController) typeFactory.CreateInstance(controller));
-            }
-
-            foreach (var controller in _controllers)
-            {
-                controller.Initialize();
-            }
         }
 
         #region AddRemove
@@ -469,9 +455,9 @@ namespace Robust.Shared.Physics.Dynamics
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            foreach (var controller in _controllers)
+            foreach (var controller in _physicsSystem.Controllers)
             {
-                controller.UpdateBeforeSolve(prediction, this, frameTime);
+                controller.UpdateBeforeMapSolve(prediction, this, frameTime);
             }
 
             ContactManager.Collide();
@@ -489,9 +475,9 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: SolveTOI
 
-            foreach (var controller in _controllers)
+            foreach (var controller in _physicsSystem.Controllers)
             {
-                controller.UpdateAfterSolve(prediction, this, frameTime);
+                controller.UpdateAfterMapSolve(prediction, this, frameTime);
             }
 
             // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it

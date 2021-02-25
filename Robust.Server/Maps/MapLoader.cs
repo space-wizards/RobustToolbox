@@ -709,7 +709,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
-                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -763,7 +763,7 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
                 IComponent data = protoData != null ? (IComponent)serv3Mgr.CreateCopy(protoData)! : (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;

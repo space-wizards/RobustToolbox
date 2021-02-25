@@ -14,13 +14,13 @@ namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate object PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+        private delegate object PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
             ISerializationContext? context, object?[] defaultValues);
 
-        private delegate MappingDataNode SerializeDelegateSignature(object obj, IServ3Manager serv3Manager,
+        private delegate MappingDataNode SerializeDelegateSignature(object obj, ISerializationManager serializationManager,
             ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
         public delegate object CopyDelegateSignature(object source, object target,
-            IServ3Manager serv3Manager);
+            ISerializationManager serializationManager);
 
         public readonly Type Type;
 
@@ -34,15 +34,15 @@ namespace Robust.Shared.Serialization.Manager
 
         public readonly CopyDelegateSignature _copyDelegate;
 
-        public object InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+        public object InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
             ISerializationContext? context) =>
-            _populateDelegate(target, mappingDataNode, serv3Manager, context, _defaultValues);
+            _populateDelegate(target, mappingDataNode, serializationManager, context, _defaultValues);
 
-        public MappingDataNode InvokeSerializeDelegate(object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite) =>
-            _serializeDelegate(obj, serv3Manager, context, alwaysWrite, _defaultValues);
+        public MappingDataNode InvokeSerializeDelegate(object obj, ISerializationManager serializationManager, ISerializationContext? context, bool alwaysWrite) =>
+            _serializeDelegate(obj, serializationManager, context, alwaysWrite, _defaultValues);
 
-        public object InvokeCopyDelegate(object source, object target, IServ3Manager serv3Manager) =>
-            _copyDelegate(source, target, serv3Manager);
+        public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager) =>
+            _copyDelegate(source, target, serializationManager);
 
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
@@ -111,7 +111,7 @@ namespace Robust.Shared.Serialization.Manager
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            object PopulateDelegate(object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager,
+            object PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serv3Manager,
                 ISerializationContext? context, object?[] defaultValues)
             {
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
@@ -183,7 +183,7 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_serializeDelegate<>{Type}",
                 typeof(MappingDataNode),
-                new[] {typeof(object), typeof(IServ3Manager), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
+                new[] {typeof(object), typeof(ISerializationManager), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
@@ -215,7 +215,7 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(object), typeof(IServ3Manager)},
+                new[] {typeof(object), typeof(object), typeof(ISerializationManager)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");

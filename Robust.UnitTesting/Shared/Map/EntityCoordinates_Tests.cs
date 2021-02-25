@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapManager.Initialize();
             mapManager.Startup();
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

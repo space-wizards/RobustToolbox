@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public partial class Serv3Manager : IServ3Manager
+    public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();

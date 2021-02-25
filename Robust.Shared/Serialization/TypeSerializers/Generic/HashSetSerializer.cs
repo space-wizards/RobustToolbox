@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private HashSet<T> NormalRead(SequenceDataNode node, ISerializationContext? context)
         {
@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                hashset.Add(_serv3Manager.ReadValue<T>(dataNode, context));
+                hashset.Add(_serializationManager.ReadValue<T>(dataNode, context));
             }
 
             return hashset;
@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var elem in value)
             {
-                sequence.Add(_serv3Manager.WriteValue(elem, alwaysWrite, context));
+                sequence.Add(_serializationManager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;

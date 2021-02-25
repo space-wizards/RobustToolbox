@@ -3,7 +3,7 @@ using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public interface IServ3Manager
+    public interface ISerializationManager
     {
         #region Serialization
         void Initialize();

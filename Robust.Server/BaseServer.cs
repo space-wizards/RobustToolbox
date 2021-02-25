@@ -5,19 +5,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
-using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Prototypes;
-using Robust.Server.ViewVariables;
-using Robust.Shared.Asynchronous;
-using Robust.Shared.Timing;
-using Robust.Shared.Utility;
-using Robust.Shared.Exceptions;
-using Robust.Server.Scripting;
-using Robust.Server.ServerStatus;
-using Robust.Shared;
 using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
@@ -25,13 +12,26 @@ using Robust.Server.GameStates;
 using Robust.Server.Log;
 using Robust.Server.Placement;
 using Robust.Server.Player;
+using Robust.Server.Scripting;
+using Robust.Server.ServerStatus;
 using Robust.Server.Utility;
+using Robust.Server.ViewVariables;
+using Robust.Shared;
+using Robust.Shared.Asynchronous;
+using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
 using Stopwatch = Robust.Shared.Timing.Stopwatch;
@@ -299,7 +299,7 @@ namespace Robust.Server
 
             _entities.Initialize();
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared

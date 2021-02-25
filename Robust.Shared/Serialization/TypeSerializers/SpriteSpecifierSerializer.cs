@@ -12,11 +12,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ITypeSerializer<SpriteSpecifier, ValueDataNode>,
         ITypeSerializer<SpriteSpecifier, MappingDataNode>
     {
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         public SpriteSpecifier Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return new SpriteSpecifier.Texture(_serv3Manager.ReadValue<ResourcePath>(node, context));
+            return new SpriteSpecifier.Texture(_serializationManager.ReadValue<ResourcePath>(node, context));
         }
 
         public SpriteSpecifier Read(MappingDataNode node, ISerializationContext? context = null)
@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 && node.TryGetNode("state", out var rawStateNode)
                 && rawStateNode is ValueDataNode stateNode)
             {
-                return new SpriteSpecifier.Rsi(_serv3Manager.ReadValue<ResourcePath>(spriteNode, context), stateNode.Value);
+                return new SpriteSpecifier.Rsi(_serializationManager.ReadValue<ResourcePath>(spriteNode, context), stateNode.Value);
             }
 
             throw new InvalidNodeTypeException();
@@ -38,10 +38,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             switch (value)
             {
                 case SpriteSpecifier.Texture tex:
-                    return _serv3Manager.WriteValue(tex.TexturePath, alwaysWrite, context);
+                    return _serializationManager.WriteValue(tex.TexturePath, alwaysWrite, context);
                 case SpriteSpecifier.Rsi rsi:
                     var mapping = new MappingDataNode();
-                    mapping.AddNode("sprite", _serv3Manager.WriteValue(rsi.RsiPath, alwaysWrite, context));
+                    mapping.AddNode("sprite", _serializationManager.WriteValue(rsi.RsiPath, alwaysWrite, context));
                     mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
                     return mapping;
             }

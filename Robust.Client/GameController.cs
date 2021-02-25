@@ -157,7 +157,7 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);

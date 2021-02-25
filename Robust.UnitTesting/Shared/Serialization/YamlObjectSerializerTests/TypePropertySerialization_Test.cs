@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -8,8 +7,8 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
-using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
@@ -20,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
         }
 
         [Test]
@@ -31,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
                 TestPropertyOne = "B",
                 TestPropertyTwo = 10
             };
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var mapping = (MappingDataNode) serMan.WriteValue(type);
 
             Assert.IsNotEmpty(mapping.Children);
@@ -68,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode[0];
 
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var type = serMan.ReadValue<ITestType>(mapping["test"].ToDataNode());
 
             Assert.NotNull(type);

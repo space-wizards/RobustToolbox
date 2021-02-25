@@ -51,7 +51,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             componentFactory.RegisterClass<InheritorComponent>();
             componentFactory.RegisterClass<FinalComponent>();
 
-            var serializationManager = IoCManager.Resolve<IServ3Manager>();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
             serializationManager.Initialize();
 
             var componentManager = IoCManager.Resolve<IComponentManager>();

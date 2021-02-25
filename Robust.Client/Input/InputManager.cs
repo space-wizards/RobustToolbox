@@ -121,7 +121,7 @@ namespace Robust.Client.Input
         public void SaveToUserData()
         {
             var mapping = new MappingDataNode();
-            var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -417,7 +417,7 @@ namespace Robust.Client.Input
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
-            var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
             var robustMapping = mapping.ToDataNode() as MappingDataNode;
             if (robustMapping == null) throw new InvalidOperationException();
 

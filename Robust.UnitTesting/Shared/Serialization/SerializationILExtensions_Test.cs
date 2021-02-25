@@ -1,14 +1,7 @@
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using NUnit.Framework;
 using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
@@ -43,7 +36,7 @@ strField: foo
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
         }
 
         /* TODO PAUL

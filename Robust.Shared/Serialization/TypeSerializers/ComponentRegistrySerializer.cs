@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
         public ComponentRegistry Read(SequenceDataNode node, ISerializationContext? context = null)
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
-                var data = _serv3Manager.ReadValue<IComponent>(_componentFactory.GetRegistration(compType).Type, copy);
+                var data = _serializationManager.ReadValue<IComponent>(_componentFactory.GetRegistration(compType).Type, copy);
 
                 components[compType] = data;
             }
@@ -80,7 +80,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
-                var node = _serv3Manager.WriteValue(component.GetType(), component, alwaysWrite, context);
+                var node = _serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
                 if (mapping.Children.Count != 0)
                 {

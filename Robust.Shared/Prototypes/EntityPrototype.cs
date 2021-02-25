@@ -278,7 +278,7 @@ namespace Robust.Shared.Prototypes
         //todo paul remove
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
             // Copy component data over.
             foreach (var(type, component) in source.Components)
             {
@@ -478,7 +478,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IServ3Manager>().Copy(data, component);
+            IoCManager.Resolve<ISerializationManager>().Copy(data, component);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -512,7 +512,7 @@ namespace Robust.Shared.Prototypes
             var compType = factory.GetRegistration(type).Type;
 
 
-            Components[type] = IoCManager.Resolve<IServ3Manager>().ReadValue<IComponent>(compType, copy.ToDataNode());
+            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValue<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()

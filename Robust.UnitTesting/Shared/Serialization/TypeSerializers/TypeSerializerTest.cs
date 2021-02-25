@@ -6,7 +6,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     public abstract class TypeSerializerTest : RobustUnitTest
     {
-        public IServ3Manager Serialization => IoCManager.Resolve<IServ3Manager>();
+        public ISerializationManager Serialization => IoCManager.Resolve<ISerializationManager>();
 
         [OneTimeSetUp]
         public void OneTimeSetup()

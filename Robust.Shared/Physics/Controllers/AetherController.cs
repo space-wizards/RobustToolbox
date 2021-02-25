@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -11,6 +12,10 @@ namespace Robust.Shared.Physics.Controllers
     {
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntityManager EntityManager = default!;
+
+        public virtual List<Type> UpdatesBefore => new();
+
+        public virtual List<Type> UpdatesAfter => new();
 
         public virtual void Initialize()
         {

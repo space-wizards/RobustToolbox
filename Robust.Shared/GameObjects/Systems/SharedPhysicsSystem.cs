@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -79,10 +80,37 @@ namespace Robust.Shared.GameObjects
                 allControllerTypes.Add(type);
             }
 
+            var instantiated = new Dictionary<Type, AetherController>();
+
             foreach (var type in allControllerTypes)
             {
-                _controllers.Add((AetherController) typeFactory.CreateInstance(type));
+                instantiated.Add(type, (AetherController) typeFactory.CreateInstance(type));
             }
+
+            // Build dependency graph, copied from EntitySystemManager *COUGH
+
+            var nodes = new Dictionary<Type, EntitySystemManager.GraphNode<AetherController>>();
+
+            foreach (var (_, controller) in instantiated)
+            {
+                var node = new EntitySystemManager.GraphNode<AetherController>(controller);
+                nodes[controller.GetType()] = node;
+            }
+
+            foreach (var (type, node) in nodes)
+            {
+                foreach (var before in instantiated[type].UpdatesBefore)
+                {
+                    nodes[before].DependsOn.Add(node);
+                }
+
+                foreach (var after in instantiated[type].UpdatesAfter)
+                {
+                    node.DependsOn.Add(nodes[after]);
+                }
+            }
+
+            _controllers = GameObjects.EntitySystemManager.TopologicalSort(nodes.Values).Select(c => c.System).ToList();
 
             foreach (var controller in _controllers)
             {

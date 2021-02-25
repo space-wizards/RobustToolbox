@@ -1,13 +1,15 @@
 namespace Robust.Shared.Serialization.Manager
 {
+    public struct DeserializationKeyValuePairMarker {}
+
     public class DeserializationResult
     {
         public readonly object? Object;
-        public readonly (bool, DeserializationResult?)[]? Mapped;
+        public readonly DeserializationEntry[]? Mapped;
 
         public DeserializationResult(object? o) : this(o, null) {}
 
-        public DeserializationResult(object? o, (bool, DeserializationResult?)[]? mapped)
+        public DeserializationResult(object? o, DeserializationEntry[]? mapped)
         {
             Object = o;
             Mapped = mapped;

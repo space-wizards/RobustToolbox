@@ -5,7 +5,9 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Server.GameObjects
 {
-    public class EyeComponent : SharedEyeComponent
+    [RegisterComponent]
+    [ComponentReference(typeof(EyeComponent))]
+    internal class ServerEyeComponent : EyeComponent
     {
         private bool _drawFov;
         private Vector2 _zoom;
@@ -75,6 +77,12 @@ namespace Robust.Server.GameObjects
 
             serializer.DataField(ref _zoom, "zoom", Vector2.One/2f);
             serializer.DataFieldCached(ref _drawFov, "drawFov", true);
+        }
+
+        public override void Kick(Vector2 recoil)
+        {
+            var msg = new RecoilKickMessage(recoil);
+            SendNetworkMessage(msg);
         }
     }
 }

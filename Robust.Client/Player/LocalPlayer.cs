@@ -77,9 +77,9 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
+            if (!ControlledEntity.TryGetComponent<ClientEyeComponent>(out var eye))
             {
-                eye = ControlledEntity.AddComponent<EyeComponent>();
+                eye = ControlledEntity.AddComponent<ClientEyeComponent>();
             }
             eye.Current = true;
 
@@ -98,7 +98,7 @@ namespace Robust.Client.Player
             var previous = ControlledEntity;
             if (previous != null && previous.Initialized && !previous.Deleted)
             {
-                previous.GetComponent<EyeComponent>().Current = false;
+                previous.GetComponent<ClientEyeComponent>().Current = false;
                 previous.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems

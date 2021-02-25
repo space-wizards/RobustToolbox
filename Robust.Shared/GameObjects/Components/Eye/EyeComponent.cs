@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    public class SharedEyeComponent : Component
+    public abstract class EyeComponent : Component
     {
         public override string Name => "Eye";
         public override uint? NetID => NetIDs.EYE;
@@ -21,6 +21,24 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Angle Rotation { get; set; }
+
+        // Basically I needed a way to chain this effect for the attack lunge animation.
+        // Sorry!
+        public Vector2 BaseOffset { get; set; }
+
+        public abstract void Kick(Vector2 recoil);
+
+        [Serializable, NetSerializable]
+        protected class RecoilKickMessage : ComponentMessage
+        {
+            public readonly Vector2 Recoil;
+
+            public RecoilKickMessage(Vector2 recoil)
+            {
+                Directed = true;
+                Recoil = recoil;
+            }
+        }
     }
 
     [NetSerializable, Serializable]

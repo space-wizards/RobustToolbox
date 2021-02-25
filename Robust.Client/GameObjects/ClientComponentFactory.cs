@@ -35,9 +35,6 @@ namespace Robust.Client.GameObjects
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
-            Register<EyeComponent>();
-            RegisterReference<EyeComponent, SharedEyeComponent>();
-
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
 

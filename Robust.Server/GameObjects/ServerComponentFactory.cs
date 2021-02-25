@@ -20,9 +20,6 @@ namespace Robust.Server.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            Register<EyeComponent>();
-            RegisterReference<EyeComponent, SharedEyeComponent>();
-
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();
 

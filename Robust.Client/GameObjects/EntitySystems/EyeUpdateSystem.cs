@@ -22,10 +22,7 @@ namespace Robust.Client.GameObjects
         private const float CameraRotateSpeed = MathF.PI;
         private const float CameraSnapTolerance = 0.01f;
 
-#pragma warning disable 649, CS8618
-        // ReSharper disable once NotNullMemberIsNotInitialized
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649, CS8618
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -87,9 +84,10 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))
+            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<ClientEyeComponent>(true))
             {
                 eyeComponent.UpdateEyePosition();
+                eyeComponent.UpdateViewKick(frameTime);
             }
         }
     }

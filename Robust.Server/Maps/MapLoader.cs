@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using YamlDotNet.RepresentationModel;
-using Robust.Shared.Utility;
-using Robust.Shared.Serialization;
-using Robust.Shared.GameObjects;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
@@ -771,7 +770,8 @@ namespace Robust.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = (IComponent)serv3Mgr.ReadValue(factory.GetRegistration(componentName).Type, mapping.ToDataNode(), this);
+                    data = serv3Mgr.ReadValue<IComponent>(factory.GetRegistration(componentName).Type,
+                        mapping.ToDataNode(), this);
                 }
 
                 return data;

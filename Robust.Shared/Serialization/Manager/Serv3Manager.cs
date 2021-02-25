@@ -189,6 +189,11 @@ namespace Robust.Shared.Serialization.Manager
             return obj;
         }
 
+        public T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            return (T) ReadValue(type, node, context);
+        }
+
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {

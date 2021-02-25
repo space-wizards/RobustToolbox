@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
-                var data = (IComponent)_serv3Manager.ReadValue(_componentFactory.GetRegistration(compType).Type, copy);
+                var data = _serv3Manager.ReadValue<IComponent>(_componentFactory.GetRegistration(compType).Type, copy);
 
                 components[compType] = data;
             }

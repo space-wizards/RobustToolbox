@@ -512,7 +512,7 @@ namespace Robust.Shared.Prototypes
             var compType = factory.GetRegistration(type).Type;
 
 
-            Components[type] = (IComponent) IoCManager.Resolve<IServ3Manager>().ReadValue(compType, copy.ToDataNode());
+            Components[type] = IoCManager.Resolve<IServ3Manager>().ReadValue<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()

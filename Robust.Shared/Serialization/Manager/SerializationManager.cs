@@ -85,12 +85,12 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public T ReadValue<T>(DataNode node, ISerializationContext? context = null)
+        public DeserializationResult ReadValue<T>(DataNode node, ISerializationContext? context = null)
         {
-            return (T) ReadValue(typeof(T), node, context);
+            return ReadValue(typeof(T), node, context);
         }
 
-        public object ReadValue(Type type, DataNode node, ISerializationContext? context = null)
+        public DeserializationResult ReadValue(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
 
@@ -99,7 +99,7 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
                 var foo = TypeDescriptor.GetConverter(type);
-                return foo.ConvertFromInvariantString(valueDataNode.Value);
+                return new (foo.ConvertFromInvariantString(valueDataNode.Value));
             }
 
             // array
@@ -115,17 +115,17 @@ namespace Robust.Shared.Serialization.Manager
                     newArray.SetValue(value, idx++);
                 }
 
-                return newArray;
+                return new (newArray);
             }
 
             if (underlyingType.IsEnum)
             {
-                return node switch
+                return new(node switch
                 {
                     ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
                     SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
                     _ => throw new InvalidNodeTypeException($"Cannot serialize node as {underlyingType}, unsupported node type {node.GetType()}")
-                };
+                });
             }
 
             if (node.Tag?.StartsWith("!type:") == true)
@@ -136,7 +136,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
             {
-                return serializedObj;
+                return new(serializedObj);
             }
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
                 selfSerObj.Deserialize(valueDataNode.Value);
-                return selfSerObj;
+                return new(selfSerObj);
             }
 
             //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
@@ -172,26 +172,22 @@ namespace Robust.Shared.Serialization.Manager
             if (dataDef == null)
             {
                 Logger.Warning($"Failed to get data definition for {type} when reading");
-                return obj;
+                return new(obj);
             }
 
             if (node is not MappingDataNode mappingDataNode)
             {
                 Logger.Warning($"No mappingnode provided for type {type}");
-                return obj;
+                return new(obj);
             }
 
-            obj = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
+            var res = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
+            obj = res.Object;
 
             if (obj is ISerializationHooks serHooks)
                 serHooks.AfterDeserialization();
 
-            return obj;
-        }
-
-        public T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
-        {
-            return (T) ReadValue(type, node, context);
+            return res;
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,

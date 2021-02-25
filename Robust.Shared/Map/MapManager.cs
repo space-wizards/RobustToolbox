@@ -448,7 +448,7 @@ namespace Robust.Shared.Map
 
                     var collideComp = newEnt.AddComponent<PhysicsComponent>();
                     collideComp.CanCollide = true;
-                    collideComp.AddFixture(new Fixture(collideComp, new PhysShapeGrid(grid)));
+                    collideComp.AddFixture(new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 

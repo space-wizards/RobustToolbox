@@ -12,5 +12,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             bodyA.AddJoint(joint);
             return joint;
         }
+
+        public static SlothJoint CreateSlothJoint(this PhysicsComponent bodyA, PhysicsComponent bodyB)
+        {
+            var joint = new SlothJoint(bodyA, bodyB);
+            bodyA.AddJoint(joint);
+            return joint;
+        }
     }
 }

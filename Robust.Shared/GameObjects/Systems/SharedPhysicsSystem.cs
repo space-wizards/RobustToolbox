@@ -16,6 +16,14 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedPhysicsSystem : EntitySystem
     {
         /*
+         * TODO:
+         * Raycasts for non-box shapes (i.e. circles and edges: Can probably just copy acruid's code?)
+         * TOI Solver (continuous collision detection)
+         * Poly cutting
+         * Chain shape
+         */
+
+        /*
          * Multi-threading notes:
          * Sources:
          * https://github.com/VelcroPhysics/VelcroPhysics/issues/29

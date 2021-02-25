@@ -398,7 +398,7 @@ namespace Robust.Shared.Physics.Broadphase
             var broadPhases = new List<IBroadPhase>();
             _lastBroadPhases[body] = broadPhases;
 
-            body.CreateProxies();
+            body.CreateProxies(_mapManager, this);
             SetBroadPhases(body);
 
             // TODO: Remove this garbage
@@ -447,46 +447,6 @@ namespace Robust.Shared.Physics.Broadphase
 
             // Need to update what broadphases are relevant.
             SetBroadPhases(body);
-        }
-
-        /// <summary>
-        ///     Update the broadphase with all the fixtures on this body.
-        /// </summary>
-        /// <remarks>
-        ///     Should be called when a body changes position.
-        /// </remarks>
-        /// <param name="body"></param>
-        public void RefreshFixtures(PhysicsComponent body)
-        {
-            // If the entity's still being initialized it might have MoveEvent called (might change in future?)
-            if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
-            {
-                return;
-            }
-
-            var mapId = body.Owner.Transform.MapID;
-            body.ClearProxies();
-
-            if (mapId == MapId.Nullspace || body.Deleted)
-            {
-                body.ClearProxies();
-                return;
-            }
-
-            // TODO: Cache the below more, for now we'll just full-clear it for stability
-            broadPhases.Clear();
-
-            body.CreateProxies();
-
-            foreach (var fixture in body.Fixtures)
-            {
-                foreach (var (gridId, _) in fixture.Proxies)
-                {
-                    var broadPhase = GetBroadPhase(mapId, gridId);
-                    if (broadPhase == null) continue;
-                    broadPhases.Add(broadPhase);
-                }
-            }
         }
 
         internal void AddFixture(PhysicsComponent body, Fixture fixture)
@@ -823,8 +783,9 @@ namespace Robust.Shared.Physics.Broadphase
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
-            // TODO: Could be more optimal here and below by getting direction and only getting box that way.
-            var rayBox = new Box2(ray.Position - maxLength, ray.Position + maxLength);
+            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
+            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
+                Vector2.ComponentMax(ray.Position, endPoint));
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
             {
@@ -861,6 +822,8 @@ namespace Robust.Shared.Physics.Broadphase
                     {
                         return true;
                     }
+
+                    // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
                     var result = new RayCastResults(distFromOrigin, point + offset, proxy.Fixture.Body.Entity);

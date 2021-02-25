@@ -44,116 +44,6 @@ namespace Robust.Shared.GameObjects
         bool Predict { get; set; }
 
         /// <summary>
-        ///     Adds a controller of type <see cref="T"/> to this component, throwing
-        ///     an error if one already exists.
-        /// </summary>
-        /// <typeparam name="T">The controller type to add.</typeparam>
-        /// <returns>The newly added controller.</returns>
-        /// <exception cref="InvalidOperationException">
-        ///     Throws <see cref="InvalidOperationException"/> if a controller of type
-        ///     <see cref="T"/> already exists.
-        /// </exception>
-        T AddController<T>() where T : VirtualController, new();
-
-        /// <summary>
-        ///     Adds a controller of type <see cref="T"/> to this component.
-        /// </summary>
-        /// <typeparam name="T">The controller type to add.</typeparam>
-        /// <returns>The newly added controller.</returns>
-        T SetController<T>() where T : VirtualController, new();
-
-        /// <summary>
-        ///     Gets a controller of type <see cref="T"/> from this component.
-        /// </summary>
-        /// <typeparam name="T">The controller type to get.</typeparam>
-        /// <returns>The existing controller.</returns>
-        /// <exception cref="KeyNotFoundException">
-        ///     Throws <see cref="KeyNotFoundException"/> if no controller exists with
-        ///     type <see cref="T"/>.
-        /// </exception>
-        T GetController<T>() where T : VirtualController;
-
-        /// <summary>
-        ///     Gets all the controllers from this component.
-        /// </summary>
-        /// <returns>An enumerable of the controllers.</returns>
-        IEnumerable<VirtualController> GetControllers();
-
-        /// <summary>
-        ///     Tries to get a controller of type <see cref="T"/> from this component.
-        /// </summary>
-        /// <param name="controller">The controller if found or null otherwise.</param>
-        /// <typeparam name="T">The type of the controller to find.</typeparam>
-        /// <returns>True if the controller was found, false otherwise.</returns>
-        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
-
-        /// <summary>
-        ///     Checks if this component has a controller of type <see cref="T"/>.
-        /// </summary>
-        /// <typeparam name="T">The type of the controller to check.</typeparam>
-        /// <returns>True if the controller exists, false otherwise.</returns>
-        bool HasController<T>() where T : VirtualController;
-
-        /// <summary>
-        ///     Convenience wrapper to implement "create controller if it does
-        ///     not already exist".
-        ///     Always gives you back a controller, and creates it if it does
-        ///     not exist yet.
-        /// </summary>
-        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
-        /// <returns>
-        ///     The existing controller, or the new controller if none existed yet.
-        /// </returns>
-        T EnsureController<T>() where T : VirtualController, new();
-
-        /// <summary>
-        ///     Convenience wrapper to implement "create controller if it does
-        ///     not already exist".
-        ///     Always gives you back a controller, and creates it if it does
-        ///     not exist yet.
-        /// </summary>
-        /// <param name="controller">
-        ///     The existing controller, or the new controller if none existed yet.
-        /// </param>
-        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
-        /// <returns>
-        ///     True if the component already existed, false if it had to be created.
-        /// </returns>
-        bool EnsureController<T>(out T controller) where T : VirtualController, new();
-
-        /// <summary>
-        ///     Removes the controller of type <see cref="T"/> if one exists.
-        /// </summary>
-        /// <typeparam name="T">The type of the controller to remove</typeparam>
-        /// <returns>True if the component was removed, false otherwise.</returns>
-        bool TryRemoveController<T>() where T : VirtualController;
-
-        /// <summary>
-        ///     Removes the controller of type <see cref="T"/> if one exists,
-        ///     and if so returns it.
-        /// </summary>
-        /// <param name="controller">
-        ///     The controller if one was removed, null otherwise.
-        /// </param>
-        /// <typeparam name="T">The type of the controller to remove</typeparam>
-        /// <returns>True if the component was removed, false otherwise.</returns>
-        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
-
-        /// <summary>
-        ///     Removes all controllers from this component.
-        /// </summary>
-        void RemoveControllers();
-
-        /// <summary>
-        ///     Tries to sets the linear velocity of all controllers controlling
-        ///     this component to zero.
-        ///     This does not short-circuit on the first controller that couldn't
-        ///     be stopped.
-        /// </summary>
-        /// <returns>True if all of the controllers were reset, false otherwise.</returns>
-        bool Stop();
-
-        /// <summary>
         /// Can this body be moved?
         /// </summary>
         /// <returns></returns>
@@ -162,10 +52,6 @@ namespace Robust.Shared.GameObjects
 
     partial class PhysicsComponent : IPhysicsComponent
     {
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-
-        private Dictionary<Type, VirtualController> _controllers = new();
-
         [ViewVariables]
         public bool HasProxies { get; set; }
 
@@ -545,133 +431,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The same point expressed in world coordinates.</returns>
         public Vector2 GetWorldPoint(in Vector2 localPoint)
         {
-            return Physics.Transform.Mul(GetTransform(), localPoint);
-        }
-
-        /// <inheritdoc />
-        public T AddController<T>() where T : VirtualController, new()
-        {
-            if (_controllers.ContainsKey(typeof(T)))
-            {
-                throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
-            }
-
-            var controller = _dynamicTypeFactory.CreateInstance<T>();
-            controller.ControlledComponent = this;
-            _controllers[typeof(T)] = controller;
-
-            Dirty();
-
-            return controller;
-        }
-
-        /// <inheritdoc />
-        public T SetController<T>() where T : VirtualController, new()
-        {
-            var controller = _dynamicTypeFactory.CreateInstance<T>();
-            controller.ControlledComponent = this;
-            _controllers[typeof(T)] = controller;
-
-            Dirty();
-
-            return controller;
-        }
-
-        /// <inheritdoc />
-        public T GetController<T>() where T : VirtualController
-        {
-            return (T) _controllers[typeof(T)];
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<VirtualController> GetControllers()
-        {
-            return _controllers.Values;
-        }
-
-        /// <inheritdoc />
-        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
-        {
-            controller = null!;
-
-            var found = _controllers.TryGetValue(typeof(T), out var value);
-
-            return found && (controller = (value as T)!) != null;
-        }
-
-        /// <inheritdoc />
-        public bool HasController<T>() where T : VirtualController
-        {
-            return _controllers.ContainsKey(typeof(T));
-        }
-
-        /// <inheritdoc />
-        public T EnsureController<T>() where T : VirtualController, new()
-        {
-            if (TryGetController(out T controller))
-            {
-                return controller;
-            }
-
-            controller = AddController<T>();
-
-            return controller;
-        }
-
-        /// <inheritdoc />
-        public bool EnsureController<T>(out T controller) where T : VirtualController, new()
-        {
-            if (TryGetController(out controller))
-            {
-                return true;
-            }
-
-            controller = AddController<T>();
-            return false;
-        }
-
-        /// <inheritdoc />
-        public bool TryRemoveController<T>() where T : VirtualController
-        {
-            var removed = _controllers.Remove(typeof(T), out var controller);
-
-            if (controller != null)
-            {
-                controller.ControlledComponent = null;
-            }
-
-            Dirty();
-
-            return removed;
-        }
-
-        /// <inheritdoc />
-        public bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
-        {
-            controller = null!;
-            var removed = _controllers.Remove(typeof(T), out var virtualController);
-
-            if (virtualController != null)
-            {
-                controller = (T) virtualController;
-                controller.ControlledComponent = null;
-            }
-
-            Dirty();
-
-            return removed;
-        }
-
-        /// <inheritdoc />
-        public void RemoveControllers()
-        {
-            foreach (var controller in _controllers.Values)
-            {
-                controller.ControlledComponent = null;
-            }
-
-            _controllers.Clear();
-            Dirty();
+            return Transform.Mul(GetTransform(), localPoint);
         }
 
         /// <summary>
@@ -754,7 +514,8 @@ namespace Robust.Shared.GameObjects
         ///     Get the proxies for each of our fixtures and add them to the broadphases.
         /// </summary>
         /// <param name="mapManager"></param>
-        public void CreateProxies(IMapManager? mapManager = null)
+        /// <param name="broadPhaseSystem"></param>
+        public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
         {
             if (HasProxies) return;
 
@@ -766,12 +527,14 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
             mapManager ??= IoCManager.Resolve<IMapManager>();
             var worldPosition = Owner.Transform.WorldPosition;
             var mapId = Owner.Transform.MapID;
             var worldAABB = GetWorldAABB();
             var worldRotation = Owner.Transform.WorldRotation.Theta;
+
+            // TODO: For singularity and shuttles: Any fixtures that have a MapGrid layer / mask needs to be added to the default broadphase (so it can collide with grids).
 
             foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
             {
@@ -830,19 +593,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
             return EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, offset, approx);
-        }
-
-        /// <inheritdoc />
-        public bool Stop()
-        {
-            var successful = true;
-
-            foreach (var controller in _controllers.Values)
-            {
-                successful &= controller.Stop();
-            }
-
-            return successful;
         }
 
         /// <inheritdoc />

@@ -32,7 +32,13 @@ namespace Robust.Shared.Physics.Broadphase
 
         private Dictionary<PhysicsComponent, List<IBroadPhase>> _lastBroadPhases = new();
 
+        /// <summary>
+        ///     Given MoveEvent and RotateEvent do the same thing we won't double up on work.
+        /// </summary>
+        private HashSet<IEntity> _handledThisTick = new();
+
         private Queue<MoveEvent> _queuedMoveEvents = new();
+        private Queue<RotateEvent> _queuedRotateEvent = new();
         private Queue<EntMapIdChangedMessage> _queuedMapChanges = new();
         private Queue<FixtureUpdateMessage> _queuedFixtureUpdates = new();
         private Queue<CollisionChangeMessage> _queuedCollisionChanges = new();
@@ -127,7 +133,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             SubscribeLocalEvent<CollisionChangeMessage>(QueueCollisionChange);
             SubscribeLocalEvent<MoveEvent>(QueuePhysicsMove);
-            SubscribeLocalEvent<RotateEvent>(HandlePhysicsRotate);
+            SubscribeLocalEvent<RotateEvent>(QueuePhysicsRotate);
             SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(QueueContainerInsertMessage);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(QueueContainerRemoveMessage);
@@ -145,11 +151,31 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 var moveEvent = _queuedMoveEvents.Dequeue();
 
-                if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
-                    continue;
+                // Doing this seems to fuck with tp so leave off for now I guess, it's mainly to avoid the rotate duplication
+                if (_handledThisTick.Contains(moveEvent.Sender)) continue;
+
+                _handledThisTick.Add(moveEvent.Sender);
+
+                if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
                 SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
             }
+
+            while (_queuedRotateEvent.Count > 0)
+            {
+                var rotateEvent = _queuedRotateEvent.Dequeue();
+
+                if (_handledThisTick.Contains(rotateEvent.Sender)) continue;
+
+                _handledThisTick.Add(rotateEvent.Sender);
+
+                if (rotateEvent.Sender.Deleted || !rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
+                    return;
+
+                SynchronizeFixtures(physicsComponent, Vector2.Zero);
+            }
+
+            _handledThisTick.Clear();
 
             // TODO: Just call ProcessEventQueue directly?
             // Manually manage queued stuff ourself given EventBus.QueueEvent happens at the same time every time
@@ -208,7 +234,7 @@ namespace Robust.Shared.Physics.Broadphase
             _queuedMoveEvents.Enqueue(moveEvent);
         }
 
-        private void HandlePhysicsRotate(RotateEvent rotateEvent)
+        private void QueuePhysicsRotate(RotateEvent rotateEvent)
         {
             if (!rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;

@@ -509,7 +509,10 @@ namespace Robust.Shared.GameObjects
 
             AttachParent(newMapEntity);
 
+            // Technically we're not moving, just changing parent.
+            DeferUpdates = true;
             WorldPosition = mapPos.Position;
+            DeferUpdates = false;
 
             Dirty();
         }

@@ -112,8 +112,7 @@ namespace Robust.Shared.Physics.Collision
         }
     }
 
-    // Originally this was a struct but it gets mutated all over the place so I just made it a class for now.
-    internal sealed class Manifold
+    public struct Manifold
     {
         public Vector2 LocalNormal;
 
@@ -127,25 +126,17 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     Points of contact, can only be 0 -> 2.
         /// </summary>
-        public ManifoldPoint[] Points = new ManifoldPoint[2];
+        public ManifoldPoint[] Points;
 
         public ManifoldType Type;
-
-        public Manifold() {}
 
         public Manifold(Vector2 localNormal, Vector2 localPoint, int pointCount, ManifoldPoint[] points, ManifoldType type)
         {
             LocalNormal = localNormal;
             LocalPoint = localPoint;
             PointCount = pointCount;
-            Array.Copy(points, Points, pointCount);
+            Points = points;
             Type = type;
-        }
-
-        // TODO: Make a unittest for this real fucken bad.
-        public Manifold Clone()
-        {
-            return new(LocalNormal, LocalPoint, PointCount, Points, Type);
         }
     }
 

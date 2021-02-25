@@ -533,6 +533,7 @@ namespace Robust.Shared.Physics.Dynamics
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 if (// prediction && !seed.Predict ||
+                    // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
                     seed.Island ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static) continue;

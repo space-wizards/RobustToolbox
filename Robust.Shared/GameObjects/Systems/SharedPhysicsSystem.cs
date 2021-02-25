@@ -17,10 +17,15 @@ namespace Robust.Shared.GameObjects
     {
         /*
          * TODO:
-         * Raycasts for non-box shapes (i.e. circles and edges: Can probably just copy acruid's code?)
+         * Port acruid's box solver in to reduce allocs for building manifolds (this one is important for perf to remove the disgusting ctors and casts)
+         * Raycasts for non-box shapes.
+         * SetTransformIgnoreContacts for teleports (and anything else left on the physics body in Farseer)
+         * Actual center of mass for shapes (currently just assumes center coordinate)
+         * Circle offsets to entity.
          * TOI Solver (continuous collision detection)
          * Poly cutting
          * Chain shape
+         * (Content) grenade launcher grenades that explode after time rather than impact.
          */
 
         /*

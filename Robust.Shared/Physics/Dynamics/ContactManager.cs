@@ -421,6 +421,8 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
             foreach (var contact in ActiveContacts)
             {
+                if (!contact.IsTouching) continue;
+
                 // God this area's hard to read but tl;dr run ICollideBehavior and IPostCollide and try to optimise it a little.
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;

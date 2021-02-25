@@ -58,7 +58,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
-        public Manifold Manifold = new();
+        public Manifold Manifold;
 
         private ContactType _type;
 
@@ -298,7 +298,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (FixtureA == null || FixtureB == null)
                 return;
 
-            Manifold oldManifold = Manifold.Clone();
+            Manifold oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
@@ -320,7 +320,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
             else
             {
-                Evaluate(Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the
@@ -419,23 +419,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <param name="manifold">The manifold.</param>
         /// <param name="transformA">The first transform.</param>
         /// <param name="transformB">The second transform.</param>
-        private void Evaluate(Manifold manifold, in Transform transformA, in Transform transformB)
+        private void Evaluate(ref Manifold manifold, in Transform transformA, in Transform transformB)
         {
             // This is expensive and shitcodey, see below.
             switch (_type)
             {
                 // TODO: Need a unit test for these.
                 case ContactType.Polygon:
-                    _collisionManager.CollidePolygons(manifold, new PolygonShape(FixtureA!.Shape), transformA, new PolygonShape(FixtureB!.Shape), transformB);
+                    _collisionManager.CollidePolygons(ref manifold, new PolygonShape(FixtureA!.Shape), transformA, new PolygonShape(FixtureB!.Shape), transformB);
                     break;
                 case ContactType.PolygonAndCircle:
-                    _collisionManager.CollidePolygonAndCircle(manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollidePolygonAndCircle(ref manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndCircle:
-                    _collisionManager.CollideEdgeAndCircle(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideEdgeAndCircle(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndPolygon:
-                    _collisionManager.CollideEdgeAndPolygon(manifold, (EdgeShape) FixtureA!.Shape, transformA, new PolygonShape(FixtureB!.Shape), transformB);
+                    _collisionManager.CollideEdgeAndPolygon(ref manifold, (EdgeShape) FixtureA!.Shape, transformA, new PolygonShape(FixtureB!.Shape), transformB);
                     break;
                 case ContactType.ChainAndCircle:
                     throw new NotImplementedException();
@@ -454,30 +454,30 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     */
                     break;
                 case ContactType.Circle:
-                    _collisionManager.CollideCircles(manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
+                    _collisionManager.CollideCircles(ref manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;
                 // Custom ones
                 // This is kind of shitcodey and originally I just had the poly version but if we get an AABB -> whatever version directly you'll get good optimisations over a cast.
                 case ContactType.Aabb:
-                    _collisionManager.CollideAabbs(manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeAabb) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideAabbs(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeAabb) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.AabbAndCircle:
-                    _collisionManager.CollideAabbAndCircle(manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideAabbAndCircle(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.AabbAndPolygon:
-                    _collisionManager.CollideAabbAndPolygon(manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideAabbAndPolygon(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.AabbAndRect:
-                    _collisionManager.CollideAabbAndRect(manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideAabbAndRect(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.Rect:
-                    _collisionManager.CollideRects(manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideRects(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.RectAndCircle:
-                    _collisionManager.CollideRectAndCircle(manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideRectAndCircle(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.RectAndPolygon:
-                    _collisionManager.CollideRectAndPolygon(manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
+                    _collisionManager.CollideRectAndPolygon(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
             }
         }

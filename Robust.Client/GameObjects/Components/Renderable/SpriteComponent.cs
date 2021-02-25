@@ -335,7 +335,6 @@ namespace Robust.Client.GameObjects
                     var rsiPath = TextureRoot / rsi;
                     try
                     {
-                        if (rsi.EndsWith("apc.rsi")) System.Console.Write("a");
                         BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
                     }
                     catch (Exception e)
@@ -2234,7 +2233,7 @@ namespace Robust.Client.GameObjects
             public T AddComponent<T>() where T : Component, new()
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serv3Manager = IoCManager.Resolve<ISerializationManager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2246,7 +2245,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    comp = (T)serv3Manager.Copy(node, comp)!;
+                    comp = serializationManager.Copy(node, comp)!;
                 }
 
                 return comp;

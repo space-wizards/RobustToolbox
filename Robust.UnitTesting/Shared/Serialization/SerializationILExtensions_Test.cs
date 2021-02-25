@@ -55,8 +55,8 @@ strField: foo
             dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynMethod.GetILGenerator();
 
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
-            var dataDef = serv3Mgr.GetDataDefinition(typeof(TestClass));
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serializationManager.GetDataDefinition(typeof(TestClass));
             Assert.NotNull(dataDef);
             Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(2));
 
@@ -71,7 +71,7 @@ strField: foo
 
             var test = new TestClass();
             var mapping = YamlObjectSerializer_Test.YamlTextToNode(YAMLNESTED);
-            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new [] {field.DefaultValue});
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serializationManager, new [] {field.DefaultValue});
 
             Assert.That(test.nestedField.primitiveStringField, Is.EqualTo("bar"));
         }
@@ -91,8 +91,8 @@ strField: foo
             dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynMethod.GetILGenerator();
 
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
-            var dataDef = serv3Mgr.GetDataDefinition(typeof(NestedTestClass));
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serializationManager.GetDataDefinition(typeof(NestedTestClass));
             Assert.NotNull(dataDef);
             Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(1));
 
@@ -107,7 +107,7 @@ strField: foo
 
             var test = new NestedTestClass();
             var mapping = YamlObjectSerializer_Test.YamlTextToNode(YAML);
-            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new [] {field.DefaultValue});
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serializationManager, new [] {field.DefaultValue});
 
             Assert.That(test.primitiveStringField, Is.EqualTo("foo"));
         }
@@ -127,8 +127,8 @@ strField: foo
             dynMethod.DefineParameter(4, ParameterAttributes.In, "defaultValues");
             var generator = dynMethod.GetILGenerator();
 
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
-            var dataDef = serv3Mgr.GetDataDefinition(typeof(NestedTestClass));
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serializationManager.GetDataDefinition(typeof(NestedTestClass));
             Assert.NotNull(dataDef);
             Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(1));
 
@@ -143,7 +143,7 @@ strField: foo
 
             var test = new NestedTestClass();
             var mapping = new YamlMappingNode();
-            @delegate(test, YamlObjectSerializer.NewReader(mapping), serv3Mgr, new []{field.DefaultValue});
+            @delegate(test, YamlObjectSerializer.NewReader(mapping), serializationManager, new []{field.DefaultValue});
 
             Assert.That(test.primitiveStringField, Is.EqualTo("defaultTest2"));
         }
@@ -162,8 +162,8 @@ strField: foo
             dynMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
             var generator = dynMethod.GetILGenerator();
 
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
-            var dataDef = serv3Mgr.GetDataDefinition(typeof(NestedTestClass));
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var dataDef = serializationManager.GetDataDefinition(typeof(NestedTestClass));
             Assert.NotNull(dataDef);
             Assert.That(dataDef!.FieldDefinitions.Count, Is.EqualTo(1));
 
@@ -177,7 +177,7 @@ strField: foo
 
             var source = new NestedTestClass(){primitiveStringField = "copyTest"};
             var target = new NestedTestClass();
-            @delegate(source, target, serv3Mgr);
+            @delegate(source, target, serializationManager);
 
             Assert.That(target.primitiveStringField, Is.EqualTo("copyTest"));
         }*/

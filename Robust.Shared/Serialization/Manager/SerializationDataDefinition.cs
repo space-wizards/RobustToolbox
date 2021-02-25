@@ -71,12 +71,12 @@ namespace Robust.Shared.Serialization.Manager
 
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
-                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                        Logger.ErrorS("serialization", $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }
                     else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
                     {
-                        Logger.ErrorS("SerV3", $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
+                        Logger.ErrorS("serialization", $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
                         continue;
                     }
                 }
@@ -111,7 +111,7 @@ namespace Robust.Shared.Serialization.Manager
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            object PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serv3Manager,
+            object PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
                 ISerializationContext? context, object?[] defaultValues)
             {
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
@@ -137,7 +137,7 @@ namespace Robust.Shared.Serialization.Manager
 
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
-                            fieldVal = serv3Manager.ReadConstant(type, node);
+                            fieldVal = serializationManager.ReadConstant(type, node);
                             break;
                         }
                         case DataFieldWithFlagAttribute flag:
@@ -148,7 +148,7 @@ namespace Robust.Shared.Serialization.Manager
 
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
-                            fieldVal = serv3Manager.ReadFlag(type, node);
+                            fieldVal = serializationManager.ReadFlag(type, node);
                             break;
                         }
                         default:
@@ -157,7 +157,7 @@ namespace Robust.Shared.Serialization.Manager
 
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
-                            fieldVal = serv3Manager.ReadValue(type, node);
+                            fieldVal = serializationManager.ReadValue(type, node);
                             break;
                         }
                     }

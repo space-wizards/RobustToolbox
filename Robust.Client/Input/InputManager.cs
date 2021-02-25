@@ -121,7 +121,7 @@ namespace Robust.Client.Input
         public void SaveToUserData()
         {
             var mapping = new MappingDataNode();
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -145,8 +145,8 @@ namespace Robust.Client.Input
                 .ToArray();
 
             mapping.AddNode("version", new ValueDataNode("1"));
-            mapping.AddNode("binds", serv3Mgr.WriteValue(modifiedBindings));
-            mapping.AddNode("leaveEmpty", serv3Mgr.WriteValue(leaveEmpty));
+            mapping.AddNode("binds", serializationManager.WriteValue(modifiedBindings));
+            mapping.AddNode("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
@@ -417,13 +417,13 @@ namespace Robust.Client.Input
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
-            var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
             var robustMapping = mapping.ToDataNode() as MappingDataNode;
             if (robustMapping == null) throw new InvalidOperationException();
 
             if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serv3Mgr.ReadValue<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = serializationManager.ReadValue<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -452,7 +452,7 @@ namespace Robust.Client.Input
 
             if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
             {
-                var leaveEmpty = serv3Mgr.ReadValue<BoundKeyFunction[]>(node);
+                var leaveEmpty = serializationManager.ReadValue<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {

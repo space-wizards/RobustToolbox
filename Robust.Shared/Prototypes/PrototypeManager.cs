@@ -440,7 +440,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = _serv3Manager.ReadValue<IPrototype>(prototypeType, node.ToDataNode());
+                var prototype = _serializationManager.ReadValue<IPrototype>(prototypeType, node.ToDataNode());
 
                 changedPrototypes.Add(prototype);
 

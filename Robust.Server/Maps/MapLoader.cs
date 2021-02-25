@@ -709,7 +709,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
-                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -734,7 +734,7 @@ namespace Robust.Server.Maps
                             continue;
 
                         CurrentWritingComponent = component.Name;
-                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(component.GetType(), component, context: this);
+                        var compMapping = (MappingDataNode)serializationManager.WriteValue(component.GetType(), component, context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
@@ -763,14 +763,16 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                var serv3Mgr = IoCManager.Resolve<ISerializationManager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
-                IComponent data = protoData != null ? (IComponent)serv3Mgr.CreateCopy(protoData)! : (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
+                IComponent data = protoData != null
+                    ? (IComponent) serializationManager.CreateCopy(protoData)!
+                    : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = serv3Mgr.ReadValue<IComponent>(factory.GetRegistration(componentName).Type,
+                    data = serializationManager.ReadValue<IComponent>(factory.GetRegistration(componentName).Type,
                         mapping.ToDataNode(), this);
                 }
 

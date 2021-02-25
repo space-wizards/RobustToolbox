@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public static class SerializationILExtensions
     {
-        // object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager, ISerializationContext? context, object?[] defaultValues
+        // object target, MappingDataNode mappingDataNode, IServ3Manager serializationManager, ISerializationContext? context, object?[] defaultValues
         public static void EmitPopulateField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.Manager
             var notMappedLabel = generator.DefineLabel();
             generator.Emit(OpCodes.Brfalse, notMappedLabel);
 
-            generator.Emit(OpCodes.Ldarg_2); //load serv3mgr
+            generator.Emit(OpCodes.Ldarg_2); //load serializationmanager
 
             var getNodeMethod = typeof(MappingDataNode).GetMethods().First(m =>
                 m.Name == nameof(MappingDataNode.GetNode) &&
@@ -127,7 +127,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.MarkLabel(endLabel);
         }
 
-        // object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
+        // object obj, IServ3Manager serializationManager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
         public static void EmitSerializeField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
@@ -173,7 +173,7 @@ public readonly bool ServerOnly;
             generator.Emit(OpCodes.Ldloc_0); //loading mappingnode for calling addnode
             generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading tag for addnode
 
-            generator.Emit(OpCodes.Ldarg_1); //load serv3mgr
+            generator.Emit(OpCodes.Ldarg_1); //load serializationManager
 
             switch (fieldDefinition.Attribute)
             {

@@ -21,6 +21,9 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null);
 
         object? Copy(object? source, object? target);
+
+        T? Copy<T>(object? source, T? target);
+
         object? CreateCopy(object? source);
         #endregion
 

@@ -263,14 +263,17 @@ namespace Robust.Shared.Serialization.Manager
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
-        public object? Copy(object? source, object? target)
+        private object? CopyToTarget(object? source, object? target)
         {
             if (source == null || target == null)
             {
                 return source;
             }
 
-            if (target.GetType().IsPrimitive && source.GetType().IsPrimitive)
+            var sourceType = source.GetType();
+            var targetType = target.GetType();
+
+            if (targetType.IsPrimitive && sourceType.IsPrimitive)
             {
                 //todo does this work
                 //i think it does
@@ -300,13 +303,30 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDefinition == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {target.GetType()} when copying");
+                Logger.Warning($"Could not find datadefinition for type {targetType} when copying");
                 return source;
             }
 
             target = dataDefinition.InvokeCopyDelegate(source, target, this);
 
             return target;
+        }
+
+        public object? Copy(object? source, object? target)
+        {
+            return CopyToTarget(source, target);
+        }
+
+        public T? Copy<T>(object? source, T? target)
+        {
+            var copy = CopyToTarget(source, target);
+
+            if (copy == null)
+            {
+                return default;
+            }
+
+            return (T?) copy;
         }
 
         public object? CreateCopy(object? source)

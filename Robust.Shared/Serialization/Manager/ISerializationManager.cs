@@ -8,6 +8,8 @@ namespace Robust.Shared.Serialization.Manager
         #region Serialization
         void Initialize();
 
+        bool HasDataDefinition(Type type);
+
         DeserializationResult ReadValue<T>(DataNode node, ISerializationContext? context = null);
 
         DeserializationResult ReadValue(Type type, DataNode node, ISerializationContext? context = null);

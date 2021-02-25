@@ -353,27 +353,26 @@ namespace Robust.Shared.Utility
                    (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
         }
 
-        public bool IsOverride()
-        {
-            return !PropertyInfo.IsBasePropertyDefinition();
-        }
-
         public bool IsOverridenIn(Type type)
         {
             // TODO paul this is most definitely 100.10% wrong help
-            foreach (var parent in type.GetClassHierarchy())
+            if (DeclaringType == type)
             {
-                if (parent == DeclaringType)
+                return false;
+            }
+
+            foreach (var property in type.GetAllProperties())
+            {
+                if (property.GetGetMethod(true) != PropertyInfo.GetGetMethod(true) &&
+                    property.GetGetMethod(true)?.GetBaseDefinition() == PropertyInfo.GetGetMethod(true))
                 {
-                    return false;
+                    return true;
                 }
 
-                foreach (var property in parent.GetAllProperties())
+                if (property.GetSetMethod(true) != PropertyInfo.GetSetMethod(true) &&
+                    property.GetSetMethod(true)?.GetBaseDefinition() == PropertyInfo.GetSetMethod(true))
                 {
-                    if (property.DeclaringType == type)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
 

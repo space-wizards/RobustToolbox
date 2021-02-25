@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -26,6 +27,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
+        }
+
+        [MustUseReturnValue]
+        public UIBox2 Copy(UIBox2 source, UIBox2 target)
+        {
+            return new(source.Left, source.Top, source.Right, source.Bottom);
         }
     }
 }

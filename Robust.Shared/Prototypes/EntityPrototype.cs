@@ -520,7 +520,16 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, IComponent> {}
+        public class ComponentRegistry : Dictionary<string, IComponent>
+        {
+            public ComponentRegistry()
+            {
+            }
+
+            public ComponentRegistry(Dictionary<string, IComponent> components) : base(components)
+            {
+            }
+        }
 
         [DataDefinition]
         public class EntityPlacementProperties

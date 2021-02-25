@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -16,6 +17,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value);
+        }
+
+        [MustUseReturnValue]
+        public string Copy(string source, string target)
+        {
+            return source;
         }
     }
 }

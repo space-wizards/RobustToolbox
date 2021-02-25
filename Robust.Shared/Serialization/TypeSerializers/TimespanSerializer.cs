@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -19,6 +20,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+        }
+
+        [MustUseReturnValue]
+        public TimeSpan Copy(TimeSpan source, TimeSpan target)
+        {
+            return source;
         }
     }
 }

@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -56,6 +58,35 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             ISerializationContext? context)
         {
             return NormalRead(node, context).ToImmutableHashSet();
+        }
+
+        [MustUseReturnValue]
+        public HashSet<T> Copy(HashSet<T> source, HashSet<T> target)
+        {
+            target.Clear();
+            target.EnsureCapacity(source.Count);
+
+            foreach (var element in source)
+            {
+                var elementCopy = _serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                target.Add(elementCopy);
+            }
+
+            return target;
+        }
+
+        [MustUseReturnValue]
+        public ImmutableHashSet<T> Copy(ImmutableHashSet<T> source, ImmutableHashSet<T> target)
+        {
+            var builder = ImmutableHashSet.CreateBuilder<T>();
+
+            foreach (var element in source)
+            {
+                var elementCopy = _serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                builder.Add(elementCopy);
+            }
+
+            return builder.ToImmutable();
         }
     }
 }

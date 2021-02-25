@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -20,6 +21,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             var val = (int)value;
             return new ValueDataNode(val.ToString());
+        }
+
+        [MustUseReturnValue]
+        public MapId Copy(MapId source, MapId target)
+        {
+            return new(source.Value);
         }
     }
 }

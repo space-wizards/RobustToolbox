@@ -25,6 +25,8 @@ namespace Robust.Shared.Serialization.Manager
         T? Copy<T>(object? source, T? target);
 
         object? CreateCopy(object? source);
+
+        T? CreateCopy<T>(T? source);
         #endregion
 
         #region Flags And Constants

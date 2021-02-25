@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -12,7 +13,7 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
+    public class ComponentRegistrySerializer :ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
@@ -90,6 +91,20 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             return compSequence;
+        }
+
+        [MustUseReturnValue]
+        public ComponentRegistry Copy(ComponentRegistry source, ComponentRegistry target)
+        {
+            target.Clear();
+            target.EnsureCapacity(source.Count);
+
+            foreach (var (id, component) in source)
+            {
+                target.Add(id, component);
+            }
+
+            return target;
         }
     }
 }

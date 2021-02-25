@@ -329,12 +329,29 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) copy;
         }
 
-        public object? CreateCopy(object? source)
+        private object? CreateCopyInternal(object? source)
         {
             if (source == null) return source;
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target);
+        }
+
+        public object? CreateCopy(object? source)
+        {
+            return CreateCopyInternal(source);
+        }
+
+        public T? CreateCopy<T>(T? source)
+        {
+            var copy = CreateCopyInternal(source);
+
+            if (copy == null)
+            {
+                return default;
+            }
+
+            return (T?) copy;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

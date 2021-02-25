@@ -28,5 +28,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
+
+        public Vector2i Copy(Vector2i source, Vector2i target)
+        {
+            return new(source.X, source.Y);
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -17,6 +18,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToString());
+        }
+
+        [MustUseReturnValue]
+        public Regex Copy(Regex source, Regex target)
+        {
+            return new(source.ToString(), source.Options, source.MatchTimeout);
         }
     }
 }

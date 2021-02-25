@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -22,6 +23,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.ToHex());
+        }
+
+        [MustUseReturnValue]
+        public Color Copy(Color source, Color target)
+        {
+            return new(source.R, source.G, source.B, source.A);
         }
     }
 }

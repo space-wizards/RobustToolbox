@@ -1,4 +1,5 @@
 using System.Globalization;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -25,6 +26,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.Theta.ToString(CultureInfo.InvariantCulture)} rad");
+        }
+
+        [MustUseReturnValue]
+        public Angle Copy(Angle source, Angle target)
+        {
+            return new(source);
         }
     }
 }

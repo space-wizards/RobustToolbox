@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -228,7 +229,7 @@ namespace Robust.Server.Maps
         private class MapContext : ISerializationContext, IEntityLoadContext,
             ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
-            ITypeSerializer<IEntity, ValueDataNode>
+            ITypeReaderWriter<IEntity, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -902,6 +903,18 @@ namespace Robust.Server.Maps
                 {
                     return Entities[val];
                 }
+            }
+
+            [MustUseReturnValue]
+            public GridId Copy(GridId source, GridId target)
+            {
+                return new(source.Value);
+            }
+
+            [MustUseReturnValue]
+            public EntityUid Copy(EntityUid source, EntityUid target)
+            {
+                return new((int) source);
             }
         }
 

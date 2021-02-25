@@ -287,19 +287,19 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            SerializationDataDefinition? dataDef = null;
-            while (commonType != null && !TryGetDataDefinition(commonType, out var dataDefinition))
+            SerializationDataDefinition? dataDefinition = null;
+            while (commonType != null && !TryGetDataDefinition(commonType, out dataDefinition))
             {
                 commonType = commonType.BaseType;
             }
 
-            if (dataDef == null)
+            if (dataDefinition == null)
             {
                 Logger.Warning($"Could not find datadefinition for type {target.GetType()} when copying");
                 return source;
             }
 
-            target = dataDef.InvokeCopyDelegate(source, target, this);
+            target = dataDefinition.InvokeCopyDelegate(source, target, this);
 
             return target;
         }

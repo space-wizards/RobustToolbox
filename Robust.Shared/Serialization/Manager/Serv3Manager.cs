@@ -265,7 +265,7 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            if (target.GetType().IsPrimitive == source.GetType().IsPrimitive)
+            if (target.GetType().IsPrimitive && source.GetType().IsPrimitive)
             {
                 //todo does this work
                 //i think it does

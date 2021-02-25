@@ -15,19 +15,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        private HashSet<T> NormalRead(SequenceDataNode node, ISerializationContext? context)
+        private DeserializationResult NormalRead(SequenceDataNode node, ISerializationContext? context)
         {
             var hashset = new HashSet<T>();
+            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                hashset.Add(_serializationManager.ReadValue<T>(dataNode, context));
+                var res = _serializationManager.ReadValue<T>(dataNode, context)
+                hashset.Add((T) res.GetValue()!);
+                mappings.Add(res);
             }
 
-            return hashset;
+            return new DeserializedSet<T>(hashset, mappings);
         }
 
-        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
             ISerializationContext? context)
         {
             return NormalRead(node, context);
@@ -52,10 +55,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return sequence;
         }
 
-        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
             ISerializationContext? context)
         {
-            return NormalRead(node, context).ToImmutableHashSet();
+            var res = (DeserializedSet<T>)NormalRead(node, context);
+            return res.WithSet(res.Value.ToImmutableHashSet());
         }
     }
 }

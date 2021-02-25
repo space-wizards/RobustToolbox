@@ -35,7 +35,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         private DeserializationResult NormalRead(MappingDataNode node, ISerializationContext? context = null)
         {
             var dict = new Dictionary<TKey, TValue>();
-            var mappedFields = new DeserializationEntry[node.Children.Count];
+            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             var i = 0;
             foreach (var (key, value) in node.Children)
@@ -43,12 +43,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 var keyRes = _serializationManager.ReadValue<TKey>(key, context);
 
                 var valueRes = _serializationManager.ReadValue<TValue>(value, context);
-                dict.Add(keyValue, valueValue);
-                //todo paul aaaaaaaaa
-                mappedFields[i++] = new DeserializationEntry(true, new DeserializationResult())
+                dict.Add((TKey)keyRes.GetValue()!, (TValue)valueRes.GetValue()!);
+                mappedFields.Add(keyRes, valueRes);
             }
 
-            return dict;
+            return new DeserializedDictionary<TKey, TValue>(dict, mappedFields);
         }
 
         public DeserializationResult Read(MappingDataNode node, ISerializationContext? context)
@@ -81,9 +80,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
         {
-            var res = NormalRead(node, context);
-            res.WithObject(new SortedDictionary<TKey, TValue>((IDictionary<TKey, TValue>) res.Object!));
-            return res;
+            var res = (DeserializedDictionary<TKey, TValue>)NormalRead(node, context);
+            return res.WithDict(new SortedDictionary<TKey, TValue>(res.Value));
         }
     }
 }

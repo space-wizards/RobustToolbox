@@ -167,7 +167,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var componentManager = IoCManager.Resolve<IComponentManager>();
             componentManager.Initialize();
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

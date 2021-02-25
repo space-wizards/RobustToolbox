@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Serialization.Markdown;
 using System.Reflection;
+using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public partial class Serv3Manager
+    public partial class SerializationManager
     {
         private Dictionary<Type, Type> _constantsMapping = new();
         private Dictionary<Type, Type> _flagsMapping = new();

@@ -4,13 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public partial class Serv3Manager
+    public partial class SerializationManager
     {
         private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
         private readonly Dictionary<Type, object> _typeWriters = new();
@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryReadWithTypeSerializers(Type type, DataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
-            var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
             obj = null;
             var arr = new object?[]
@@ -155,7 +155,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader)) return false;
-            var ser = (ITypeSerializer<T, TNode>) rawTypeReader;
+            var ser = (ITypeReader<T, TNode>) rawTypeReader;
             obj = ser.Read(node, context);
             return true;
         }
@@ -164,7 +164,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
-            var method = typeof(Serv3Manager).GetRuntimeMethods().First(m =>
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
             node = null;
             var arr = new object?[]

@@ -8,8 +8,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Prototypes
 {
@@ -27,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             factory.Register<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
             manager.Resync();

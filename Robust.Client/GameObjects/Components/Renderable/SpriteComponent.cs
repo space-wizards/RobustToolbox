@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -12,15 +13,14 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
-using System.Linq;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -335,7 +335,6 @@ namespace Robust.Client.GameObjects
                     var rsiPath = TextureRoot / rsi;
                     try
                     {
-                        if (rsi.EndsWith("apc.rsi")) System.Console.Write("a");
                         BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
                     }
                     catch (Exception e)
@@ -2234,7 +2233,7 @@ namespace Robust.Client.GameObjects
             public T AddComponent<T>() where T : Component, new()
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serv3Manager = IoCManager.Resolve<IServ3Manager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2246,7 +2245,7 @@ namespace Robust.Client.GameObjects
 
                 if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
                 {
-                    comp = (T)serv3Manager.Copy(node, comp)!;
+                    comp = serializationManager.Copy(node, comp)!;
                 }
 
                 return comp;

@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableList<T>, SequenceDataNode>
     {
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         public List<T> Read(SequenceDataNode node, ISerializationContext? context = null)
         {
@@ -23,7 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(_serv3Manager.ReadValue<T>(dataNode, context));
+                list.Add(_serializationManager.ReadValue<T>(dataNode, context));
             }
 
             return list;
@@ -41,7 +41,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             var sequence = new SequenceDataNode();
             foreach (var elem in value)
             {
-                sequence.Add(_serv3Manager.WriteValue(elem, alwaysWrite, context));
+                sequence.Add(_serializationManager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;

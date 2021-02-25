@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode> where TKey : notnull
     {
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private MappingDataNode InterfaceWrite(
             IDictionary<TKey, TValue> value,
@@ -25,8 +25,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             foreach (var (key, val) in value)
             {
                 mappingNode.AddNode(
-                    _serv3Manager.WriteValue(key, alwaysWrite, context),
-                    _serv3Manager.WriteValue(val, alwaysWrite, context));
+                    _serializationManager.WriteValue(key, alwaysWrite, context),
+                    _serializationManager.WriteValue(val, alwaysWrite, context));
             }
 
             return mappingNode;
@@ -38,9 +38,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var (key, value) in node.Children)
             {
-                var keyValue = _serv3Manager.ReadValue<TKey>(key, context);
+                var keyValue = _serializationManager.ReadValue<TKey>(key, context);
 
-                var valueValue = _serv3Manager.ReadValue<TValue>(value, context);
+                var valueValue = _serializationManager.ReadValue<TValue>(value, context);
                 dict.Add(keyValue, valueValue);
             }
 

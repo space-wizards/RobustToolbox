@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
@@ -15,7 +14,6 @@ using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.YAML;
@@ -64,7 +62,7 @@ namespace Robust.Shared.Prototypes
         /// </exception>
         IPrototype Index(Type type, string id);
         bool HasIndex<T>(string id) where T : IPrototype;
-        bool TryIndex<T>(string id, out T prototype) where T : IPrototype;
+        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype;
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -131,7 +129,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] public readonly ITaskManager TaskManager = default!;
         [Dependency] public readonly INetManager NetManager = default!;
-        [Dependency] private readonly IServ3Manager _serv3Manager = default!;
+        [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new();
 
@@ -442,7 +440,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = (IPrototype) _serv3Manager.ReadValue(prototypeType, node.ToDataNode());
+                var prototype = _serializationManager.ReadValue<IPrototype>(prototypeType, node.ToDataNode());
 
                 changedPrototypes.Add(prototype);
 

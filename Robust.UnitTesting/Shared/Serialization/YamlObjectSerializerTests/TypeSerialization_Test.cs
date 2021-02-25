@@ -5,8 +5,8 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
@@ -17,14 +17,14 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
         }
 
         [Test]
         public void SerializeTypeTest()
         {
             ITestType type = new TestTypeOne();
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var mapping = serMan.WriteValue(type);
 
             Assert.IsInstanceOf<ValueDataNode>(mapping);
@@ -54,7 +54,7 @@ test:
             yamlStream.Load(streamReader);
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var type = serMan.ReadValue<ITestType>(new MappingDataNode(mapping)["test"]);
 
             Assert.NotNull(type);

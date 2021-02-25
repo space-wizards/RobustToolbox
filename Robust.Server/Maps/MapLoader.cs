@@ -1,24 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using YamlDotNet.RepresentationModel;
-using Robust.Shared.Utility;
-using Robust.Shared.Serialization;
-using Robust.Shared.GameObjects;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
@@ -710,7 +709,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
-                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -735,7 +734,7 @@ namespace Robust.Server.Maps
                             continue;
 
                         CurrentWritingComponent = component.Name;
-                        var compMapping = (MappingDataNode)serv3Mgr.WriteValue(component.GetType(), component, context: this);
+                        var compMapping = (MappingDataNode)serializationManager.WriteValue(component.GetType(), component, context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
@@ -764,14 +763,17 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
-                IComponent data = protoData != null ? (IComponent)serv3Mgr.CreateCopy(protoData)! : (IComponent)Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
+                IComponent data = protoData != null
+                    ? (IComponent) serializationManager.CreateCopy(protoData)!
+                    : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = (IComponent)serv3Mgr.ReadValue(factory.GetRegistration(componentName).Type, mapping.ToDataNode(), this);
+                    data = serializationManager.ReadValue<IComponent>(factory.GetRegistration(componentName).Type,
+                        mapping.ToDataNode(), this);
                 }
 
                 return data;

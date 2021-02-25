@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public static class SerializationILExtensions
     {
-        // object target, MappingDataNode mappingDataNode, IServ3Manager serv3Manager, ISerializationContext? context, object?[] defaultValues
+        // object target, MappingDataNode mappingDataNode, IServ3Manager serializationManager, ISerializationContext? context, object?[] defaultValues
         public static void EmitPopulateField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int localIdx, int defaultValueIdx)
         {
@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.Manager
             var notMappedLabel = generator.DefineLabel();
             generator.Emit(OpCodes.Brfalse, notMappedLabel);
 
-            generator.Emit(OpCodes.Ldarg_2); //load serv3mgr
+            generator.Emit(OpCodes.Ldarg_2); //load serializationmanager
 
             var getNodeMethod = typeof(MappingDataNode).GetMethods().First(m =>
                 m.Name == nameof(MappingDataNode.GetNode) &&
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
                     generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
 
-                    var readConstMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.ReadConstant));
+                    var readConstMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.ReadConstant));
                     Debug.Assert(readConstMethod != null, nameof(readConstMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, readConstMethod);
                     break;
@@ -64,7 +64,7 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading the tag
                     generator.Emit(OpCodes.Callvirt, getNodeMethod); //getting the node
 
-                    var readFlagMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.ReadFlag));
+                    var readFlagMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.ReadFlag));
                     Debug.Assert(readFlagMethod != null, nameof(readFlagMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, readFlagMethod);
                     break;
@@ -80,8 +80,8 @@ namespace Robust.Shared.Serialization.Manager
 
                     generator.Emit(OpCodes.Ldarg_3); //loading context
 
-                    var readValueMethod = typeof(IServ3Manager).GetMethods().First(m =>
-                        m.Name == nameof(IServ3Manager.ReadValue) && m.GetParameters().Length == 3);
+                    var readValueMethod = typeof(ISerializationManager).GetMethods().First(m =>
+                        m.Name == nameof(ISerializationManager.ReadValue) && m.GetParameters().Length == 3);
                     generator.Emit(OpCodes.Callvirt, readValueMethod); //reads node into our desired value
 
                     //unbox the value if necessary since ReadValue returns a object
@@ -127,7 +127,7 @@ namespace Robust.Shared.Serialization.Manager
             generator.MarkLabel(endLabel);
         }
 
-        // object obj, IServ3Manager serv3Manager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
+        // object obj, IServ3Manager serializationManager, ISerializationContext? context, bool alwaysWrite, object?[] defaultValues
         public static void EmitSerializeField(this RobustILGenerator generator,
             SerializationDataDefinition.FieldDefinition fieldDefinition, int defaultValueIdx)
         {
@@ -173,7 +173,7 @@ public readonly bool ServerOnly;
             generator.Emit(OpCodes.Ldloc_0); //loading mappingnode for calling addnode
             generator.Emit(OpCodes.Ldstr, fieldDefinition.Attribute.Tag); //loading tag for addnode
 
-            generator.Emit(OpCodes.Ldarg_1); //load serv3mgr
+            generator.Emit(OpCodes.Ldarg_1); //load serializationManager
 
             switch (fieldDefinition.Attribute)
             {
@@ -186,7 +186,7 @@ public readonly bool ServerOnly;
 
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-                    var writeConstantMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteConstant));
+                    var writeConstantMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.WriteConstant));
                     Debug.Assert(writeConstantMethod != null, nameof(writeConstantMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, writeConstantMethod);
                     break;
@@ -199,7 +199,7 @@ public readonly bool ServerOnly;
 
                     generator.Emit(OpCodes.Ldloc, locIdx); //load value
 
-                    var writeFlagMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.WriteFlag));
+                    var writeFlagMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.WriteFlag));
                     Debug.Assert(writeFlagMethod != null, nameof(writeConstantMethod) + " != null");
                     generator.Emit(OpCodes.Callvirt, writeFlagMethod);
                     break;
@@ -215,8 +215,8 @@ public readonly bool ServerOnly;
 
                     generator.Emit(OpCodes.Ldarg, 2); //load context
 
-                    var writeDataFieldMethod = typeof(IServ3Manager).GetMethods().First(m =>
-                        m.Name == nameof(IServ3Manager.WriteValue) && m.GetParameters().Length == 4);
+                    var writeDataFieldMethod = typeof(ISerializationManager).GetMethods().First(m =>
+                        m.Name == nameof(ISerializationManager.WriteValue) && m.GetParameters().Length == 4);
                     generator.Emit(OpCodes.Callvirt, writeDataFieldMethod); //get new node
                     break;
             }
@@ -259,7 +259,7 @@ public readonly bool ServerOnly;
             //if(!toField.FieldType.IsPrimitive && toField.FieldType.IsValueType)
             generator.Emit(OpCodes.Box, toField.FieldType);
 
-            var copyMethod = typeof(IServ3Manager).GetMethod(nameof(IServ3Manager.Copy));
+            var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy), new Type[] {typeof(object), typeof(object)});
             Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
             generator.Emit(OpCodes.Callvirt, copyMethod);
             generator.Emit(OpCodes.Unbox_Any, toField.FieldType);

@@ -6,7 +6,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -67,7 +66,7 @@ entities:
 
             IoCManager.Resolve<IComponentManager>().Initialize();
 
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);

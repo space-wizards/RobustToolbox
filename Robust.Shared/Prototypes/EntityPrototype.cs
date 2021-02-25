@@ -278,7 +278,7 @@ namespace Robust.Shared.Prototypes
         //todo paul remove
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
-            var serv3Mgr = IoCManager.Resolve<IServ3Manager>();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
             // Copy component data over.
             foreach (var(type, component) in source.Components)
             {
@@ -286,7 +286,7 @@ namespace Robust.Shared.Prototypes
                 {
                     // Copy over values the target component does not have.
                     //todo paul
-                    targetComponent = (IComponent)serv3Mgr.Copy(component, targetComponent)!;
+                    targetComponent = serializationManager.Copy(component, targetComponent)!;
                 }
                 else
                 {
@@ -303,7 +303,7 @@ namespace Robust.Shared.Prototypes
                     }
 
 
-                    var data = serv3Mgr.CreateCopy(component)!;
+                    var data = serializationManager.CreateCopy(component)!;
 
                     target.Components[type] = (IComponent)data;
                 }
@@ -311,7 +311,7 @@ namespace Robust.Shared.Prototypes
                 next: ;
             }
 
-            target.PlacementProperties = (EntityPlacementProperties) serv3Mgr.Copy(source.PlacementProperties, target.PlacementProperties)!;
+            target.PlacementProperties = serializationManager.Copy(source.PlacementProperties, target.PlacementProperties)!;
             //target.PlacementProperties = (EntityPlacementProperties)serv3Mgr.CreateCopy(source.PlacementProperties);
             // Copy all simple data over.
             /*if (!target._placementOverriden)
@@ -478,7 +478,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<IServ3Manager>().Copy(data, component);
+            IoCManager.Resolve<ISerializationManager>().Copy(data, component);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -512,7 +512,7 @@ namespace Robust.Shared.Prototypes
             var compType = factory.GetRegistration(type).Type;
 
 
-            Components[type] = (IComponent) IoCManager.Resolve<IServ3Manager>().ReadValue(compType, copy.ToDataNode());
+            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValue<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()

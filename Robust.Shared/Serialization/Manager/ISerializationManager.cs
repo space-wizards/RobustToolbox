@@ -1,10 +1,9 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public interface IServ3Manager
+    public interface ISerializationManager
     {
         #region Serialization
         void Initialize();
@@ -13,12 +12,18 @@ namespace Robust.Shared.Serialization.Manager
 
         object ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null);
+        T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null);
+
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
+            where T : notnull;
 
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
         object? Copy(object? source, object? target);
+
+        T? Copy<T>(object? source, T? target);
+
         object? CreateCopy(object? source);
         #endregion
 

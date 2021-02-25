@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    public partial class Serv3Manager : IServ3Manager
+    public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
@@ -124,7 +124,7 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
                     SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
-                    _ => throw new InvalidNodeTypeException()
+                    _ => throw new InvalidNodeTypeException($"Cannot serialize node as {underlyingType}, unsupported node type {node.GetType()}")
                 };
             }
 
@@ -171,7 +171,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDef == null)
             {
-                Logger.Warning($"Failed to get datadefintion for {type} when reading");
+                Logger.Warning($"Failed to get data definition for {type} when reading");
                 return obj;
             }
 
@@ -187,6 +187,11 @@ namespace Robust.Shared.Serialization.Manager
                 serHooks.AfterDeserialization();
 
             return obj;
+        }
+
+        public T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            return (T) ReadValue(type, node, context);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
@@ -258,14 +263,17 @@ namespace Robust.Shared.Serialization.Manager
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
-        public object? Copy(object? source, object? target)
+        private object? CopyToTarget(object? source, object? target)
         {
             if (source == null || target == null)
             {
                 return source;
             }
 
-            if (target.GetType().IsPrimitive == source.GetType().IsPrimitive)
+            var sourceType = source.GetType();
+            var targetType = target.GetType();
+
+            if (targetType.IsPrimitive && sourceType.IsPrimitive)
             {
                 //todo does this work
                 //i think it does
@@ -287,21 +295,38 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            SerializationDataDefinition? dataDef = null;
-            while (commonType != null && !TryGetDataDefinition(commonType, out var dataDefinition))
+            SerializationDataDefinition? dataDefinition = null;
+            while (commonType != null && !TryGetDataDefinition(commonType, out dataDefinition))
             {
                 commonType = commonType.BaseType;
             }
 
-            if (dataDef == null)
+            if (dataDefinition == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {target.GetType()} when copying");
+                Logger.Warning($"Could not find datadefinition for type {targetType} when copying");
                 return source;
             }
 
-            target = dataDef.InvokeCopyDelegate(source, target, this);
+            target = dataDefinition.InvokeCopyDelegate(source, target, this);
 
             return target;
+        }
+
+        public object? Copy(object? source, object? target)
+        {
+            return CopyToTarget(source, target);
+        }
+
+        public T? Copy<T>(object? source, T? target)
+        {
+            var copy = CopyToTarget(source, target);
+
+            if (copy == null)
+            {
+                return default;
+            }
+
+            return (T?) copy;
         }
 
         public object? CreateCopy(object? source)

@@ -1,9 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.YAML;
@@ -20,7 +18,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IServ3Manager>().Initialize();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
         }
 
         [Test]
@@ -28,7 +26,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             // Arrange
             var data = _serializableList;
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var sequence = (SequenceDataNode) serMan.WriteValue(data);
             var mapping = new MappingDataNode();
             mapping.AddNode("datalist", sequence);
@@ -42,7 +40,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         public void DeserializeListTest()
         {
             // Arrange
-            var serMan = IoCManager.Resolve<IServ3Manager>();
+            var serMan = IoCManager.Resolve<ISerializationManager>();
             var rootNode = YamlTextToNode(_serializedListYaml);
 
             // Act

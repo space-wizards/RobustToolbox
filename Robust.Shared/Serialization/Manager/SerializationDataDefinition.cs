@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate object PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
+        private delegate DeserializationResult PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
             ISerializationContext? context, object?[] defaultValues);
 
         private delegate MappingDataNode SerializeDelegateSignature(object obj, ISerializationManager serializationManager,
@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public readonly CopyDelegateSignature _copyDelegate;
 
-        public object InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
+        public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
             ISerializationContext? context) =>
             _populateDelegate(target, mappingDataNode, serializationManager, context, _defaultValues);
 
@@ -111,20 +111,24 @@ namespace Robust.Shared.Serialization.Manager
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            object PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
+            DeserializationResult PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
                 ISerializationContext? context, object?[] defaultValues)
             {
+                var mappedInfo = new (bool, DeserializationResult?)[_baseFieldDefinitions.Length];
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
                 {
                     var fieldDefinition = _baseFieldDefinitions[i];
                     var mapped = mappingDataNode.HasNode(fieldDefinition.Attribute.Tag);
 
+                    (bool, DeserializationResult?) info = (mapped, null);
+
                     if (!mapped)
                     {
+                        mappedInfo[i] = info;
                         continue;
                     }
 
-                    object fieldVal;
+                    object? fieldVal;
 
                     switch (fieldDefinition.Attribute)
                     {
@@ -138,6 +142,7 @@ namespace Robust.Shared.Serialization.Manager
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
                             fieldVal = serializationManager.ReadConstant(type, node);
+                            info.Item2 = new(fieldVal);
                             break;
                         }
                         case DataFieldWithFlagAttribute flag:
@@ -149,6 +154,7 @@ namespace Robust.Shared.Serialization.Manager
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
                             fieldVal = serializationManager.ReadFlag(type, node);
+                            info.Item2 = new(fieldVal);
                             break;
                         }
                         default:
@@ -157,14 +163,16 @@ namespace Robust.Shared.Serialization.Manager
 
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
 
-                            fieldVal = serializationManager.ReadValue(type, node);
+                            var res = serializationManager.ReadValue(type, node);
+                            info.Item2 = res;
+                            fieldVal = res.Object;
                             break;
                         }
                     }
 
                     var defValue = defaultValues[i];
 
-                    if (fieldVal.Equals(defValue))
+                    if (Equals(fieldVal, defValue))
                     {
                         continue;
                     }
@@ -172,7 +180,7 @@ namespace Robust.Shared.Serialization.Manager
                     fieldDefinition.FieldInfo.SetValue(target, fieldVal);
                 }
 
-                return target;
+                return new (target, mappedInfo);
             }
 
             return PopulateDelegate;

@@ -8,11 +8,9 @@ namespace Robust.Shared.Serialization.Manager
         #region Serialization
         void Initialize();
 
-        T ReadValue<T>(DataNode node, ISerializationContext? context = null);
+        DeserializationResult ReadValue<T>(DataNode node, ISerializationContext? context = null);
 
-        object ReadValue(Type type, DataNode node, ISerializationContext? context = null);
-
-        T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null);
+        DeserializationResult ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;

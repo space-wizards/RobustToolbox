@@ -17,6 +17,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _suppressScrollValueChanged;
 
+        public int ScrollSpeedX { get; set; } = 50;
+        public int ScrollSpeedY { get; set; } = 50;
+
         public ScrollContainer()
         {
             MouseFilter = MouseFilterMode.Pass;
@@ -197,12 +200,12 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_vScrollEnabled)
             {
-                _vScrollBar.ValueTarget -= args.Delta.Y * 50;
+                _vScrollBar.ValueTarget -= args.Delta.Y * ScrollSpeedY;
             }
 
             if (_hScrollEnabled)
             {
-                _hScrollBar.ValueTarget += args.Delta.X * 50;
+                _hScrollBar.ValueTarget += args.Delta.X * ScrollSpeedX;
             }
 
             args.Handle();

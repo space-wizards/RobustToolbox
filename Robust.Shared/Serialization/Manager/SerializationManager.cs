@@ -72,6 +72,12 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
+        public bool HasDataDefinition(Type type)
+        {
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check datadefinitions for generic types. ({type})");
+            return _dataDefinitions.ContainsKey(type);
+        }
+
         private SerializationDataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;

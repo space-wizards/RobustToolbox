@@ -259,7 +259,7 @@ public readonly bool ServerOnly;
             //if(!toField.FieldType.IsPrimitive && toField.FieldType.IsValueType)
             generator.Emit(OpCodes.Box, toField.FieldType);
 
-            var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy));
+            var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy), new Type[] {typeof(object), typeof(object)});
             Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
             generator.Emit(OpCodes.Callvirt, copyMethod);
             generator.Emit(OpCodes.Unbox_Any, toField.FieldType);

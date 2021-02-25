@@ -278,8 +278,10 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             if (target.GetType().IsPrimitive != source.GetType().IsPrimitive)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(
+                    $"Source and target do not match. Source ({sourceType}) is primitive type: {sourceType.IsPrimitive}. Target ({targetType}) is primitive type: {targetType.IsPrimitive}");
 
+            // TODO paul serv3
             var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
             if(commonType == null)
             {

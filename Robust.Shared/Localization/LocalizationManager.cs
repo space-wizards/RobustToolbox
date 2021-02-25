@@ -34,7 +34,7 @@ namespace Robust.Shared.Localization
         public bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
         {
             var attributeSource = "";
- 
+
             if (entity.TryGetComponent<GrammarComponent>(out var grammar) && !string.IsNullOrEmpty(grammar.LocalizationId))
             {
                 attributeSource = grammar.LocalizationId;
@@ -254,7 +254,6 @@ namespace Robust.Shared.Localization
                         Functions = context.Functions
                     }
                 );
-                AddBuiltinFunctions(newContext);
 
                 _contexts[culture] = newContext;
 

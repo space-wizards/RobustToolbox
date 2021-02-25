@@ -171,7 +171,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDef == null)
             {
-                Logger.Warning($"Failed to get datadefintion for {type} when reading");
+                Logger.Warning($"Failed to get data definition for {type} when reading");
                 return obj;
             }
 

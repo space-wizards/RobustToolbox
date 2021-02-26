@@ -13,14 +13,6 @@ namespace Robust.Shared.Serialization.Markdown
 
         public MappingDataNode() { }
 
-        public KeyValuePair<DataNode, DataNode> this[int key] => Children.ElementAt(key);
-
-        public DataNode this[string index]
-        {
-            get => GetNode(index);
-            set => AddNode(index, value);
-        }
-
         public MappingDataNode(YamlMappingNode mapping)
         {
             foreach (var (key, val) in mapping.Children)
@@ -29,6 +21,22 @@ namespace Robust.Shared.Serialization.Markdown
             }
 
             Tag = mapping.Tag;
+        }
+
+        public MappingDataNode(Dictionary<DataNode, DataNode> nodes)
+        {
+            foreach (var (key, val) in nodes)
+            {
+                _mapping.Add(key, val);
+            }
+        }
+
+        public KeyValuePair<DataNode, DataNode> this[int key] => Children.ElementAt(key);
+
+        public DataNode this[string index]
+        {
+            get => GetNode(index);
+            set => AddNode(index, value);
         }
 
         public YamlMappingNode ToMappingNode()
@@ -40,6 +48,11 @@ namespace Robust.Shared.Serialization.Markdown
             }
 
             return mapping;
+        }
+
+        public T Cast<T>(string index) where T : DataNode
+        {
+            return (T) this[index];
         }
 
         public DataNode GetNode(DataNode key)

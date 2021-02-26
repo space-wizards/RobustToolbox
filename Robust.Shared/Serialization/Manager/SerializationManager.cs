@@ -259,6 +259,12 @@ namespace Robust.Shared.Serialization.Manager
             return WriteValue(typeof(T), value, alwaysWrite, context);
         }
 
+        public TNode WriteValueAs<TNode>(object value, bool alwaysWrite = false, ISerializationContext? context = null)
+            where TNode : DataNode
+        {
+            return (TNode) WriteValue(value.GetType(), value, alwaysWrite, context);
+        }
+
         public DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

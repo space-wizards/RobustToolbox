@@ -305,7 +305,7 @@ namespace Robust.Shared.Prototypes
 
                     var data = serializationManager.CreateCopy(component)!;
 
-                    target.Components[type] = (IComponent)data;
+                    target.Components[type] = data;
                 }
 
                 next: ;

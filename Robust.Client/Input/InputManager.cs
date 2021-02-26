@@ -21,7 +21,6 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.Core;
@@ -423,7 +422,7 @@ namespace Robust.Client.Input
 
             if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.ReadValue<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -452,7 +451,7 @@ namespace Robust.Client.Input
 
             if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.ReadValue<BoundKeyFunction[]>(node);
+                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {

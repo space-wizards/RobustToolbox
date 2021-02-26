@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
-using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown

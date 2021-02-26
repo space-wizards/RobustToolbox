@@ -26,6 +26,7 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
+        // TODO Paul register copiers
         private object? RegisterSerializer(Type type)
         {
             var writerInterfaces = type.GetInterfaces()
@@ -34,8 +35,10 @@ namespace Robust.Shared.Serialization.Manager
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeReader<,>)).ToArray();
 
             if (readerInterfaces.Length == 0 && writerInterfaces.Length == 0)
+            {
                 throw new InvalidOperationException(
                     "Tried to register TypeReader/Writer that had none of the interfaces inherited.");
+            }
 
             if (type.IsGenericTypeDefinition)
             {
@@ -127,14 +130,12 @@ namespace Robust.Shared.Serialization.Manager
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
+
             obj = null;
-            var arr = new object?[]
-            {
-                node,
-                obj,
-                context
-            };
+
+            var arr = new[] {node, obj, context};
             var res = method.Invoke(this, arr);
+
             if (res as bool? ?? false)
             {
                 obj = arr[1];
@@ -150,13 +151,17 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
             {
-                obj = genericTypeReader.Read(node, context);
+                obj = genericTypeReader.Read(node, context).Value;
                 return true;
             }
 
-            if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader)) return false;
+            if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader))
+            {
+                return false;
+            }
+
             var ser = (ITypeReader<T, TNode>) rawTypeReader;
-            obj = ser.Read(node, context);
+            obj = ser.Read(node, context).Value;
             return true;
         }
 
@@ -167,17 +172,13 @@ namespace Robust.Shared.Serialization.Manager
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
             node = null;
-            var arr = new object?[]
-            {
-                obj,
-                node,
-                alwaysWrite,
-                context
-            };
+
+            var arr = new[] {obj, node, alwaysWrite, context};
             var res = method.Invoke(this, arr);
+
             if (res as bool? ?? false)
             {
-                node = (DataNode?)arr[1];
+                node = (DataNode?) arr[1];
                 return true;
             }
 
@@ -196,9 +197,14 @@ namespace Robust.Shared.Serialization.Manager
                 return true;
             }
 
-            if (!_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter)) return false;
+            if (!_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter))
+            {
+                return false;
+            }
+
             var ser = (ITypeWriter<T>) rawTypeWriter;
             node = ser.Write(obj, alwaysWrite, context);
+
             return true;
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -12,8 +13,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -228,7 +229,7 @@ namespace Robust.Server.Maps
         private class MapContext : ISerializationContext, IEntityLoadContext,
             ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
-            ITypeSerializer<IEntity, ValueDataNode>
+            ITypeReaderWriter<IEntity, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -767,13 +768,15 @@ namespace Robust.Server.Maps
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
                 IComponent data = protoData != null
-                    ? (IComponent) serializationManager.CreateCopy(protoData)!
+                    ? serializationManager.CreateCopy(protoData)!
                     : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = serializationManager.ReadValue<IComponent>(factory.GetRegistration(componentName).Type,
-                        mapping.ToDataNode(), this);
+                    data = serializationManager.ReadValueOrThrow<IComponent>(
+                        factory.GetRegistration(componentName).Type,
+                        mapping.ToDataNode(),
+                        this);
                 }
 
                 return data;
@@ -807,9 +810,9 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public GridId Read(ValueDataNode node, ISerializationContext? context = null)
+            public DeserializationResult<GridId> Read(ValueDataNode node, ISerializationContext? context = null)
             {
-                if(node.Value == "null") return GridId.Invalid;
+                if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
 
                 var val = int.Parse(node.Value);
                 if (val >= Grids.Count)
@@ -818,9 +821,10 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return Grids[val].Index;
+                    return new DeserializedValue<GridId>(Grids[val].Index);
                 }
-                return GridId.Invalid;
+
+                return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
             public DataNode Write(IEntity value, bool alwaysWrite = false,
@@ -871,11 +875,12 @@ namespace Robust.Server.Maps
                 }
             }
 
-            EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+            DeserializationResult<EntityUid> ITypeReader<EntityUid, ValueDataNode>.Read(ValueDataNode node,
+                ISerializationContext? context)
             {
                 if (node.Value == "null")
                 {
-                    return EntityUid.Invalid;
+                    return new DeserializedValue<EntityUid>(EntityUid.Invalid);
                 }
 
                 var val = int.Parse(node.Value);
@@ -885,14 +890,17 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return UidEntityMap[val];
+                    return new DeserializedValue<EntityUid>(UidEntityMap[val]);
                 }
-                return EntityUid.Invalid;
+
+                return new DeserializedValue<EntityUid>(EntityUid.Invalid);
             }
 
-            IEntity ITypeReader<IEntity, ValueDataNode>.Read(ValueDataNode node, ISerializationContext? context)
+            DeserializationResult<IEntity> ITypeReader<IEntity, ValueDataNode>.Read(ValueDataNode node,
+                ISerializationContext? context)
             {
                 var val = int.Parse(node.Value);
+
                 if (val >= Entities.Count)
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
@@ -900,8 +908,20 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return Entities[val];
+                    return new DeserializedValue<IEntity>(Entities[val]);
                 }
+            }
+
+            [MustUseReturnValue]
+            public GridId Copy(GridId source, GridId target)
+            {
+                return new(source.Value);
+            }
+
+            [MustUseReturnValue]
+            public EntityUid Copy(EntityUid source, EntityUid target)
+            {
+                return new((int) source);
             }
         }
 

@@ -1,7 +1,9 @@
 using System;
 using System.Globalization;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers
@@ -9,16 +11,22 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
     {
-        public TimeSpan Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<TimeSpan> Read(ValueDataNode node, ISerializationContext? context = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-            return TimeSpan.FromSeconds(seconds);
+            return new DeserializedValue<TimeSpan>(TimeSpan.FromSeconds(seconds));
         }
 
         public DataNode Write(TimeSpan value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(value.TotalSeconds.ToString(CultureInfo.InvariantCulture));
+        }
+
+        [MustUseReturnValue]
+        public TimeSpan Copy(TimeSpan source, TimeSpan target)
+        {
+            return source;
         }
     }
 }

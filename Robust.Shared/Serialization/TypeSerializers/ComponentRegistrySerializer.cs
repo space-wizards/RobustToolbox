@@ -1,23 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
+    public class ComponentRegistrySerializer :ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        public ComponentRegistry Read(SequenceDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<ComponentRegistry> Read(SequenceDataNode node,
+            ISerializationContext? context = null)
         {
             var components = new ComponentRegistry();
 
@@ -48,7 +51,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
-                var data = _serializationManager.ReadValue<IComponent>(_componentFactory.GetRegistration(compType).Type, copy);
+                var type = _componentFactory.GetRegistration(compType).Type;
+                var data = _serializationManager.ReadValue<IComponent>(type, copy) ??
+                           throw new NullReferenceException();
 
                 components[compType] = data;
             }
@@ -70,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 }
             }
 
-            return components;
+            return DeserializationResult.Value(components);
         }
 
         public DataNode Write(ComponentRegistry value,
@@ -90,6 +95,20 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             return compSequence;
+        }
+
+        [MustUseReturnValue]
+        public ComponentRegistry Copy(ComponentRegistry source, ComponentRegistry target)
+        {
+            target.Clear();
+            target.EnsureCapacity(source.Count);
+
+            foreach (var (id, component) in source)
+            {
+                target.Add(id, component);
+            }
+
+            return target;
         }
     }
 }

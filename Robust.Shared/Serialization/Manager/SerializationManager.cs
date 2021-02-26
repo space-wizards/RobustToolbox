@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
@@ -91,12 +92,12 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public DeserializationResult ReadValue<T>(DataNode node, ISerializationContext? context = null)
+        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
         {
-            return ReadValue(typeof(T), node, context);
+            return (DeserializationResult<T>) Read(typeof(T), node, context);
         }
 
-        public DeserializationResult ReadValue(Type type, DataNode node, ISerializationContext? context = null)
+        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
 
@@ -105,28 +106,30 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
                 var foo = TypeDescriptor.GetConverter(type);
-                return new (foo.ConvertFromInvariantString(valueDataNode.Value));
+                return DeserializationResult.Value(foo.ConvertFromInvariantString(valueDataNode.Value));
             }
 
             // array
             if (type.IsArray)
             {
                 if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
-                var newArray = (Array)Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
+                var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
+                var fields = new DeserializedFieldEntry[sequenceDataNode.Sequence.Count];
 
                 var idx = 0;
                 foreach (var entryNode in sequenceDataNode.Sequence)
                 {
-                    var value = ReadValue(type.GetElementType()!, entryNode, context);
+                    var value = Read(type.GetElementType()!, entryNode, context);
+                    fields[idx] = new DeserializedFieldEntry(true);
                     newArray.SetValue(value, idx++);
                 }
 
-                return new (newArray);
+                return DeserializationResult.Definition(newArray, fields);
             }
 
             if (underlyingType.IsEnum)
             {
-                return new(node switch
+                return DeserializationResult.Value(node switch
                 {
                     ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
                     SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
@@ -142,7 +145,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
             {
-                return new(serializedObj);
+                return DeserializationResult.Value(serializedObj);
             }
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
@@ -151,7 +154,8 @@ namespace Robust.Shared.Serialization.Manager
 
                 var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
                 selfSerObj.Deserialize(valueDataNode.Value);
-                return new(selfSerObj);
+
+                return DeserializationResult.Value(selfSerObj);
             }
 
             //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
@@ -165,8 +169,10 @@ namespace Robust.Shared.Serialization.Manager
 
             var obj = Activator.CreateInstance(underlyingType)!;
 
-            if(obj is IPopulateDefaultValues populateDefaultValues)
+            if (obj is IPopulateDefaultValues populateDefaultValues)
+            {
                 populateDefaultValues.PopulateDefaultValues();
+            }
 
             SerializationDataDefinition? dataDef = null;
 
@@ -178,22 +184,73 @@ namespace Robust.Shared.Serialization.Manager
             if (dataDef == null)
             {
                 Logger.Warning($"Failed to get data definition for {type} when reading");
-                return new(obj);
+                return DeserializationResult.Value(obj);
             }
 
             if (node is not MappingDataNode mappingDataNode)
             {
                 Logger.Warning($"No mappingnode provided for type {type}");
-                return new(obj);
+                return DeserializationResult.Value(obj);
             }
 
             var res = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
-            obj = res.Object;
 
-            if (obj is ISerializationHooks serHooks)
+            if (res.RawValue is ISerializationHooks serHooks)
+            {
                 serHooks.AfterDeserialization();
+            }
 
             return res;
+        }
+
+        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            return Read(type, node, context).RawValue;
+        }
+
+        public T? ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            var value = Read(type, node, context);
+
+            if (value.RawValue == null)
+            {
+                return default;
+            }
+
+            return (T) value.RawValue;
+        }
+
+        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null)
+        {
+            return ReadValue<T>(typeof(T), node, context);
+        }
+
+        public T ReadValueOrThrow<T>(DataNode node, ISerializationContext? context = null)
+        {
+            return ReadValue<T>(node, context) ?? throw new NullReferenceException();
+        }
+
+        public T ReadValueOrThrow<T>(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            return ReadValue<T>(type, node, context) ?? throw new NullReferenceException();
+        }
+
+        public object ReadValueOrThrow(Type type, DataNode node, ISerializationContext? context = null)
+        {
+            return ReadValue(type, node, context) ?? throw new NullReferenceException();
+        }
+
+        public (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node,
+            ISerializationContext? context = null)
+        {
+            var result = Read(type, node, context);
+            return (result, result.RawValue);
+        }
+
+        public (DeserializationResult result, T value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
+        {
+            var result = (DeserializedValue<T>) Read(typeof(T), node, context);
+            return (result, result.Value);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
@@ -284,8 +341,10 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             if (target.GetType().IsPrimitive != source.GetType().IsPrimitive)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(
+                    $"Source and target do not match. Source ({sourceType}) is primitive type: {sourceType.IsPrimitive}. Target ({targetType}) is primitive type: {targetType.IsPrimitive}");
 
+            // TODO paul serv3
             var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
             if(commonType == null)
             {
@@ -331,12 +390,29 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) copy;
         }
 
-        public object? CreateCopy(object? source)
+        private object? CreateCopyInternal(object? source)
         {
             if (source == null) return source;
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target);
+        }
+
+        public object? CreateCopy(object? source)
+        {
+            return CreateCopyInternal(source);
+        }
+
+        public T? CreateCopy<T>(T? source)
+        {
+            var copy = CreateCopyInternal(source);
+
+            if (copy == null)
+            {
+                return default;
+            }
+
+            return (T?) copy;
         }
 
         private static Type ResolveConcreteType(Type baseType, string typeName)

@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappings.Add(result);
             }
 
-            return new DeserializedCollection<HashSet<T>>(set, mappings);
+            return new DeserializedCollection<HashSet<T>, T>(set, mappings);
         }
 
         public DataNode Write(ImmutableHashSet<T> value, bool alwaysWrite = false,
@@ -68,7 +68,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappings.Add(result);
             }
 
-            return new DeserializedCollection<ImmutableHashSet<T>>(set.ToImmutable(), mappings);
+            return new DeserializedCollection<ImmutableHashSet<T>, T>(set.ToImmutable(), mappings);
         }
 
         [MustUseReturnValue]

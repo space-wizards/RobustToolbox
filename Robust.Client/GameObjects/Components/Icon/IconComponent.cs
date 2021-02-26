@@ -1,14 +1,8 @@
-﻿using System.Collections.Generic;
-using Robust.Client.Graphics;
+﻿using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -87,7 +81,8 @@ namespace Robust.Client.GameObjects
             {
                 return null;
             }
-            return TextureForConfig(compData, resourceCache);
+
+            return TextureForConfig(compData.component, resourceCache);
         }
     }
 }

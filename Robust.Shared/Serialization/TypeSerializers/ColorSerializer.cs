@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 ? color :
                 Color.FromHex(node.Value);
 
-            return DeserializationResult.Value(deserializedColor);
+            return new DeserializedValue<Color>(deserializedColor);
         }
 
         public DataNode Write(Color value, bool alwaysWrite = false,

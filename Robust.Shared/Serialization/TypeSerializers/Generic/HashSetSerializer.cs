@@ -26,9 +26,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _serializationManager.Read<T>(dataNode, context);
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
-                set.Add(result.ValueOrThrow);
+                set.Add(value);
                 mappings.Add(result);
             }
 
@@ -62,9 +62,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _serializationManager.Read<T>(dataNode, context);
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
-                set.Add(result.ValueOrThrow);
+                set.Add(value);
                 mappings.Add(result);
             }
 

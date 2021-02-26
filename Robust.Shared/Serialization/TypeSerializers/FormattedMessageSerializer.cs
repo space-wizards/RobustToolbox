@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         public DeserializationResult<FormattedMessage> Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return DeserializationResult.Value(FormattedMessage.FromMarkup(node.Value));
+            return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
 
         public DataNode Write(FormattedMessage value, bool alwaysWrite = false,

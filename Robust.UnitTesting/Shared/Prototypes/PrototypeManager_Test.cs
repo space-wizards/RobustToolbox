@@ -37,7 +37,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            var mapping = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var mapping = prototype.Components["TestBasicPrototypeComponent"].component as TestBasicPrototypeComponent;
             Assert.That(mapping!.Foo, Is.EqualTo("bar!"));
         }
 
@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
 
-            var componentData = prototype.Components["PointLight"] as PointLightComponent;
+            var componentData = prototype.Components["PointLight"].component as PointLightComponent;
 
             Assert.That(componentData!.NetSyncEnabled, Is.EqualTo(false));
         }
@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("yamltester");
             Assert.That(prototype.Components, Contains.Key("TestBasicPrototypeComponent"));
 
-            var componentData = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var componentData = prototype.Components["TestBasicPrototypeComponent"].component as TestBasicPrototypeComponent;
 
             Assert.NotNull(componentData);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));

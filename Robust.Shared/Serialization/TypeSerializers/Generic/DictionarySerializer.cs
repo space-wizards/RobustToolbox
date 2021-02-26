@@ -42,12 +42,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.Read<TKey>(key, context);
-                var keyValue = keyRes.Value ?? throw new NullReferenceException();
-                var valueRes = _serializationManager.Read<TValue>(value, context);
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
 
-                dict.Add(keyValue, valueRes.Value!);
-                mappedFields.Add(keyRes, valueRes);
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
             }
 
             return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
@@ -78,12 +77,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.Read<TKey>(key, context);
-                var keyValue = keyRes.Value ?? throw new NullReferenceException();
-                var valueRes = _serializationManager.Read<TValue>(value, context);
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
 
-                dict.Add(keyValue, valueRes.Value!);
-                mappedFields.Add(keyRes, valueRes);
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
             }
 
             return new DeserializedReadOnlyDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
@@ -96,12 +94,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.Read<TKey>(key, context);
-                var keyValue = keyRes.Value ?? throw new NullReferenceException();
-                var valueRes = _serializationManager.Read<TValue>(value, context);
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
 
-                dict.Add(keyValue, valueRes.Value!);
-                mappedFields.Add(keyRes, valueRes);
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
             }
 
             return new DeserializedReadOnlyDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));

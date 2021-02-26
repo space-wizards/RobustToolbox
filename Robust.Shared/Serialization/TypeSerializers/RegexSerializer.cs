@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         public DeserializationResult<Regex> Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return DeserializationResult.Value(new Regex(node.Value, RegexOptions.Compiled));
+            return new DeserializedValue<Regex>(new Regex(node.Value, RegexOptions.Compiled));
         }
 
         public DataNode Write(Regex value, bool alwaysWrite = false,

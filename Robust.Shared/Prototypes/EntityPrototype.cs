@@ -170,9 +170,14 @@ namespace Robust.Shared.Prototypes
         public EntityPrototype()
         {
             // Everybody gets a transform component!
-            Components.Add("Transform", new TransformComponent());
+            var transform = new TransformComponent();
+            var transformDef = new DeserializedDefinition<TransformComponent>(transform);
+            Components.Add("Transform", (transform, transformDef));
+
             // And a metadata component too!
-            Components.Add("MetaData", new MetaDataComponent());
+            var metadata = new MetaDataComponent();
+            var metadataDef = new DeserializedDefinition<MetaDataComponent>(metadata);
+            Components.Add("MetaData", (metadata, metadataDef));
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
@@ -185,7 +190,7 @@ namespace Robust.Shared.Prototypes
 
             // There are no duplicate component names
             // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast;
+            component = (T) componentUnCast.component;
             return true;
         }
 
@@ -281,13 +286,18 @@ namespace Robust.Shared.Prototypes
         {
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             // Copy component data over.
-            foreach (var (type, component) in source.Components)
+            foreach (var (type, tuple) in source.Components)
             {
-                if (target.Components.TryGetValue(type, out var targetComponent))
+                var (component, result) = tuple;
+
+                if (target.Components.TryGetValue(type, out var targetTuple))
                 {
                     // Copy over values the target component does not have.
                     //todo paul
-                    targetComponent = serializationManager.Copy(component, targetComponent)!;
+                    var (targetComponent, targetResult) = targetTuple;
+
+                    targetComponent = serializationManager.PushInheritance(result, targetComponent, targetResult);
+                    target.Components[type] = (targetComponent!, targetResult);
                 }
                 else
                 {
@@ -306,7 +316,7 @@ namespace Robust.Shared.Prototypes
 
                     var data = serializationManager.CreateCopy(component)!;
 
-                    target.Components[type] = data;
+                    target.Components[type] = (data, result);
                 }
 
                 next: ;
@@ -430,10 +440,10 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, data) in prototype.Components)
                 {
-                    var fullData = data;
+                    var (component, _) = data;
                     if (context != null)
                     {
-                        fullData = context.GetComponentData(name, data);
+                        component = context.GetComponentData(name, component);
                     }
                     /*else
                     {
@@ -444,7 +454,7 @@ namespace Robust.Shared.Prototypes
 
                     //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData);
+                    EnsureCompExistsAndDeserialize(entity, factory, name, component);
                 }
             }
 
@@ -512,7 +522,8 @@ namespace Robust.Shared.Prototypes
             copy.Children.Remove(new YamlScalarNode("type"));
             var compType = factory.GetRegistration(type).Type;
 
-            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValueOrThrow<IComponent>(compType, copy.ToDataNode());
+            var result = IoCManager.Resolve<ISerializationManager>().ReadWithValueOrThrow<IComponent>(compType, copy.ToDataNode());
+            Components[type] = result;
         }
 
         public override string ToString()
@@ -520,13 +531,13 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, IComponent>
+        public class ComponentRegistry : Dictionary<string, (IComponent component, DeserializationResult result)>
         {
             public ComponentRegistry()
             {
             }
 
-            public ComponentRegistry(Dictionary<string, IComponent> components) : base(components)
+            public ComponentRegistry(Dictionary<string, (IComponent component, DeserializationResult result)> components) : base(components)
             {
             }
         }

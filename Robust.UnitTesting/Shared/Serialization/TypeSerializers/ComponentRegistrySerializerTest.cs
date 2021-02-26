@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers;
 using YamlDotNet.RepresentationModel;
@@ -24,9 +25,10 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void SerializationTest()
         {
+            var component = new TestComponent();
             var registry = new ComponentRegistry
             {
-                {"Test", new TestComponent()}
+                {"Test", (component, new DeserializedValue<TestComponent>(component))}
             };
             var node = Serialization.WriteValueAs<SequenceDataNode>(registry);
 

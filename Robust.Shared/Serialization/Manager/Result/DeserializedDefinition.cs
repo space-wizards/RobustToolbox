@@ -3,16 +3,28 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDefinition<T> : DeserializationResult<T> where T : new()
+    public class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedMapping where T : new()
     {
-        public DeserializedDefinition(T value, DeserializedFieldEntry[] mapping)
+        public DeserializedDefinition(T value, DeserializedFieldEntry[]? mapping = null)
         {
-            _value = value;
+            Value = value;
+
+            if (mapping == null)
+            {
+                var count = IoCManager.Resolve<ISerializationManager>()
+                    .GetDataFieldCount(typeof(T));
+                mapping = new DeserializedFieldEntry[count];
+
+                for (var i = 0; i < count; i++)
+                {
+                    mapping[i] = new DeserializedFieldEntry(false);
+                }
+            }
+
             Mapping = mapping;
         }
 
-        public override T Value => _value;
-        private T _value;
+        public override T Value { get; }
 
         public DeserializedFieldEntry[] Mapping { get; }
 
@@ -52,6 +64,5 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return IoCManager.Resolve<ISerializationManager>().PopulateDataDefinition<T>(newMapping);
         }
-
     }
 }

@@ -79,6 +79,18 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
+        public int GetDataFieldCount(Type type)
+        {
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
+
+            if (!_dataDefinitions.TryGetValue(type, out var dataDef))
+            {
+                return 0;
+            }
+
+            return dataDef.DataFieldCount;
+        }
+
         public DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new()
         {
             if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
@@ -101,9 +113,9 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
+        public DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null)
         {
-            return (DeserializationResult<T>) Read(typeof(T), node, context);
+            return Read(typeof(T), node, context);
         }
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
@@ -123,17 +135,20 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
                 var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
-                var fields = new DeserializedFieldEntry[sequenceDataNode.Sequence.Count];
+                var results = new DeserializationResult[sequenceDataNode.Sequence.Count];
 
                 var idx = 0;
                 foreach (var entryNode in sequenceDataNode.Sequence)
                 {
-                    var value = Read(type.GetElementType()!, entryNode, context);
-                    fields[idx] = new DeserializedFieldEntry(true);
-                    newArray.SetValue(value, idx++);
+                    var (result, value) = ReadWithValue(type.GetElementType()!, entryNode, context);
+
+                    newArray.SetValue(value, idx);
+                    results[idx] = result;
+
+                    idx++;
                 }
 
-                return DeserializationResult.Definition(newArray, fields);
+                return new DeserializedArray(newArray, results);
             }
 
             if (underlyingType.IsEnum)
@@ -254,6 +269,43 @@ namespace Robust.Shared.Serialization.Manager
         {
             var result = Read(type, node, context);
             return (result, result.RawValue);
+        }
+
+        public (T? value, DeserializationResult result) ReadWithValue<T>(Type type, DataNode node,
+            ISerializationContext? context = null)
+        {
+            var (result, value) = ReadWithValue(type, node, context);
+
+            if (value == null)
+            {
+                return (default, result);
+            }
+
+            return ((T?) value, result);
+        }
+
+        public T PushInheritance<T>(
+            DeserializationResult from,
+            T value,
+            DeserializationResult valueResult)
+            where T : notnull
+        {
+            var inheritedResult = (IDeserializedMapping) valueResult.Copy().PushInheritanceFrom(from);
+            var type = value.GetType().EnsureNotNullableType();
+
+            if (!TryGetDataDefinition(type, out var def))
+            {
+                throw new ArgumentException($"Type {typeof(T)} does not have a data definition.");
+            }
+
+            var updatedValue = def.InvokePopulateDelegate(value, inheritedResult.Mapping).RawValue;
+
+            if (updatedValue == null)
+            {
+                throw new NullReferenceException(nameof(updatedValue));
+            }
+
+            return (T) updatedValue;
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,

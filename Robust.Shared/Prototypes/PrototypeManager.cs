@@ -444,7 +444,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var (result, prototype) = _serializationManager.ReadWithValueOrThrow<IPrototype>(prototypeType, node.ToDataNode());
+                var (prototype, result) = _serializationManager.ReadWithValueOrThrow<IPrototype>(prototypeType, node.ToDataNode());
 
                 changedPrototypes.Add(prototype);
 

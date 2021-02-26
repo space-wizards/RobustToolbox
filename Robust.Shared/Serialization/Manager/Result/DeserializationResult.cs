@@ -8,12 +8,13 @@ namespace Robust.Shared.Serialization.Manager.Result
         public abstract object? RawValue { get; }
 
         public abstract DeserializationResult PushInheritanceFrom(DeserializationResult source);
+
         public abstract DeserializationResult Copy();
 
-        public static DeserializedValue<T> Value<T>(T? value)
+        public static DeserializationResult Value<T>(T value) where T : notnull
         {
-            var type = typeof(DeserializedValue<>).MakeGenericType(typeof(T));
-            return (DeserializedValue<T>) Activator.CreateInstance(type, value)!;
+            var type = typeof(DeserializedValue<>).MakeGenericType(value.GetType());
+            return (DeserializationResult) Activator.CreateInstance(type, value)!;
         }
 
         public static DeserializationResult Definition(object value, DeserializedFieldEntry[] mappings)
@@ -36,7 +37,5 @@ namespace Robust.Shared.Serialization.Manager.Result
     public abstract class DeserializationResult<T> : DeserializationResult
     {
         public abstract T Value { get; }
-
-        public T ValueOrThrow => Value ?? throw new NullReferenceException();
     }
 }

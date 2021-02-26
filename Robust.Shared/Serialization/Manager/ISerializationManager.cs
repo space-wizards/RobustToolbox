@@ -12,9 +12,11 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
+        int GetDataFieldCount(Type type);
+
         DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new();
 
-        DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
+        DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null);
 
         DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
 
@@ -32,6 +34,15 @@ namespace Robust.Shared.Serialization.Manager
         object ReadValueOrThrow(Type type, DataNode node, ISerializationContext? context = null);
 
         (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node, ISerializationContext? context = null);
+
+        (T? value, DeserializationResult result) ReadWithValue<T>(Type type, DataNode node,
+            ISerializationContext? context = null);
+
+        T PushInheritance<T>(
+            DeserializationResult from,
+            T value,
+            DeserializationResult valueResult)
+            where T : notnull;
 
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;

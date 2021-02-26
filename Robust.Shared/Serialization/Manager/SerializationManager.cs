@@ -92,9 +92,9 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null)
+        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
         {
-            return Read(typeof(T), node, context);
+            return (DeserializationResult<T>) Read(typeof(T), node, context);
         }
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)

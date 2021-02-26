@@ -12,12 +12,13 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
-        DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null);
+        DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
 
         DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
 
         public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
+        // TODO Paul move these to SerializationExtensions?
         T? ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null);
 
         T? ReadValue<T>(DataNode node, ISerializationContext? context = null);
@@ -45,6 +46,7 @@ namespace Robust.Shared.Serialization.Manager
         object? CreateCopy(object? source);
 
         T? CreateCopy<T>(T? source);
+
         #endregion
 
         #region Flags And Constants

@@ -27,5 +27,7 @@ namespace Robust.Shared.Serialization.Manager.Result
     public abstract class DeserializationResult<T> : DeserializationResult
     {
         public abstract T? Value { get; }
+
+        public T ValueOrThrow => Value ?? throw new NullReferenceException();
     }
 }

@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
@@ -32,27 +35,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return mappingNode;
         }
 
-        private DeserializationResult NormalRead(MappingDataNode node, ISerializationContext? context = null)
+        private DeserializationResult<TDict> NormalRead<TDict>(
+            MappingDataNode node,
+            ISerializationContext? context = null)
+            where TDict : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, new()
         {
-            var dict = new Dictionary<TKey, TValue>();
+            var dict = new TDict();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
-            var i = 0;
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.ReadValue<TKey>(key, context);
+                var keyRes = _serializationManager.ReadOrThrow<TKey>(key, context);
+                var keyValue = keyRes.Value ?? throw new NullReferenceException();
+                var valueRes = _serializationManager.ReadOrThrow<TValue>(value, context);
 
-                var valueRes = _serializationManager.ReadValue<TValue>(value, context);
-                dict.Add((TKey)keyRes.GetValue()!, (TValue)valueRes.GetValue()!);
+                dict.Add(keyValue, valueRes.Value!);
                 mappedFields.Add(keyRes, valueRes);
             }
 
-            return new DeserializedDictionary<TKey, TValue>(dict, mappedFields);
+            return new DeserializedDictionary<TDict, TKey, TValue>(dict, mappedFields);
         }
 
-        public DeserializationResult Read(MappingDataNode node, ISerializationContext? context)
+        public DeserializationResult<Dictionary<TKey, TValue>> Read(MappingDataNode node, ISerializationContext? context)
         {
-            return NormalRead(node, context);
+            return NormalRead<Dictionary<TKey, TValue>>(node, context);
         }
 
         public DataNode Write(Dictionary<TKey, TValue> value, bool alwaysWrite = false,
@@ -73,15 +79,76 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return InterfaceWrite(value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<IReadOnlyDictionary<TKey, TValue>> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
         {
-            return NormalRead(node, context);
+            var dict = new Dictionary<TKey, TValue>();
+            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
+
+            foreach (var (key, value) in node.Children)
+            {
+                var keyRes = _serializationManager.ReadOrThrow<TKey>(key, context);
+                var keyValue = keyRes.Value ?? throw new NullReferenceException();
+                var valueRes = _serializationManager.ReadOrThrow<TValue>(value, context);
+
+                dict.Add(keyValue, valueRes.Value!);
+                mappedFields.Add(keyRes, valueRes);
+            }
+
+            return new DeserializedDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields);
         }
 
-        DeserializationResult ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<SortedDictionary<TKey, TValue>> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
         {
-            var res = (DeserializedDictionary<TKey, TValue>)NormalRead(node, context);
-            return res.WithDict(new SortedDictionary<TKey, TValue>(res.Value));
+            return NormalRead<SortedDictionary<TKey, TValue>>(node, context);
+        }
+
+        [MustUseReturnValue]
+        private T CopyInternal<T>(IReadOnlyDictionary<TKey, TValue> source, T target) where T : IDictionary<TKey, TValue>
+        {
+            target.Clear();
+
+            foreach (var (key, value) in source)
+            {
+                var keyCopy = _serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
+                var valueCopy = _serializationManager.CreateCopy(value)!;
+
+                target.Add(keyCopy, valueCopy);
+            }
+
+            return target;
+        }
+
+        [MustUseReturnValue]
+        public Dictionary<TKey, TValue> Copy(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target)
+        {
+            return CopyInternal(source, target);
+        }
+
+        [MustUseReturnValue]
+        public IReadOnlyDictionary<TKey, TValue> Copy(IReadOnlyDictionary<TKey, TValue> source, IReadOnlyDictionary<TKey, TValue> target)
+        {
+            if (target is Dictionary<TKey, TValue> targetDictionary)
+            {
+                return CopyInternal(source, targetDictionary);
+            }
+
+            var dictionary = new Dictionary<TKey, TValue>(source.Count);
+
+            foreach (var (key, value) in source)
+            {
+                var keyCopy = _serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
+                var valueCopy = _serializationManager.CreateCopy(value)!;
+
+                dictionary.Add(keyCopy, valueCopy);
+            }
+
+            return dictionary;
+        }
+
+        [MustUseReturnValue]
+        public SortedDictionary<TKey, TValue> Copy(SortedDictionary<TKey, TValue> source, SortedDictionary<TKey, TValue> target)
+        {
+            return CopyInternal(source, target);
         }
     }
 }

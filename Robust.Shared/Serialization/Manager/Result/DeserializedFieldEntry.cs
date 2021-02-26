@@ -11,5 +11,10 @@
         public bool Mapped { get; }
 
         public DeserializationResult? Result { get; }
+
+        public DeserializedFieldEntry Copy()
+        {
+            return new DeserializedFieldEntry(Mapped, Result?.Copy());
+        }
     }
 }

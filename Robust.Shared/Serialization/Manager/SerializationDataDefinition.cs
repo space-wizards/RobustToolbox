@@ -15,8 +15,10 @@ namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate DeserializationResult PopulateDelegateSignature(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
-            ISerializationContext? context, object?[] defaultValues);
+        private delegate DeserializedFieldEntry[] DeserializeDelegate(MappingDataNode mappingDataNode,
+            ISerializationManager serializationManager, ISerializationContext? context);
+
+        private delegate DeserializationResult PopulateDelegateSignature(object target, DeserializedFieldEntry[] deserializationResults, object?[] defaultValues);
 
         private delegate MappingDataNode SerializeDelegateSignature(object obj, ISerializationManager serializationManager,
             ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
@@ -30,15 +32,23 @@ namespace Robust.Shared.Serialization.Manager
         private readonly FieldDefinition[] _baseFieldDefinitions;
         private readonly object?[] _defaultValues;
 
+        private readonly DeserializeDelegate _deserializeDelegate;
+
         private readonly PopulateDelegateSignature _populateDelegate;
 
         private readonly SerializeDelegateSignature _serializeDelegate;
 
         private readonly CopyDelegateSignature _copyDelegate;
 
+        public DeserializationResult InvokePopulateDelegate(object target, DeserializedFieldEntry[] fields) =>
+            _populateDelegate(target, fields, _defaultValues);
+
         public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
-            ISerializationContext? context) =>
-            _populateDelegate(target, mappingDataNode, serializationManager, context, _defaultValues);
+            ISerializationContext? context)
+        {
+            var fields = _deserializeDelegate(mappingDataNode, serializationManager, context);
+            return _populateDelegate(target, fields, _defaultValues);
+        }
 
         public MappingDataNode InvokeSerializeDelegate(object obj, ISerializationManager serializationManager, ISerializationContext? context, bool alwaysWrite) =>
             _serializeDelegate(obj, serializationManager, context, alwaysWrite, _defaultValues);
@@ -99,6 +109,7 @@ namespace Robust.Shared.Serialization.Manager
             _baseFieldDefinitions = fields.ToArray();
             _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
+            _deserializeDelegate = EmitDeserializationDelegate();
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
             _copyDelegate = EmitCopyDelegate();
@@ -110,11 +121,10 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
-        // TODO PAUL SERV3: Turn this back into IL once it is fixed
-        private PopulateDelegateSignature EmitPopulateDelegate()
+        private DeserializeDelegate EmitDeserializationDelegate()
         {
-            DeserializationResult PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
-                ISerializationContext? context, object?[] defaultValues)
+            DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
+                ISerializationManager serializationManager, ISerializationContext? serializationContext)
             {
                 var mappedInfo = new DeserializedFieldEntry[_baseFieldDefinitions.Length];
 
@@ -129,7 +139,6 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    object? fieldVal;
                     DeserializationResult? result;
 
                     switch (fieldDefinition.Attribute)
@@ -143,7 +152,6 @@ namespace Robust.Shared.Serialization.Manager
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
                             var constant = serializationManager.ReadConstant(type, node);
 
-                            fieldVal = constant;
                             result = new DeserializedValue<int>(constant);
                             break;
                         }
@@ -155,7 +163,6 @@ namespace Robust.Shared.Serialization.Manager
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
                             var flag = serializationManager.ReadFlag(type, node);
 
-                            fieldVal = flag;
                             result = new DeserializedValue<int>(flag);
                             break;
                         }
@@ -165,7 +172,6 @@ namespace Robust.Shared.Serialization.Manager
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
                             var res = serializationManager.ReadWithValue(type, node);
 
-                            fieldVal = res.value;
                             result = res.result;
                             break;
                         }
@@ -173,18 +179,37 @@ namespace Robust.Shared.Serialization.Manager
 
                     var entry = new DeserializedFieldEntry(mapped, result);
                     mappedInfo[i] = entry;
+                }
+
+                return mappedInfo;
+            }
+
+            return DeserializationDelegate;
+        }
+
+        // TODO PAUL SERV3: Turn this back into IL once it is fixed
+        private PopulateDelegateSignature EmitPopulateDelegate()
+        {
+            DeserializationResult PopulateDelegate(object target, DeserializedFieldEntry[] deserializedFields, object?[] defaultValues)
+            {
+                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                {
+                    var res = deserializedFields[i];
+                    if(!res.Mapped) continue;
+
+                    var fieldDefinition = _baseFieldDefinitions[i];
 
                     var defValue = defaultValues[i];
 
-                    if (Equals(fieldVal, defValue))
+                    if (Equals(res.Result?.RawValue, defValue))
                     {
                         continue;
                     }
 
-                    fieldDefinition.FieldInfo.SetValue(target, fieldVal);
+                    fieldDefinition.FieldInfo.SetValue(target, res.Result?.RawValue);
                 }
 
-                return DeserializationResult.Definition(target, mappedInfo);
+                return DeserializationResult.Definition(target, deserializedFields);
             }
 
             return PopulateDelegate;

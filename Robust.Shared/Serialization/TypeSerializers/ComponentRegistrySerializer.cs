@@ -23,6 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             var components = new ComponentRegistry();
+            var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
@@ -52,10 +53,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 copy.RemoveNode("type");
 
                 var type = _componentFactory.GetRegistration(compType).Type;
-                var data = _serializationManager.ReadValue<IComponent>(type, copy) ??
-                           throw new NullReferenceException();
+                var compRes = _serializationManager.Read(type, copy);
 
-                components[compType] = data;
+                components[compType] = (IComponent?)compRes.RawValue ?? throw new NullReferenceException();
+                mappings.Add(DeserializationResult.Value(compType), compRes);
             }
 
             var referenceTypes = new List<Type>();
@@ -75,7 +76,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 }
             }
 
-            return DeserializationResult.Value(components);
+            return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
         }
 
         public DataNode Write(ComponentRegistry value,

@@ -79,6 +79,15 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
+        public DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new()
+        {
+            if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
+                throw new ArgumentException($"Provided Type is not a datadefinition ({typeof(T)})");
+
+            var obj = new T();
+            return dataDefinition.InvokePopulateDelegate(obj, fields);
+        }
+
         private SerializationDataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;

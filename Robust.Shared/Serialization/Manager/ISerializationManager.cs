@@ -33,8 +33,6 @@ namespace Robust.Shared.Serialization.Manager
 
         (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null);
-
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;
 

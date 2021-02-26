@@ -1,32 +1,36 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDictionary<TDict, TKey, TValue> :
+    public class DeserializedReadOnlyDictionary<TDict, TKey, TValue> :
         DeserializationResult<TDict>
         where TKey : notnull
-        where TDict : IDictionary<TKey, TValue>, new()
+        where TDict : IReadOnlyDictionary<TKey, TValue>
     {
-        public DeserializedDictionary(
+        public delegate TDict Create(Dictionary<TKey, TValue> elements);
+
+        public DeserializedReadOnlyDictionary(
             TDict? value,
-            IReadOnlyDictionary<DeserializationResult, DeserializationResult> mappings)
+            IReadOnlyDictionary<DeserializationResult, DeserializationResult> mappings,
+            Create createDelegate)
         {
             Value = value;
             Mappings = mappings;
+            CreateDelegate = createDelegate;
         }
 
         public override TDict? Value { get; }
 
         public IReadOnlyDictionary<DeserializationResult, DeserializationResult> Mappings { get; }
 
+        public Create CreateDelegate { get; }
+
         public override object? RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            var sourceRes = source.Cast<DeserializedDictionary<TDict, TKey, TValue>>();
-            var valueDict = new TDict();
+            var sourceRes = source.Cast<DeserializedReadOnlyDictionary<TDict, TKey, TValue>>();
+            var valueDict = new Dictionary<TKey, TValue>();
             var mappingDict = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (keyRes, valRes) in sourceRes.Mappings)
@@ -47,12 +51,12 @@ namespace Robust.Shared.Serialization.Manager.Result
                 mappingDict.Add(newKeyRes, newValueRes);
             }
 
-            return new DeserializedDictionary<TDict, TKey, TValue>(valueDict, mappingDict);
+            return new DeserializedReadOnlyDictionary<TDict, TKey, TValue>(CreateDelegate(valueDict), mappingDict, CreateDelegate);
         }
 
         public override DeserializationResult Copy()
         {
-            var valueDict = new TDict();
+            var valueDict = new Dictionary<TKey, TValue>();
             var mappingDict = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (keyRes, valRes) in Mappings)
@@ -64,20 +68,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 mappingDict.Add(newKeyRes, newValueRes);
             }
 
-            return new DeserializedDictionary<TDict, TKey, TValue>(valueDict, mappingDict);
-        }
-
-        public static object Create(
-            IDictionary dict,
-            IDictionary<DeserializationResult, DeserializationResult> mappings)
-        {
-            var dictType = dict.GetType();
-            var keyType = dict.Keys.GetType().GetGenericArguments()[0];
-            var valType = dict.Values.GetType().GetGenericArguments()[0];
-
-            var resultType = typeof(DeserializedDictionary<,,>).MakeGenericType(dictType, keyType, valType);
-
-            return Activator.CreateInstance(resultType, dict, mappings)!;
+            return new DeserializedReadOnlyDictionary<TDict, TKey, TValue>(CreateDelegate(valueDict), mappingDict, CreateDelegate);
         }
     }
 }

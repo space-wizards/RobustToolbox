@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -194,7 +195,7 @@ namespace Robust.Shared.Prototypes
         }
 
         // Resolve inheritance.
-        public bool Sync(IPrototypeManager manager, int stage)
+        public bool Sync(IPrototypeManager prototypes, ISerializationManager serialization, int stage, DeserializationResult result)
         {
             switch (stage)
             {
@@ -204,7 +205,7 @@ namespace Robust.Shared.Prototypes
                         return true;
                     }
 
-                    Parent = manager.Index<EntityPrototype>(parentTemp);
+                    Parent = prototypes.Index<EntityPrototype>(parentTemp);
                     if (Parent.Children == null)
                     {
                         Parent.Children = new List<EntityPrototype>();
@@ -280,7 +281,7 @@ namespace Robust.Shared.Prototypes
         {
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             // Copy component data over.
-            foreach (var(type, component) in source.Components)
+            foreach (var (type, component) in source.Components)
             {
                 if (target.Components.TryGetValue(type, out var targetComponent))
                 {

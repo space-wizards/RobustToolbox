@@ -1,4 +1,5 @@
-﻿using YamlDotNet.RepresentationModel;
+﻿using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Result;
 
 namespace Robust.Shared.Prototypes
 {
@@ -35,8 +36,11 @@ namespace Robust.Shared.Prototypes
         /// The order of syncing is in no way guaranteed to be consistent across stages.
         /// This means that on stage 1 prototype A might sync first, but on stage 2 prototype B might.
         /// </remarks>
+        /// <param name="prototypes"></param>
+        /// <param name="serialization"></param>
         /// <param name="stage">The current sync stage.</param>
+        /// <param name="result"></param>
         /// <returns>Whether or not the prototype will be included in the next sync stage</returns>
-        bool Sync(IPrototypeManager manager, int stage);
+        bool Sync(IPrototypeManager prototypes, ISerializationManager serialization, int stage, DeserializationResult result);
     }
 }

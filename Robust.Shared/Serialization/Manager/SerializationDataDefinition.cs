@@ -56,7 +56,6 @@ namespace Robust.Shared.Serialization.Manager
         public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager) =>
             _copyDelegate(source, target, serializationManager);
 
-
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
         public SerializationDataDefinition(Type type)

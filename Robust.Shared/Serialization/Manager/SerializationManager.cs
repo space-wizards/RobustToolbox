@@ -17,9 +17,9 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
-        private List<Type> _copyByRefRegistrations = new();
+        private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
+        private readonly List<Type> _copyByRefRegistrations = new();
 
         public void Initialize()
         {
@@ -75,14 +75,14 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool HasDataDefinition(Type type)
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check datadefinitions for generic types. ({type})");
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
             return _dataDefinitions.ContainsKey(type);
         }
 
         public DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new()
         {
             if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a datadefinition ({typeof(T)})");
+                throw new ArgumentException($"Provided Type is not a data definition ({typeof(T)})");
 
             var obj = new T();
             return dataDefinition.InvokePopulateDelegate(obj, fields);
@@ -254,12 +254,6 @@ namespace Robust.Shared.Serialization.Manager
         {
             var result = Read(type, node, context);
             return (result, result.RawValue);
-        }
-
-        public (DeserializationResult result, T value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
-        {
-            var result = (DeserializedValue<T>) Read(typeof(T), node, context);
-            return (result, result.Value);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,

@@ -20,15 +20,15 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            var dataDef = source.As<DeserializedDefinition<T>>();
+            var dataDef = source.Cast<DeserializedDefinition<T>>();
             if (dataDef.Mapping.Length != Mapping.Length)
-                throw new ArgumentException($"Mappinglength mismatch in PushInheritanceFrom ({typeof(T)})");
+                throw new ArgumentException($"Mapping length mismatch in {nameof(PushInheritanceFrom)}. Type: {typeof(T)}");
 
             var newMapping = new DeserializedFieldEntry[Mapping.Length];
 
-            for (int i = 0; i < dataDef.Mapping.Length; i++)
+            for (var i = 0; i < dataDef.Mapping.Length; i++)
             {
-                if(Mapping[i].Mapped)
+                if (Mapping[i].Mapped)
                 {
                     newMapping[i] = Mapping[i].Copy();
                 }

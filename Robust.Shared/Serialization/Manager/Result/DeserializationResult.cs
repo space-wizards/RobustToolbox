@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.Manager.Result
             return (DeserializationResult) Activator.CreateInstance(type, value, mappings)!;
         }
 
-        public T As<T>() where T : DeserializationResult
+        public T Cast<T>() where T : DeserializationResult
         {
             if (this is T value) return value;
             throw new InvalidDeserializedResultTypeException<T>(GetType());

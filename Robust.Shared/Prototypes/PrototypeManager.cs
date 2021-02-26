@@ -16,6 +16,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -138,7 +139,7 @@ namespace Robust.Shared.Prototypes
         private bool _hasEverResynced;
 
         #region IPrototypeManager members
-        private readonly Dictionary<Type, Dictionary<string, IPrototype>> prototypes = new();
+        private readonly Dictionary<Type, Dictionary<string, (IPrototype prototype, DeserializationResult result)>> prototypes = new();
 
         private readonly HashSet<string> IgnoredPrototypeTypes = new();
 
@@ -159,7 +160,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return prototypes[typeof(T)].Values.Select(p => (T) p);
+            return prototypes[typeof(T)].Values.Select(t => (T) t.prototype);
         }
 
         public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
@@ -169,7 +170,10 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return prototypes[type].Values;
+            foreach (var tuple in prototypes[type].Values)
+            {
+                yield return tuple.prototype;
+            }
         }
 
         public T Index<T>(string id) where T : class, IPrototype
@@ -180,7 +184,7 @@ namespace Robust.Shared.Prototypes
             }
             try
             {
-                return (T)prototypes[typeof(T)][id];
+                return (T) prototypes[typeof(T)][id].prototype;
             }
             catch (KeyNotFoundException)
             {
@@ -195,7 +199,7 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return prototypes[type][id];
+            return prototypes[type][id].prototype;
         }
 
         public void Clear()
@@ -232,7 +236,7 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var prototypeList in prototypes.Values)
                 {
-                    foreach (var prototype in prototypeList.Values)
+                    foreach (var (prototype, _) in prototypeList.Values)
                     {
                         if (prototype is ISyncingPrototype syncing)
                         {
@@ -253,7 +257,7 @@ namespace Robust.Shared.Prototypes
                 // When we get to the end, do the whole thing again!
                 // Yes this is ridiculously overengineered BUT IT PERFORMS WELL.
                 // I hope.
-                List<ISyncingPrototype> currentRun = prototypes[type].Values.Select(p => (ISyncingPrototype) p).ToList();
+                List<(ISyncingPrototype, DeserializationResult)> currentRun = prototypes[type].Values.Select((tuple) => ((ISyncingPrototype) tuple.prototype, tuple.result)).ToList();
 
                 var stage = 0;
                 // Outer loop to iterate stages.
@@ -263,11 +267,11 @@ namespace Robust.Shared.Prototypes
                     // If we need to stick, i gets reduced down below.
                     for (var i = 0; i < currentRun.Count; i++)
                     {
-                        ISyncingPrototype prototype = currentRun[i];
-                        var result = prototype.Sync(this, stage);
+                        var (prototype, result) = currentRun[i];
+                        var includeInNext = prototype.Sync(this, _serializationManager, stage, result);
                         // Keep prototype and move on to next one if it returns true.
                         // Thus it stays in the list for next stage.
-                        if (result)
+                        if (includeInNext)
                         {
                             continue;
                         }
@@ -440,7 +444,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = _serializationManager.ReadValueOrThrow<IPrototype>(prototypeType, node.ToDataNode());
+                var (result, prototype) = _serializationManager.ReadWithValueOrThrow<IPrototype>(prototypeType, node.ToDataNode());
 
                 changedPrototypes.Add(prototype);
 
@@ -451,7 +455,7 @@ namespace Robust.Shared.Prototypes
                     throw new PrototypeLoadException($"Duplicate ID: '{id}'");
                 }
 
-                prototypes[prototypeType][id] = prototype;
+                prototypes[prototypeType][id] = (prototype, result);
             }
 
             return changedPrototypes;
@@ -472,8 +476,10 @@ namespace Robust.Shared.Prototypes
             {
                 throw new UnknownPrototypeException(id);
             }
-            var returned = index.TryGetValue(id, out var uncast);
-            prototype = (T) uncast!;
+
+            var returned = index.TryGetValue(id, out var tuple);
+
+            prototype = (T) tuple.prototype;
             return returned;
         }
 
@@ -508,7 +514,7 @@ namespace Robust.Shared.Prototypes
 
             if (typeof(IPrototype).IsAssignableFrom(type))
             {
-                prototypes[type] = new Dictionary<string, IPrototype>();
+                prototypes[type] = new Dictionary<string, (IPrototype, DeserializationResult)>();
             }
         }
 

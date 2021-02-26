@@ -2,13 +2,16 @@ using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
+    [TypeSerializer]
     public class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
     {
-        public Box2 Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<Box2> Read(ValueDataNode node, ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
 
@@ -17,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var t = float.Parse(args[2], CultureInfo.InvariantCulture);
             var r = float.Parse(args[3], CultureInfo.InvariantCulture);
 
-            return new Box2(l, b, r, t);
+            return DeserializationResult.Value(new Box2(l, b, r, t));
         }
 
         public DataNode Write(Box2 value, bool alwaysWrite = false,

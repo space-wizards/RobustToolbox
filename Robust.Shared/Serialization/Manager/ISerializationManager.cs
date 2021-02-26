@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
@@ -6,13 +7,30 @@ namespace Robust.Shared.Serialization.Manager
     public interface ISerializationManager
     {
         #region Serialization
+
         void Initialize();
 
         bool HasDataDefinition(Type type);
 
-        DeserializationResult ReadValue<T>(DataNode node, ISerializationContext? context = null);
+        DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null);
 
-        DeserializationResult ReadValue(Type type, DataNode node, ISerializationContext? context = null);
+        DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
+
+        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null);
+
+        T? ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null);
+
+        T? ReadValue<T>(DataNode node, ISerializationContext? context = null);
+
+        T ReadValueOrThrow<T>(DataNode node, ISerializationContext? context = null);
+
+        T ReadValueOrThrow<T>(Type type, DataNode node, ISerializationContext? context = null);
+
+        object ReadValueOrThrow(Type type, DataNode node, ISerializationContext? context = null);
+
+        (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node, ISerializationContext? context = null);
+
+        (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null);
 
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;

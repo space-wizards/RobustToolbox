@@ -81,7 +81,7 @@ namespace Robust.Shared.Serialization.Manager
                     generator.Emit(OpCodes.Ldarg_3); //loading context
 
                     var readValueMethod = typeof(ISerializationManager).GetMethods().First(m =>
-                        m.Name == nameof(ISerializationManager.ReadValue) && m.GetParameters().Length == 3);
+                        m.Name == nameof(ISerializationManager.Read) && m.GetParameters().Length == 3);
                     generator.Emit(OpCodes.Callvirt, readValueMethod); //reads node into our desired value
 
                     //unbox the value if necessary since ReadValue returns a object

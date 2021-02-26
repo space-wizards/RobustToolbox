@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
@@ -39,22 +40,24 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         {
             var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new DeserializationEntry[node.Children.Count];
-
             var i = 0;
+
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.ReadValue<TKey>(key, context);
+                var keyRes = _serializationManager.Read<TKey>(key, context);
+                var valueRes = _serializationManager.Read<TValue>(value, context);
 
-                var valueRes = _serializationManager.ReadValue<TValue>(value, context);
                 dict.Add(keyValue, valueValue);
                 //todo paul aaaaaaaaa
-                mappedFields[i++] = new DeserializationEntry(true, new DeserializationResult())
+                // what did he mean by this
+                mappedFields[i++] = new DeserializedFieldEntry(true, new DeserializationResult());
             }
 
             return dict;
         }
 
-        public DeserializationResult Read(MappingDataNode node, ISerializationContext? context)
+        public DeserializationResult<Dictionary<TKey, TValue>> Read(MappingDataNode node,
+            ISerializationContext? context)
         {
             return NormalRead(node, context);
         }
@@ -77,12 +80,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return InterfaceWrite(value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<IReadOnlyDictionary<TKey, TValue>>
+            ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node,
+                ISerializationContext? context)
         {
             return NormalRead(node, context);
         }
 
-        DeserializationResult ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<SortedDictionary<TKey, TValue>>
+            ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node,
+                ISerializationContext? context)
         {
             var res = NormalRead(node, context);
             res.WithObject(new SortedDictionary<TKey, TValue>((IDictionary<TKey, TValue>) res.Object!));

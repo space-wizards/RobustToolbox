@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
@@ -19,7 +20,8 @@ namespace Robust.Shared.Serialization.Manager
 
         private delegate MappingDataNode SerializeDelegateSignature(object obj, ISerializationManager serializationManager,
             ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
-        public delegate object CopyDelegateSignature(object source, object target,
+
+        private delegate object CopyDelegateSignature(object source, object target,
             ISerializationManager serializationManager);
 
         public readonly Type Type;
@@ -32,7 +34,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly SerializeDelegateSignature _serializeDelegate;
 
-        public readonly CopyDelegateSignature _copyDelegate;
+        private readonly CopyDelegateSignature _copyDelegate;
 
         public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
             ISerializationContext? context) =>
@@ -114,61 +116,63 @@ namespace Robust.Shared.Serialization.Manager
             DeserializationResult PopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
                 ISerializationContext? context, object?[] defaultValues)
             {
-                var mappedInfo = new (bool, DeserializationResult?)[_baseFieldDefinitions.Length];
+                var mappedInfo = new DeserializedFieldEntry[_baseFieldDefinitions.Length];
+
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
                 {
                     var fieldDefinition = _baseFieldDefinitions[i];
                     var mapped = mappingDataNode.HasNode(fieldDefinition.Attribute.Tag);
 
-                    (bool, DeserializationResult?) info = (mapped, null);
-
                     if (!mapped)
                     {
-                        mappedInfo[i] = info;
+                        mappedInfo[i] = new DeserializedFieldEntry(mapped);
                         continue;
                     }
 
                     object? fieldVal;
+                    DeserializationResult? result;
 
                     switch (fieldDefinition.Attribute)
                     {
-                        case DataFieldWithConstantAttribute constant:
+                        case DataFieldWithConstantAttribute constantAttribute:
                         {
                             if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int))
                                 throw new InvalidOperationException();
 
-                            var type = constant.ConstantTag;
-
+                            var type = constantAttribute.ConstantTag;
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+                            var constant = serializationManager.ReadConstant(type, node);
 
-                            fieldVal = serializationManager.ReadConstant(type, node);
-                            info.Item2 = new(fieldVal);
+                            fieldVal = constant;
+                            result = new DeserializedValue<int>(constant);
                             break;
                         }
-                        case DataFieldWithFlagAttribute flag:
+                        case DataFieldWithFlagAttribute flagAttribute:
                         {
                             if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
 
-                            var type = flag.FlagTag;
-
+                            var type = flagAttribute.FlagTag;
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+                            var flag = serializationManager.ReadFlag(type, node);
 
-                            fieldVal = serializationManager.ReadFlag(type, node);
-                            info.Item2 = new(fieldVal);
+                            fieldVal = flag;
+                            result = new DeserializedValue<int>(flag);
                             break;
                         }
                         default:
                         {
                             var type = fieldDefinition.FieldType;
-
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+                            var res = serializationManager.ReadWithValue(type, node);
 
-                            var res = serializationManager.ReadValue(type, node);
-                            info.Item2 = res;
-                            fieldVal = res.Object;
+                            fieldVal = res.value;
+                            result = res.result;
                             break;
                         }
                     }
+
+                    var entry = new DeserializedFieldEntry(mapped, result);
+                    mappedInfo[i] = entry;
 
                     var defValue = defaultValues[i];
 
@@ -180,7 +184,7 @@ namespace Robust.Shared.Serialization.Manager
                     fieldDefinition.FieldInfo.SetValue(target, fieldVal);
                 }
 
-                return new (target, mappedInfo);
+                return DeserializationResult.Definition(target, mappedInfo);
             }
 
             return PopulateDelegate;

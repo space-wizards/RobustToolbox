@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Robust.Shared.Serialization.Markdown.YAML;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown

@@ -1,7 +1,7 @@
 using System;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Serialization.Markdown.YAML
+namespace Robust.Shared.Serialization.Markdown
 {
     public static class YamlNodeHelpers
     {

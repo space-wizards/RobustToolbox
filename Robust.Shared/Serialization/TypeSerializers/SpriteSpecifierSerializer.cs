@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using static Robust.Shared.Utility.SpriteSpecifier;
@@ -19,18 +20,24 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        public SpriteSpecifier Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<SpriteSpecifier> Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return new Texture(_serializationManager.ReadValue<ResourcePath>(node, context));
+            var path = _serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
+            var texture = new Texture(path);
+
+            return DeserializationResult.Value<SpriteSpecifier>(texture);
         }
 
-        public SpriteSpecifier Read(MappingDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<SpriteSpecifier> Read(MappingDataNode node, ISerializationContext? context = null)
         {
             if (node.TryGetNode("sprite", out var spriteNode)
                 && node.TryGetNode("state", out var rawStateNode)
                 && rawStateNode is ValueDataNode stateNode)
             {
-                return new Rsi(_serializationManager.ReadValue<ResourcePath>(spriteNode, context), stateNode.Value);
+                var path = _serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context);
+                var rsi = new Rsi(path, stateNode.Value);
+
+                return new DeserializedValue<SpriteSpecifier>(rsi);
             }
 
             throw new InvalidNodeTypeException();
@@ -50,6 +57,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
                     return mapping;
             }
+
             throw new NotImplementedException();
         }
 

@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
@@ -18,7 +19,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        public ComponentRegistry Read(SequenceDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<ComponentRegistry> Read(SequenceDataNode node,
+            ISerializationContext? context = null)
         {
             var components = new ComponentRegistry();
 
@@ -49,7 +51,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
-                var data = _serializationManager.ReadValue<IComponent>(_componentFactory.GetRegistration(compType).Type, copy);
+                var type = _componentFactory.GetRegistration(compType).Type;
+                var data = _serializationManager.ReadValue<IComponent>(type, copy) ??
+                           throw new NullReferenceException();
 
                 components[compType] = data;
             }
@@ -71,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 }
             }
 
-            return components;
+            return DeserializationResult.Value(components);
         }
 
         public DataNode Write(ComponentRegistry value,

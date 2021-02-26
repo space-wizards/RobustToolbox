@@ -10,7 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown.YAML;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
@@ -511,8 +511,7 @@ namespace Robust.Shared.Prototypes
             copy.Children.Remove(new YamlScalarNode("type"));
             var compType = factory.GetRegistration(type).Type;
 
-
-            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValue<IComponent>(compType, copy.ToDataNode());
+            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValueOrThrow<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()

@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
@@ -23,13 +24,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                hashset.Add(_serializationManager.ReadValue<T>(dataNode, context));
+                hashset.Add(_serializationManager.Read<T>(dataNode, context));
             }
 
             return hashset;
         }
 
-        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult<HashSet<T>> ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
             ISerializationContext? context)
         {
             return NormalRead(node, context);
@@ -54,7 +55,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return sequence;
         }
 
-        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult<ImmutableHashSet<T>> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+            SequenceDataNode node,
             ISerializationContext? context)
         {
             return NormalRead(node, context).ToImmutableHashSet();

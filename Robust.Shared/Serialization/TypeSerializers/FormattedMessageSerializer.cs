@@ -1,15 +1,18 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
+    [TypeSerializer]
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
-        public FormattedMessage Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<FormattedMessage> Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return FormattedMessage.FromMarkup(node.Value);
+            return DeserializationResult.Value(FormattedMessage.FromMarkup(node.Value));
         }
 
         public DataNode Write(FormattedMessage value, bool alwaysWrite = false,

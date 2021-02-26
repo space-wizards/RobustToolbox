@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.YAML;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -44,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var rootNode = YamlTextToNode(_serializedListYaml);
 
             // Act
-            var data = serMan.ReadValue<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
+            var data = serMan.ReadValueOrThrow<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
 
             // Assert
             Assert.That(data, Is.Not.Null);

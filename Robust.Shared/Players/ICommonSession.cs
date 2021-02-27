@@ -12,8 +12,11 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Status of the session.
         /// </summary>
-        SessionStatus Status { get; set; }
+        SessionStatus Status { get; internal set; }
 
+        /// <summary>
+        /// Entity that this session is attached to, if any.
+        /// </summary>
         IEntity? AttachedEntity { get; }
 
         /// <summary>
@@ -24,11 +27,11 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Current name of this player.
         /// </summary>
-         string Name { get; set; }
+         string Name { get; internal set; }
 
         /// <summary>
         /// Current connection latency of this session from the server to their client.
         /// </summary>
-        short Ping { get; set; }
+        short Ping { get; internal set; }
     }
 }

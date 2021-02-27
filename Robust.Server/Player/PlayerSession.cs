@@ -1,9 +1,10 @@
-﻿using Robust.Shared.GameStates;
+using Robust.Shared.GameStates;
 using Robust.Server.GameObjects;
 using System;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Player
@@ -42,11 +43,29 @@ namespace Robust.Server.Player
         private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
-        public string Name { get; }
+        
+        [ViewVariables]
+        internal string Name { get; set; }
+
+        /// <inheritdoc />
+        string ICommonSession.Name
+        {
+            get => this.Name;
+            set => this.Name = value;
+        }
+        
+        [ViewVariables]
+        internal short Ping { get; set; }
+
+        short ICommonSession.Ping
+        {
+            get => this.Ping;
+            set => this.Ping = value;
+        }
 
         /// <inheritdoc />
         [ViewVariables]
-        public SessionStatus Status
+        internal SessionStatus Status
         {
             get => _status;
             set
@@ -60,6 +79,13 @@ namespace Robust.Server.Player
 
                 PlayerStatusChanged?.Invoke(this, new SessionStatusEventArgs(this, old, value));
             }
+        }
+
+        /// <inheritdoc />
+        SessionStatus ICommonSession.Status
+        {
+            get => this.Status;
+            set => this.Status = value;
         }
 
         /// <inheritdoc />

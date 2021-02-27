@@ -94,7 +94,7 @@ namespace Robust.Shared.Localization
 
                     if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.ProperNoun.HasValue)
                     {
-                        return new LocValueString(grammar.ProperNoun.Value.ToString());
+                        return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
                     }
 
                     if (TryGetEntityLocAttrib(entity, "proper", out var proper))

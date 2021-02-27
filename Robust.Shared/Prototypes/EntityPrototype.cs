@@ -176,7 +176,6 @@ namespace Robust.Shared.Prototypes
             if (mapping.TryGetNode("localizationId", out var locId)) {
                 _localizationId = locId.ToString();
             }
-
             if (mapping.TryGetNode("name", out var node))
             {
                 _nameModified = true;
@@ -185,7 +184,7 @@ namespace Robust.Shared.Prototypes
             else if (loc.TryGetString($"ent-{CaseConversion.PascalToKebab(ID)}", out var name))
             {
                 _nameModified = true;
-                Name = loc.GetString(name);
+                Name = name;
             }
 
             if (mapping.TryGetNode("parent", out node))

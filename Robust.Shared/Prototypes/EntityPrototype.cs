@@ -21,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity")]
-    public class EntityPrototype : IPrototype, ISyncingPrototype
+    public class EntityPrototype : IPrototype
     {
         /// <summary>
         /// The "in code name" of the object. Must be unique.
@@ -135,7 +135,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        public EntityPrototype? Parent { get; private set; }
+        public string? Parent { get; private set; }
 
         /// <summary>
         /// A list of children inheriting from this prototype.
@@ -186,181 +186,6 @@ namespace Robust.Shared.Prototypes
             // TODO Sanity check with names being in an attribute of the type instead
             component = (T) componentUnCast;
             return true;
-        }
-
-        public void Reset()
-        {
-            Children.Clear();
-        }
-
-        // Resolve inheritance.
-        public bool Sync(IPrototypeManager manager, int stage)
-        {
-            switch (stage)
-            {
-                case 0:
-                    if (parentTemp == null)
-                    {
-                        return true;
-                    }
-
-                    Parent = manager.Index<EntityPrototype>(parentTemp);
-                    if (Parent.Children == null)
-                    {
-                        Parent.Children = new List<EntityPrototype>();
-                    }
-
-                    Parent.Children.Add(this);
-                    return false;
-
-                case 1:
-                    // We are a root-level prototype.
-                    // As such we're getting the duty of pushing inheritance into everybody's face.
-                    // Can't do a "puller" system where each queries the parent because it requires n stages
-                    //  (n being the depth of each inheritance tree)
-
-                    if (Children == null)
-                    {
-                        break;
-                    }
-
-                    PushInheritanceAll();
-                    break;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Iteratively pushes inheritance down to all children, children's children, etc. breadth-first.
-        /// </summary>
-        private void PushInheritanceAll()
-        {
-            if (Children == null)
-            {
-                return;
-            }
-
-            var sourceTargets = new List<(EntityPrototype, List<EntityPrototype>)> {(this, Children)};
-            var newSources = new List<EntityPrototype>();
-            while (true)
-            {
-                foreach (var (source, targetList) in sourceTargets)
-                {
-                    if (targetList == null)
-                    {
-                        continue;
-                    }
-
-                    foreach (var target in targetList)
-                    {
-                        PushInheritance(source, target);
-                    }
-
-                    newSources.AddRange(targetList);
-                }
-
-                if (newSources.Count == 0)
-                {
-                    break;
-                }
-
-                sourceTargets.Clear();
-                foreach (var newSource in newSources)
-                {
-                    sourceTargets.Add((newSource, newSource.Children));
-                }
-
-                newSources.Clear();
-            }
-        }
-
-        //todo paul remove
-        private static void PushInheritance(EntityPrototype source, EntityPrototype target)
-        {
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
-            // Copy component data over.
-            foreach (var(type, component) in source.Components)
-            {
-                if (target.Components.TryGetValue(type, out var targetComponent))
-                {
-                    // Copy over values the target component does not have.
-                    //todo paul
-                    targetComponent = serializationManager.Copy(component, targetComponent)!;
-                }
-                else
-                {
-                    // Copy component into the target, since it doesn't have it yet.
-                    // Unless it'd cause a conflict.
-                    var factory = IoCManager.Resolve<IComponentFactory>();
-                    foreach (var refType in factory.GetRegistration(type).References)
-                    {
-                        if (target.ReferenceTypes.Contains(refType))
-                        {
-                            // yeah nope the child's got it!! NEXT!!
-                            goto next;
-                        }
-                    }
-
-
-                    var data = serializationManager.CreateCopy(component)!;
-
-                    target.Components[type] = (IComponent)data;
-                }
-
-                next: ;
-            }
-
-            target.PlacementProperties = serializationManager.Copy(source.PlacementProperties, target.PlacementProperties)!;
-            //target.PlacementProperties = (EntityPlacementProperties)serv3Mgr.CreateCopy(source.PlacementProperties);
-            // Copy all simple data over.
-            /*if (!target._placementOverriden)
-            {
-                target.PlacementMode = source.PlacementMode;
-            }
-
-            if (!target._placementOverriden)
-            {
-                target.PlacementOffset = source.PlacementOffset;
-            }
-
-            if (target.MountingPoints == null && source.MountingPoints != null)
-            {
-                target.MountingPoints = new List<int>(source.MountingPoints);
-            }
-
-            if (target.PlacementRange == DEFAULT_RANGE)
-            {
-                target.PlacementRange = source.PlacementRange;
-            }*/
-
-            if (!target._descriptionModified)
-            {
-                target.Description = source.Description;
-            }
-
-            if (target.EditorSuffix == null)
-            {
-                target.EditorSuffix = source.EditorSuffix;
-            }
-
-            if (!target._snapOverriden)
-            {
-                foreach (var flag in source._snapFlags)
-                {
-                    target._snapFlags.Add(flag);
-                }
-            }
-
-            if (!target._nameModified)
-            {
-                target.Name = source.Name;
-            }
-
-            if (target.Children == null)
-            {
-                return;
-            }
         }
 
         public void UpdateEntity(Entity entity)

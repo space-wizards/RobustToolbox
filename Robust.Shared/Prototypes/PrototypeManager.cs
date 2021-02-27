@@ -16,6 +16,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -139,6 +140,8 @@ namespace Robust.Shared.Prototypes
 
         #region IPrototypeManager members
         private readonly Dictionary<Type, Dictionary<string, IPrototype>> prototypes = new();
+        private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
+        private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
 
         private readonly HashSet<string> IgnoredPrototypeTypes = new();
 
@@ -202,6 +205,8 @@ namespace Robust.Shared.Prototypes
         {
             prototypeTypes.Clear();
             prototypes.Clear();
+            _prototypeResults.Clear();
+            _inheritanceTrees.Clear();
         }
 
         public virtual void ReloadPrototypes(ResourcePath file)
@@ -227,62 +232,26 @@ namespace Robust.Shared.Prototypes
 
         public void Resync()
         {
-            // TODO Make this smarter and only resync changed prototypes
-            if (_hasEverResynced)
+            foreach (var (type, tree) in _inheritanceTrees)
             {
-                foreach (var prototypeList in prototypes.Values)
+                foreach (var baseNode in tree.BaseNodes)
                 {
-                    foreach (var prototype in prototypeList.Values)
-                    {
-                        if (prototype is ISyncingPrototype syncing)
-                        {
-                            syncing.Reset();
-                        }
-                    }
+                    PushInheritance(type, baseNode, null);
                 }
             }
+        }
 
-            foreach (Type type in prototypeTypes.Values.Where(t => typeof(ISyncingPrototype).IsAssignableFrom(t)))
+        public void PushInheritance(Type type, string id, DeserializationResult? baseResult)
+        {
+            var myRes = _prototypeResults[type][id];
+            var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
+            foreach (var childID in _inheritanceTrees[type].Children(id))
             {
-                // This list is the list of prototypes we're syncing.
-                // Iterate using indices.
-                // IF the prototype wants to NOT by synced again,
-                // Swap remove it with the one at the end of the list,
-                //  and do the whole thing again with the one formerly at the end of the list
-                // otherwise keep it and move up an index
-                // When we get to the end, do the whole thing again!
-                // Yes this is ridiculously overengineered BUT IT PERFORMS WELL.
-                // I hope.
-                List<ISyncingPrototype> currentRun = prototypes[type].Values.Select(p => (ISyncingPrototype) p).ToList();
-
-                var stage = 0;
-                // Outer loop to iterate stages.
-                while (currentRun.Count > 0)
-                {
-                    // Increase positions to iterate over list.
-                    // If we need to stick, i gets reduced down below.
-                    for (var i = 0; i < currentRun.Count; i++)
-                    {
-                        ISyncingPrototype prototype = currentRun[i];
-                        var result = prototype.Sync(this, stage);
-                        // Keep prototype and move on to next one if it returns true.
-                        // Thus it stays in the list for next stage.
-                        if (result)
-                        {
-                            continue;
-                        }
-
-                        // Move the last element in the list to where we are currently.
-                        // Since we don't break we'll do this one next, as i stays the same.
-                        //  (for loop cancels out decrement here)
-                        currentRun.RemoveSwap(i);
-                        i--;
-                    }
-                    stage++;
-                }
+                PushInheritance(type, childID, newResult);
             }
 
-            _hasEverResynced = true;
+            var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
+            prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }
 
         /// <inheritdoc />
@@ -440,18 +409,19 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = _serializationManager.ReadValueOrThrow<IPrototype>(prototypeType, node.ToDataNode());
+                var res = _serializationManager.Read(prototypeType, node.ToDataNode());
+                var prototype = (IPrototype) res.RawValue!;
 
-                changedPrototypes.Add(prototype);
-
-                var id = prototype.ID;
-
-                if (!overwrite && prototypes[prototypeType].ContainsKey(id))
+                if (!overwrite && prototypes[prototypeType].ContainsKey(prototype.ID))
                 {
-                    throw new PrototypeLoadException($"Duplicate ID: '{id}'");
+                    throw new PrototypeLoadException($"Duplicate ID: '{prototype.ID}'");
                 }
 
-                prototypes[prototypeType][id] = prototype;
+                _prototypeResults[prototypeType][prototype.ID] = res;
+                _inheritanceTrees[prototypeType].AddId(prototype.ID, prototype.Parent);
+
+                prototypes[prototypeType][prototype.ID] = prototype;
+                changedPrototypes.Add(prototype);
             }
 
             return changedPrototypes;
@@ -509,6 +479,7 @@ namespace Robust.Shared.Prototypes
             if (typeof(IPrototype).IsAssignableFrom(type))
             {
                 prototypes[type] = new Dictionary<string, IPrototype>();
+                _inheritanceTrees[type] = new PrototypeInheritanceTree();
             }
         }
 

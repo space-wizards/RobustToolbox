@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDefinition<T> : DeserializationResult<T> where T : new()
+    public class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedDefinition where T : new()
     {
         public DeserializedDefinition(T value, DeserializedFieldEntry[] mapping)
         {
@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 }
             }
 
-            return IoCManager.Resolve<ISerializationManager>().PopulateDataDefinition<T>(newMapping);
+            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);
         }
 
         public override DeserializationResult Copy()
@@ -50,7 +50,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 newMapping[i] = Mapping[i].Copy();
             }
 
-            return IoCManager.Resolve<ISerializationManager>().PopulateDataDefinition<T>(newMapping);
+            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);
         }
 
     }

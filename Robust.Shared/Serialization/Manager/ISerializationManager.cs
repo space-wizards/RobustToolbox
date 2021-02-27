@@ -12,7 +12,11 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
-        DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new();
+        DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
+
+        DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new();
+
+        DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult);
 
         DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
 

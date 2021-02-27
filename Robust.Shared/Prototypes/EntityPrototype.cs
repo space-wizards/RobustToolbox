@@ -10,7 +10,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -22,7 +21,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity")]
-    public class EntityPrototype : IPrototype, ISyncingPrototype
+    public class EntityPrototype : IPrototype
     {
         /// <summary>
         /// The "in code name" of the object. Must be unique.
@@ -136,7 +135,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        public EntityPrototype? Parent { get; private set; }
+        public string? Parent { get; private set; }
 
         /// <summary>
         /// A list of children inheriting from this prototype.
@@ -170,14 +169,9 @@ namespace Robust.Shared.Prototypes
         public EntityPrototype()
         {
             // Everybody gets a transform component!
-            var transform = new TransformComponent();
-            var transformDef = new DeserializedDefinition<TransformComponent>(transform);
-            Components.Add("Transform", (transform, transformDef));
-
+            Components.Add("Transform", new TransformComponent());
             // And a metadata component too!
-            var metadata = new MetaDataComponent();
-            var metadataDef = new DeserializedDefinition<MetaDataComponent>(metadata);
-            Components.Add("MetaData", (metadata, metadataDef));
+            Components.Add("MetaData", new MetaDataComponent());
         }
 
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
@@ -190,188 +184,8 @@ namespace Robust.Shared.Prototypes
 
             // There are no duplicate component names
             // TODO Sanity check with names being in an attribute of the type instead
-            component = (T) componentUnCast.component;
+            component = (T) componentUnCast;
             return true;
-        }
-
-        public void Reset()
-        {
-            Children.Clear();
-        }
-
-        // Resolve inheritance.
-        public bool Sync(IPrototypeManager prototypes, ISerializationManager serialization, int stage, DeserializationResult result)
-        {
-            switch (stage)
-            {
-                case 0:
-                    if (parentTemp == null)
-                    {
-                        return true;
-                    }
-
-                    Parent = prototypes.Index<EntityPrototype>(parentTemp);
-                    if (Parent.Children == null)
-                    {
-                        Parent.Children = new List<EntityPrototype>();
-                    }
-
-                    Parent.Children.Add(this);
-                    return false;
-
-                case 1:
-                    // We are a root-level prototype.
-                    // As such we're getting the duty of pushing inheritance into everybody's face.
-                    // Can't do a "puller" system where each queries the parent because it requires n stages
-                    //  (n being the depth of each inheritance tree)
-
-                    if (Children == null)
-                    {
-                        break;
-                    }
-
-                    PushInheritanceAll();
-                    break;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Iteratively pushes inheritance down to all children, children's children, etc. breadth-first.
-        /// </summary>
-        private void PushInheritanceAll()
-        {
-            if (Children == null)
-            {
-                return;
-            }
-
-            var sourceTargets = new List<(EntityPrototype, List<EntityPrototype>)> {(this, Children)};
-            var newSources = new List<EntityPrototype>();
-            while (true)
-            {
-                foreach (var (source, targetList) in sourceTargets)
-                {
-                    if (targetList == null)
-                    {
-                        continue;
-                    }
-
-                    foreach (var target in targetList)
-                    {
-                        PushInheritance(source, target);
-                    }
-
-                    newSources.AddRange(targetList);
-                }
-
-                if (newSources.Count == 0)
-                {
-                    break;
-                }
-
-                sourceTargets.Clear();
-                foreach (var newSource in newSources)
-                {
-                    sourceTargets.Add((newSource, newSource.Children));
-                }
-
-                newSources.Clear();
-            }
-        }
-
-        //todo paul remove
-        private static void PushInheritance(EntityPrototype source, EntityPrototype target)
-        {
-            var serializationManager = IoCManager.Resolve<ISerializationManager>();
-            // Copy component data over.
-            foreach (var (type, tuple) in source.Components)
-            {
-                var (component, result) = tuple;
-
-                if (target.Components.TryGetValue(type, out var targetTuple))
-                {
-                    // Copy over values the target component does not have.
-                    //todo paul
-                    var (targetComponent, targetResult) = targetTuple;
-
-                    targetComponent = serializationManager.PushInheritance(result, targetComponent, targetResult);
-                    target.Components[type] = (targetComponent!, targetResult);
-                }
-                else
-                {
-                    // Copy component into the target, since it doesn't have it yet.
-                    // Unless it'd cause a conflict.
-                    var factory = IoCManager.Resolve<IComponentFactory>();
-                    foreach (var refType in factory.GetRegistration(type).References)
-                    {
-                        if (target.ReferenceTypes.Contains(refType))
-                        {
-                            // yeah nope the child's got it!! NEXT!!
-                            goto next;
-                        }
-                    }
-
-
-                    var data = serializationManager.CreateCopy(component)!;
-
-                    target.Components[type] = (data, result);
-                }
-
-                next: ;
-            }
-
-            target.PlacementProperties = serializationManager.Copy(source.PlacementProperties, target.PlacementProperties)!;
-            //target.PlacementProperties = (EntityPlacementProperties)serv3Mgr.CreateCopy(source.PlacementProperties);
-            // Copy all simple data over.
-            /*if (!target._placementOverriden)
-            {
-                target.PlacementMode = source.PlacementMode;
-            }
-
-            if (!target._placementOverriden)
-            {
-                target.PlacementOffset = source.PlacementOffset;
-            }
-
-            if (target.MountingPoints == null && source.MountingPoints != null)
-            {
-                target.MountingPoints = new List<int>(source.MountingPoints);
-            }
-
-            if (target.PlacementRange == DEFAULT_RANGE)
-            {
-                target.PlacementRange = source.PlacementRange;
-            }*/
-
-            if (!target._descriptionModified)
-            {
-                target.Description = source.Description;
-            }
-
-            if (target.EditorSuffix == null)
-            {
-                target.EditorSuffix = source.EditorSuffix;
-            }
-
-            if (!target._snapOverriden)
-            {
-                foreach (var flag in source._snapFlags)
-                {
-                    target._snapFlags.Add(flag);
-                }
-            }
-
-            if (!target._nameModified)
-            {
-                target.Name = source.Name;
-            }
-
-            if (target.Children == null)
-            {
-                return;
-            }
         }
 
         public void UpdateEntity(Entity entity)
@@ -440,10 +254,10 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var (name, data) in prototype.Components)
                 {
-                    var (component, _) = data;
+                    var fullData = data;
                     if (context != null)
                     {
-                        component = context.GetComponentData(name, component);
+                        fullData = context.GetComponentData(name, data);
                     }
                     /*else
                     {
@@ -454,7 +268,7 @@ namespace Robust.Shared.Prototypes
 
                     //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, component);
+                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData);
                 }
             }
 
@@ -522,8 +336,7 @@ namespace Robust.Shared.Prototypes
             copy.Children.Remove(new YamlScalarNode("type"));
             var compType = factory.GetRegistration(type).Type;
 
-            var result = IoCManager.Resolve<ISerializationManager>().ReadWithValueOrThrow<IComponent>(compType, copy.ToDataNode());
-            Components[type] = result;
+            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValueOrThrow<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()
@@ -531,13 +344,13 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, (IComponent component, DeserializationResult result)>
+        public class ComponentRegistry : Dictionary<string, IComponent>
         {
             public ComponentRegistry()
             {
             }
 
-            public ComponentRegistry(Dictionary<string, (IComponent component, DeserializationResult result)> components) : base(components)
+            public ComponentRegistry(Dictionary<string, IComponent> components) : base(components)
             {
             }
         }

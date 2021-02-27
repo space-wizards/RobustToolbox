@@ -17,9 +17,9 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
-        private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
-        private readonly List<Type> _copyByRefRegistrations = new();
+        private List<Type> _copyByRefRegistrations = new();
 
         public void Initialize()
         {
@@ -75,29 +75,30 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool HasDataDefinition(Type type)
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check datadefinitions for generic types. ({type})");
             return _dataDefinitions.ContainsKey(type);
         }
 
-        public int GetDataFieldCount(Type type)
+        public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new()
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
-
-            if (!_dataDefinitions.TryGetValue(type, out var dataDef))
-            {
-                return 0;
-            }
-
-            return dataDef.DataFieldCount;
+            var obj = new T();
+            return PopulateDataDefinition(obj, new DeserializedDefinition<T>(obj, fields));
         }
 
-        public DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new()
+        public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new()
         {
             if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({typeof(T)})");
+                throw new ArgumentException($"Provided Type is not a datadefinition ({typeof(T)})");
 
-            var obj = new T();
-            return dataDefinition.InvokePopulateDelegate(obj, fields);
+            return dataDefinition.InvokePopulateDelegate(obj, definition.Mapping);
+        }
+
+        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult)
+        {
+            if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
+                throw new ArgumentException($"Provided Type is not a datadefinition ({obj.GetType()})");
+
+            return dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
         }
 
         private SerializationDataDefinition? GetDataDefinition(Type type)
@@ -113,9 +114,9 @@ namespace Robust.Shared.Serialization.Manager
             return dataDefinition != null;
         }
 
-        public DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null)
+        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
         {
-            return Read(typeof(T), node, context);
+            return (DeserializationResult<T>) Read(typeof(T), node, context);
         }
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
@@ -135,20 +136,17 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
                 var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
-                var results = new DeserializationResult[sequenceDataNode.Sequence.Count];
+                var fields = new DeserializedFieldEntry[sequenceDataNode.Sequence.Count];
 
                 var idx = 0;
                 foreach (var entryNode in sequenceDataNode.Sequence)
                 {
-                    var (result, value) = ReadWithValue(type.GetElementType()!, entryNode, context);
-
-                    newArray.SetValue(value, idx);
-                    results[idx] = result;
-
-                    idx++;
+                    var value = Read(type.GetElementType()!, entryNode, context);
+                    fields[idx] = new DeserializedFieldEntry(true);
+                    newArray.SetValue(value, idx++);
                 }
 
-                return new DeserializedArray(newArray, results);
+                return DeserializationResult.Definition(newArray, fields);
             }
 
             if (underlyingType.IsEnum)
@@ -271,53 +269,16 @@ namespace Robust.Shared.Serialization.Manager
             return (result, result.RawValue);
         }
 
-        public (T? value, DeserializationResult result) ReadWithValue<T>(Type type, DataNode node,
-            ISerializationContext? context = null)
+        public (DeserializationResult result, T value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
         {
-            var (result, value) = ReadWithValue(type, node, context);
-
-            if (value == null)
-            {
-                return (default, result);
-            }
-
-            return ((T?) value, result);
-        }
-
-        public T PushInheritance<T>(
-            DeserializationResult from,
-            T value,
-            DeserializationResult valueResult)
-            where T : notnull
-        {
-            var inheritedResult = (IDeserializedMapping) valueResult.Copy().PushInheritanceFrom(from);
-            var type = value.GetType().EnsureNotNullableType();
-
-            if (!TryGetDataDefinition(type, out var def))
-            {
-                throw new ArgumentException($"Type {typeof(T)} does not have a data definition.");
-            }
-
-            var updatedValue = def.InvokePopulateDelegate(value, inheritedResult.Mapping).RawValue;
-
-            if (updatedValue == null)
-            {
-                throw new NullReferenceException(nameof(updatedValue));
-            }
-
-            return (T) updatedValue;
+            var result = (DeserializedValue<T>) Read(typeof(T), node, context);
+            return (result, result.Value);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {
             return WriteValue(typeof(T), value, alwaysWrite, context);
-        }
-
-        public TNode WriteValueAs<TNode>(object value, bool alwaysWrite = false, ISerializationContext? context = null)
-            where TNode : DataNode
-        {
-            return (TNode) WriteValue(value.GetType(), value, alwaysWrite, context);
         }
 
         public DataNode WriteValue(Type type, object value, bool alwaysWrite = false,

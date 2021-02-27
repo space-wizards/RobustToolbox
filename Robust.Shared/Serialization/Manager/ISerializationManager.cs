@@ -12,11 +12,13 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
-        int GetDataFieldCount(Type type);
+        DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
 
-        DeserializationResult PopulateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : new();
+        DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new();
 
-        DeserializationResult Read<T>(DataNode node, ISerializationContext? context = null);
+        DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult);
+
+        DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
 
         DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
 
@@ -35,20 +37,10 @@ namespace Robust.Shared.Serialization.Manager
 
         (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        (T? value, DeserializationResult result) ReadWithValue<T>(Type type, DataNode node,
-            ISerializationContext? context = null);
-
-        T PushInheritance<T>(
-            DeserializationResult from,
-            T value,
-            DeserializationResult valueResult)
-            where T : notnull;
+        (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null);
 
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;
-
-        TNode WriteValueAs<TNode>(object value, bool alwaysWrite = false, ISerializationContext? context = null)
-            where TNode : DataNode;
 
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null);

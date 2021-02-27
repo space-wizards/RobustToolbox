@@ -17,7 +17,11 @@ namespace Robust.Client.Player
             set => this.Status = value;
         }
 
+        /// <inheritdoc />
         public IEntity? AttachedEntity { get; set; }
+
+        /// <inheritdoc />
+        public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
         /// <inheritdoc />
         public NetUserId UserId { get; }

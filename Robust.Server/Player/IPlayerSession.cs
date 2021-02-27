@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -7,7 +7,6 @@ namespace Robust.Server.Player
 {
     public interface IPlayerSession : ICommonSession
     {
-        EntityUid? AttachedEntityUid { get; }
         INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
 

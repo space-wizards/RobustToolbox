@@ -15,9 +15,14 @@ namespace Robust.Shared.Players
         SessionStatus Status { get; internal set; }
 
         /// <summary>
-        /// Entity that this session is attached to, if any.
+        /// Entity that this session is represented by in the world, if any.
         /// </summary>
         IEntity? AttachedEntity { get; }
+
+        /// <summary>
+        /// Entity UID that this session is represented by in the world, if any.
+        /// </summary>
+        EntityUid? AttachedEntityUid { get; }
 
         /// <summary>
         /// The UID of this session.

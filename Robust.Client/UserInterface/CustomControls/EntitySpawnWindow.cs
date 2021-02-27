@@ -148,13 +148,6 @@ namespace Robust.Client.UserInterface.CustomControls
             SearchBar.GrabKeyboardFocus();
         }
 
-        public override void Close()
-        {
-            base.Close();
-
-            Dispose();
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

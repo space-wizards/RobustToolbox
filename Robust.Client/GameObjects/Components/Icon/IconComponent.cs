@@ -82,7 +82,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            return TextureForConfig(compData.component, resourceCache);
+            return TextureForConfig(compData, resourceCache);
         }
     }
 }

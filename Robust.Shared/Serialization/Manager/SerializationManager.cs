@@ -269,10 +269,31 @@ namespace Robust.Shared.Serialization.Manager
             return (result, result.RawValue);
         }
 
-        public (DeserializationResult result, T value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
+        public (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
         {
-            var result = (DeserializedValue<T>) Read(typeof(T), node, context);
-            return (result, result.Value);
+            var result = Read(typeof(T), node, context);
+
+            if (result.RawValue == null)
+            {
+                return (result, default);
+            }
+
+            return (result, (T) result.RawValue);
+        }
+
+        public (DeserializationResult result, T? value) ReadWithValueCast<T>(
+            Type type,
+            DataNode node,
+            ISerializationContext? context = null)
+        {
+            var result = Read(type, node, context);
+
+            if (result.RawValue == null)
+            {
+                return (result, default);
+            }
+
+            return (result, (T) result.RawValue);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
@@ -342,6 +363,15 @@ namespace Robust.Shared.Serialization.Manager
             mapping = mapping.Merge(newMapping);
 
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
+        }
+
+        public T WriteValueAs<T>(
+            object value,
+            bool alwaysWrite = false,
+            ISerializationContext? context = null)
+            where T : DataNode
+        {
+            return (T) WriteValue(value.GetType(), value, alwaysWrite, context);
         }
 
         private object? CopyToTarget(object? source, object? target)

@@ -43,7 +43,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             foreach (var (key, value) in node.Children)
             {
                 var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);
@@ -78,7 +78,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             foreach (var (key, value) in node.Children)
             {
                 var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);
@@ -95,7 +95,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             foreach (var (key, value) in node.Children)
             {
                 var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueVal, valueResult) = _serializationManager.ReadWithValue<TValue>(typeof(TValue), value, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);

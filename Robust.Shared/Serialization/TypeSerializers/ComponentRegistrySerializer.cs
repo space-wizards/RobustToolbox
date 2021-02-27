@@ -55,7 +55,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var type = _componentFactory.GetRegistration(compType).Type;
                 var read = _serializationManager.ReadWithValueOrThrow<IComponent>(type, copy);
 
-                components[compType] = read;
+                components[compType] = read.value;
                 mappings.Add(DeserializationResult.Value(compType), read.result);
             }
 
@@ -76,7 +76,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 }
             }
 
-            return new DeserializedDictionary<ComponentRegistry, string, (IComponent, DeserializationResult)>(components, mappings);
+            return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
         }
 
         public DataNode Write(ComponentRegistry value,

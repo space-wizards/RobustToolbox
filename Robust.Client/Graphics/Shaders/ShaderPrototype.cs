@@ -5,9 +5,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.Graphics
@@ -18,8 +19,13 @@ namespace Robust.Client.Graphics
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        [field: DataField("id")]
+        [ViewVariables]
+        [field: DataField("id", required: true)]
         public string ID { get; } = default!;
+
+        [ViewVariables]
+        [field: DataField("parent")]
+        public string? Parent { get; }
 
         private ShaderKind Kind;
 

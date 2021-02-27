@@ -479,7 +479,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
                 return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
             }
@@ -496,7 +496,7 @@ namespace Robust.Shared.GameObjects
 
         private static bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
-            if (entity.TryGetComponent(out IPhysicsComponent? component))
+            if (entity.TryGetComponent(out IPhysBody? component))
             {
                 if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
                 return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
             }
@@ -647,7 +647,7 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            if (ent.TryGetComponent(out IPhysicsComponent? collider))
+            if (ent.TryGetComponent(out IPhysBody? collider))
                 return collider.GetWorldAABB(_mapManager);
 
             var pos = ent.Transform.WorldPosition;

@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {
@@ -198,7 +199,7 @@ namespace Robust.Server.GameObjects
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out IPhysicsComponent? physics))
+            if (entity.TryGetComponent(out IPhysBody? physics))
                 return new Box2(physics.GetWorldAABB().BottomLeft + 0.01f, physics.GetWorldAABB().TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge

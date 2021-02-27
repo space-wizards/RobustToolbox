@@ -264,7 +264,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage message)
         {
-            if (message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
+            if (message.Entity.TryGetComponent(out IPhysBody? physicsComponent))
             {
                 physicsComponent.CanCollide = false;
                 physicsComponent.Awake = false;
@@ -273,7 +273,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage message)
         {
-            if (!message.Entity.Deleted && message.Entity.TryGetComponent(out IPhysicsComponent? physicsComponent))
+            if (!message.Entity.Deleted && message.Entity.TryGetComponent(out IPhysBody? physicsComponent))
             {
                 physicsComponent.CanCollide = true;
                 physicsComponent.Awake = true;

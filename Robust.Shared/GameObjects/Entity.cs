@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -160,7 +161,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -199,7 +200,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 

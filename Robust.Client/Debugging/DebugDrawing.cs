@@ -139,7 +139,7 @@ namespace Robust.Client.Debugging
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((IPhysicsComponent)body).Anchored}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {(body).BodyType == BodyType.Static}");
                     row++;
                 }
 

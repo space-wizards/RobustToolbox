@@ -88,7 +88,7 @@ namespace Robust.Shared.Physics.Dynamics
         private float _restitution;
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>

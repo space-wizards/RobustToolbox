@@ -23,7 +23,7 @@ namespace Robust.Client.GameObjects
 
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
-            RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
 

@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     ///
     /// </summary>
-    public interface IPhysBody
+    public interface IPhysBody : IComponent
     {
         /// <summary>
         ///     Entity that this physBody represents.
@@ -47,10 +47,15 @@ namespace Robust.Shared.Physics
         /// </summary>
         BodyType BodyType { get; set; }
 
+        /// <summary>
+        ///     Whether the body is affected by tile friction or not.
+        /// </summary>
+        BodyStatus Status { get; set; }
+
         bool Awake { get; set; }
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
@@ -62,6 +67,11 @@ namespace Robust.Shared.Physics
         /// Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
+
+        /// <summary>
+        /// Mass of the entity in kilograms
+        /// </summary>
+        float Mass { get; set; }
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.

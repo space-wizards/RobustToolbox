@@ -101,7 +101,25 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         internal override bool SolvePositionConstraints(SolverData data)
         {
-            // TODO: Should use these? IDK
+            if (_currentLength < _maxLength) return true;
+
+            var posA = data.Positions[_indexA];
+            var posB = data.Positions[_indexB];
+
+            var vA = data.LinearVelocities[_indexA];
+            float wA = data.AngularVelocities[_indexA];
+            var vB = data.LinearVelocities[_indexB];
+            float wB = data.AngularVelocities[_indexB];
+
+            var correctionDistance = _maxLength - _currentLength;
+
+            data.Positions[_indexB] -= correctionDistance;
+
+            //var P = _u * impulse;
+            //vA -= P * _invMassA;
+            //wA -= _invIA * Vector2.Cross(_rA, P);
+            //vB += P * _invMassB;
+            //wB += _invIB * Vector2.Cross(_rB, P);
             return true;
         }
     }

@@ -188,12 +188,12 @@ namespace Robust.Shared.Physics.Dynamics
                 edge = edge.Next;
             }
 
-            // Does a joint override collision? Is at least one body dynamic?
-            if (!bodyB.ShouldCollide(bodyA))
-                return;
-
             //Check default filter
             if (!ShouldCollide(fixtureA, fixtureB))
+                return;
+
+            // Does a joint override collision? Is at least one body dynamic?
+            if (!bodyB.ShouldCollide(bodyA))
                 return;
 
             //FPE feature: BeforeCollision delegate

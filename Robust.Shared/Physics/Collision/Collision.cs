@@ -1180,6 +1180,7 @@ namespace Robust.Shared.Physics.Collision
 
         // TODO: Uhh optimise these because holy fuck dey expensive. I didn't use for now because we can just convert to a poly quicker.
         // Probably copy Acruid's implementation though you need to make it return a box2d manifold instead.
+        // Also I tried using the AABBandcircle one but it didn't seem to work well.
         public void CollideAabbAndPolygon(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PolygonShape polyB,
             in Transform transformB)
         {

@@ -148,13 +148,6 @@ namespace Robust.Client.UserInterface.CustomControls
             SearchBar.GrabKeyboardFocus();
         }
 
-        public override void Close()
-        {
-            base.Close();
-
-            Dispose();
-        }
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -201,6 +194,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
             placementManager.ToggleEraser();
+            OverrideMenu.Disabled = args.Pressed;
         }
 
         private void BuildEntityList(string? searchStr = null)
@@ -510,6 +504,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             EraseButton.Pressed = false;
+            OverrideMenu.Disabled = false;
         }
 
         private class DoNotMeasure : Control

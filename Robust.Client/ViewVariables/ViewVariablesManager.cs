@@ -229,7 +229,11 @@ namespace Robust.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new SS14Window
+            {
+                Title = "View Variables",
+                SetSize = _defaultWindowSize
+            };
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
 

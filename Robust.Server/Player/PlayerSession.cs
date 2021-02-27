@@ -53,9 +53,13 @@ namespace Robust.Server.Player
             get => this.Name;
             set => this.Name = value;
         }
-        
+
         [ViewVariables]
-        internal short Ping { get; set; }
+        internal short Ping
+        {
+            get => ConnectedClient.Ping;
+            set => throw new NotSupportedException();
+        }
 
         short ICommonSession.Ping
         {
@@ -63,7 +67,6 @@ namespace Robust.Server.Player
             set => this.Ping = value;
         }
 
-        /// <inheritdoc />
         [ViewVariables]
         internal SessionStatus Status
         {

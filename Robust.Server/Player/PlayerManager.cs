@@ -14,6 +14,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -53,6 +54,11 @@ namespace Robust.Server.Player
         [ViewVariables]
         private readonly Dictionary<string, NetUserId> _userIdMap = new();
 
+        /// <inheritdoc />
+        public IEnumerable<ICommonSession> NetworkedSessions => _sessions.Values;
+
+        /// <inheritdoc />
+        public IEnumerable<ICommonSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
         [ViewVariables]

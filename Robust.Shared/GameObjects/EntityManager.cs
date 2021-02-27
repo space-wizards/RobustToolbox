@@ -47,12 +47,20 @@ namespace Robust.Shared.GameObjects
 
         protected readonly List<Entity> AllEntities = new();
 
-        private readonly EntityEventBus _eventBus = new();
+        private readonly CombinedEventBus _eventBus;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
 
         public bool Started { get; protected set; }
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="EntityManager"/>.
+        /// </summary>
+        public EntityManager()
+        {
+            _eventBus = new CombinedEventBus(_componentManager);
+        }
 
         public virtual void Initialize()
         {

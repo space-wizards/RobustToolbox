@@ -1,0 +1,105 @@
+using System;
+using Moq;
+using NUnit.Framework;
+using Robust.Shared.GameObjects;
+
+namespace Robust.UnitTesting.Shared.GameObjects
+{
+    public partial class EntityEventBusTests
+    {
+        [Test]
+        public void SubscribeCompEvent()
+        {
+            // Arrange
+            var entUid = new EntityUid(7);
+            var compInstance = new MetaDataComponent();
+
+            var mockMan = new Mock<IComponentManager>();
+
+            IComponent? outIComponent = compInstance;
+            mockMan.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+                .Returns(true);
+
+            mockMan.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+                .Returns(compInstance);
+
+            var bus = new ComponentEventBus(mockMan.Object);
+
+            // Subscribe
+            int calledCount = 0;
+            bus.SubscribeCompEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
+
+            // add a component to the system
+            mockMan.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
+
+            // Raise
+            var evntArgs = new TestEvent(5);
+            bus.RaiseCompEvent(entUid, evntArgs);
+
+            // Assert
+            Assert.That(calledCount, Is.EqualTo(1));
+            void HandleTestEvent(EntityUid uid, MetaDataComponent component, TestEvent args)
+            {
+                calledCount++;
+                Assert.That(uid, Is.EqualTo(entUid));
+                Assert.That(component, Is.EqualTo(compInstance));
+                Assert.That(args.TestNumber, Is.EqualTo(5));
+            }
+
+        }
+
+        [Test]
+        public void UnsubscribeCompEvent()
+        {
+            // Arrange
+            var entUid = new EntityUid(7);
+            var compInstance = new MetaDataComponent();
+
+            var mockMan = new Mock<IComponentManager>();
+
+            IComponent? outIComponent = compInstance;
+            mockMan.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+                .Returns(true);
+
+            mockMan.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+                .Returns(compInstance);
+
+            var bus = new ComponentEventBus(mockMan.Object);
+
+            // Subscribe
+            int calledCount = 0;
+            bus.SubscribeCompEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
+            bus.UnsubscribeCompEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
+
+            // add a component to the system
+            mockMan.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
+
+            // Raise
+            var evntArgs = new TestEvent(5);
+            bus.RaiseCompEvent(entUid, evntArgs);
+
+            // Assert
+            Assert.That(calledCount, Is.EqualTo(0));
+            void HandleTestEvent(EntityUid uid, MetaDataComponent component, TestEvent args)
+            {
+                calledCount++;
+            }
+
+        }
+
+        private class DummyComponent : Component
+        {
+            public override string Name => "Dummy";
+        }
+
+        private class TestEvent : ComponentEvent
+        {
+            public int TestNumber { get; }
+
+            public TestEvent(int testNumber)
+            {
+                TestNumber = testNumber;
+            }
+        }
+    }
+}

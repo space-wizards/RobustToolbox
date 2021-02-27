@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
                 // mark the component as dirty for networking
                 component.Dirty();
 
-                ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
+                ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
             }
 
             _componentDependencyManager.OnComponentAdd(entity, component);
@@ -244,7 +244,7 @@ namespace Robust.Shared.GameObjects
                 component.Running = false;
                 component.OnRemove();
                 _componentDependencyManager.OnComponentRemove(_entityManager.GetEntity(uid), component);
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -270,7 +270,7 @@ namespace Robust.Shared.GameObjects
 
                 component.Running = false;
                 component.OnRemove(); // Sets delete
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));
 
             }
 
@@ -308,7 +308,7 @@ namespace Robust.Shared.GameObjects
             // mark the owning entity as dirty for networking
             component.Owner.Dirty();
 
-            ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component));
+            ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component, entityUid));
         }
 
         /// <inheritdoc />

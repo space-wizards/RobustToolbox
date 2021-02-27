@@ -1,12 +1,13 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
+using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable, TestOf(typeof(EntityEventBus))]
-    public class EntityEventBus_Tests
+    public partial class EntityEventBusTests
     {
         /// <summary>
         /// Trying to subscribe a null handler causes a <see cref="ArgumentNullException"/> to be thrown.

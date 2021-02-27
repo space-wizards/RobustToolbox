@@ -160,6 +160,11 @@ namespace Robust.Shared.Physics.Dynamics
             // Are the fixtures on the same body?
             if (bodyA.Owner.Uid.Equals(bodyB.Owner.Uid)) return;
 
+            // Box2D checks the mask / layer below but IMO doing it before contact is better.
+            // Check default filter
+            if (!ShouldCollide(fixtureA, fixtureB))
+                return;
+
             // Does a contact already exist?
             var edge = bodyB.ContactEdges;
 
@@ -187,10 +192,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                 edge = edge.Next;
             }
-
-            //Check default filter
-            if (!ShouldCollide(fixtureA, fixtureB))
-                return;
 
             // Does a joint override collision? Is at least one body dynamic?
             if (!bodyB.ShouldCollide(bodyA))

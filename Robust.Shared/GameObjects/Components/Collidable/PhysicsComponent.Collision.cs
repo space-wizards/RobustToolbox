@@ -223,7 +223,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Removes all of our contacts and flags them as requiring regeneration next physics tick.
         /// </summary>
-        internal void RegenerateContacts()
+        public void RegenerateContacts()
         {
             var contactEdge = ContactEdges;
             while (contactEdge != null)

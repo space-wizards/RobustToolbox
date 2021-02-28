@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 
 namespace Robust.Client.Player
 {
-    public interface IPlayerManager
+    public interface IPlayerManager : Shared.Players.ISharedPlayerManager
     {
-        IEnumerable<IPlayerSession> Sessions { get; }
+        new IEnumerable<IPlayerSession> Sessions { get; }
         IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict { get; }
 
         LocalPlayer? LocalPlayer { get; }
@@ -17,8 +17,6 @@ namespace Robust.Client.Player
         /// </summary>
         event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
 
-        int PlayerCount { get; }
-        int MaxPlayers { get; }
         event EventHandler PlayerListUpdated;
 
         void Initialize();

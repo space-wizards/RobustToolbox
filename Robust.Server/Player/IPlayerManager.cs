@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Enums;
@@ -13,20 +13,9 @@ namespace Robust.Server.Player
     /// <summary>
     ///     Manages each players session when connected to the server.
     /// </summary>
-    public interface IPlayerManager
+    public interface IPlayerManager : Shared.Players.ISharedPlayerManager
     {
-        /// <summary>
-        ///     Number of players currently connected to this server.
-        ///     Fetching this is thread safe.
-        /// </summary>
-        int PlayerCount { get; }
-
         BoundKeyMap KeyMap { get; }
-
-        /// <summary>
-        ///     Maximum number of players that can connect to this server at one time.
-        /// </summary>
-        int MaxPlayers { get; }
 
         /// <summary>
         ///     Raised when the <see cref="SessionStatus" /> of a <see cref="IPlayerSession" /> is changed.

@@ -62,8 +62,7 @@ namespace Robust.Shared.Network
                 }
 
                 NetEncryption? encryption = null;
-                NetUserId userId;
-                string userName;
+                NetUserData userData;
                 LoginType type;
                 var padSuccessMessage = true;
 
@@ -104,7 +103,8 @@ namespace Robust.Shared.Network
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
                         // In that case, the decrypt can fail here.
-                        connection.Disconnect("Token decryption failed.\nPlease reconnect to this server from the launcher.");
+                        connection.Disconnect(
+                            "Token decryption failed.\nPlease reconnect to this server from the launcher.");
                         return;
                     }
 
@@ -125,8 +125,8 @@ namespace Robust.Shared.Network
 
                     joinedResp.EnsureSuccessStatusCode();
 
-                    var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(
-                        await joinedResp.Content.ReadAsStringAsync());
+                    var resp = await joinedResp.Content.ReadAsStringAsync();
+                    var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(resp);
 
                     if (!joinedRespJson.IsValid)
                     {
@@ -134,8 +134,11 @@ namespace Robust.Shared.Network
                         return;
                     }
 
-                    userId = new NetUserId(joinedRespJson.UserData!.UserId);
-                    userName = joinedRespJson.UserData.UserName;
+                    var userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                    userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
+                    {
+                        PatronTier = joinedRespJson.UserData.PatronTier
+                    };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
                 }
@@ -163,13 +166,14 @@ namespace Robust.Shared.Network
                         name = $"{origName}_{++iterations}";
                     }
 
-                    userName = name;
-
+                    NetUserId userId;
                     (userId, type) = await AssignUserIdAsync(name);
+
+                    userData = new NetUserData(userId, name);
                 }
 
                 var endPoint = connection.RemoteEndPoint;
-                var connect = await OnConnecting(endPoint, userId, userName, type);
+                var connect = await OnConnecting(endPoint, userData, type);
                 if (connect.IsDenied)
                 {
                     connection.Disconnect($"Connection denied: {connect.DenyReason}");
@@ -177,15 +181,15 @@ namespace Robust.Shared.Network
                 }
 
                 // Well they're in. Kick a connected client with the same GUID if we have to.
-                if (_assignedUserIds.TryGetValue(userId, out var existing))
+                if (_assignedUserIds.TryGetValue(userData.UserId, out var existing))
                 {
-                    if (_awaitingDisconnectToConnect.Contains(userId))
+                    if (_awaitingDisconnectToConnect.Contains(userData.UserId))
                     {
                         connection.Disconnect("Stop trying to connect multiple times at once.");
                         return;
                     }
 
-                    _awaitingDisconnectToConnect.Add(userId);
+                    _awaitingDisconnectToConnect.Add(userData.UserId);
                     try
                     {
                         existing.Disconnect("Another connection has been made with your account.");
@@ -194,7 +198,7 @@ namespace Robust.Shared.Network
                     }
                     finally
                     {
-                        _awaitingDisconnectToConnect.Remove(userId);
+                        _awaitingDisconnectToConnect.Remove(userData.UserId);
                     }
                 }
 
@@ -202,8 +206,8 @@ namespace Robust.Shared.Network
                     connection.Status == NetConnectionStatus.Disconnected)
                 {
                     Logger.InfoS("net",
-                        "{ConnectionEndpoint} disconnected during handshake",
-                        connection.RemoteEndPoint, userName, userId);
+                        "{ConnectionEndpoint} ({UserId}/{UserName}) disconnected during handshake",
+                        connection.RemoteEndPoint, userData.UserId, userData.UserName);
 
                     return;
                 }
@@ -211,8 +215,7 @@ namespace Robust.Shared.Network
                 var msg = peer.Peer.CreateMessage();
                 var msgResp = new MsgLoginSuccess
                 {
-                    UserId = userId.UserId,
-                    UserName = userName,
+                    UserData = userData,
                     Type = type
                 };
                 if (padSuccessMessage)
@@ -227,10 +230,10 @@ namespace Robust.Shared.Network
 
                 Logger.InfoS("net",
                     "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
-                    connection.RemoteEndPoint, userName, userId);
+                    connection.RemoteEndPoint, userData.UserName, userData.UserName);
 
                 // Handshake complete!
-                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption, type);
+                HandleInitialHandshakeComplete(peer, connection, userData, encryption, type);
             }
             catch (ClientDisconnectedException)
             {
@@ -309,6 +312,7 @@ namespace Robust.Shared.Network
             {
                 public string UserName = default!;
                 public Guid UserId = default!;
+                public string? PatronTier;
             }
 #pragma warning restore 649
         }

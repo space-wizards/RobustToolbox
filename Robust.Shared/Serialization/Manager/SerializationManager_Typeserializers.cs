@@ -6,6 +6,7 @@ using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
@@ -125,7 +126,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers(Type type, DataNode node, [NotNullWhen(true)] out object? obj, ISerializationContext? context = null)
+        private bool TryReadWithTypeSerializers(Type type, DataNode node, [NotNullWhen(true)] out DeserializationResult? obj, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
@@ -133,36 +134,35 @@ namespace Robust.Shared.Serialization.Manager
 
             obj = null;
 
-            var arr = new[] {node, obj, context};
+            var arr = new object?[] {node, obj, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                obj = arr[1];
+                obj = (DeserializationResult?)arr[1];
                 return true;
             }
 
             return false;
         }
 
-        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out T? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
+        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult<T>? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
         {
-            obj = default;
-
-            if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
+            if (_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader))
             {
-                obj = genericTypeReader.Read(node, context).Value;
+                var ser = (ITypeReader<T, TNode>) rawTypeReader;
+                obj = ser.Read(node, context);
                 return true;
             }
 
-            if (!_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader))
+            if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
             {
-                return false;
+                obj = genericTypeReader.Read(node, context);
+                return true;
             }
 
-            var ser = (ITypeReader<T, TNode>) rawTypeReader;
-            obj = ser.Read(node, context).Value;
-            return true;
+            obj = null;
+            return false;
         }
 
         private bool TryWriteWithTypeSerializers(Type type, object obj, [NotNullWhen(true)] out DataNode? node, bool alwaysWrite = false,
@@ -191,21 +191,20 @@ namespace Robust.Shared.Serialization.Manager
         {
             node = default;
 
+            if (_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter))
+            {
+                var ser = (ITypeWriter<T>) rawTypeWriter;
+                node = ser.Write(obj, alwaysWrite, context);
+                return true;
+            }
+
             if (TryGetGenericWriter(out ITypeWriter<T>? genericTypeWriter))
             {
                 node = genericTypeWriter.Write(obj, alwaysWrite, context);
                 return true;
             }
 
-            if (!_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter))
-            {
-                return false;
-            }
-
-            var ser = (ITypeWriter<T>) rawTypeWriter;
-            node = ser.Write(obj, alwaysWrite, context);
-
-            return true;
+            return false;
         }
     }
 }

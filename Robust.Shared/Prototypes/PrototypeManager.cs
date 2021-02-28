@@ -479,6 +479,7 @@ namespace Robust.Shared.Prototypes
             if (typeof(IPrototype).IsAssignableFrom(type))
             {
                 prototypes[type] = new Dictionary<string, IPrototype>();
+                _prototypeResults[type] = new Dictionary<string, DeserializationResult>();
                 _inheritanceTrees[type] = new PrototypeInheritanceTree();
             }
         }

@@ -12,6 +12,7 @@ namespace Robust.Shared.Physics
     /// entity origin in world space.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeRect : IPhysShape
     {
         [DataFieldWithFlag("layer", typeof(CollisionLayer))]

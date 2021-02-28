@@ -321,6 +321,11 @@ namespace Robust.Shared.Utility
 
         public static implicit operator FieldInfo(SpecificFieldInfo f) => f.FieldInfo;
         public static explicit operator SpecificFieldInfo(FieldInfo f) => new(f);
+
+        public override string? ToString()
+        {
+            return FieldInfo.ToString();
+        }
     }
 
     public class SpecificPropertyInfo : AbstractFieldInfo
@@ -353,27 +358,35 @@ namespace Robust.Shared.Utility
                    (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
         }
 
-        public bool IsOverridenIn(Type type)
+        public bool IsMostOverridden(Type type)
         {
-            // TODO paul this is most definitely 100.10% wrong help
             if (DeclaringType == type)
             {
-                return false;
+                return true;
             }
 
-            foreach (var property in type.GetAllProperties())
+            var setBase = PropertyInfo.SetMethod?.GetBaseDefinition();
+            var getBase = PropertyInfo.GetMethod?.GetBaseDefinition();
+            var currentType = type;
+            var relevantProperties = type.GetAllProperties().Where(p => p.Name == PropertyInfo.Name).ToList();
+            while (currentType != null)
             {
-                if (property.GetGetMethod(true) != PropertyInfo.GetGetMethod(true) &&
-                    property.GetGetMethod(true)?.GetBaseDefinition() == PropertyInfo.GetGetMethod(true))
+                foreach (var property in relevantProperties)
                 {
-                    return true;
+                    if(property.DeclaringType != currentType) continue;
+
+                    if (setBase != null && setBase == property.SetMethod?.GetBaseDefinition())
+                    {
+                        return property == PropertyInfo;
+                    }
+
+                    if (getBase != null && getBase == property.GetMethod?.GetBaseDefinition())
+                    {
+                        return property == PropertyInfo;
+                    }
                 }
 
-                if (property.GetSetMethod(true) != PropertyInfo.GetSetMethod(true) &&
-                    property.GetSetMethod(true)?.GetBaseDefinition() == PropertyInfo.GetSetMethod(true))
-                {
-                    return true;
-                }
+                currentType = currentType.BaseType;
             }
 
             return false;
@@ -381,5 +394,10 @@ namespace Robust.Shared.Utility
 
         public static implicit operator PropertyInfo(SpecificPropertyInfo f) => f.PropertyInfo;
         public static explicit operator SpecificPropertyInfo(PropertyInfo f) => new(f);
+
+        public override string? ToString()
+        {
+            return PropertyInfo.ToString();
+        }
     }
 }

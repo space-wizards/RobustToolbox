@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
@@ -14,17 +15,17 @@ namespace Robust.Server.GameObjects
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        public const int AudioDistanceRange = 25;
+        private const int AudioDistanceRange = 25;
 
         private uint _streamIndex;
 
-        public class AudioSourceServer : IPlayingAudioStream
+        private class AudioSourceServer : IPlayingAudioStream
         {
             private readonly uint _id;
             private readonly AudioSystem _audioSystem;
-            private readonly IEnumerable<IPlayerSession>? _sessions;
+            private readonly IEnumerable<ICommonSession>? _sessions;
 
-            internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<IPlayerSession>? sessions = null)
+            internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<ICommonSession>? sessions = null)
             {
                 _audioSystem = parent;
                 _id = identifier;
@@ -42,7 +43,7 @@ namespace Robust.Server.GameObjects
             SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
         }
 
-        private void InternalStop(uint id, IEnumerable<IPlayerSession>? sessions = null)
+        private void InternalStop(uint id, IEnumerable<ICommonSession>? sessions = null)
         {
             var msg = new StopAudioMessageClient
             {
@@ -104,7 +105,6 @@ namespace Robust.Server.GameObjects
             }
 
             return new AudioSourceServer(this, id, players);
-
         }
 
         /// <summary>
@@ -213,19 +213,93 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
         {
-            throw new NotImplementedException();
+            var id = CacheIdentifier();
+            var msg = new PlayAudioGlobalMessage
+            {
+                FileName = filename,
+                AudioParams = audioParams ?? AudioParams.Default,
+                Identifier = id
+            };
+
+            var players = (playerFilter as IFilter).Recipients;
+            foreach (var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+
+            return new AudioSourceServer(this, id, players);
         }
 
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            throw new NotImplementedException();
+            //TODO: Calculate this from PAS
+            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+
+            var id = CacheIdentifier();
+
+            var msg = new PlayAudioEntityMessage
+            {
+                FileName = filename,
+                Coordinates = entity.Transform.Coordinates,
+                EntityUid = entity.Uid,
+                AudioParams = audioParams ?? AudioParams.Default,
+                Identifier = id,
+            };
+            
+            IList<ICommonSession> players;
+            var recipients = (playerFilter as IFilter).Recipients;
+
+            if (range > 0.0f)
+                players = PASInRange(recipients, entity.Transform.MapPosition, range);
+            else
+                players = recipients;
+
+            foreach (var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+            
+            return new AudioSourceServer(this, id, players);
         }
 
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
-            throw new NotImplementedException();
+            //TODO: Calculate this from PAS
+            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+
+            var id = CacheIdentifier();
+            var msg = new PlayAudioPositionalMessage
+            {
+                FileName = filename,
+                Coordinates = coordinates,
+                AudioParams = audioParams ?? AudioParams.Default,
+                Identifier = id
+            };
+            
+            IList<ICommonSession> players;
+            var recipients = (playerFilter as IFilter).Recipients;
+
+            if (range > 0.0f)
+                players = PASInRange(recipients, coordinates.ToMap(EntityManager), range);
+            else
+                players = recipients;
+
+            foreach (var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+            
+            return new AudioSourceServer(this, id, players);
+        }
+
+        private static List<ICommonSession> PASInRange(IEnumerable<ICommonSession> players, MapCoordinates position, float range)
+        {
+            return players.Where(x =>
+                    x.AttachedEntity != null &&
+                    position.InRange(x.AttachedEntity.Transform.MapPosition, range))
+                .ToList();
         }
     }
 }

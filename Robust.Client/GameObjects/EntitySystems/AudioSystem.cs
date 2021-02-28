@@ -345,19 +345,19 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
         {
-            throw new System.NotImplementedException();
+            return Play(filename, audioParams);
         }
 
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            throw new System.NotImplementedException();
+            return Play(filename, entity, audioParams);
         }
 
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
-            throw new System.NotImplementedException();
+            return Play(filename, coordinates, audioParams);
         }
     }
 }

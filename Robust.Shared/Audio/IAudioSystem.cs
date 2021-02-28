@@ -4,6 +4,9 @@ using Robust.Shared.Player;
 
 namespace Robust.Shared.Audio
 {
+    /// <summary>
+    /// Common interface for the Audio System, which is used to play sounds on clients.
+    /// </summary>
     public interface IAudioSystem
     {
         /// <summary>

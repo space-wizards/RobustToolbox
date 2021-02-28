@@ -101,6 +101,7 @@ entities:
             Assert.That(c.Baz, Is.EqualTo(-1));
         }
 
+        [DataDefinition]
         private sealed class MapDeserializeTestComponent : Component
         {
             public override string Name => "MapDeserializeTest";

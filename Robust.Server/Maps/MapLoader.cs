@@ -566,7 +566,7 @@ namespace Robust.Server.Maps
                         {
                             var copy = new YamlMappingNode(((YamlMappingNode)compData).AsEnumerable());
                             copy.Children.Remove(new YamlScalarNode("type"));
-                            //TODO Paul: maybe replace mapping with dict
+                            //TODO Paul: maybe replace mapping with datanode
                             CurrentReadingEntityComponents[compData["type"].AsString()] = copy;
                         }
                     }

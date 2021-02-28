@@ -43,7 +43,7 @@ namespace Robust.Shared.Map
             set { }
         }
 
-        public void AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization()
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
             _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);

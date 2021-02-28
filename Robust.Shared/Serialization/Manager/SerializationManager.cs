@@ -385,12 +385,16 @@ namespace Robust.Shared.Serialization.Manager
                 return target;
             }
 
+            if(target is ISerializationHooks beforeHooks) beforeHooks.BeforeSerialization();
+
             if (!TryGetDataDefinition(commonType, out var dataDef))
             {
                 throw new InvalidOperationException($"No data definition found for type {commonType} when copying");
             }
 
             target = dataDef.InvokeCopyDelegate(source, target, this, context);
+
+            if(target is ISerializationHooks afterHooks) afterHooks.AfterDeserialization();
 
             return target;
         }

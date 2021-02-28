@@ -158,12 +158,12 @@ namespace Robust.Shared.GameObjects
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
             CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
         {
-            var allNodes = new List<GraphNode<IEntitySystem>>();
-            var typeToNode = new Dictionary<Type, GraphNode<IEntitySystem>>();
+            var allNodes = new List<GraphNode>();
+            var typeToNode = new Dictionary<Type, GraphNode>();
 
             foreach (var system in systems)
             {
-                var node = new GraphNode<IEntitySystem>(system);
+                var node = new GraphNode(system);
 
                 allNodes.Add(node);
                 typeToNode.Add(system.GetType(), node);
@@ -193,10 +193,10 @@ namespace Robust.Shared.GameObjects
             return (frameUpdate, update);
         }
 
-        internal static IEnumerable<GraphNode<T>> TopologicalSort<T>(IEnumerable<GraphNode<T>> nodes)
+        private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes)
         {
             var elems = nodes.ToDictionary(node => node,
-                node => new HashSet<GraphNode<T>>(node.DependsOn));
+                node => new HashSet<GraphNode>(node.DependsOn));
             while (elems.Count > 0)
             {
                 var elem =
@@ -331,12 +331,12 @@ namespace Robust.Shared.GameObjects
         }
 
         [DebuggerDisplay("GraphNode: {" + nameof(System) + "}")]
-        internal sealed class GraphNode<T>
+        private sealed class GraphNode
         {
-            public readonly T System;
-            public readonly List<GraphNode<T>> DependsOn = new();
+            public readonly IEntitySystem System;
+            public readonly List<GraphNode> DependsOn = new();
 
-            public GraphNode(T system)
+            public GraphNode(IEntitySystem system)
             {
                 System = system;
             }

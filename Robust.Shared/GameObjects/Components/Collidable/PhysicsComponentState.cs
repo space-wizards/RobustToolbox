@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -12,11 +10,10 @@ namespace Robust.Shared.GameObjects
     public class PhysicsComponentState : ComponentState
     {
         public readonly bool CanCollide;
-        public readonly bool SleepingAllowed;
-        public readonly bool FixedRotation;
         public readonly BodyStatus Status;
-        public readonly List<Fixture> Fixtures;
-        public readonly List<Joint> Joints;
+        public readonly List<IPhysShape> PhysShapes;
+        public readonly bool Hard;
+
 
         /// <summary>
         ///     Current mass of the entity, stored in grams.
@@ -24,45 +21,31 @@ namespace Robust.Shared.GameObjects
         public readonly int Mass;
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
-        public readonly BodyType BodyType;
+        public readonly bool Anchored;
 
         /// <summary>
         ///
         /// </summary>
         /// <param name="canCollide"></param>
-        /// <param name="sleepingAllowed"></param>
-        /// <param name="fixedRotation"></param>
         /// <param name="status"></param>
-        /// <param name="fixtures"></param>
-        /// <param name="joints"></param>
+        /// <param name="physShapes"></param>
+        /// <param name="hard"></param>
         /// <param name="mass">Current Mass of the entity.</param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
-        /// <param name="bodyType"></param>
-        public PhysicsComponentState(
-            bool canCollide,
-            bool sleepingAllowed,
-            bool fixedRotation,
-            BodyStatus status,
-            List<Fixture> fixtures,
-            List<Joint> joints,
-            float mass,
-            Vector2 linearVelocity,
-            float angularVelocity,
-            BodyType bodyType)
+        /// <param name="anchored">Whether or not the entity is anchored in place.</param>
+        public PhysicsComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
             : base(NetIDs.PHYSICS)
         {
             CanCollide = canCollide;
-            SleepingAllowed = sleepingAllowed;
-            FixedRotation = fixedRotation;
             Status = status;
-            Fixtures = fixtures;
-            Joints = joints;
+            PhysShapes = physShapes;
+            Hard = hard;
 
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
-            Mass = (int) Math.Round(mass * 1000); // rounds kg to nearest gram
-            BodyType = bodyType;
+            Mass = (int)Math.Round(mass * 1000); // rounds kg to nearest gram
+            Anchored = anchored;
         }
     }
 }

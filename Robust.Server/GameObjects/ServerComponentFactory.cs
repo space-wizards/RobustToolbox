@@ -1,5 +1,4 @@
-﻿using Robust.Shared.GameObjects;
-using Robust.Shared.Physics;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
@@ -28,8 +27,7 @@ namespace Robust.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, IPhysBody>();
-
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");

@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -194,7 +193,7 @@ namespace Robust.Shared.GameObjects
                 {
                     ITransformComponent _ => 0,
                     IMetaDataComponent _ => 1,
-                    IPhysBody _ => 2,
+                    IPhysicsComponent _ => 2,
                     _ => int.MaxValue
                 };
 

@@ -29,18 +29,13 @@ namespace Robust.Shared.GameObjects
         private Vector2 _prevPosition;
         private Angle _prevRotation;
 
-        // Cache changes so we can distribute them after physics is done (better cache)
-        private EntityCoordinates? _oldCoords;
-        private Angle? _oldLocalRotation;
-
-        public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
-
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -54,7 +49,6 @@ namespace Robust.Shared.GameObjects
 
         private bool _mapIdInitialized;
 
-        public bool DeferUpdates { get; set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -78,6 +72,13 @@ namespace Robust.Shared.GameObjects
                 return GridId.Invalid;
             }
         }
+
+        /// <inheritdoc />
+        public bool DeferUpdates { get; set; }
+
+        // Deferred fields
+        private Angle? _oldLocalRotation;
+        private EntityCoordinates? _oldCoords;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -119,6 +120,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     UpdateEntityTree();
+                    UpdatePhysicsTree();
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
                 }
@@ -174,7 +176,7 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = Owner.EntityManager.GetEntity(value).Transform;
+            set => Parent = _entityManager.GetEntity(value).Transform;
         }
 
         /// <inheritdoc />
@@ -263,7 +265,7 @@ namespace Robust.Shared.GameObjects
 
                 if (value.EntityId != _parent)
                 {
-                    var newEntity = Owner.EntityManager.GetEntity(value.EntityId);
+                    var newEntity = _entityManager.GetEntity(value.EntityId);
                     AttachParent(newEntity);
                 }
 
@@ -281,6 +283,7 @@ namespace Robust.Shared.GameObjects
                     }
 
                     UpdateEntityTree();
+                    UpdatePhysicsTree();
                 }
                 else
                 {
@@ -313,6 +316,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     UpdateEntityTree();
+                    UpdatePhysicsTree();
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
                 }
@@ -320,6 +324,35 @@ namespace Robust.Shared.GameObjects
                 {
                     _oldCoords ??= oldGridPos;
                 }
+            }
+        }
+
+        /// <inheritdoc />
+        public void RunPhysicsDeferred()
+        {
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
+            {
+                return;
+            }
+
+            RebuildMatrices();
+            UpdateEntityTree();
+            UpdatePhysicsTree();
+
+            if (_oldCoords != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
+                _oldCoords = null;
+            }
+
+            if (_oldLocalRotation != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
+                _oldLocalRotation = null;
             }
         }
 
@@ -445,33 +478,6 @@ namespace Robust.Shared.GameObjects
             base.OnRemove();
         }
 
-        public void RunDeferred()
-        {
-            // if we resolved to (close enough) to the OG position then no update.
-            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
-                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
-            {
-                return;
-            }
-
-            RebuildMatrices();
-            UpdateEntityTree();
-
-            if (_oldCoords != null)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
-                _oldCoords = null;
-            }
-
-            if (_oldLocalRotation != null)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
-                _oldLocalRotation = null;
-            }
-        }
-
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
@@ -489,7 +495,7 @@ namespace Robust.Shared.GameObjects
             IEntity newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
             {
-                newMapEntity = Owner.EntityManager.GetEntity(mapGrid.GridEntityId);
+                newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId))
             {
@@ -510,10 +516,7 @@ namespace Robust.Shared.GameObjects
 
             AttachParent(newMapEntity);
 
-            // Technically we're not moving, just changing parent.
-            DeferUpdates = true;
             WorldPosition = mapPos.Position;
-            DeferUpdates = false;
 
             Dirty();
         }
@@ -624,12 +627,24 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
+            IPhysicsComponent? collider;
+
             if (oldId != MapId.Nullspace)
             {
-                Owner.EntityManager.RemoveFromEntityTree(Owner, oldId);
+                _entityManager.RemoveFromEntityTree(Owner, oldId);
+
+                if (Initialized && Owner.TryGetComponent(out collider))
+                {
+                    collider.RemovedFromPhysicsTree(oldId);
+                }
             }
 
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
+            if (MapID != MapId.Nullspace && Initialized && Owner.TryGetComponent(out collider))
+            {
+                collider.AddedToPhysicsTree(MapID);
+            }
+
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -745,6 +760,7 @@ namespace Robust.Shared.GameObjects
 
                 Dirty();
                 UpdateEntityTree();
+                TryUpdatePhysicsTree();
             }
 
             if (nextState is TransformComponentState nextTransform)
@@ -766,7 +782,6 @@ namespace Robust.Shared.GameObjects
         // Hooks for GodotTransformComponent go here.
         protected virtual void SetPosition(Vector2 position)
         {
-            // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
             _localPosition = position;
         }
 
@@ -809,7 +824,12 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = itransMat;
         }
 
-        public bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
+        private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
+
+        private bool UpdatePhysicsTree() =>
+            Owner.TryGetComponent(out IPhysicsComponent? collider) && collider.UpdatePhysicsTree();
+
+        private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
         public string GetDebugString()
         {

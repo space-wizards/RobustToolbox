@@ -44,11 +44,6 @@ namespace Robust.Shared.Maths
         public static readonly Vector2 Infinity = new(float.PositiveInfinity, float.PositiveInfinity);
 
         /// <summary>
-        ///     A vector with NaN X and Y.
-        /// </summary>
-        public static readonly Vector2 NaN = new(float.NaN, float.NaN);
-
-        /// <summary>
         ///     Construct a vector from its coordinates.
         /// </summary>
         /// <param name="x">X coordinate</param>
@@ -95,7 +90,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Vector2 Rounded()
         {
-            return new(MathF.Round(X), MathF.Round(Y));
+            return new((float) MathF.Round(X), (float) MathF.Round(Y));
         }
 
         /// <summary>

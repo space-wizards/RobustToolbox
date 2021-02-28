@@ -2,31 +2,14 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics
 {
     /// <summary>
     ///
     /// </summary>
-    public interface IPhysBody : IComponent
+    public interface IPhysBody
     {
-        bool IgnoreGravity { get; set; }
-
-        int IslandIndex { get; set; }
-
-        /// <summary>
-        ///     Has this body already been added to a physics island
-        /// </summary>
-        bool Island { get; set; }
-
-        /// <summary>
-        ///     Should the body still have physics updates applied even if paused
-        /// </summary>
-        bool IgnorePaused { get; set; }
-
         /// <summary>
         ///     Entity that this physBody represents.
         /// </summary>
@@ -35,7 +18,14 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        Box2 GetWorldAABB(IMapManager? mapManager = null);
+        Box2 WorldAABB { get; }
+
+        /// <summary>
+        ///     AABB of this entity in local space.
+        /// </summary>
+        Box2 AABB { get; }
+
+        IList<IPhysShape> PhysicsShapes { get; }
 
         /// <summary>
         /// Whether or not this body can collide.
@@ -54,39 +44,29 @@ namespace Robust.Shared.Physics
         /// </summary>
         int CollisionMask { get; }
 
-        void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null);
-
-        void ClearProxies();
-
-        IReadOnlyList<Fixture> Fixtures { get; }
-
         /// <summary>
         ///     The map index this physBody is located upon
         /// </summary>
         MapId MapID { get; }
 
         /// <summary>
+        /// Broad Phase proxy ID.
+        /// </summary>
+        int ProxyId { get; set; }
+
+        /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }
 
-        /// <summary>
-        ///     Whether the body is affected by tile friction or not.
-        /// </summary>
-        BodyStatus BodyStatus { get; set; }
+        int SleepAccumulator { get; set; }
 
-        bool Awake { get; set; }
+        int SleepThreshold { get; set; }
 
-        bool SleepingAllowed { get; set; }
-
-        float SleepTime { get; set; }
-
-        float LinearDamping { get; set; }
-
-        float AngularDamping { get; set; }
+        bool Awake { get; }
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
@@ -95,19 +75,14 @@ namespace Robust.Shared.Physics
         bool Hard { get; set; }
 
         /// <summary>
-        ///     Inverse mass of the entity in kilograms (1 / Mass).
+        /// Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
 
         /// <summary>
-        /// Mass of the entity in kilograms
+        /// Inverse moment of inertia, in 
         /// </summary>
-        float Mass { get; set; }
-
-        /// <summary>
-        ///     Inverse inertia
-        /// </summary>
-        float InvI { get; set; }
+        float InvI { get; }
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
@@ -172,7 +147,5 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <returns>True if this body can move, false if it is static.</returns>
         bool CanMove();
-
-        IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

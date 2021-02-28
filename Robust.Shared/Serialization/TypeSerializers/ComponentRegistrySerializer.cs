@@ -16,12 +16,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ComponentRegistrySerializer :ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-
-        public DeserializationResult<ComponentRegistry> Read(SequenceDataNode node,
+        public DeserializationResult<ComponentRegistry> Read(ISerializationManager serializationManager,
+            SequenceDataNode node,
             ISerializationContext? context = null)
         {
+            var factory = IoCManager.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
             var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
 
@@ -29,7 +28,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             {
                 string compType = ((ValueDataNode)componentMapping.GetNode("type")).Value;
                 // See if type exists to detect errors.
-                switch (_componentFactory.GetComponentAvailability(compType))
+                switch (factory.GetComponentAvailability(compType))
                 {
                     case ComponentAvailability.Available:
                         break;
@@ -52,8 +51,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
                 copy.RemoveNode("type");
 
-                var type = _componentFactory.GetRegistration(compType).Type;
-                var read = _serializationManager.ReadWithValueOrThrow<IComponent>(type, copy);
+                var type = factory.GetRegistration(compType).Type;
+                var read = serializationManager.ReadWithValueOrThrow<IComponent>(type, copy);
 
                 components[compType] = read.value;
                 mappings.Add(DeserializationResult.Value(compType), read.result);
@@ -63,7 +62,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)
             {
-                var registration = _componentFactory.GetRegistration(componentName);
+                var registration = factory.GetRegistration(componentName);
                 foreach (var compType in registration.References)
                 {
                     if (referenceTypes.Contains(compType))
@@ -79,14 +78,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
         }
 
-        public DataNode Write(ComponentRegistry value,
+        public DataNode Write(ISerializationManager serializationManager, ComponentRegistry value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var compSequence = new SequenceDataNode();
             foreach (var (type, component) in value)
             {
-                var node = _serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
+                var node = serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
                 if (mapping.Children.Count != 0)
                 {
@@ -99,7 +98,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public ComponentRegistry Copy(ComponentRegistry source, ComponentRegistry target)
+        public ComponentRegistry Copy(ISerializationManager serializationManager, ComponentRegistry source,
+            ComponentRegistry target)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);

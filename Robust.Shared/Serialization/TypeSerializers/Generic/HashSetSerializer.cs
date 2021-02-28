@@ -16,9 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-
-        DeserializationResult<HashSet<T>> ITypeReader<HashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult<HashSet<T>> ITypeReader<HashSet<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context)
         {
             var set = new HashSet<T>();
@@ -26,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
                 set.Add(value);
                 mappings.Add(result);
@@ -35,26 +34,28 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<HashSet<T>, T>(set, mappings);
         }
 
-        public DataNode Write(ImmutableHashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return Write(value.ToHashSet(), alwaysWrite, context);
+            return Write(serializationManager, value.ToHashSet(), alwaysWrite, context);
         }
 
-        public DataNode Write(HashSet<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, HashSet<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();
 
             foreach (var elem in value)
             {
-                sequence.Add(_serializationManager.WriteValue(elem, alwaysWrite, context));
+                sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;
         }
 
-        DeserializationResult<ImmutableHashSet<T>> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(SequenceDataNode node,
+        DeserializationResult<ImmutableHashSet<T>> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context)
         {
             var set = ImmutableHashSet.CreateBuilder<T>();
@@ -62,7 +63,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
                 set.Add(value);
                 mappings.Add(result);
@@ -72,14 +73,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public HashSet<T> Copy(HashSet<T> source, HashSet<T> target)
+        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
                 target.Add(elementCopy);
             }
 
@@ -87,13 +88,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public ImmutableHashSet<T> Copy(ImmutableHashSet<T> source, ImmutableHashSet<T> target)
+        public ImmutableHashSet<T> Copy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
+            ImmutableHashSet<T> target)
         {
             var builder = ImmutableHashSet.CreateBuilder<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
                 builder.Add(elementCopy);
             }
 

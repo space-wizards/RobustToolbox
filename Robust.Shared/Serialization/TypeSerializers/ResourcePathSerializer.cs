@@ -10,12 +10,13 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
     {
-        public DeserializationResult<ResourcePath> Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<ResourcePath> Read(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
         }
 
-        public DataNode Write(ResourcePath value,
+        public DataNode Write(ISerializationManager serializationManager, ResourcePath value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public ResourcePath Copy(ResourcePath source, ResourcePath target)
+        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target)
         {
             return new(source.ToString());
         }

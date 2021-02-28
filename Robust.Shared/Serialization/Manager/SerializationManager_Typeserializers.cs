@@ -59,7 +59,6 @@ namespace Robust.Shared.Serialization.Manager
             else
             {
                 var serializer = Activator.CreateInstance(type)!;
-                IoCManager.InjectDependencies(serializer);
 
                 foreach (var writerInterface in writerInterfaces)
                 {
@@ -153,13 +152,13 @@ namespace Robust.Shared.Serialization.Manager
                 _typeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader))
             {
                 var ser = (ITypeReader<T, TNode>) rawTypeReader;
-                obj = ser.Read(node, context);
+                obj = ser.Read(this, node, context);
                 return true;
             }
 
             if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
             {
-                obj = genericTypeReader.Read(node, context);
+                obj = genericTypeReader.Read(this, node, context);
                 return true;
             }
 
@@ -197,13 +196,13 @@ namespace Robust.Shared.Serialization.Manager
                 _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
             {
                 var ser = (ITypeWriter<T>) rawTypeWriter;
-                node = ser.Write(obj, alwaysWrite, context);
+                node = ser.Write(this, obj, alwaysWrite, context);
                 return true;
             }
 
             if (TryGetGenericWriter(out ITypeWriter<T>? genericTypeWriter))
             {
-                node = genericTypeWriter.Write(obj, alwaysWrite, context);
+                node = genericTypeWriter.Write(this, obj, alwaysWrite, context);
                 return true;
             }
 

@@ -823,7 +823,8 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public DeserializationResult<GridId> Read(ValueDataNode node, ISerializationContext? context = null)
+            public DeserializationResult<GridId> Read(ISerializationManager serializationManager, ValueDataNode node,
+                ISerializationContext? context = null)
             {
                 if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
 
@@ -840,7 +841,7 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            public DataNode Write(IEntity value, bool alwaysWrite = false,
+            public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value.Uid, out var entityMapped))
@@ -854,7 +855,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public DataNode Write(EntityUid value, bool alwaysWrite = false,
+            public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
@@ -874,7 +875,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public DataNode Write(GridId value, bool alwaysWrite = false,
+            public DataNode Write(ISerializationManager serializationManager, GridId value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!GridIDMap.TryGetValue(value, out var gridMapped))
@@ -888,7 +889,8 @@ namespace Robust.Server.Maps
                 }
             }
 
-            DeserializationResult<EntityUid> ITypeReader<EntityUid, ValueDataNode>.Read(ValueDataNode node,
+            DeserializationResult<EntityUid> ITypeReader<EntityUid, ValueDataNode>.Read(
+                ISerializationManager serializationManager, ValueDataNode node,
                 ISerializationContext? context)
             {
                 if (node.Value == "null")
@@ -909,7 +911,8 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<EntityUid>(EntityUid.Invalid);
             }
 
-            DeserializationResult<IEntity> ITypeReader<IEntity, ValueDataNode>.Read(ValueDataNode node,
+            DeserializationResult<IEntity> ITypeReader<IEntity, ValueDataNode>.Read(
+                ISerializationManager serializationManager, ValueDataNode node,
                 ISerializationContext? context)
             {
                 var val = int.Parse(node.Value);
@@ -926,13 +929,13 @@ namespace Robust.Server.Maps
             }
 
             [MustUseReturnValue]
-            public GridId Copy(GridId source, GridId target)
+            public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target)
             {
                 return new(source.Value);
             }
 
             [MustUseReturnValue]
-            public EntityUid Copy(EntityUid source, EntityUid target)
+            public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target)
             {
                 return new((int) source);
             }

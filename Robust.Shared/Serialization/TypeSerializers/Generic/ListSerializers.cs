@@ -16,53 +16,55 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableList<T>, SequenceDataNode>
     {
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-
-        private DataNode WriteInternal(IEnumerable<T> value, bool alwaysWrite = false,
+        private DataNode WriteInternal(ISerializationManager serializationManager, IEnumerable<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var sequence = new SequenceDataNode();
 
             foreach (var elem in value)
             {
-                sequence.Add(_serializationManager.WriteValue(elem, alwaysWrite, context));
+                sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
             }
 
             return sequence;
         }
 
-        public DataNode Write(ImmutableList<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, ImmutableList<T> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return WriteInternal(value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(List<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, List<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return WriteInternal(value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(IReadOnlyCollection<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, IReadOnlyCollection<T> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return WriteInternal(value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(IReadOnlyList<T> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, IReadOnlyList<T> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return WriteInternal(value, alwaysWrite, context);
+            return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        DeserializationResult<List<T>> ITypeReader<List<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
+        DeserializationResult<List<T>> ITypeReader<List<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
             var results = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(typeof(T), dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(typeof(T), dataNode, context);
                 list.Add(value);
                 results.Add(result);
             }
@@ -70,14 +72,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<List<T>, T>(list, results);
         }
 
-        DeserializationResult<IReadOnlyList<T>> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
+        DeserializationResult<IReadOnlyList<T>> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
             var results = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
                 list.Add(value);
                 results.Add(result);
@@ -86,14 +89,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyCollection<IReadOnlyList<T>, T>(list, results, l => l);
         }
 
-        DeserializationResult<IReadOnlyCollection<T>> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
+        DeserializationResult<IReadOnlyCollection<T>> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
             var results = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
                 list.Add(value);
                 results.Add(result);
             }
@@ -101,14 +105,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyCollection<IReadOnlyCollection<T>, T>(list, results, l => l);
         }
 
-        DeserializationResult<ImmutableList<T>> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
+        DeserializationResult<ImmutableList<T>> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
+            ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = ImmutableList.CreateBuilder<T>();
             var results = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
                 list.Add(value);
                 results.Add(result);
             }
@@ -117,13 +122,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        private TList CopyInternal<TList>(IEnumerable<T> source, TList target) where TList : IList<T>
+        private TList CopyInternal<TList>(ISerializationManager serializationManager, IEnumerable<T> source, TList target) where TList : IList<T>
         {
             target.Clear();
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element)!;
                 target.Add(elementCopy);
             }
 
@@ -131,24 +136,25 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public List<T> Copy(List<T> source, List<T> target)
+        public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target)
         {
-            return CopyInternal(source, target);
+            return CopyInternal(serializationManager, source, target);
         }
 
         [MustUseReturnValue]
-        public IReadOnlyList<T> Copy(IReadOnlyList<T> source, IReadOnlyList<T> target)
+        public IReadOnlyList<T> Copy(ISerializationManager serializationManager, IReadOnlyList<T> source,
+            IReadOnlyList<T> target)
         {
             if (target is List<T> targetList)
             {
-                return CopyInternal(source, targetList);
+                return CopyInternal(serializationManager, source, targetList);
             }
 
             var list = new List<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element)!;
                 list.Add(elementCopy);
             }
 
@@ -156,31 +162,33 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public IReadOnlyCollection<T> Copy(IReadOnlyCollection<T> source, IReadOnlyCollection<T> target)
+        public IReadOnlyCollection<T> Copy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
+            IReadOnlyCollection<T> target)
         {
             if (target is List<T> targetList)
             {
-                return CopyInternal(source, targetList);
+                return CopyInternal(serializationManager, source, targetList);
             }
 
             var list = new List<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element)!;
                 list.Add(elementCopy);
             }
 
             return list;
         }
 
-        public ImmutableList<T> Copy(ImmutableList<T> source, ImmutableList<T> target)
+        public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
+            ImmutableList<T> target)
         {
             var builder = ImmutableList.CreateBuilder<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = _serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element)!;
                 builder.Add(elementCopy);
             }
 

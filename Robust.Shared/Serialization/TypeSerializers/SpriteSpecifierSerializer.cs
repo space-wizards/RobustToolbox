@@ -18,23 +18,23 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ITypeCopier<Texture>,
         ITypeCopier<EntityPrototype>
     {
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-
-        public DeserializationResult<SpriteSpecifier> Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<SpriteSpecifier> Read(ISerializationManager serializationManager,
+            ValueDataNode node, ISerializationContext? context = null)
         {
-            var path = _serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
             var texture = new Texture(path);
 
             return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
-        public DeserializationResult<SpriteSpecifier> Read(MappingDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<SpriteSpecifier> Read(ISerializationManager serializationManager,
+            MappingDataNode node, ISerializationContext? context = null)
         {
             if (node.TryGetNode("sprite", out var spriteNode)
                 && node.TryGetNode("state", out var rawStateNode)
                 && rawStateNode is ValueDataNode stateNode)
             {
-                var path = _serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context);
+                var path = serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context);
                 var rsi = new Rsi(path, stateNode.Value);
 
                 return new DeserializedValue<SpriteSpecifier>(rsi);
@@ -43,17 +43,17 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new InvalidNodeTypeException();
         }
 
-        public DataNode Write(SpriteSpecifier value,
+        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             switch (value)
             {
                 case Texture tex:
-                    return _serializationManager.WriteValue(tex.TexturePath, alwaysWrite, context);
+                    return serializationManager.WriteValue(tex.TexturePath, alwaysWrite, context);
                 case Rsi rsi:
                     var mapping = new MappingDataNode();
-                    mapping.AddNode("sprite", _serializationManager.WriteValue(rsi.RsiPath, alwaysWrite, context));
+                    mapping.AddNode("sprite", serializationManager.WriteValue(rsi.RsiPath, alwaysWrite, context));
                     mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
                     return mapping;
             }
@@ -61,18 +61,19 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new NotImplementedException();
         }
 
-        public Rsi Copy(Rsi source, Rsi target)
+        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target)
         {
             return new(source.RsiPath, source.RsiState);
         }
 
-        public Texture Copy(Texture source, Texture target)
+        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target)
         {
             return new(source.TexturePath);
         }
 
         [MustUseReturnValue]
-        public EntityPrototype Copy(EntityPrototype source, EntityPrototype target)
+        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
+            EntityPrototype target)
         {
             return new(source.EntityPrototypeId);
         }

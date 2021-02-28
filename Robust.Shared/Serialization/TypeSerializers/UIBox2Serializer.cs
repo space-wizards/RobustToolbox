@@ -11,7 +11,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
     {
-        public DeserializationResult<UIBox2> Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<UIBox2> Read(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
 
@@ -23,14 +24,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<UIBox2>(new UIBox2(l, t, r, b));
         }
 
-        public DataNode Write(UIBox2 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, UIBox2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
         }
 
         [MustUseReturnValue]
-        public UIBox2 Copy(UIBox2 source, UIBox2 target)
+        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target)
         {
             return new(source.Left, source.Top, source.Right, source.Bottom);
         }

@@ -5,6 +5,6 @@ namespace Robust.Shared.Serialization.Manager
     public interface ITypeCopier<TType>
     {
         [MustUseReturnValue]
-        TType Copy(TType source, TType target);
+        TType Copy(ISerializationManager serializationManager, TType source, TType target);
     }
 }

@@ -11,7 +11,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class Vector3Serializer : ITypeSerializer<Vector3, ValueDataNode>
     {
-        public DeserializationResult<Vector3> Read(ValueDataNode node, ISerializationContext? context = null)
+        public DeserializationResult<Vector3> Read(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             string raw = node.Value;
             string[] args = raw.Split(',');
@@ -29,14 +30,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Vector3>(vector);
         }
 
-        public DataNode Write(Vector3 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Vector3 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             return new ValueDataNode(
                 $"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)},{value.Z.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector3 Copy(Vector3 source, Vector3 target)
+        public Vector3 Copy(ISerializationManager serializationManager, Vector3 source, Vector3 target)
         {
             return new(source);
         }

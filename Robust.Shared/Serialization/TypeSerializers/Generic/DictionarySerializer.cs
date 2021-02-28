@@ -16,9 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode> where TKey : notnull
     {
-        [Dependency] private readonly ISerializationManager _serializationManager = default!;
-
         private MappingDataNode InterfaceWrite(
+            ISerializationManager serializationManager,
             IDictionary<TKey, TValue> value,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
@@ -28,22 +27,23 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             foreach (var (key, val) in value)
             {
                 mappingNode.AddNode(
-                    _serializationManager.WriteValue(key, alwaysWrite, context),
-                    _serializationManager.WriteValue(val, alwaysWrite, context));
+                    serializationManager.WriteValue(key, alwaysWrite, context),
+                    serializationManager.WriteValue(val, alwaysWrite, context));
             }
 
             return mappingNode;
         }
 
-        public DeserializationResult<Dictionary<TKey, TValue>> Read(MappingDataNode node, ISerializationContext? context)
+        public DeserializationResult<Dictionary<TKey, TValue>> Read(ISerializationManager serializationManager,
+            MappingDataNode node, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
+                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);
@@ -52,33 +52,38 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        public DataNode Write(Dictionary<TKey, TValue> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Dictionary<TKey, TValue> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return InterfaceWrite(value, alwaysWrite, context);
+            return InterfaceWrite(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(SortedDictionary<TKey, TValue> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, SortedDictionary<TKey, TValue> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return InterfaceWrite(value, alwaysWrite, context);
+            return InterfaceWrite(serializationManager, value, alwaysWrite, context);
         }
 
-        public DataNode Write(IReadOnlyDictionary<TKey, TValue> value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> value,
+            bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return InterfaceWrite(value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
+            return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult<IReadOnlyDictionary<TKey, TValue>> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<IReadOnlyDictionary<TKey, TValue>>
+            ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
+                ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
+                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);
@@ -87,15 +92,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        DeserializationResult<SortedDictionary<TKey, TValue>> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
+        DeserializationResult<SortedDictionary<TKey, TValue>>
+            ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
+                ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
             var dict = new SortedDictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
-                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
+                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
                 dict.Add(keyVal, valueVal!);
                 mappedFields.Add(keyResult, valueResult);
@@ -105,14 +112,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        private T CopyInternal<T>(IReadOnlyDictionary<TKey, TValue> source, T target) where T : IDictionary<TKey, TValue>
+        private T CopyInternal<T>(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, T target) where T : IDictionary<TKey, TValue>
         {
             target.Clear();
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = _serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
-                var valueCopy = _serializationManager.CreateCopy(value)!;
+                var keyCopy = serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.CreateCopy(value)!;
 
                 target.Add(keyCopy, valueCopy);
             }
@@ -121,25 +128,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public Dictionary<TKey, TValue> Copy(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target)
+        public Dictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
+            Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target)
         {
-            return CopyInternal(source, target);
+            return CopyInternal(serializationManager, source, target);
         }
 
         [MustUseReturnValue]
-        public IReadOnlyDictionary<TKey, TValue> Copy(IReadOnlyDictionary<TKey, TValue> source, IReadOnlyDictionary<TKey, TValue> target)
+        public IReadOnlyDictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
+            IReadOnlyDictionary<TKey, TValue> source, IReadOnlyDictionary<TKey, TValue> target)
         {
             if (target is Dictionary<TKey, TValue> targetDictionary)
             {
-                return CopyInternal(source, targetDictionary);
+                return CopyInternal(serializationManager, source, targetDictionary);
             }
 
             var dictionary = new Dictionary<TKey, TValue>(source.Count);
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = _serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
-                var valueCopy = _serializationManager.CreateCopy(value)!;
+                var keyCopy = serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.CreateCopy(value)!;
 
                 dictionary.Add(keyCopy, valueCopy);
             }
@@ -148,9 +157,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public SortedDictionary<TKey, TValue> Copy(SortedDictionary<TKey, TValue> source, SortedDictionary<TKey, TValue> target)
+        public SortedDictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
+            SortedDictionary<TKey, TValue> source, SortedDictionary<TKey, TValue> target)
         {
-            return CopyInternal(source, target);
+            return CopyInternal(serializationManager, source, target);
         }
     }
 }

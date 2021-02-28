@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -202,7 +203,9 @@ namespace Robust.Shared.Serialization.Manager
 
             if (node is not MappingDataNode mappingDataNode)
             {
-                throw new ArgumentException($"No mapping node provided for type {type}");
+                if(node is not ValueDataNode emptyValueDataNode || emptyValueDataNode.Value != "")
+                    throw new ArgumentException($"No mapping node provided for type {type}");
+                mappingDataNode = new MappingDataNode(); //if we get an emptyValueDataNode we just use an empty mapping
             }
 
             var res = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);

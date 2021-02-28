@@ -150,6 +150,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
+        [DataField("parent")]
         public string? Parent { get; private set; }
 
         /// <summary>
@@ -159,12 +160,6 @@ namespace Robust.Shared.Prototypes
         public List<EntityPrototype> Children { get; private set; } = new();
 
         public bool IsRoot => Parent == null;
-
-        /// <summary>
-        /// Used to store the parent id until we sync when all templates are done loading.
-        /// </summary>
-        [DataField("parent")]
-        private string? parentTemp;
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.

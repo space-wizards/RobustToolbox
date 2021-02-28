@@ -55,10 +55,10 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             foreach (var (keyRes, valRes) in Mappings)
             {
-                var newKeyRes = keyRes.Copy().Cast<DeserializationResult<TKey>>();
-                var newValueRes = valRes.Copy().Cast<DeserializationResult<TValue>>();
+                var newKeyRes = keyRes.Copy();
+                var newValueRes = valRes.Copy();
 
-                valueDict.Add(newKeyRes.Value, newValueRes.Value);
+                valueDict.Add((TKey) newKeyRes.RawValue!, (TValue)newValueRes.RawValue!);
                 mappingDict.Add(newKeyRes, newValueRes);
             }
 

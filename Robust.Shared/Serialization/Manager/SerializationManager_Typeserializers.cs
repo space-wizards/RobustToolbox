@@ -254,7 +254,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 4).MakeGenericMethod(type, source.GetType(), target.GetType());
+                m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 2).MakeGenericMethod(type, source.GetType(), target.GetType());
 
             var arr = new[] {source, target};
             var res = method.Invoke(this, arr);

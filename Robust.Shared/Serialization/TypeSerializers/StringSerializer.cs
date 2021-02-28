@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public string Copy(ISerializationManager serializationManager, string source, string target)
+        public string Copy(ISerializationManager serializationManager, string source, string target, ISerializationContext? context = null)
         {
             return source;
         }

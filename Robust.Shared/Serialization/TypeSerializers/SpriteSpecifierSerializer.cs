@@ -61,19 +61,19 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new NotImplementedException();
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target)
+        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target, ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target)
+        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target, ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
         [MustUseReturnValue]
         public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
-            EntityPrototype target)
+            EntityPrototype target, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }

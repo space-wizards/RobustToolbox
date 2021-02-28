@@ -73,14 +73,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target)
+        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
                 target.Add(elementCopy);
             }
 
@@ -89,13 +89,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         [MustUseReturnValue]
         public ImmutableHashSet<T> Copy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
-            ImmutableHashSet<T> target)
+            ImmutableHashSet<T> target, ISerializationContext? context = null)
         {
             var builder = ImmutableHashSet.CreateBuilder<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element) ?? throw new NullReferenceException();
+                var elementCopy = serializationManager.CreateCopy(element, context) ?? throw new NullReferenceException();
                 builder.Add(elementCopy);
             }
 

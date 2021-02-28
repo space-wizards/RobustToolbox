@@ -112,14 +112,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        private T CopyInternal<T>(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, T target) where T : IDictionary<TKey, TValue>
+        private T CopyInternal<T>(ISerializationManager serializationManager, IReadOnlyDictionary<TKey, TValue> source, T target, ISerializationContext? context) where T : IDictionary<TKey, TValue>
         {
             target.Clear();
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value)!;
+                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.CreateCopy(value, context)!;
 
                 target.Add(keyCopy, valueCopy);
             }
@@ -129,26 +129,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         [MustUseReturnValue]
         public Dictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
-            Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target)
+            Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target, ISerializationContext? context = null)
         {
-            return CopyInternal(serializationManager, source, target);
+            return CopyInternal(serializationManager, source, target, context);
         }
 
         [MustUseReturnValue]
         public IReadOnlyDictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
-            IReadOnlyDictionary<TKey, TValue> source, IReadOnlyDictionary<TKey, TValue> target)
+            IReadOnlyDictionary<TKey, TValue> source, IReadOnlyDictionary<TKey, TValue> target,
+            ISerializationContext? context = null)
         {
             if (target is Dictionary<TKey, TValue> targetDictionary)
             {
-                return CopyInternal(serializationManager, source, targetDictionary);
+                return CopyInternal(serializationManager, source, targetDictionary, context);
             }
 
             var dictionary = new Dictionary<TKey, TValue>(source.Count);
 
             foreach (var (key, value) in source)
             {
-                var keyCopy = serializationManager.CreateCopy(key) ?? throw new NullReferenceException();
-                var valueCopy = serializationManager.CreateCopy(value)!;
+                var keyCopy = serializationManager.CreateCopy(key, context) ?? throw new NullReferenceException();
+                var valueCopy = serializationManager.CreateCopy(value, context)!;
 
                 dictionary.Add(keyCopy, valueCopy);
             }
@@ -158,9 +159,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         [MustUseReturnValue]
         public SortedDictionary<TKey, TValue> Copy(ISerializationManager serializationManager,
-            SortedDictionary<TKey, TValue> source, SortedDictionary<TKey, TValue> target)
+            SortedDictionary<TKey, TValue> source, SortedDictionary<TKey, TValue> target,
+            ISerializationContext? context = null)
         {
-            return CopyInternal(serializationManager, source, target);
+            return CopyInternal(serializationManager, source, target, context);
         }
     }
 }

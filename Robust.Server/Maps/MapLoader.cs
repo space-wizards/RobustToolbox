@@ -781,7 +781,7 @@ namespace Robust.Server.Maps
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
                 IComponent data = protoData != null
-                    ? serializationManager.CreateCopy(protoData)!
+                    ? serializationManager.CreateCopy(protoData, this)!
                     : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
@@ -929,13 +929,15 @@ namespace Robust.Server.Maps
             }
 
             [MustUseReturnValue]
-            public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target)
+            public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target,
+                ISerializationContext? context = null)
             {
                 return new(source.Value);
             }
 
             [MustUseReturnValue]
-            public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target)
+            public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
+                ISerializationContext? context = null)
             {
                 return new((int) source);
             }

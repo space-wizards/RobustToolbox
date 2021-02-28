@@ -35,7 +35,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target)
+        public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target, ISerializationContext? context = null)
         {
             return new(source.X, source.Y);
         }

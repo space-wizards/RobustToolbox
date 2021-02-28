@@ -122,13 +122,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        private TList CopyInternal<TList>(ISerializationManager serializationManager, IEnumerable<T> source, TList target) where TList : IList<T>
+        private TList CopyInternal<TList>(ISerializationManager serializationManager, IEnumerable<T> source, TList target, ISerializationContext? context = null) where TList : IList<T>
         {
             target.Clear();
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element, context)!;
                 target.Add(elementCopy);
             }
 
@@ -136,14 +136,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target)
+        public List<T> Copy(ISerializationManager serializationManager, List<T> source, List<T> target, ISerializationContext? context = null)
         {
-            return CopyInternal(serializationManager, source, target);
+            return CopyInternal(serializationManager, source, target, context);
         }
 
         [MustUseReturnValue]
         public IReadOnlyList<T> Copy(ISerializationManager serializationManager, IReadOnlyList<T> source,
-            IReadOnlyList<T> target)
+            IReadOnlyList<T> target, ISerializationContext? context = null)
         {
             if (target is List<T> targetList)
             {
@@ -154,7 +154,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element, context)!;
                 list.Add(elementCopy);
             }
 
@@ -163,18 +163,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         [MustUseReturnValue]
         public IReadOnlyCollection<T> Copy(ISerializationManager serializationManager, IReadOnlyCollection<T> source,
-            IReadOnlyCollection<T> target)
+            IReadOnlyCollection<T> target, ISerializationContext? context = null)
         {
             if (target is List<T> targetList)
             {
-                return CopyInternal(serializationManager, source, targetList);
+                return CopyInternal(serializationManager, source, targetList, context);
             }
 
             var list = new List<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element, context)!;
                 list.Add(elementCopy);
             }
 
@@ -182,13 +182,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
-            ImmutableList<T> target)
+            ImmutableList<T> target, ISerializationContext? context = null)
         {
             var builder = ImmutableList.CreateBuilder<T>();
 
             foreach (var element in source)
             {
-                var elementCopy = serializationManager.CreateCopy(element)!;
+                var elementCopy = serializationManager.CreateCopy(element, context)!;
                 builder.Add(elementCopy);
             }
 

@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target)
+        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target, ISerializationContext? context = null)
         {
             return new(source.ToString());
         }

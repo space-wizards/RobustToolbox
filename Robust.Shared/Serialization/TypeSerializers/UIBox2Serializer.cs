@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target)
+        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target, ISerializationContext? context = null)
         {
             return new(source.Left, source.Top, source.Right, source.Bottom);
         }

@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Color Copy(ISerializationManager serializationManager, Color source, Color target)
+        public Color Copy(ISerializationManager serializationManager, Color source, Color target, ISerializationContext? context = null)
         {
             return new(source.R, source.G, source.B, source.A);
         }

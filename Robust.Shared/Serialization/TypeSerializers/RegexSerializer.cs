@@ -23,7 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target)
+        public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target, ISerializationContext? context = null)
         {
             return new(source.ToString(), source.Options, source.MatchTimeout);
         }

@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target)
+        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target, ISerializationContext? context = null)
         {
             return new(source.Value);
         }

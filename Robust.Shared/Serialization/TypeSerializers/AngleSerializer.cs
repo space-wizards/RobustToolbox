@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Angle Copy(ISerializationManager serializationManager, Angle source, Angle target)
+        public Angle Copy(ISerializationManager serializationManager, Angle source, Angle target, ISerializationContext? context = null)
         {
             return new(source);
         }

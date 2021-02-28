@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Whether the body is affected by tile friction or not.
         /// </summary>
-        BodyStatus Status { get; set; }
+        BodyStatus BodyStatus { get; set; }
 
         bool Awake { get; set; }
 

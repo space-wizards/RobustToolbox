@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(IPhysBody))]
     public sealed class PhysicsComponent : Component, IPhysBody
     {
-        private BodyStatus _status;
+        private BodyStatus _bodyStatus;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -167,7 +167,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private bool _awake;
+        private bool _awake = true;
 
         /// <summary>
         /// You can disable sleeping on this body. If you disable sleeping, the
@@ -252,8 +252,7 @@ namespace Robust.Shared.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _canCollide, "on", true);
-            serializer.DataField(ref _status, "status", BodyStatus.OnGround);
+            serializer.DataField(ref _bodyStatus, "status", BodyStatus.OnGround);
             // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(ref _fixedRotation, "fixedRotation", true);
@@ -297,7 +296,7 @@ namespace Robust.Shared.GameObjects
             {
                 _invMass = 1.0f / _mass;
             }
-            serializer.DataField(ref _awake, "awake", true);
+
             serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }
 
@@ -311,7 +310,7 @@ namespace Robust.Shared.GameObjects
                 joints.Add(je.Joint);
             }
 
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _status, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -323,7 +322,7 @@ namespace Robust.Shared.GameObjects
             SleepingAllowed = newState.SleepingAllowed;
             FixedRotation = newState.FixedRotation;
             CanCollide = newState.CanCollide;
-            Status = newState.Status;
+            BodyStatus = newState.Status;
 
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
@@ -510,7 +509,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private bool _canCollide;
+        private bool _canCollide = true;
 
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
@@ -845,25 +844,18 @@ namespace Robust.Shared.GameObjects
         ///     The current status of the object
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public BodyStatus Status
+        public BodyStatus BodyStatus
         {
-            get => _status;
+            get => _bodyStatus;
             set
             {
-                if (_status == value)
+                if (_bodyStatus == value)
                     return;
 
-                _status = value;
+                _bodyStatus = value;
                 Dirty();
             }
         }
-
-        /// <summary>
-        ///     Whether this component is on the ground
-        /// </summary>
-        public bool OnGround => Status == BodyStatus.OnGround &&
-                                !IoCManager.Resolve<IPhysicsManager>()
-                                    .IsWeightless(Owner.Transform.Coordinates);
 
         /// <summary>
         ///     Whether or not the entity is anchored in place.
@@ -1221,7 +1213,6 @@ namespace Robust.Shared.GameObjects
         public override void OnRemove()
         {
             base.OnRemove();
-
             CanCollide = false;
         }
 
@@ -1324,16 +1315,6 @@ namespace Robust.Shared.GameObjects
             }
 
             return true;
-        }
-
-        public bool IsOnGround()
-        {
-            return Status == BodyStatus.OnGround;
-        }
-
-        public bool IsInAir()
-        {
-            return Status == BodyStatus.InAir;
         }
     }
 

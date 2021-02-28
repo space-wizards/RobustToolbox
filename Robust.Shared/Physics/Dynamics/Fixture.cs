@@ -355,4 +355,18 @@ namespace Robust.Shared.Physics.Dynamics
                    Body == other.Body;
         }
     }
+
+    /// <summary>
+    /// Tag type for defining the representation of the collision layer bitmask
+    /// in terms of readable names in the content. To understand more about the
+    /// point of this type, see the <see cref="FlagsForAttribute"/>.
+    /// </summary>
+    public sealed class CollisionLayer {}
+
+    /// <summary>
+    /// Tag type for defining the representation of the collision mask bitmask
+    /// in terms of readable names in the content. To understand more about the
+    /// point of this type, see the <see cref="FlagsForAttribute"/>.
+    /// </summary>
+    public sealed class CollisionMask {}
 }

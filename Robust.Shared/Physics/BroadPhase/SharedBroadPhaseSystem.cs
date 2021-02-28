@@ -264,7 +264,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage message)
         {
-            if (message.Entity.TryGetComponent(out IPhysBody? physicsComponent))
+            if (!message.Entity.Deleted && message.Entity.TryGetComponent(out IPhysBody? physicsComponent))
             {
                 physicsComponent.CanCollide = false;
                 physicsComponent.Awake = false;
@@ -755,6 +755,8 @@ namespace Robust.Shared.Physics.Broadphase
         /// <returns></returns>
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
         {
+            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
+
             var bodies = new HashSet<PhysicsComponent>();
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))

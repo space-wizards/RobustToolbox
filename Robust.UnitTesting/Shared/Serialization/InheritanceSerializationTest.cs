@@ -64,6 +64,9 @@ namespace Robust.UnitTesting.Shared.Serialization
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var mapManager = IoCManager.Resolve<IMapManager>();
+            mapManager.Initialize();
+            mapManager.Startup();
+
             var mapId = new MapId(1);
 
             mapManager.CreateMap(mapId);

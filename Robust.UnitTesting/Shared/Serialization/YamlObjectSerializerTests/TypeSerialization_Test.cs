@@ -40,7 +40,8 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
         {
             var yaml = @"
 test:
-  !type:testtype1";
+  !type:testtype1
+  {}";
 
             using var stream = new MemoryStream();
 
@@ -55,7 +56,7 @@ test:
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
             var serMan = IoCManager.Resolve<ISerializationManager>();
-            var type = serMan.Read<ITestType>(new MappingDataNode(mapping)["test"]);
+            var type = serMan.ReadValue<ITestType>(new MappingDataNode(mapping)["test"]);
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeOne>(type);

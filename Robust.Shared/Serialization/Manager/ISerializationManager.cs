@@ -18,8 +18,6 @@ namespace Robust.Shared.Serialization.Manager
 
         DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult);
 
-        DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
-
         DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
 
         public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null);

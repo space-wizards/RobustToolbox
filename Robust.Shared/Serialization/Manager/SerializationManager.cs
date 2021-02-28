@@ -17,9 +17,9 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
-        private List<Type> _copyByRefRegistrations = new();
+        private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
+        private readonly List<Type> _copyByRefRegistrations = new();
 
         public void Initialize()
         {
@@ -118,11 +118,6 @@ namespace Robust.Shared.Serialization.Manager
         {
             dataDefinition = GetDataDefinition(type);
             return dataDefinition != null;
-        }
-
-        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
-        {
-            return (DeserializationResult<T>) Read(typeof(T), node, context);
         }
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
@@ -262,6 +257,21 @@ namespace Robust.Shared.Serialization.Manager
                 // Need it for the culture overload.
                 var convertible = (IConvertible) value;
                 return new ValueDataNode(convertible.ToString(CultureInfo.InvariantCulture));
+            }
+
+            // array
+            if (type.IsArray)
+            {
+                var sequenceNode = new SequenceDataNode();
+                var array = (Array) value;
+
+                foreach (var val in array)
+                {
+                    var serializedVal = WriteValue(val.GetType(), val, alwaysWrite, context);
+                    sequenceNode.Add(serializedVal);
+                }
+
+                return sequenceNode;
             }
 
             if (value is ISerializationHooks serHook)

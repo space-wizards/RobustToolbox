@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents an Axis-Aligned Bounding Box.
@@ -13,8 +17,27 @@ namespace Robust.Shared.Physics
     [Serializable, NetSerializable]
     public class PhysShapeAabb : IPhysShape
     {
-        private int _collisionLayer;
-        private int _collisionMask;
+        public int ChildCount => 1;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        private float _radius;
+
+        public ShapeType ShapeType => ShapeType.Polygon;
+
         private Box2 _localBounds = Box2.UnitCentered;
 
         /// <summary>
@@ -26,31 +49,10 @@ namespace Robust.Shared.Physics
             get => _localBounds;
             set
             {
+                if (_localBounds == value)
+                    return;
+
                 _localBounds = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            set
-            {
-                _collisionLayer = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            set
-            {
-                _collisionMask = value;
                 OnDataChanged?.Invoke();
             }
         }
@@ -70,21 +72,41 @@ namespace Robust.Shared.Physics
             handle.SetTransform(Matrix3.Identity);
         }
 
+        // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return _localBounds;
+            // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
+            return _localBounds.Scale(1 + Radius);
         }
 
         /// <inheritdoc />
         void IExposeData.ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
+
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        }
+
+        [Pure]
+        internal List<Vector2> GetVertices()
+        {
+            return new()
+            {
+                _localBounds.BottomRight,
+                _localBounds.TopRight,
+                _localBounds.TopLeft,
+                _localBounds.BottomLeft,
+            };
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeAabb otherAABB) return false;
+            return _localBounds.EqualsApprox(otherAABB._localBounds);
         }
     }
 }

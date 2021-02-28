@@ -11,6 +11,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -24,6 +25,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
+        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+
         private readonly List<PlayingStream> _playingClydeStreams = new();
 
         public int OcclusionCollisionMask;
@@ -31,10 +34,13 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
             SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
             SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
             SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+            _broadPhaseSystem = Get<SharedBroadPhaseSystem>();
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
@@ -141,7 +147,7 @@ namespace Robust.Client.GameObjects
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

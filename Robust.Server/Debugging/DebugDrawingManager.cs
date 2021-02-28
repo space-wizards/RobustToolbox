@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -14,7 +14,7 @@ namespace Robust.Server.Debugging
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME);
-            _physics.DebugDrawRay += data => PhysicsOnDebugDrawRay(data);
+            // TODO _physics.DebugDrawRay += data => PhysicsOnDebugDrawRay(data);
         }
 
         [Conditional("DEBUG")]

@@ -324,7 +324,7 @@ namespace Robust.Shared.Serialization.Manager
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
-        private object? CopyToTarget(object? source, object? target)
+        private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null)
         {
             if (source == null || target == null)
             {
@@ -372,14 +372,14 @@ namespace Robust.Shared.Serialization.Manager
             return target;
         }
 
-        public object? Copy(object? source, object? target)
+        public object? Copy(object? source, object? target, ISerializationContext? context = null)
         {
-            return CopyToTarget(source, target);
+            return CopyToTarget(source, target, context);
         }
 
-        public T? Copy<T>(object? source, T? target)
+        public T? Copy<T>(object? source, T? target, ISerializationContext? context = null)
         {
-            var copy = CopyToTarget(source, target);
+            var copy = CopyToTarget(source, target, context);
 
             if (copy == null)
             {
@@ -389,22 +389,22 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) copy;
         }
 
-        private object? CreateCopyInternal(object? source)
+        private object? CreateCopyInternal(object? source, ISerializationContext? context = null)
         {
             if (source == null) return source;
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
-            return Copy(source, target);
+            return Copy(source, target, context);
         }
 
-        public object? CreateCopy(object? source)
+        public object? CreateCopy(object? source, ISerializationContext? context = null)
         {
-            return CreateCopyInternal(source);
+            return CreateCopyInternal(source, context);
         }
 
-        public T? CreateCopy<T>(T? source)
+        public T? CreateCopy<T>(T? source, ISerializationContext? context = null)
         {
-            var copy = CreateCopyInternal(source);
+            var copy = CreateCopyInternal(source, context);
 
             if (copy == null)
             {

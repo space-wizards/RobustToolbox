@@ -263,6 +263,7 @@ namespace Robust.Server.Maps
 
             public Dictionary<(Type, Type), object> TypeReaders { get; }
             public Dictionary<Type, object> TypeWriters { get; }
+            public Dictionary<Type, object> TypeCopiers => TypeWriters;
 
             public bool MapIsPostInit { get; private set; }
 

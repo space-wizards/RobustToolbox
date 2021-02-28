@@ -250,37 +250,39 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryCopyWithTypeCopier(Type type, object source, ref object target)
+        private bool TryCopyWithTypeCopier(Type type, object source, ref object target, ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 2).MakeGenericMethod(type, source.GetType(), target.GetType());
+                m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 3).MakeGenericMethod(type, source.GetType(), target.GetType());
 
-            var arr = new[] {source, target};
+            var arr = new[] {source, target, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                target = arr[1];
+                target = arr[1]!;
                 return true;
             }
 
             return false;
         }
 
-        private bool TryCopyWithTypeCopier<TCommon, TSource, TTarget>(TSource source, ref TTarget target)
+        private bool TryCopyWithTypeCopier<TCommon, TSource, TTarget>(TSource source, ref TTarget target, ISerializationContext? context = null)
             where TSource : TCommon where TTarget : TCommon where TCommon : notnull
         {
-            if (_typeCopiers.TryGetValue(typeof(TCommon), out var rawTypeCopier))
+            object? rawTypeCopier;
+            if (context != null && context.TypeWriters.TryGetValue(typeof(TCommon), out rawTypeCopier) ||
+                _typeCopiers.TryGetValue(typeof(TCommon), out rawTypeCopier))
             {
                 var ser = (ITypeCopier<TCommon>) rawTypeCopier;
-                target = (TTarget) ser.Copy(this, source, target);
+                target = (TTarget) ser.Copy(this, source, target, context);
                 return true;
             }
 
             if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericTypeWriter))
             {
-                target = (TTarget) genericTypeWriter.Copy(this, source, target);
+                target = (TTarget) genericTypeWriter.Copy(this, source, target, context);
                 return true;
             }
 

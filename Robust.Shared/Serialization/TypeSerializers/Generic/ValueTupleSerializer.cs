@@ -17,9 +17,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.ReadValue<T1>(entry.Key, context);
-            var v2 = serializationManager.ReadValue<T2>(entry.Value, context);
-            return DeserializationResult.Value(new ValueTuple<T1, T2>(v1!, v2!));
+            var v1 = serializationManager.ReadValueOrThrow<T1>(entry.Key, context);
+            var v2 = serializationManager.ReadValueOrThrow<T2>(entry.Value, context);
+
+            return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
         }
 
         public DataNode Write(ISerializationManager serializationManager, (T1, T2) value, bool alwaysWrite = false,
@@ -29,7 +30,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             mapping.AddNode(
                 serializationManager.WriteValue(value.Item1, alwaysWrite, context),
                 serializationManager.WriteValue(value.Item2, alwaysWrite, context)
-                );
+            );
+
             return mapping;
         }
 

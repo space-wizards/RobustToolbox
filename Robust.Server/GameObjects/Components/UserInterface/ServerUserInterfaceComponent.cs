@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Server.GameObjects
@@ -19,32 +20,26 @@ namespace Robust.Server.GameObjects
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
-    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
 
         [DataField("interfaces", readOnly: true)]
-        private List<PrototypeData> interfaceReceiver
-        {
-            set
-            {
-                _interfaces.Clear();
-                foreach (var data in value)
-                {
-                    _interfaces[data.UiKey] = new BoundUserInterface(data.UiKey, this);
-                }
-            }
-            get
-            {
-                return _interfaces.Keys.Select(d => new PrototypeData() {UiKey = d}).ToList();
-            }
-        }
+        private List<PrototypeData> _interfaceData = new();
 
         /// <summary>
         ///     Enumeration of all the interfaces this component provides.
         /// </summary>
         public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            foreach (var prototypeData in _interfaceData)
+            {
+                _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData.UiKey, this);
+            }
+        }
 
         public BoundUserInterface GetBoundUserInterface(object uiKey)
         {

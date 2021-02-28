@@ -13,7 +13,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -334,7 +333,7 @@ namespace Robust.Shared.Serialization.Manager
             var sourceType = source.GetType();
             var targetType = target.GetType();
 
-            if (targetType.IsPrimitive && sourceType.IsPrimitive)
+            if (sourceType.IsPrimitive && targetType.IsPrimitive)
             {
                 //todo does this work
                 //i think it does
@@ -342,9 +341,33 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            if (target.GetType().IsPrimitive != source.GetType().IsPrimitive)
+            if (source.GetType().IsPrimitive != target.GetType().IsPrimitive)
                 throw new InvalidOperationException(
-                    $"Source and target do not match. Source ({sourceType}) is primitive type: {sourceType.IsPrimitive}. Target ({targetType}) is primitive type: {targetType.IsPrimitive}");
+                    $"Source and target do not match. Source ({sourceType}) is primitive type? {sourceType.IsPrimitive}. Target ({targetType}) is primitive type? {targetType.IsPrimitive}");
+
+            if (sourceType.IsValueType && targetType.IsValueType)
+            {
+                return source;
+            }
+
+            if (source.GetType().IsValueType != target.GetType().IsValueType)
+                throw new InvalidOperationException(
+                    $"Source and target do not match. Source ({sourceType}) is value type? {sourceType.IsValueType}. Target ({targetType}) is value type? {targetType.IsValueType}");
+
+            // array
+            if (sourceType.IsArray && targetType.IsArray)
+            {
+                var sourceArray = (Array) source;
+                var targetArray = (Array) target;
+
+                Array.Copy(sourceArray, targetArray, sourceArray.Length);
+
+                return targetArray;
+            }
+
+            if (source.GetType().IsArray != target.GetType().IsArray)
+                throw new InvalidOperationException(
+                    $"Source and target do not match. Source ({sourceType}) is array type? {sourceType.IsArray}. Target ({targetType}) is array type? {targetType.IsArray}");
 
             var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
             if(commonType == null)
@@ -392,6 +415,14 @@ namespace Robust.Shared.Serialization.Manager
         private object? CreateCopyInternal(object? source, ISerializationContext? context = null)
         {
             if (source == null) return source;
+
+            var type = source.GetType();
+
+            if (type.IsPrimitive || type.IsEnum || source is string)
+            {
+                return source;
+            }
+
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target, context);

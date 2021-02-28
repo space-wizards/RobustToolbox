@@ -352,12 +352,12 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException("Could not find common type in Copy!");
             }
 
-            if (_copyByRefRegistrations.Contains(commonType))
+            if (_copyByRefRegistrations.Contains(commonType) || commonType.IsEnum)
             {
                 return source;
             }
 
-            if (TryCopyWithTypeCopier(commonType, source, ref target))
+            if (TryCopyWithTypeCopier(commonType, source, ref target, context))
             {
                 return target;
             }

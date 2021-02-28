@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             var entry = node.Children.First();
             var v1 = serializationManager.ReadValue<T1>(entry.Key, context);
-            var v2 = serializationManager.ReadValue<T2>(entry.Key, context);
+            var v2 = serializationManager.ReadValue<T2>(entry.Value, context);
             return DeserializationResult.Value(new ValueTuple<T1, T2>(v1!, v2!));
         }
 

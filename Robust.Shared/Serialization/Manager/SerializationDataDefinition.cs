@@ -73,9 +73,8 @@ namespace Robust.Shared.Serialization.Manager
 
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
                 {
-                    // TODO paul this is most definitely 100.10% wrong help
                     // We only want the most overriden instance of a property for the type we are working with
-                    if (propertyInfo.IsOverridenIn(type))
+                    if (!propertyInfo.IsMostOverridden(type))
                     {
                         continue;
                     }

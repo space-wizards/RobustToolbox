@@ -12,6 +12,7 @@ namespace Robust.Shared.Map
     /// A physics shape that represents a <see cref="MapGrid"/>.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
         [DataField("grid")]

@@ -34,6 +34,7 @@ namespace Robust.Shared.Serialization.Manager
                 registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
+                    if(child.IsAbstract || child.IsInterface) continue;
                     registrations.Add(child);
                 }
             }
@@ -48,7 +49,12 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var type in registrations)
             {
-                if (type.IsAbstract || type.IsInterface) continue; //todo more verbose?
+                if (type.IsAbstract || type.IsInterface)
+                {
+                    Logger.Warning($"Skipping registering datadefinition for type {type} since it is abstract/interface");
+                    continue;
+                }
+
                 _dataDefinitions.Add(type, new SerializationDataDefinition(type));
             }
 
@@ -136,17 +142,17 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
                 var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
-                var fields = new DeserializedFieldEntry[sequenceDataNode.Sequence.Count];
+                var results = new List<DeserializationResult>();
 
                 var idx = 0;
                 foreach (var entryNode in sequenceDataNode.Sequence)
                 {
                     var value = Read(type.GetElementType()!, entryNode, context);
-                    fields[idx] = new DeserializedFieldEntry(true);
-                    newArray.SetValue(value, idx++);
+                    results.Add(value);
+                    newArray.SetValue(value.RawValue, idx++);
                 }
 
-                return DeserializationResult.Definition(newArray, fields);
+                return new DeserializedArray(newArray, results);
             }
 
             if (underlyingType.IsEnum)
@@ -167,7 +173,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, context))
             {
-                return DeserializationResult.Value(serializedObj);
+                return serializedObj;
             }
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
@@ -182,11 +188,9 @@ namespace Robust.Shared.Serialization.Manager
 
             //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
 
-            var currentType = underlyingType;
-
-            if (underlyingType.IsInterface)
+            if (underlyingType.IsInterface || underlyingType.IsAbstract)
             {
-                throw new InvalidOperationException($"Unable to create an instance of an interface. Type: {underlyingType}");
+                throw new InvalidOperationException($"Unable to create an instance of an interface/abstract type. Type: {underlyingType}");
             }
 
             var obj = Activator.CreateInstance(underlyingType)!;
@@ -196,16 +200,9 @@ namespace Robust.Shared.Serialization.Manager
                 populateDefaultValues.PopulateDefaultValues();
             }
 
-            SerializationDataDefinition? dataDef = null;
-
-            while (currentType != null && !TryGetDataDefinition(currentType, out dataDef))
+            if (!TryGetDataDefinition(underlyingType, out var dataDef))
             {
-                currentType = currentType.BaseType;
-            }
-
-            if (dataDef == null)
-            {
-                Logger.Warning($"Failed to get data definition for {type} when reading");
+                Logger.Warning($"Failed to get data definition for {underlyingType} when reading");
                 return DeserializationResult.Value(obj);
             }
 

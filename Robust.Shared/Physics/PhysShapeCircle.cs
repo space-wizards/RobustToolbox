@@ -11,6 +11,7 @@ namespace Robust.Shared.Physics
     /// and it's origin is always the same as the entity position.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeCircle : IPhysShape
     {
         private const float DefaultRadius = 0.5f;

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -65,19 +63,6 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedDictionary<TDict, TKey, TValue>(valueDict, mappingDict);
-        }
-
-        public static object Create(
-            IDictionary dict,
-            IDictionary<DeserializationResult, DeserializationResult> mappings)
-        {
-            var dictType = dict.GetType();
-            var keyType = dict.Keys.GetType().GetGenericArguments()[0];
-            var valType = dict.Values.GetType().GetGenericArguments()[0];
-
-            var resultType = typeof(DeserializedDictionary<,,>).MakeGenericType(dictType, keyType, valType);
-
-            return Activator.CreateInstance(resultType, dict, mappings)!;
         }
     }
 }

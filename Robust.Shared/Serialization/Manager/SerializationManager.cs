@@ -367,7 +367,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException($"No data definition found for type {commonType} when copying");
             }
 
-            target = dataDef.InvokeCopyDelegate(source, target, this);
+            target = dataDef.InvokeCopyDelegate(source, target, this, context);
 
             return target;
         }

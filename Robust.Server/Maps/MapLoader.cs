@@ -787,10 +787,10 @@ namespace Robust.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = serializationManager.ReadValueOrThrow<IComponent>(
-                        factory.GetRegistration(componentName).Type,
-                        mapping.ToDataNode(),
-                        this);
+                    var mapData = (IDeserializedDefinition)serializationManager.Read(factory.GetRegistration(componentName).Type,
+                        mapping.ToDataNode(), this);
+                    var newData = serializationManager.PopulateDataDefinition(data, mapData);
+                    data = (IComponent) newData.RawValue!;
                 }
 
                 return data;

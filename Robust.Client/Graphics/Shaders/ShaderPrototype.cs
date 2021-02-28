@@ -75,12 +75,12 @@ namespace Robust.Client.Graphics
             switch (Kind)
             {
                 case ShaderKind.Source:
-                    instance = _clyde.InstanceShader(Source!.ClydeHandle);
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(Source!.ClydeHandle);
                     _applyDefaultParameters(instance);
                     break;
 
                 case ShaderKind.Canvas:
-                    instance = _clyde.InstanceShader(CompiledCanvasShader);
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(CompiledCanvasShader);
                     break;
 
                 default:
@@ -119,7 +119,7 @@ namespace Robust.Client.Graphics
                 case "source":
                     Kind = ShaderKind.Source;
                     if (path == null) throw new InvalidOperationException();
-                    Source = _resourceCache.GetResource<ShaderSourceResource>(path);
+                    Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path);
 
                     if (paramMapping != null)
                     {
@@ -186,7 +186,7 @@ namespace Robust.Client.Graphics
                     source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
 
                     var preset = ShaderParser.Parse(source, _resourceCache);
-                    CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");
+                    CompiledCanvasShader = IoCManager.Resolve<IClydeInternal>().LoadShader(preset, $"canvas_preset_{ID}");
                     break;
 
                 default:

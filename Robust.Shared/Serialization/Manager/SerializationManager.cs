@@ -110,7 +110,10 @@ namespace Robust.Shared.Serialization.Manager
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
-            if(obj is ISerializationHooks serializationHooksBefore) serializationHooksBefore.BeforeSerialization();
+            if (obj is IPopulateDefaultValues populateDefaultValues)
+            {
+                populateDefaultValues.PopulateDefaultValues();
+            }
             var res = dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
             if(res.RawValue is ISerializationHooks serializationHooksAfter) serializationHooksAfter.AfterDeserialization();
             return res;
@@ -206,7 +209,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (!TryGetDataDefinition(underlyingType, out var dataDef))
             {
-                throw new InvalidOperationException($"No data definition found for type {type} with nodetype {node.GetType()} when reading");
+                throw new InvalidOperationException($"No data definition found for type {underlyingType} with nodetype {node.GetType()} when reading");
             }
 
             if (node is not MappingDataNode mappingDataNode)
@@ -231,16 +234,11 @@ namespace Robust.Shared.Serialization.Manager
             return Read(type, node, context).RawValue;
         }
 
-        public T? ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
+        public T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
         {
             var value = Read(type, node, context);
 
-            if (value.RawValue == null)
-            {
-                return default;
-            }
-
-            return (T) value.RawValue;
+            return (T) value.RawValue!;
         }
 
         public T? ReadValue<T>(DataNode node, ISerializationContext? context = null)

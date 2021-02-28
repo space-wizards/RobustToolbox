@@ -5,7 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
@@ -134,6 +136,13 @@ namespace Robust.Shared.Serialization.Manager
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
                 {
                     var fieldDefinition = _baseFieldDefinitions[i];
+
+                    if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
+                    {
+                        mappedInfo[i] = new DeserializedFieldEntry(false);
+                        continue;
+                    }
+
                     var mapped = mappingDataNode.HasNode(fieldDefinition.Attribute.Tag);
 
                     if (!mapped)

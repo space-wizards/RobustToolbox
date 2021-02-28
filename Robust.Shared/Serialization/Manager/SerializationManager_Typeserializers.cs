@@ -272,7 +272,7 @@ namespace Robust.Shared.Serialization.Manager
             where TSource : TCommon where TTarget : TCommon where TCommon : notnull
         {
             object? rawTypeCopier;
-            if (context != null && context.TypeWriters.TryGetValue(typeof(TCommon), out rawTypeCopier) ||
+            if (context != null && context.TypeCopiers.TryGetValue(typeof(TCommon), out rawTypeCopier) ||
                 _typeCopiers.TryGetValue(typeof(TCommon), out rawTypeCopier))
             {
                 var ser = (ITypeCopier<TCommon>) rawTypeCopier;

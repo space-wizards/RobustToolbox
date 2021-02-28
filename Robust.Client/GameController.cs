@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
@@ -61,6 +62,7 @@ namespace Robust.Client
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
+        [Dependency] private readonly IMidiManager _midiManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -377,6 +379,8 @@ namespace Robust.Client
 
         private void Cleanup()
         {
+            _networkManager.Shutdown("Client shutting down");
+            _midiManager.Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
         }

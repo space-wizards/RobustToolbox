@@ -36,7 +36,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
+    public partial class NetManager : IClientNetManager, IServerNetManager
     {
         internal const int AesKeyLength = 32;
 
@@ -356,11 +356,6 @@ namespace Robust.Shared.Network
                 Logger.WarningS("net",
                     "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
-        }
-
-        public void Dispose()
-        {
-            Shutdown("Network manager getting disposed.");
         }
 
         /// <inheritdoc />

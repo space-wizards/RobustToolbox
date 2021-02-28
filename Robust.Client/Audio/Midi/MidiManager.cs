@@ -63,9 +63,11 @@ namespace Robust.Client.Audio.Midi
         bool IsAvailable { get; }
 
         public int OcclusionCollisionMask { get; set; }
+
+        void Shutdown();
     }
 
-    internal class MidiManager : IDisposable, IMidiManager
+    internal class MidiManager : IMidiManager
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
@@ -352,7 +354,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public void Dispose()
+        public void Shutdown()
         {
             _alive = false;
             _midiThread?.Join();

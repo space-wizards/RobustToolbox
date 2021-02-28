@@ -2,12 +2,12 @@
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedReadOnlyCollection<T, E> : DeserializationResult<T> where T : IReadOnlyCollection<E>
+    public class DeserializedReadOnlyCollection<TCollection, TElement> : DeserializationResult<TCollection> where TCollection : IReadOnlyCollection<TElement>
     {
-        public delegate T Create(List<E> elements);
+        public delegate TCollection Create(List<TElement> elements);
 
         public DeserializedReadOnlyCollection(
-            T? value,
+            TCollection? value,
             IEnumerable<DeserializationResult> mappings,
             Create createDelegate)
         {
@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.Manager.Result
             CreateDelegate = createDelegate;
         }
 
-        public override T? Value { get; }
+        public override TCollection? Value { get; }
 
         public IEnumerable<DeserializationResult> Mappings { get; }
 
@@ -26,15 +26,15 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            var sourceCollection = source.Cast<DeserializedReadOnlyCollection<T, E>>();
-            var valueList = new List<E>();
+            var sourceCollection = source.Cast<DeserializedReadOnlyCollection<TCollection, TElement>>();
+            var valueList = new List<TElement>();
             var resList = new List<DeserializationResult>();
 
             if (sourceCollection.Value != null)
             {
                 foreach (var oldRes in sourceCollection.Mappings)
                 {
-                    var newRes = oldRes.Copy().Cast<DeserializationResult<E>>();
+                    var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
                     valueList.Add(newRes.Value);
                     resList.Add(newRes);
                 }
@@ -44,28 +44,28 @@ namespace Robust.Shared.Serialization.Manager.Result
             {
                 foreach (var oldRes in Mappings)
                 {
-                    var newRes = oldRes.Copy().Cast<DeserializationResult<E>>();
+                    var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
                     valueList.Add(newRes.Value);
                     resList.Add(newRes);
                 }
             }
 
-            return new DeserializedReadOnlyCollection<T, E>(CreateDelegate(valueList), resList, CreateDelegate);
+            return new DeserializedReadOnlyCollection<TCollection, TElement>(CreateDelegate(valueList), resList, CreateDelegate);
         }
 
         public override DeserializationResult Copy()
         {
-            var valueList = new List<E>();
+            var valueList = new List<TElement>();
             var resList = new List<DeserializationResult>();
 
             foreach (var oldRes in Mappings)
             {
-                var newRes = oldRes.Copy().Cast<DeserializationResult<E>>();
+                var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
                 valueList.Add(newRes.Value);
                 resList.Add(newRes);
             }
 
-            return new DeserializedReadOnlyCollection<T, E>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
+            return new DeserializedReadOnlyCollection<TCollection, TElement>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
         }
     }
 }

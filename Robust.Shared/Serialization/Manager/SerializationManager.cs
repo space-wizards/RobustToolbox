@@ -17,9 +17,9 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        private Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
 
-        private List<Type> _copyByRefRegistrations = new();
+        private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
+        private readonly List<Type> _copyByRefRegistrations = new();
 
         public void Initialize()
         {
@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.Manager
                 registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
-                    if(child.IsAbstract || child.IsInterface) continue;
+                    if (child.IsAbstract || child.IsInterface) continue;
                     registrations.Add(child);
                 }
             }
@@ -51,7 +51,7 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (type.IsAbstract || type.IsInterface)
                 {
-                    Logger.Warning($"Skipping registering datadefinition for type {type} since it is abstract/interface");
+                    Logger.Warning($"Skipping registering data definition for type {type} since it is abstract or an interface");
                     continue;
                 }
 
@@ -81,7 +81,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool HasDataDefinition(Type type)
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check datadefinitions for generic types. ({type})");
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
             return _dataDefinitions.ContainsKey(type);
         }
 
@@ -94,7 +94,7 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new()
         {
             if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a datadefinition ({typeof(T)})");
+                throw new ArgumentException($"Provided Type is not a data definition ({typeof(T)})");
 
             return dataDefinition.InvokePopulateDelegate(obj, definition.Mapping);
         }
@@ -102,7 +102,7 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult)
         {
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a datadefinition ({obj.GetType()})");
+                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
             return dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
         }
@@ -118,11 +118,6 @@ namespace Robust.Shared.Serialization.Manager
         {
             dataDefinition = GetDataDefinition(type);
             return dataDefinition != null;
-        }
-
-        public DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null)
-        {
-            return (DeserializationResult<T>) Read(typeof(T), node, context);
         }
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
@@ -202,14 +197,12 @@ namespace Robust.Shared.Serialization.Manager
 
             if (!TryGetDataDefinition(underlyingType, out var dataDef))
             {
-                Logger.Warning($"Failed to get data definition for {underlyingType} when reading");
-                return DeserializationResult.Value(obj);
+                throw new InvalidOperationException($"No data definition found for type {type} when reading");
             }
 
             if (node is not MappingDataNode mappingDataNode)
             {
-                Logger.Warning($"No mappingnode provided for type {type}");
-                return DeserializationResult.Value(obj);
+                throw new ArgumentException($"No mapping node provided for type {type}");
             }
 
             var res = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
@@ -244,55 +237,6 @@ namespace Robust.Shared.Serialization.Manager
             return ReadValue<T>(typeof(T), node, context);
         }
 
-        public T ReadValueOrThrow<T>(DataNode node, ISerializationContext? context = null)
-        {
-            return ReadValue<T>(node, context) ?? throw new NullReferenceException();
-        }
-
-        public T ReadValueOrThrow<T>(Type type, DataNode node, ISerializationContext? context = null)
-        {
-            return ReadValue<T>(type, node, context) ?? throw new NullReferenceException();
-        }
-
-        public object ReadValueOrThrow(Type type, DataNode node, ISerializationContext? context = null)
-        {
-            return ReadValue(type, node, context) ?? throw new NullReferenceException();
-        }
-
-        public (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node,
-            ISerializationContext? context = null)
-        {
-            var result = Read(type, node, context);
-            return (result, result.RawValue);
-        }
-
-        public (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null)
-        {
-            var result = Read(typeof(T), node, context);
-
-            if (result.RawValue == null)
-            {
-                return (result, default);
-            }
-
-            return (result, (T) result.RawValue);
-        }
-
-        public (DeserializationResult result, T? value) ReadWithValueCast<T>(
-            Type type,
-            DataNode node,
-            ISerializationContext? context = null)
-        {
-            var result = Read(type, node, context);
-
-            if (result.RawValue == null)
-            {
-                return (result, default);
-            }
-
-            return (result, (T) result.RawValue);
-        }
-
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {
@@ -313,6 +257,21 @@ namespace Robust.Shared.Serialization.Manager
                 // Need it for the culture overload.
                 var convertible = (IConvertible) value;
                 return new ValueDataNode(convertible.ToString(CultureInfo.InvariantCulture));
+            }
+
+            // array
+            if (type.IsArray)
+            {
+                var sequenceNode = new SequenceDataNode();
+                var array = (Array) value;
+
+                foreach (var val in array)
+                {
+                    var serializedVal = WriteValue(val.GetType(), val, alwaysWrite, context);
+                    sequenceNode.Add(serializedVal);
+                }
+
+                return sequenceNode;
             }
 
             if (value is ISerializationHooks serHook)
@@ -346,29 +305,18 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDef == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {type} when writing");
-                return mapping;
+                throw new InvalidOperationException($"No data definition found for type {type} when writing");
             }
 
             if (dataDef.CanCallWith(value) != true)
             {
-                Logger.Warning($"Supplied parameter does not fit with datadefinition of {type}.");
-                return mapping;
+                throw new ArgumentException($"Supplied value does not fit with data definition of {type}.");
             }
 
             var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
             mapping = mapping.Merge(newMapping);
 
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
-        }
-
-        public T WriteValueAs<T>(
-            object value,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-            where T : DataNode
-        {
-            return (T) WriteValue(value.GetType(), value, alwaysWrite, context);
         }
 
         private object? CopyToTarget(object? source, object? target)
@@ -413,7 +361,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDefinition == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {targetType} when copying");
+                Logger.Warning($"Could not find data definition for type {targetType} when copying");
                 return source;
             }
 

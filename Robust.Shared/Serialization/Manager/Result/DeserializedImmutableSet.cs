@@ -11,7 +11,6 @@ namespace Robust.Shared.Serialization.Manager.Result
             Mappings = mappings;
         }
 
-
         public override ImmutableHashSet<T>? Value { get; }
 
         public IEnumerable<DeserializationResult> Mappings { get; }

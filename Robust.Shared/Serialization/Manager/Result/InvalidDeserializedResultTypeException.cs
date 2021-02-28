@@ -7,6 +7,7 @@ namespace Robust.Shared.Serialization.Manager.Result
     public class InvalidDeserializedResultTypeException<TExpected> : Exception
     {
         public readonly Type ReceivedType;
+
         public override string Message => $"Invalid Type {ReceivedType} received. Expected {typeof(TExpected)}";
 
         public InvalidDeserializedResultTypeException(Type receivedType)

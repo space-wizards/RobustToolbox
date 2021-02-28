@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Generic;
@@ -10,12 +9,12 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ListSerializers<>))]
-    public class ListSerializerTest : TypeSerializerTest
+    public class ArraySerializerTest : TypeSerializerTest
     {
         [Test]
         public void SerializationTest()
         {
-            var list = new List<string> {"A", "E"};
+            var list = new[] {"A", "E"};
             var node = Serialization.WriteValueAs<SequenceDataNode>(list);
 
             Assert.That(node.Cast<ValueDataNode>(0).Value, Is.EqualTo("A"));
@@ -25,9 +24,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void DeserializationTest()
         {
-            var list = new List<string> {"A", "E"};
+            var list = new[] {"A", "E"};
             var node = new SequenceDataNode("A", "E");
-            var deserializedList = Serialization.ReadValue<List<string>>(node);
+            var deserializedList = Serialization.ReadValue<string[]>(node);
 
             Assert.That(deserializedList, Is.EqualTo(list));
         }

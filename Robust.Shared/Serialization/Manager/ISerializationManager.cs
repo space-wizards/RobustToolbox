@@ -18,39 +18,18 @@ namespace Robust.Shared.Serialization.Manager
 
         DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult);
 
-        DeserializationResult<T> Read<T>(DataNode node, ISerializationContext? context = null);
-
         DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
 
         public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null);
 
-        // TODO Paul move these to SerializationExtensions?
         T? ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null);
 
         T? ReadValue<T>(DataNode node, ISerializationContext? context = null);
-
-        T ReadValueOrThrow<T>(DataNode node, ISerializationContext? context = null);
-
-        T ReadValueOrThrow<T>(Type type, DataNode node, ISerializationContext? context = null);
-
-        object ReadValueOrThrow(Type type, DataNode node, ISerializationContext? context = null);
-
-        (DeserializationResult result, object? value) ReadWithValue(Type type, DataNode node, ISerializationContext? context = null);
-
-        (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null);
-
-        (DeserializationResult result, T? value) ReadWithValueCast<T>(Type type, DataNode node, ISerializationContext? context = null);
 
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;
 
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false, ISerializationContext? context = null);
-
-        T WriteValueAs<T>(
-            object value,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-            where T : DataNode;
 
         object? Copy(object? source, object? target);
 

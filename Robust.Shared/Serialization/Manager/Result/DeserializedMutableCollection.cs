@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -59,14 +57,6 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedMutableCollection<T, E>(Value == null ? null : valueList, resList);
-        }
-
-        public static object Create(IEnumerable enumerable, IEnumerable<DeserializationResult> mappings)
-        {
-            var type = enumerable.GetType().GetGenericArguments()[0];
-            var resultType = typeof(DeserializedMutableCollection<,>).MakeGenericType(enumerable.GetType(), type);
-
-            return Activator.CreateInstance(resultType, enumerable, mappings)!;
         }
     }
 }

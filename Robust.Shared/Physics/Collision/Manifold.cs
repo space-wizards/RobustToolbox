@@ -20,6 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Maths;
 
@@ -111,21 +112,19 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     Points of contact, can only be 0 -> 2.
         /// </summary>
-        public ManifoldPoint[] Points;
+        public ManifoldPoint[] Points = new ManifoldPoint[2];
 
         public ManifoldType Type;
 
-        public Manifold()
-        {
-            Points = new ManifoldPoint[2];
-        }
+        public Manifold() {}
 
         public Manifold(Vector2 localNormal, Vector2 localPoint, int pointCount, ManifoldPoint[] points, ManifoldType type)
         {
             LocalNormal = localNormal;
             LocalPoint = localPoint;
             PointCount = pointCount;
-            Points = points;
+            // Do not remove this copy or shit BREAKS
+            Array.Copy(points, Points, PointCount);
             Type = type;
         }
 

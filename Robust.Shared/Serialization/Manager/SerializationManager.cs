@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public bool HasDataDefinition(Type type)
         {
-            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check datadefinitions for generic types. ({type})");
+            if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
             return _dataDefinitions.ContainsKey(type);
         }
 
@@ -88,7 +88,7 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new()
         {
             if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a datadefinition ({typeof(T)})");
+                throw new ArgumentException($"Provided Type is not a data definition ({typeof(T)})");
 
             return dataDefinition.InvokePopulateDelegate(obj, definition.Mapping);
         }
@@ -96,7 +96,7 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult)
         {
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a datadefinition ({obj.GetType()})");
+                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
             return dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
         }
@@ -205,14 +205,12 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDef == null)
             {
-                Logger.Warning($"Failed to get data definition for {type} when reading");
-                return DeserializationResult.Value(obj);
+                throw new InvalidOperationException($"No data definition found for type {type} when reading");
             }
 
             if (node is not MappingDataNode mappingDataNode)
             {
-                Logger.Warning($"No mappingnode provided for type {type}");
-                return DeserializationResult.Value(obj);
+                throw new ArgumentException($"No mapping node provided for type {type}");
             }
 
             var res = dataDef.InvokePopulateDelegate(obj, mappingDataNode, this, context);
@@ -349,14 +347,12 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDef == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {type} when writing");
-                return mapping;
+                throw new InvalidOperationException($"No data definition found for type {type} when writing");
             }
 
             if (dataDef.CanCallWith(value) != true)
             {
-                Logger.Warning($"Supplied parameter does not fit with datadefinition of {type}.");
-                return mapping;
+                throw new ArgumentException($"Supplied value does not fit with data definition of {type}.");
             }
 
             var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
@@ -416,7 +412,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (dataDefinition == null)
             {
-                Logger.Warning($"Could not find datadefinition for type {targetType} when copying");
+                Logger.Warning($"Could not find data definition for type {targetType} when copying");
                 return source;
             }
 

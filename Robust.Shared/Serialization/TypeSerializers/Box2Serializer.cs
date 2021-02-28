@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var t = float.Parse(args[2], CultureInfo.InvariantCulture);
             var r = float.Parse(args[3], CultureInfo.InvariantCulture);
 
-            return DeserializationResult.Value(new Box2(l, b, r, t));
+            return new DeserializedValue<Box2>(new Box2(l, b, r, t));
         }
 
         public DataNode Write(Box2 value, bool alwaysWrite = false,

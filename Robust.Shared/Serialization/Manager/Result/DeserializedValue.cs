@@ -10,9 +10,10 @@
         public override T Value { get; }
 
         public override object? RawValue => Value;
+
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            return source.Copy().As<DeserializedValue<T>>();
+            return source.Copy().Cast<DeserializedValue<T>>();
         }
 
         public override DeserializationResult Copy()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -38,8 +38,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
-
-        private RenderTexture EntityPostRenderTarget = default!;
 
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
@@ -315,10 +313,6 @@ namespace Robust.Client.Graphics.Clyde
 
             ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
-
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: nameof(EntityPostRenderTarget));
 
             CreateMainViewport();
         }

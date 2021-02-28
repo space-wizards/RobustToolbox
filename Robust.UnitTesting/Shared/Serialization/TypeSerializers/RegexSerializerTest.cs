@@ -3,6 +3,8 @@ using NUnit.Framework;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers;
 
+// ReSharper disable AccessToStaticMemberViaDerivedType
+
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
@@ -14,7 +16,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var str = "[AEIOU]";
             var regex = new Regex(str);
-            var node = (ValueDataNode) Serialization.WriteValue(regex);
+            var node = Serialization.WriteValueAs<ValueDataNode>(regex);
 
             Assert.That(node.Value, Is.EqualTo(str));
         }

@@ -56,7 +56,6 @@ namespace Robust.Shared.Serialization.Manager
         public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager) =>
             _copyDelegate(source, target, serializationManager);
 
-
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
         public SerializationDataDefinition(Type type)
@@ -114,6 +113,8 @@ namespace Robust.Shared.Serialization.Manager
             _serializeDelegate = EmitSerializeDelegate();
             _copyDelegate = EmitCopyDelegate();
         }
+
+        public int DataFieldCount => _baseFieldDefinitions.Length;
 
         public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
         {
@@ -195,7 +196,7 @@ namespace Robust.Shared.Serialization.Manager
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
                 {
                     var res = deserializedFields[i];
-                    if(!res.Mapped) continue;
+                    if (!res.Mapped) continue;
 
                     var fieldDefinition = _baseFieldDefinitions[i];
 

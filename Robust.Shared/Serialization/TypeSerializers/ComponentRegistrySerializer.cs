@@ -53,10 +53,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 copy.RemoveNode("type");
 
                 var type = _componentFactory.GetRegistration(compType).Type;
-                var compRes = _serializationManager.Read(type, copy);
+                var read = _serializationManager.ReadWithValueOrThrow<IComponent>(type, copy);
 
-                components[compType] = (IComponent?)compRes.RawValue ?? throw new NullReferenceException();
-                mappings.Add(DeserializationResult.Value(compType), compRes);
+                components[compType] = read.value;
+                mappings.Add(DeserializationResult.Value(compType), read.result);
             }
 
             var referenceTypes = new List<Type>();

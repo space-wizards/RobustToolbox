@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var path = _serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
             var texture = new Texture(path);
 
-            return DeserializationResult.Value<SpriteSpecifier>(texture);
+            return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
         public DeserializationResult<SpriteSpecifier> Read(MappingDataNode node, ISerializationContext? context = null)

@@ -35,30 +35,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return mappingNode;
         }
 
-        private DeserializationResult<TDict> NormalRead<TDict>(
-            MappingDataNode node,
-            ISerializationContext? context = null)
-            where TDict : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, new()
+        public DeserializationResult<Dictionary<TKey, TValue>> Read(MappingDataNode node, ISerializationContext? context)
         {
-            var dict = new TDict();
+            var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.ReadOrThrow<TKey>(key, context);
-                var keyValue = keyRes.Value ?? throw new NullReferenceException();
-                var valueRes = _serializationManager.ReadOrThrow<TValue>(value, context);
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
-                dict.Add(keyValue, valueRes.Value!);
-                mappedFields.Add(keyRes, valueRes);
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
             }
 
-            return new DeserializedDictionary<TDict, TKey, TValue>(dict, mappedFields);
-        }
-
-        public DeserializationResult<Dictionary<TKey, TValue>> Read(MappingDataNode node, ISerializationContext? context)
-        {
-            return NormalRead<Dictionary<TKey, TValue>>(node, context);
+            return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
         public DataNode Write(Dictionary<TKey, TValue> value, bool alwaysWrite = false,
@@ -86,20 +77,31 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var (key, value) in node.Children)
             {
-                var keyRes = _serializationManager.ReadOrThrow<TKey>(key, context);
-                var keyValue = keyRes.Value ?? throw new NullReferenceException();
-                var valueRes = _serializationManager.ReadOrThrow<TValue>(value, context);
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
 
-                dict.Add(keyValue, valueRes.Value!);
-                mappedFields.Add(keyRes, valueRes);
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
             }
 
-            return new DeserializedDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields);
+            return new DeserializedReadOnlyDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
         DeserializationResult<SortedDictionary<TKey, TValue>> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(MappingDataNode node, ISerializationContext? context)
         {
-            return NormalRead<SortedDictionary<TKey, TValue>>(node, context);
+            var dict = new SortedDictionary<TKey, TValue>();
+            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
+
+            foreach (var (key, value) in node.Children)
+            {
+                var (keyVal, keyResult) = _serializationManager.ReadWithValueOrThrow<TKey>(key, context);
+                var (valueResult, valueVal) = _serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context);
+
+                dict.Add(keyVal, valueVal!);
+                mappedFields.Add(keyResult, valueResult);
+            }
+
+            return new DeserializedReadOnlyDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));
         }
 
         [MustUseReturnValue]

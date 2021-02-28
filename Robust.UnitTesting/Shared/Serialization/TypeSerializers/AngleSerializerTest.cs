@@ -1,9 +1,9 @@
-﻿using System.Globalization;
-using System.Text.RegularExpressions;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers;
+
+// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var degrees = 75d;
             var angle = Angle.FromDegrees(degrees);
-            var node = (ValueDataNode) Serialization.WriteValue(angle);
+            var node = Serialization.WriteValueAs<ValueDataNode>(angle);
             var serializedValue = $"{MathHelper.DegreesToRadians(degrees)} rad";
 
             Assert.That(node.Value, Is.EqualTo(serializedValue));

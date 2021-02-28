@@ -39,11 +39,18 @@ namespace Robust.Shared.Serialization.Manager
 
         (DeserializationResult result, T? value) ReadWithValue<T>(DataNode node, ISerializationContext? context = null);
 
+        (DeserializationResult result, T? value) ReadWithValueCast<T>(Type type, DataNode node, ISerializationContext? context = null);
+
         DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
             where T : notnull;
 
-        DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
-            ISerializationContext? context = null);
+        DataNode WriteValue(Type type, object value, bool alwaysWrite = false, ISerializationContext? context = null);
+
+        T WriteValueAs<T>(
+            object value,
+            bool alwaysWrite = false,
+            ISerializationContext? context = null)
+            where T : DataNode;
 
         object? Copy(object? source, object? target);
 

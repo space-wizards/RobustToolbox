@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public DeserializationResult<MapId> Read(ValueDataNode node, ISerializationContext? context = null)
         {
             var val = int.Parse(node.Value, CultureInfo.InvariantCulture);
-            return DeserializationResult.Value(new MapId(val));
+            return new DeserializedValue<MapId>(new MapId(val));
         }
 
         public DataNode Write(MapId value, bool alwaysWrite = false,

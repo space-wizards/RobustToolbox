@@ -26,13 +26,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _serializationManager.ReadOrThrow<T>(dataNode, context);
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
-                set.Add(result.ValueOrThrow);
+                set.Add(value);
                 mappings.Add(result);
             }
 
-            return new DeserializedCollection<HashSet<T>, T>(set, mappings);
+            return new DeserializedMutableCollection<HashSet<T>, T>(set, mappings);
         }
 
         public DataNode Write(ImmutableHashSet<T> value, bool alwaysWrite = false,
@@ -62,13 +62,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _serializationManager.ReadOrThrow<T>(dataNode, context);
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
 
-                set.Add(result.ValueOrThrow);
+                set.Add(value);
                 mappings.Add(result);
             }
 
-            return new DeserializedCollection<ImmutableHashSet<T>, T>(set.ToImmutable(), mappings);
+            return new DeserializedImmutableSet<T>(set.ToImmutable(), mappings);
         }
 
         [MustUseReturnValue]

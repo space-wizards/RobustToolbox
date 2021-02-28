@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -47,7 +47,19 @@ namespace Robust.Shared.Prototypes
         private string _name = "";
 
         private bool _nameModified;
-        private bool _descriptionModified;
+
+        [DataField("localizationId")]
+        string? _localizationId;
+
+        /// <summary>
+        /// Fluent messageId used to lookup the entity's name and localization attributes.
+        /// </summary>
+        [ViewVariables, CanBeNull]
+        public string? LocalizationID
+        {
+            get => _localizationId ??= $"ent-{CaseConversion.PascalToKebab(ID)}";
+            private set => _localizationId = value;
+        }
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
@@ -58,8 +70,9 @@ namespace Robust.Shared.Prototypes
         public string? EditorSuffix
         {
             get => _editorSuffix;
-            private set { _editorSuffix = value != null ? Loc.GetString(value) : null; }
+            private set => _editorSuffix = value != null ? Loc.GetString(value) : null;
         }
+
         private string? _editorSuffix;
 
         /// <summary>
@@ -78,6 +91,8 @@ namespace Robust.Shared.Prototypes
 
         }
         private string _description = "";
+
+        private bool _descriptionModified;
 
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.

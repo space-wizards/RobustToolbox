@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -35,6 +35,9 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _sourceDisposeQueue = new();
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new();
         private readonly ConcurrentQueue<int> _bufferDisposeQueue = new();
+
+        // The base gain value for a listener, used to boost the default volume.
+        private const float _baseGain = 2f;
 
         public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
         public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -182,7 +185,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void SetMasterVolume(float newVolume)
         {
-            AL.Listener(ALListenerf.Gain, newVolume);
+            AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)

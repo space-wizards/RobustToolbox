@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     CultureInfo.InvariantCulture))
                 : Angle.FromDegrees(double.Parse(nodeContents, CultureInfo.InvariantCulture));
 
-            return DeserializationResult.Value(angle);
+            return new DeserializedValue<Angle>(angle);
         }
 
         public DataNode Write(Angle value, bool alwaysWrite = false,

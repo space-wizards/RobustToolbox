@@ -7,12 +7,11 @@ namespace Robust.Shared.Serialization.Manager.Result
     {
         public DeserializedDefinition(T value, DeserializedFieldEntry[] mapping)
         {
-            _value = value;
+            Value = value;
             Mapping = mapping;
         }
 
-        public override T Value => _value;
-        private T _value;
+        public override T Value { get; }
 
         public DeserializedFieldEntry[] Mapping { get; }
 
@@ -20,13 +19,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            var dataDef = source.As<DeserializedDefinition<T>>();
+            var dataDef = source.Cast<DeserializedDefinition<T>>();
             if (dataDef.Mapping.Length != Mapping.Length)
                 throw new ArgumentException($"Mappinglength mismatch in PushInheritanceFrom ({typeof(T)})");
 
             var newMapping = new DeserializedFieldEntry[Mapping.Length];
 
-            for (int i = 0; i < dataDef.Mapping.Length; i++)
+            for (var i = 0; i < dataDef.Mapping.Length; i++)
             {
                 if(Mapping[i].Mapped)
                 {
@@ -45,13 +44,12 @@ namespace Robust.Shared.Serialization.Manager.Result
         {
             var newMapping = new DeserializedFieldEntry[Mapping.Length];
 
-            for(var i = 0; i < Mapping.Length; i++)
+            for (var i = 0; i < Mapping.Length; i++)
             {
                 newMapping[i] = Mapping[i].Copy();
             }
 
             return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);
         }
-
     }
 }

@@ -8,10 +8,11 @@ namespace Robust.Shared.Utility
     {
         private const int NotAnnotatedNullableFlag = 1;
 
+        private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?>
+            _nullableAttributeTypeCache = new();
 
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?> _nullableAttributeTypeCache = new();
-
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?> _nullableContextAttributeTypeCache = new();
+        private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?>
+            _nullableContextAttributeTypeCache = new();
 
         public static Type EnsureNullableType(this Type type)
         {

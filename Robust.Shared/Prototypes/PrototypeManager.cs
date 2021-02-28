@@ -436,7 +436,7 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [MaybeNullWhen(false)] out T prototype) where T : IPrototype
+        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
         {
             if (!prototypes.TryGetValue(typeof(T), out var index))
             {

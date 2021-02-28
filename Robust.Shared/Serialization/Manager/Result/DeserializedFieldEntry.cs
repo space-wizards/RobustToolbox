@@ -14,7 +14,7 @@
 
         public DeserializedFieldEntry Copy()
         {
-            return new DeserializedFieldEntry(Mapped, Result?.Copy());
+            return new(Mapped, Result?.Copy());
         }
     }
 }

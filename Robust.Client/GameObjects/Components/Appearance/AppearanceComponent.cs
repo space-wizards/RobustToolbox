@@ -4,10 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
@@ -17,6 +14,7 @@ namespace Robust.Client.GameObjects
     {
         [ViewVariables]
         private Dictionary<object, object> data = new();
+
         [ViewVariables]
         [DataField("visuals")]
         internal List<AppearanceVisualizer> Visualizers = new();

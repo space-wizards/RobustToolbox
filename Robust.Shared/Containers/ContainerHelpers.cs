@@ -108,7 +108,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         ///     Attempts to remove all entities in a container.
         /// </summary>
-        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null)
+        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null, bool attachToGridOrMap = false)
         {
             foreach (var entity in container.ContainedEntities.ToArray())
             {
@@ -121,6 +121,9 @@ namespace Robust.Shared.Containers
 
                 if (moveTo.HasValue)
                     entity.Transform.Coordinates = moveTo.Value;
+
+                if(attachToGridOrMap)
+                    entity.Transform.AttachToGridOrMap();
             }
         }
 

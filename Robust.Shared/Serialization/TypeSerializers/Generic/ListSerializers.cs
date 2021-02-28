@@ -18,25 +18,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        public DeserializationResult<TReturn> Read<TList, TReturn>(
-            SequenceDataNode node,
-            ISerializationContext? context = null)
-            where TList : IList<T>, TReturn, new()
-            where TReturn : IEnumerable<T>
-        {
-            var list = new TList();
-            var results = new List<DeserializationResult>();
-
-            foreach (var dataNode in node.Sequence)
-            {
-                var result = _serializationManager.Read<T>(dataNode, context);
-                list.Add(result.ValueOrThrow);
-                results.Add(result);
-            }
-
-            return new DeserializedCollection<TReturn>(list, results);
-        }
-
         private DataNode WriteInternal(IEnumerable<T> value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
@@ -76,17 +57,48 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult<List<T>> ITypeReader<List<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return Read<List<T>, List<T>>(node, context);
+            var list = new List<T>();
+            var results = new List<DeserializationResult>();
+
+            foreach (var dataNode in node.Sequence)
+            {
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(typeof(T), dataNode, context);
+                list.Add(value);
+                results.Add(result);
+            }
+
+            return new DeserializedMutableCollection<List<T>, T>(list, results);
         }
 
         DeserializationResult<IReadOnlyList<T>> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return Read<List<T>, IReadOnlyList<T>>(node, context);
+            var list = new List<T>();
+            var results = new List<DeserializationResult>();
+
+            foreach (var dataNode in node.Sequence)
+            {
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+
+                list.Add(value);
+                results.Add(result);
+            }
+
+            return new DeserializedReadOnlyCollection<IReadOnlyList<T>, T>(list, results, l => l);
         }
 
         DeserializationResult<IReadOnlyCollection<T>> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
         {
-            return Read<List<T>, IReadOnlyCollection<T>>(node, context);
+            var list = new List<T>();
+            var results = new List<DeserializationResult>();
+
+            foreach (var dataNode in node.Sequence)
+            {
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                list.Add(value);
+                results.Add(result);
+            }
+
+            return new DeserializedReadOnlyCollection<IReadOnlyCollection<T>, T>(list, results, l => l);
         }
 
         DeserializationResult<ImmutableList<T>> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(SequenceDataNode node, ISerializationContext? context)
@@ -96,12 +108,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _serializationManager.Read<T>(dataNode, context);
-                list.Add(result.ValueOrThrow);
+                var (value, result) = _serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                list.Add(value);
                 results.Add(result);
             }
 
-            return new DeserializedCollection<ImmutableList<T>>(list.ToImmutable(), results);
+            return new DeserializedImmutableList<T>(list.ToImmutable(), results);
         }
 
         [MustUseReturnValue]

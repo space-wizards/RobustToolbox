@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         public DeserializationResult<ResourcePath> Read(ValueDataNode node, ISerializationContext? context = null)
         {
-            return DeserializationResult.Value(new ResourcePath(node.Value));
+            return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
         }
 
         public DataNode Write(ResourcePath value,

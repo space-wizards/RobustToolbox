@@ -36,6 +36,7 @@ using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -83,6 +84,7 @@ namespace Robust.Shared.GameObjects
         // TODO: Should there be a VV thing for joints? Would be useful. Same with contacts.
         // Though not sure how to do it well with the linked-list.
 
+        public bool IgnorePaused { get; set; }
         public IEntity Entity => Owner;
 
         /// <inheritdoc />
@@ -300,7 +302,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession session)
         {
             // TODO: Could optimise the shit out of this because only linear velocity and angular velocity are changing 99% of the time.
             var joints = new List<Joint>();
@@ -644,14 +646,9 @@ namespace Robust.Shared.GameObjects
         public bool IgnoreGravity { get; set; }
 
         /// <summary>
-        ///     Scale of gravity applied to this body. Default is 1.
-        /// </summary>
-        public float GravityScale { get; set; } = 1.0f;
-
-        /// <summary>
         /// Inverse moment of inertia (1 / I).
         /// </summary>
-        internal float InvI { get; set; }
+        public float InvI { get; set; }
 
         /// <summary>
         ///     Is the body allowed to have angular velocity.

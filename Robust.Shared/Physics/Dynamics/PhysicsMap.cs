@@ -70,6 +70,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Vector2 _gravity;
 
+        // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
+        // and one that includes the body
         private List<ITransformComponent> _deferredUpdates = new();
 
         /// <summary>
@@ -515,8 +517,9 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
-                if (// prediction && !seed.Predict ||
-                    // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
+                // prediction && !seed.Predict ||
+                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
+                if ((seed.Paused && !seed.IgnorePaused) ||
                     seed.Island ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static) continue;

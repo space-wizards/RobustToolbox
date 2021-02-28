@@ -8,7 +8,7 @@ using Robust.Shared.Physics.Dynamics;
 namespace Robust.Shared.Physics.Controllers
 {
     [MeansImplicitUse]
-    public abstract class AetherController
+    public abstract class VirtualController
     {
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntityManager EntityManager = default!;

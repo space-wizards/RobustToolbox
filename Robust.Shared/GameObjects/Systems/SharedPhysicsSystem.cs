@@ -53,8 +53,8 @@ namespace Robust.Shared.GameObjects
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
 
-        internal IReadOnlyList<AetherController> Controllers => _controllers;
-        private List<AetherController> _controllers = new();
+        internal IReadOnlyList<VirtualController> Controllers => _controllers;
+        private List<VirtualController> _controllers = new();
 
         // TODO: Stoer all the controllers here akshully
 
@@ -87,26 +87,26 @@ namespace Robust.Shared.GameObjects
             var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
             var allControllerTypes = new List<Type>();
 
-            foreach (var type in reflectionManager.GetAllChildren(typeof(AetherController)))
+            foreach (var type in reflectionManager.GetAllChildren(typeof(VirtualController)))
             {
                 if (type.IsAbstract) continue;
                 allControllerTypes.Add(type);
             }
 
-            var instantiated = new Dictionary<Type, AetherController>();
+            var instantiated = new Dictionary<Type, VirtualController>();
 
             foreach (var type in allControllerTypes)
             {
-                instantiated.Add(type, (AetherController) typeFactory.CreateInstance(type));
+                instantiated.Add(type, (VirtualController) typeFactory.CreateInstance(type));
             }
 
             // Build dependency graph, copied from EntitySystemManager *COUGH
 
-            var nodes = new Dictionary<Type, EntitySystemManager.GraphNode<AetherController>>();
+            var nodes = new Dictionary<Type, EntitySystemManager.GraphNode<VirtualController>>();
 
             foreach (var (_, controller) in instantiated)
             {
-                var node = new EntitySystemManager.GraphNode<AetherController>(controller);
+                var node = new EntitySystemManager.GraphNode<VirtualController>(controller);
                 nodes[controller.GetType()] = node;
             }
 

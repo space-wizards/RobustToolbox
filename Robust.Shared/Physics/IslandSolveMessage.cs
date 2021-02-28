@@ -5,9 +5,9 @@ namespace Robust.Shared.Physics
 {
     internal class IslandSolveMessage : EntitySystemMessage
     {
-        public List<PhysicsComponent> Bodies { get; }
+        public List<IPhysBody> Bodies { get; }
 
-        public IslandSolveMessage(List<PhysicsComponent> bodies)
+        public IslandSolveMessage(List<IPhysBody> bodies)
         {
             Bodies = bodies;
         }

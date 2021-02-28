@@ -155,7 +155,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
 
-        public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
+        public IPhysBody[] Bodies = Array.Empty<IPhysBody>();
         private Contact[] _contacts = Array.Empty<Contact>();
         private Joint[] _joints = Array.Empty<Joint>();
 
@@ -233,7 +233,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
         }
 
-        public void Add(PhysicsComponent body)
+        public void Add(IPhysBody body)
         {
             body.IslandIndex = BodyCount;
             Bodies[BodyCount++] = body;
@@ -304,7 +304,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<ITransformComponent> deferredUpdates)
         {
 #if DEBUG
-            var debugBodies = new List<PhysicsComponent>();
+            var debugBodies = new List<IPhysBody>();
             for (var i = 0; i < BodyCount; i++)
             {
                 debugBodies.Add(Bodies[i]);
@@ -331,7 +331,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     if (body.IgnoreGravity)
                         linearVelocity += body.Force * frameTime * body.InvMass;
                     else
-                        linearVelocity += (gravity * body.GravityScale + body.Force * body.InvMass) * frameTime;
+                        linearVelocity += (gravity + body.Force * body.InvMass) * frameTime;
 
                     angularVelocity += frameTime * body.InvI * body.Torque;
 

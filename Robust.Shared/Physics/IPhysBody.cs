@@ -2,6 +2,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics
 {
@@ -10,6 +11,20 @@ namespace Robust.Shared.Physics
     /// </summary>
     public interface IPhysBody : IComponent
     {
+        bool IgnoreGravity { get; set; }
+
+        int IslandIndex { get; set; }
+
+        /// <summary>
+        ///     Has this body already been added to a physics island
+        /// </summary>
+        bool Island { get; set; }
+
+        /// <summary>
+        ///     Should the body still have physics updates applied even if paused
+        /// </summary>
+        bool IgnorePaused { get; set; }
+
         /// <summary>
         ///     Entity that this physBody represents.
         /// </summary>
@@ -54,6 +69,14 @@ namespace Robust.Shared.Physics
 
         bool Awake { get; set; }
 
+        bool SleepingAllowed { get; set; }
+
+        float SleepTime { get; set; }
+
+        float LinearDamping { get; set; }
+
+        float AngularDamping { get; set; }
+
         /// <summary>
         ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
@@ -64,7 +87,7 @@ namespace Robust.Shared.Physics
         bool Hard { get; set; }
 
         /// <summary>
-        /// Inverse mass of the entity in kilograms (1 / Mass).
+        ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
 
@@ -72,6 +95,11 @@ namespace Robust.Shared.Physics
         /// Mass of the entity in kilograms
         /// </summary>
         float Mass { get; set; }
+
+        /// <summary>
+        ///     Inverse inertia
+        /// </summary>
+        float InvI { get; set; }
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.

@@ -27,6 +27,14 @@ namespace Robust.Shared.Serialization.Markdown
             }
         }
 
+        public SequenceDataNode(params string[] strings)
+        {
+            foreach (var s in strings)
+            {
+                _nodes.Add(new ValueDataNode(s));
+            }
+        }
+
         public YamlSequenceNode ToSequenceNode()
         {
             var node = new YamlSequenceNode();

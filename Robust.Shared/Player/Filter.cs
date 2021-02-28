@@ -64,7 +64,7 @@ namespace Robust.Shared.Player
             // Calculate this from the PVS system that does not exist.
             throw new NotImplementedException();
 
-            return this;
+            //return this;
         }
 
         public Filter AddPlayers(IEnumerable<ICommonSession> players)
@@ -97,7 +97,7 @@ namespace Robust.Shared.Player
             _recipients.Remove(player);
             return this;
         }
-        
+
         public Filter RemoveWhere(Predicate<ICommonSession> predicate)
         {
             for (int i = 0; i < _recipients.Count; i++)

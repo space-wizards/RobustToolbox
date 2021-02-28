@@ -94,10 +94,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new()
         {
-            if (!TryGetDataDefinition(typeof(T), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({typeof(T)})");
-
-            return dataDefinition.InvokePopulateDelegate(obj, definition.Mapping);
+            return PopulateDataDefinition(obj, (IDeserializedDefinition) definition);
         }
 
         public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult)
@@ -105,7 +102,10 @@ namespace Robust.Shared.Serialization.Manager
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
-            return dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
+            if(obj is ISerializationHooks serializationHooksBefore) serializationHooksBefore.BeforeSerialization();
+            var res = dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
+            if(res.RawValue is ISerializationHooks serializationHooksAfter) serializationHooksAfter.AfterDeserialization();
+            return res;
         }
 
         private SerializationDataDefinition? GetDataDefinition(Type type)

@@ -2,6 +2,8 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics
@@ -51,6 +53,12 @@ namespace Robust.Shared.Physics
         /// all of the shapes of this body.
         /// </summary>
         int CollisionMask { get; }
+
+        void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null);
+
+        void ClearProxies();
+
+        IReadOnlyList<Fixture> Fixtures { get; }
 
         /// <summary>
         ///     The map index this physBody is located upon

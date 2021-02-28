@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private readonly Dictionary<MapId, Dictionary<GridId, IBroadPhase>> _graph = new();
 
-        private Dictionary<PhysicsComponent, List<IBroadPhase>> _lastBroadPhases = new();
+        private Dictionary<IPhysBody, List<IBroadPhase>> _lastBroadPhases = new();
 
         /// <summary>
         ///     Given MoveEvent and RotateEvent do the same thing we won't double up on work.
@@ -324,7 +324,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        private void SetBroadPhases(PhysicsComponent body)
+        private void SetBroadPhases(IPhysBody body)
         {
             if (!_lastBroadPhases.TryGetValue(body, out var broadPhases))
             {
@@ -377,7 +377,7 @@ namespace Robust.Shared.Physics.Broadphase
                 if (!grids.TryGetValue(gridId, out var broadPhase)) continue;
 
                 var bodyCleanup = false;
-                var toCleanup = new List<PhysicsComponent>();
+                var toCleanup = new List<IPhysBody>();
                 // Need to cleanup every body that was touching this grid.
                 foreach (var (body, broadPhases) in _lastBroadPhases)
                 {
@@ -401,7 +401,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public void AddBody(PhysicsComponent body)
+        public void AddBody(IPhysBody body)
         {
             if (_lastBroadPhases.ContainsKey(body))
             {
@@ -431,7 +431,7 @@ namespace Robust.Shared.Physics.Broadphase
             EntityManager.UpdateEntityTree(body.Owner);
         }
 
-        public void RemoveBody(PhysicsComponent body)
+        public void RemoveBody(IPhysBody body)
         {
             if (!_lastBroadPhases.ContainsKey(body))
             {

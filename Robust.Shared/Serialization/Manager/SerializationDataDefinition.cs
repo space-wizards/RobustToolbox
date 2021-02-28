@@ -170,7 +170,7 @@ namespace Robust.Shared.Serialization.Manager
                         {
                             var type = fieldDefinition.FieldType;
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            var res = serializationManager.ReadWithValue(type, node);
+                            var res = serializationManager.ReadWithValue(type, node, serializationContext);
 
                             result = res.result;
                             break;

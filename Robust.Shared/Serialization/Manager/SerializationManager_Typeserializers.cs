@@ -148,7 +148,9 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult<T>? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
         {
-            if (_typeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader))
+            object? rawTypeReader;
+            if (context != null && context.TypeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader) ||
+                _typeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader))
             {
                 var ser = (ITypeReader<T, TNode>) rawTypeReader;
                 obj = ser.Read(node, context);
@@ -190,8 +192,9 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null) where T : notnull
         {
             node = default;
-
-            if (_typeWriters.TryGetValue(typeof(T), out var rawTypeWriter))
+            object? rawTypeWriter;
+            if (context != null && context.TypeWriters.TryGetValue(typeof(T), out rawTypeWriter) ||
+                _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
             {
                 var ser = (ITypeWriter<T>) rawTypeWriter;
                 node = ser.Write(obj, alwaysWrite, context);

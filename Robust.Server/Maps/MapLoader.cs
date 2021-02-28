@@ -261,9 +261,10 @@ namespace Robust.Server.Maps
 
             private Dictionary<ushort, string>? _tileMap;
 
-            public bool MapIsPostInit { get; private set; }
+            public Dictionary<(Type, Type), object> TypeReaders { get; }
+            public Dictionary<Type, object> TypeWriters { get; }
 
-            public Dictionary<Type, object> TypeSerializers { get; }
+            public bool MapIsPostInit { get; private set; }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager,
@@ -277,11 +278,17 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
-                TypeSerializers = new()
+                TypeWriters = new()
                 {
                     {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
+                };
+                TypeReaders = new()
+                {
+                    {(typeof(IEntity), typeof(ValueDataNode)), this},
+                    {(typeof(GridId), typeof(ValueDataNode)), this},
+                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
             }
 
@@ -300,11 +307,17 @@ namespace Robust.Server.Maps
                 RootNode = node;
                 TargetMap = targetMapId;
                 _prototypeManager = prototypeManager;
-                TypeSerializers = new()
+                TypeWriters = new()
                 {
                     {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
+                };
+                TypeReaders = new()
+                {
+                    {(typeof(IEntity), typeof(ValueDataNode)), this},
+                    {(typeof(GridId), typeof(ValueDataNode)), this},
+                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
             }
 

@@ -1,10 +1,13 @@
 ﻿using System.Linq;
+using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Timing;
 using MapGrid = Robust.Shared.Map.MapGrid;
 
@@ -13,6 +16,19 @@ namespace Robust.UnitTesting.Shared.Map
     [TestFixture, TestOf(typeof(MapGrid))]
     class MapGrid_Tests : RobustUnitTest
     {
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+        }
+
         [OneTimeSetUp]
         public void Setup()
         {

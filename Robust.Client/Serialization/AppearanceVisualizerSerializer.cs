@@ -41,9 +41,9 @@ namespace Robust.Client.Serialization
         }
 
         public AppearanceVisualizer Copy(ISerializationManager serializationManager, AppearanceVisualizer source,
-            AppearanceVisualizer target)
+            AppearanceVisualizer target, ISerializationContext? context = null)
         {
-            throw new System.NotImplementedException();
+            return serializationManager.Copy(source, target, context)!;
         }
     }
 }

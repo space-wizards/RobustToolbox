@@ -99,14 +99,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         [MustUseReturnValue]
         public ComponentRegistry Copy(ISerializationManager serializationManager, ComponentRegistry source,
-            ComponentRegistry target)
+            ComponentRegistry target, ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
 
             foreach (var (id, component) in source)
             {
-                target.Add(id, component);
+                target.Add(id, serializationManager.CreateCopy(component, context)!);
             }
 
             return target;

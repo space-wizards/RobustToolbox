@@ -31,13 +31,13 @@ namespace Robust.Shared.Serialization.Manager
 
         DataNode WriteValue(Type type, object value, bool alwaysWrite = false, ISerializationContext? context = null);
 
-        object? Copy(object? source, object? target);
+        object? Copy(object? source, object? target, ISerializationContext? context = null);
 
-        T? Copy<T>(object? source, T? target);
+        T? Copy<T>(object? source, T? target, ISerializationContext? context = null);
 
-        object? CreateCopy(object? source);
+        object? CreateCopy(object? source, ISerializationContext? context = null);
 
-        T? CreateCopy<T>(T? source);
+        T? CreateCopy<T>(T? source, ISerializationContext? context = null);
 
         #endregion
 

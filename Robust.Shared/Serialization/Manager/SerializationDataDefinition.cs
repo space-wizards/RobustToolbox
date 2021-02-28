@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
 
         private delegate object CopyDelegateSignature(object source, object target,
-            ISerializationManager serializationManager);
+            ISerializationManager serializationManager, ISerializationContext? context);
 
         public readonly Type Type;
 
@@ -53,8 +53,8 @@ namespace Robust.Shared.Serialization.Manager
         public MappingDataNode InvokeSerializeDelegate(object obj, ISerializationManager serializationManager, ISerializationContext? context, bool alwaysWrite) =>
             _serializeDelegate(obj, serializationManager, context, alwaysWrite, _defaultValues);
 
-        public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager) =>
-            _copyDelegate(source, target, serializationManager);
+        public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager, ISerializationContext? context) =>
+            _copyDelegate(source, target, serializationManager, context);
 
         public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
@@ -253,17 +253,18 @@ namespace Robust.Shared.Serialization.Manager
             var dynamicMethod = new DynamicMethod(
                 $"_populateDelegate<>{Type}",
                 typeof(object),
-                new[] {typeof(object), typeof(object), typeof(ISerializationManager)},
+                new[] {typeof(object), typeof(object), typeof(ISerializationManager), typeof(ISerializationContext)},
                 Type,
                 true);
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
             dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
             dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
+            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
             var generator = dynamicMethod.GetRobustGen();
 
             foreach (var fieldDefinition in _baseFieldDefinitions)
             {
-                generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2);
+                generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2, 3);
             }
 
             generator.Emit(OpCodes.Ldarg_1);

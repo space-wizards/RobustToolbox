@@ -230,7 +230,7 @@ public readonly bool ServerOnly;
         }
 
         public static void EmitCopy(this RobustILGenerator generator, int fromArg, AbstractFieldInfo fromField, int toArg,
-            AbstractFieldInfo toField, int mgrArg, bool assumeValueNotNull = false)
+            AbstractFieldInfo toField, int mgrArg, int ctxArg, bool assumeValueNotNull = false)
         {
             //todo paul breaks if fromfield is nullable & tofield is not
 
@@ -259,7 +259,10 @@ public readonly bool ServerOnly;
             //if(!toField.FieldType.IsPrimitive && toField.FieldType.IsValueType)
             generator.Emit(OpCodes.Box, toField.FieldType);
 
-            var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy), new Type[] {typeof(object), typeof(object)});
+            //todo paul use context
+            generator.Emit(OpCodes.Ldarg, ctxArg);
+
+            var copyMethod = typeof(ISerializationManager).GetMethod(nameof(ISerializationManager.Copy), new Type[] {typeof(object), typeof(object), typeof(ISerializationContext)});
             Debug.Assert(copyMethod != null, nameof(copyMethod) + " != null");
             generator.Emit(OpCodes.Callvirt, copyMethod);
             generator.Emit(OpCodes.Unbox_Any, toField.FieldType);

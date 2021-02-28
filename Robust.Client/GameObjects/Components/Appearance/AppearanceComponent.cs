@@ -140,6 +140,7 @@ namespace Robust.Client.GameObjects
     ///     Handles the visualization of data inside of an appearance component.
     ///     Implementations of this class are NOT bound to a specific entity, they are flyweighted across multiple.
     /// </summary>
+    [ImplicitDataDefinitionForInheritors]
     public abstract class AppearanceVisualizer
     {
         /// <summary>

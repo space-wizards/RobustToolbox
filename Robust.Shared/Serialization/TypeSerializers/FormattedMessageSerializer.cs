@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         [MustUseReturnValue]
         public FormattedMessage Copy(ISerializationManager serializationManager, FormattedMessage source,
-            FormattedMessage target)
+            FormattedMessage target, ISerializationContext? context = null)
         {
             return new(source);
         }

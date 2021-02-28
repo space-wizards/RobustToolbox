@@ -37,7 +37,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 $"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)},{value.Z.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector3 Copy(ISerializationManager serializationManager, Vector3 source, Vector3 target)
+        public Vector3 Copy(ISerializationManager serializationManager, Vector3 source, Vector3 target, ISerializationContext? context = null)
         {
             return new(source);
         }

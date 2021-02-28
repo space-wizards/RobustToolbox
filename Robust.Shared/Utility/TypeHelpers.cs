@@ -268,7 +268,7 @@ namespace Robust.Shared.Utility
             }
         }
 
-        public static Type? FindCommonType(Type type1, Type type2)
+        public static Type? SelectCommonType(Type type1, Type type2)
         {
             Type? commonType = null;
             if (type1.IsAssignableFrom(type2))

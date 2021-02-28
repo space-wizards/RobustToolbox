@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -53,6 +55,13 @@ namespace Robust.Shared.Serialization.Manager
                 if (type.IsAbstract || type.IsInterface)
                 {
                     Logger.Warning($"Skipping registering data definition for type {type} since it is abstract or an interface");
+                    continue;
+                }
+
+                if (!type.IsValueType && type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                    .FirstOrDefault(m => m.GetParameters().Length == 0) == null)
+                {
+                    Logger.Warning($"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     continue;
                 }
 
@@ -124,8 +133,6 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
-
-            if(underlyingType.Name == "AppearanceVisualizer") System.Console.WriteLine();
 
             // val primitives
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
@@ -200,7 +207,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (!TryGetDataDefinition(underlyingType, out var dataDef))
             {
-                throw new InvalidOperationException($"No data definition found for type {type} when reading");
+                throw new InvalidOperationException($"No data definition found for type {type} with nodetype {node.GetType()} when reading");
             }
 
             if (node is not MappingDataNode mappingDataNode)
@@ -301,14 +308,7 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = value.GetType();
             }
 
-            SerializationDataDefinition? dataDef = null;
-
-            while (currentType != null && !TryGetDataDefinition(currentType, out dataDef))
-            {
-                currentType = currentType.BaseType;
-            }
-
-            if (dataDef == null)
+            if (!TryGetDataDefinition(currentType, out var dataDef))
             {
                 throw new InvalidOperationException($"No data definition found for type {type} when writing");
             }
@@ -324,7 +324,7 @@ namespace Robust.Shared.Serialization.Manager
             return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
         }
 
-        private object? CopyToTarget(object? source, object? target)
+        private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null)
         {
             if (source == null || target == null)
             {
@@ -346,8 +346,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new InvalidOperationException(
                     $"Source and target do not match. Source ({sourceType}) is primitive type: {sourceType.IsPrimitive}. Target ({targetType}) is primitive type: {targetType.IsPrimitive}");
 
-            // TODO paul serv3
-            var commonType = TypeHelpers.FindCommonType(source.GetType(), target.GetType());
+            var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
             if(commonType == null)
             {
                 throw new InvalidOperationException("Could not find common type in Copy!");
@@ -358,31 +357,29 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            SerializationDataDefinition? dataDefinition = null;
-            while (commonType != null && !TryGetDataDefinition(commonType, out dataDefinition))
+            if (TryCopyWithTypeCopier(commonType, source, ref target))
             {
-                commonType = commonType.BaseType;
+                return target;
             }
 
-            if (dataDefinition == null)
+            if (!TryGetDataDefinition(commonType, out var dataDef))
             {
-                Logger.Warning($"Could not find data definition for type {targetType} when copying");
-                return source;
+                throw new InvalidOperationException($"No data definition found for type {commonType} when copying");
             }
 
-            target = dataDefinition.InvokeCopyDelegate(source, target, this);
+            target = dataDef.InvokeCopyDelegate(source, target, this, context);
 
             return target;
         }
 
-        public object? Copy(object? source, object? target)
+        public object? Copy(object? source, object? target, ISerializationContext? context = null)
         {
-            return CopyToTarget(source, target);
+            return CopyToTarget(source, target, context);
         }
 
-        public T? Copy<T>(object? source, T? target)
+        public T? Copy<T>(object? source, T? target, ISerializationContext? context = null)
         {
-            var copy = CopyToTarget(source, target);
+            var copy = CopyToTarget(source, target, context);
 
             if (copy == null)
             {
@@ -392,22 +389,22 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) copy;
         }
 
-        private object? CreateCopyInternal(object? source)
+        private object? CreateCopyInternal(object? source, ISerializationContext? context = null)
         {
             if (source == null) return source;
             //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
-            return Copy(source, target);
+            return Copy(source, target, context);
         }
 
-        public object? CreateCopy(object? source)
+        public object? CreateCopy(object? source, ISerializationContext? context = null)
         {
-            return CreateCopyInternal(source);
+            return CreateCopyInternal(source, context);
         }
 
-        public T? CreateCopy<T>(T? source)
+        public T? CreateCopy<T>(T? source, ISerializationContext? context = null)
         {
-            var copy = CreateCopyInternal(source);
+            var copy = CreateCopyInternal(source, context);
 
             if (copy == null)
             {

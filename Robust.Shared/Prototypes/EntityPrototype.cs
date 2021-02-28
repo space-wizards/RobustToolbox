@@ -279,7 +279,8 @@ namespace Robust.Shared.Prototypes
 
                     //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData);
+                    //todo paul serv3 oh god
+                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData, context as ISerializationContext);
                 }
             }
 
@@ -297,12 +298,13 @@ namespace Robust.Shared.Prototypes
 
                     var ser = context.GetComponentData(name, null);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, ser);
+                    //todo paul serv3 oh god
+                    EnsureCompExistsAndDeserialize(entity, factory, name, ser, context as ISerializationContext);
                 }
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, IComponent data)
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, IComponent data, ISerializationContext? context)
         {
             var compType = factory.GetRegistration(compName).Type;
 
@@ -314,7 +316,7 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<ISerializationManager>().Copy(data, component);
+            IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)

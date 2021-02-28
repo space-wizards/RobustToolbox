@@ -36,40 +36,40 @@ namespace Robust.Shared.Physics.Collision
         bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
 
-        void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
+        void CollideCircles(Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB);
 
-        void CollideEdgeAndCircle(ref Manifold manifold, EdgeShape edgeA, in Transform transformA,
+        void CollideEdgeAndCircle(Manifold manifold, EdgeShape edgeA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB);
 
-        void CollideEdgeAndPolygon(ref Manifold manifold, EdgeShape edgeA, in Transform xfA,
+        void CollideEdgeAndPolygon(Manifold manifold, EdgeShape edgeA, in Transform xfA,
             PolygonShape polygonB, in Transform xfB);
 
-        void CollidePolygonAndCircle(ref Manifold manifold, PolygonShape polygonA, in Transform xfA,
+        void CollidePolygonAndCircle(Manifold manifold, PolygonShape polygonA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB);
 
-        void CollidePolygons(ref Manifold manifold, PolygonShape polyA, in Transform transformA,
+        void CollidePolygons(Manifold manifold, PolygonShape polyA, in Transform transformA,
             PolygonShape polyB, in Transform transformB);
 
-        void CollideAabbAndPolygon(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
+        void CollideAabbAndPolygon(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PolygonShape polyB, in Transform transformB);
 
-        void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
+        void CollideAabbAndCircle(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB);
 
-        void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
+        void CollideAabbs(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PhysShapeAabb aabbB, in Transform transformB);
 
-        void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
+        void CollideAabbAndRect(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PhysShapeRect rectB, in Transform transformB);
 
-        void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
+        void CollideRects(Manifold manifold, PhysShapeRect rectA, in Transform transformA,
             PhysShapeRect rectB, in Transform transformB);
 
-        void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
+        void CollideRectAndCircle(Manifold manifold, PhysShapeRect rectA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB);
 
-        void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
+        void CollideRectAndPolygon(Manifold manifold, PhysShapeRect rectA, in Transform transformA,
             PolygonShape polyB, in Transform transformB);
     }
 
@@ -171,7 +171,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="transformA">The transform A.</param>
         /// <param name="circleB">The circle B.</param>
         /// <param name="transformB">The transform B.</param>
-        public void CollideEdgeAndCircle(ref Manifold manifold, EdgeShape edgeA, in Transform transformA,
+        public void CollideEdgeAndCircle(Manifold manifold, EdgeShape edgeA, in Transform transformA,
             PhysShapeCircle circleB, in Transform transformB)
         {
             manifold.PointCount = 0;
@@ -224,7 +224,6 @@ namespace Robust.Shared.Physics.Collision
                 cf.IndexA = 0;
                 cf.TypeA = (byte) ContactFeatureType.Vertex;
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
@@ -267,7 +266,6 @@ namespace Robust.Shared.Physics.Collision
                 cf.IndexA = 1;
                 cf.TypeA = (byte) ContactFeatureType.Vertex;
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
@@ -303,7 +301,6 @@ namespace Robust.Shared.Physics.Collision
             cf.IndexA = 0;
             cf.TypeA = (byte) ContactFeatureType.Face;
             manifold.PointCount = 1;
-            manifold.Points = new ManifoldPoint[1];
             manifold.Type = ManifoldType.FaceA;
             manifold.LocalNormal = n;
             manifold.LocalPoint = A;
@@ -317,7 +314,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.Points[0] = mp2;
         }
 
-        public void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
+        public void CollideCircles(Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
             PhysShapeCircle circleB,
             in Transform xfB)
         {
@@ -339,7 +336,6 @@ namespace Robust.Shared.Physics.Collision
             manifold.LocalPoint = Vector2.Zero; // Also here
             manifold.LocalNormal = Vector2.Zero;
             manifold.PointCount = 1;
-            manifold.Points = new ManifoldPoint[1];
 
             ManifoldPoint p0 = manifold.Points[0];
 
@@ -357,12 +353,12 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The xf A.</param>
         /// <param name="polygonB">The polygon B.</param>
         /// <param name="xfB">The xf B.</param>
-        public void CollideEdgeAndPolygon(ref Manifold manifold, EdgeShape edgeA, in Transform xfA,
+        public void CollideEdgeAndPolygon(Manifold manifold, EdgeShape edgeA, in Transform xfA,
             PolygonShape polygonB,
             in Transform xfB)
         {
             EPCollider collider = new(_configManager);
-            collider.Collide(ref manifold, edgeA, xfA, polygonB, xfB);
+            collider.Collide(manifold, edgeA, xfA, polygonB, xfB);
         }
 
         private class EPCollider
@@ -386,7 +382,7 @@ namespace Robust.Shared.Physics.Collision
                 _polygonB = new TempPolygon(configManager);
             }
 
-            public void Collide(ref Manifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
+            public void Collide(Manifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
                 in Transform xfB)
             {
                 // Algorithm:
@@ -764,7 +760,6 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 int pointCount = 0;
-                manifold.Points = new ManifoldPoint[2];
 
                 for (int i = 0; i < 2; ++i)
                 {
@@ -880,7 +875,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform of A.</param>
         /// <param name="circleB">The circle B.</param>
         /// <param name="xfB">The transform of B.</param>
-        public void CollidePolygonAndCircle(ref Manifold manifold, PolygonShape polygonA, in Transform xfA,
+        public void CollidePolygonAndCircle(Manifold manifold, PolygonShape polygonA, in Transform xfA,
             PhysShapeCircle circleB, in Transform xfB)
         {
             manifold.PointCount = 0;
@@ -924,7 +919,6 @@ namespace Robust.Shared.Physics.Collision
             if (separation < float.Epsilon)
             {
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.FaceA;
                 manifold.LocalNormal = polygonA.Normals[normalIndex];
                 manifold.LocalPoint = (v1 + v2) * 0.5f;
@@ -952,7 +946,6 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.FaceA;
                 manifold.LocalNormal = cLocal - v1;
                 float factor = 1f /
@@ -978,7 +971,6 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.FaceA;
                 manifold.LocalNormal = cLocal - v2;
                 float factor = 1f /
@@ -1008,7 +1000,6 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 manifold.PointCount = 1;
-                manifold.Points = new ManifoldPoint[1];
                 manifold.Type = ManifoldType.FaceA;
                 manifold.LocalNormal = polygonA.Normals[vertIndex1];
                 manifold.LocalPoint = faceCenter;
@@ -1030,7 +1021,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="transformA">The transform A.</param>
         /// <param name="polyB">The poly B.</param>
         /// <param name="transformB">The transform B.</param>
-        public void CollidePolygons(ref Manifold manifold, PolygonShape polyA, in Transform transformA,
+        public void CollidePolygons(Manifold manifold, PolygonShape polyA, in Transform transformA,
             PolygonShape polyB, in Transform transformB)
         {
             manifold.PointCount = 0;
@@ -1128,7 +1119,6 @@ namespace Robust.Shared.Physics.Collision
             // Now clipPoints2 contains the clipped points.
             manifold.LocalNormal = localNormal;
             manifold.LocalPoint = planePoint;
-            manifold.Points = new ManifoldPoint[2];
 
             int pointCount = 0;
             for (int i = 0; i < 2; ++i)
@@ -1159,53 +1149,52 @@ namespace Robust.Shared.Physics.Collision
             }
 
             manifold.PointCount = pointCount;
-            manifold.Points = new ManifoldPoint[pointCount];
         }
 
         // TODO: Uhh optimise these because holy fuck dey expensive. I didn't use for now because we can just convert to a poly quicker.
         // Probably copy Acruid's implementation though you need to make it return a box2d manifold instead.
         // Also I tried using the AABBandcircle one but it didn't seem to work well.
-        public void CollideAabbAndPolygon(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PolygonShape polyB,
+        public void CollideAabbAndPolygon(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PolygonShape polyB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, polyB, transformB);
+            CollidePolygons(manifold, (PolygonShape) aabbA, transformA, polyB, transformB);
         }
 
-        public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
+        public void CollideAabbAndCircle(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+            CollidePolygonAndCircle(manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
         }
 
-        public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
+        public void CollideAabbs(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+            CollidePolygons(manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
         }
 
-        public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,
+        public void CollideAabbAndRect(Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,
             in Transform transformB)
         {
             // TODO: Uhh this should work I think with cached bounds? Worst case we manually calc it here but then we need to do fuckery in DistanceProxy
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) rectB, transformB);
+            CollidePolygons(manifold, (PolygonShape) aabbA, transformA, (PolygonShape) rectB, transformB);
         }
 
-        public void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeRect rectB,
+        public void CollideRects(Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeRect rectB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, (PolygonShape) rectB, transformB);
+            CollidePolygons(manifold, (PolygonShape) rectA, transformA, (PolygonShape) rectB, transformB);
         }
 
-        public void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeCircle circleB,
+        public void CollideRectAndCircle(Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) rectA, transformA, circleB, transformB);
+            CollidePolygonAndCircle(manifold, (PolygonShape) rectA, transformA, circleB, transformB);
         }
 
-        public void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PolygonShape polyB,
+        public void CollideRectAndPolygon(Manifold manifold, PhysShapeRect rectA, in Transform transformA, PolygonShape polyB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, polyB, transformB);
+            CollidePolygons(manifold, (PolygonShape) rectA, transformA, polyB, transformB);
         }
 
         /// <summary>

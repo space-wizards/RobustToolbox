@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Configs;
 using NUnit.Framework;
+using Robust.Shared.Configuration;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;

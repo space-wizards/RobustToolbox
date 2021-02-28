@@ -95,7 +95,9 @@ namespace Robust.Shared.Physics.Collision
         }
     }
 
-    public struct Manifold
+    // Made a class because A) It gets mutated bloody everywhere and B) unless you're careful you'll get solver issues (yay!)
+    // which I really could not be fucked dealing with
+    internal sealed class Manifold
     {
         public Vector2 LocalNormal;
 
@@ -113,6 +115,11 @@ namespace Robust.Shared.Physics.Collision
 
         public ManifoldType Type;
 
+        public Manifold()
+        {
+            Points = new ManifoldPoint[2];
+        }
+
         public Manifold(Vector2 localNormal, Vector2 localPoint, int pointCount, ManifoldPoint[] points, ManifoldType type)
         {
             LocalNormal = localNormal;
@@ -120,6 +127,11 @@ namespace Robust.Shared.Physics.Collision
             PointCount = pointCount;
             Points = points;
             Type = type;
+        }
+
+        internal Manifold Clone()
+        {
+            return new(LocalNormal, LocalPoint, PointCount, Points, Type);
         }
     }
 

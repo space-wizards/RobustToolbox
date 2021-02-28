@@ -27,11 +27,11 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             IoCManager.InjectDependencies(this);
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
 
             _contents = new Label
             {
-                FontColorShadowOverride = Color.Black,
+                FontColorShadowOverride = Color.Black
             };
             AddChild(_contents);
 
@@ -43,6 +43,7 @@ namespace Robust.Client.UserInterface.CustomControls
             };
 
             MouseFilter = _contents.MouseFilter = MouseFilterMode.Ignore;
+            MinWidth = 175;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -70,8 +71,10 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId), mouseWorldMap.Position);
-                tile = new TileRef(mouseWorldMap.MapId, GridId.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
+                mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId),
+                    mouseWorldMap.Position);
+                tile = new TileRef(mouseWorldMap.MapId, GridId.Invalid,
+                    mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
@@ -103,7 +106,8 @@ Mouse Pos:
     {1}
     {2}
     EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid, entityTransform.GridID);
+    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid,
+                    entityTransform.GridID);
             }
 
             if (controlHovered != null)
@@ -112,7 +116,7 @@ Mouse Pos:
             }
 
             _contents.Text = stringBuilder.ToString();
-            MinimumSizeChanged();
+            // MinimumSizeChanged();
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -132,11 +136,6 @@ Mouse Pos:
                 _uiBox.Bottom - y);
 
             handle.DrawRect(renderBox, Color.Red, false);
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            return new(175, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

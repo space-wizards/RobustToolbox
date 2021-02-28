@@ -37,7 +37,21 @@ namespace Robust.Client.Player
         public int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? 0;
 
         /// <inheritdoc />
-        [ViewVariables] public LocalPlayer? LocalPlayer { get; private set; }
+        [ViewVariables]
+        public LocalPlayer? LocalPlayer
+        {
+            get => _localPlayer;
+            private set
+            {
+                if (_localPlayer == value) return;
+                var oldValue = _localPlayer;
+                _localPlayer = value;
+                LocalPlayerChanged?.Invoke(new LocalPlayerChangedEventArgs(oldValue, _localPlayer));
+            }
+        }
+        private LocalPlayer? _localPlayer;
+        public event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
+
 
         /// <inheritdoc />
         [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;

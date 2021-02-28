@@ -767,14 +767,14 @@ namespace Robust.Shared.ContentPack
                 var dllName = $"{simpleName}.dll";
                 foreach (var diskLoadPath in _diskLoadPaths)
                 {
-                    try
+                    var path = Path.Combine(diskLoadPath, dllName);
+
+                    if (!File.Exists(path))
                     {
-                        var path = Path.Combine(diskLoadPath, dllName);
-                        return new PEReader(File.OpenRead(path));
+                        continue;
                     }
-                    catch (FileNotFoundException)
-                    {
-                    }
+
+                    return new PEReader(File.OpenRead(path));
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);

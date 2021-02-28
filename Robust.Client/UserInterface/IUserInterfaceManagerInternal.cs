@@ -45,7 +45,8 @@ namespace Robust.Client.UserInterface
         void Render(IRenderHandle renderHandle);
 
         void QueueStyleUpdate(Control control);
-        void QueueLayoutUpdate(Control control);
+        void QueueMeasureUpdate(Control control);
+        void QueueArrangeUpdate(Control control);
         void CursorChanged(Control control);
         /// <summary>
         /// Hides the tooltip for the indicated control, if tooltip for that control is currently showing.

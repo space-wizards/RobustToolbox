@@ -10,18 +10,17 @@ namespace Robust.UnitTesting
 
     public sealed class TestLogHandler : ILogHandler, IDisposable
     {
-
-        private readonly string _prefix;
+        private readonly string? _prefix;
 
         private readonly TextWriter _writer;
 
         private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-        public TestLogHandler(string prefix)
+        public TestLogHandler(string? prefix = null)
         {
             _prefix = prefix;
             _writer = TestContext.Out;
-            _writer.WriteLine($"{_prefix}: Started {DateTime.Now:o}");
+            _writer.WriteLine($"{GetPrefix()}Started {DateTime.Now:o}");
         }
 
         public void Dispose()
@@ -34,9 +33,13 @@ namespace Robust.UnitTesting
             var name = LogMessage.LogLevelToName(message.Level.ToRobust());
             var seconds = _sw.ElapsedMilliseconds/1000d;
             var rendered = message.RenderMessage();
-            _writer.WriteLine($"{_prefix}: {seconds:F3}s [{name}] {sawmillName}: {rendered}");
+            _writer.WriteLine($"{GetPrefix()}{seconds:F3}s [{name}] {sawmillName}: {rendered}");
         }
 
+        private string GetPrefix()
+        {
+            return _prefix != null ? $"{_prefix}: " : "";
+        }
     }
 
 }

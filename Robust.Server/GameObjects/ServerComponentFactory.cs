@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects
 
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
-            Register<PointLightComponent>();
+
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");

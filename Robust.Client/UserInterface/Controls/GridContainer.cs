@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _expandBackwards = value;
-                UpdateLayout();
+                InvalidateArrange();
             }
         }
         private bool _expandBackwards;
@@ -100,10 +100,17 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        public float MaxWidth
+        [Obsolete("Use MaxGridWidth")]
+        public new float MaxWidth
+        {
+            set => MaxGridWidth = value;
+        }
+
+        public float MaxGridWidth
         {
             set => SetMaxSize(Dimension.Column, value);
         }
+
         /// <summary>
         ///     The max height (in virtual pixels) the grid  of elements can have. This dynamically determines
         ///     the number of rows based on the size of the elements. Setting this puts this grid
@@ -120,11 +127,16 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        public float MaxHeight
+        [Obsolete("Use MaxGridHeight")]
+        public new float MaxHeight
+        {
+            set => MaxGridHeight = value;
+        }
+
+        public float MaxGridHeight
         {
             set => SetMaxSize(Dimension.Row, value);
         }
-
 
         private int? _vSeparationOverride;
 
@@ -199,8 +211,7 @@ namespace Robust.Client.UserInterface.Controls
             _limitType = LimitType.Count;
 
             _limitedDimensionCount = value;
-            MinimumSizeChanged();
-            UpdateLayout();
+            InvalidateMeasure();
         }
 
         private void SetMaxSize(Dimension forDimension, float value)
@@ -214,8 +225,7 @@ namespace Robust.Client.UserInterface.Controls
             _limitType = LimitType.Size;
 
             _limitSize = value;
-            MinimumSizeChanged();
-            UpdateLayout();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -263,7 +273,7 @@ namespace Robust.Client.UserInterface.Controls
             int maxMinHeight = -1;
             foreach (var child in Children)
             {
-                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
+                var (minSizeX, minSizeY) = child.DesiredPixelSize;
                 maxMinWidth = Math.Max(maxMinWidth, minSizeX);
                 maxMinHeight = Math.Max(maxMinHeight, minSizeY);
             }
@@ -271,7 +281,7 @@ namespace Robust.Client.UserInterface.Controls
             return new Vector2i(maxMinWidth, maxMinHeight);
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
             // rows and cols,
@@ -279,6 +289,12 @@ namespace Robust.Client.UserInterface.Controls
             // on the limited dimension, which might involve swapping them.
             // For the below convention, we pretend that columns have a limit defined, thus
             // the amount of rows is not limited (unlimited).
+
+            foreach (var child in Children)
+            {
+                // TODO: This is not really correct in any fucking way but I CBA to fix this properly.
+                child.Measure(availableSize);
+            }
 
             var rows = GetCount(UnlimitedDimension);
             var cols = GetCount(LimitedDimension);
@@ -304,7 +320,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 // also converting here to our "pretend" scenario where columns have a limit defined.
                 // note if we are limiting by size rather than count, the size of each child is constant (cell size)
-                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.CombinedPixelMinimumSize : cellSize;
+                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.DesiredPixelSize : cellSize;
                 var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
                 var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
                 minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
@@ -348,9 +364,9 @@ namespace Robust.Client.UserInterface.Controls
             return totalSize;
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
-            // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
+               // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
             // rows and cols,
             // but at the start of the method here we'll set those to what they actually are based
             // on the limited dimension, which might involve swapping them.
@@ -390,19 +406,19 @@ namespace Robust.Client.UserInterface.Controls
 
                 // converting here to our "pretend" scenario where columns have a limit defined
                 // note if we are limiting by size rather than count, the size of each child is constant (cell size)
-                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.CombinedPixelMinimumSize : cellSize;
+                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.DesiredPixelSize : cellSize;
                 var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
                 var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
                 minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
                 minRowHeight[row] = Math.Max(minSizeY, minRowHeight[row]);
-                var colSizeFlag = _limitDimension == Dimension.Column
-                    ? child.SizeFlagsHorizontal
-                    : child.SizeFlagsVertical;
-                var rowSizeFlag = UnlimitedDimension == Dimension.Column
-                    ? child.SizeFlagsHorizontal
-                    : child.SizeFlagsVertical;
-                colExpand[column] = colExpand[column] || (colSizeFlag & SizeFlags.Expand) != 0;
-                rowExpand[row] = rowExpand[row] || (rowSizeFlag & SizeFlags.Expand) != 0;
+                var colExpandFlag = _limitDimension == Dimension.Column
+                    ? child.HorizontalExpand
+                    : child.VerticalExpand;
+                var rowExpandFlag = UnlimitedDimension == Dimension.Column
+                    ? child.HorizontalExpand
+                    : child.VerticalExpand;
+                colExpand[column] = colExpand[column] || colExpandFlag;
+                rowExpand[row] = rowExpand[row] || rowExpandFlag;
 
                 index += 1;
             }
@@ -550,10 +566,12 @@ namespace Robust.Client.UserInterface.Controls
                 var boxHeight = _limitDimension == Dimension.Column ? minRowHeight[row] : minColWidth[column];
 
                 var box = UIBox2i.FromDimensions(left, top, boxWidth, boxHeight);
-                FitChildInPixelBox(child, box);
+                child.ArrangePixel(box);
 
                 hOffset += minColWidth[column] + hSep;
             }
+
+            return finalSize;
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Shared.GameStates;
@@ -352,7 +353,10 @@ namespace Robust.Client.GameStates
 
                 foreach (var component in _componentManager.GetNetComponents(createdEntity))
                 {
-                    var state = component.GetComponentState();
+                    Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
+
+                    var player = _players.LocalPlayer.Session;
+                    var state = component.GetComponentState(player);
 
                     if (state.GetType() == typeof(ComponentState))
                     {

@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -18,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity")]
-    public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
+    public class EntityPrototype : IPrototype, ISyncingPrototype
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
@@ -35,7 +36,29 @@ namespace Robust.Shared.Prototypes
         public string Name { get; private set; } = "";
 
         private bool _nameModified;
-        private bool _descriptionModified;
+
+
+        string? _localizationId;
+
+        /// <summary>
+        /// Fluent messageId used to lookup the entity's name and localization attributes.
+        /// </summary>
+        [ViewVariables, CanBeNull]
+        public string? LocalizationID
+        {
+            get
+            {
+                if(_localizationId == null)
+                {
+                    _localizationId = $"ent-{CaseConversion.PascalToKebab(ID)}";
+                }
+                return _localizationId;
+            }
+            private set
+            {
+                _localizationId = value;
+            }
+        }
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
@@ -49,6 +72,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         public string Description { get; private set; } = "";
+
+        private bool _descriptionModified;
 
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
@@ -145,12 +170,21 @@ namespace Robust.Shared.Prototypes
 
         public void LoadFrom(YamlMappingNode mapping)
         {
+            var loc = IoCManager.Resolve<ILocalizationManager>();
             ID = mapping.GetNode("id").AsString();
 
+            if (mapping.TryGetNode("localizationId", out var locId)) {
+                _localizationId = locId.ToString();
+            }
             if (mapping.TryGetNode("name", out var node))
             {
                 _nameModified = true;
-                Name = Loc.GetString(node.AsString());
+                Name = loc.GetString(node.AsString());
+            }
+            else if (loc.TryGetString($"ent-{CaseConversion.PascalToKebab(ID)}", out var name))
+            {
+                _nameModified = true;
+                Name = name;
             }
 
             if (mapping.TryGetNode("parent", out node))
@@ -162,12 +196,17 @@ namespace Robust.Shared.Prototypes
             if (mapping.TryGetNode("description", out node))
             {
                 _descriptionModified = true;
-                Description = Loc.GetString(node.AsString());
+                Description = loc.GetString(node.AsString());
+            }
+            else if (loc.TryGetString($"ent-{CaseConversion.PascalToKebab(ID)}.desc", out var name))
+            {
+                _descriptionModified = true;
+                Description = loc.GetString(name);
             }
 
             if (mapping.TryGetNode("suffix", out node))
             {
-                EditorSuffix = Loc.GetString(node.AsString());
+                EditorSuffix = loc.GetString(node.AsString());
             }
 
             // COMPONENTS
@@ -255,6 +294,11 @@ namespace Robust.Shared.Prototypes
 
                 _snapOverriden = true;
             }
+        }
+
+        public void Reset()
+        {
+            Children.Clear();
         }
 
         // Resolve inheritance.
@@ -422,6 +466,69 @@ namespace Robust.Shared.Prototypes
             {
                 return;
             }
+        }
+
+        public void UpdateEntity(Entity entity)
+        {
+            bool HasBeenModified(string name, YamlMappingNode data, EntityPrototype prototype, IComponent currentComponent, IComponentFactory factory)
+            {
+                var component = factory.GetComponent(name);
+                prototype.CurrentDeserializingComponent = name;
+                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(prototype));
+                component.ExposeData(ser);
+                return component == (Component) currentComponent;
+            }
+
+            if (ID != entity.Prototype?.ID)
+            {
+                Logger.Error($"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entity.Prototype?.ID}'");
+                return;
+            }
+
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            var componentManager = IoCManager.Resolve<IComponentManager>();
+            var oldPrototype = entity.Prototype;
+
+            var oldPrototypeComponents = oldPrototype.Components.Keys
+                .Where(n => n != "Transform" && n != "MetaData")
+                .Select(name => (name, factory.GetRegistration(name).Type))
+                .ToList();
+            var newPrototypeComponents = Components.Keys
+                .Where(n => n != "Transform" && n != "MetaData")
+                .Select(name => (name, factory.GetRegistration(name).Type))
+                .ToList();
+
+            var ignoredComponents = new List<string>();
+
+            // Find components to be removed, and remove them
+            foreach (var (name, type) in oldPrototypeComponents.Except(newPrototypeComponents))
+            {
+                if (!HasBeenModified(name, oldPrototype.Components[name], oldPrototype, entity.GetComponent(type),
+                    factory) && Components.Keys.Contains(name))
+                {
+                    ignoredComponents.Add(name);
+                    continue;
+                }
+
+                componentManager.RemoveComponent(entity.Uid, type);
+            }
+
+            componentManager.CullRemovedComponents();
+
+            // Add new components
+            foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name)).Except(oldPrototypeComponents))
+            {
+                var data = Components[name];
+                var component = (Component) factory.GetComponent(name);
+                ObjectSerializer ser = YamlObjectSerializer.NewReader(data, new PrototypeSerializationContext(this));
+                CurrentDeserializingComponent = name;
+                component.Owner = entity;
+                component.ExposeData(ser);
+                entity.AddComponent(component);
+            }
+
+            // Update entity metadata
+            entity.MetaData.EntityPrototype = this;
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context)

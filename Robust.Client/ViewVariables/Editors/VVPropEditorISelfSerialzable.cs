@@ -13,7 +13,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = ((ISelfSerialize)value!).Serialize(),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
 
             if (!ReadOnly)

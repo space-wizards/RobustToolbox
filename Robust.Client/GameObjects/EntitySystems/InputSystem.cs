@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects
         /// <param name="message">Arguments for this event.</param>
         /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
         /// old input that was saved or buffered until further processing could be done</param>
-        public bool HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
+        public bool HandleInputCommand(ICommonSession? session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 

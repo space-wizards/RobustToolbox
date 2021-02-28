@@ -223,13 +223,17 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.SetSize = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new SS14Window
+            {
+                Title = "View Variables",
+                SetSize = _defaultWindowSize
+            };
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
 
@@ -264,8 +268,8 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, blob, session);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.Size = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)

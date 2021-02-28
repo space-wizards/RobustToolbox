@@ -116,7 +116,7 @@ namespace Robust.Client.GameObjects
                 _didRegisterSerializer = true;
             }
 
-            serializer.DataField(ref Visualizers, "visuals", new List<AppearanceVisualizer>());
+            serializer.DataFieldCached(ref Visualizers, "visuals", new List<AppearanceVisualizer>());
         }
 
         public override void Initialize()

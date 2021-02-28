@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
@@ -10,6 +10,7 @@ using Robust.Client.Input;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
+using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
@@ -17,6 +18,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -33,7 +35,7 @@ namespace Robust.Client
         {
             SharedIoC.RegisterIoC();
 
-            IoCManager.Register<IPrototypeManager, PrototypeManager>();
+            IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
@@ -59,6 +61,7 @@ namespace Robust.Client
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
+            IoCManager.Register<IConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IFontManager, FontManager>();
             IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();

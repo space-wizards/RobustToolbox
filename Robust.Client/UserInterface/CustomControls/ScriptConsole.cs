@@ -26,12 +26,9 @@ namespace Robust.Client.UserInterface.CustomControls
                         },
                         Children =
                         {
-                            (OutputPanel = new OutputPanel
-                            {
-                                SizeFlagsVertical = SizeFlags.FillExpand,
-                            })
+                            (OutputPanel = new OutputPanel())
                         },
-                        SizeFlagsVertical = SizeFlags.FillExpand
+                        VerticalExpand = true,
                     },
                     new HBoxContainer
                     {
@@ -39,7 +36,7 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (InputBar = new HistoryLineEdit
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 PlaceHolder = Loc.GetString("Your C# code here.")
                             }),
                             (RunButton = new Button {Text = Loc.GetString("Run")})
@@ -50,7 +47,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             InputBar.OnTextEntered += _ => Run();
             RunButton.OnPressed += _ => Run();
-            CustomMinimumSize = (550, 300);
+            MinSize = (550, 300);
         }
 
         protected abstract void Run();

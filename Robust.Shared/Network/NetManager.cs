@@ -135,6 +135,8 @@ namespace Robust.Shared.Network
         private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
             = new();
 
+        private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
+
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
 

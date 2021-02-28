@@ -13,7 +13,7 @@ namespace Robust.Client.ViewVariables.Editors
                 Pressed = (bool)value!,
                 Disabled = ReadOnly,
                 Text = value!.ToString()!,
-                CustomMinimumSize = new Vector2(70, 0)
+                MinSize = new Vector2(70, 0)
             };
             if (!ReadOnly)
             {

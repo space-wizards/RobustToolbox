@@ -123,8 +123,6 @@ namespace Robust.Shared.Timing
             FrameEventArgs realFrameEvent;
             FrameEventArgs simFrameEvent;
 
-            _timing.ResetRealTime();
-
             while (Running)
             {
                 // maximum number of ticks to queue before the loop slows down.

@@ -133,6 +133,7 @@ namespace Robust.Shared.Serialization
                 | RegexOptions.IgnorePatternWhitespace
             );
 
+        public bool Locked => _dict.Locked;
 
         public ITypeSerializer TypeSerializer => this;
 

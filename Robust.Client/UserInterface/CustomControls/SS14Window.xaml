@@ -1,15 +1,13 @@
-﻿<cc:SS14Window xmlns:cc="clr-namespace:Robust.Client.UserInterface.CustomControls"
-                           xmlns:c="clr-namespace:Robust.Client.UserInterface.Controls">
-    <c:PanelContainer StyleClasses="windowPanel"/>
-    <c:VBoxContainer SeparationOverride="0">
-        <c:PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
-            <c:HBoxContainer>
-                <c:MarginContainer MarginLeftOverride="5" SizeFlagsHorizontal="FillExpand">
-                    <c:Label Name="TitleLabel" StyleIdentifier="foo" ClipText="True" Text="Exemplary Window Title Here" VAlign="Center" StyleClasses="windowTitle"/>
-                </c:MarginContainer>
-                <c:TextureButton Name="CloseButton" StyleClasses="windowCloseButton" SizeFlagsVertical="ShrinkCenter"></c:TextureButton>
-            </c:HBoxContainer>
-        </c:PanelContainer>
-        <c:MarginContainer Name="ContentsContainer" MarginBottomOverride="10" MarginLeftOverride="10" MarginRightOverride="10" MarginTopOverride="10" RectClipContent="True" SizeFlagsVertical="FillExpand" />
-    </c:VBoxContainer>
-</cc:SS14Window>
+﻿<SS14Window xmlns="https://spacestation14.io" MinWidth="100" MinHeight="50">
+    <PanelContainer StyleClasses="windowPanel" />
+    <VBoxContainer SeparationOverride="0">
+        <PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
+            <HBoxContainer>
+                <Label Margin="5 0 0 0" HorizontalExpand="true" Name="TitleLabel" StyleIdentifier="foo" ClipText="True"
+                       Text="{Loc Exemplary Window Title Here}" VAlign="Center" StyleClasses="windowTitle" />
+                <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
+            </HBoxContainer>
+        </PanelContainer>
+        <Control Name="ContentsContainer" Margin="10" RectClipContent="True" VerticalExpand="true" />
+    </VBoxContainer>
+</SS14Window>

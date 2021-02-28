@@ -26,7 +26,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timers;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -163,6 +162,7 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _consoleHost.Initialize();
+            _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();
@@ -318,6 +318,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
+            logManager.GetSawmill("loc").Level = LogLevel.Error;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG

@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ComponentRegistrySerializer :ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
-        public DeserializationResult<ComponentRegistry> Read(ISerializationManager serializationManager,
+        public DeserializationResult Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             ISerializationContext? context = null)
         {

@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return mappingNode;
         }
 
-        public DeserializationResult<Dictionary<TKey, TValue>> Read(ISerializationManager serializationManager,
+        public DeserializationResult Read(ISerializationManager serializationManager,
             MappingDataNode node, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
@@ -73,7 +73,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult<IReadOnlyDictionary<TKey, TValue>>
+        DeserializationResult
             ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
@@ -92,7 +92,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        DeserializationResult<SortedDictionary<TKey, TValue>>
+        DeserializationResult
             ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {

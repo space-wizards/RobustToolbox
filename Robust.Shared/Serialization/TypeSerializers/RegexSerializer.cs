@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class RegexSerializer : ITypeSerializer<Regex, ValueDataNode>
     {
-        public DeserializationResult<Regex> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<Regex>(new Regex(node.Value, RegexOptions.Compiled));

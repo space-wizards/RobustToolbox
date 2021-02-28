@@ -9,7 +9,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class StringSerializer : ITypeSerializer<string, ValueDataNode>
     {
-        public DeserializationResult<string> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<string>(node.Value);

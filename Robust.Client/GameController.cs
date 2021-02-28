@@ -153,11 +153,11 @@ namespace Robust.Client
                 _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
-
-            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);

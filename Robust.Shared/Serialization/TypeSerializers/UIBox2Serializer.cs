@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
     {
-        public DeserializationResult<UIBox2> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');

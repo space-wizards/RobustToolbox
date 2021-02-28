@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
-        public DeserializationResult<Color> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)

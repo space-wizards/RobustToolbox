@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
-        public DeserializationResult<FormattedMessage> Read(ISerializationManager serializationManager,
+        public DeserializationResult Read(ISerializationManager serializationManager,
             ValueDataNode node, ISerializationContext? context = null)
         {
             return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));

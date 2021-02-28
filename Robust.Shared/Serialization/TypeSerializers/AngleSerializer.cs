@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
     {
-        public DeserializationResult<Angle> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var nodeContents = node.Value;

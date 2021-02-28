@@ -56,8 +56,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return WriteInternal(serializationManager, value, alwaysWrite, context);
         }
 
-        DeserializationResult<List<T>> ITypeReader<List<T>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
+        DeserializationResult ITypeReader<List<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+            SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
             var results = new List<DeserializationResult>();
@@ -72,7 +72,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<List<T>, T>(list, results);
         }
 
-        DeserializationResult<IReadOnlyList<T>> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
+        DeserializationResult ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
@@ -89,7 +89,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyCollection<IReadOnlyList<T>, T>(list, results, l => l);
         }
 
-        DeserializationResult<IReadOnlyCollection<T>> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
+        DeserializationResult ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = new List<T>();
@@ -105,7 +105,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyCollection<IReadOnlyCollection<T>, T>(list, results, l => l);
         }
 
-        DeserializationResult<ImmutableList<T>> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
+        DeserializationResult ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             var list = ImmutableList.CreateBuilder<T>();

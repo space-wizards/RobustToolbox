@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ITypeCopier<Texture>,
         ITypeCopier<EntityPrototype>
     {
-        public DeserializationResult<SpriteSpecifier> Read(ISerializationManager serializationManager,
+        public DeserializationResult Read(ISerializationManager serializationManager,
             ValueDataNode node, ISerializationContext? context = null)
         {
             var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
-        public DeserializationResult<SpriteSpecifier> Read(ISerializationManager serializationManager,
+        public DeserializationResult Read(ISerializationManager serializationManager,
             MappingDataNode node, ISerializationContext? context = null)
         {
             if (node.TryGetNode("sprite", out var spriteNode)

@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>
     {
-        public DeserializationResult<Vector4> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             string raw = node.Value;

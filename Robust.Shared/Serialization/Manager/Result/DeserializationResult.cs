@@ -19,10 +19,11 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public static DeserializationResult Definition(object value, DeserializedFieldEntry[] mappings)
         {
-            if (!IoCManager.Resolve<ISerializationManager>().HasDataDefinition(value.GetType()))
-                throw new ArgumentException("Provided value was not a data definition", nameof(value));
+            //if (!IoCManager.Resolve<ISerializationManager>().HasDataDefinition(value.GetType()))
+            //    throw new ArgumentException("Provided value was not a data definition", nameof(value));
 
             //todo validate mappings array count
+            //unless...
             var type = typeof(DeserializedDefinition<>).MakeGenericType(value.GetType());
             return (DeserializationResult) Activator.CreateInstance(type, value, mappings)!;
         }

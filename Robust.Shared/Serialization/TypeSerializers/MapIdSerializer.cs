@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
     {
-        public DeserializationResult<MapId> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var val = int.Parse(node.Value, CultureInfo.InvariantCulture);

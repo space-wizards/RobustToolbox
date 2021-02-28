@@ -149,7 +149,7 @@ namespace Robust.Client.GameObjects
                         var path = TextureRoot / layerDatum.RsiPath;
                         try
                         {
-                            layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
+                            layer.RSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(path).RSI;
                         }
                         catch
                         {
@@ -197,7 +197,7 @@ namespace Robust.Client.GameObjects
                         else
                         {
                             layer.Texture =
-                                resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                                IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
                         }
                     }
 
@@ -335,7 +335,7 @@ namespace Robust.Client.GameObjects
                     var rsiPath = TextureRoot / rsi;
                     try
                     {
-                        BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
+                        BaseRSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(rsiPath).RSI;
                     }
                     catch (Exception e)
                     {

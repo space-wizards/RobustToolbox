@@ -16,8 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
-        DeserializationResult<HashSet<T>> ITypeReader<HashSet<T>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager, SequenceDataNode node,
+        DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+            SequenceDataNode node,
             ISerializationContext? context)
         {
             var set = new HashSet<T>();
@@ -54,7 +54,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return sequence;
         }
 
-        DeserializationResult<ImmutableHashSet<T>> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+        DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context)
         {

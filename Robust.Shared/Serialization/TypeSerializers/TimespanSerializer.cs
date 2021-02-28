@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
     {
-        public DeserializationResult<TimeSpan> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);

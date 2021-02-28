@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
     {
-        public DeserializationResult<ResourcePath> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));

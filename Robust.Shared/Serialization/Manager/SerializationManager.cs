@@ -125,6 +125,8 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = type.EnsureNotNullableType();
 
+            if(underlyingType.Name == "AppearanceVisualizer") System.Console.WriteLine();
+
             // val primitives
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
             {
@@ -186,7 +188,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType.IsInterface || underlyingType.IsAbstract)
             {
-                throw new InvalidOperationException($"Unable to create an instance of an interface/abstract type. Type: {underlyingType}");
+                 throw new InvalidOperationException($"Unable to create an instance of an interface/abstract type. Type: {underlyingType}");
             }
 
             var obj = Activator.CreateInstance(underlyingType)!;

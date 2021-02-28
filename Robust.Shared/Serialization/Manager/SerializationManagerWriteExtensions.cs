@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Serialization.Markdown;
+﻿using System;
+using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -11,7 +12,18 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
             where T : DataNode
         {
-            return (T) manager.WriteValue(value.GetType(), value, alwaysWrite, context);
+            return manager.WriteValueAs<T>(value.GetType(), value, alwaysWrite, context);
+        }
+
+        public static T WriteValueAs<T>(
+            this ISerializationManager manager,
+            Type type,
+            object value,
+            bool alwaysWrite = false,
+            ISerializationContext? context = null)
+            where T : DataNode
+        {
+            return (T) manager.WriteValue(type, value, alwaysWrite, context);
         }
     }
 }

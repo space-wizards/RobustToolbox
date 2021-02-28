@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     [TypeSerializer]
     public class Vector2Serializer : ITypeSerializer<Vector2, ValueDataNode>
     {
-        public DeserializationResult<Vector2> Read(ISerializationManager serializationManager, ValueDataNode node,
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             string raw = node.Value;

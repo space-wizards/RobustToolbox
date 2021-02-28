@@ -145,7 +145,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult<T>? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
+        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
         {
             object? rawTypeReader;
             if (context != null && context.TypeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader) ||

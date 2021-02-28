@@ -91,7 +91,10 @@ namespace Robust.Shared.Serialization.Manager
                     }
                 }
 
-                fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo));
+                var alwaysPushInheritance =
+                    abstractFieldInfo.GetCustomAttribute<AlwaysPushInheritanceAttribute>() != null;
+
+                fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo, alwaysPushInheritance));
             }
 
             _duplicates = fieldDefs
@@ -170,14 +173,12 @@ namespace Robust.Shared.Serialization.Manager
                         {
                             var type = fieldDefinition.FieldType;
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            var res = serializationManager.ReadWithValue(type, node, serializationContext);
-
-                            result = res.result;
+                            result = serializationManager.Read(type, node, serializationContext);
                             break;
                         }
                     }
 
-                    var entry = new DeserializedFieldEntry(mapped, result);
+                    var entry = new DeserializedFieldEntry(mapped, result, fieldDefinition.AlwaysPushInheritanceFlag);
                     mappedInfo[i] = entry;
                 }
 
@@ -276,12 +277,14 @@ namespace Robust.Shared.Serialization.Manager
             public readonly DataFieldAttribute Attribute;
             public readonly object? DefaultValue;
             public readonly AbstractFieldInfo FieldInfo;
+            public readonly bool AlwaysPushInheritanceFlag;
 
-            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo)
+            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo, bool alwaysPushInheritanceFlag)
             {
                 Attribute = attr;
                 DefaultValue = defaultValue;
                 FieldInfo = fieldInfo;
+                AlwaysPushInheritanceFlag = alwaysPushInheritanceFlag;
             }
 
             public Type FieldType => FieldInfo.FieldType;

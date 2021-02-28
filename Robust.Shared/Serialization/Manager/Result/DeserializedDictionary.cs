@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -24,25 +26,27 @@ namespace Robust.Shared.Serialization.Manager.Result
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
             var sourceRes = source.Cast<DeserializedDictionary<TDict, TKey, TValue>>();
-            var valueDict = new TDict();
-            var mappingDict = new Dictionary<DeserializationResult, DeserializationResult>();
+            var mappingDict = Mappings.ToDictionary(p => p.Key.Copy(), p => p.Value.Copy());
 
             foreach (var (keyRes, valRes) in sourceRes.Mappings)
             {
-                var newKeyRes = keyRes.Copy().Cast<DeserializationResult<TKey>>();
-                var newValueRes = valRes.Copy().Cast<DeserializationResult<TValue>>();
+                var newKeyRes = keyRes.Copy();
+                var newValueRes = valRes.Copy();
 
-                valueDict.Add(newKeyRes.Value, newValueRes.Value);
+                var oldEntry = mappingDict.FirstOrNull(p => Equals(p.Key.RawValue, newKeyRes.RawValue));
+                if (oldEntry.HasValue)
+                {
+                    newKeyRes = oldEntry.Value.Key.PushInheritanceFrom(newKeyRes);
+                    newValueRes = oldEntry.Value.Value.PushInheritanceFrom(newValueRes);
+                    mappingDict.Remove(oldEntry.Value.Key);
+                }
                 mappingDict.Add(newKeyRes, newValueRes);
             }
 
-            foreach (var (keyRes, valRes) in Mappings)
+            var valueDict = new TDict();
+            foreach (var (key, val) in mappingDict)
             {
-                var newKeyRes = keyRes.Copy().Cast<DeserializationResult<TKey>>();
-                var newValueRes = valRes.Copy().Cast<DeserializationResult<TValue>>();
-
-                valueDict.Add(newKeyRes.Value, newValueRes.Value);
-                mappingDict.Add(newKeyRes, newValueRes);
+                valueDict.Add((TKey) key.RawValue!, (TValue) val.RawValue!);
             }
 
             return new DeserializedDictionary<TDict, TKey, TValue>(valueDict, mappingDict);

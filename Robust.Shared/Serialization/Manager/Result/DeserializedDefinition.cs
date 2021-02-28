@@ -27,14 +27,7 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             for (var i = 0; i < dataDef.Mapping.Length; i++)
             {
-                if(Mapping[i].Mapped)
-                {
-                    newMapping[i] = Mapping[i].Copy();
-                }
-                else
-                {
-                    newMapping[i] = dataDef.Mapping[i].Copy();
-                }
+                newMapping[i] = Mapping[i].PushInheritanceFrom(dataDef.Mapping[i]);
             }
 
             return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);

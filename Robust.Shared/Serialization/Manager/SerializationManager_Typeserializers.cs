@@ -15,9 +15,11 @@ namespace Robust.Shared.Serialization.Manager
     {
         private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
         private readonly Dictionary<Type, object> _typeWriters = new();
+        private readonly Dictionary<Type, object> _typeCopiers = new();
 
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericReaderTypes = new();
         private readonly Dictionary<Type, Type> _genericWriterTypes = new();
+        private readonly Dictionary<Type, Type> _genericCopierTypes = new();
 
         private void InitializeTypeSerializers()
         {
@@ -34,11 +36,13 @@ namespace Robust.Shared.Serialization.Manager
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeWriter<>)).ToArray();
             var readerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeReader<,>)).ToArray();
+            var copierInterfaces = type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ITypeCopier<>)).ToArray();
 
-            if (readerInterfaces.Length == 0 && writerInterfaces.Length == 0)
+            if (readerInterfaces.Length == 0 && writerInterfaces.Length == 0 && copierInterfaces.Length == 0)
             {
                 throw new InvalidOperationException(
-                    "Tried to register TypeReader/Writer that had none of the interfaces inherited.");
+                    "Tried to register TypeReader/Writer/Copier that had none of the interfaces inherited.");
             }
 
             if (type.IsGenericTypeDefinition)
@@ -54,6 +58,13 @@ namespace Robust.Shared.Serialization.Manager
                     if(!_genericReaderTypes.TryAdd((readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]), type))
                         Logger.Error($"Tried registering generic reader for type {readerInterface.GetGenericArguments()[0]} and datanode {readerInterface.GetGenericArguments()[1]} twice");
                 }
+
+                foreach (var copierInterface in copierInterfaces)
+                {
+                    if(!_genericCopierTypes.TryAdd(copierInterface.GetGenericArguments()[0], type))
+                        Logger.Error($"Tried registering generic copier for type {copierInterface.GetGenericArguments()[0]} twice");
+                }
+
                 return null;
             }
             else
@@ -70,6 +81,12 @@ namespace Robust.Shared.Serialization.Manager
                 {
                     if(!_typeReaders.TryAdd((readerInterface.GetGenericArguments()[0], readerInterface.GetGenericArguments()[1]), serializer))
                         Logger.Error($"Tried registering reader for type {readerInterface.GetGenericArguments()[0]} and datanode {readerInterface.GetGenericArguments()[1]} twice");
+                }
+
+                foreach (var copierInterface in copierInterfaces)
+                {
+                    if(!_typeCopiers.TryAdd(copierInterface.GetGenericArguments()[0], serializer))
+                        Logger.Error($"Tried registering copier for type {copierInterface.GetGenericArguments()[0]} twice");
                 }
 
                 return serializer;
@@ -119,6 +136,30 @@ namespace Robust.Shared.Serialization.Manager
                 if (serializerTypeDef == null) return false;
                 var serializerType = serializerTypeDef.MakeGenericType(typeof(T).GetGenericArguments());
                 rawWriter = (ITypeWriter<T>)RegisterSerializer(serializerType)!;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryGetGenericCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? rawCopier) where T : notnull
+        {
+            rawCopier = null;
+            if (typeof(T).IsGenericType)
+            {
+                var typeDef = typeof(T).GetGenericTypeDefinition();
+                Type? serializerTypeDef = null;
+                foreach (var (key, val) in _genericCopierTypes)
+                {
+                    if (typeDef.HasSameMetadataDefinitionAs(key))
+                    {
+                        serializerTypeDef = val;
+                        break;
+                    }
+                }
+                if (serializerTypeDef == null) return false;
+                var serializerType = serializerTypeDef.MakeGenericType(typeof(T).GetGenericArguments());
+                rawCopier = (ITypeCopier<T>)RegisterSerializer(serializerType)!;
                 return true;
             }
 
@@ -203,6 +244,43 @@ namespace Robust.Shared.Serialization.Manager
             if (TryGetGenericWriter(out ITypeWriter<T>? genericTypeWriter))
             {
                 node = genericTypeWriter.Write(this, obj, alwaysWrite, context);
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryCopyWithTypeCopier(Type type, object source, ref object target)
+        {
+            //TODO Paul: do this shit w/ delegates
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
+                m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 4).MakeGenericMethod(type, source.GetType(), target.GetType());
+
+            var arr = new[] {source, target};
+            var res = method.Invoke(this, arr);
+
+            if (res as bool? ?? false)
+            {
+                target = arr[1];
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryCopyWithTypeCopier<TCommon, TSource, TTarget>(TSource source, ref TTarget target)
+            where TSource : TCommon where TTarget : TCommon where TCommon : notnull
+        {
+            if (_typeCopiers.TryGetValue(typeof(TCommon), out var rawTypeCopier))
+            {
+                var ser = (ITypeCopier<TCommon>) rawTypeCopier;
+                target = (TTarget) ser.Copy(this, source, target);
+                return true;
+            }
+
+            if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericTypeWriter))
+            {
+                target = (TTarget) genericTypeWriter.Copy(this, source, target);
                 return true;
             }
 

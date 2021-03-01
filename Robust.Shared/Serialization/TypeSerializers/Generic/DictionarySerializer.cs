@@ -73,7 +73,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
-            foreach (var (key, val) in node)
+            foreach (var (key, val) in node.Children)
             {
                 if (!serializationManager.ValidateNode(typeof(TKey), key, context)) return false;
                 if (!serializationManager.ValidateNode(typeof(TValue), val, context)) return false;

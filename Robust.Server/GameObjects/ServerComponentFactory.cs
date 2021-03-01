@@ -1,3 +1,4 @@
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
@@ -34,9 +35,6 @@ namespace Robust.Server.GameObjects
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();

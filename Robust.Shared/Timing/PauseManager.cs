@@ -5,6 +5,7 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
 
@@ -91,8 +92,13 @@ namespace Robust.Shared.Timing
 
         public bool IsGridPaused(GridId gridId)
         {
-            var grid = _mapManager.GetGrid(gridId);
-            return IsGridPaused(grid);
+            if (_mapManager.TryGetGrid(gridId, out var grid))
+            {
+                return IsGridPaused(grid);
+            }
+
+            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
+            return true;
         }
 
         public bool IsMapInitialized(MapId mapId)

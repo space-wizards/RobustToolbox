@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.Network;
@@ -36,6 +37,14 @@ namespace Robust.Shared.Serialization
         void DeserializeDirect<T>(Stream stream, out T value);
         object Deserialize(Stream stream);
         bool CanSerialize(Type type);
+
+        /// <summary>
+        /// Searches for a type with a given SerializedName that can be assigned to another type.
+        /// </summary>
+        /// <param name="assignableType">object type that it can be assigned to, like a base class or interface.</param>
+        /// <param name="serializedTypeName">The serializedName inside the <see cref="NetSerializableAttribute"/>.</param>
+        /// <returns>Type found, if any.</returns>
+        Type? FindSerializedType(Type assignableType, string serializedTypeName);
 
         Task Handshake(INetChannel sender);
 

@@ -519,7 +519,8 @@ namespace Robust.Shared.Physics.Dynamics
                 // when contact broke so if you want to try that then GOOD LUCK.
                 // prediction && !seed.Predict ||
                 // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
-                if ((seed.Paused && !seed.IgnorePaused) ||
+                if ((prediction && !seed.Predict) ||
+                    (seed.Paused && !seed.IgnorePaused) ||
                     seed.Island ||
                     !seed.CanCollide ||
                     seed.BodyType == BodyType.Static) continue;

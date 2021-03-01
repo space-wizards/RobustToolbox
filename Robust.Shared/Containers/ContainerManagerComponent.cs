@@ -1,4 +1,3 @@
-//#define OLD
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,7 +6,6 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
-using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -20,12 +18,10 @@ namespace Robust.Shared.Containers
     [ComponentReference(typeof(IContainerManager))]
     public class ContainerManagerComponent : Component, IContainerManager
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
         
         [ViewVariables] private Dictionary<string, IContainer> _containers = new();
-        private Dictionary<string, List<EntityUid>>? _entitiesWaitingResolve;
 
         /// <inheritdoc />
         public sealed override string Name => "ContainerContainer";
@@ -52,27 +48,12 @@ namespace Robust.Shared.Containers
         {
             base.Initialize();
 
-#if OLD
-            if (_entitiesWaitingResolve == null) return;
-
-            foreach (var (key, entities) in _entitiesWaitingResolve)
-            {
-                var container = GetContainer(key);
-                foreach (var uid in entities)
-                {
-                    container.Insert(Owner.EntityManager.GetEntity(uid));
-                }
-            }
-
-            _entitiesWaitingResolve = null;
-#else
             foreach (var container in _containers)
             {
                 var baseContainer = (BaseContainer)container.Value;
                 baseContainer.Manager = this;
                 baseContainer.ID = container.Key;
             }
-#endif
         }
 
         /// <inheritdoc />
@@ -158,34 +139,8 @@ namespace Robust.Shared.Containers
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
-
-            if (serializer.Reading)
-            {
-#if OLD
-                if (serializer.TryReadDataField<Dictionary<string, ContainerPrototypeData>>("containers", out var data))
-                {
-                    _entitiesWaitingResolve = new Dictionary<string, List<EntityUid>>();
-                    foreach (var (key, datum) in data)
-                    {
-                        if (datum.Type == null) throw new InvalidOperationException("Container does not have type set.");
-
-                        var type = _reflectionManager.LooseGetType(datum.Type);
-                        MakeContainer(key, type);
-
-                        if (datum.Entities.Count == 0) continue;
-
-                        var list = new List<EntityUid>(datum.Entities.Where(u => u.IsValid()));
-                        _entitiesWaitingResolve.Add(key, list);
-                    }
-                }
-#else
-                serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
-#endif
-            }
-            else
-            {
-                serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
-            }
+            
+            serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
         }
 
         /// <inheritdoc />

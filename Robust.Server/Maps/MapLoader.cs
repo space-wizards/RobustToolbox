@@ -749,7 +749,7 @@ namespace Robust.Server.Maps
                             continue;
 
                         CurrentWritingComponent = component.Name;
-                        var compMapping = (MappingDataNode)serializationManager.WriteValue(component.GetType(), component, context: this);
+                        var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)

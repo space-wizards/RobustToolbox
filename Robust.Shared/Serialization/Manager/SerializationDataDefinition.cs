@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -324,29 +322,30 @@ namespace Robust.Shared.Serialization.Manager
             return SerializeDelegate;
         }
 
+        // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private CopyDelegateSignature EmitCopyDelegate()
         {
-            var dynamicMethod = new DynamicMethod(
-                $"_populateDelegate<>{Type}",
-                typeof(object),
-                new[] {typeof(object), typeof(object), typeof(ISerializationManager), typeof(ISerializationContext)},
-                Type,
-                true);
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "source");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "target");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "serializationContext");
-            var generator = dynamicMethod.GetRobustGen();
-
-            foreach (var fieldDefinition in _baseFieldDefinitions)
+            object PopulateDelegate(
+                object source,
+                object target,
+                ISerializationManager manager,
+                ISerializationContext? context)
             {
-                generator.EmitCopy(0, fieldDefinition.FieldInfo, 1, fieldDefinition.FieldInfo, 2, 3);
+                foreach (var field in _baseFieldDefinitions)
+                {
+                    var info = field.FieldInfo;
+                    var sourceValue = info.GetValue(source);
+                    var targetValue = info.GetValue(target);
+
+                    var copy = manager.Copy(sourceValue, targetValue, context);
+
+                    info.SetValue(target, copy);
+                }
+
+                return target;
             }
 
-            generator.Emit(OpCodes.Ldarg_1);
-            generator.Emit(OpCodes.Ret);
-
-            return dynamicMethod.CreateDelegate<CopyDelegateSignature>();
+            return PopulateDelegate;
         }
 
         public class FieldDefinition

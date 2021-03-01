@@ -4,6 +4,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 using static Robust.Shared.Utility.SpriteSpecifier;
 
@@ -26,10 +27,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return serializationManager.ReadValue<ResourcePath>(node) != null;
+            return serializationManager.ReadValue<ResourcePath>(node) != null ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager,
@@ -48,13 +49,15 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new InvalidNodeTypeException();
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
             return node.HasNode("sprite") &&
                    node.TryGetNode("state", out var stateNode) &&
                    stateNode is ValueDataNode &&
-                   serializationManager.ReadValue<ResourcePath>(stateNode) != null;
+                   serializationManager.ReadValue<ResourcePath>(stateNode) != null
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,

@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -31,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Vector4>(vector);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             string raw = node.Value;
@@ -39,13 +40,13 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 4)
             {
-                return false;
+                return new ErrorNode(node);
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _);
+                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Vector4 value, bool alwaysWrite = false,

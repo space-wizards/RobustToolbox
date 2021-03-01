@@ -9,6 +9,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers
@@ -78,12 +79,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
         }
 
-        public bool Validate(ISerializationManager serializationManager, SequenceDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context = null)
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
-            var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
+            var list = new List<ValidatedNode>();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
@@ -95,16 +96,19 @@ namespace Robust.Shared.Serialization.TypeSerializers
                         break;
 
                     case ComponentAvailability.Ignore:
+                        list.Add(new ValidatedValueNode(componentMapping));
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        return false;
+                        list.Add(new ErrorNode(componentMapping));
+                        continue;
                 }
 
                 // Has this type already been added?
                 if (components.Keys.Contains(compType))
                 {
-                    return false;
+                    list.Add(new ErrorNode(componentMapping));
+                    continue;
                 }
 
                 var copy = (componentMapping.Copy() as MappingDataNode)!;
@@ -112,10 +116,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
                 var type = factory.GetRegistration(compType).Type;
 
-                if (!serializationManager.ValidateNode(type, copy, context))
-                {
-                    return false;
-                }
+                list.Add(serializationManager.ValidateNode(type, copy, context));
             }
 
             var referenceTypes = new List<Type>();
@@ -127,14 +128,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 {
                     if (referenceTypes.Contains(compType))
                     {
-                        return false;
+                        return new ErrorNode(node);
                     }
 
                     referenceTypes.Add(compType);
                 }
             }
 
-            return true;
+            return new ValidatedSequenceNode(list);
         }
 
         public DataNode Write(ISerializationManager serializationManager, ComponentRegistry value,

@@ -1,14 +1,16 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ValidatedMappingNode : ValidatedNode
     {
-        public readonly MappingDataNode MappingDataNode;
-        public override bool Valid { get; }
+        public readonly Dictionary<ValidatedNode, ValidatedNode> Mapping;
+        public override bool Valid => Mapping.All(p => p.Key.Valid && p.Value.Valid);
 
-        public ValidatedMappingNode(MappingDataNode mappingDataNode, bool valid)
+        public ValidatedMappingNode(Dictionary<ValidatedNode, ValidatedNode> mapping)
         {
-            MappingDataNode = mappingDataNode;
-            Valid = valid;
+            Mapping = mapping;
         }
     }
 }

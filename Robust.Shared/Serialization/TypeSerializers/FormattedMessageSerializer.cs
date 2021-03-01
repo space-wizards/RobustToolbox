@@ -3,6 +3,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers
@@ -16,10 +17,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return FormattedMessage.ValidMarkup(node.Value);
+            return FormattedMessage.ValidMarkup(node.Value) ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, FormattedMessage value,

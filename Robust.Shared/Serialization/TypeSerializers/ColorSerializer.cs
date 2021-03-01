@@ -4,6 +4,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -20,10 +21,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Color>(deserializedColor);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null;
+            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Color value, bool alwaysWrite = false,

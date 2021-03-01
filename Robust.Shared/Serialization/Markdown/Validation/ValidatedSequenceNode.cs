@@ -1,15 +1,17 @@
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ValidatedSequenceNode : ValidatedNode
     {
-        public readonly SequenceDataNode SequenceDataNode;
+        public readonly List<ValidatedNode> Sequence;
 
-        public override bool Valid { get; }
+        public override bool Valid => Sequence.All(p => p.Valid);
 
-        public ValidatedSequenceNode(SequenceDataNode sequenceDataNode, bool valid)
+        public ValidatedSequenceNode(List<ValidatedNode> sequence)
         {
-            SequenceDataNode = sequenceDataNode;
-            Valid = valid;
+            Sequence = sequence;
         }
     }
 }

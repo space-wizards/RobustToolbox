@@ -12,6 +12,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
@@ -112,25 +113,45 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
-        public bool ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
+        public ValidatedNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
 
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
-                return node is ValueDataNode;
+                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node);
 
             if (underlyingType.IsArray)
-                return node is SequenceDataNode;
+            {
+                if (node is not SequenceDataNode sequenceDataNode) return new ErrorNode(node);
+                var elementType = underlyingType.GetElementType();
+                if (elementType == null)
+                    throw new ArgumentException($"Failed to get elementtype of arraytype {type}", nameof(type));
+                var validatedList = new List<ValidatedNode>();
+                foreach (var dataNode in sequenceDataNode.Sequence)
+                {
+                    validatedList.Add(ValidateNode(elementType, dataNode, context));
+                }
+
+                return new ValidatedSequenceNode(validatedList);
+            }
 
             if (underlyingType.IsEnum)
             {
-                var res = node switch
+                try
                 {
-                    ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
-                    SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
-                    _ => null
-                };
-                return res != null;
+                    var res = node switch
+                    {
+                        ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
+                        SequenceDataNode sequenceNode => Enum.Parse(underlyingType,
+                            string.Join(", ", sequenceNode.Sequence), true),
+                        _ => null
+                    };
+                    return res != null ? new ValidatedValueNode(node) : new ErrorNode(node);
+                }
+                catch
+                {
+                    return new ErrorNode(node);
+                }
             }
 
             if (node.Tag?.StartsWith("!type:") == true)
@@ -142,19 +163,19 @@ namespace Robust.Shared.Serialization.Manager
             if (TryValidateWithTypeReader(type, node, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
-                return node is ValueDataNode;
+                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node);
 
             if (TryGetDataDefinition(type, out var dataDefinition))
             {
                 return node switch
                 {
-                    ValueDataNode valueDataNode => valueDataNode.Value == "",
+                    ValueDataNode valueDataNode => valueDataNode.Value == "" ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node),
                     MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode, context),
-                    _ => false
+                    _ => new ErrorNode(node)
                 };
             }
 
-            return false;
+            return new ErrorNode(node);
         }
 
         public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new()

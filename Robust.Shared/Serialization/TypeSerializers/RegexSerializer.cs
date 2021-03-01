@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -17,7 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Regex>(new Regex(node.Value, RegexOptions.Compiled));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             try
@@ -26,10 +27,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
             catch (Exception e)
             {
-                return false;
+                return new ErrorNode(node);
             }
 
-            return true;
+            return new ValidatedValueNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Regex value, bool alwaysWrite = false,

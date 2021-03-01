@@ -20,11 +20,26 @@ namespace Robust.Shared.Serialization.Manager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        private bool _initializing;
+        private bool _initialized;
+
         private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
         private readonly List<Type> _copyByRefRegistrations = new();
 
         public void Initialize()
         {
+            if (_initializing)
+            {
+                throw new InvalidOperationException($"{nameof(SerializationManager)} is already being initialized.");
+            }
+
+            if (_initialized)
+            {
+                throw new InvalidOperationException($"{nameof(SerializationManager)} has already been initialized.");
+            }
+
+            _initializing = true;
+
             InitializeFlagsAndConstants();
             InitializeTypeSerializers();
 
@@ -86,6 +101,9 @@ namespace Robust.Shared.Serialization.Manager
             {
                 _copyByRefRegistrations.Add(type);
             }
+
+            _initialized = true;
+            _initializing = false;
         }
 
         public bool HasDataDefinition(Type type)

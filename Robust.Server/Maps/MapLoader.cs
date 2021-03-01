@@ -15,6 +15,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -842,43 +843,44 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            bool ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node, ISerializationContext? context)
+            ValidatedNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, ISerializationContext? context)
             {
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
                 {
-                    return false;
+                    return new ErrorNode(node);
                 }
 
-                return true;
+                return new ValidatedValueNode(node);
             }
 
-            bool ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidatedNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, ISerializationContext? context)
             {
                 if (node.Value == "null")
                 {
-                    return true;
+                    return new ValidatedValueNode(node);
                 }
 
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
                 {
-                    return false;
+                    return new ErrorNode(node);
                 }
 
-                return true;
+                return new ValidatedValueNode(node);
             }
 
-            bool ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidatedNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, ISerializationContext? context)
             {
-                if (node.Value == "null") return true;
+                if (node.Value == "null") return new ValidatedValueNode(node);
 
                 if (!int.TryParse(node.Value, out var val) || val >= Grids.Count)
                 {
-                    return false;
+                    return new ErrorNode(node);
                 }
 
-                return true;
+                return new ValidatedValueNode(node);
             }
 
             public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,

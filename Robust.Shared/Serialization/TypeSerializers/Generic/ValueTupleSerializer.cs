@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
@@ -23,13 +25,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
-            if (node.Children.Count != 1) return false;
+            if (node.Children.Count != 1) return new ErrorNode(node);
             var entry = node.Children.First();
-            return serializationManager.ValidateNode(typeof(T1), entry.Key, context) &&
-                   serializationManager.ValidateNode(typeof(T2), entry.Value, context);
+            var dict = new Dictionary<ValidatedNode, ValidatedNode>();
+            dict.Add(serializationManager.ValidateNode(typeof(T1), entry.Key, context),
+                serializationManager.ValidateNode(typeof(T2), entry.Value, context));
+            return new ValidatedMappingNode(dict);
         }
 
         public DataNode Write(ISerializationManager serializationManager, (T1, T2) value, bool alwaysWrite = false,

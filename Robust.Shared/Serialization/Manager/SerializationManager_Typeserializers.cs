@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -186,26 +187,26 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryValidateWithTypeReader(Type type, DataNode node, ISerializationContext? context, out bool valid)
+        private bool TryValidateWithTypeReader(Type type, DataNode node, ISerializationContext? context, [NotNullWhen(true)] out ValidatedNode? valid)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
 
-            var arr = new object?[] {node, context, false};
+            var arr = new object?[] {node, context, null};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                valid = (bool)arr[2]!;
+                valid = (ValidatedNode)arr[2]!;
                 return true;
             }
 
-            valid = false;
+            valid = null;
             return false;
         }
 
-        private bool TryValidateWithTypeReader<T, TNode>(TNode node, ISerializationContext? context, out bool valid) where T : notnull where TNode : DataNode
+        private bool TryValidateWithTypeReader<T, TNode>(TNode node, ISerializationContext? context, [NotNullWhen(true)] out ValidatedNode? valid) where T : notnull where TNode : DataNode
         {
             if (TryGetReader<T, TNode>(null, out var reader))
             {
@@ -213,7 +214,7 @@ namespace Robust.Shared.Serialization.Manager
                 return true;
             }
 
-            valid = false;
+            valid = null;
             return false;
         }
 

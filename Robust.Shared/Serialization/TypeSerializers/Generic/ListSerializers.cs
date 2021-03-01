@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
@@ -72,38 +73,42 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<List<T>, T>(list, results);
         }
 
-        bool ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
+            ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
+            ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
+            ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode, ISerializationContext? context)
+        ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode, ISerializationContext? context)
         {
+            var list = new List<ValidatedNode>();
             foreach (var elem in sequenceDataNode.Sequence)
             {
-                if (!serializationManager.ValidateNode(typeof(T), elem, context)) return false;
+                list.Add(serializationManager.ValidateNode(typeof(T), elem, context));
             }
 
-            return true;
+            return new ValidatedSequenceNode(list);
         }
 
         DeserializationResult ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(

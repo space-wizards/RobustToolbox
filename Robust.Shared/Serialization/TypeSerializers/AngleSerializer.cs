@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -24,13 +25,13 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Angle>(angle);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var nodeValue = node.Value;
             var value = nodeValue.EndsWith("rad") ? nodeValue.Substring(0, nodeValue.Length - 3) : nodeValue;
 
-            return double.TryParse(value, out _);
+            return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Angle value, bool alwaysWrite = false,

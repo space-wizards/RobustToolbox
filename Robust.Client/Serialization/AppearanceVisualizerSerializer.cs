@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Client.Serialization
 {
@@ -32,11 +33,12 @@ namespace Robust.Client.Serialization
             return serializationManager.Read(type, newNode, context);
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+            ISerializationContext? context)
         {
             if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)
             {
-                return false;
+                return new ErrorNode(node);
             }
 
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
@@ -44,7 +46,7 @@ namespace Robust.Client.Serialization
 
             if (type == null)
             {
-                return false;
+                return new ErrorNode(node);
             }
 
             return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().RemoveNode("type"));

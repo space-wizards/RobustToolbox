@@ -1,6 +1,7 @@
 using System;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -12,7 +13,7 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
-        bool ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
+        ValidatedNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
 

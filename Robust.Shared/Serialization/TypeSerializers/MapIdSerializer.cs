@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -18,10 +19,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<MapId>(new MapId(val));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return int.TryParse(node.Value, out _);
+            return int.TryParse(node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, MapId value, bool alwaysWrite = false,

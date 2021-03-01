@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
@@ -34,26 +35,28 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<HashSet<T>, T>(set, mappings);
         }
 
-        bool ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
+            ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
+        ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
+            var list = new List<ValidatedNode>();
             foreach (var elem in node.Sequence)
             {
-                if (!serializationManager.ValidateNode(typeof(T), elem, context)) return false;
+                list.Add(serializationManager.ValidateNode(typeof(T), elem, context));
             }
 
-            return true;
+            return new ValidatedSequenceNode(list);
         }
 
         public DataNode Write(ISerializationManager serializationManager, ImmutableHashSet<T> value,

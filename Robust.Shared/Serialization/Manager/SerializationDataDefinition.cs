@@ -8,6 +8,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
@@ -123,19 +124,28 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
+            var validatedmapping = new Dictionary<ValidatedNode, ValidatedNode>();
             foreach (var (key, val) in node.Children)
             {
-                if (key is not ValueDataNode valueDataNode) return false;
+                if (key is not ValueDataNode valueDataNode)
+                {
+                    validatedmapping.Add(new ErrorNode(node), new InconclusiveNode());
+                    continue;
+                }
 
                 var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
-                if (field == null) return false;
+                if (field == null)
+                {
+                    validatedmapping.Add(new ErrorNode(node), new InconclusiveNode());
+                    continue;
+                }
 
-                if (!serializationManager.ValidateNode(field.FieldType, val, context)) return false;
+                validatedmapping.Add(serializationManager.ValidateNode(field.FieldType, key, context), serializationManager.ValidateNode(field.FieldType, val, context));
             }
 
-            return true;
+            return new ValidatedMappingNode(validatedmapping);
         }
 
         private DeserializeDelegate EmitDeserializationDelegate()

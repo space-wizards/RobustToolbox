@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
@@ -53,33 +54,34 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        bool ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidatedNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidatedNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager,
+        ValidatedNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
+            ISerializationManager serializationManager,
             MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
+            var mapping = new Dictionary<ValidatedNode, ValidatedNode>();
             foreach (var (key, val) in node.Children)
             {
-                if (!serializationManager.ValidateNode(typeof(TKey), key, context)) return false;
-                if (!serializationManager.ValidateNode(typeof(TValue), val, context)) return false;
+                mapping.Add(serializationManager.ValidateNode(typeof(TKey), key, context), serializationManager.ValidateNode(typeof(TValue), val, context));
             }
 
-            return true;
+            return new ValidatedMappingNode(mapping);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<TKey, TValue> value,

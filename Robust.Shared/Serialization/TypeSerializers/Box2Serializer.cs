@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.TypeSerializers
 {
@@ -29,20 +30,20 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Box2>(new Box2(l, b, r, t));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
 
             if (args.Length != 4)
             {
-                return false;
+                return new ErrorNode(node);
             }
 
             return float.TryParse(args[0], out _) &&
                    float.TryParse(args[1], out _) &&
                    float.TryParse(args[2], out _) &&
-                   float.TryParse(args[3], out _);
+                   float.TryParse(args[3], out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Box2 value, bool alwaysWrite = false,

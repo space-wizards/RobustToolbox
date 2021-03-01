@@ -18,6 +18,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -70,7 +71,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
-        Dictionary<Type, HashSet<string>> ValidateDirectory(ResourcePath path);
+        Dictionary<Type, List<ValidatedNode>> ValidateDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -274,12 +275,12 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public Dictionary<Type, HashSet<string>> ValidateDirectory(ResourcePath path)
+        public Dictionary<Type, List<ValidatedNode>> ValidateDirectory(ResourcePath path)
         {
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
-            var dict = new Dictionary<Type, HashSet<string>>();
+            var dict = new Dictionary<Type, List<ValidatedNode>>();
             foreach (var resourcePath in streams)
             {
                 using var reader = ReadFile(resourcePath);
@@ -308,12 +309,12 @@ namespace Robust.Shared.Prototypes
                             throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
                         }
 
-                        if (!_serializationManager.ValidateNode(prototypeTypes[type], node.ToDataNode()))
-                        {
-                            if (!dict.TryGetValue(prototypeTypes[type], out var hashSet))
-                                dict[prototypeTypes[type]] = new HashSet<string>();
-                            dict[prototypeTypes[type]].Add(node.ToString());
-                        }
+                        if (!dict.TryGetValue(prototypeTypes[type], out var hashSet))
+                            dict[prototypeTypes[type]] = new List<ValidatedNode>();
+
+                        var mapping = node.ToDataNodeCast<MappingDataNode>();
+                        mapping.RemoveNode("type");
+                        dict[prototypeTypes[type]].Add(_serializationManager.ValidateNode(prototypeTypes[type], mapping));
                     }
                 }
             }

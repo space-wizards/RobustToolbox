@@ -53,14 +53,14 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (type.IsAbstract || type.IsInterface)
                 {
-                    Logger.Warning($"Skipping registering data definition for type {type} since it is abstract or an interface");
+                    Logger.Debug($"Skipping registering data definition for type {type} since it is abstract or an interface");
                     continue;
                 }
 
                 if (!type.IsValueType && type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
                     .FirstOrDefault(m => m.GetParameters().Length == 0) == null)
                 {
-                    Logger.Warning($"Skipping registering data definition for type {type} since it has no parameterless ctor");
+                    Logger.Debug($"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     continue;
                 }
 

@@ -318,6 +318,7 @@ namespace Robust.Shared.Prototypes
                 }
             }
 
+            return dict;
         }
 
         private StreamReader? ReadFile(ResourcePath file, bool @throw = true)

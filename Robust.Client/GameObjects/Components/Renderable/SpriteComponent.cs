@@ -257,7 +257,7 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("rsi")]
+        [DataField("rsi", priority: 2)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -327,7 +327,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
 
-        public void AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization()
         {
             {
                 if (!string.IsNullOrWhiteSpace(rsi))
@@ -356,6 +356,8 @@ namespace Robust.Client.GameObjects
                         Scale = Vector2.One,
                         Visible = true,
                     });
+                    state = null;
+                    texture = null;
                 }
             }
 

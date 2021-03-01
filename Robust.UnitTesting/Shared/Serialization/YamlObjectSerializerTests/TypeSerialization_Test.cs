@@ -27,11 +27,11 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var serMan = IoCManager.Resolve<ISerializationManager>();
             var mapping = serMan.WriteValue(type);
 
-            Assert.IsInstanceOf<ValueDataNode>(mapping);
+            Assert.IsInstanceOf<MappingDataNode>(mapping);
 
-            var scalar = (ValueDataNode) mapping;
+            var scalar = (MappingDataNode) mapping;
 
-            Assert.That(scalar.Value, Is.EqualTo(""));
+            Assert.That(scalar.Children.Count, Is.EqualTo(0));
             Assert.That(scalar.Tag, Is.EqualTo("!type:TestTypeOne"));
         }
 

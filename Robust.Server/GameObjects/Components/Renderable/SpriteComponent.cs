@@ -169,6 +169,9 @@ namespace Robust.Server.GameObjects
                     }
 
                     Layers.Insert(0, layerZeroData);
+
+                    state = null;
+                    texture = null;
                 }
             }
         }

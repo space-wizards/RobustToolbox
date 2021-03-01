@@ -51,7 +51,7 @@ namespace Robust.Shared.Serialization.Manager
                 registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
-                    if (child.IsAbstract || child.IsInterface) continue;
+                    if (child.IsAbstract || child.IsInterface || child.IsGenericTypeDefinition) continue;
                     registrations.Add(child);
                 }
             }
@@ -66,7 +66,7 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var type in registrations)
             {
-                if (type.IsAbstract || type.IsInterface)
+                if (type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition)
                 {
                     Logger.Debug($"Skipping registering data definition for type {type} since it is abstract or an interface");
                     continue;

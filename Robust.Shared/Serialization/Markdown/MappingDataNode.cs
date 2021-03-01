@@ -47,6 +47,8 @@ namespace Robust.Shared.Serialization.Markdown
                 mapping.Add(key.ToYamlNode(), val.ToYamlNode());
             }
 
+            mapping.Tag = Tag;
+
             return mapping;
         }
 

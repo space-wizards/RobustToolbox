@@ -209,7 +209,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (!TryGetDataDefinition(underlyingType, out var dataDef))
             {
-                throw new InvalidOperationException($"No data definition found for type {underlyingType} with nodetype {node.GetType()} when reading");
+                throw new InvalidOperationException($"No data definition found for type {underlyingType} with node type {node.GetType()} when reading");
             }
 
             if (node is not MappingDataNode mappingDataNode)

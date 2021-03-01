@@ -87,11 +87,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             {
                 var node = serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
-                if (mapping.Children.Count != 0)
-                {
+//                if (mapping.Children.Count != 0)
+//                {
                     mapping.AddNode("type", new ValueDataNode(type));
                     compSequence.Add(mapping);
-                }
+//                }
             }
 
             return compSequence;

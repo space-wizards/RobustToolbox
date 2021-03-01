@@ -273,12 +273,13 @@ namespace Robust.Shared.Serialization.Manager
         public DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            //todo paul
-            //var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
             if (value == null) return new MappingDataNode();
 
-            if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
+            if (underlyingType.IsPrimitive ||
+                underlyingType.IsEnum ||
+                underlyingType == typeof(decimal))
             {
                 // All primitives and enums implement IConvertible.
                 // Need it for the culture overload.
@@ -287,7 +288,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             // array
-            if (type.IsArray)
+            if (underlyingType.IsArray)
             {
                 var sequenceNode = new SequenceDataNode();
                 var array = (Array) value;
@@ -304,20 +305,20 @@ namespace Robust.Shared.Serialization.Manager
             if (value is ISerializationHooks serHook)
                 serHook.BeforeSerialization();
 
-            if (TryWriteWithTypeSerializers(type, value, out var node, alwaysWrite, context))
+            if (TryWriteWithTypeSerializers(underlyingType, value, out var node, alwaysWrite, context))
             {
                 return node;
             }
 
-            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
             {
                 var selfSerObj = (ISelfSerialize)value;
                 return new ValueDataNode(selfSerObj.Serialize());
             }
 
-            var currentType = type;
+            var currentType = underlyingType;
             var mapping = new MappingDataNode();
-            if (type != value.GetType() && (type.IsAbstract || type.IsInterface))
+            if (underlyingType.IsAbstract || underlyingType.IsInterface)
             {
                 mapping.Tag = $"!type:{value.GetType().Name}";
                 currentType = value.GetType();
@@ -336,7 +337,7 @@ namespace Robust.Shared.Serialization.Manager
             var newMapping = dataDef.InvokeSerializeDelegate(value, this, context, alwaysWrite);
             mapping = mapping.Merge(newMapping);
 
-            return mapping.Children.Count == 0 ? new ValueDataNode(""){Tag = mapping.Tag} : mapping;
+            return mapping;
         }
 
         private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null)

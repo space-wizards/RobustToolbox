@@ -8,8 +8,8 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private Dictionary<Type, Type> _constantsMapping = new();
-        private Dictionary<Type, Type> _flagsMapping = new();
+        private readonly Dictionary<Type, Type> _constantsMapping = new();
+        private readonly Dictionary<Type, Type> _flagsMapping = new();
 
         private void InitializeFlagsAndConstants()
         {

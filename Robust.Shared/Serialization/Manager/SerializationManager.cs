@@ -112,6 +112,51 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
+        public bool ValidateNode(Type type, DataNode node)
+        {
+            var underlyingType = type.EnsureNotNullableType();
+
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
+                return node is ValueDataNode;
+
+            if (underlyingType.IsArray)
+                return node is SequenceDataNode;
+
+            if (underlyingType.IsEnum)
+            {
+                var res = node switch
+                {
+                    ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
+                    SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
+                    _ => null
+                };
+                return res != null;
+            }
+
+            if (node.Tag?.StartsWith("!type:") == true)
+            {
+                var typeString = node.Tag.Substring(6);
+                underlyingType = ResolveConcreteType(underlyingType, typeString);
+            }
+
+            if (TryValidateWithTypeReader(type, node, out var valid)) return valid;
+
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+                return node is ValueDataNode;
+
+            if (TryGetDataDefinition(type, out var dataDefinition))
+            {
+                return node switch
+                {
+                    ValueDataNode valueDataNode => valueDataNode.Value == "",
+                    MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode),
+                    _ => false
+                };
+            }
+
+            return false;
+        }
+
         public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new()
         {
             var obj = new T();
@@ -163,7 +208,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             // array
-            if (type.IsArray)
+            if (underlyingType.IsArray)
             {
                 if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
                 var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;

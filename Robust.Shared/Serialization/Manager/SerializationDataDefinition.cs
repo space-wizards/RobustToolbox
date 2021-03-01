@@ -125,6 +125,21 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            foreach (var (key, val) in node.Children)
+            {
+                if (key is not ValueDataNode valueDataNode) return false;
+
+                var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                if (field == null) return false;
+
+                if (!serializationManager.ValidateNode(field.FieldType, val)) return false;
+            }
+
+            return true;
+        }
+
         private DeserializeDelegate EmitDeserializationDelegate()
         {
             DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,

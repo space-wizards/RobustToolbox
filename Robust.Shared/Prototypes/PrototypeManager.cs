@@ -70,6 +70,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
+        Dictionary<Type, HashSet<string>> ValidateDirectory(ResourcePath path);
+
         List<IPrototype> LoadFromStream(TextReader stream);
 
         List<IPrototype> LoadString(string str);
@@ -270,6 +272,52 @@ namespace Robust.Shared.Prototypes
             }
 
             return changedPrototypes;
+        }
+
+        public Dictionary<Type, HashSet<string>> ValidateDirectory(ResourcePath path)
+        {
+            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
+                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+
+            var dict = new Dictionary<Type, HashSet<string>>();
+            foreach (var resourcePath in streams)
+            {
+                using var reader = ReadFile(resourcePath);
+
+                if (reader == null)
+                {
+                    continue;
+                }
+
+                var yamlStream = new YamlStream();
+                yamlStream.Load(reader);
+
+                for (var i = 0; i < yamlStream.Documents.Count; i++)
+                {
+                    var rootNode = (YamlSequenceNode) yamlStream.Documents[i].RootNode;
+                    foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+                    {
+                        var type = node.GetNode("type").AsString();
+                        if (!prototypeTypes.ContainsKey(type))
+                        {
+                            if (IgnoredPrototypeTypes.Contains(type))
+                            {
+                                continue;
+                            }
+
+                            throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+                        }
+
+                        if (!_serializationManager.ValidateNode(prototypeTypes[type], node.ToDataNode()))
+                        {
+                            if (!dict.TryGetValue(prototypeTypes[type], out var hashSet))
+                                dict[prototypeTypes[type]] = new HashSet<string>();
+                            dict[prototypeTypes[type]].Add(node.ToString());
+                        }
+                    }
+                }
+            }
+
         }
 
         private StreamReader? ReadFile(ResourcePath file, bool @throw = true)

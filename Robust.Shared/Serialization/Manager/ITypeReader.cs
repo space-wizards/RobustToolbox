@@ -7,5 +7,7 @@ namespace Robust.Shared.Serialization.Manager
     {
         DeserializationResult Read(ISerializationManager serializationManager, TNode node,
             ISerializationContext? context = null);
+
+        bool Validate(ISerializationManager serializationManager, TNode node);
     }
 }

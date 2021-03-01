@@ -186,20 +186,55 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
+        private bool TryValidateWithTypeReader(Type type, DataNode node, out bool valid)
         {
-            object? rawTypeReader;
-            if (context != null && context.TypeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader) ||
-                _typeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader))
+            //TODO Paul: do this shit w/ delegates
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
+                m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 2).MakeGenericMethod(type, node.GetType());
+
+            var arr = new object?[] {node, false};
+            var res = method.Invoke(this, arr);
+
+            if (res as bool? ?? false)
             {
-                var ser = (ITypeReader<T, TNode>) rawTypeReader;
-                obj = ser.Read(this, node, context);
+                valid = (bool)arr[1]!;
                 return true;
             }
 
-            if (TryGetGenericReader(out ITypeReader<T, TNode>? genericTypeReader))
+            valid = false;
+            return false;
+        }
+
+        private bool TryValidateWithTypeReader<T, TNode>(TNode node, out bool valid) where T : notnull where TNode : DataNode
+        {
+            if (TryGetReader<T, TNode>(null, out var reader))
             {
-                obj = genericTypeReader.Read(this, node, context);
+                valid = reader.Validate(this, node);
+                return true;
+            }
+
+            valid = false;
+            return false;
+        }
+
+        private bool TryGetReader<T, TNode>(ISerializationContext? context, [NotNullWhen(true)] out ITypeReader<T, TNode>? reader)
+            where T : notnull where TNode : DataNode
+        {
+            if (context != null && context.TypeReaders.TryGetValue((typeof(T), typeof(TNode)), out var rawTypeReader) ||
+                _typeReaders.TryGetValue((typeof(T), typeof(TNode)), out rawTypeReader))
+            {
+                reader = (ITypeReader<T, TNode>) rawTypeReader;
+                return true;
+            }
+
+            return TryGetGenericReader(out reader);
+        }
+
+        private bool TryReadWithTypeSerializers<T, TNode>(TNode node, out DeserializationResult? obj, ISerializationContext? context = null) where T : notnull where TNode : DataNode
+        {
+            if (TryGetReader<T, TNode>(context, out var reader))
+            {
+                obj = reader.Read(this, node, context);
                 return true;
             }
 
@@ -227,24 +262,27 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
+        private bool TryGetWriter<T>(ISerializationContext? context, [NotNullWhen(true)] out ITypeWriter<T>? writer) where T : notnull
+        {
+            if (context != null && context.TypeWriters.TryGetValue(typeof(T), out var rawTypeWriter) ||
+                _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
+            {
+                writer = (ITypeWriter<T>) rawTypeWriter;
+                return true;
+            }
+
+            return TryGetGenericWriter(out writer);
+        }
+
         private bool TryWriteWithTypeSerializers<T>(T obj, [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {
             node = default;
-            object? rawTypeWriter;
-            if (context != null && context.TypeWriters.TryGetValue(typeof(T), out rawTypeWriter) ||
-                _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
+            if (TryGetWriter<T>(context, out var writer))
             {
-                var ser = (ITypeWriter<T>) rawTypeWriter;
-                node = ser.Write(this, obj, alwaysWrite, context);
-                return true;
-            }
+                node = writer.Write(this, obj, alwaysWrite, context);
 
-            if (TryGetGenericWriter(out ITypeWriter<T>? genericTypeWriter))
-            {
-                node = genericTypeWriter.Write(this, obj, alwaysWrite, context);
-                return true;
             }
 
             return false;

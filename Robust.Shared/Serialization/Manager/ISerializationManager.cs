@@ -12,6 +12,8 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
+        bool ValidateNode(Type type, DataNode node);
+
         DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
 
         DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new();

@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 }
             }
 
-            return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
+            return new DeserializedComponentRegistry(components, mappings);
         }
 
         public bool Validate(ISerializationManager serializationManager, SequenceDataNode node,

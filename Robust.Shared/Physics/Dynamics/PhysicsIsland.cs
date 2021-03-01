@@ -141,7 +141,9 @@ stored in a single array since multiple arrays lead to multiple misses.
     internal sealed class PhysicsIsland
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+#if DEBUG
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+#endif
 
         private ContactSolver _contactSolver = default!;
 
@@ -310,7 +312,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 debugBodies.Add(Bodies[i]);
             }
 
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(debugBodies));
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(debugBodies));
 #endif
 
             for (var i = 0; i < BodyCount; i++)

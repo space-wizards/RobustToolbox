@@ -29,7 +29,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Box2>(new Box2(l, b, r, t));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
 

@@ -34,21 +34,23 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<HashSet<T>, T>(set, mappings);
         }
 
-        bool ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        bool ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+            SequenceDataNode node, ISerializationContext? context = null)
         {
-            return Validate(serializationManager, node);
+            return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        bool ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+            SequenceDataNode node, ISerializationContext? context = null)
         {
-            return Validate(serializationManager, node);
+            return Validate(serializationManager, node, context);
         }
 
-        bool Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        bool Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
             foreach (var elem in node.Sequence)
             {
-                if (!serializationManager.ValidateNode(typeof(T), elem)) return false;
+                if (!serializationManager.ValidateNode(typeof(T), elem, context)) return false;
             }
 
             return true;

@@ -53,27 +53,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        bool ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        bool ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
+            ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
-            return Validate(serializationManager, node);
+            return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        bool ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
+            ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
-            return Validate(serializationManager, node);
+            return Validate(serializationManager, node, context);
         }
 
-        bool ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        bool ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager,
+            MappingDataNode node, ISerializationContext? context = null)
         {
-            return Validate(serializationManager, node);
+            return Validate(serializationManager, node, context);
         }
 
-        bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
             foreach (var (key, val) in node)
             {
-                if (!serializationManager.ValidateNode(typeof(TKey), key)) return false;
-                if (!serializationManager.ValidateNode(typeof(TValue), val)) return false;
+                if (!serializationManager.ValidateNode(typeof(TKey), key, context)) return false;
+                if (!serializationManager.ValidateNode(typeof(TValue), val, context)) return false;
             }
 
             return true;

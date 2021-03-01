@@ -17,7 +17,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Regex>(new Regex(node.Value, RegexOptions.Compiled));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             try
             {

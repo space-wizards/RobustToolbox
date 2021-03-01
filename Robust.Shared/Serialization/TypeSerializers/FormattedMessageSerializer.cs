@@ -16,7 +16,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             return FormattedMessage.ValidMarkup(node.Value);
         }

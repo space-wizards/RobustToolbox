@@ -26,7 +26,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             return serializationManager.ReadValue<ResourcePath>(node) != null;
         }
@@ -47,7 +48,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new InvalidNodeTypeException();
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node,
+            ISerializationContext? context = null)
         {
             return node.HasNode("sprite") &&
                    node.TryGetNode("state", out var stateNode) &&

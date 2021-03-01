@@ -30,7 +30,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Vector3>(vector);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             string raw = node.Value;
             string[] args = raw.Split(',');

@@ -78,7 +78,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
         }
 
-        public bool Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        public bool Validate(ISerializationManager serializationManager, SequenceDataNode node,
+            ISerializationContext? context = null)
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
@@ -111,7 +112,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
                 var type = factory.GetRegistration(compType).Type;
 
-                if (!serializationManager.ValidateNode(type, copy))
+                if (!serializationManager.ValidateNode(type, copy, context))
                 {
                     return false;
                 }

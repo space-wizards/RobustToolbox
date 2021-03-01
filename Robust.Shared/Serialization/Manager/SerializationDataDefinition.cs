@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
             foreach (var (key, val) in node.Children)
             {
@@ -134,7 +134,7 @@ namespace Robust.Shared.Serialization.Manager
                 var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null) return false;
 
-                if (!serializationManager.ValidateNode(field.FieldType, val)) return false;
+                if (!serializationManager.ValidateNode(field.FieldType, val, context)) return false;
             }
 
             return true;

@@ -23,12 +23,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
         }
 
-        public bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node,
+            ISerializationContext? context = null)
         {
             if (node.Children.Count != 1) return false;
             var entry = node.Children.First();
-            return serializationManager.ValidateNode(typeof(T1), entry.Key) &&
-                   serializationManager.ValidateNode(typeof(T2), entry.Value);
+            return serializationManager.ValidateNode(typeof(T1), entry.Key, context) &&
+                   serializationManager.ValidateNode(typeof(T2), entry.Value, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, (T1, T2) value, bool alwaysWrite = false,

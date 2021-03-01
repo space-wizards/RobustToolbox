@@ -15,7 +15,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<string>(node.Value);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             return true;
         }

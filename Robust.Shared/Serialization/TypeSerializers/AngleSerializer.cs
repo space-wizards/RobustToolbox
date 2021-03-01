@@ -24,7 +24,8 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Angle>(angle);
         }
 
-        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context = null)
         {
             var nodeValue = node.Value;
             var value = nodeValue.EndsWith("rad") ? nodeValue.Substring(0, nodeValue.Length - 3) : nodeValue;

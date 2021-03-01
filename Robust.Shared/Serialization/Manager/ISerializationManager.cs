@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
 
         bool HasDataDefinition(Type type);
 
-        bool ValidateNode(Type type, DataNode node);
+        bool ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
 

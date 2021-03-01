@@ -144,13 +144,6 @@ namespace Robust.Client.GameObjects
     public abstract class AppearanceVisualizer
     {
         /// <summary>
-        ///     Load data from the prototype declaring this visualizer, to configure settings and such.
-        /// </summary>
-        public virtual void LoadData(YamlMappingNode node)
-        {
-        }
-
-        /// <summary>
         ///     Initializes an entity to be managed by this appearance controller.
         ///     DO NOT assume this is your only entity. Visualizers are shared.
         /// </summary>

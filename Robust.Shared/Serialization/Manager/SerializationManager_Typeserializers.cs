@@ -190,7 +190,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 2).MakeGenericMethod(type, node.GetType());
+                m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
 
             var arr = new object?[] {node, context, false};
             var res = method.Invoke(this, arr);

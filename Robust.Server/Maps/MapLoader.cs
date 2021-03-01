@@ -842,6 +842,45 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
+            bool ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node, ISerializationContext? context)
+            {
+                if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            bool ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, ISerializationContext? context)
+            {
+                if (node.Value == "null")
+                {
+                    return true;
+                }
+
+                if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            bool ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, ISerializationContext? context)
+            {
+                if (node.Value == "null") return true;
+
+                if (!int.TryParse(node.Value, out var val) || val >= Grids.Count)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
             public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {

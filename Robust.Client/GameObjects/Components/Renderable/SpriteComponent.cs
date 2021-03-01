@@ -140,6 +140,7 @@ namespace Robust.Client.GameObjects
             {
                 if(value == null) return;
 
+                Layers.Clear();
                 foreach (var layerDatum in value)
                 {
                     var anyTextureAttempted = false;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -200,7 +199,10 @@ namespace Robust.Shared.Serialization.Manager
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            DeserializationResult PopulateDelegate(object target, DeserializedFieldEntry[] deserializedFields, object?[] defaultValues)
+            DeserializationResult PopulateDelegate(
+                object target,
+                DeserializedFieldEntry[] deserializedFields,
+                object?[] defaultValues)
             {
                 for (var i = 0; i < _baseFieldDefinitions.Length; i++)
                 {
@@ -225,36 +227,86 @@ namespace Robust.Shared.Serialization.Manager
             return PopulateDelegate;
         }
 
+        // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private SerializeDelegateSignature EmitSerializeDelegate()
         {
-            var dynamicMethod = new DynamicMethod(
-                $"_serializeDelegate<>{Type}",
-                typeof(MappingDataNode),
-                new[] {typeof(object), typeof(ISerializationManager), typeof(ISerializationContext), typeof(bool), typeof(object?[])},
-                Type,
-                true);
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-            dynamicMethod.DefineParameter(2, ParameterAttributes.In, "serializationManager");
-            dynamicMethod.DefineParameter(3, ParameterAttributes.In, "serializationContext");
-            dynamicMethod.DefineParameter(4, ParameterAttributes.In, "alwaysWrite");
-            dynamicMethod.DefineParameter(5, ParameterAttributes.In, "defaultValues");
-            var generator = dynamicMethod.GetRobustGen();
-
-            var loc = generator.DeclareLocal(typeof(MappingDataNode));
-            Debug.Assert(loc.LocalIndex == 0);
-            generator.Emit(OpCodes.Newobj, typeof(MappingDataNode).GetConstructor(new Type[0])!);
-            generator.Emit(OpCodes.Stloc_0);
-
-            for (var i = _baseFieldDefinitions.Length-1; i >= 0; i--)
+            MappingDataNode SerializeDelegate(
+                object obj,
+                ISerializationManager manager,
+                ISerializationContext? context,
+                bool alwaysWrite,
+                object?[] defaultValues)
             {
-                var fieldDefinition = _baseFieldDefinitions[i];
-                generator.EmitSerializeField(fieldDefinition, i);
+                var mapping = new MappingDataNode();
+
+                for (var i = _baseFieldDefinitions.Length - 1; i >= 0; i--)
+                {
+                    var fieldDefinition = _baseFieldDefinitions[i];
+
+                    if (fieldDefinition.Attribute.ReadOnly)
+                    {
+                        continue;
+                    }
+
+                    if (fieldDefinition.Attribute.ServerOnly &&
+                        !IoCManager.Resolve<INetManager>().IsServer)
+                    {
+                        continue;
+                    }
+
+                    var info = fieldDefinition.FieldInfo;
+                    var value = info.GetValue(obj);
+
+                    if (value == null)
+                    {
+                        continue;
+                    }
+
+                    if (!fieldDefinition.Attribute.Required &&
+                        !alwaysWrite &&
+                        Equals(value, defaultValues[i]))
+                    {
+                        continue;
+                    }
+
+                    DataNode node;
+
+                    switch (fieldDefinition.Attribute)
+                    {
+                        case DataFieldWithConstantAttribute constantAttribute:
+                        {
+                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
+
+                            var tag = constantAttribute.ConstantTag;
+                            node = manager.WriteConstant(tag, (int) value);
+
+                            break;
+                        }
+                        case DataFieldWithFlagAttribute flagAttribute:
+                        {
+                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
+
+                            var tag = flagAttribute.FlagTag;
+                            node = manager.WriteFlag(tag, (int) value);
+
+                            break;
+                        }
+                        default:
+                        {
+                            var type = fieldDefinition.FieldType;
+                            node = manager.WriteValue(type, value, alwaysWrite, context);
+
+                            break;
+                        }
+                    }
+
+                    mapping[fieldDefinition.Attribute.Tag] = node;
+                }
+
+                return mapping;
             }
 
-            generator.Emit(OpCodes.Ldloc_0);
-            generator.Emit(OpCodes.Ret);
-
-            return dynamicMethod.CreateDelegate<SerializeDelegateSignature>();
+            return SerializeDelegate;
         }
 
         private CopyDelegateSignature EmitCopyDelegate()

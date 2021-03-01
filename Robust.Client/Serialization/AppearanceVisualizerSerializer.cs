@@ -32,6 +32,24 @@ namespace Robust.Client.Serialization
             return serializationManager.Read(type, newNode, context);
         }
 
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        {
+            if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)
+            {
+                return false;
+            }
+
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var type = reflectionManager.YamlTypeTagLookup(typeof(AppearanceVisualizer), valueNode.Value);
+
+            if (type == null)
+            {
+                return false;
+            }
+
+            return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().RemoveNode("type"));
+        }
+
         public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

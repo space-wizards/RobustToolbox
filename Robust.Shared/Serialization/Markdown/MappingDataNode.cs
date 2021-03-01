@@ -104,14 +104,15 @@ namespace Robust.Shared.Serialization.Markdown
             AddNode(new ValueDataNode(key), node);
         }
 
-        public void RemoveNode(DataNode key)
+        public MappingDataNode RemoveNode(DataNode key)
         {
             _mapping.Remove(key);
+            return this;
         }
 
-        public void RemoveNode(string key)
+        public MappingDataNode RemoveNode(string key)
         {
-            RemoveNode(_getFetchNode(key));
+            return RemoveNode(_getFetchNode(key));
         }
 
         public MappingDataNode Merge(MappingDataNode otherMapping)

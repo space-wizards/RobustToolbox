@@ -112,7 +112,7 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
-        public bool ValidateNode(Type type, DataNode node)
+        public bool ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
 
@@ -139,7 +139,7 @@ namespace Robust.Shared.Serialization.Manager
                 underlyingType = ResolveConcreteType(underlyingType, typeString);
             }
 
-            if (TryValidateWithTypeReader(type, node, out var valid)) return valid;
+            if (TryValidateWithTypeReader(type, node, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
                 return node is ValueDataNode;
@@ -149,7 +149,7 @@ namespace Robust.Shared.Serialization.Manager
                 return node switch
                 {
                     ValueDataNode valueDataNode => valueDataNode.Value == "",
-                    MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode),
+                    MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode, context),
                     _ => false
                 };
             }

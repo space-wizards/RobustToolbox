@@ -15,6 +15,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<string>(node.Value);
         }
 
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            return true;
+        }
+
         public DataNode Write(ISerializationManager serializationManager, string value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

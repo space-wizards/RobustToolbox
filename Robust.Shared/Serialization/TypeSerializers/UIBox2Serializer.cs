@@ -16,12 +16,33 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             var args = node.Value.Split(',');
 
+            if (args.Length != 4)
+            {
+                throw new InvalidMappingException($"Could not parse {nameof(UIBox2)}: '{node.Value}'");
+            }
+
             var t = float.Parse(args[0], CultureInfo.InvariantCulture);
             var l = float.Parse(args[1], CultureInfo.InvariantCulture);
             var b = float.Parse(args[2], CultureInfo.InvariantCulture);
             var r = float.Parse(args[3], CultureInfo.InvariantCulture);
 
             return new DeserializedValue<UIBox2>(new UIBox2(l, t, r, b));
+        }
+
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            string raw = node.Value;
+            string[] args = raw.Split(',');
+
+            if (args.Length != 4)
+            {
+                return false;
+            }
+
+            return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _);
         }
 
         public DataNode Write(ISerializationManager serializationManager, UIBox2 value, bool alwaysWrite = false,

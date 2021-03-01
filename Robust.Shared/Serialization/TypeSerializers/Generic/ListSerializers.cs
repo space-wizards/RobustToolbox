@@ -72,6 +72,36 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedMutableCollection<List<T>, T>(list, results);
         }
 
+        bool ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode)
+        {
+            foreach (var elem in sequenceDataNode.Sequence)
+            {
+                if (!serializationManager.ValidateNode(typeof(T), elem)) return false;
+            }
+
+            return true;
+        }
+
         DeserializationResult ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {

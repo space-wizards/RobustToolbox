@@ -263,6 +263,17 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     Forces synchronization of multi-window rendering with <c>glFinish</c> when GL fence sync is unavailable.
+        /// </summary>
+        /// <remarks>
+        ///     If this is disabled multi-window rendering on GLES2 might run better, dunno.
+        ///     It technically causes UB thanks to the OpenGL spec with cross-context sync. Hope that won't happen.
+        ///     Let's be real the OpenGL specification is basically just a suggestion to drivers anyways so who cares.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayForceSyncWindows =
+            CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

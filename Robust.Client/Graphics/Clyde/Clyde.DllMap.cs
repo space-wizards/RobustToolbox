@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics.Clyde
                     // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
                     // This is 100x easier than nvidia's documented approach of NvOptimusEnablement,
                     // and works while developing.
-                    //NativeLibrary.Load("nvapi64.dll");
+                    NativeLibrary.Load("nvapi64.dll");
                 }
                 catch (Exception)
                 {

@@ -727,7 +727,7 @@ namespace Robust.Client.Graphics.Clyde
         // Disabling inlining so that I can easily exclude it from profiles.
         // Doesn't matter anyways, it's a few extra cycles per frame.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void SwapBuffers()
+        private void SwapAllBuffers()
         {
             foreach (var window in _windows)
             {
@@ -738,6 +738,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // Do main window last since it has vsync.
+            SwapMainBuffers();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void SwapMainBuffers()
+        {
             GLFW.SwapBuffers(_mainWindow!.GlfwWindow);
         }
 

@@ -9,6 +9,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -940,6 +941,17 @@ namespace Robust.Client.Graphics.Clyde
             blitProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             blitProgram.SetUniform(UniIModulate, Color.White);
 
+            nint sync = 0;
+            if (_hasGLFenceSync)
+            {
+                sync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
+                GL.Flush();
+            }
+            else if (_configurationManager.GetCVar(CVars.DisplayForceSyncWindows))
+            {
+                GL.Finish();
+            }
+
             foreach (var window in _windows)
             {
                 if (window.IsMainWindow)
@@ -948,6 +960,11 @@ namespace Robust.Client.Graphics.Clyde
                 var rt = window.RenderTexture!;
 
                 GLFW.MakeContextCurrent(window.GlfwWindow);
+
+                if (_hasGLFenceSync)
+                {
+                    GL.WaitSync(sync, WaitSyncFlags.None, long.MaxValue);
+                }
 
                 GL.Enable(EnableCap.FramebufferSrgb);
 
@@ -961,6 +978,7 @@ namespace Robust.Client.Graphics.Clyde
                 SetTexture(TextureUnit.Texture1, _stockTextureWhite);
 
                 DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
+                GLFW.SwapBuffers(window.GlfwWindow);
             }
 
             GLFW.MakeContextCurrent(_mainWindow!.GlfwWindow);

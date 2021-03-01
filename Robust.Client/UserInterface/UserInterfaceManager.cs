@@ -944,6 +944,7 @@ namespace Robust.Client.UserInterface
             vp.Eye = eye.Eye;
 
             root.AddChild(new ViewportControl(vp));
+            root.AddChild(new Label { Text = "AAAAAAAA"});
         }
     }
 

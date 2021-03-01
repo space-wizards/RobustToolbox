@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
@@ -22,7 +23,7 @@ namespace Robust.Client.Graphics.Clyde
                 =
                 new();
 
-        public void Render()
+        public unsafe void Render()
         {
             CheckTransferringScreenshots();
 
@@ -43,7 +44,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // We have to keep running swapbuffers here
                 // or else the user's PC will turn into a heater!!
-                SwapBuffers();
+                SwapAllBuffers();
                 return;
             }
 
@@ -71,7 +72,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawSplash(_renderHandle);
                 FlushRenderQueue();
-                SwapBuffers();
+                SwapAllBuffers();
                 return;
             }
 
@@ -103,7 +104,7 @@ namespace Robust.Client.Graphics.Clyde
             BlitSecondaryWindows();
 
             // And finally, swap those buffers!
-            SwapBuffers();
+            SwapMainBuffers();
         }
 
         private void RenderOverlays(OverlaySpace space)

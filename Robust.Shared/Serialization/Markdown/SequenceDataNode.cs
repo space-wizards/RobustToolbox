@@ -43,6 +43,8 @@ namespace Robust.Shared.Serialization.Markdown
                 node.Children.Add(dataNode.ToYamlNode());
             }
 
+            node.Tag = Tag;
+
             return node;
         }
 

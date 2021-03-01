@@ -215,7 +215,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType.IsInterface || underlyingType.IsAbstract)
             {
-                 throw new InvalidOperationException($"Unable to create an instance of an interface/abstract type. Type: {underlyingType}");
+                 throw new InvalidOperationException($"Unable to create an instance of an interface or abstract type. Type: {underlyingType}");
             }
 
             var obj = Activator.CreateInstance(underlyingType)!;

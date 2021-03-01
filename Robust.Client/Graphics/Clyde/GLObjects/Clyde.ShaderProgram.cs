@@ -91,12 +91,17 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Use()
             {
-                DebugTools.Assert(_handle != 0);
-
                 if (_clyde._currentProgram == this)
                 {
                     return;
                 }
+
+                ForceUse();
+            }
+
+            public void ForceUse()
+            {
+                DebugTools.Assert(_handle != 0);
 
                 _clyde._currentProgram = this;
                 GL.UseProgram(_handle);

@@ -23,9 +23,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
 
-        IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
         // Initialized in Clyde's constructor
-        private readonly RenderWindow _mainWindowRenderTarget;
+        private readonly RenderMainWindow _mainMainWindowRenderMainTarget;
 
         // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
         // It is used for SRGB emulation.
@@ -266,10 +265,10 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void UpdateWindowLoadedRtSize()
+        private void UpdateMainWindowLoadedRtSize()
         {
-            var loadedRt = RtToLoaded(_mainWindowRenderTarget);
-            loadedRt.Size = _framebufferSize;
+            var loadedRt = RtToLoaded(_mainMainWindowRenderMainTarget);
+            loadedRt.Size = _mainWindow!.FramebufferSize;
         }
 
         private sealed class LoadedRenderTarget
@@ -352,11 +351,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class RenderWindow : RenderTargetBase, IRenderWindow
+        private sealed class RenderMainWindow : RenderTargetBase
         {
-            public override Vector2i Size => Clyde._framebufferSize;
+            public override Vector2i Size => Clyde._mainWindow!.FramebufferSize;
 
-            public RenderWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
+            public RenderMainWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
             {
             }
         }

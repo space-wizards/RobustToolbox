@@ -8,12 +8,6 @@ namespace Robust.Client.UserInterface
 {
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
     {
-        /// <summary>
-        ///     Clears and disposes of all UI components.
-        ///     Highly destructive!
-        /// </summary>
-        void DisposeAllComponents();
-
         void Initialize();
         void InitializeTesting();
 

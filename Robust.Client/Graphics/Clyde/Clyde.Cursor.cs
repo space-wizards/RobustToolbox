@@ -51,7 +51,7 @@ namespace Robust.Client.Graphics.Clyde
             if (cursor == null)
             {
                 _currentCursor = null;
-                GLFW.SetCursor(_glfwWindow, null);
+                GLFW.SetCursor(_mainWindow!.GlfwWindow, null);
                 return;
             }
 
@@ -66,7 +66,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _currentCursor = impl;
-            GLFW.SetCursor(_glfwWindow, impl.Cursor);
+            GLFW.SetCursor(_mainWindow!.GlfwWindow, impl.Cursor);
         }
 
         private unsafe void FlushCursorDispose()

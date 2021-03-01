@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -18,10 +19,12 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed class ClydeHeadless : ClydeBase, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
-        public IRenderWindow MainWindowRenderTarget { get; }
+        public IClydeWindow MainWindow { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
+        public IEnumerable<IClydeWindow> AllWindows => _windows;
         public Vector2 DefaultWindowScale => (1, 1);
         public override bool IsFocused => true;
+        private readonly List<IClydeWindow> _windows = new();
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -30,7 +33,11 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHeadless()
         {
-            MainWindowRenderTarget = new DummyRenderWindow(this);
+            var mainRt = new DummyRenderWindow(this);
+            var window = new DummyWindow(mainRt);
+
+            _windows.Add(window);
+            MainWindow = window;
         }
 
         public Vector2 MouseScreenPosition => ScreenSize / 2;
@@ -154,6 +161,14 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, string? name = null)
         {
             return new Viewport();
+        }
+
+        public IClydeWindow CreateWindow()
+        {
+            var window = new DummyWindow(CreateRenderTarget((123, 123), default));
+            _windows.Add(window);
+
+            return window;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
@@ -413,7 +428,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class DummyRenderWindow : IRenderWindow
+        private sealed class DummyRenderWindow : IRenderTarget
         {
             private readonly ClydeHeadless _clyde;
 
@@ -462,6 +477,16 @@ namespace Robust.Client.Graphics.Clyde
             public void Render()
             {
             }
+        }
+
+        private sealed class DummyWindow : IClydeWindow
+        {
+            public DummyWindow(IRenderTarget renderTarget)
+            {
+                RenderTarget = renderTarget;
+            }
+
+            public IRenderTarget RenderTarget { get; }
         }
     }
 }

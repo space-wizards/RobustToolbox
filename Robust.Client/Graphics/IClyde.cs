@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.Maths;
@@ -9,11 +10,14 @@ namespace Robust.Client.Graphics
 {
     public interface IClyde
     {
-        IRenderWindow MainWindowRenderTarget { get; }
+        IClydeWindow MainWindow { get; }
+        IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 
         Vector2i ScreenSize { get; }
 
         bool IsFocused { get; }
+
+        IEnumerable<IClydeWindow> AllWindows { get; }
 
         /// <summary>
         ///     The default scale ratio for window contents, given to us by the OS.
@@ -104,6 +108,13 @@ namespace Robust.Client.Graphics
         }
 
         IClydeViewport CreateViewport(Vector2i size, string? name = null);
+
+        IClydeWindow CreateWindow();
+    }
+
+    public interface IClydeWindow
+    {
+        public IRenderTarget RenderTarget { get; }
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

@@ -4,7 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
 using Robust.Shared.Log;
@@ -266,8 +268,15 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
-            BindVertexArray(QuadVAO.Handle);
+            DrawQuadWithVao(QuadVAO, a, b, modelMatrix, program);
+        }
+
+        private void DrawQuadWithVao(GLHandle vao, Vector2 a, Vector2 b, in Matrix3 modelMatrix,
+            GLShaderProgram program)
+        {
+            BindVertexArray(vao.Handle);
             CheckGlError();
+
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
@@ -780,7 +789,8 @@ namespace Robust.Client.Graphics.Clyde
             var bufferLength = ScreenSize.X * ScreenSize.Y;
             if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
             {
-                Logger.DebugS("clyde.ogl", "Necessary features for async screenshots not available, falling back to blocking path.");
+                Logger.DebugS("clyde.ogl",
+                    "Necessary features for async screenshots not available, falling back to blocking path.");
 
                 // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,
                 // we'll have to fall back to a crappy synchronous stalling method of glReadPixels().
@@ -903,7 +913,7 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = false;
             _currentMatrixModel = Matrix3.Identity;
             SetScissorFull(null);
-            BindRenderTargetFull(_mainWindowRenderTarget);
+            BindRenderTargetFull(_mainMainWindowRenderMainTarget);
             _batchMetaData = null;
             _queuedShader = _defaultShader.Handle;
         }
@@ -915,6 +925,45 @@ namespace Robust.Client.Graphics.Clyde
                 BlendingFactorDest.OneMinusSrcAlpha,
                 BlendingFactorSrc.One,
                 BlendingFactorDest.OneMinusSrcAlpha);
+        }
+
+        private unsafe void BlitSecondaryWindows()
+        {
+            // Only got main window.
+            if (_windows.Count == 1)
+                return;
+
+            var (blitProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
+            SetupGlobalUniformsImmediate(blitProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
+            blitProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            blitProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
+            blitProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
+            blitProgram.SetUniform(UniIModulate, Color.White);
+
+            foreach (var window in _windows)
+            {
+                if (window.IsMainWindow)
+                    continue;
+
+                var rt = window.RenderTexture!;
+
+                GLFW.MakeContextCurrent(window.GlfwWindow);
+
+                GL.Enable(EnableCap.FramebufferSrgb);
+
+                Thread.Sleep(16);
+
+                GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+                _updateUniformConstants(window.FramebufferSize);
+                blitProgram.ForceUse();
+
+                SetTexture(TextureUnit.Texture0, rt.Texture);
+                SetTexture(TextureUnit.Texture1, _stockTextureWhite);
+
+                DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
+            }
+
+            GLFW.MakeContextCurrent(_mainWindow!.GlfwWindow);
         }
 
         [StructLayout(LayoutKind.Explicit)]

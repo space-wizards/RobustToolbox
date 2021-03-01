@@ -26,8 +26,18 @@ namespace Robust.Client.Graphics.Clyde
         {
             CheckTransferringScreenshots();
 
+            var allMinimized = true;
+            foreach (var windowReg in _windows)
+            {
+                if (!windowReg.IsMinimized)
+                {
+                    allMinimized = false;
+                    break;
+                }
+            }
+
             var size = ScreenSize;
-            if (size.X == 0 || size.Y == 0 || _isMinimized)
+            if (size.X == 0 || size.Y == 0 || allMinimized)
             {
                 ClearFramebuffer(Color.Black);
 
@@ -49,7 +59,7 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants(_framebufferSize);
+            _updateUniformConstants(_mainWindow!.FramebufferSize);
 
             {
                 CalcScreenMatrices(ScreenSize, out var proj, out var view);
@@ -89,6 +99,8 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             TakeScreenshot(ScreenshotType.AfterUI);
+
+            BlitSecondaryWindows();
 
             // And finally, swap those buffers!
             SwapBuffers();
@@ -315,13 +327,8 @@ namespace Robust.Client.Graphics.Clyde
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderViewport(Viewport viewport)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a)
         {
-            if (viewport.Eye == null)
-            {
-                return;
-            }
-
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
             var oldTransform = _currentMatrixModel;
@@ -330,28 +337,50 @@ namespace Robust.Client.Graphics.Clyde
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
 
-            var eye = viewport.Eye;
-
-            var oldVp = _currentViewport;
-            _currentViewport = viewport;
-
             var state = PushRenderStateFull();
 
             {
-                // Actual code that isn't just pushing/popping renderer state so we can return safely.
-
-                var rt = _currentViewport.RenderTarget;
                 BindRenderTargetFull(RtToLoaded(rt));
                 ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
-                _updateUniformConstants(viewport.Size);
+                _updateUniformConstants(rt.Size);
 
-                CalcWorldMatrices(rt.Size, eye, out var proj, out var view);
+                // Smugleaf moment
+                a();
+
+                FlushRenderQueue();
+            }
+
+
+            PopRenderStateFull(state);
+            _updateUniformConstants(rt.Size);
+
+            SetScissorFull(oldScissor);
+            _currentMatrixModel = oldTransform;
+        }
+
+        private void RenderViewport(Viewport viewport)
+        {
+            if (viewport.Eye == null)
+            {
+                return;
+            }
+
+            RenderInRenderTarget(viewport.RenderTarget, () =>
+            {
+                var oldVp = _currentViewport;
+
+                _currentViewport = viewport;
+                var eye = viewport.Eye;
+
+                // Actual code that isn't just pushing/popping renderer state so we can return safely.
+
+                CalcWorldMatrices(viewport.RenderTarget.Size, eye, out var proj, out var view);
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
                 var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+                    viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
@@ -401,14 +430,9 @@ namespace Robust.Client.Graphics.Clyde
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
-            }
 
-            PopRenderStateFull(state);
-            _updateUniformConstants(oldVp?.Size ?? _framebufferSize);
-
-            SetScissorFull(oldScissor);
-            _currentMatrixModel = oldTransform;
-            _currentViewport = oldVp;
+                _currentViewport = oldVp;
+            });
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

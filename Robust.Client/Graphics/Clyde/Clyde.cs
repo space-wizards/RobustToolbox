@@ -70,7 +70,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Init main window render target.
             var windowRid = AllocRid();
-            var window = new RenderWindow(this, windowRid);
+            var window = new RenderMainWindow(this, windowRid);
             var loadedData = new LoadedRenderTarget
             {
                 IsWindow = true,
@@ -78,7 +78,7 @@ namespace Robust.Client.Graphics.Clyde
             };
             _renderTargets.Add(windowRid, loadedData);
 
-            _mainWindowRenderTarget = window;
+            _mainMainWindowRenderMainTarget = window;
             _currentRenderTarget = RtToLoaded(window);
             _currentBoundRenderTarget = _currentRenderTarget;
         }
@@ -277,15 +277,7 @@ namespace Robust.Client.Graphics.Clyde
                     quadVertices,
                     nameof(QuadVBO));
 
-                QuadVAO = new GLHandle(GenVertexArray());
-                BindVertexArray(QuadVAO.Handle);
-                ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, nameof(QuadVAO));
-                // Vertex Coords
-                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-                GL.EnableVertexAttribArray(0);
-                // Texture Coords.
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-                GL.EnableVertexAttribArray(1);
+                QuadVAO = MakeQuadVao();
 
                 CheckGlError();
             }
@@ -317,9 +309,25 @@ namespace Robust.Client.Graphics.Clyde
             CreateMainViewport();
         }
 
+        private GLHandle MakeQuadVao()
+        {
+            var vao = new GLHandle(GenVertexArray());
+            BindVertexArray(QuadVAO.Handle);
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, nameof(QuadVAO));
+            GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.ObjectHandle);
+            // Vertex Coords
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.EnableVertexAttribArray(0);
+            // Texture Coords.
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
+            return vao;
+        }
+
         private void CreateMainViewport()
         {
-            var (w, h) = _framebufferSize;
+            var (w, h) = _mainWindow!.FramebufferSize;
 
             // Ensure viewport size is always even to avoid artifacts.
             if (w % 2 == 1) w += 1;

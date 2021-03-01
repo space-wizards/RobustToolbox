@@ -55,7 +55,7 @@ namespace Robust.Client.UserInterface
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.
         /// </summary>
-        Control RootControl { get; }
+        WindowRoot RootControl { get; }
 
         IDebugMonitors DebugMonitors { get; }
 
@@ -101,5 +101,6 @@ namespace Robust.Client.UserInterface
         ICursor? WorldCursor { get; set; }
 
         void PushModal(Control modal);
+        WindowRoot CreateWindowRoot(IClydeWindow window);
     }
 }

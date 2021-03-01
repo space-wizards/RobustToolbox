@@ -23,6 +23,7 @@ namespace Robust.Client.Graphics.Clyde
         private class GLUniformBuffer<T> where T : unmanaged, IAppliableUniformSet
         {
             private readonly Clyde _clyde;
+            private readonly int _index;
 
             /// <summary>
             ///     GPU Buffer (only used when uniform buffers are available)
@@ -37,13 +38,23 @@ namespace Robust.Client.Graphics.Clyde
             public GLUniformBuffer(Clyde clyde, int index, string? name = null)
             {
                 _clyde = clyde;
+                _index = index;
                 if (_clyde._hasGLUniformBuffers)
                 {
                     _implUBO = new GLBuffer(_clyde, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, name);
                     unsafe {
                         _implUBO.Reallocate(sizeof(T));
                     }
-                    GL.BindBufferBase(BufferRangeTarget.UniformBuffer, index, (int) _implUBO.ObjectHandle);
+
+                    Rebind();
+                }
+            }
+
+            public void Rebind()
+            {
+                if (_implUBO != null)
+                {
+                    GL.BindBufferBase(BufferRangeTarget.UniformBuffer, _index, (int) _implUBO!.ObjectHandle);
                 }
             }
 

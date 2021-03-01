@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Client.Console;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -9,7 +11,9 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -37,16 +41,20 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
-        [ViewVariables] public Stylesheet? Stylesheet
+        [ViewVariables]
+        public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
             {
                 _stylesheet = value;
 
-                if (RootControl?.Stylesheet != null)
+                foreach (var root in _roots)
                 {
-                    RootControl.StylesheetUpdateRecursive();
+                    if (root.Stylesheet != null)
+                    {
+                        root.StylesheetUpdateRecursive();
+                    }
                 }
             }
         }
@@ -60,7 +68,7 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
         [ViewVariables] public float UIScale { get; private set; } = 1;
         [ViewVariables] public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
-        [ViewVariables] public Control RootControl { get; private set; } = default!;
+        [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
         [ViewVariables] public DebugConsole DebugConsole { get; private set; } = default!;
@@ -86,6 +94,9 @@ namespace Robust.Client.UserInterface
         private Stylesheet? _stylesheet;
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
+
+        private readonly List<WindowRoot> _roots = new();
+        private readonly Dictionary<IClydeWindow, WindowRoot> _windowsToRoot = new();
 
         public void Initialize()
         {
@@ -120,19 +131,9 @@ namespace Robust.Client.UserInterface
 
         private void _initializeCommon()
         {
-            RootControl = new Control
-            {
-                Name = "UIRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-                HorizontalAlignment = Control.HAlignment.Stretch,
-                VerticalAlignment = Control.VAlignment.Stretch,
-                IsInsideTree = true
-            };
+            RootControl = CreateWindowRoot(_displayManager.MainWindow);
 
-            RootControl.InvalidateMeasure();
-            QueueMeasureUpdate(RootControl);
-
-            _displayManager.OnWindowResized += args => _updateRootSize();
+            _displayManager.OnWindowResized += WindowSizeChanged;
 
             StateRoot = new LayoutContainer
             {
@@ -174,14 +175,44 @@ namespace Robust.Client.UserInterface
             _initializeCommon();
         }
 
+        public WindowRoot CreateWindowRoot(IClydeWindow window)
+        {
+            if (_windowsToRoot.ContainsKey(window))
+            {
+                throw new ArgumentException("Window already has a UI root.");
+            }
+
+            var newRoot = new WindowRoot(window)
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore,
+                HorizontalAlignment = Control.HAlignment.Stretch,
+                VerticalAlignment = Control.VAlignment.Stretch,
+                IsInsideTree = true
+            };
+
+            _roots.Add(newRoot);
+            _windowsToRoot.Add(window, newRoot);
+
+            newRoot.InvalidateMeasure();
+            QueueMeasureUpdate(newRoot);
+
+            return newRoot;
+        }
+
         public void Update(FrameEventArgs args)
         {
-            RootControl.DoUpdate(args);
+            foreach (var root in _roots)
+            {
+                root.DoUpdate(args);
+            }
         }
 
         public void FrameUpdate(FrameEventArgs args)
         {
-            RootControl.DoFrameUpdate(args);
+            foreach (var root in _roots)
+            {
+                root.DoFrameUpdate(args);
+            }
 
             // Process queued style & layout updates.
             while (_styleUpdateQueue.Count != 0)
@@ -248,9 +279,9 @@ namespace Robust.Client.UserInterface
                 RunMeasure(control.Parent);
             }
 
-            if (control == RootControl)
+            if (control is WindowRoot root)
             {
-                control.Measure(_displayManager.ScreenSize / UIScale);
+                control.Measure(root.Window.RenderTarget.Size / UIScale);
             }
             else if (control.PreviousMeasure.HasValue)
             {
@@ -268,9 +299,9 @@ namespace Robust.Client.UserInterface
                 RunArrange(control.Parent);
             }
 
-            if (control == RootControl)
+            if (control is WindowRoot root)
             {
-                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, _displayManager.ScreenSize / UIScale));
+                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.RenderTarget.Size / UIScale));
             }
             else if (control.PreviousArrange.HasValue)
             {
@@ -476,11 +507,6 @@ namespace Robust.Client.UserInterface
             KeyboardFocused.TextEntered(guiArgs);
         }
 
-        public void DisposeAllComponents()
-        {
-            RootControl.DisposeAllChildren();
-        }
-
         public void Popup(string contents, string title = "Alert!")
         {
             var popup = new SS14Window
@@ -606,7 +632,22 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
+            foreach (var root in _roots)
+            {
+                if (root.Window == _displayManager.MainWindow)
+                {
+                    DoRender(root);
+                }
+                else
+                {
+                    renderHandle.RenderInRenderTarget(root.Window.RenderTarget, () => DoRender(root));
+                }
+            }
+
+            void DoRender(WindowRoot root)
+            {
+                _render(renderHandle, root, Vector2i.Zero, Color.White, null);
+            }
         }
 
         public void QueueStyleUpdate(Control control)
@@ -835,13 +876,11 @@ namespace Robust.Client.UserInterface
         {
             UIScale = newValue == 0f ? DefaultUIScale : newValue;
 
-            if (RootControl == null)
+            foreach (var root in _roots)
             {
-                return;
+                _propagateUIScaleChanged(root);
+                root.InvalidateMeasure();
             }
-
-            _propagateUIScaleChanged(RootControl);
-            _updateRootSize();
         }
 
         private static void _propagateUIScaleChanged(Control control)
@@ -854,9 +893,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private void _updateRootSize()
+        private void WindowSizeChanged(WindowResizedEventArgs windowResizedEventArgs)
         {
-            RootControl.InvalidateMeasure();
+            if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window, out var root))
+                return;
+
+            root.InvalidateMeasure();
         }
 
         /// <summary>
@@ -880,6 +922,50 @@ namespace Robust.Client.UserInterface
             }
 
             return false;
+        }
+    }
+
+    [UsedImplicitly]
+    internal sealed class TestWindowCommand : IConsoleCommand
+    {
+        public string Command => "window";
+        public string Description => "A";
+        public string Help => "A";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var window = IoCManager.Resolve<IClyde>().CreateWindow();
+            var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
+
+            var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);
+
+            var entity = IoCManager.Resolve<IEntityManager>().SpawnEntity("", new MapCoordinates(0, 0, new MapId(1)));
+            var eye = entity.AddComponent<EyeComponent>();
+            vp.Eye = eye.Eye;
+
+            root.AddChild(new ViewportControl(vp));
+        }
+    }
+
+    internal sealed class ViewportControl : Control
+    {
+        private readonly IClydeViewport _vp;
+
+        public ViewportControl(IClydeViewport vp)
+        {
+            _vp = vp;
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            _vp.Render();
+
+            handle.DrawTexture(_vp.RenderTarget.Texture, Vector2.Zero);
+        }
+
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
+        {
+            return _vp.Size;
         }
     }
 }

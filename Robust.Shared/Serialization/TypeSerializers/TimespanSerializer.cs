@@ -18,6 +18,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<TimeSpan>(TimeSpan.FromSeconds(seconds));
         }
 
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _);
+        }
+
         public DataNode Write(ISerializationManager serializationManager, TimeSpan value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

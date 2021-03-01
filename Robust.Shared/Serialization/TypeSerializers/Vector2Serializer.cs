@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 2)
             {
-                throw new ArgumentException($"Could not parse {nameof(Vector2)}: '{raw}'");
+                throw new InvalidMappingException($"Could not parse {nameof(Vector2)}: '{raw}'");
             }
 
             var x = float.Parse(args[0], CultureInfo.InvariantCulture);
@@ -27,6 +27,20 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var vector = new Vector2(x, y);
 
             return new DeserializedValue<Vector2>(vector);
+        }
+
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            string raw = node.Value;
+            string[] args = raw.Split(',');
+
+            if (args.Length != 2)
+            {
+                return false;
+            }
+
+            return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Vector2 value, bool alwaysWrite = false,

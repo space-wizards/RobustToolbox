@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Generic
 {
@@ -50,6 +51,32 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             }
 
             return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+        }
+
+        bool ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            return Validate(serializationManager, node);
+        }
+
+        bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            foreach (var (key, val) in node)
+            {
+                if (!serializationManager.ValidateNode(typeof(TKey), key)) return false;
+                if (!serializationManager.ValidateNode(typeof(TValue), val)) return false;
+            }
+
+            return true;
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<TKey, TValue> value,

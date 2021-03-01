@@ -14,7 +14,7 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
-    public class ComponentRegistrySerializer :ITypeSerializer<ComponentRegistry, SequenceDataNode>
+    public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
-                string compType = ((ValueDataNode)componentMapping.GetNode("type")).Value;
+                string compType = ((ValueDataNode) componentMapping.GetNode("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
                 {
@@ -76,6 +76,64 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             return new DeserializedDictionary<ComponentRegistry, string, IComponent>(components, mappings);
+        }
+
+        public bool Validate(ISerializationManager serializationManager, SequenceDataNode node)
+        {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            var components = new ComponentRegistry();
+            var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
+
+            foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
+            {
+                string compType = ((ValueDataNode) componentMapping.GetNode("type")).Value;
+                // See if type exists to detect errors.
+                switch (factory.GetComponentAvailability(compType))
+                {
+                    case ComponentAvailability.Available:
+                        break;
+
+                    case ComponentAvailability.Ignore:
+                        continue;
+
+                    case ComponentAvailability.Unknown:
+                        return false;
+                }
+
+                // Has this type already been added?
+                if (components.Keys.Contains(compType))
+                {
+                    return false;
+                }
+
+                var copy = (componentMapping.Copy() as MappingDataNode)!;
+                copy.RemoveNode("type");
+
+                var type = factory.GetRegistration(compType).Type;
+
+                if (!serializationManager.ValidateNode(type, copy))
+                {
+                    return false;
+                }
+            }
+
+            var referenceTypes = new List<Type>();
+            // Assert that there are no conflicting component references.
+            foreach (var componentName in components.Keys)
+            {
+                var registration = factory.GetRegistration(componentName);
+                foreach (var compType in registration.References)
+                {
+                    if (referenceTypes.Contains(compType))
+                    {
+                        return false;
+                    }
+
+                    referenceTypes.Add(compType);
+                }
+            }
+
+            return true;
         }
 
         public DataNode Write(ISerializationManager serializationManager, ComponentRegistry value,

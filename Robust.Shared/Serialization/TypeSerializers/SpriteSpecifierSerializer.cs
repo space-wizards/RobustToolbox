@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -27,6 +26,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<SpriteSpecifier>(texture);
         }
 
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            return serializationManager.ReadValue<ResourcePath>(node) != null;
+        }
+
         public DeserializationResult Read(ISerializationManager serializationManager,
             MappingDataNode node, ISerializationContext? context = null)
         {
@@ -41,6 +45,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             throw new InvalidNodeTypeException();
+        }
+
+        public bool Validate(ISerializationManager serializationManager, MappingDataNode node)
+        {
+            return node.HasNode("sprite") &&
+                   node.TryGetNode("state", out var stateNode) &&
+                   stateNode is ValueDataNode &&
+                   serializationManager.ReadValue<ResourcePath>(stateNode) != null;
         }
 
         public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,

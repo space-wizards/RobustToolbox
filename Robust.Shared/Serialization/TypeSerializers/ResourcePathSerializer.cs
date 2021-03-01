@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -14,6 +15,20 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
+        }
+
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            try
+            {
+                _ = new ResourcePath(node.Value);
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public DataNode Write(ISerializationManager serializationManager, ResourcePath value,

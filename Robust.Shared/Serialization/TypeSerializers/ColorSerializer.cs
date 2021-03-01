@@ -20,6 +20,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Color>(deserializedColor);
         }
 
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null;
+        }
+
         public DataNode Write(ISerializationManager serializationManager, Color value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

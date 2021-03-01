@@ -18,6 +18,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<MapId>(new MapId(val));
         }
 
+        public bool Validate(ISerializationManager serializationManager, ValueDataNode node)
+        {
+            return int.TryParse(node.Value, out _);
+        }
+
         public DataNode Write(ISerializationManager serializationManager, MapId value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {

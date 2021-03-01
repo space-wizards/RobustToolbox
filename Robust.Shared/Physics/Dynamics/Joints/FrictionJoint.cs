@@ -197,13 +197,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             float mA = _invMassA, mB = _invMassB;
             float iA = _invIA, iB = _invIB;
 
-            var K = new Vector2[2];
+            Span<Vector2> K = stackalloc Vector2[2];
             K[0].X = mA + mB + iA * _rA.Y * _rA.Y + iB * _rB.Y * _rB.Y;
             K[0].Y = -iA * _rA.X * _rA.Y - iB * _rB.X * _rB.Y;
             K[1].X = K[0].Y;
             K[1].Y = mA + mB + iA * _rA.X * _rA.X + iB * _rB.X * _rB.X;
 
-            _linearMass = K.Inverse();
+            _linearMass = Vector2Helpers.Inverse(K);
 
             _angularMass = iA + iB;
             if (_angularMass > 0.0f)

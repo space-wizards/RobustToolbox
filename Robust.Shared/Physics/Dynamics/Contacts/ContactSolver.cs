@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.IO;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -184,6 +185,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void InitializeVelocityConstraints()
         {
+            Span<Vector2> points = stackalloc Vector2[2];
+
             for (var i = 0; i < _contactCount; ++i)
             {
                 var velocityConstraint = _velocityConstraints[i];
@@ -221,8 +224,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
                 Vector2 normal;
-                var points = new Vector2[2];
-                InitializeManifold(manifold, xfA, xfB, radiusA, radiusB, out normal, out points);
+                InitializeManifold(manifold, xfA, xfB, radiusA, radiusB, out normal, points);
 
                 velocityConstraint.Normal = normal;
 
@@ -728,10 +730,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             float radiusA,
             float radiusB,
             out Vector2 normal,
-            out Vector2[] points)
+            Span<Vector2> points)
         {
             normal = Vector2.Zero;
-            points = new Vector2[2];
 
             if (manifold.PointCount == 0)
             {

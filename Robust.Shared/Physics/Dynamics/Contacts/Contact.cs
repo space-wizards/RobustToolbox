@@ -260,14 +260,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(out Vector2 normal, out Vector2[] points)
+        public void GetWorldManifold(out Vector2 normal, Span<Vector2> points)
         {
             PhysicsComponent bodyA = FixtureA?.Body!;
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
 
-            ContactSolver.InitializeManifold(Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, out points);
+            ContactSolver.InitializeManifold(Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
@@ -395,7 +395,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (sensor)
                 return;
 
+            // Really only useful for debugging plus the message allocs soooooo
+#if DEBUG
             _entityManager.EventBus.RaiseEvent(EventSource.Local, new PreSolveMessage(this, oldManifold));
+#endif
         }
 
         /// <summary>
@@ -411,10 +414,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 // TODO: Need a unit test for these.
                 case ContactType.Polygon:
-                    _collisionManager.CollidePolygons(manifold, new PolygonShape(FixtureA!.Shape), transformA, new PolygonShape(FixtureB!.Shape), transformB);
+                    _collisionManager.CollidePolygons(manifold, (PolygonShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.PolygonAndCircle:
-                    _collisionManager.CollidePolygonAndCircle(manifold, new PolygonShape(FixtureA!.Shape), transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
+                    _collisionManager.CollidePolygonAndCircle(manifold, (PolygonShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndCircle:
                     _collisionManager.CollideEdgeAndCircle(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);

@@ -726,20 +726,20 @@ namespace Robust.Shared.Physics.Collision
                 rf.sideOffset2 = Vector2.Dot(rf.sideNormal2, rf.v2);
 
                 // Clip incident edge against extruded edge1 side edges.
-                ClipVertex[] clipPoints1;
-                ClipVertex[] clipPoints2;
+                Span<ClipVertex> clipPoints1 = stackalloc ClipVertex[2];
                 int np;
 
                 // Clip to box side 1
-                np = ClipSegmentToLine(out clipPoints1, ref ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
+                np = ClipSegmentToLine(clipPoints1, ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
 
                 if (np < 2)
                 {
                     return;
                 }
 
+                Span<ClipVertex> clipPoints2 = stackalloc ClipVertex[2];
                 // Clip to negative box side 1
-                np = ClipSegmentToLine(out clipPoints2, ref clipPoints1, rf.sideNormal2, rf.sideOffset2, rf.i2);
+                np = ClipSegmentToLine(clipPoints2, clipPoints1, rf.sideNormal2, rf.sideOffset2, rf.i2);
 
                 // TODO: Max manifold points
                 if (np < 2)
@@ -1066,8 +1066,9 @@ namespace Robust.Shared.Physics.Collision
                 flip = false;
             }
 
-            ClipVertex[] incidentEdge;
-            FindIncidentEdge(out incidentEdge, poly1, xf1, edge1, poly2, xf2);
+            Span<ClipVertex> incidentEdge = stackalloc ClipVertex[2];
+
+            FindIncidentEdge(incidentEdge, poly1, xf1, edge1, poly2, xf2);
 
             int count1 = poly1.Vertices.Count;
 
@@ -1099,17 +1100,17 @@ namespace Robust.Shared.Physics.Collision
             float sideOffset2 = tangent.X * v12.X + tangent.Y * v12.Y + totalRadius;
 
             // Clip incident edge against extruded edge1 side edges.
-            ClipVertex[] clipPoints1;
-            ClipVertex[] clipPoints2;
+            Span<ClipVertex> clipPoints1 = stackalloc ClipVertex[2];
 
             // Clip to box side 1
-            int np = ClipSegmentToLine(out clipPoints1, ref incidentEdge, -tangent, sideOffset1, iv1);
+            int np = ClipSegmentToLine(clipPoints1, incidentEdge, -tangent, sideOffset1, iv1);
 
             if (np < 2)
                 return;
 
+            Span<ClipVertex> clipPoints2 = stackalloc ClipVertex[2];
             // Clip to negative box side 1
-            np = ClipSegmentToLine(out clipPoints2, ref clipPoints1, tangent, sideOffset2, iv2);
+            np = ClipSegmentToLine(clipPoints2, clipPoints1, tangent, sideOffset2, iv2);
 
             if (np < 2)
             {
@@ -1206,11 +1207,9 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="offset">The offset.</param>
         /// <param name="vertexIndexA">The vertex index A.</param>
         /// <returns></returns>
-        private static int ClipSegmentToLine(out ClipVertex[] vOut, ref ClipVertex[] vIn, Vector2 normal,
+        private static int ClipSegmentToLine(Span<ClipVertex> vOut, Span<ClipVertex> vIn, Vector2 normal,
             float offset, int vertexIndexA)
         {
-            vOut = new ClipVertex[2];
-
             ClipVertex v0 = vIn[0];
             ClipVertex v1 = vIn[1];
 
@@ -1345,10 +1344,9 @@ namespace Robust.Shared.Physics.Collision
             return bestSeparation;
         }
 
-        private static void FindIncidentEdge(out ClipVertex[] c, PolygonShape poly1, in Transform xf1, int edge1,
+        private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1,
             PolygonShape poly2, in Transform xf2)
         {
-            c = new ClipVertex[2];
             List<Vector2> normals1 = poly1.Normals;
 
             int count2 = poly2.Vertices.Count;

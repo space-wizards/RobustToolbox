@@ -63,9 +63,9 @@ namespace Robust.Client.Debugging
                 PointState[] state1, state2;
                 CollisionManager.GetPointStates(out state1, out state2, oldManifold, manifold);
 
-                Vector2[] points;
+                Span<Vector2> points = stackalloc Vector2[2];
                 Vector2 normal;
-                contact.GetWorldManifold(out normal, out points);
+                contact.GetWorldManifold(out normal, points);
 
                 for (int i = 0; i < manifold.PointCount && PointCount < MaxContactPoints; ++i)
                 {

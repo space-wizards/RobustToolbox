@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     The lower Y coordinate of the top edge of the box.
         /// </summary>
-        public float Bottom => Center.Y + HalfExtents.Y;
+        public float Bottom => Center.Y - HalfExtents.Y;
 
         /// <summary>
         ///     The higher Y coordinate of the bottom of the box.

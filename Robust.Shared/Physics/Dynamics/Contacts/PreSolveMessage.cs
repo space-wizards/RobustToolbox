@@ -7,9 +7,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     {
         public Contact Contact { get; }
 
-        public Collision.Manifold OldManifold { get; }
+        public Manifold OldManifold { get; }
 
-        public PreSolveMessage(Contact contact, Collision.Manifold oldManifold)
+        public PreSolveMessage(Contact contact, Manifold oldManifold)
         {
             Contact = contact;
             OldManifold = oldManifold;

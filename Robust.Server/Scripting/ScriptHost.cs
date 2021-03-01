@@ -230,7 +230,7 @@ namespace Robust.Server.Scripting
             }
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
-                msg.AddText(CSharpObjectFormatter.Instance.FormatObject(instance.State.ReturnValue));
+                msg.AddText(ScriptInstanceShared.SafeFormat(instance.State.ReturnValue));
             }
 
             replyMessage.Response = msg;
@@ -290,7 +290,7 @@ namespace Robust.Server.Scripting
 
             public override void show(object obj)
             {
-                write(CSharpObjectFormatter.Instance.FormatObject(obj));
+                write(ScriptInstanceShared.SafeFormat(obj));
             }
         }
     }

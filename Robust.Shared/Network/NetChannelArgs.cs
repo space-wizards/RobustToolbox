@@ -32,15 +32,17 @@ namespace Robust.Shared.Network
 
         public string? DenyReason { get; private set; }
 
+        public NetUserData UserData { get; }
+
         /// <summary>
         /// The IP of the incoming connection.
         /// </summary>
-        public readonly NetUserId UserId;
+        public NetUserId UserId => UserData.UserId;
+        public string UserName => UserData.UserName;
 
-        public readonly IPEndPoint IP;
-        public readonly string UserName;
-        public readonly LoginType AuthType;
-
+        public IPEndPoint IP { get; }
+        public LoginType AuthType { get; }
+        
         public void Deny(string reason)
         {
             DenyReason = reason;
@@ -51,10 +53,14 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="userId">The session ID of the incoming connection.</param>
         public NetConnectingArgs(NetUserId userId, IPEndPoint ip, string userName, LoginType authType)
+            : this(new NetUserData(userId, userName), ip, authType)
         {
-            UserId = userId;
+        }
+
+        public NetConnectingArgs(NetUserData data, IPEndPoint ip, LoginType authType)
+        {
+            UserData = data;
             IP = ip;
-            UserName = userName;
             AuthType = authType;
         }
     }

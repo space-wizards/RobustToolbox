@@ -52,6 +52,14 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
+        ///     Remove all markup, leaving only the basic text content behind.
+        /// </summary>
+        public static string RemoveMarkup(string text)
+        {
+            return FromMarkup(text).ToString();
+        }
+
+        /// <summary>
         ///     Create a new <c>FormattedMessage</c> by copying another one.
         /// </summary>
         /// <param name="toCopy">The message to copy.</param>

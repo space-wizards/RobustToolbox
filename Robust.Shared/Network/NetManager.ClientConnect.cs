@@ -205,7 +205,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response);
 
-            var channel = new NetChannel(this, connection, new NetUserId(msgSuc.UserId), msgSuc.UserName, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 

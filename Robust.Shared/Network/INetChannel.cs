@@ -54,6 +54,8 @@ namespace Robust.Shared.Network
         /// </summary>
         bool IsConnected { get; }
 
+        NetUserData UserData { get; }
+
         /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.
         /// </summary>

@@ -159,7 +159,7 @@ namespace Robust.Server.Console
                 _systemConsole.Print(text + "\n");
         }
 
-        private static string FormatPlayerString(IBaseSession? session)
+        private static string FormatPlayerString(ICommonSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
         }

@@ -1,4 +1,5 @@
 #if CLIENT_SCRIPTING
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -172,7 +173,7 @@ namespace Robust.Client.Console
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
                 var msg = new FormattedMessage();
-                msg.AddText(CSharpObjectFormatter.Instance.FormatObject(_state.ReturnValue));
+                msg.AddText(ScriptInstanceShared.SafeFormat(_state.ReturnValue));
                 OutputPanel.AddMessage(msg);
             }
 
@@ -188,7 +189,6 @@ namespace Robust.Client.Console
 
             _autoImportRepeatBuffer = (found.ToArray(), code);
         }
-
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
@@ -215,7 +215,7 @@ namespace Robust.Client.Console
 
             public override void show(object obj)
             {
-                write(CSharpObjectFormatter.Instance.FormatObject(obj));
+                write(ScriptInstanceShared.SafeFormat(obj));
             }
         }
     }

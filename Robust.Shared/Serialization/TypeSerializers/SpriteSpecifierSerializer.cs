@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -12,93 +14,139 @@ namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
     public class SpriteSpecifierSerializer :
-        ITypeReaderWriter<SpriteSpecifier, ValueDataNode>,
-        ITypeReaderWriter<SpriteSpecifier, MappingDataNode>,
-        ITypeCopier<Rsi>,
-        ITypeCopier<Texture>,
-        ITypeCopier<EntityPrototype>
+        ITypeReaderWriter<Texture, ValueDataNode>,
+        ITypeReaderWriter<EntityPrototype, ValueDataNode>,
+        ITypeReaderWriter<Rsi, MappingDataNode>,
+        ITypeReader<SpriteSpecifier, MappingDataNode>,
+        ITypeReader<SpriteSpecifier, ValueDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager,
-            ValueDataNode node, bool skipHook, ISerializationContext? context = null)
+        DeserializationResult ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook, ISerializationContext? context)
         {
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
-            var texture = new Texture(path);
-
-            return new DeserializedValue<SpriteSpecifier>(texture);
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
+            return DeserializationResult.Value(new Texture(path));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
-            ISerializationContext? context = null)
+        DeserializationResult ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook, ISerializationContext? context)
         {
-            return serializationManager.ValidateNode<ResourcePath>(node);
-        }
-
-        public DeserializationResult Read(ISerializationManager serializationManager,
-            MappingDataNode node, bool skipHook, ISerializationContext? context = null)
-        {
-            if (node.TryGetNode("sprite", out var spriteNode)
-                && node.TryGetNode("state", out var rawStateNode)
-                && rawStateNode is ValueDataNode stateNode)
+            try
             {
-                var path = serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context, skipHook);
-                var rsi = new Rsi(path, stateNode.Value);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, context);
+            }
+            catch { /* ignored */ }
 
-                return new DeserializedValue<SpriteSpecifier>(rsi);
+            try
+            {
+                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, context);
+            }
+            catch { /* ignored */ }
+
+            throw new InvalidMappingException(
+                "SpriteSpecifier was neither a Texture nor an EntityPrototype but got provided a valuedatanode");
+        }
+
+        DeserializationResult ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook, ISerializationContext? context)
+        {
+            return DeserializationResult.Value(new EntityPrototype(node.Value));
+        }
+
+        DeserializationResult ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager, MappingDataNode node,
+            bool skipHook, ISerializationContext? context)
+        {
+            if (!node.TryGetNode("sprite", out var pathNode))
+            {
+                throw new InvalidMappingException("Expected sprite-node");
             }
 
-            throw new InvalidNodeTypeException();
+            if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode valueDataNode)
+            {
+                throw new InvalidMappingException("Expected state-node as a valuenode");
+            }
+
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context);
+            return DeserializationResult.Value(new Rsi(path, valueDataNode.Value));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
-            ISerializationContext? context = null)
+
+        DeserializationResult ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager, MappingDataNode node,
+            bool skipHook, ISerializationContext? context)
         {
-            if (!node.HasNode("sprite") ||
-                !node.TryGetNode("state", out var stateNode) ||
-                stateNode is not ValueDataNode)
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, context);
+        }
+
+        ValidatedNode ITypeReader<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context)
+        {
+            var texNode = ((ITypeReader<Texture, ValueDataNode>) this).Validate(serializationManager, node, context);
+            if (texNode is ErrorNode) return texNode;
+
+            var protNode = ((ITypeReader<EntityPrototype, ValueDataNode>) this).Validate(serializationManager, node, context);
+            if (protNode is ErrorNode) return texNode;
+
+            return new ValidatedValueNode(node);
+        }
+
+        ValidatedNode ITypeReader<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context)
+        {
+            return string.IsNullOrWhiteSpace(node.Value) ? new ErrorNode(node) : new ValidatedValueNode(node);
+        }
+
+
+        ValidatedNode ITypeReader<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+            ISerializationContext? context)
+        {
+            return serializationManager.ValidateNode(typeof(ResourcePath), node, context);
+        }
+
+        ValidatedNode ITypeReader<SpriteSpecifier, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
+            ISerializationContext? context)
+        {
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Validate(serializationManager, node, context);
+        }
+
+        ValidatedNode ITypeReader<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
+            ISerializationContext? context)
+        {
+            if (!node.TryGetNode("sprite", out var pathNode))
             {
                 return new ErrorNode(node);
             }
 
-            return serializationManager.ValidateNode<ResourcePath>(stateNode);
-        }
-
-        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,
-            bool alwaysWrite = false,
-            ISerializationContext? context = null)
-        {
-            switch (value)
+            if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode)
             {
-                case Texture tex:
-                    return serializationManager.WriteValue(tex.TexturePath, alwaysWrite, context);
-                case Rsi rsi:
-                    var mapping = new MappingDataNode();
-                    mapping.AddNode("sprite", serializationManager.WriteValue(rsi.RsiPath, alwaysWrite, context));
-                    mapping.AddNode("state", new ValueDataNode(rsi.RsiState));
-                    return mapping;
+                return new ErrorNode(node);
             }
 
-            throw new NotImplementedException();
+            var path = serializationManager.ValidateNode(typeof(ResourcePath), pathNode, context);
+
+            if (path is ErrorNode) return new ErrorNode(node);
+
+            return new ValidatedValueNode(node);
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target,
-            bool skipHook,
+        public DataNode Write(ISerializationManager serializationManager, Texture value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new(source.RsiPath, source.RsiState);
+            return serializationManager.WriteValue(value.TexturePath, alwaysWrite, context);
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target,
-            bool skipHook,
+        public DataNode Write(ISerializationManager serializationManager, EntityPrototype value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new(source.TexturePath);
+            return new ValueDataNode(value.EntityPrototypeId);
         }
 
-        [MustUseReturnValue]
-        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
-            EntityPrototype target, bool skipHook, ISerializationContext? context = null)
+
+        public DataNode Write(ISerializationManager serializationManager, Rsi value, bool alwaysWrite = false,
+            ISerializationContext? context = null)
         {
-            return new(source.EntityPrototypeId);
+            var mapping = new MappingDataNode();
+            mapping.AddNode("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.AddNode("state", new ValueDataNode(value.RsiState));
+            return mapping;
         }
     }
 }

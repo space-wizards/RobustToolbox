@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
+    [CopyByRef]
     public interface IEntity
     {
         GameTick LastModifiedTick { get; }
@@ -40,7 +42,7 @@ namespace Robust.Shared.GameObjects
         ///     True if the entity has been deleted.
         /// </summary>
         bool Deleted { get; }
-        
+
         bool Paused { get; set; }
 
         /// <summary>

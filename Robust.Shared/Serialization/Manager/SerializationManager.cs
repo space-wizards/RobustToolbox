@@ -539,30 +539,28 @@ namespace Robust.Shared.Serialization.Manager
             return copy == null ? default : (T?) copy;
         }
 
-        private object? CreateCopyInternal(object? source, ISerializationContext? context = null, bool skipHook = false)
+        private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)
         {
             if (source == null) return source;
 
-            var type = source.GetType();
-
-            if (type.IsPrimitive || type.IsEnum || source is string)
+            if (type.IsPrimitive || type.IsEnum || source is string || _copyByRefRegistrations.Contains(type))
             {
                 return source;
             }
 
-            //todo paul checks here
             var target = Activator.CreateInstance(source.GetType())!;
             return Copy(source, target, context, skipHook);
         }
 
         public object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false)
         {
-            return CreateCopyInternal(source, context, skipHook);
+            if (source == null) return null;
+            return CreateCopyInternal(source.GetType(), source, context, skipHook);
         }
 
         public T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false)
         {
-            var copy = CreateCopyInternal(source, context, skipHook);
+            var copy = CreateCopyInternal(typeof(T), source, context, skipHook);
 
             if (copy == null)
             {

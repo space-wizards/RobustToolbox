@@ -3,8 +3,7 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager
 {
-    //todo paul make this actually usable
-    //todo paul allow generics
+    //todo paul make this actually not kanser to use holy moly (& allow generics)
     public interface ISerializationContext
     {
         Dictionary<(Type, Type), object> TypeReaders { get; }

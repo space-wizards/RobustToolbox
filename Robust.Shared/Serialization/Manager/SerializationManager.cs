@@ -55,7 +55,7 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
             {
-                registrations.Add(baseType);
+                if (!baseType.IsAbstract && !baseType.IsInterface && !baseType.IsGenericTypeDefinition) registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
                     if (child.IsAbstract || child.IsInterface || child.IsGenericTypeDefinition) continue;
@@ -536,12 +536,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var copy = CopyToTarget(source, target, context, skipHook);
 
-            if (copy == null)
-            {
-                return default;
-            }
-
-            return (T?) copy;
+            return copy == null ? default : (T?) copy;
         }
 
         private object? CreateCopyInternal(object? source, ISerializationContext? context = null, bool skipHook = false)

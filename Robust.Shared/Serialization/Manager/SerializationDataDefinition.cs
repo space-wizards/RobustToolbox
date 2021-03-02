@@ -105,7 +105,6 @@ namespace Robust.Shared.Serialization.Manager
                 .ToArray();
 
             var fields = fieldDefs;
-            //todo paul write a test for this
             fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
             _baseFieldDefinitions = fields.ToArray();
             _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();

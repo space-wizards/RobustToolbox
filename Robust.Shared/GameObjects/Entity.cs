@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -16,11 +16,11 @@ namespace Robust.Shared.GameObjects
         #region Members
 
         /// <inheritdoc />
-        public IEntityManager EntityManager { get; private set; } = default!;
+        public IEntityManager EntityManager { get; }
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityUid Uid { get; private set; }
+        public EntityUid Uid { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects
             get => _paused;
             set
             {
-                if (_paused == value || value && HasComponent<SharedIgnorePauseComponent>())
+                if (_paused == value || value && HasComponent<IgnorePauseComponent>())
                     return;
 
                 _paused = value;
@@ -106,47 +106,16 @@ namespace Robust.Shared.GameObjects
 
         #region Initialization
 
-        /// <summary>
-        ///     Sets fundamental managers after the entity has been created.
-        /// </summary>
-        /// <remarks>
-        ///     This is a separate method because C# makes constructors painful.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has initialized managers.
-        /// </exception>
-        public void SetManagers(IEntityManager entityManager)
+        public Entity(IEntityManager entityManager, EntityUid uid)
         {
-            if (EntityManager != null)
-            {
-                throw new InvalidOperationException("Entity already has initialized managers.");
-            }
-
             EntityManager = entityManager;
+            Uid = uid;
         }
 
         /// <inheritdoc />
         public bool IsValid()
         {
             return !Deleted;
-        }
-
-        /// <summary>
-        ///     Initialize the entity's UID. This can only be called once.
-        /// </summary>
-        /// <param name="uid">The new UID.</param>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has a UID.
-        /// </exception>
-        public void SetUid(EntityUid uid)
-        {
-            if (!uid.IsValid())
-                throw new ArgumentException("Uid is not valid.", nameof(uid));
-
-            if (Uid.IsValid())
-                throw new InvalidOperationException("Entity already has a UID.");
-
-            Uid = uid;
         }
 
         /// <summary>

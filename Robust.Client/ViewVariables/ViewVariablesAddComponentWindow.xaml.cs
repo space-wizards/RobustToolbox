@@ -13,8 +13,6 @@ namespace Robust.Client.ViewVariables
     [GenerateTypedNameReferences]
     public partial class ViewVariablesAddComponentWindow : SS14Window
     {
-        protected override Vector2? CustomSize => (200f, 300f);
-
         private string? _lastSearch;
         private string[] _components = Array.Empty<string>();
 
@@ -32,6 +30,8 @@ namespace Robust.Client.ViewVariables
             AddButton.OnPressed += OnAddButtonPressed;
 
             Populate(components);
+
+            SetSize = (200, 300);
         }
 
         private void RefreshAddButton()

@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
@@ -28,16 +29,12 @@ namespace Robust.Server.GameObjects
 
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysicsComponent>();
-            Register<PointLightComponent>();
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();

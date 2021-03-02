@@ -93,17 +93,17 @@ namespace Robust.Shared.GameObjects
             // Check that there are no overlapping references.
             foreach (var type in reg.References)
             {
-                if (!TryGetComponent(uid, type, out var duplicate)) continue;
+                var dict = _entTraitDict[type];
+                if (!dict.TryGetValue(uid, out var duplicate))
+                    continue;
 
-                if (!overwrite)
+                if (!overwrite && !duplicate.Deleted)
                     throw new InvalidOperationException(
                         $"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
                 if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
-                {
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
-                }
 
                 RemoveComponentImmediate((Component) duplicate);
             }
@@ -129,9 +129,12 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
 
-            var defaultSerializer = DefaultValueSerializer.Reader();
-            defaultSerializer.CurrentType = component.GetType();
-            component.ExposeData(defaultSerializer);
+            if (entity.Initialized || entity.Initializing)
+            {
+                var defaultSerializer = DefaultValueSerializer.Reader();
+                defaultSerializer.CurrentType = component.GetType();
+                component.ExposeData(defaultSerializer);
+            }
 
             _componentDependencyManager.OnComponentAdd(entity, component);
 
@@ -262,18 +265,20 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Deleted) return;
-
-            // these two components are required on all entities and cannot be removed.
-            if (component is ITransformComponent || component is IMetaDataComponent)
+            if (!component.Deleted)
             {
-                DebugTools.Assert("Tried to remove a protected component.");
-                return;
-            }
+                // these two components are required on all entities and cannot be removed.
+                if (component is ITransformComponent || component is IMetaDataComponent)
+                {
+                    DebugTools.Assert("Tried to remove a protected component.");
+                    return;
+                }
 
-            component.Running = false;
-            component.OnRemove();
-            ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
+                component.Running = false;
+                component.OnRemove(); // Sets delete
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
+
+            }
 
             DeleteComponent(component);
         }

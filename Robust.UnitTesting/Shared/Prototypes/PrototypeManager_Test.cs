@@ -1,5 +1,6 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -12,12 +13,15 @@ namespace Robust.UnitTesting.Shared.Prototypes
     [TestFixture]
     public class PrototypeManager_Test : RobustUnitTest
     {
+        private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
+
         [OneTimeSetUp]
         public void Setup()
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.Register<TestBasicPrototypeComponent>();
+            factory.RegisterClass<PointLightComponent>();
 
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));
@@ -97,6 +101,16 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.PlacementMode, Is.EqualTo("SnapgridCenter"));
         }
 
+        [Test]
+        public void TestLoadString()
+        {
+            manager.LoadString(LoadStringDocument);
+
+            var prototype = manager.Index<EntityPrototype>(LoadStringTestDummyId);
+
+            Assert.That(prototype.Name, Is.EqualTo(LoadStringTestDummyId));
+        }
+
         private enum YamlTestEnum : byte
         {
             Foo,
@@ -159,6 +173,11 @@ namespace Robust.UnitTesting.Shared.Prototypes
   placement:
     mode: SnapgridCenter
 ";
+
+        private static readonly string LoadStringDocument = $@"
+- type: entity
+  id: {LoadStringTestDummyId}
+  name: {LoadStringTestDummyId}";
     }
 
     public class TestBasicPrototypeComponent : Component

@@ -11,13 +11,11 @@ namespace Robust.Client.UserInterface.Controls
         private FormattedMessage? _message;
         private RichTextEntry _entry;
 
-        public float? MaxWidth { get; set; }
-
         public void SetMessage(FormattedMessage message)
         {
             _message = message;
             _entry = new RichTextEntry(_message);
-            _updateEntry();
+            InvalidateMeasure();
         }
 
         public void SetMessage(string message)
@@ -27,42 +25,17 @@ namespace Robust.Client.UserInterface.Controls
             SetMessage(msg);
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_message == null)
             {
                 return Vector2.Zero;
             }
 
-            var width = 0f;
-            if (MaxWidth.HasValue)
-            {
-                width = _entry.Width / UIScale;
-            }
-            return (width, _entry.Height / UIScale);
-        }
-
-        private void _updateEntry()
-        {
             var font = _getFont();
+            _entry.Update(font, availableSize.X * UIScale, UIScale);
 
-            if (_message != null)
-            {
-                var oldHeight = _entry.Height;
-                var oldWidth = _entry.Width;
-                _entry.Update(font, (MaxWidth ?? Width) * UIScale, UIScale);
-                if (oldHeight != _entry.Height || MaxWidth != null && _entry.Width != oldWidth)
-                {
-                    MinimumSizeChanged();
-                }
-            }
-        }
-
-        protected override void StylePropertiesChanged()
-        {
-            base.StylePropertiesChanged();
-
-            _updateEntry();
+            return (_entry.Width / UIScale, _entry.Height / UIScale);
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
@@ -75,13 +48,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>(), UIScale);
-        }
-
-        protected override void Resized()
-        {
-            base.Resized();
-
-            _updateEntry();
         }
 
         [Pure]

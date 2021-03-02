@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype, IIndexedPrototype
+    public sealed class ShaderPrototype : IPrototype
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;

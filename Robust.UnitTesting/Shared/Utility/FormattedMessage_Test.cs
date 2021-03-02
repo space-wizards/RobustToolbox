@@ -52,5 +52,14 @@ namespace Robust.UnitTesting.Shared.Utility
                 string.Join("", msg.Tags.Cast<FormattedMessage.TagText>().Select(p => p.Text)),
                 NUnit.Framework.Is.EqualTo(text));
         }
+
+        [Test]
+        [TestCase("Foo", ExpectedResult = "Foo")]
+        [TestCase("[color=red]Foo[/color]", ExpectedResult = "Foo")]
+        [TestCase("[color=red]Foo[/color]bar", ExpectedResult = "Foobar")]
+        public string TestRemoveMarkup(string test)
+        {
+            return FormattedMessage.RemoveMarkup(test);
+        }
     }
 }

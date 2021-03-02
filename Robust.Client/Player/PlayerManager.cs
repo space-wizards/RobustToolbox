@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Configuration;
@@ -8,6 +8,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -31,6 +32,21 @@ namespace Robust.Client.Player
         private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new();
 
         /// <inheritdoc />
+        public IEnumerable<ICommonSession> NetworkedSessions
+        {
+            get
+            {
+                if (LocalPlayer is not null)
+                    return new[] {LocalPlayer.Session};
+
+                return Enumerable.Empty<ICommonSession>();
+            }
+        }
+
+        /// <inheritdoc />
+        IEnumerable<ICommonSession> ISharedPlayerManager.Sessions => _sessions.Values;
+
+        /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
 
         /// <inheritdoc />
@@ -52,9 +68,9 @@ namespace Robust.Client.Player
         private LocalPlayer? _localPlayer;
         public event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
 
-
         /// <inheritdoc />
-        [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
+        [ViewVariables]
+        IEnumerable<IPlayerSession> IPlayerManager.Sessions => _sessions.Values;
 
         /// <inheritdoc />
         public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;

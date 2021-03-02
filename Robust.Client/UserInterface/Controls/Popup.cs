@@ -30,7 +30,7 @@ namespace Robust.Client.UserInterface.Controls
                 PopupContainer.SetAltOrigin(this, altPos);
 
                 _desiredSize = box.Value.Size;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
 
             Visible = true;
@@ -52,9 +52,11 @@ namespace Robust.Client.UserInterface.Controls
             OnPopupHide?.Invoke();
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
-            return Vector2.ComponentMax(_desiredSize, base.CalculateMinimumSize());
+            return Vector2.ComponentMax(
+                _desiredSize,
+                base.MeasureOverride(Vector2.ComponentMax(availableSize, _desiredSize)));
         }
     }
 }

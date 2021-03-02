@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
@@ -49,7 +49,25 @@ namespace Robust.Client.GameObjects
         ///     Rotation transformations on individual layers still apply.
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
+        [Obsolete("Use NoRotation and/or DirectionOverride")]
         bool Directional { get; set; }
+
+        /// <summary>
+        /// All sprite rotation is locked, and will always be drawn upright on
+        /// the screen, regardless of world or view orientation.
+        /// </summary>
+        bool NoRotation {get; set; }
+
+        /// <summary>
+        /// Enables overriding the calculated directional RSI state for this sprite.
+        /// The state to use is defined in <see cref="DirectionOverride"/>.
+        /// </summary>
+        bool EnableDirectionOverride { get; set; }
+
+        /// <summary>
+        /// The directional RSI state that will always be displayed, regardless of orientation.
+        /// </summary>
+        Direction DirectionOverride { get; set; }
 
         // NOTE: The below are ALL designed to NOT throw exceptions ever,
         // instead making a bunch of noisy error logs.
@@ -63,6 +81,8 @@ namespace Robust.Client.GameObjects
         ShaderInstance? PostShader { get; set; }
         uint RenderOrder { get; set; }
         bool IsInert { get; }
+
+        Matrix3 GetLocalMatrix();
 
         /// <summary>
         ///     Sets a layer key to the layer map, creating it if it does not exist.
@@ -202,5 +222,12 @@ namespace Robust.Client.GameObjects
         ISpriteLayer this[object layerKey] { get; }
 
         IEnumerable<ISpriteLayer> AllLayers { get; }
+
+        int GetLayerDirectionCount(ISpriteLayer layer);
+
+        /// <summary>
+        ///     Calculate sprite bounding box in world-space coordinates.
+        /// </summary>
+        Box2 CalculateBoundingBox();
     }
 }

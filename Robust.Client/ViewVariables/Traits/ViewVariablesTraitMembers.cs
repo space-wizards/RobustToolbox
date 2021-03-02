@@ -86,7 +86,7 @@ namespace Robust.Client.ViewVariables.Traits
         {
             if (!first)
             {
-                container.AddChild(new Control {CustomMinimumSize = (0, 16)});
+                container.AddChild(new Control {MinSize = (0, 16)});
             }
 
             first = false;

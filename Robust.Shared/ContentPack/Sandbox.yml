@@ -407,10 +407,16 @@ Types:
       - "System.Reflection.Assembly GetAssembly(System.Type)"
       - "System.Reflection.Assembly GetExecutingAssembly()"
       - "System.Type[] GetTypes()"
+      - "System.Reflection.AssemblyName GetName()"
     AssemblyCompanyAttribute: { All: True }
     AssemblyConfigurationAttribute: { All: True }
     AssemblyFileVersionAttribute: { All: True }
     AssemblyInformationalVersionAttribute: { All: True }
+    AssemblyName:
+      Methods:
+      - "string get_FullName()"
+      - "System.Version get_Version()"
+      - "string get_Name()"
     AssemblyProductAttribute: { All: True }
     AssemblyTitleAttribute: { All: True }
     DefaultMemberAttribute: { All: True }
@@ -864,6 +870,7 @@ Types:
     IDisposable: { All: True }
     IEquatable`1: { }
     IFormatProvider: { All: True }
+    IFormattable: { All: True }
     IndexOutOfRangeException: { All: True }
     Int16: { All: True }
     Int32: { All: True }
@@ -1273,6 +1280,7 @@ Types:
     ValueTuple`7: { All: True }
     ValueTuple`8: { All: True }
     ValueType: { All: True }
+    Version: { All: True }
     Void: { All: True }
   YamlDotNet.Core.Events:
     MappingStyle: { } # Enum

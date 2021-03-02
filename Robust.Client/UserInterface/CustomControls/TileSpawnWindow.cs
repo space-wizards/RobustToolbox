@@ -25,8 +25,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private bool _clearingSelections;
 
-        protected override Vector2? CustomSize => (300, 300);
-
         public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
             IResourceCache resourceCache)
         {
@@ -38,7 +36,7 @@ namespace Robust.Client.UserInterface.CustomControls
             Contents.AddChild(vBox);
             var hBox = new HBoxContainer();
             vBox.AddChild(hBox);
-            SearchBar = new LineEdit {PlaceHolder = "Search", SizeFlagsHorizontal = SizeFlags.FillExpand};
+            SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
             hBox.AddChild(SearchBar);
 
@@ -46,7 +44,7 @@ namespace Robust.Client.UserInterface.CustomControls
             ClearButton.OnPressed += OnClearButtonPressed;
             hBox.AddChild(ClearButton);
 
-            TileList = new ItemList {SizeFlagsVertical = SizeFlags.FillExpand};
+            TileList = new ItemList {VerticalExpand = true};
             TileList.OnItemSelected += TileListOnOnItemSelected;
             TileList.OnItemDeselected += TileListOnOnItemDeselected;
             vBox.AddChild(TileList);
@@ -57,6 +55,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Title = "Place Tiles";
             SearchBar.GrabKeyboardFocus();
+
+            SetSize = (300, 300);
         }
 
         protected override void Dispose(bool disposing)

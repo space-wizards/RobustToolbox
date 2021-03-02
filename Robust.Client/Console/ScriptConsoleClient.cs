@@ -1,5 +1,8 @@
 #if CLIENT_SCRIPTING
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
@@ -36,6 +39,8 @@ namespace Robust.Client.Console
         private readonly ScriptGlobals _globals;
         private ScriptState? _state;
 
+        private (string[] imports, string code)? _autoImportRepeatBuffer;
+
         public ScriptConsoleClient()
         {
             Title = Loc.GetString("Robust C# Interactive (CLIENT)");
@@ -54,38 +59,56 @@ namespace Robust.Client.Console
             var code = InputBar.Text;
             InputBar.Clear();
 
-            // Remove > or . at the end of the output panel.
-            OutputPanel.RemoveEntry(^1);
-
-            _inputBuffer.AppendLine(code);
-            _linesEntered += 1;
-
-            var tree = SyntaxFactory.ParseSyntaxTree(SourceText.From(_inputBuffer.ToString()), ScriptInstanceShared.ParseOptions);
-
-            if (!SyntaxFactory.IsCompleteSubmission(tree))
+            if (_autoImportRepeatBuffer.HasValue && code == "y")
             {
-                if (_linesEntered == 1)
+                var (imports, repeatCode) = _autoImportRepeatBuffer.Value;
+                var sb = new StringBuilder();
+                foreach (var import in imports)
                 {
-                    OutputPanel.AddText($"> {code}");
+                    sb.AppendFormat("using {0};\n", import);
                 }
-                else
-                {
-                    OutputPanel.AddText($". {code}");
-                }
-                OutputPanel.AddText(".");
-                return;
+
+                sb.Append(repeatCode);
+
+                code = sb.ToString();
             }
-
-            code = _inputBuffer.ToString().Trim();
-
-            // Remove echo of partial submission from the output panel.
-            for (var i = 1; i < _linesEntered; i++)
+            else
             {
+                // Remove > or . at the end of the output panel.
                 OutputPanel.RemoveEntry(^1);
-            }
 
-            _inputBuffer.Clear();
-            _linesEntered = 0;
+                _inputBuffer.AppendLine(code);
+                _linesEntered += 1;
+
+                var tree = SyntaxFactory.ParseSyntaxTree(SourceText.From(_inputBuffer.ToString()),
+                    ScriptInstanceShared.ParseOptions);
+
+                if (!SyntaxFactory.IsCompleteSubmission(tree))
+                {
+                    if (_linesEntered == 1)
+                    {
+                        OutputPanel.AddText($"> {code}");
+                    }
+                    else
+                    {
+                        OutputPanel.AddText($". {code}");
+                    }
+
+                    OutputPanel.AddText(".");
+                    return;
+                }
+
+                code = _inputBuffer.ToString().Trim();
+
+                // Remove echo of partial submission from the output panel.
+                for (var i = 1; i < _linesEntered; i++)
+                {
+                    OutputPanel.RemoveEntry(^1);
+                }
+
+                _inputBuffer.Clear();
+                _linesEntered = 0;
+            }
 
             Script newScript;
 
@@ -135,6 +158,8 @@ namespace Robust.Client.Console
 
                 OutputPanel.AddMessage(msg);
                 OutputPanel.AddText(">");
+
+                PromptAutoImports(e.Diagnostics, code);
                 return;
             }
 
@@ -148,11 +173,21 @@ namespace Robust.Client.Console
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
                 var msg = new FormattedMessage();
-                msg.AddText(CSharpObjectFormatter.Instance.FormatObject(_state.ReturnValue));
+                msg.AddText(ScriptInstanceShared.SafeFormat(_state.ReturnValue));
                 OutputPanel.AddMessage(msg);
             }
 
             OutputPanel.AddText(">");
+        }
+
+        private void PromptAutoImports(IEnumerable<Diagnostic> diags, string code)
+        {
+            if (!ScriptInstanceShared.CalcAutoImports(_reflectionManager, diags, out var found))
+                return;
+
+            OutputPanel.AddText($"Auto-import {string.Join(", ", found)} (enter 'y')?");
+
+            _autoImportRepeatBuffer = (found.ToArray(), code);
         }
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
@@ -180,7 +215,7 @@ namespace Robust.Client.Console
 
             public override void show(object obj)
             {
-                write(CSharpObjectFormatter.Instance.FormatObject(obj));
+                write(ScriptInstanceShared.SafeFormat(obj));
             }
         }
     }

@@ -39,8 +39,6 @@ namespace Robust.Client.Graphics.Clyde
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
 
-        private RenderTexture EntityPostRenderTarget = default!;
-
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
         private GLHandle BatchVAO;
@@ -88,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
-            
+
             _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
@@ -151,6 +149,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {
@@ -313,10 +313,6 @@ namespace Robust.Client.Graphics.Clyde
 
             ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
-
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: nameof(EntityPostRenderTarget));
 
             CreateMainViewport();
 

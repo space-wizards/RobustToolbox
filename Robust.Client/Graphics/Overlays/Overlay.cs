@@ -30,11 +30,6 @@ namespace Robust.Client.Graphics
         public Texture? ScreenTexture = null;
 
         /// <summary>
-        ///     If set to true, the results of this overlay will entirely overwrite the framebuffer it is overlayed onto. 
-        /// </summary>
-        public virtual bool OverwriteTargetFrameBuffer => false;
-
-        /// <summary>
         ///    Overlays on the same OverlaySpace will be drawn from lowest ZIndex to highest ZIndex. As an example, ZIndex -1 will be drawn before ZIndex 2.
         ///    This value is 0 by default. Overlays with same ZIndex will be drawn in an random order.
         /// </summary>
@@ -44,9 +39,16 @@ namespace Robust.Client.Graphics
 
         private bool Disposed = false;
 
-        protected Overlay()
+        public Overlay()
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
+        }
+
+        /// <summary>
+        ///     If this function returns true, the target framebuffer will be wiped before applying this overlay to it.
+        /// </summary>
+        public virtual bool OverwriteTargetFrameBuffer(){
+            return false;
         }
 
         /// <summary>

@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                         FlushRenderQueue();
                         UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
                     }
-                    if (overlay.OverwriteTargetFrameBuffer) {
+                    if (overlay.OverwriteTargetFrameBuffer()) {
                         ClearFramebuffer(default);
                     }
                     overlay.ClydeRender(_renderHandle, space);
@@ -131,7 +131,7 @@ namespace Robust.Client.Graphics.Clyde
         ///    Sends SCREEN_TEXTURE to all overlays in the given OverlaySpace that request it.
         /// </summary>
         private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
-            //This currently does NOT consider viewports. This will need to be improved upon in the future.
+            //This currently does NOT consider viewports and just grabs the current screen framebuffer. This will need to be improved upon in the future.
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
                 if (overlay.RequestScreenTexture && overlay.Space == space) {
@@ -154,6 +154,28 @@ namespace Robust.Client.Graphics.Clyde
             }
             return false;
         }
+
+
+
+
+
+        public Texture? GetScreenTexture(){
+            if (lastFrameSize != _framebufferSize) {
+                GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
+                    PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+            }
+            lastFrameSize = _framebufferSize;
+            CopyRenderTextureToTexture(texture, ScreenBufferTexture);
+            foreach (Overlay overlay in oTargets) {
+                overlay.ScreenTexture = ScreenBufferTexture;
+            }
+            o
+        }
+
+
+
+
 
         private void DrawEntities(Viewport viewport, Box2 worldBounds)
         {

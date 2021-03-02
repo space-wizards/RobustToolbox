@@ -363,7 +363,6 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private Dictionary<AtlasTexture, ClydeTexture> atlasCache = new Dictionary<AtlasTexture, ClydeTexture>();
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];

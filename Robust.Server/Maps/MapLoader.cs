@@ -280,13 +280,13 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
-                TypeWriters = new()
+                TypeWriters = new Dictionary<Type, object>()
                 {
                     {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
-                TypeReaders = new()
+                TypeReaders = new Dictionary<(Type, Type), object>()
                 {
                     {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},
@@ -309,13 +309,13 @@ namespace Robust.Server.Maps
                 RootNode = node;
                 TargetMap = targetMapId;
                 _prototypeManager = prototypeManager;
-                TypeWriters = new()
+                TypeWriters = new Dictionary<Type, object>()
                 {
                     {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
-                TypeReaders = new()
+                TypeReaders = new Dictionary<(Type, Type), object>()
                 {
                     {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},

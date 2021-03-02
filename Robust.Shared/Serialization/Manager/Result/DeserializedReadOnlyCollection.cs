@@ -35,7 +35,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 foreach (var oldRes in sourceCollection.Mappings)
                 {
                     var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                    valueList.Add(newRes.Value);
+                    valueList.Add(newRes.Value!);
                     resList.Add(newRes);
                 }
             }
@@ -45,7 +45,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 foreach (var oldRes in Mappings)
                 {
                     var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                    valueList.Add(newRes.Value);
+                    valueList.Add(newRes.Value!);
                     resList.Add(newRes);
                 }
             }
@@ -61,7 +61,7 @@ namespace Robust.Shared.Serialization.Manager.Result
             foreach (var oldRes in Mappings)
             {
                 var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                valueList.Add(newRes.Value);
+                valueList.Add(newRes.Value!);
                 resList.Add(newRes);
             }
 

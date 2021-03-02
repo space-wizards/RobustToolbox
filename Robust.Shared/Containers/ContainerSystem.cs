@@ -1,9 +1,10 @@
 using Robust.Shared.GameObjects;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.Containers
 {
-    internal sealed class ContainerSystem : EntitySystem
+    public class ContainerSystem : EntitySystem
     {
+        /// <inheritdoc />
         public override void Initialize()
         {
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
@@ -18,9 +19,7 @@ namespace Robust.Server.GameObjects
                 return;
 
             if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))
-            {
                 containerManager.ForceRemove(message.Entity);
-            }
         }
     }
 }

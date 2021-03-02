@@ -207,7 +207,7 @@ namespace Robust.Client.Player
                     if (state.UserId == LocalPlayer!.UserId)
                     {
                         LocalPlayer.InternalSession = newSession;
-
+                        newSession.ConnectedClient = _network.ServerChannel!;
                         // We just connected to the server, hurray!
                         LocalPlayer.SwitchState(SessionStatus.Connecting, newSession.Status);
                     }

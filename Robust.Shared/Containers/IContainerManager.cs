@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.Containers
 {
     /// <summary>
     /// Manages containers on an entity.
@@ -17,7 +18,8 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">The type of the new container</typeparam>
         /// <returns>The new container.</returns>
         /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID</exception>
-        T MakeContainer<T>(string id) where T: IContainer;
+        T MakeContainer<T>(string id)
+            where T : IContainer;
 
         /// <summary>
         /// Attempts to remove <paramref name="entity" /> contained inside the owning entity,
@@ -32,7 +34,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="id">The ID to look up.</param>
         /// <returns>The container.</returns>
-        /// <exception cref="KeyNotFoundException" >Thrown if the container does not exist.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown if the container does not exist.</exception>
         IContainer GetContainer(string id);
 
         /// <summary>
@@ -64,7 +66,7 @@ namespace Robust.Shared.GameObjects
         void ForceRemove(IEntity entity);
 
         /// <summary>
-        ///     DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown"/> instead.
+        /// DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown" /> instead.
         /// </summary>
         void InternalContainerShutdown(IContainer container);
     }

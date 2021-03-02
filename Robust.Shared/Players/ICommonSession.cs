@@ -38,5 +38,14 @@ namespace Robust.Shared.Players
         /// Current connection latency of this session from the server to their client.
         /// </summary>
         short Ping { get; internal set; }
+
+        /// <summary>
+        /// The current network channel for this player.
+        /// </summary>
+        /// <remarks>
+        /// On the Server every player has a network channel,
+        /// on the Client only the LocalPlayer has a network channel.
+        /// </remarks>
+        INetChannel ConnectedClient { get; }
     }
 }

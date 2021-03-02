@@ -1,3 +1,4 @@
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Physics;
 
@@ -48,9 +49,6 @@ namespace Robust.Client.GameObjects
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
 
             Register<AnimationPlayerComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<TimerComponent>();
 

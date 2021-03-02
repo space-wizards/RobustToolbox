@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects
 {
-    public class ContainerSystem : EntitySystem
+    public class ClientContainerSystem : ContainerSystem
     {
         private readonly HashSet<IEntity> _updateQueue = new();
 
@@ -90,15 +90,5 @@ namespace Robust.Client.GameObjects
                 }
             }
         }
-    }
-
-    internal readonly struct UpdateContainerOcclusionMessage
-    {
-        public UpdateContainerOcclusionMessage(IEntity entity)
-        {
-            Entity = entity;
-        }
-
-        public IEntity Entity { get; }
     }
 }

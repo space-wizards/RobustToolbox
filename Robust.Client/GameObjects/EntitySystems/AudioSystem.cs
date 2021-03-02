@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -11,12 +10,13 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : EntitySystem
+    public class AudioSystem : EntitySystem, IAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -25,9 +25,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly List<PlayingStream> _playingClydeStreams = new();
-
-        public int OcclusionCollisionMask;
-
+        
         /// <inheritdoc />
         public override void Initialize()
         {
@@ -35,6 +33,8 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
             SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+            SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
@@ -176,7 +176,6 @@ namespace Robust.Client.GameObjects
         {
             stream.Source.Dispose();
             stream.Done = true;
-            stream.DoPlaybackDone();
         }
 
         /// <summary>
@@ -335,92 +334,30 @@ namespace Robust.Client.GameObjects
             {
                 Source.StopPlaying();
             }
-
-            public event Action? PlaybackDone;
-
-            public void DoPlaybackDone()
-            {
-                PlaybackDone?.Invoke();
-            }
-        }
-    }
-
-    public interface IPlayingAudioStream
-    {
-        void Stop();
-
-        event Action PlaybackDone;
-    }
-
-    public static class AudioSystemExtensions
-    {
-
-        /// <summary>
-        ///     Play an audio file following an entity.
-        /// </summary>
-        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-        /// <param name="entity">The entity "emitting" the audio.</param>
-        /// <param name="audioParams"></param>
-        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
-        public static IPlayingAudioStream? Play(
-            this IEntity entity,
-            string filename,
-            AudioParams? audioParams,
-            AudioSystem? audioSystem = null)
-        {
-            audioSystem ??= EntitySystem.Get<AudioSystem>();
-            return audioSystem.Play(filename, entity, audioParams);
         }
 
-        /// <summary>
-        ///     Play an audio stream following an entity.
-        /// </summary>
-        /// <param name="stream">The audio stream to play.</param>
-        /// <param name="entity">The entity "emitting" the audio.</param>
-        /// <param name="audioParams"></param>
-        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
-        public static IPlayingAudioStream? Play(
-            this IEntity entity,
-            AudioStream stream,
-            AudioParams? audioParams = null,
-            AudioSystem? audioSystem = null)
+        /// <inheritdoc />
+        public int DefaultSoundRange => 25;
+
+        /// <inheritdoc />
+        public int OcclusionCollisionMask { get; set; }
+
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
         {
-            audioSystem ??= EntitySystem.Get<AudioSystem>();
-            return audioSystem.Play(stream, entity, audioParams);
+            return Play(filename, audioParams);
         }
 
-        /// <summary>
-        ///     Play an audio file at a static position.
-        /// </summary>
-        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-        /// <param name="coordinates">The coordinates at which to play the audio.</param>
-        /// <param name="audioParams"></param>
-        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
-        public static IPlayingAudioStream? Play(
-            this EntityCoordinates coordinates,
-            string filename,
-            AudioParams? audioParams = null,
-            AudioSystem? audioSystem = null)
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            audioSystem ??= EntitySystem.Get<AudioSystem>();
-            return audioSystem.Play(filename, coordinates, audioParams);
+            return Play(filename, entity, audioParams);
         }
 
-        /// <summary>
-        ///     Play an audio stream at a static position.
-        /// </summary>
-        /// <param name="stream">The audio stream to play.</param>
-        /// <param name="coordinates">The coordinates at which to play the audio.</param>
-        /// <param name="audioParams"></param>
-        /// <param name="audioSystem">A pre-fetched instance of <see cref="AudioSystem"/> to use, can be null.</param>
-        public static IPlayingAudioStream? Play(
-            this EntityCoordinates coordinates,
-            AudioStream stream,
-            AudioParams? audioParams = null,
-            AudioSystem? audioSystem = null)
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
-            audioSystem ??= EntitySystem.Get<AudioSystem>();
-            return audioSystem.Play(stream, coordinates, audioParams);
+            return Play(filename, coordinates, audioParams);
         }
     }
 }

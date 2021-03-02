@@ -37,7 +37,6 @@ namespace Robust.Shared.Serialization.Manager
         /// <summary>
         ///     Validates that a node has all the properties required by a certain type with its serializer.
         /// </summary>
-        /// <param name="type">The type to check for.</param>
         /// <param name="node">The node to check.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <returns>
@@ -51,6 +50,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     populating the object.
         /// </summary>
         /// <param name="fields">The fields to use for deserialization.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type to populate.</typeparam>
         /// <returns>A result with the populated type.</returns>
         DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false) where T : notnull, new();
@@ -61,6 +61,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </summary>
         /// <param name="obj">The object to populate.</param>
         /// <param name="definition">The data to use for deserialization.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of <see cref="obj"/> to populate.</typeparam>
         /// <returns>A result with the populated object.</returns>
         DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false) where T : notnull, new();
@@ -71,6 +72,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </summary>
         /// <param name="obj">The object to populate.</param>
         /// <param name="definition">The data to use for deserialization.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A result with the populated object.</returns>
         DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false);
 
@@ -154,6 +156,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="source">The object to copy values from.</param>
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>
         ///     The object with the copied values.
         ///     This object is not necessarily the same instance as the one passed
@@ -170,6 +173,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="source">The object to copy values from.</param>
         /// <param name="target">The object to copy values into.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the objects to copy from and into.</typeparam>
         /// <returns>
         ///     The object with the copied values.
@@ -184,6 +188,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </summary>
         /// <param name="source">The object to copy.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A copy of the given object.</returns>
         object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false);
 
@@ -192,6 +197,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </summary>
         /// <param name="source">The object to copy.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
         T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false);

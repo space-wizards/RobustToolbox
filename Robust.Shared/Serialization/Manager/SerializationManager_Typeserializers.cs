@@ -197,7 +197,7 @@ namespace Robust.Shared.Serialization.Manager
 
             obj = null;
 
-            var arr = new object?[] {node, obj, context, skipHook};
+            var arr = new object?[] {node, obj, skipHook, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
@@ -335,7 +335,7 @@ namespace Robust.Shared.Serialization.Manager
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryCopyWithTypeCopier) && m.GetParameters().Length == 4).MakeGenericMethod(type, source.GetType(), target.GetType());
 
-            var arr = new[] {source, target, context, skipHook};
+            var arr = new[] {source, target, skipHook, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)

@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -158,6 +159,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     This object is not necessarily the same instance as the one passed
         ///     as <see cref="target"/>.
         /// </returns>
+        [MustUseReturnValue]
         object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
@@ -174,6 +176,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     This object is not necessarily the same instance as the one passed
         ///     as <see cref="target"/>.
         /// </returns>
+        [MustUseReturnValue]
         T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -520,11 +521,13 @@ namespace Robust.Shared.Serialization.Manager
             return target;
         }
 
+        [MustUseReturnValue]
         public object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
         {
             return CopyToTarget(source, target, context, skipHook);
         }
 
+        [MustUseReturnValue]
         public T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false)
         {
             var copy = CopyToTarget(source, target, context, skipHook);

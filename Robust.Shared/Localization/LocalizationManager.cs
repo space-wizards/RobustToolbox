@@ -427,7 +427,9 @@ namespace Robust.Shared.Localization
 
             var root = new ResourcePath($"/Locale/{culture.Name}/");
 
-            var files = resourceManager.ContentFindFiles(root).ToArray();
+            var files = resourceManager.ContentFindFiles(root)
+                .Where(c => c.Filename.EndsWith(".ftl", StringComparison.InvariantCultureIgnoreCase))
+                .ToArray();
 
             var resources = files.AsParallel().Select(path =>
             {

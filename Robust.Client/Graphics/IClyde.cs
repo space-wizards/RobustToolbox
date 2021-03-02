@@ -112,10 +112,5 @@ namespace Robust.Client.Graphics
         IClydeWindow CreateWindow();
     }
 
-    public interface IClydeWindow
-    {
-        public IRenderTarget RenderTarget { get; }
-    }
-
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.
 }

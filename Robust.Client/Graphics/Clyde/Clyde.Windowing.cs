@@ -568,7 +568,13 @@ namespace Robust.Client.Graphics.Clyde
         {
             try
             {
-                _gameController.Shutdown("Window closed");
+                var windowReg = FindWindow(window);
+                if (windowReg.IsMainWindow)
+                {
+                    _gameController.Shutdown("Window closed");
+                }
+
+                windowReg.Closed?.Invoke(new WindowClosedEventArgs(windowReg.Handle));
             }
             catch (Exception e)
             {
@@ -654,7 +660,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var windowReg = FindWindow(window);
                 windowReg.IsFocused = focused;
-                OnWindowFocused?.Invoke(new WindowFocusedEventArgs(focused));
+                OnWindowFocused?.Invoke(new WindowFocusedEventArgs(focused, windowReg.Handle));
             }
             catch (Exception e)
             {
@@ -679,12 +685,18 @@ namespace Robust.Client.Graphics.Clyde
 
         public override void SetWindowTitle(string title)
         {
+            SetWindowTitle(_mainWindow!, title);
+        }
+
+        private void SetWindowTitle(WindowReg reg, string title)
+        {
             if (title == null)
             {
                 throw new ArgumentNullException(nameof(title));
             }
 
-            GLFW.SetWindowTitle(_mainWindow!.GlfwWindow, title);
+            GLFW.SetWindowTitle(reg.GlfwWindow, title);
+            reg.Title = title;
         }
 
         public void RequestWindowAttention()
@@ -815,11 +827,22 @@ namespace Robust.Client.Graphics.Clyde
             _glfwExceptionList.Add(e);
         }
 
+        private static void SetWindowVisible(WindowReg reg, bool visible)
+        {
+            reg.IsVisible = visible;
+
+            if (visible)
+            {
+                GLFW.ShowWindow(reg.GlfwWindow);
+            }
+            else
+            {
+                GLFW.HideWindow(reg.GlfwWindow);
+            }
+        }
+
         private sealed class WindowReg
         {
-            public bool IsMainWindow;
-            public Window* GlfwWindow;
-
             public Vector2 WindowScale;
             public Vector2 PixelRatio;
             public Vector2i FramebufferSize;
@@ -829,14 +852,21 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2 LastMousePos;
             public bool IsFocused;
             public bool IsMinimized;
+            public string Title = "";
+            public bool IsVisible;
 
+            public bool IsMainWindow;
+            public Window* GlfwWindow;
             public WindowHandle Handle = default!;
             public RenderTexture? RenderTexture;
             public GLHandle QuadVao;
+            public Action<WindowClosedEventArgs>? Closed;
         }
 
         private sealed record WindowHandle(Clyde Clyde, WindowReg Reg) : IClydeWindow
         {
+            public bool IsDisposed { get; set; }
+
             public void Dispose()
             {
             }
@@ -853,6 +883,17 @@ namespace Robust.Client.Graphics.Clyde
 
                     return Reg.RenderTexture!;
                 }
+            }
+
+            public string Title { get => Reg.Title; set => Clyde.SetWindowTitle(Reg, value); }
+            public bool IsFocused => Reg.IsFocused;
+            public bool IsMinimized => Reg.IsMinimized;
+            public bool IsVisible { get => Reg.IsVisible; set => SetWindowVisible(Reg, value); }
+
+            public event Action<WindowClosedEventArgs> Closed
+            {
+                add => Reg.Closed += value;
+                remove => Reg.Closed -= value;
             }
         }
 

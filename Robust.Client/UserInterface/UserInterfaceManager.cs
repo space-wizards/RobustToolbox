@@ -937,13 +937,14 @@ namespace Robust.Client.UserInterface
             var window = IoCManager.Resolve<IClyde>().CreateWindow();
             var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
 
-            var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);
+            /*var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);
 
             var entity = IoCManager.Resolve<IEntityManager>().SpawnEntity("", new MapCoordinates(0, 0, new MapId(1)));
             var eye = entity.AddComponent<EyeComponent>();
             vp.Eye = eye.Eye;
 
             root.AddChild(new ViewportControl(vp));
+            */
             root.AddChild(new Label { Text = "AAAAAAAA"});
         }
     }

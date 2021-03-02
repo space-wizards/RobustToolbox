@@ -486,7 +486,19 @@ namespace Robust.Client.Graphics.Clyde
                 RenderTarget = renderTarget;
             }
 
+            public bool IsDisposed { get; private set; }
             public IRenderTarget RenderTarget { get; }
+            public string Title { get; set; } = "";
+            public bool IsFocused => false;
+            public bool IsMinimized => false;
+            public bool IsVisible { get; set; } = true;
+            public event Action<WindowClosedEventArgs>? Closed;
+
+            public void Dispose()
+            {
+                Closed?.Invoke(new WindowClosedEventArgs(this));
+                IsDisposed = true;
+            }
         }
     }
 }

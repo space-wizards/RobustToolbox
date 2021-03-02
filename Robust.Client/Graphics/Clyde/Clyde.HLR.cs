@@ -419,7 +419,7 @@ namespace Robust.Client.Graphics.Clyde
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                    var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
+                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - (200, 200), (400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 
@@ -429,7 +429,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
-                        UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
+                        UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
                 _currentViewport = oldVp;

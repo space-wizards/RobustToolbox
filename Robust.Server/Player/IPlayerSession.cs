@@ -7,7 +7,6 @@ namespace Robust.Server.Player
 {
     public interface IPlayerSession : ICommonSession
     {
-        INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
 
         /// <summary>

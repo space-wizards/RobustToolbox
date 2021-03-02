@@ -40,6 +40,9 @@ namespace Robust.Client.Player
         internal short Ping { get; set; }
 
         /// <inheritdoc />
+        public INetChannel ConnectedClient { get; internal set; } = null!;
+
+        /// <inheritdoc />
         short ICommonSession.Ping
         {
             get => this.Ping;

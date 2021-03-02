@@ -159,23 +159,6 @@ namespace Robust.Client.Graphics.Clyde
 
 
 
-        public Texture? GetScreenTexture(){
-            if (lastFrameSize != _framebufferSize) {
-                GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
-                    PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            }
-            lastFrameSize = _framebufferSize;
-            CopyRenderTextureToTexture(texture, ScreenBufferTexture);
-            foreach (Overlay overlay in oTargets) {
-                overlay.ScreenTexture = ScreenBufferTexture;
-            }
-            o
-        }
-
-
-
-
 
         private void DrawEntities(Viewport viewport, Box2 worldBounds)
         {

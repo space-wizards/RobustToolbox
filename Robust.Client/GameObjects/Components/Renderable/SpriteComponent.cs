@@ -2306,7 +2306,7 @@ namespace Robust.Client.GameObjects
                     _components[typeof(ISpriteComponent)] = comp;
                 }
 
-                if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
+                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
                 {
                     comp = serializationManager.Copy(node, comp)!;
                 }

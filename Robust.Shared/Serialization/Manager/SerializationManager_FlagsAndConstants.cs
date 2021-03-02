@@ -88,7 +88,7 @@ namespace Robust.Shared.Serialization.Manager
                     foreach (var elem in sequenceDataNode.Sequence)
                     {
                         if (elem is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                        flags |= (int)Enum.Parse(flagType, valueDataNode.Value);
+                        flags |= (int) Enum.Parse(flagType, valueDataNode.Value);
                     }
 
                     return flags;

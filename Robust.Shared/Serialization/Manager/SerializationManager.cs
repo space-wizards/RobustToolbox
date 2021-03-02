@@ -197,7 +197,7 @@ namespace Robust.Shared.Serialization.Manager
             return PopulateDataDefinition(obj, (IDeserializedDefinition) definition);
         }
 
-        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition deserializationResult)
+        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition)
         {
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
@@ -206,8 +206,9 @@ namespace Robust.Shared.Serialization.Manager
             {
                 populateDefaultValues.PopulateDefaultValues();
             }
-            var res = dataDefinition.InvokePopulateDelegate(obj, deserializationResult.Mapping);
-            if(res.RawValue is ISerializationHooks serializationHooksAfter) serializationHooksAfter.AfterDeserialization();
+
+            var res = dataDefinition.InvokePopulateDelegate(obj, definition.Mapping);
+            if (res.RawValue is ISerializationHooks serializationHooksAfter) serializationHooksAfter.AfterDeserialization();
             return res;
         }
 
@@ -326,16 +327,21 @@ namespace Robust.Shared.Serialization.Manager
             return Read(type, node, context).RawValue;
         }
 
-        public T ReadValue<T>(Type type, DataNode node, ISerializationContext? context = null)
+        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null)
         {
             var value = Read(type, node, context);
 
-            return (T) value.RawValue!;
+            if (value.RawValue == null)
+            {
+                return default;
+            }
+
+            return (T?) value.RawValue;
         }
 
         public T? ReadValue<T>(DataNode node, ISerializationContext? context = null)
         {
-            return ReadValue<T>(typeof(T), node, context);
+            return ReadValueCast<T>(typeof(T), node, context);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
@@ -495,7 +501,7 @@ namespace Robust.Shared.Serialization.Manager
             return CopyToTarget(source, target, context);
         }
 
-        public T? Copy<T>(object? source, T? target, ISerializationContext? context = null)
+        public T? Copy<T>(T? source, T? target, ISerializationContext? context = null)
         {
             var copy = CopyToTarget(source, target, context);
 

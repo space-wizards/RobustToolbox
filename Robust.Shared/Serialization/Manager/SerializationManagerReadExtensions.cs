@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.Manager
             DataNode node,
             ISerializationContext? context = null)
         {
-            return manager.ReadValue<T>(type, node, context) ?? throw new NullReferenceException();
+            return manager.ReadValueCast<T>(type, node, context) ?? throw new NullReferenceException();
         }
 
         public static object ReadValueOrThrow(

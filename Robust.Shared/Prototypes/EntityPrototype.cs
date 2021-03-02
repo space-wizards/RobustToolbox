@@ -314,7 +314,8 @@ namespace Robust.Shared.Prototypes
                 component = newComponent;
             }
 
-            IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
+            // TODO use this value to support struct components
+            _ = IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
         }
 
         public override string ToString()

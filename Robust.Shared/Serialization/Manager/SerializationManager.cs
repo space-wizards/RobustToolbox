@@ -22,6 +22,8 @@ namespace Robust.Shared.Serialization.Manager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        public const string LogCategory = "serialization";
+
         private bool _initializing;
         private bool _initialized;
 
@@ -70,14 +72,14 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (type.IsAbstract || type.IsInterface || type.IsGenericTypeDefinition)
                 {
-                    Logger.Debug($"Skipping registering data definition for type {type} since it is abstract or an interface");
+                    Logger.Debug(LogCategory, $"Skipping registering data definition for type {type} since it is abstract or an interface");
                     continue;
                 }
 
                 if (!type.IsValueType && type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
                     .FirstOrDefault(m => m.GetParameters().Length == 0) == null)
                 {
-                    Logger.Debug($"Skipping registering data definition for type {type} since it has no parameterless ctor");
+                    Logger.Debug(LogCategory, $"Skipping registering data definition for type {type} since it has no parameterless ctor");
                     continue;
                 }
 

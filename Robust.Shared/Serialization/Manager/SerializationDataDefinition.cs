@@ -81,12 +81,12 @@ namespace Robust.Shared.Serialization.Manager
 
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
-                        Logger.ErrorS("serialization", $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                        Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }
                     else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
                     {
-                        Logger.ErrorS("serialization", $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
+                        Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
                         continue;
                     }
                 }

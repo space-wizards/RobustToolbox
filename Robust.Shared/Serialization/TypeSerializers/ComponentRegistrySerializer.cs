@@ -39,14 +39,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        Logger.Error($"Unknown component '{compType}' in prototype!");
+                        Logger.Error(SerializationManager.LogCategory, $"Unknown component '{compType}' in prototype!");
                         continue;
                 }
 
                 // Has this type already been added?
                 if (components.Keys.Contains(compType))
                 {
-                    Logger.Error($"Component of type '{compType}' defined twice in prototype!");
+                    Logger.Error(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
                     continue;
                 }
 

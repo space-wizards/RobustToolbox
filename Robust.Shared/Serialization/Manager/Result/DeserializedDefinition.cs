@@ -30,7 +30,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 newMapping[i] = Mapping[i].PushInheritanceFrom(dataDef.Mapping[i]);
             }
 
-            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);
+            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping, true);
         }
 
         public override DeserializationResult Copy()
@@ -42,7 +42,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 newMapping[i] = Mapping[i].Copy();
             }
 
-            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping);
+            return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping, true);
         }
     }
 }

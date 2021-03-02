@@ -52,7 +52,7 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
             {
-                registrations.Add(baseType);
+                if (!baseType.IsAbstract && !baseType.IsInterface && !baseType.IsGenericTypeDefinition) registrations.Add(baseType);
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
                     if (child.IsAbstract || child.IsInterface || child.IsGenericTypeDefinition) continue;

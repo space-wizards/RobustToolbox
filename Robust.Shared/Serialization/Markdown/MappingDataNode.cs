@@ -100,7 +100,6 @@ namespace Robust.Shared.Serialization.Markdown
 
         public void AddNode(string key, DataNode node)
         {
-            //todo paul yes yes i'll rework it
             AddNode(new ValueDataNode(key), node);
         }
 

@@ -534,12 +534,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             var copy = CopyToTarget(source, target, context, skipHook);
 
-            if (copy == null)
-            {
-                return default;
-            }
-
-            return (T?) copy;
+            return copy == null ? default : (T?) copy;
         }
 
         private object? CreateCopyInternal(object? source, ISerializationContext? context = null, bool skipHook = false)

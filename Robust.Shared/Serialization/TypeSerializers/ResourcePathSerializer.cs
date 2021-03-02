@@ -1,5 +1,7 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -24,15 +26,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             try
             {
-                //todo paul check if this is actually a valid path
-                _ = new ResourcePath(node.Value);
+                return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(node.Value))
+                    ? new ValidatedValueNode(node)
+                    : new ErrorNode(node);
             }
             catch (Exception e)
             {
                 return new ErrorNode(node);
             }
-
-            return new ValidatedValueNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, ResourcePath value,

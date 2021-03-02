@@ -268,16 +268,7 @@ namespace Robust.Shared.Prototypes
                     {
                         fullData = context.GetComponentData(name, data);
                     }
-                    /*else
-                    {
-                        prototype.CurrentDeserializingComponent = name;
-                        ser = YamlObjectSerializer.NewReader(data, defaultContext);
-                    }*/
-                    //ser.CurrentType = factory.GetRegistration(name).Type;
 
-                    //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
-
-                    //todo paul serv3 oh god
                     EnsureCompExistsAndDeserialize(entity, factory, name, fullData, context as ISerializationContext);
                 }
             }
@@ -296,7 +287,6 @@ namespace Robust.Shared.Prototypes
 
                     var ser = context.GetComponentData(name, null);
 
-                    //todo paul serv3 oh god
                     EnsureCompExistsAndDeserialize(entity, factory, name, ser, context as ISerializationContext);
                 }
             }

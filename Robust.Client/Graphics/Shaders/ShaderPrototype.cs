@@ -112,7 +112,7 @@ namespace Robust.Client.Graphics
         [DataField("light_mode", readOnly: true)] private string? rawMode;
         [DataField("blend_mode", readOnly: true)] private string? rawBlendMode;
 
-        public void AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization()
         {
             switch (_rawKind)
             {
@@ -205,18 +205,9 @@ namespace Robust.Client.Graphics
 
             [DataField("func")] public StencilFunc StencilFunc;
 
-            [DataField("readMask")] public int ReadMask;
+            [DataField("readMask")] public int ReadMask = unchecked((int) uint.MaxValue);
 
-            [DataField("writeMask")] public int WriteMask;
-
-            public void CopyTo(StencilData data)
-            {
-                data.StencilRef = StencilRef;
-                data.StencilOp = StencilOp;
-                data.StencilFunc = StencilFunc;
-                data.WriteMask = WriteMask;
-                data.ReadMask = ReadMask;
-            }
+            [DataField("writeMask")] public int WriteMask = unchecked((int) uint.MaxValue);
         }
 
         private static object _parseUniformValue(YamlNode node, ShaderDataType dataType)

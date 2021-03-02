@@ -18,6 +18,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -45,6 +46,7 @@ namespace Robust.Server
             IoCManager.Register<IMapLoader, MapLoader>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<ISharedPlayerManager, PlayerManager>();
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
             IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();

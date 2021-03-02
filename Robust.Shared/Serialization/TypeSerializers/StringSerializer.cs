@@ -11,6 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class StringSerializer : ITypeSerializer<string, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<string>(node.Value);
@@ -29,7 +30,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public string Copy(ISerializationManager serializationManager, string source, string target, ISerializationContext? context = null)
+        public string Copy(ISerializationManager serializationManager, string source, string target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return source;
         }

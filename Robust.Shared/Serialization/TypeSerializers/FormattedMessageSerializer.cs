@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
-            ValueDataNode node, ISerializationContext? context = null)
+            ValueDataNode node, bool skipHook, ISerializationContext? context = null)
         {
             return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
         [MustUseReturnValue]
         public FormattedMessage Copy(ISerializationManager serializationManager, FormattedMessage source,
-            FormattedMessage target, ISerializationContext? context = null)
+            FormattedMessage target, bool skipHook, ISerializationContext? context = null)
         {
             return new(source);
         }

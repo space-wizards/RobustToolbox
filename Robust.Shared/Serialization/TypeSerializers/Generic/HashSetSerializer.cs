@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -19,6 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
+            bool skipHook,
             ISerializationContext? context)
         {
             var set = new HashSet<T>();
@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
 
                 set.Add(value);
                 mappings.Add(result);
@@ -80,7 +80,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager, SequenceDataNode node,
+            ISerializationManager serializationManager,
+            SequenceDataNode node,
+            bool skipHook,
             ISerializationContext? context)
         {
             var set = ImmutableHashSet.CreateBuilder<T>();
@@ -88,7 +90,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context);
+                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
 
                 set.Add(value);
                 mappings.Add(result);
@@ -98,7 +100,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         [MustUseReturnValue]
-        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target, ISerializationContext? context = null)
+        public HashSet<T> Copy(ISerializationManager serializationManager, HashSet<T> source, HashSet<T> target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             target.Clear();
             target.EnsureCapacity(source.Count);
@@ -114,7 +118,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         [MustUseReturnValue]
         public ImmutableHashSet<T> Copy(ISerializationManager serializationManager, ImmutableHashSet<T> source,
-            ImmutableHashSet<T> target, ISerializationContext? context = null)
+            ImmutableHashSet<T> target, bool skipHook, ISerializationContext? context = null)
         {
             var builder = ImmutableHashSet.CreateBuilder<T>();
 

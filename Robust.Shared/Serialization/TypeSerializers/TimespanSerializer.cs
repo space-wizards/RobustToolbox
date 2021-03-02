@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
@@ -22,7 +23,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
+            return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, TimeSpan value, bool alwaysWrite = false,
@@ -32,7 +35,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target, ISerializationContext? context = null)
+        public TimeSpan Copy(ISerializationManager serializationManager, TimeSpan source, TimeSpan target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return source;
         }

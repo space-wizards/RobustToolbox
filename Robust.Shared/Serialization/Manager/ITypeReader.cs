@@ -6,7 +6,10 @@ namespace Robust.Shared.Serialization.Manager
 {
     public interface ITypeReader<TType, TNode> where TType : notnull where TNode : DataNode
     {
-        DeserializationResult Read(ISerializationManager serializationManager, TNode node,
+        DeserializationResult Read(
+            ISerializationManager serializationManager,
+            TNode node,
+            bool skipHook,
             ISerializationContext? context = null);
 
         ValidatedNode Validate(ISerializationManager serializationManager, TNode node,

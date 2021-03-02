@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
@@ -44,7 +45,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
+                   float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, UIBox2 value, bool alwaysWrite = false,
@@ -54,7 +57,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target, ISerializationContext? context = null)
+        public UIBox2 Copy(ISerializationManager serializationManager, UIBox2 source, UIBox2 target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.Left, source.Top, source.Right, source.Bottom);
         }

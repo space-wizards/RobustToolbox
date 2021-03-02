@@ -19,9 +19,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ITypeCopier<EntityPrototype>
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
-            ValueDataNode node, ISerializationContext? context = null)
+            ValueDataNode node, bool skipHook, ISerializationContext? context = null)
         {
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
             var texture = new Texture(path);
 
             return new DeserializedValue<SpriteSpecifier>(texture);
@@ -30,17 +30,17 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return serializationManager.ReadValue<ResourcePath>(node) != null ? new ValidatedValueNode(node) : new ErrorNode(node);
+            return serializationManager.ValidateNode<ResourcePath>(node);
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager,
-            MappingDataNode node, ISerializationContext? context = null)
+            MappingDataNode node, bool skipHook, ISerializationContext? context = null)
         {
             if (node.TryGetNode("sprite", out var spriteNode)
                 && node.TryGetNode("state", out var rawStateNode)
                 && rawStateNode is ValueDataNode stateNode)
             {
-                var path = serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context);
+                var path = serializationManager.ReadValueOrThrow<ResourcePath>(spriteNode, context, skipHook);
                 var rsi = new Rsi(path, stateNode.Value);
 
                 return new DeserializedValue<SpriteSpecifier>(rsi);
@@ -52,12 +52,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
-            return node.HasNode("sprite") &&
-                   node.TryGetNode("state", out var stateNode) &&
-                   stateNode is ValueDataNode &&
-                   serializationManager.ReadValue<ResourcePath>(stateNode) != null
-                ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+            if (!node.HasNode("sprite") ||
+                !node.TryGetNode("state", out var stateNode) ||
+                stateNode is not ValueDataNode)
+            {
+                return new ErrorNode(node);
+            }
+
+            return serializationManager.ValidateNode<ResourcePath>(stateNode);
         }
 
         public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value,
@@ -78,19 +80,23 @@ namespace Robust.Shared.Serialization.TypeSerializers
             throw new NotImplementedException();
         }
 
-        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target, ISerializationContext? context = null)
+        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
         }
 
-        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target, ISerializationContext? context = null)
+        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.TexturePath);
         }
 
         [MustUseReturnValue]
         public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source,
-            EntityPrototype target, ISerializationContext? context = null)
+            EntityPrototype target, bool skipHook, ISerializationContext? context = null)
         {
             return new(source.EntityPrototypeId);
         }

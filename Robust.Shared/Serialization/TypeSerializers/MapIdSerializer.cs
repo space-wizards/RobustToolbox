@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var val = int.Parse(node.Value, CultureInfo.InvariantCulture);
@@ -33,7 +34,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target, ISerializationContext? context = null)
+        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.Value);
         }

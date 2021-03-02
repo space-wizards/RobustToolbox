@@ -10,10 +10,8 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
 {
@@ -317,39 +315,6 @@ namespace Robust.Shared.Prototypes
             }
 
             IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
-        }
-
-        private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
-        {
-            string type = mapping.GetNode("type").AsString();
-            // See if type exists to detect errors.
-            switch (factory.GetComponentAvailability(type))
-            {
-                case ComponentAvailability.Available:
-                    break;
-
-                case ComponentAvailability.Ignore:
-                    return;
-
-                case ComponentAvailability.Unknown:
-                    Log.Logger.Error($"Unknown component '{type}' in prototype {ID}!");
-                    return;
-            }
-
-            // Has this type already been added?
-            if (Components.Keys.Contains(type))
-            {
-                Log.Logger.Error($"Component of type '{type}' defined twice in prototype {ID}!");
-                return;
-            }
-
-            var copy = new YamlMappingNode(mapping.AsEnumerable());
-            // TODO: figure out a better way to exclude the type node.
-            // Also maybe deep copy this? Right now it's pretty error prone.
-            copy.Children.Remove(new YamlScalarNode("type"));
-            var compType = factory.GetRegistration(type).Type;
-
-            Components[type] = IoCManager.Resolve<ISerializationManager>().ReadValueOrThrow<IComponent>(compType, copy.ToDataNode());
         }
 
         public override string ToString()

@@ -459,7 +459,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var res = _serializationManager.Read(prototypeType, node.ToDataNode());
+                var res = _serializationManager.Read(prototypeType, node.ToDataNode(), skipHook: true);
                 var prototype = (IPrototype) res.RawValue!;
 
                 if (!overwrite && prototypes[prototypeType].ContainsKey(prototype.ID))

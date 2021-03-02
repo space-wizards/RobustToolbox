@@ -13,14 +13,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     public class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             if (node.Children.Count != 1)
                 throw new InvalidMappingException("Less than or more than 1 mappings provided to ValueTupleSerializer");
 
             var entry = node.Children.First();
-            var v1 = serializationManager.ReadValueOrThrow<T1>(entry.Key, context);
-            var v2 = serializationManager.ReadValueOrThrow<T2>(entry.Value, context);
+            var v1 = serializationManager.ReadValueOrThrow<T1>(entry.Key, context, skipHook);
+            var v2 = serializationManager.ReadValueOrThrow<T2>(entry.Value, context, skipHook);
 
             return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
         }
@@ -29,10 +30,16 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             ISerializationContext? context = null)
         {
             if (node.Children.Count != 1) return new ErrorNode(node);
+
             var entry = node.Children.First();
-            var dict = new Dictionary<ValidatedNode, ValidatedNode>();
-            dict.Add(serializationManager.ValidateNode(typeof(T1), entry.Key, context),
-                serializationManager.ValidateNode(typeof(T2), entry.Value, context));
+            var dict = new Dictionary<ValidatedNode, ValidatedNode>
+            {
+                {
+                    serializationManager.ValidateNode(typeof(T1), entry.Key, context),
+                    serializationManager.ValidateNode(typeof(T2), entry.Value, context)
+                }
+            };
+
             return new ValidatedMappingNode(dict);
         }
 
@@ -49,6 +56,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         public (T1, T2) Copy(ISerializationManager serializationManager, (T1, T2) source, (T1, T2) target,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             return (serializationManager.Copy(source.Item1, target.Item1)!,

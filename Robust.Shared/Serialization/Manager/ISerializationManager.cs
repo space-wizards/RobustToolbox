@@ -34,13 +34,25 @@ namespace Robust.Shared.Serialization.Manager
         ValidatedNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         /// <summary>
+        ///     Validates that a node has all the properties required by a certain type with its serializer.
+        /// </summary>
+        /// <param name="type">The type to check for.</param>
+        /// <param name="node">The node to check.</param>
+        /// <param name="context">The context to use, if any.</param>
+        /// <returns>
+        ///     A node with whether or not <see cref="node"/> is valid and which of its fields
+        ///     are invalid, if any.
+        /// </returns>
+        ValidatedNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
+
+        /// <summary>
         ///     Creates a deserialization result from a generic type and its fields,
         ///     populating the object.
         /// </summary>
         /// <param name="fields">The fields to use for deserialization.</param>
         /// <typeparam name="T">The type to populate.</typeparam>
         /// <returns>A result with the populated type.</returns>
-        DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields) where T : notnull, new();
+        DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false) where T : notnull, new();
 
         /// <summary>
         ///     Creates a deserialization result from a generic type and its definition,
@@ -50,7 +62,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="definition">The data to use for deserialization.</param>
         /// <typeparam name="T">The type of <see cref="obj"/> to populate.</typeparam>
         /// <returns>A result with the populated object.</returns>
-        DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition) where T : notnull, new();
+        DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false) where T : notnull, new();
 
         /// <summary>
         ///     Creates a deserialization result from an object and its definition,
@@ -59,7 +71,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="obj">The object to populate.</param>
         /// <param name="definition">The data to use for deserialization.</param>
         /// <returns>A result with the populated object.</returns>
-        DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition);
+        DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into an object, populating it.
@@ -67,8 +79,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type of object to populate.</param>
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A result with the deserialized object.</returns>
-        DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null);
+        DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into an object, populating it.
@@ -76,8 +89,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type of object to deserialize into.</param>
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>The deserialized object or null.</returns>
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null);
+        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into an object of the given <see cref="type"/>,
@@ -86,18 +100,20 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type of object to deserialize into.</param>
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The generic type to cast the resulting object to.</typeparam>
         /// <returns>The deserialized casted object, or null.</returns>
-        T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null);
+        T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into a populated object of the given generic type <see cref="T"/>
         /// </summary>
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
+        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T? ReadValue<T>(DataNode node, ISerializationContext? context = null);
+        T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Serializes a value into a node.
@@ -142,7 +158,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     This object is not necessarily the same instance as the one passed
         ///     as <see cref="target"/>.
         /// </returns>
-        object? Copy(object? source, object? target, ISerializationContext? context = null);
+        object? Copy(object? source, object? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Copies the values of one object into another.
@@ -158,7 +174,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     This object is not necessarily the same instance as the one passed
         ///     as <see cref="target"/>.
         /// </returns>
-        T? Copy<T>(T? source, T? target, ISerializationContext? context = null);
+        T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -166,7 +182,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="source">The object to copy.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <returns>A copy of the given object.</returns>
-        object? CreateCopy(object? source, ISerializationContext? context = null);
+        object? CreateCopy(object? source, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Creates a copy of the given object.
@@ -175,7 +191,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <typeparam name="T">The type of the object to copy.</typeparam>
         /// <returns>A copy of the given object.</returns>
-        T? CreateCopy<T>(T? source, ISerializationContext? context = null);
+        T? CreateCopy<T>(T? source, ISerializationContext? context = null, bool skipHook = false);
 
         #endregion
 

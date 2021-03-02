@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
@@ -42,7 +43,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target, ISerializationContext? context = null)
+        public ResourcePath Copy(ISerializationManager serializationManager, ResourcePath source, ResourcePath target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.ToString());
         }

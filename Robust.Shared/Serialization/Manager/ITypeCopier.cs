@@ -6,6 +6,7 @@ namespace Robust.Shared.Serialization.Manager
     {
         [MustUseReturnValue]
         TType Copy(ISerializationManager serializationManager, TType source, TType target,
+            bool skipHook,
             ISerializationContext? context = null);
     }
 }

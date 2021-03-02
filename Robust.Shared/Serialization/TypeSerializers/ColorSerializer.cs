@@ -12,6 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var deserializedColor = Color.TryFromName(node.Value, out var color)
@@ -34,7 +35,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Color Copy(ISerializationManager serializationManager, Color source, Color target, ISerializationContext? context = null)
+        public Color Copy(ISerializationManager serializationManager, Color source, Color target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.R, source.G, source.B, source.A);
         }

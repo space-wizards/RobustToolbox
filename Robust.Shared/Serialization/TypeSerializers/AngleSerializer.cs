@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var nodeContents = node.Value;
@@ -41,7 +42,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Angle Copy(ISerializationManager serializationManager, Angle source, Angle target, ISerializationContext? context = null)
+        public Angle Copy(ISerializationManager serializationManager, Angle source, Angle target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source);
         }

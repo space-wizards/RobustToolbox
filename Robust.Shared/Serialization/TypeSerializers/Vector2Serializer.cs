@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
@@ -13,6 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class Vector2Serializer : ITypeSerializer<Vector2, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             string raw = node.Value;
@@ -42,7 +42,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
+                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Vector2 value, bool alwaysWrite = false,
@@ -51,7 +53,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target, ISerializationContext? context = null)
+        public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.X, source.Y);
         }

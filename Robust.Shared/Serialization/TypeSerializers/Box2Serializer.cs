@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');
@@ -43,17 +44,27 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return float.TryParse(args[0], out _) &&
                    float.TryParse(args[1], out _) &&
                    float.TryParse(args[2], out _) &&
-                   float.TryParse(args[3], out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
+                   float.TryParse(args[3], out _)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Box2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode($"{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
+            var nodeValue =
+                $"{value.Bottom.ToString(CultureInfo.InvariantCulture)}," +
+                $"{value.Left.ToString(CultureInfo.InvariantCulture)}," +
+                $"{value.Top.ToString(CultureInfo.InvariantCulture)}," +
+                $"{value.Right.ToString(CultureInfo.InvariantCulture)}";
+
+            return new ValueDataNode(nodeValue);
         }
 
         [MustUseReturnValue]
-        public Box2 Copy(ISerializationManager serializationManager, Box2 source, Box2 target, ISerializationContext? context = null)
+        public Box2 Copy(ISerializationManager serializationManager, Box2 source, Box2 target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.Left, source.Bottom, source.Right, source.Top);
         }

@@ -788,7 +788,8 @@ namespace Robust.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    var mapData = (IDeserializedDefinition)serializationManager.Read(factory.GetRegistration(componentName).Type,
+                    var mapData = (IDeserializedDefinition) serializationManager.Read(
+                        factory.GetRegistration(componentName).Type,
                         mapping.ToDataNode(), this);
                     var newData = serializationManager.PopulateDataDefinition(data, mapData);
                     data = (IComponent) newData.RawValue!;
@@ -826,6 +827,7 @@ namespace Robust.Server.Maps
             }
 
             public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+                bool skipHook,
                 ISerializationContext? context = null)
             {
                 if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
@@ -933,6 +935,7 @@ namespace Robust.Server.Maps
 
             DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
+                bool skipHook,
                 ISerializationContext? context)
             {
                 if (node.Value == "null")
@@ -955,6 +958,7 @@ namespace Robust.Server.Maps
 
             DeserializationResult ITypeReader<IEntity, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
+                bool skipHook,
                 ISerializationContext? context)
             {
                 var val = int.Parse(node.Value);
@@ -972,6 +976,7 @@ namespace Robust.Server.Maps
 
             [MustUseReturnValue]
             public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target,
+                bool skipHook,
                 ISerializationContext? context = null)
             {
                 return new(source.Value);
@@ -979,6 +984,7 @@ namespace Robust.Server.Maps
 
             [MustUseReturnValue]
             public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
+                bool skipHook,
                 ISerializationContext? context = null)
             {
                 return new((int) source);

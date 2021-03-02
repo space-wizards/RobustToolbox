@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class RegexSerializer : ITypeSerializer<Regex, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            bool skipHook,
             ISerializationContext? context = null)
         {
             return new DeserializedValue<Regex>(new Regex(node.Value, RegexOptions.Compiled));
@@ -40,7 +41,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         [MustUseReturnValue]
-        public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target, ISerializationContext? context = null)
+        public Regex Copy(ISerializationManager serializationManager, Regex source, Regex target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return new(source.ToString(), source.Options, source.MatchTimeout);
         }

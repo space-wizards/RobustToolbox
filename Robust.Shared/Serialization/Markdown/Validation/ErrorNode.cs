@@ -12,6 +12,7 @@ namespace Robust.Shared.Serialization.Markdown.Validation
         }
 
         public override bool Valid => false;
+
         public override IEnumerable<string> Invalids()
         {
             var str = Node.ToString();

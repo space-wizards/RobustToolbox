@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.Manager
     public class SerializationDataDefinition
     {
         private delegate DeserializedFieldEntry[] DeserializeDelegate(MappingDataNode mappingDataNode,
-            ISerializationManager serializationManager, ISerializationContext? context);
+            ISerializationManager serializationManager, ISerializationContext? context, bool skipHook);
 
         private delegate DeserializationResult PopulateDelegateSignature(object target, DeserializedFieldEntry[] deserializationResults, object?[] defaultValues);
 
@@ -44,9 +44,9 @@ namespace Robust.Shared.Serialization.Manager
             _populateDelegate(target, fields, _defaultValues);
 
         public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
-            ISerializationContext? context)
+            ISerializationContext? context, bool skipHook)
         {
-            var fields = _deserializeDelegate(mappingDataNode, serializationManager, context);
+            var fields = _deserializeDelegate(mappingDataNode, serializationManager, context, skipHook);
             return _populateDelegate(target, fields, _defaultValues);
         }
 
@@ -151,7 +151,7 @@ namespace Robust.Shared.Serialization.Manager
         private DeserializeDelegate EmitDeserializationDelegate()
         {
             DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
-                ISerializationManager serializationManager, ISerializationContext? serializationContext)
+                ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
             {
                 var mappedInfo = new DeserializedFieldEntry[_baseFieldDefinitions.Length];
 
@@ -204,7 +204,7 @@ namespace Robust.Shared.Serialization.Manager
                         {
                             var type = fieldDefinition.FieldType;
                             var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            result = serializationManager.Read(type, node, serializationContext);
+                            result = serializationManager.Read(type, node, serializationContext, skipHook);
                             break;
                         }
                     }

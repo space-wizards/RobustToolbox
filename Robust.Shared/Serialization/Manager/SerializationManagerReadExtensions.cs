@@ -10,44 +10,49 @@ namespace Robust.Shared.Serialization.Manager
         public static T ReadValueOrThrow<T>(
             this ISerializationManager manager,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            return manager.ReadValue<T>(node, context) ?? throw new NullReferenceException();
+            return manager.ReadValue<T>(node, context, skipHook) ?? throw new NullReferenceException();
         }
 
         public static T ReadValueOrThrow<T>(
             this ISerializationManager manager,
             Type type,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            return manager.ReadValueCast<T>(type, node, context) ?? throw new NullReferenceException();
+            return manager.ReadValueCast<T>(type, node, context, skipHook) ?? throw new NullReferenceException();
         }
 
         public static object ReadValueOrThrow(
             this ISerializationManager manager,
             Type type,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            return manager.ReadValue(type, node, context) ?? throw new NullReferenceException();
+            return manager.ReadValue(type, node, context, skipHook) ?? throw new NullReferenceException();
         }
 
         public static (DeserializationResult result, object? value) ReadWithValue(
             this ISerializationManager manager,
             Type type, DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            var result = manager.Read(type, node, context);
+            var result = manager.Read(type, node, context, skipHook);
             return (result, result.RawValue);
         }
 
         public static (DeserializationResult result, T? value) ReadWithValue<T>(
             this ISerializationManager manager,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            var result = manager.Read(typeof(T), node, context);
+            var result = manager.Read(typeof(T), node, context, skipHook);
 
             if (result.RawValue == null)
             {
@@ -61,9 +66,10 @@ namespace Robust.Shared.Serialization.Manager
             this ISerializationManager manager,
             Type type,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            var result = manager.Read(type, node, context);
+            var result = manager.Read(type, node, context, skipHook);
 
             if (result.RawValue == null)
             {
@@ -77,9 +83,10 @@ namespace Robust.Shared.Serialization.Manager
         public static (T value, DeserializationResult result) ReadWithValueOrThrow<T>(
             this ISerializationManager manager,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            var result = manager.Read(typeof(T), node, context);
+            var result = manager.Read(typeof(T), node, context, skipHook);
 
             if (result.RawValue == null)
             {
@@ -93,9 +100,10 @@ namespace Robust.Shared.Serialization.Manager
             this ISerializationManager manager,
             Type type,
             DataNode node,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
-            var result = manager.Read(type, node, context);
+            var result = manager.Read(type, node, context, skipHook);
 
             if (result.RawValue == null)
             {

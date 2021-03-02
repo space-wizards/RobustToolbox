@@ -1193,13 +1193,13 @@ namespace Robust.Client.GameObjects
         }
 
         [DataField("noRot")]
-        private bool _screenLock = false;
+        private bool _screenLock = true;
 
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;
 
         [DataField("enableOverrideDir")]
-        private bool _enableOverrideDirection = false;
+        private bool _enableOverrideDirection;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

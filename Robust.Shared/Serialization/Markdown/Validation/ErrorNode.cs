@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ErrorNode : ValidatedNode
@@ -10,5 +12,13 @@ namespace Robust.Shared.Serialization.Markdown.Validation
         }
 
         public override bool Valid => false;
+        public override IEnumerable<string> Invalids()
+        {
+            var str = Node.ToString();
+            if (str != null)
+            {
+                yield return str;
+            }
+        }
     }
 }

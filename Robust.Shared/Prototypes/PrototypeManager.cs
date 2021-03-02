@@ -71,7 +71,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
-        Dictionary<Type, List<ValidatedNode>> ValidateDirectory(ResourcePath path);
+        Dictionary<Type, List<(string file, ValidatedNode node)>> ValidateDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -275,12 +275,12 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public Dictionary<Type, List<ValidatedNode>> ValidateDirectory(ResourcePath path)
+        public Dictionary<Type, List<(string file, ValidatedNode node)>> ValidateDirectory(ResourcePath path)
         {
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
-            var dict = new Dictionary<Type, List<ValidatedNode>>();
+            var dict = new Dictionary<Type, List<(string file, ValidatedNode node)>>();
             foreach (var resourcePath in streams)
             {
                 using var reader = ReadFile(resourcePath);
@@ -310,11 +310,11 @@ namespace Robust.Shared.Prototypes
                         }
 
                         if (!dict.TryGetValue(prototypeTypes[type], out var hashSet))
-                            dict[prototypeTypes[type]] = new List<ValidatedNode>();
+                            dict[prototypeTypes[type]] = new List<(string, ValidatedNode)>();
 
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
                         mapping.RemoveNode("type");
-                        dict[prototypeTypes[type]].Add(_serializationManager.ValidateNode(prototypeTypes[type], mapping));
+                        dict[prototypeTypes[type]].Add((resourcePath.ToString(), _serializationManager.ValidateNode(prototypeTypes[type], mapping)));
                     }
                 }
             }

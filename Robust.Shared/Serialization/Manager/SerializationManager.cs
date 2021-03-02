@@ -157,7 +157,15 @@ namespace Robust.Shared.Serialization.Manager
             if (node.Tag?.StartsWith("!type:") == true)
             {
                 var typeString = node.Tag.Substring(6);
-                underlyingType = ResolveConcreteType(underlyingType, typeString);
+                try
+                {
+                    underlyingType = ResolveConcreteType(underlyingType, typeString);
+                }
+                catch (InvalidOperationException)
+                {
+                    return new ErrorNode(node);
+                }
+
             }
 
             if (TryValidateWithTypeReader(type, node, context, out var valid)) return valid;

@@ -131,18 +131,18 @@ namespace Robust.Shared.Serialization.Manager
             {
                 if (key is not ValueDataNode valueDataNode)
                 {
-                    validatedmapping.Add(new ErrorNode(node), new InconclusiveNode());
+                    validatedmapping.Add(new ErrorNode(key), new InconclusiveNode(val));
                     continue;
                 }
 
                 var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
-                    validatedmapping.Add(new ErrorNode(node), new InconclusiveNode());
+                    validatedmapping.Add(new ErrorNode(key), new InconclusiveNode(val));
                     continue;
                 }
 
-                validatedmapping.Add(serializationManager.ValidateNode(field.FieldType, key, context), serializationManager.ValidateNode(field.FieldType, val, context));
+                validatedmapping.Add(serializationManager.ValidateNode(typeof(string), key, context), serializationManager.ValidateNode(field.FieldType, val, context));
             }
 
             return new ValidatedMappingNode(validatedmapping);

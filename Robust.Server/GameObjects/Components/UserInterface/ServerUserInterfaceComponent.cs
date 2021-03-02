@@ -35,6 +35,8 @@ namespace Robust.Server.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            _interfaces.Clear();
+
             foreach (var prototypeData in _interfaceData)
             {
                 _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData.UiKey, this);

@@ -1,41 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects
 {
-    public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
+    public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new();
 
-        private Dictionary<object, PrototypeData> _interfaceData = new();
+        private readonly Dictionary<object, PrototypeData> _interfaces = new();
 
-        [DataField("interfaces")]
-        private List<PrototypeData> _dataReceiver
+        [DataField("interfaces", readOnly: true)]
+        private List<PrototypeData> _interfaceData = new();
+
+        void ISerializationHooks.AfterDeserialization()
         {
-            set
+            _interfaces.Clear();
+
+            foreach (var data in _interfaceData)
             {
-                _interfaceData.Clear();
-                foreach (var data in value)
-                {
-                    _interfaceData[data.UiKey] = data;
-                }
-            }
-            get
-            {
-                return _interfaceData.Values.ToList();
+                _interfaces[data.UiKey] = data;
             }
         }
-
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
         public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
             ICommonSession? session = null)
@@ -75,7 +71,7 @@ namespace Robust.Client.GameObjects
 
         private void OpenInterface(BoundInterfaceMessageWrapMessage wrapped)
         {
-            var data = _interfaceData[wrapped.UiKey];
+            var data = _interfaces[wrapped.UiKey];
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
             var boundInterface = (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[]{this, wrapped.UiKey});

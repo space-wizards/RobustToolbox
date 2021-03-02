@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Maths;
-using Robust.Shared.Map;
-using Robust.Shared.Network.Messages;
-using Robust.Client.Graphics;
-using Robust.Client.GameObjects;
-using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
-using Robust.Shared.Utility;
 using Robust.Shared.Timing;
-using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
 {
@@ -125,16 +124,6 @@ namespace Robust.Client.Placement
                 if (value != null)
                 {
                     PlacementOffset = value.PlacementOffset;
-
-
-                    /* todo paul
-                     if (value.Components.TryGetValue("Physics", out var physicsComp)
-                        && physicsComp is PhysicsComponent_AUTODATA physicsComponentAutodata
-                        && physicsComponentAutodata._physShapes_field is { } shapes)
-                    {
-                        _colliderAABB = shapes.FirstOrDefault()?.CalculateLocalBounds(0f) ?? new Box2(0f, 0f, 0f, 0f);
-                        return;
-                    }*/
                 }
 
                 _colliderAABB = new Box2(0f, 0f, 0f, 0f);

@@ -23,6 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             try
             {
+                //todo paul check if this is actually a valid path
                 _ = new ResourcePath(node.Value);
             }
             catch (Exception e)

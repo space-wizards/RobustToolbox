@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -23,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         DeserializationResult ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager, ValueDataNode node,
             bool skipHook, ISerializationContext? context)
         {
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context);
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
             return DeserializationResult.Value(new Texture(path));
         }
 
@@ -32,13 +28,13 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             try
             {
-                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, context);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, skipHook, context);
             }
             catch { /* ignored */ }
 
             try
             {
-                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, context);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, skipHook, context);
             }
             catch { /* ignored */ }
 
@@ -65,7 +61,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context);
+            var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context, skipHook);
             return DeserializationResult.Value(new Rsi(path, valueDataNode.Value));
         }
 
@@ -73,7 +69,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         DeserializationResult ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager, MappingDataNode node,
             bool skipHook, ISerializationContext? context)
         {
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, context);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, skipHook, context);
         }
 
         ValidatedNode ITypeReader<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,

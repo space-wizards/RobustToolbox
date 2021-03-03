@@ -20,5 +20,10 @@
         {
             return new DeserializedValue<T>(Value);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            if(Value is ISerializationHooks hooks) hooks.AfterDeserialization();
+        }
     }
 }

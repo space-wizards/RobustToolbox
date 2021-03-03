@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -58,6 +59,14 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedMutableCollection<TCollection, TElement>(Value == null ? null : valueList, resList);
+        }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var val in Mappings)
+            {
+                val.CallAfterDeserializationHook();
+            }
         }
     }
 }

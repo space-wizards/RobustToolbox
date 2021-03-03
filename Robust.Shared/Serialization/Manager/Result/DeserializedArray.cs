@@ -60,5 +60,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return new DeserializedArray(valueList, resList);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var elem in Mappings)
+            {
+                elem.CallAfterDeserializationHook();
+            }
+        }
     }
 }

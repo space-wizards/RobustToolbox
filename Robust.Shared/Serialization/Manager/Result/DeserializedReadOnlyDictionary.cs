@@ -70,5 +70,14 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return new DeserializedReadOnlyDictionary<TDict, TKey, TValue>(CreateDelegate(valueDict), mappingDict, CreateDelegate);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var (key, val) in Mappings)
+            {
+                key.CallAfterDeserializationHook();
+                val.CallAfterDeserializationHook();
+            }
+        }
     }
 }

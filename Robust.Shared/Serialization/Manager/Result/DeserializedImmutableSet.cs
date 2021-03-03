@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Robust.Shared.Serialization.Manager.Result
@@ -59,6 +60,14 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedImmutableSet<T>(Value == null ? null : valueSet.ToImmutable(), resList);
+        }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var val in Mappings)
+            {
+                val.CallAfterDeserializationHook();
+            }
         }
     }
 }

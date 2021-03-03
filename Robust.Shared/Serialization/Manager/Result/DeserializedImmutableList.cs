@@ -60,5 +60,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return new DeserializedImmutableList<T>(Value == null ? null : valueList.ToImmutable(), resList);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var elem in Mappings)
+            {
+                elem.CallAfterDeserializationHook();
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Utility;
 
@@ -67,6 +68,15 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedDictionary<TDict, TKey, TValue>(valueDict, mappingDict);
+        }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var (key, val) in Mappings)
+            {
+                key.CallAfterDeserializationHook();
+                val.CallAfterDeserializationHook();
+            }
         }
     }
 }

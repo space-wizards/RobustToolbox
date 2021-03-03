@@ -67,5 +67,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return new DeserializedReadOnlyCollection<TCollection, TElement>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var val in Mappings)
+            {
+                val.CallAfterDeserializationHook();
+            }
+        }
     }
 }

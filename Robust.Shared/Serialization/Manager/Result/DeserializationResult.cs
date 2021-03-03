@@ -11,6 +11,8 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public abstract DeserializationResult Copy();
 
+        public abstract void CallAfterDeserializationHook();
+
         public static DeserializationResult Value<T>(T value) where T : notnull
         {
             var type = typeof(DeserializedValue<>).MakeGenericType(value.GetType());

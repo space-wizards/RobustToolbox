@@ -302,6 +302,7 @@ namespace Robust.Shared.Prototypes
                 PushInheritance(type, childID, newResult, changed);
             }
 
+            newResult.CallAfterDeserializationHook();
             var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
             prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }

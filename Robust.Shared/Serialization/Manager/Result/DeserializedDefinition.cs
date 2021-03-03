@@ -44,5 +44,14 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             return IoCManager.Resolve<ISerializationManager>().CreateDataDefinition<T>(newMapping, true);
         }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var fieldEntry in Mapping)
+            {
+                fieldEntry.Result?.CallAfterDeserializationHook();
+            }
+            if(Value is ISerializationHooks hooks) hooks.AfterDeserialization();
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -97,6 +98,14 @@ namespace Robust.Shared.Serialization.Manager.Result
             }
 
             return new DeserializedComponentRegistry(registry, mappingDict);
+        }
+
+        public override void CallAfterDeserializationHook()
+        {
+            foreach (var (_, comp) in Mappings)
+            {
+                comp.CallAfterDeserializationHook();
+            }
         }
     }
 }

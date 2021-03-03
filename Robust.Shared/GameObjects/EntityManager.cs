@@ -570,7 +570,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
             new();
 
-        public virtual bool UpdateEntityTree(IEntity entity)
+        public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
             if (entity.Deleted)
             {

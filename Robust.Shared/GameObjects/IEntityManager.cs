@@ -218,7 +218,7 @@ namespace Robust.Shared.GameObjects
 
         #region Spatial Updates
 
-        bool UpdateEntityTree(IEntity entity);
+        bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null);
         bool RemoveFromEntityTree(IEntity entity, MapId mapId);
 
         #endregion

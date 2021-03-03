@@ -158,7 +158,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                 if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
-                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager));
+                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager), moveEvent.WorldAABB);
             }
 
             while (_queuedRotateEvent.Count > 0)
@@ -172,7 +172,7 @@ namespace Robust.Shared.Physics.Broadphase
                 if (rotateEvent.Sender.Deleted || !rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                     return;
 
-                SynchronizeFixtures(physicsComponent, Vector2.Zero);
+                SynchronizeFixtures(physicsComponent, Vector2.Zero, rotateEvent.WorldAABB);
             }
 
             _handledThisTick.Clear();
@@ -542,7 +542,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         /// <param name="body"></param>
         /// <param name="displacement"></param>
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -551,10 +551,10 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             var mapId = body.Owner.Transform.MapID;
-            var worldAABB = body.GetWorldAABB(_mapManager);
+            worldAABB ??= body.GetWorldAABB(_mapManager);
 
             var newBroadPhases = _mapManager
-                .FindGridIdsIntersecting(mapId, worldAABB, true)
+                .FindGridIdsIntersecting(mapId, worldAABB.Value, true)
                 .Select(gridId => GetBroadPhase(mapId, gridId))
                 .ToArray();
 

@@ -455,19 +455,19 @@ namespace Robust.Shared.GameObjects
             }
 
             RebuildMatrices();
-            UpdateEntityTree();
+            UpdateEntityTree(worldAABB);
 
             if (_oldCoords != null)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
                 _oldLocalRotation = null;
             }
         }
@@ -809,7 +809,7 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = itransMat;
         }
 
-        public bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
+        public bool UpdateEntityTree(Box2? worldAABB = null) => Owner.EntityManager.UpdateEntityTree(Owner, worldAABB);
 
         public string GetDebugString()
         {
@@ -859,6 +859,7 @@ namespace Robust.Shared.GameObjects
             /// <param name="localPosition">Current position offset of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
+            /// <param name="noLocalRotation"></param>
             public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation)
                 : base(NetIDs.TRANSFORM)
             {
@@ -870,32 +871,50 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Raised whenever an entity moves.
+    ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
+    /// </summary>
     public class MoveEvent : EntitySystemMessage
     {
-        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos)
+        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
+            WorldAABB = worldAABB;
         }
 
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
         public bool Handled { get; set; }
+
+        /// <summary>
+        ///     New AABB of the entity.
+        /// </summary>
+        public Box2? WorldAABB { get; }
     }
 
+    /// <summary>
+    ///     Raised whenever this entity rotates in relation to their parent.
+    /// </summary>
     public class RotateEvent : EntitySystemMessage
     {
-        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation)
+        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {
             Sender = sender;
             OldRotation = oldRotation;
             NewRotation = newRotation;
+            WorldAABB = worldAABB;
         }
 
         public IEntity Sender { get; }
         public Angle OldRotation { get; }
         public Angle NewRotation { get; }
+        /// <summary>
+        ///     New AABB of the entity.
+        /// </summary>
+        public Box2? WorldAABB { get; }
     }
 }

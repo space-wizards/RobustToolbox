@@ -15,7 +15,6 @@ namespace Robust.Shared.GameObjects
     public class ComponentManager : IComponentManager
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
@@ -130,7 +129,7 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
             }
 
-            _componentDependencyManager.OnComponentAdd(entity, component);
+            _componentDependencyManager.OnComponentAdd(entity.Uid, component);
 
             component.OnAdd();
 
@@ -243,7 +242,7 @@ namespace Robust.Shared.GameObjects
 
                 component.Running = false;
                 component.OnRemove();
-                _componentDependencyManager.OnComponentRemove(_entityManager.GetEntity(uid), component);
+                _componentDependencyManager.OnComponentRemove(uid, component);
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
@@ -354,8 +353,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            var ent = _entityManager.GetEntity(uid);
-            throw new KeyNotFoundException($"Entity {ent} does not have a component of type {type}");
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }
 
         /// <inheritdoc />
@@ -371,8 +369,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            var ent = _entityManager.GetEntity(uid);
-            throw new KeyNotFoundException($"Entity {ent} does not have a component of NetID {netId}");
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of NetID {netId}");
         }
 
         /// <inheritdoc />

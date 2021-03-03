@@ -244,7 +244,7 @@ namespace Robust.Shared.Prototypes
                 var component = (Component) factory.GetComponent(name);
                 CurrentDeserializingComponent = name;
                 component.Owner = entity;
-                componentDependencyManager.OnComponentAdd(entity, component);
+                componentDependencyManager.OnComponentAdd(entity.Uid, component);
                 entity.AddComponent(component);
             }
 

@@ -32,6 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
+            // TODO Paul should we be checking entity exists here
             return EntityUid.TryParse(node.Value, out var uid) &&
                    uid.IsValid() &&
                    serializationManager.EntityManager.EntityExists(uid)

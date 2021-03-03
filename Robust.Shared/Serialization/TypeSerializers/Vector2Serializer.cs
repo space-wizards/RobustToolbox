@@ -50,7 +50,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public DataNode Write(ISerializationManager serializationManager, Vector2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)}");
+            var valueString = $"{value.X.ToString(CultureInfo.InvariantCulture)}," +
+                              $"{value.Y.ToString(CultureInfo.InvariantCulture)}";
+
+            return new ValueDataNode(valueString);
         }
 
         public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target,

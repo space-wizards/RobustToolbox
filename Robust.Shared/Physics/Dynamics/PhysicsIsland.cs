@@ -143,6 +143,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 #if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        private List<IPhysBody> _debugBodies = new(8);
 #endif
 
         private ContactSolver _contactSolver = default!;
@@ -306,13 +307,13 @@ stored in a single array since multiple arrays lead to multiple misses.
         public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<ITransformComponent> deferredUpdates)
         {
 #if DEBUG
-            var debugBodies = new List<IPhysBody>();
+            _debugBodies.Clear();
             for (var i = 0; i < BodyCount; i++)
             {
-                debugBodies.Add(Bodies[i]);
+                _debugBodies.Add(Bodies[i]);
             }
 
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(debugBodies));
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(_debugBodies));
 #endif
 
             for (var i = 0; i < BodyCount; i++)

@@ -286,7 +286,8 @@ namespace Robust.Shared.GameObjects
             // TODO: Dump someday
             serializer.DataReadFunction("anchored", true, value =>
             {
-                _bodyType = value ? BodyType.Static : BodyType.Dynamic;
+                if (value)
+                    _bodyType = BodyType.Static;
             });
 
             serializer.DataField(ref _linearDamping, "linearDamping", 0.02f);
@@ -647,11 +648,13 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Inverse moment of inertia (1 / I).
         /// </summary>
+        [ViewVariables]
         public float InvI { get; set; }
 
         /// <summary>
         ///     Is the body allowed to have angular velocity.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool FixedRotation
         {
             get => _fixedRotation;

@@ -423,7 +423,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     _collisionManager.CollideEdgeAndCircle(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.EdgeAndPolygon:
-                    _collisionManager.CollideEdgeAndPolygon(manifold, (EdgeShape) FixtureA!.Shape, transformA, new PolygonShape(FixtureB!.Shape), transformB);
+                    _collisionManager.CollideEdgeAndPolygon(manifold, (EdgeShape) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
                 case ContactType.ChainAndCircle:
                     throw new NotImplementedException();

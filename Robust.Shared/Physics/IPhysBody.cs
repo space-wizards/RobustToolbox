@@ -173,6 +173,10 @@ namespace Robust.Shared.Physics
         /// <returns>True if this body can move, false if it is static.</returns>
         bool CanMove();
 
+        void ApplyLinearImpulse(in Vector2 impulse);
+
+        void ApplyAngularImpulse(float impulse);
+
         IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

@@ -73,8 +73,7 @@ namespace Robust.Shared.Physics.Collision
                     break;
 
                 case ShapeType.Polygon:
-                    // TODO: When manifold building gets fixed replace it back with a cast.
-                    var polygon = new PolygonShape(shape);
+                    var polygon = (PolygonShape) shape;
 
                     foreach (var vert in polygon.Vertices)
                     {

@@ -169,7 +169,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(this, x => x.Shape, "shape", new PhysShapeAabb());
+            serializer.DataField(this, x => x.Shape, "shape", new PolygonShape());
             serializer.DataField(ref _friction, "friction", 0.4f);
             serializer.DataField(ref _restitution, "restitution", 0f);
             serializer.DataField(ref _hard, "hard", true);

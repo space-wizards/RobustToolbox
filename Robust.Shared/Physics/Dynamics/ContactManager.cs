@@ -304,6 +304,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal void Collide()
         {
+            ActiveList.Clear();
             // TODO: We need to handle collisions during prediction but also handle the start / stop colliding shit during sim ONLY
 
             // Update awake contacts
@@ -314,6 +315,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
+
                 int indexA = contact.ChildIndexA;
                 int indexB = contact.ChildIndexB;
                 PhysicsComponent bodyA = fixtureA.Body;
@@ -403,8 +405,10 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void PreSolve()
         {
+            ActiveList.Clear();
+            ActiveList.AddRange(ActiveContacts);
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
-            foreach (var contact in ActiveContacts)
+            foreach (var contact in ActiveList)
             {
                 if (!contact.IsTouching) continue;
 

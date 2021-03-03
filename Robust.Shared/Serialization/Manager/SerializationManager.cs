@@ -517,11 +517,6 @@ namespace Robust.Shared.Serialization.Manager
                 return target;
             }
 
-            if (!skipHook && source is ISerializationHooks beforeHooks)
-            {
-                beforeHooks.BeforeSerialization();
-            }
-
             if (target is IPopulateDefaultValues populateDefaultValues)
             {
                 populateDefaultValues.PopulateDefaultValues();

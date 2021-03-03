@@ -1,13 +1,20 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
 {
-    public class SequenceDataNode : DataNode
+    public class SequenceDataNode : DataNode<SequenceDataNode>
     {
         private readonly List<DataNode> _nodes = new();
 
         public SequenceDataNode() { }
+
+        public SequenceDataNode(List<DataNode> nodes)
+        {
+            _nodes = nodes;
+        }
 
         public SequenceDataNode(YamlSequenceNode sequenceNode)
         {
@@ -67,7 +74,7 @@ namespace Robust.Shared.Serialization.Markdown
             return (T) this[index];
         }
 
-        public override DataNode Copy()
+        public override SequenceDataNode Copy()
         {
             var newSequence = new SequenceDataNode() {Tag = Tag};
 
@@ -77,6 +84,28 @@ namespace Robust.Shared.Serialization.Markdown
             }
 
             return newSequence;
+        }
+
+        public override int GetHashCode()
+        {
+            var code = new HashCode();
+            foreach (var dataNode in _nodes)
+            {
+                code.Add(dataNode);
+            }
+
+            return code.ToHashCode();
+        }
+
+        public override SequenceDataNode Except(SequenceDataNode node)
+        {
+            var set = new HashSet<DataNode>(node._nodes);
+            var newList = new List<DataNode>();
+            foreach (var nodeNode in node._nodes)
+            {
+                if (!set.Contains(nodeNode)) newList.Add(nodeNode);
+            }
+            return new SequenceDataNode(newList);
         }
     }
 }

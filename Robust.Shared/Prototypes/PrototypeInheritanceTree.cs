@@ -36,8 +36,18 @@ namespace Robust.Shared.Prototypes
             return parent;
         }
 
-        public void AddId(string id, string? parent)
+        public string? GetParent(string id)
         {
+            return _parents.GetValueOrDefault(id);
+        }
+
+        public void AddId(string id, string? parent, bool overwrite = false)
+        {
+            if (overwrite && HasId(id))
+            {
+                RemoveId(id);
+            }
+
             if (_nodes.ContainsKey(id))
                 throw new ArgumentException($"ID {id} already present in InheritanceTree", nameof(id));
 
@@ -78,6 +88,11 @@ namespace Robust.Shared.Prototypes
                 ourChildren = new HashSet<string>();
 
             _nodes.Add(id, ourChildren);
+        }
+
+        public bool HasId(string id)
+        {
+            return _nodes.ContainsKey(id);
         }
 
         public void RemoveId(string id)

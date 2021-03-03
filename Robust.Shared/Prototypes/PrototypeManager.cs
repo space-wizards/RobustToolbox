@@ -216,18 +216,51 @@ namespace Robust.Shared.Prototypes
         {
 #if !FULL_RELEASE
             var changed = LoadFile(file.ToRootedPath(), true);
-            Resync();
+            var pushed = new HashSet<string>();
 
             foreach (var prototype in changed)
             {
-                if (prototype is not EntityPrototype entityPrototype)
+                var type = prototype.GetType();
+                var baseNode = prototype.ID;
+
+                if (pushed.Contains(baseNode))
                 {
                     continue;
                 }
 
-                foreach (var entity in _entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == entityPrototype.ID)))
+                var tree = _inheritanceTrees[type];
+                var currentNode = prototype.Parent;
+
+                if (currentNode == null)
                 {
-                    entityPrototype.UpdateEntity((Entity) entity);
+                    PushInheritance(type, baseNode, null, pushed);
+                    continue;
+                }
+
+                while (true)
+                {
+                    var parent = tree.GetParent(currentNode);
+
+                    if (parent == null)
+                    {
+                        break;
+                    }
+
+                    baseNode = currentNode;
+                    currentNode = parent;
+                }
+
+                PushInheritance(type, currentNode, baseNode, null, pushed);
+            }
+
+            var entityPrototypes = prototypes[typeof(EntityPrototype)];
+
+            // TODO filter by entity prototypes changed
+            foreach (var prototype in pushed)
+            {
+                foreach (var entity in _entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype)))
+                {
+                    ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
                 }
             }
 #endif
@@ -239,18 +272,34 @@ namespace Robust.Shared.Prototypes
             {
                 foreach (var baseNode in tree.BaseNodes)
                 {
-                    PushInheritance(type, baseNode, null);
+                    PushInheritance(type, baseNode, null, new HashSet<string>());
                 }
             }
         }
 
-        public void PushInheritance(Type type, string id, DeserializationResult? baseResult)
+        public void PushInheritance(Type type, string id, string child, DeserializationResult? baseResult, HashSet<string> changed)
         {
+            changed.Add(id);
+
             var myRes = _prototypeResults[type][id];
             var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
+
+            PushInheritance(type, child, newResult, changed);
+
+            var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
+            prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
+        }
+
+        public void PushInheritance(Type type, string id, DeserializationResult? baseResult, HashSet<string> changed)
+        {
+            changed.Add(id);
+
+            var myRes = _prototypeResults[type][id];
+            var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
+
             foreach (var childID in _inheritanceTrees[type].Children(id))
             {
-                PushInheritance(type, childID, newResult);
+                PushInheritance(type, childID, newResult, changed);
             }
 
             var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
@@ -353,9 +402,9 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public List<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
+        public HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
         {
-            var changedPrototypes = new List<IPrototype>();
+            var changedPrototypes = new HashSet<IPrototype>();
 
             try
             {
@@ -376,7 +425,7 @@ namespace Robust.Shared.Prototypes
                     try
                     {
                         var documentPrototypes = LoadFromDocument(yamlStream.Documents[i], overwrite);
-                        changedPrototypes.AddRange(documentPrototypes);
+                        changedPrototypes.UnionWith(documentPrototypes);
                     }
                     catch (Exception e)
                     {
@@ -440,9 +489,9 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private List<IPrototype> LoadFromDocument(YamlDocument document, bool overwrite = false)
+        private HashSet<IPrototype> LoadFromDocument(YamlDocument document, bool overwrite = false)
         {
-            var changedPrototypes = new List<IPrototype>();
+            var changedPrototypes = new HashSet<IPrototype>();
             var rootNode = (YamlSequenceNode) document.RootNode;
 
             foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
@@ -468,7 +517,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 _prototypeResults[prototypeType][prototype.ID] = res;
-                _inheritanceTrees[prototypeType].AddId(prototype.ID, prototype.Parent);
+                _inheritanceTrees[prototypeType].AddId(prototype.ID, prototype.Parent, true);
 
                 prototypes[prototypeType][prototype.ID] = prototype;
                 changedPrototypes.Add(prototype);

@@ -262,7 +262,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
                 Vector2 normal;
-                InitializeManifold(manifold, xfA, xfB, radiusA, radiusB, out normal, points);
+                InitializeManifold(ref manifold, xfA, xfB, radiusA, radiusB, out normal, points);
 
                 velocityConstraint.Normal = normal;
 
@@ -661,7 +661,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             for (int i = 0; i < _contactCount; ++i)
             {
                 ContactVelocityConstraint velocityConstraint = _velocityConstraints[i];
-                Collision.Manifold manifold = _contacts[velocityConstraint.ContactIndex].Manifold;
+                var manifold = _contacts[velocityConstraint.ContactIndex].Manifold;
 
                 for (int j = 0; j < velocityConstraint.PointCount; ++j)
                 {
@@ -762,7 +762,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// that generated the manifold.
         /// </summary>
         internal static void InitializeManifold(
-            in Collision.Manifold manifold,
+            ref Manifold manifold,
             in Transform xfA,
             in Transform xfB,
             float radiusA,

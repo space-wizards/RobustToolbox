@@ -96,9 +96,25 @@ namespace Robust.Shared.Physics.Collision
         }
     }
 
-    // Made a class because A) It gets mutated bloody everywhere and B) unless you're careful you'll get solver issues (yay!)
-    // which I really could not be fucked dealing with
-    public sealed class Manifold
+    /// <summary>
+    /// A manifold for two touching convex Shapes.
+    /// Box2D supports multiple types of contact:
+    /// - Clip point versus plane with radius
+    /// - Point versus point with radius (circles)
+    /// The local point usage depends on the manifold type:
+    /// - ShapeType.Circles: the local center of circleA
+    /// - SeparationFunction.FaceA: the center of faceA
+    /// - SeparationFunction.FaceB: the center of faceB
+    /// Similarly the local normal usage:
+    /// - ShapeType.Circles: not used
+    /// - SeparationFunction.FaceA: the normal on polygonA
+    /// - SeparationFunction.FaceB: the normal on polygonB
+    /// We store contacts in this way so that position correction can
+    /// account for movement, which is critical for continuous physics.
+    /// All contact scenarios must be expressed in one of these types.
+    /// This structure is stored across time steps, so we keep it small.
+    /// </summary>
+    public struct Manifold
     {
         public Vector2 LocalNormal;
 
@@ -112,25 +128,44 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     Points of contact, can only be 0 -> 2.
         /// </summary>
-        public ManifoldPoint[] Points = new ManifoldPoint[2];
+        internal FixedArray2<ManifoldPoint> Points;
 
         public ManifoldType Type;
+    }
 
-        public Manifold() {}
+    internal struct FixedArray2<T>
+    {
+        private T _value0;
+        private T _value1;
 
-        public Manifold(Vector2 localNormal, Vector2 localPoint, int pointCount, ManifoldPoint[] points, ManifoldType type)
+        public T this[int index]
         {
-            LocalNormal = localNormal;
-            LocalPoint = localPoint;
-            PointCount = pointCount;
-            // Do not remove this copy or shit BREAKS
-            Array.Copy(points, Points, PointCount);
-            Type = type;
-        }
-
-        internal Manifold Clone()
-        {
-            return new(LocalNormal, LocalPoint, PointCount, Points, Type);
+            get
+            {
+                switch (index)
+                {
+                    case 0:
+                        return _value0;
+                    case 1:
+                        return _value1;
+                    default:
+                        throw new IndexOutOfRangeException();
+                }
+            }
+            set
+            {
+                switch (index)
+                {
+                    case 0:
+                        _value0 = value;
+                        break;
+                    case 1:
+                        _value1 = value;
+                        break;
+                    default:
+                        throw new IndexOutOfRangeException();
+                }
+            }
         }
     }
 

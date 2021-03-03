@@ -721,6 +721,7 @@ namespace Robust.Server.GameObjects
             _deletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }
 
+        // TODO: Call this from MoveEvent as well I think and just pass in the box2
         public override bool UpdateEntityTree(IEntity entity)
         {
             var currentTick = CurrentTick;
@@ -736,6 +737,7 @@ namespace Robust.Server.GameObjects
             DebugTools.Assert(entity.Transform.Initialized);
 
             // note: updated can be false even if something moved a bit
+            var worldAABB = GetWorldAabbFromEntity(entity);
 
             foreach (var (player, lastSeen) in _playerLastSeen)
             {
@@ -782,7 +784,7 @@ namespace Robust.Server.GameObjects
                 // saw it previously
 
                 // player can't see it now
-                if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
+                if (!viewbox.Intersects(worldAABB))
                 {
                     var addToMovers = false;
                     if (entity.Transform.LastModifiedTick >= currentTick)

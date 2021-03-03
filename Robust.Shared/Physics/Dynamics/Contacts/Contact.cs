@@ -395,7 +395,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (sensor)
                 return;
 
-            // Really only useful for debugging plus the message allocs soooooo
 #if DEBUG
             _entityManager.EventBus.RaiseEvent(EventSource.Local, new PreSolveMessage(this, oldManifold));
 #endif

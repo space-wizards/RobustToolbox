@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
-        
+
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>

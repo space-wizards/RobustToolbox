@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -106,51 +107,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
-        public PolygonShape(IPhysShape shape)
-        {
-            // Look it's fucking shitcode but go look at Collision to explain why (tl;dr until Acruid's manifold generation is ported this is faster than doing 2 casts)
-            switch (shape)
-            {
-                case PhysShapeAabb aabb:
-                    _radius = aabb.Radius;
-                    var bounds = aabb.LocalBounds;
-                    // Set normals directly to avoid giftwrap
-                    _vertices = new List<Vector2>
-                    {
-                        bounds.BottomRight,
-                        bounds.TopRight,
-                        bounds.TopLeft,
-                        bounds.BottomLeft,
-                    };
-                    _normals = new List<Vector2>
-                    {
-                        new(1, -0),
-                        new(0, 1),
-                        new(-1, -0),
-                        new(0, -1),
-                    };
-                    break;
-                case PhysShapeRect rect:
-                    _radius = rect.Radius;
-                    var rectBounds = rect.CachedBounds;
-                    Vertices = new List<Vector2>
-                    {
-                        rectBounds.BottomRight,
-                        rectBounds.TopRight,
-                        rectBounds.TopLeft,
-                        rectBounds.BottomLeft,
-                    };
-                    break;
-                case PolygonShape poly:
-                    _radius = poly.Radius;
-                    _vertices = poly._vertices;
-                    _normals = poly._normals;
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-
         public PolygonShape()
         {
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
@@ -174,7 +130,23 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(this, x => x.Vertices, "vertices", new List<Vector2>());
+            // Helper, at least for now
+            var bounds = serializer.ReadDataField("bounds", Box2.UnitCentered);
+
+            Vertices = new List<Vector2>
+            {
+                bounds.BottomRight,
+                bounds.TopRight,
+                bounds.TopLeft,
+                bounds.BottomLeft,
+            };
+
+            // Was probably a box2 so just assume that
+            // TODO: Below needs cleanup once PhysShapeAabb gets working again and other stuff is cleaned up
+            if (serializer.TryReadDataField("vertices", out List<Vector2>? vertices) && vertices != null)
+            {
+                Vertices = vertices;
+            }
             // ComputeProperties();
         }
 

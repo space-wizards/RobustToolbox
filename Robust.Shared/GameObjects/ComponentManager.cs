@@ -450,7 +450,7 @@ namespace Robust.Shared.GameObjects
             var comps = _entCompIndex[uid];
             foreach (var comp in comps)
             {
-                if (comp.Deleted || !(comp is T tComp)) continue;
+                if (comp.Deleted || comp is not T tComp) continue;
 
                 yield return tComp;
             }

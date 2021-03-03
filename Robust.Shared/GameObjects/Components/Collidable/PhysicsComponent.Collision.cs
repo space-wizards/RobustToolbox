@@ -7,6 +7,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
@@ -16,12 +17,15 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    ///     Called every tick for colliding bodies.
+    /// </summary>
     public interface ICollideBehavior
     {
         /// <summary>
         ///     We'll pass in both our body and the other body to save the behaviors having to get these components themselves.
         /// </summary>
-        void CollideWith(IPhysBody ourBody, IPhysBody otherBody);
+        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
     }
 
     public interface IPostCollide

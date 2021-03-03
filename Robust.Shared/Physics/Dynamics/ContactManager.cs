@@ -426,7 +426,7 @@ namespace Robust.Shared.Physics.Dynamics
                     foreach (var behavior in _collisionBehaviors)
                     {
                         if (bodyB.Deleted) break;
-                        behavior.CollideWith(bodyA, bodyB);
+                        behavior.CollideWith(bodyA, bodyB, contact.Manifold);
                     }
 
                     _collisionBehaviors.Clear();
@@ -442,7 +442,7 @@ namespace Robust.Shared.Physics.Dynamics
                     foreach (var behavior in _collisionBehaviors)
                     {
                         if (bodyA.Deleted) break;
-                        behavior.CollideWith(bodyB, bodyA);
+                        behavior.CollideWith(bodyB, bodyA, contact.Manifold);
                     }
 
                     _collisionBehaviors.Clear();

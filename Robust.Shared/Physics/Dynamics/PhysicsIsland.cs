@@ -304,7 +304,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// <param name="invDt"></param>
         /// <param name="prediction"></param>
         /// <param name="deferredUpdates">Add any transform updates to a deferred list</param>
-        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<ITransformComponent> deferredUpdates)
+        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<(ITransformComponent, IPhysBody)> deferredUpdates)
         {
 #if DEBUG
             _debugBodies.Clear();
@@ -484,7 +484,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 if (transform.UpdatesDeferred)
                 {
-                    deferredUpdates.Add(transform);
+                    deferredUpdates.Add((transform, body));
                 }
 
                 body.LinearVelocity = _linearVelocities[i];

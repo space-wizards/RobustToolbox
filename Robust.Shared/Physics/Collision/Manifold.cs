@@ -98,7 +98,7 @@ namespace Robust.Shared.Physics.Collision
 
     // Made a class because A) It gets mutated bloody everywhere and B) unless you're careful you'll get solver issues (yay!)
     // which I really could not be fucked dealing with
-    internal sealed class Manifold
+    public sealed class Manifold
     {
         public Vector2 LocalNormal;
 

@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
-        void RunDeferred();
+        void RunDeferred(Box2 worldAABB);
 
         /// <summary>
         ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.

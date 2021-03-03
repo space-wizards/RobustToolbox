@@ -38,8 +38,7 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        // TODO: Pausing but need to merge in shared IPauseManager
-        // AKA world.
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private SharedPhysicsSystem _physicsSystem = default!;
 
@@ -72,7 +71,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<ITransformComponent> _deferredUpdates = new();
+        private List<(ITransformComponent, IPhysBody)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -477,9 +476,10 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
-            foreach (var transform in _deferredUpdates)
+            // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
+            foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred();
+                transform.RunDeferred(physics.GetWorldAABB(_mapManager));
             }
 
             _deferredUpdates.Clear();

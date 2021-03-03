@@ -293,7 +293,7 @@ namespace Robust.Shared.GameObjects
             serializer.DataField(ref _linearDamping, "linearDamping", 0.02f);
             serializer.DataField(ref _angularDamping, "angularDamping", 0.02f);
             serializer.DataField(ref _mass, "mass", 1.0f);
-            if (_mass > 0f && BodyType == BodyType.Dynamic)
+            if (_mass > 0f && (BodyType & BodyType.Dynamic | BodyType.KinematicController) != 0)
             {
                 _invMass = 1.0f / _mass;
             }
@@ -581,7 +581,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Mass
         {
-            get => BodyType == BodyType.Dynamic ? _mass : 0.0f;
+            get => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
@@ -606,7 +606,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
-        public float InvMass => BodyType == BodyType.Dynamic ? _invMass : 0.0f;
+        [ViewVariables]
+        public float InvMass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _invMass : 0.0f;
 
         private float _invMass;
 
@@ -1293,8 +1294,8 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         internal bool ShouldCollide(PhysicsComponent other)
         {
-            // At least one body should be dynamic.
-            if (_bodyType != BodyType.Dynamic && other._bodyType != BodyType.Dynamic)
+            if ((_bodyType & (BodyType.Kinematic | BodyType.Static)) != 0 &&
+                (other._bodyType & (BodyType.Kinematic | BodyType.Static)) != 0)
             {
                 return false;
             }

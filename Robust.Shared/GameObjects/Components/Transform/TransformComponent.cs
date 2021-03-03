@@ -445,7 +445,7 @@ namespace Robust.Shared.GameObjects
             base.OnRemove();
         }
 
-        public void RunDeferred()
+        public void RunDeferred(Box2 worldAABB)
         {
             // if we resolved to (close enough) to the OG position then no update.
             if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&

@@ -123,8 +123,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.TangentSpeed = contact.TangentSpeed;
                 velocityConstraint.IndexA = bodyA.IslandIndex;
                 velocityConstraint.IndexB = bodyB.IslandIndex;
-                velocityConstraint.InvMassA = bodyA.InvMass;
-                velocityConstraint.InvMassB = bodyB.InvMass;
+
+                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
                 velocityConstraint.InvIA = bodyA.InvI;
                 velocityConstraint.InvIB = bodyB.InvI;
                 velocityConstraint.ContactIndex = i;
@@ -139,8 +139,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var positionConstraint = _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex;
                 positionConstraint.IndexB = bodyB.IslandIndex;
-                positionConstraint.InvMassA = bodyA.InvMass;
-                positionConstraint.InvMassB = bodyB.InvMass;
+                (positionConstraint.InvMassA, positionConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
                 // TODO: Dis
                 // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
                 // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;
@@ -180,6 +179,45 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     positionConstraint.LocalPoints[j] = contactPoint.LocalPoint;
                 }
+            }
+        }
+
+        private (float, float) GetInvMass(IPhysBody bodyA, IPhysBody bodyB)
+        {
+            // God this is shitcodey but uhhhh we need to snowflake KinematicController for nice collisions.
+            // TODO: Might need more finagling with the kinematic bodytype
+            switch (bodyA.BodyType)
+            {
+                case BodyType.Kinematic:
+                case BodyType.Static:
+                    return (bodyA.InvMass, bodyB.InvMass);
+                case BodyType.KinematicController:
+                    switch (bodyB.BodyType)
+                    {
+                        case BodyType.Kinematic:
+                        case BodyType.Static:
+                            return (bodyA.InvMass, bodyB.InvMass);
+                        case BodyType.Dynamic:
+                            return (bodyA.InvMass, 0f);
+                        case BodyType.KinematicController:
+                            return (0f, 0f);
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                case BodyType.Dynamic:
+                    switch (bodyB.BodyType)
+                    {
+                        case BodyType.Kinematic:
+                        case BodyType.Static:
+                        case BodyType.Dynamic:
+                            return (bodyA.InvMass, bodyB.InvMass);
+                        case BodyType.KinematicController:
+                            return (0f, bodyB.InvMass);
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

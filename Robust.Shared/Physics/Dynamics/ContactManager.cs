@@ -21,8 +21,6 @@
 */
 
 using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -33,11 +31,6 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
-        // TODO: When a static body has no contacts left need to set it to sleep as otherwise it'll just show as awake
-        // for debug drawing (map never adds static bodies as awake so should be no problem there).
-
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         internal MapId MapId { get; set; }
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
@@ -88,12 +81,10 @@ namespace Robust.Shared.Physics.Dynamics
                 while (contactEdge != null)
                 {
                     var contact = contactEdge.Contact!;
-
                     if (!ActiveContacts.Contains(contact))
                     {
                         ActiveContacts.Add(contact);
                     }
-
                     contactEdge = contactEdge.Next;
                 }
             }
@@ -113,14 +104,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                     contactEdge = contactEdge.Next;
                 }
-            }
-        }
-
-        internal void RemoveActiveContact(Contact contact)
-        {
-            if (!ActiveContacts.Contains(contact))
-            {
-                ActiveContacts.Remove(contact);
             }
         }
 

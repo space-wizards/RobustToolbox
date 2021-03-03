@@ -29,22 +29,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     This contact in the chain.
         /// </summary>
-        public Contact? Contact { get; set; } = default!;
+        public Contact? Contact { get; set; }
 
         public ContactEdge? Next { get; set; }
 
-        public ContactEdge? Previous { get; set; } = default!;
+        public ContactEdge? Previous { get; set; }
 
         // Subject to change
-        public PhysicsComponent? Other { get; set; } = default!;
-
-        public ContactEdge() {}
-
-        public ContactEdge(Contact contact, ContactEdge previous, PhysicsComponent other)
-        {
-            Contact = contact;
-            Previous = previous;
-            Other = other;
-        }
+        public PhysicsComponent? Other { get; set; }
     }
 }

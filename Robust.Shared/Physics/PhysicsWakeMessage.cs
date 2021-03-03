@@ -22,24 +22,4 @@ namespace Robust.Shared.Physics
             Body = component;
         }
     }
-
-    public sealed class PhysicsWakeCompMessage : ComponentMessage
-    {
-        public PhysicsComponent Body { get; }
-
-        public PhysicsWakeCompMessage(PhysicsComponent component)
-        {
-            Body = component;
-        }
-    }
-
-    public sealed class PhysicsSleepCompMessage : ComponentMessage
-    {
-        public PhysicsComponent Body { get; }
-
-        public PhysicsSleepCompMessage(PhysicsComponent component)
-        {
-            Body = component;
-        }
-    }
 }

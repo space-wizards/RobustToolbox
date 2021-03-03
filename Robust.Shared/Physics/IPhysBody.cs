@@ -167,12 +167,6 @@ namespace Robust.Shared.Physics
 
         void WakeBody();
 
-        /// <summary>
-        /// Derived value determining if this body can move or not.
-        /// </summary>
-        /// <returns>True if this body can move, false if it is static.</returns>
-        bool CanMove();
-
         void ApplyLinearImpulse(in Vector2 impulse);
 
         void ApplyAngularImpulse(float impulse);

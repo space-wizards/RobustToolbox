@@ -376,7 +376,6 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 if (!grids.TryGetValue(gridId, out var broadPhase)) continue;
 
-                var bodyCleanup = false;
                 var toCleanup = new List<IPhysBody>();
                 // Need to cleanup every body that was touching this grid.
                 foreach (var (body, broadPhases) in _lastBroadPhases)

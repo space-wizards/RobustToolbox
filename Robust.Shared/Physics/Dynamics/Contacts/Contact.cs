@@ -431,7 +431,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     chain.GetChildEdge(_edge, ChildIndexA);
                     Collision.CollisionManager.CollideEdgeAndCircle(ref manifold, _edge, ref transformA, (CircleShape)FixtureB.Shape, ref transformB);
                     */
-                    break;
                 case ContactType.ChainAndPolygon:
                     throw new NotImplementedException();
                     /*
@@ -439,7 +438,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     loop2.GetChildEdge(_edge, ChildIndexA);
                     Collision.CollisionManager.CollideEdgeAndPolygon(ref manifold, _edge, ref transformA, (PolygonShape)FixtureB.Shape, ref transformB);
                     */
-                    break;
                 case ContactType.Circle:
                     _collisionManager.CollideCircles(manifold, (PhysShapeCircle) FixtureA!.Shape, in transformA, (PhysShapeCircle) FixtureB!.Shape, in transformB);
                     break;

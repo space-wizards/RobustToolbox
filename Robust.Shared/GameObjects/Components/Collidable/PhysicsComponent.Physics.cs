@@ -24,8 +24,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -159,7 +157,6 @@ namespace Robust.Shared.GameObjects
                     PhysicsMap.ContactManager.UpdateContacts(ContactEdges, true);
 
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-                    SendMessage(new PhysicsWakeCompMessage(this));
                 }
                 else
                 {
@@ -167,7 +164,6 @@ namespace Robust.Shared.GameObjects
                     ResetDynamics();
                     _sleepTime = 0.0f;
                     PhysicsMap.ContactManager.UpdateContacts(ContactEdges, false);
-                    SendMessage(new PhysicsSleepCompMessage(this));
                 }
 
                 Dirty();
@@ -1114,12 +1110,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool CanMove()
-        {
-            return BodyType == BodyType.Dynamic || (!Anchored && Mass > 0);
-        }
-
-        /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
@@ -1138,12 +1128,10 @@ namespace Robust.Shared.GameObjects
                 if (!Awake)
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
-                    SendMessage(new PhysicsSleepCompMessage(this));
                 }
                 else
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-                    SendMessage(new PhysicsWakeCompMessage(this));
                 }
 
                 if (Owner.IsInContainer())

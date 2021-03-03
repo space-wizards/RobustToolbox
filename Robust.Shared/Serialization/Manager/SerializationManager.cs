@@ -131,7 +131,7 @@ namespace Robust.Shared.Serialization.Manager
                 if (node is not SequenceDataNode sequenceDataNode) return new ErrorNode(node);
                 var elementType = underlyingType.GetElementType();
                 if (elementType == null)
-                    throw new ArgumentException($"Failed to get elementtype of arraytype {type}", nameof(type));
+                    throw new ArgumentException($"Failed to get elementtype of arraytype {underlyingType}", nameof(underlyingType));
                 var validatedList = new List<ValidatedNode>();
                 foreach (var dataNode in sequenceDataNode.Sequence)
                 {
@@ -173,12 +173,12 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            if (TryValidateWithTypeReader(type, node, context, out var valid)) return valid;
+            if (TryValidateWithTypeReader(underlyingType, node, context, out var valid)) return valid;
 
-            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
                 return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node);
 
-            if (TryGetDataDefinition(type, out var dataDefinition))
+            if (TryGetDataDefinition(underlyingType, out var dataDefinition))
             {
                 return node switch
                 {
@@ -214,7 +214,7 @@ namespace Robust.Shared.Serialization.Manager
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
-            if (!skipHook && obj is IPopulateDefaultValues populateDefaultValues)
+            if (obj is IPopulateDefaultValues populateDefaultValues)
             {
                 populateDefaultValues.PopulateDefaultValues();
             }
@@ -505,9 +505,14 @@ namespace Robust.Shared.Serialization.Manager
                 return target;
             }
 
-            if (target is ISerializationHooks beforeHooks)
+            if (!skipHook && source is ISerializationHooks beforeHooks)
             {
                 beforeHooks.BeforeSerialization();
+            }
+
+            if (target is IPopulateDefaultValues populateDefaultValues)
+            {
+                populateDefaultValues.PopulateDefaultValues();
             }
 
             if (!TryGetDataDefinition(commonType, out var dataDef))

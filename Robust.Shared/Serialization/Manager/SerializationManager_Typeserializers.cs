@@ -323,7 +323,7 @@ namespace Robust.Shared.Serialization.Manager
             if (TryGetWriter<T>(context, out var writer))
             {
                 node = writer.Write(this, obj, alwaysWrite, context);
-
+                return true;
             }
 
             return false;

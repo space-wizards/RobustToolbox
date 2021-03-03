@@ -126,7 +126,7 @@ namespace Robust.UnitTesting.Server
         {
             var container = new DependencyCollection();
             Collection = container;
-            
+
             IoCManager.InitThread(container, true);
 
             //TODO: This is a long term project that should eventually have parity with the actual server/client/SP IoC registration.
@@ -165,15 +165,15 @@ namespace Robust.UnitTesting.Server
             //TODO: Try to remove these
             container.RegisterInstance<IEntityNetworkManager>(new Mock<IEntityNetworkManager>().Object);
             container.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
-            
+
             _diFactory?.Invoke(container);
             container.BuildGraph();
-            
+
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler("SIM"));
 
             var compFactory = container.Resolve<IComponentFactory>();
-            
+
             compFactory.Register<MetaDataComponent>();
             compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
 
@@ -187,7 +187,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterReference<MapGridComponent, IMapGridComponent>();
 
             compFactory.Register<PhysicsComponent>();
-            compFactory.RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            compFactory.RegisterReference<PhysicsComponent, IPhysBody>();
 
             _regDelegate?.Invoke(compFactory);
 

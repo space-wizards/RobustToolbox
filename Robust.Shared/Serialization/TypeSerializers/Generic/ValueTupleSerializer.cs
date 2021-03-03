@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
-            if (node.Children.Count != 1) return new ErrorNode(node);
+            if (node.Children.Count != 1) return new ErrorNode(node, "More or less than 1 Mapping for ValueTuple found.");
 
             var entry = node.Children.First();
             var dict = new Dictionary<ValidatedNode, ValidatedNode>

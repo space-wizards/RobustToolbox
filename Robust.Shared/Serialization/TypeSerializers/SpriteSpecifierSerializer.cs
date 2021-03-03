@@ -1,3 +1,4 @@
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -87,14 +88,15 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ValidatedNode ITypeReader<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context)
         {
-            return string.IsNullOrWhiteSpace(node.Value) ? new ErrorNode(node) : new ValidatedValueNode(node);
+            //todo paul actually validate the id
+            return string.IsNullOrWhiteSpace(node.Value) ? new ErrorNode(node, "Invalid entityprototypeid") : new ValidatedValueNode(node);
         }
 
 
         ValidatedNode ITypeReader<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context)
         {
-            return serializationManager.ValidateNode(typeof(ResourcePath), node, context);
+            return serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
         }
 
         ValidatedNode ITypeReader<SpriteSpecifier, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -106,19 +108,19 @@ namespace Robust.Shared.Serialization.TypeSerializers
         ValidatedNode ITypeReader<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context)
         {
-            if (!node.TryGetNode("sprite", out var pathNode))
+            if (!node.TryGetNode("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Missing/Invalid spritenode");
             }
 
             if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Missing/Invalid statenode");
             }
 
-            var path = serializationManager.ValidateNode(typeof(ResourcePath), pathNode, context);
+            var path = serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{(SharedSpriteComponent.TextureRoot / valuePathNode.Value) / "meta.json"}"), context);
 
-            if (path is ErrorNode) return new ErrorNode(node);
+            if (path is ErrorNode) return path;
 
             return new ValidatedValueNode(node);
         }

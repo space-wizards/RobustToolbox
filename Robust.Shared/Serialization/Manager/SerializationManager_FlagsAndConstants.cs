@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -97,11 +98,38 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
+        public ValidatedNode ValidateFlag(Type tagType, DataNode node)
+        {
+            var flagType = GetFlagTypeFromTag(tagType);
+            switch (node)
+            {
+                case ValueDataNode valueDataNode:
+                    return int.TryParse(valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing flag.");
+                case SequenceDataNode sequenceDataNode:
+                    foreach (var elem in sequenceDataNode.Sequence)
+                    {
+                        if (elem is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid flagtype in flag-sequence.");
+                        if (!Enum.TryParse(flagType, valueDataNode.Value, out _)) return new ErrorNode(node, "Failed parsing flag in flag-sequence");
+                    }
+
+                    return new ValidatedValueNode(node);
+                default:
+                    return new ErrorNode(node, "Invalid nodetype for flag.");
+            }
+        }
+
         public int ReadConstant(Type tagType, DataNode node)
         {
             if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
             var constType = GetConstantTypeFromTag(tagType);
             return (int) Enum.Parse(constType, valueDataNode.Value);
+        }
+
+        public ValidatedNode ValidateConstant(Type tagType, DataNode node)
+        {
+            if (node is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid nodetype for constant.");
+            var constType = GetConstantTypeFromTag(tagType);
+            return Enum.TryParse(constType, valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing constant.");
         }
 
         public DataNode WriteFlag(Type tagType, int flag)

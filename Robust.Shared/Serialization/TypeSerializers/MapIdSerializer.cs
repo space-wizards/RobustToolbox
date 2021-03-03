@@ -23,7 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return int.TryParse(node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node);
+            return int.TryParse(node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing MapId");
         }
 
         public DataNode Write(ISerializationManager serializationManager, MapId value, bool alwaysWrite = false,

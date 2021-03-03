@@ -220,12 +220,34 @@ namespace Robust.Shared.Serialization.Manager
         int ReadFlag(Type tagType, DataNode node);
 
         /// <summary>
+        ///     Validates that a node can be deserialized into the specified flagtype.
+        /// </summary>
+        /// <param name="tagType">The tagtype for used to retrieve the flagtype.</param>
+        /// <param name="node">The node to check.</param>
+        /// <returns>
+        ///     A node with whether or not <see cref="node"/> is valid and which of its fields
+        ///     are invalid, if any.
+        /// </returns>
+        ValidatedNode ValidateFlag(Type tagType, DataNode node);
+
+        /// <summary>
         ///     Deserializes a node into an enum value of the given type.
         /// </summary>
         /// <param name="tagType">The type of enum to deserialize into.</param>
         /// <param name="node">The node to deserialize.</param>
         /// <returns>The deserialized enum.</returns>
         int ReadConstant(Type tagType, DataNode node);
+
+        /// <summary>
+        ///     Validates that a node can be deserialized into the specified constanttype.
+        /// </summary>
+        /// <param name="tagType">The tagtype for used to retrieve the constanttype.</param>
+        /// <param name="node">The node to check.</param>
+        /// <returns>
+        ///     A node with whether or not <see cref="node"/> is valid and which of its fields
+        ///     are invalid, if any.
+        /// </returns>
+        ValidatedNode ValidateConstant(Type tagType, DataNode node);
 
         /// <summary>
         ///     Serializes an enum flag into a node.

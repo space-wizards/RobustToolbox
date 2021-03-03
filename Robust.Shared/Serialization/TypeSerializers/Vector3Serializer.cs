@@ -39,14 +39,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 3)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Invalid amount of arguments for Vector3.");
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+                : new ErrorNode(node, "Failed parsing values for Vector3.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, Vector3 value, bool alwaysWrite = false,

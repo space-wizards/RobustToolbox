@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 4)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Invalid amount of arguments for Vector4.");
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                    float.TryParse(args[2], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
                    float.TryParse(args[3], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+                : new ErrorNode(node, "Failed parsing values for Vector4.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, Vector4 value, bool alwaysWrite = false,

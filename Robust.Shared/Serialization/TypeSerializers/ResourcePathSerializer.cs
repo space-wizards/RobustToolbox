@@ -28,11 +28,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
             {
                 return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(node.Value))
                     ? new ValidatedValueNode(node)
-                    : new ErrorNode(node);
+                    : new ErrorNode(node, "File not found.");
             }
             catch (Exception e)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Failed parsing filepath.");
             }
         }
 

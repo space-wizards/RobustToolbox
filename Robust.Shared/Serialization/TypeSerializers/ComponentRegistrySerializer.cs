@@ -100,14 +100,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        list.Add(new ErrorNode(componentMapping));
+                        list.Add(new ErrorNode(componentMapping, "Unknown ComponentType."));
                         continue;
                 }
 
                 // Has this type already been added?
                 if (components.Keys.Contains(compType))
                 {
-                    list.Add(new ErrorNode(componentMapping));
+                    list.Add(new ErrorNode(componentMapping, "Duplicate Component."));
                     continue;
                 }
 
@@ -129,7 +129,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 {
                     if (referenceTypes.Contains(compType))
                     {
-                        return new ErrorNode(node);
+                        return new ErrorNode(node, "Duplicate ComponentReference.");
                     }
 
                     referenceTypes.Add(compType);

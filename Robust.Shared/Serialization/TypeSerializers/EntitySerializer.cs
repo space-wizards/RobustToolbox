@@ -36,7 +36,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                    uid.IsValid() &&
                    serializationManager.EntityManager.EntityExists(uid)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+                : new ErrorNode(node, "Failed parsing EntityUid");
         }
 
         public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,

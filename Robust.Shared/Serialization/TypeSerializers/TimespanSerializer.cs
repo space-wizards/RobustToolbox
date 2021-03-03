@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+                : new ErrorNode(node, "Failed parsing TimeSpan");
         }
 
         public DataNode Write(ISerializationManager serializationManager, TimeSpan value, bool alwaysWrite = false,

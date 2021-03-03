@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
             catch (Exception e)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Failed compiling regex.");
             }
 
             return new ValidatedValueNode(node);

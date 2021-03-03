@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 4)
             {
-                return new ErrorNode(node);
+                return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
             return float.TryParse(args[0], out _) &&
@@ -46,7 +46,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                    float.TryParse(args[2], out _) &&
                    float.TryParse(args[3], out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node);
+                : new ErrorNode(node, "Failed parsing values of Box2.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, Box2 value, bool alwaysWrite = false,

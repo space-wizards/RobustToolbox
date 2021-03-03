@@ -4,7 +4,7 @@
         <PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
             <HBoxContainer>
                 <Label Margin="5 0 0 0" HorizontalExpand="true" Name="TitleLabel" StyleIdentifier="foo" ClipText="True"
-                       Text="{Loc Exemplary Window Title Here}" VAlign="Center" StyleClasses="windowTitle" />
+                       Text="{Loc 'ss14window-placeholder-title'}" VAlign="Center" StyleClasses="windowTitle" />
                 <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
             </HBoxContainer>
         </PanelContainer>

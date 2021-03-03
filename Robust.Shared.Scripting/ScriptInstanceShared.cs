@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
 using Robust.Shared.Maths;
@@ -219,6 +220,20 @@ namespace Robust.Shared.Scripting
             return ScriptOptions.Default
                 .AddImports(_defaultImports)
                 .AddReferences(GetDefaultReferences(reflectionManager));
+        }
+
+        public static string SafeFormat(object obj)
+        {
+            // Working "around" https://github.com/dotnet/roslyn/issues/51548
+
+            try
+            {
+                return CSharpObjectFormatter.Instance.FormatObject(obj);
+            }
+            catch (NotSupportedException)
+            {
+                return "<CSharpObjectFormatter.FormatObject threw>";
+            }
         }
     }
 }

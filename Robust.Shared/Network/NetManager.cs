@@ -17,6 +17,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network
 {
@@ -35,7 +36,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
+    public partial class NetManager : IClientNetManager, IServerNetManager
     {
         internal const int AesKeyLength = 32;
 
@@ -194,6 +195,7 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IEnumerable<INetChannel> Channels => _channels.Values;
 
         /// <inheritdoc />
@@ -354,11 +356,6 @@ namespace Robust.Shared.Network
                 Logger.WarningS("net",
                     "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
-        }
-
-        public void Dispose()
-        {
-            Shutdown("Network manager getting disposed.");
         }
 
         /// <inheritdoc />
@@ -672,14 +669,13 @@ namespace Robust.Shared.Network
 
         private async void HandleInitialHandshakeComplete(NetPeerData peer,
             NetConnection sender,
-            NetUserId userId,
-            string userName,
+            NetUserData userData,
             NetEncryption? encryption,
             LoginType loginType)
         {
-            var channel = new NetChannel(this, sender, userId, userName, loginType);
-            _assignedUserIds.Add(userId, sender);
-            _assignedUsernames.Add(userName, sender);
+            var channel = new NetChannel(this, sender, userData, loginType);
+            _assignedUserIds.Add(userData.UserId, sender);
+            _assignedUsernames.Add(userData.UserName, sender);
             _channels.Add(sender, channel);
             peer.AddChannel(channel);
             channel.Encryption = encryption;
@@ -1034,11 +1030,10 @@ namespace Robust.Shared.Network
 
         private async Task<NetConnectingArgs> OnConnecting(
             IPEndPoint ip,
-            NetUserId userId,
-            string userName,
+            NetUserData userData,
             LoginType loginType)
         {
-            var args = new NetConnectingArgs(userId, ip, userName, loginType);
+            var args = new NetConnectingArgs(userData, ip, loginType);
             foreach (var conn in _connectingEvent)
             {
                 await conn(args);

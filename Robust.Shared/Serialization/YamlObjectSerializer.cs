@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -786,7 +786,7 @@ namespace Robust.Shared.Serialization
                     var valNode = TypeToNode(entry.Value);
 
                     // write the concrete type tag
-                    AssignTag<object?>(valType, entry, null, valNode);
+                    AssignTag<object?>(valType, entry.Value, null, valNode);
 
                     node.Add(keyNode, valNode);
                 }

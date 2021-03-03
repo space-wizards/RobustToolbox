@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Lidgren.Network;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network
 {
@@ -12,23 +13,28 @@ namespace Robust.Shared.Network
             private readonly NetConnection _connection;
 
             /// <inheritdoc />
+            [ViewVariables]
             public long ConnectionId => _connection.RemoteUniqueIdentifier;
 
             /// <inheritdoc />
+            [ViewVariables]
             public INetManager NetPeer => _manager;
 
-            public string UserName { get; }
-            public LoginType AuthType { get; }
-            public TimeSpan RemoteTimeOffset => TimeSpan.FromSeconds(_connection.RemoteTimeOffset);
-            public TimeSpan RemoteTime => _manager._timing.RealTime + RemoteTimeOffset;
+            [ViewVariables] public string UserName => UserData.UserName;
+            [ViewVariables] public LoginType AuthType { get; }
+            [ViewVariables] public TimeSpan RemoteTimeOffset => TimeSpan.FromSeconds(_connection.RemoteTimeOffset);
+            [ViewVariables] public TimeSpan RemoteTime => _manager._timing.RealTime + RemoteTimeOffset;
 
             /// <inheritdoc />
+            [ViewVariables]
             public short Ping => (short) Math.Round(_connection.AverageRoundtripTime * 1000);
 
             /// <inheritdoc />
+            [ViewVariables]
             public bool IsConnected => _connection.Status == NetConnectionStatus.Connected;
 
             /// <inheritdoc />
+            [ViewVariables]
             public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
             /// <summary>
@@ -36,7 +42,8 @@ namespace Robust.Shared.Network
             /// </summary>
             public NetConnection Connection => _connection;
 
-            public NetUserId UserId { get; }
+            [ViewVariables] public NetUserId UserId => UserData.UserId;
+            [ViewVariables] public NetUserData UserData { get; }
 
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
@@ -46,14 +53,13 @@ namespace Robust.Shared.Network
             /// </summary>
             /// <param name="manager">The server this channel belongs to.</param>
             /// <param name="connection">The raw NetConnection to the remote peer.</param>
-            internal NetChannel(NetManager manager, NetConnection connection, NetUserId userId, string userName,
+            internal NetChannel(NetManager manager, NetConnection connection, NetUserData userData,
                 LoginType loginType)
             {
                 _manager = manager;
                 _connection = connection;
-                UserId = userId;
-                UserName = userName;
                 AuthType = loginType;
+                UserData = userData;
             }
 
             /// <inheritdoc />

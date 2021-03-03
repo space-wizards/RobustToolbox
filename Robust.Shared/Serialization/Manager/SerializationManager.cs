@@ -477,9 +477,22 @@ namespace Robust.Shared.Serialization.Manager
                 var sourceArray = (Array) source;
                 var targetArray = (Array) target;
 
-                Array.Copy(sourceArray, targetArray, sourceArray.Length);
+                Array newArray;
+                if(sourceArray.Length == targetArray.Length)
+                {
+                    newArray = targetArray;
+                }
+                else
+                {
+                    newArray = (Array) Activator.CreateInstance(sourceArray.GetType(), sourceArray.Length)!;
+                }
 
-                return targetArray;
+                for (int i = 0; i < sourceArray.Length; i++)
+                {
+                    newArray.SetValue(CreateCopy(sourceArray.GetValue(i), context, skipHook), i);
+                }
+
+                return newArray;
             }
 
             if (source.GetType().IsArray != target.GetType().IsArray)

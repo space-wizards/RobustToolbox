@@ -119,9 +119,11 @@ namespace Robust.Shared.Prototypes
     {
         private readonly string type;
         public string Type => type;
-        public PrototypeAttribute(string type)
+        public readonly int LoadPriority = 1;
+        public PrototypeAttribute(string type, int loadPriority = 1)
         {
             this.type = type;
+            LoadPriority = loadPriority;
         }
     }
 
@@ -136,6 +138,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new();
+        private readonly Dictionary<Type, int> prototypePriorities = new();
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
@@ -212,18 +215,25 @@ namespace Robust.Shared.Prototypes
             _inheritanceTrees.Clear();
         }
 
+        private int SortPrototypesByPriority(Type a, Type b)
+        {
+            return prototypePriorities[b].CompareTo(prototypePriorities[a]);
+        }
+
         public virtual void ReloadPrototypes(ResourcePath file)
         {
 #if !FULL_RELEASE
-            var changed = LoadFile(file.ToRootedPath(), true);
-            var pushed = new HashSet<string>();
+            var changed = LoadFile(file.ToRootedPath(), true).ToList();
+            changed.Sort((prototype, prototype1) => SortPrototypesByPriority(prototype.GetType(), prototype1.GetType()));
+            var pushed = new Dictionary<Type, HashSet<string>>();
 
             foreach (var prototype in changed)
             {
                 var type = prototype.GetType();
+                if (!pushed.ContainsKey(type)) pushed[type] = new HashSet<string>();
                 var baseNode = prototype.ID;
 
-                if (pushed.Contains(baseNode))
+                if (pushed[type].Contains(baseNode))
                 {
                     continue;
                 }
@@ -233,7 +243,7 @@ namespace Robust.Shared.Prototypes
 
                 if (currentNode == null)
                 {
-                    PushInheritance(type, baseNode, null, pushed);
+                    PushInheritance(type, baseNode, null, pushed[type]);
                     continue;
                 }
 
@@ -250,13 +260,15 @@ namespace Robust.Shared.Prototypes
                     currentNode = parent;
                 }
 
-                PushInheritance(type, currentNode, baseNode, null, pushed);
+                PushInheritance(type, currentNode, baseNode, null, pushed[type]);
             }
+
+            // TODO filter by entity prototypes changed
+            if (!pushed.ContainsKey(typeof(EntityPrototype))) return;
 
             var entityPrototypes = prototypes[typeof(EntityPrototype)];
 
-            // TODO filter by entity prototypes changed
-            foreach (var prototype in pushed)
+            foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
                 foreach (var entity in _entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype)))
                 {
@@ -268,8 +280,11 @@ namespace Robust.Shared.Prototypes
 
         public void Resync()
         {
-            foreach (var (type, tree) in _inheritanceTrees)
+            var trees = _inheritanceTrees.Keys.ToList();
+            trees.Sort(SortPrototypesByPriority);
+            foreach (var type in trees)
             {
+                var tree = _inheritanceTrees[type];
                 foreach (var baseNode in tree.BaseNodes)
                 {
                     PushInheritance(type, baseNode, null, new HashSet<string>());
@@ -286,6 +301,7 @@ namespace Robust.Shared.Prototypes
 
             PushInheritance(type, child, newResult, changed);
 
+            newResult.CallAfterDeserializationHook();
             var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
             prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }
@@ -575,6 +591,7 @@ namespace Robust.Shared.Prototypes
             }
 
             prototypeTypes[attribute.Type] = type;
+            prototypePriorities[type] = attribute.LoadPriority;
 
             if (typeof(IPrototype).IsAssignableFrom(type))
             {

@@ -91,10 +91,17 @@ namespace Robust.Shared.Serialization.Manager
                     }
                 }
 
-                var alwaysPushInheritance =
-                    abstractFieldInfo.GetCustomAttribute<AlwaysPushInheritanceAttribute>() != null;
+                var inheritanceBehaviour = InheritanceBehaviour.Default;
+                if (abstractFieldInfo.GetCustomAttribute<AlwaysPushInheritanceAttribute>() != null)
+                {
+                    inheritanceBehaviour = InheritanceBehaviour.Always;
+                }
+                else if (abstractFieldInfo.GetCustomAttribute<NeverPushInheritanceAttribute>() != null)
+                {
+                    inheritanceBehaviour = InheritanceBehaviour.Never;
+                }
 
-                fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo, alwaysPushInheritance));
+                fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo, inheritanceBehaviour));
             }
 
             _duplicates = fieldDefs
@@ -160,7 +167,7 @@ namespace Robust.Shared.Serialization.Manager
 
                     if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(false);
+                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehaviour);
                         continue;
                     }
 
@@ -168,7 +175,7 @@ namespace Robust.Shared.Serialization.Manager
 
                     if (!mapped)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(mapped);
+                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehaviour);
                         continue;
                     }
 
@@ -208,7 +215,7 @@ namespace Robust.Shared.Serialization.Manager
                         }
                     }
 
-                    var entry = new DeserializedFieldEntry(mapped, result, fieldDefinition.AlwaysPushInheritanceFlag);
+                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehaviour, result);
                     mappedInfo[i] = entry;
                 }
 
@@ -362,17 +369,24 @@ namespace Robust.Shared.Serialization.Manager
             public readonly DataFieldAttribute Attribute;
             public readonly object? DefaultValue;
             public readonly AbstractFieldInfo FieldInfo;
-            public readonly bool AlwaysPushInheritanceFlag;
+            public readonly InheritanceBehaviour InheritanceBehaviour;
 
-            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo, bool alwaysPushInheritanceFlag)
+            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo, InheritanceBehaviour inheritanceBehaviour)
             {
                 Attribute = attr;
                 DefaultValue = defaultValue;
                 FieldInfo = fieldInfo;
-                AlwaysPushInheritanceFlag = alwaysPushInheritanceFlag;
+                InheritanceBehaviour = inheritanceBehaviour;
             }
 
             public Type FieldType => FieldInfo.FieldType;
+        }
+
+        public enum InheritanceBehaviour : byte
+        {
+            Default,
+            Always,
+            Never
         }
     }
 }

@@ -96,6 +96,7 @@ namespace Robust.Shared.Prototypes
         ///     If true, this object should not show up in the entity spawn panel.
         /// </summary>
         [ViewVariables]
+        [NeverPushInheritance]
         [DataField("abstract")]
         public bool Abstract { get; private set; }
 

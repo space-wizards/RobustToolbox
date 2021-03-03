@@ -1,16 +1,18 @@
-﻿namespace Robust.Shared.Serialization.Manager.Result
+﻿using System;
+
+namespace Robust.Shared.Serialization.Manager.Result
 {
     public class DeserializedFieldEntry
     {
-        public DeserializedFieldEntry(bool mapped, DeserializationResult? result = null, bool alwaysInherit = false)
+        public DeserializedFieldEntry(bool mapped, SerializationDataDefinition.InheritanceBehaviour inheritanceBehaviour, DeserializationResult? result = null)
         {
             Mapped = mapped;
             Result = result;
-            AlwaysInherit = alwaysInherit;
+            InheritanceBehaviour = inheritanceBehaviour;
         }
 
         public bool Mapped { get; }
-        public bool AlwaysInherit { get; }
+        public SerializationDataDefinition.InheritanceBehaviour InheritanceBehaviour { get; }
 
         public DeserializationResult? Result { get; }
 
@@ -18,11 +20,13 @@
         {
             if(Mapped)
             {
-                if (AlwaysInherit)
+                if (InheritanceBehaviour == SerializationDataDefinition.InheritanceBehaviour.Always)
                 {
-                    if(Result != null)
+                    if (Result != null)
                     {
-                        return fieldEntry.Result != null ? new (Mapped, Result.PushInheritanceFrom(fieldEntry.Result), AlwaysInherit) : Copy();
+                        return fieldEntry.Result != null
+                            ? new(Mapped, InheritanceBehaviour, Result.PushInheritanceFrom(fieldEntry.Result))
+                            : Copy();
                     }
                     else
                     {
@@ -32,15 +36,13 @@
 
                 return Copy();
             }
-            else
-            {
-                return fieldEntry.Copy();
-            }
+
+            return InheritanceBehaviour == SerializationDataDefinition.InheritanceBehaviour.Never ? Copy() : fieldEntry.Copy();
         }
 
         public DeserializedFieldEntry Copy()
         {
-            return new(Mapped, Result?.Copy(), AlwaysInherit);
+            return new(Mapped, InheritanceBehaviour, Result?.Copy());
         }
     }
 }

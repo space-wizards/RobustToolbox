@@ -71,7 +71,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 results.Add(result);
             }
 
-            return new DeserializedMutableCollection<List<T>, T>(list, results);
+            return new DeserializedCollection<List<T>, T>(list, results, elements => elements);
         }
 
         ValidatedNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
@@ -127,7 +127,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 results.Add(result);
             }
 
-            return new DeserializedReadOnlyCollection<IReadOnlyList<T>, T>(list, results, l => l);
+            return new DeserializedCollection<IReadOnlyList<T>, T>(list, results, l => l);
         }
 
         DeserializationResult ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
@@ -144,7 +144,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 results.Add(result);
             }
 
-            return new DeserializedReadOnlyCollection<IReadOnlyCollection<T>, T>(list, results, l => l);
+            return new DeserializedCollection<IReadOnlyCollection<T>, T>(list, results, l => l);
         }
 
         DeserializationResult ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
@@ -161,7 +161,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 results.Add(result);
             }
 
-            return new DeserializedImmutableList<T>(list.ToImmutable(), results);
+            return new DeserializedCollection<ImmutableList<T>,T>(list.ToImmutable(), results, elements => ImmutableList.Create(elements.ToArray()));
         }
 
         [MustUseReturnValue]

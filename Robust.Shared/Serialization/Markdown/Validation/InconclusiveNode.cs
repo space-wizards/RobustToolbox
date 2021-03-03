@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
@@ -12,10 +13,8 @@ namespace Robust.Shared.Serialization.Markdown.Validation
         }
 
         public override bool Valid => true;
-        public override IEnumerable<string> Invalids()
-        {
-            yield break;
-        }
+
+        public override IEnumerable<string> Invalids() => Enumerable.Empty<string>();
 
         public override string? ToString()
         {

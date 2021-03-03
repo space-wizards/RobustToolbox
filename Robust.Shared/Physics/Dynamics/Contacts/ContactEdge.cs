@@ -24,7 +24,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
-    internal sealed class ContactEdge
+    public sealed class ContactEdge
     {
         /// <summary>
         ///     This contact in the chain.

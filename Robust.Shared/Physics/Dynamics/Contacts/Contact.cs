@@ -32,10 +32,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
-    internal sealed class Contact
+    public sealed class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly ICollisionManager _collisionManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+#if DEBUG
+        private SharedDebugPhysicsSystem _debugPhysics = default!;
+#endif
 
         public ContactEdge NodeA = new();
         public ContactEdge NodeB = new();
@@ -159,6 +161,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Contact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             IoCManager.InjectDependencies(this);
+#if DEBUG
+            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+#endif
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 
@@ -396,7 +401,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 return;
 
 #if DEBUG
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, new PreSolveMessage(this, oldManifold));
+            _debugPhysics.HandlePreSolve(this, oldManifold);
 #endif
         }
 
@@ -500,6 +505,33 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Rect,
             RectAndCircle,
             RectAndPolygon,
+        }
+
+        public bool Equals(Contact? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(FixtureA, other.FixtureA) &&
+                   Equals(FixtureB, other.FixtureB) &&
+                   Manifold.Equals(other.Manifold) &&
+                   _type == other._type &&
+                   GridId.Equals(other.GridId) &&
+                   Enabled == other.Enabled &&
+                   ChildIndexA == other.ChildIndexA &&
+                   ChildIndexB == other.ChildIndexB &&
+                   Friction.Equals(other.Friction) &&
+                   Restitution.Equals(other.Restitution);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return ReferenceEquals(this, obj) || obj is Contact other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            // TODO: Need to suss this out
+            return HashCode.Combine(GridId.Value, FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
         }
     }
 }

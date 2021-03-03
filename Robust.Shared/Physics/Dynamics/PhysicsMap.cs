@@ -445,11 +445,9 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             ContactManager.Collide();
-
-            // TODO: May move this as a PostSolve once we have broadphase collisions where contacts can be generated
-            // even though the bodies may not technically be colliding
+            // Don't run collision behaviors during FrameUpdate?
             if (!prediction)
-                ContactManager.PreSolve();
+                ContactManager.PreSolve(frameTime);
 
             // Remove all deleted entities etc.
             ProcessChanges();

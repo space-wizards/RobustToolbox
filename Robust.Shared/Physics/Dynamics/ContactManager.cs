@@ -386,14 +386,15 @@ namespace Robust.Shared.Physics.Dynamics
             ActiveList.Clear();
         }
 
-        public void PreSolve()
+        public void PreSolve(float frameTime)
         {
-            ActiveList.Clear();
+            // TODO: Optimise this coz it allocates a fuckton
             ActiveList.AddRange(ActiveContacts);
+
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
             foreach (var contact in ActiveList)
             {
-                if (!contact.IsTouching) continue;
+                if (!contact.IsTouching || !contact.Enabled) continue;
 
                 // God this area's hard to read but tl;dr run ICollideBehavior and IPostCollide and try to optimise it a little.
                 var bodyA = contact.FixtureA!.Body;
@@ -409,7 +410,7 @@ namespace Robust.Shared.Physics.Dynamics
                     foreach (var behavior in _collisionBehaviors)
                     {
                         if (bodyB.Deleted) break;
-                        behavior.CollideWith(bodyA, bodyB, contact.Manifold);
+                        behavior.CollideWith(bodyA, bodyB, frameTime, contact.Manifold);
                     }
 
                     _collisionBehaviors.Clear();
@@ -425,7 +426,7 @@ namespace Robust.Shared.Physics.Dynamics
                     foreach (var behavior in _collisionBehaviors)
                     {
                         if (bodyA.Deleted) break;
-                        behavior.CollideWith(bodyB, bodyA, contact.Manifold);
+                        behavior.CollideWith(bodyB, bodyA, frameTime, contact.Manifold);
                     }
 
                     _collisionBehaviors.Clear();
@@ -463,6 +464,8 @@ namespace Robust.Shared.Physics.Dynamics
                     _postCollideBehaviors.Clear();
                 }
             }
+
+            ActiveList.Clear();
         }
 
         public void PostSolve()

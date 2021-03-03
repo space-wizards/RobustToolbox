@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     We'll pass in both our body and the other body to save the behaviors having to get these components themselves.
         /// </summary>
-        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
+        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, float frameTime, in Manifold manifold);
     }
 
     public interface IPostCollide

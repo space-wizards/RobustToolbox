@@ -61,8 +61,8 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             foreach (var oldRes in Mappings)
             {
-                var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                valueList.Add(newRes.Value!);
+                var newRes = oldRes.Copy();
+                valueList.Add((TElement) newRes.RawValue!);
                 resList.Add(newRes);
             }
 

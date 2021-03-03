@@ -743,6 +743,7 @@ namespace Robust.Server.Maps
                         mapping.Add("type", entity.Prototype.ID);
                         if (!prototypeCompCache.ContainsKey(entity.Prototype.ID))
                         {
+                            prototypeCompCache[entity.Prototype.ID] = new Dictionary<string, MappingDataNode>();
                             foreach (var (compType, comp) in entity.Prototype.Components)
                             {
                                 prototypeCompCache[entity.Prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));

@@ -11,9 +11,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
 {
     [TypeSerializer]
     public class SpriteSpecifierSerializer :
-        ITypeReaderWriter<Texture, ValueDataNode>,
-        ITypeReaderWriter<EntityPrototype, ValueDataNode>,
-        ITypeReaderWriter<Rsi, MappingDataNode>,
+        ITypeSerializer<Texture, ValueDataNode>,
+        ITypeSerializer<EntityPrototype, ValueDataNode>,
+        ITypeSerializer<Rsi, MappingDataNode>,
         ITypeReader<SpriteSpecifier, MappingDataNode>,
         ITypeReader<SpriteSpecifier, ValueDataNode>
     {
@@ -145,6 +145,24 @@ namespace Robust.Shared.Serialization.TypeSerializers
             mapping.AddNode("sprite", serializationManager.WriteValue(value.RsiPath));
             mapping.AddNode("state", new ValueDataNode(value.RsiState));
             return mapping;
+        }
+
+        public Texture Copy(ISerializationManager serializationManager, Texture source, Texture target, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            return new(source.TexturePath);
+        }
+
+        public EntityPrototype Copy(ISerializationManager serializationManager, EntityPrototype source, EntityPrototype target,
+            bool skipHook, ISerializationContext? context = null)
+        {
+            return new(source.EntityPrototypeId);
+        }
+
+        public Rsi Copy(ISerializationManager serializationManager, Rsi source, Rsi target, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            return new(source.RsiPath, source.RsiState);
         }
     }
 }

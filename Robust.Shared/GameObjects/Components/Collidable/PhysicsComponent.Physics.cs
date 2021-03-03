@@ -144,6 +144,13 @@ namespace Robust.Shared.GameObjects
                 if (_awake == value)
                     return;
 
+                if (BodyType == BodyType.Static)
+                {
+                    // Check nothing slipped through
+                    DebugTools.Assert(!_awake);
+                    return;
+                }
+
                 _awake = value;
 
                 if (value)

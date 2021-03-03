@@ -1,14 +1,13 @@
 ﻿# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
 # Yes, I typed most of this out by hand.
 
-
-SystemAssemblyName: System.Runtime
-
 # ILVerify errors that are allowed.
 AllowedVerifierErrors:
 # InitOnly happens a lot when calling e.g. ToString() on a readonly field.
 # It's fine and doesn't break anything runtime related so...
 - InitOnly
+# ILVerify has problems with Default Interface Methods so...
+- InterfaceMethodNotImplemented
 
 # EVERYTHING in these namespaces is allowed.
 WhitelistedNamespaces:

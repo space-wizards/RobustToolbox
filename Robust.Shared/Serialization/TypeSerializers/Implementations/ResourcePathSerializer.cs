@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -28,20 +29,23 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            var path = node.Value;
+            var path = new ResourcePath(node.Value);
 
-            if (path.EndsWith(".rsi"))
+            if (path.Extension.Equals("rsi"))
             {
-                path = $"{path}{ResourcePath.SYSTEM_SEPARATOR}meta.json";
-                if (!path.StartsWith(ResourcePath.SYSTEM_SEPARATOR))
-                {
-                    path = $"{SharedSpriteComponent.TextureRoot}{ResourcePath.SYSTEM_SEPARATOR}{path}";
-                }
+                path /= "meta.json";
             }
+
+            if (!path.EnumerateSegments().First().Equals("Textures", StringComparison.InvariantCultureIgnoreCase))
+            {
+                path = SharedSpriteComponent.TextureRoot / path;
+            }
+
+            path = path.ToRootedPath();
 
             try
             {
-                return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(path))
+                return IoCManager.Resolve<IResourceManager>().ContentFileExists(path)
                     ? new ValidatedValueNode(node)
                     : new ErrorNode(node, $"File not found. ({path})");
             }

@@ -145,7 +145,12 @@ namespace Robust.Shared.Serialization.Manager
                 var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
-                    validatedMapping.Add(new ErrorNode(key, $"Field \"{valueDataNode.Value}\" not found.", false), new InconclusiveNode(val));
+                    var error = new ErrorNode(
+                        key,
+                        $"Field \"{valueDataNode.Value}\" not found in \"{Type}\".",
+                        false);
+
+                    validatedMapping.Add(error, new InconclusiveNode(val));
                     continue;
                 }
 

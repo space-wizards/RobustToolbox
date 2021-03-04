@@ -52,6 +52,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
 
+        public event EventHandler<EntityUid>? EntityAdded;
+        public event EventHandler<EntityUid>? EntityInitialized;
+        public event EventHandler<EntityUid>? EntityDeleted;
+
         public bool Started { get; protected set; }
 
         /// <summary>
@@ -59,7 +63,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public EntityManager()
         {
-            _eventBus = new CombinedEventBus(_componentManager);
+            _eventBus = new CombinedEventBus(this);
         }
 
         public virtual void Initialize()
@@ -223,6 +227,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
+            EntityDeleted?.Invoke(this, e.Uid);
             e.Shutdown();
         }
 
@@ -298,6 +303,7 @@ namespace Robust.Shared.GameObjects
             Entities[entity.Uid] = entity;
             AllEntities.Add(entity);
 
+            EntityAdded?.Invoke(this, entity.Uid);
             return entity;
         }
 
@@ -334,6 +340,7 @@ namespace Robust.Shared.GameObjects
             try
             {
                 InitializeEntity(entity);
+                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
             }
             catch (Exception e)

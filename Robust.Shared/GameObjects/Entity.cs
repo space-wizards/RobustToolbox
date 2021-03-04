@@ -311,7 +311,6 @@ namespace Robust.Shared.GameObjects
         public void Shutdown()
         {
             EntityManager.ComponentManager.DisposeComponents(Uid);
-
             // Entity manager culls us because we're set to Deleted.
             Deleted = true;
         }

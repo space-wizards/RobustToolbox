@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -12,7 +11,7 @@ namespace Robust.Shared.GameObjects
 
     internal class CombinedEventBus : ComponentEventBus, IEventBus
     {
-        public CombinedEventBus(IComponentManager compMan) : base(compMan) { }
+        public CombinedEventBus(IEntityManager entMan) : base(entMan) { }
     }
 
     public interface IComponentEventBus
@@ -33,17 +32,17 @@ namespace Robust.Shared.GameObjects
     {
         private delegate void EventHandler(EntityUid uid, IComponent comp, ComponentEvent args);
 
-        private IComponentManager _compMan;
+        private IEntityManager _entMan;
         private EventTables _eventTables;
         
         /// <summary>
         /// Constructs a new instance of <see cref="ComponentEventBus"/>.
         /// </summary>
-        /// <param name="compMan">The component manager to use</param>
-        public ComponentEventBus(IComponentManager compMan)
+        /// <param name="entMan">The component manager to use</param>
+        public ComponentEventBus(IEntityManager entMan)
         {
-            _compMan = compMan;
-            _eventTables = new EventTables(_compMan);
+            _entMan = entMan;
+            _eventTables = new EventTables(_entMan);
         }
 
         /// <inheritdoc />
@@ -74,7 +73,7 @@ namespace Robust.Shared.GameObjects
         
         private class EventTables : IDisposable
         {
-            private IComponentManager _compMan;
+            private IEntityManager _entMan;
 
             // eUid -> EventType -> { CompType1, ... CompTypeN }
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
@@ -85,40 +84,41 @@ namespace Robust.Shared.GameObjects
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
 
-            public EventTables(IComponentManager compMan)
+            public EventTables(IEntityManager entMan)
             {
-                _compMan = compMan;
+                _entMan = entMan;
 
-                _compMan.ComponentAdded += OnComponentAdded;
-                _compMan.ComponentRemoved += OnComponentRemoved;
+                _entMan.EntityAdded += OnEntityAdded;
+                _entMan.EntityDeleted += OnEntityDeleted;
+
+                _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
+                _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
                 
                 _eventTables = new();
                 _subscriptions = new();
                 _subscriptionLock = false;
+            }
+
+            private void OnEntityAdded(object? sender, EntityUid e)
+            {
+                AddEntity(e);
+            }
+
+            private void OnEntityDeleted(object? sender, EntityUid e)
+            {
+                RemoveEntity(e);
             }
             
             private void OnComponentAdded(object? sender, ComponentEventArgs e)
             {
                 _subscriptionLock = true;
 
-                var comp = e.Component;
-                var euid = e.OwnerUid;
-
-                if(comp is MetaDataComponent)
-                    AddEntity(euid);
-
-                AddComponent(euid, comp.GetType());
+                AddComponent(e.OwnerUid, e.Component.GetType());
             }
 
             private void OnComponentRemoved(object? sender, ComponentEventArgs e)
             {
-                var comp = e.Component;
-                var euid = e.OwnerUid;
-
-                if (e.Component is MetaDataComponent)
-                    RemoveEntity(euid);
-                else
-                    RemoveComponent(euid, comp.GetType());
+                RemoveComponent(e.OwnerUid, e.Component.GetType());
             }
 
             public void Subscribe(Type compType, Type eventType, EventHandler handler)
@@ -215,7 +215,7 @@ namespace Robust.Shared.GameObjects
                     if(!compSubs.TryGetValue(eventType, out var handler))
                         return;
 
-                    var component = _compMan.GetComponent(euid, compType);
+                    var component = _entMan.ComponentManager.GetComponent(euid, compType);
                     handler(euid, component, args);
                 }
             }
@@ -234,11 +234,14 @@ namespace Robust.Shared.GameObjects
 
             public void Dispose()
             {
-                _compMan.ComponentAdded -= OnComponentAdded;
-                _compMan.ComponentRemoved -= OnComponentRemoved;
+                _entMan.EntityAdded -= OnEntityAdded;
+                _entMan.EntityDeleted -= OnEntityDeleted;
+
+                _entMan.ComponentManager.ComponentAdded -= OnComponentAdded;
+                _entMan.ComponentManager.ComponentRemoved -= OnComponentRemoved;
 
                 // punishment for use-after-free
-                _compMan = null!;
+                _entMan = null!;
                 _eventTables = null!;
                 _subscriptions = null!;
             }
@@ -248,7 +251,7 @@ namespace Robust.Shared.GameObjects
         {
             _eventTables.Dispose();
             _eventTables = null!;
-            _compMan = null!;
+            _entMan = null!;
         }
     }
 

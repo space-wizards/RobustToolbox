@@ -3,8 +3,9 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Robust.Generators;
 
-namespace Robust.Generators
+namespace Robust.Analyzers
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class MeansImplicitAssigmentSuppressor : DiagnosticSuppressor

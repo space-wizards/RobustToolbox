@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -12,12 +13,14 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
-            ValueDataNode node, bool skipHook, ISerializationContext? context = null)
+            ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
+            ISerializationContext? context = null)
         {
             return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             return FormattedMessage.ValidMarkup(node.Value) ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid markup in FormattedMessage.", true);

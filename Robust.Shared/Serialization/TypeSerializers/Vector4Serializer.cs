@@ -1,4 +1,5 @@
 using System.Globalization;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -12,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
@@ -33,6 +35,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             string raw = node.Value;

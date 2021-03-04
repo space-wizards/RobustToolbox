@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -9,8 +8,6 @@ namespace Robust.Shared.Serialization.Manager
 {
     public interface ISerializationManager
     {
-        IDependencyCollection DependencyCollection { get; }
-
         #region Serialization
 
         /// <summary>

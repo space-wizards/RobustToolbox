@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -12,6 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
@@ -23,6 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing Color.", true);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -18,10 +19,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
             SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
-            var factory = serializationManager.DependencyCollection.Resolve<IComponentFactory>();
+            var factory = dependencies.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
             var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
 
@@ -79,10 +81,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedComponentRegistry(components, mappings);
         }
 
-        public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager,
+            SequenceDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            var factory = serializationManager.DependencyCollection.Resolve<IComponentFactory>();
+            var factory = dependencies.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
             var list = new List<ValidationNode>();
 

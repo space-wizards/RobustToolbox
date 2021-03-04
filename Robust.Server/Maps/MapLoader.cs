@@ -842,6 +842,7 @@ namespace Robust.Server.Maps
             }
 
             public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+                IDependencyCollection dependencies,
                 bool skipHook,
                 ISerializationContext? context = null)
             {
@@ -861,7 +862,7 @@ namespace Robust.Server.Maps
             }
 
             ValidationNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, ISerializationContext? context)
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
                 {
@@ -872,7 +873,7 @@ namespace Robust.Server.Maps
             }
 
             ValidationNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, ISerializationContext? context)
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null")
                 {
@@ -888,7 +889,7 @@ namespace Robust.Server.Maps
             }
 
             ValidationNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, ISerializationContext? context)
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null") return new ValidatedValueNode(node);
 
@@ -950,6 +951,7 @@ namespace Robust.Server.Maps
 
             DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
+                IDependencyCollection dependencies,
                 bool skipHook,
                 ISerializationContext? context)
             {
@@ -973,6 +975,7 @@ namespace Robust.Server.Maps
 
             DeserializationResult ITypeReader<IEntity, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
+                IDependencyCollection dependencies,
                 bool skipHook,
                 ISerializationContext? context)
             {

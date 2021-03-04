@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -18,6 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     {
         DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context)
         {
@@ -37,13 +39,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         ValidationNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
@@ -82,6 +84,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager,
             SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context)
         {

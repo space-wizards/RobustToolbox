@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -35,7 +36,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager,
-            MappingDataNode node, bool skipHook, ISerializationContext? context)
+            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
@@ -53,20 +54,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         ValidationNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
-            ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+            ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
+            ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
-            ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+            ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
+            ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager,
-            MappingDataNode node, ISerializationContext? context)
+            MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
@@ -106,6 +109,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         DeserializationResult
             ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
+                IDependencyCollection dependencies,
                 bool skipHook, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
@@ -126,6 +130,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         DeserializationResult
             ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
+                IDependencyCollection dependencies,
                 bool skipHook, ISerializationContext? context)
         {
             var dict = new SortedDictionary<TKey, TValue>();

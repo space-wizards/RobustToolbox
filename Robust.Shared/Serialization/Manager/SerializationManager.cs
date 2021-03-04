@@ -177,7 +177,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            if (TryValidateWithTypeReader(underlyingType, node, context, out var valid)) return valid;
+            if (TryValidateWithTypeReader(underlyingType, node, DependencyCollection, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
                 return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize", true);
@@ -292,7 +292,7 @@ namespace Robust.Shared.Serialization.Manager
                 underlyingType = ResolveConcreteType(underlyingType, typeString);
             }
 
-            if (TryReadWithTypeSerializers(underlyingType, node, out var serializedObj, skipHook, context))
+            if (TryReadWithTypeSerializers(underlyingType, node, DependencyCollection, out var serializedObj, skipHook, context))
             {
                 return serializedObj;
             }

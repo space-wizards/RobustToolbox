@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -13,6 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
     public class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
@@ -27,6 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             if (node.Children.Count != 1) return new ErrorNode(node, "More or less than 1 Mapping for ValueTuple found.");

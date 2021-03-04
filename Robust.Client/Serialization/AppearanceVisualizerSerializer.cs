@@ -14,6 +14,7 @@ namespace Robust.Client.Serialization
     public class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
@@ -35,6 +36,7 @@ namespace Robust.Client.Serialization
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context)
         {
             if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)

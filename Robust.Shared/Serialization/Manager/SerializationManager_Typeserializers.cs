@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -186,41 +187,47 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryReadWithTypeSerializers(
             Type type,
             DataNode node,
+            IDependencyCollection dependencies,
             [NotNullWhen(true)] out DeserializationResult? obj,
             bool skipHook,
             ISerializationContext? context = null)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods()
-                .First(m => m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 4)
+                .First(m => m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 5)
                 .MakeGenericMethod(type, node.GetType());
 
             obj = default;
 
-            var arr = new object?[] {node, obj, skipHook, context};
+            var arr = new object?[] {node, dependencies, obj, skipHook, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                obj = (DeserializationResult) arr[1]!;
+                obj = (DeserializationResult) arr[2]!;
                 return true;
             }
 
             return false;
         }
 
-        private bool TryValidateWithTypeReader(Type type, DataNode node, ISerializationContext? context, [NotNullWhen(true)] out ValidationNode? valid)
+        private bool TryValidateWithTypeReader(
+            Type type,
+            DataNode node,
+            IDependencyCollection dependencies,
+            ISerializationContext? context,
+            [NotNullWhen(true)] out ValidationNode? valid)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 3).MakeGenericMethod(type, node.GetType());
+                m.Name == nameof(TryValidateWithTypeReader) && m.GetParameters().Length == 4).MakeGenericMethod(type, node.GetType());
 
-            var arr = new object?[] {node, context, null};
+            var arr = new object?[] {node, dependencies, context, null};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                valid = (ValidationNode)arr[2]!;
+                valid = (ValidationNode) arr[3]!;
                 return true;
             }
 
@@ -230,6 +237,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool TryValidateWithTypeReader<T, TNode>(
             TNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context,
             [NotNullWhen(true)] out ValidationNode? valid)
             where T : notnull
@@ -237,7 +245,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (TryGetReader<T, TNode>(null, out var reader))
             {
-                valid = reader.Validate(this, node, context);
+                valid = reader.Validate(this, node, dependencies, context);
                 return true;
             }
 
@@ -263,6 +271,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool TryReadWithTypeSerializers<T, TNode>(
             TNode node,
+            IDependencyCollection dependencies,
             [NotNullWhen(true)] out DeserializationResult? obj,
             bool skipHook,
             ISerializationContext? context = null)
@@ -271,7 +280,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (TryGetReader<T, TNode>(context, out var reader))
             {
-                obj = reader.Read(this, node, skipHook, context);
+                obj = reader.Read(this, node, dependencies, skipHook, context);
                 return true;
             }
 

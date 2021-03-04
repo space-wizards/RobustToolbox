@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -58,6 +59,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult ITypeReader<List<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context)
         {
@@ -76,27 +78,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         ValidationNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context)
+            SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
@@ -114,6 +116,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
             var list = new List<T>();
@@ -132,6 +135,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
             var list = new List<T>();
@@ -149,6 +153,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         DeserializationResult ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
             var list = ImmutableList.CreateBuilder<T>();

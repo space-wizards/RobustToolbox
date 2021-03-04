@@ -1,5 +1,6 @@
 using System.Globalization;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -13,6 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
     public class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
@@ -32,6 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
             var args = node.Value.Split(',');

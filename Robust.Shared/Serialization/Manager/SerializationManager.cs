@@ -143,20 +143,24 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType.IsEnum)
             {
-                try
+                var enumName = node switch
                 {
-                    var res = node switch
-                    {
-                        ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
-                        SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
-                        _ => null
-                    };
-                    return res != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid NodeType for Enum.", true);
-                }
-                catch(Exception e)
+                    ValueDataNode valueNode => valueNode.Value,
+                    SequenceDataNode sequenceNode => string.Join(", ", sequenceNode.Sequence),
+                    _ => null
+                };
+
+                if (enumName == null)
                 {
-                    return new ErrorNode(node, $"Failed parsing Enum. ({e.Message})", false);
+                    return new ErrorNode(node, $"Invalid node type {node.GetType().Name} for enum {underlyingType}.");
                 }
+
+                if (!Enum.TryParse(underlyingType, enumName, true, out var enumValue))
+                {
+                    return new ErrorNode(node, $"{enumValue} is not a valid enum value of type {underlyingType}", false);
+                }
+
+                return new ValidatedValueNode(node);
             }
 
             if (node.Tag?.StartsWith("!type:") == true)

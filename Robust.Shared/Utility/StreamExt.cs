@@ -44,7 +44,7 @@ namespace Robust.Shared.Utility
         }
 
         /// <exception cref="EndOfStreamException">
-        /// Thrown if not exactly <paramref name="amount"/> bytes could be read.
+        /// Thrown if not exactly <paramref name="buffer.Length"/> bytes could be read.
         /// </exception>
         public static void ReadExact(this Stream stream, Span<byte> buffer)
         {

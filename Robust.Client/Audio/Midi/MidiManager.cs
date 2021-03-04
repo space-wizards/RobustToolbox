@@ -430,9 +430,7 @@ namespace Robust.Client.Audio.Midi
                     }
                     else
                     {
-                        var buffer = stream.ReadExact(length);
-
-                        buffer.CopyTo(span);
+                        stream.ReadExact(span);
                     }
                 }
                 catch (EndOfStreamException)

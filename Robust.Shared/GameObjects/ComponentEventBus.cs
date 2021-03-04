@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
@@ -17,20 +16,20 @@ namespace Robust.Shared.GameObjects
     public interface IComponentEventBus
     {
         void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
-            where TEvent:ComponentEvent;
+            where TEvent:EntitySystemMessage;
 
         void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : ComponentEvent;
+            where TEvent : EntitySystemMessage;
 
         void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : ComponentEvent;
+            where TEvent : EntitySystemMessage;
     }
 
     internal class ComponentEventBus : EntityEventBus, IComponentEventBus, IDisposable
     {
-        private delegate void EventHandler(EntityUid uid, IComponent comp, ComponentEvent args);
+        private delegate void EventHandler(EntityUid uid, IComponent comp, EntitySystemMessage args);
 
         private IEntityManager _entMan;
         private EventTables _eventTables;
@@ -47,7 +46,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
-            where TEvent:ComponentEvent
+            where TEvent:EntitySystemMessage
         {
             _eventTables.Dispatch(uid, typeof(TEvent), args);
         }
@@ -55,9 +54,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : ComponentEvent
+            where TEvent : EntitySystemMessage
         {
-            void EventHandler(EntityUid uid, IComponent comp, ComponentEvent args)
+            void EventHandler(EntityUid uid, IComponent comp, EntitySystemMessage args)
                 => handler(uid, (TComp) comp, (TEvent) args);
 
             _eventTables.Subscribe(typeof(TComp), typeof(TEvent), EventHandler);
@@ -66,7 +65,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : ComponentEvent
+            where TEvent : EntitySystemMessage
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
@@ -200,7 +199,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            public void Dispatch(EntityUid euid, Type eventType, ComponentEvent args)
+            public void Dispatch(EntityUid euid, Type eventType, EntitySystemMessage args)
             {
                 var eventTable = _eventTables[euid];
                 
@@ -255,11 +254,8 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    [Serializable, NetSerializable]
-    public abstract class ComponentEvent { }
-
     public delegate void ComponentEventHandler<in TComp, in TEvent>(EntityUid uid, TComp component, TEvent args)
         where TComp : IComponent
-        where TEvent : ComponentEvent;
+        where TEvent : EntitySystemMessage;
 
 }

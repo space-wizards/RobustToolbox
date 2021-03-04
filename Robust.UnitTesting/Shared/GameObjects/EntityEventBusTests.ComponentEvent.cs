@@ -102,7 +102,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public override string Name => "Dummy";
         }
 
-        private class TestEvent : ComponentEvent
+        private class TestEvent : EntitySystemMessage
         {
             public int TestNumber { get; }
 

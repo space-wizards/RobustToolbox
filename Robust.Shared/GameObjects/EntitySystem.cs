@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -116,7 +116,27 @@ namespace Robust.Shared.GameObjects
         {
             return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
         }
+        
+        protected void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntitySystemMessage
+        {
+            EntityManager.EventBus.SubscribeCompEvent(handler);
+        }
 
+        protected void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntitySystemMessage
+        {
+            EntityManager.EventBus.UnsubscribeCompEvent(handler);
+        }
+
+        protected void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
+            where TEvent : EntitySystemMessage
+        {
+            EntityManager.EventBus.RaiseCompEvent(uid, args);
+        }
+        
         #endregion
 
         #region Static Helpers

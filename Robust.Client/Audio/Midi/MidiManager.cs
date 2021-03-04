@@ -83,7 +83,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        private readonly List<MidiRenderer> _renderers = new();
+        private readonly List<IMidiRenderer> _renderers = new();
 
         private bool _alive = true;
         private Settings? _settings;
@@ -345,7 +345,7 @@ namespace Robust.Client.Audio.Midi
                             renderer.Render();
                         else
                         {
-                            ((IMidiRenderer)renderer).InternalDispose();
+                            renderer.InternalDispose();
                             _renderers.Remove(renderer);
                         }
                     }

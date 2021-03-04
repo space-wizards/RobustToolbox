@@ -21,6 +21,17 @@ namespace Robust.Client.Audio.Midi
 
     public interface IMidiRenderer : IDisposable
     {
+
+        /// <summary>
+        ///     The buffered audio source of this renderer.
+        /// </summary>
+        IClydeBufferedAudioSource Source { get; }
+
+        /// <summary>
+        ///     Whether this renderer has been disposed or not.
+        /// </summary>
+        bool Disposed { get; }
+
         /// <summary>
         ///     This controls whether the midi file being played will loop or not.
         /// </summary>
@@ -109,6 +120,11 @@ namespace Robust.Client.Audio.Midi
         ///     Stops all notes being played currently.
         /// </summary>
         void StopAllNotes();
+
+        /// <summary>
+        ///     Render and play MIDI to the audio source.
+        /// </summary>
+        void Render();
 
         /// <summary>
         ///     Loads a new soundfont into the renderer.
@@ -452,6 +468,7 @@ namespace Robust.Client.Audio.Midi
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
             midiEv.Tick = timestamp;
+            midiEvent.Dispose();
             SendMidiEvent(midiEv);
             return 0;
         }
@@ -462,6 +479,7 @@ namespace Robust.Client.Audio.Midi
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
             midiEv.Tick = timestamp;
+            midiEvent.Dispose();
             SendMidiEvent(midiEv);
             return 0;
         }

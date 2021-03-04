@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var nodeValue = node.Value;
             var value = nodeValue.EndsWith("rad") ? nodeValue.Substring(0, nodeValue.Length - 3) : nodeValue;
 
-            return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing angle.");
+            return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing angle.", true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Angle value, bool alwaysWrite = false,

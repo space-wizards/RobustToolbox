@@ -865,7 +865,7 @@ namespace Robust.Server.Maps
             {
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
                 {
-                    return new ErrorNode(node, "Invalid EntityUid");
+                    return new ErrorNode(node, "Invalid EntityUid", true);
                 }
 
                 return new ValidatedValueNode(node);
@@ -881,7 +881,7 @@ namespace Robust.Server.Maps
 
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
                 {
-                    return new ErrorNode(node, "Invalid EntityUid");
+                    return new ErrorNode(node, "Invalid EntityUid", true);
                 }
 
                 return new ValidatedValueNode(node);
@@ -894,7 +894,7 @@ namespace Robust.Server.Maps
 
                 if (!int.TryParse(node.Value, out var val) || val >= Grids.Count)
                 {
-                    return new ErrorNode(node, "Invalid GridId");
+                    return new ErrorNode(node, "Invalid GridId", true);
                 }
 
                 return new ValidatedValueNode(node);

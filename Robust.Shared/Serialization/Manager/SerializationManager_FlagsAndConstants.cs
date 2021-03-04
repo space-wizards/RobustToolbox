@@ -104,17 +104,17 @@ namespace Robust.Shared.Serialization.Manager
             switch (node)
             {
                 case ValueDataNode valueDataNode:
-                    return int.TryParse(valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing flag.");
+                    return int.TryParse(valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing flag.", false);
                 case SequenceDataNode sequenceDataNode:
                     foreach (var elem in sequenceDataNode.Sequence)
                     {
-                        if (elem is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid flagtype in flag-sequence.");
-                        if (!Enum.TryParse(flagType, valueDataNode.Value, out _)) return new ErrorNode(node, "Failed parsing flag in flag-sequence");
+                        if (elem is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid flagtype in flag-sequence.", true);
+                        if (!Enum.TryParse(flagType, valueDataNode.Value, out _)) return new ErrorNode(node, "Failed parsing flag in flag-sequence", false);
                     }
 
                     return new ValidatedValueNode(node);
                 default:
-                    return new ErrorNode(node, "Invalid nodetype for flag.");
+                    return new ErrorNode(node, "Invalid nodetype for flag.", true);
             }
         }
 
@@ -127,9 +127,9 @@ namespace Robust.Shared.Serialization.Manager
 
         public ValidationNode ValidateConstant(Type tagType, DataNode node)
         {
-            if (node is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid nodetype for constant.");
+            if (node is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid nodetype for constant.", true);
             var constType = GetConstantTypeFromTag(tagType);
-            return Enum.TryParse(constType, valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing constant.");
+            return Enum.TryParse(constType, valueDataNode.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing constant.", false);
         }
 
         public DataNode WriteFlag(Type tagType, int flag)

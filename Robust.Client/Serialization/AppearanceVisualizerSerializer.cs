@@ -39,7 +39,7 @@ namespace Robust.Client.Serialization
         {
             if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)
             {
-                return new ErrorNode(node, "Missing/Invalid type");
+                return new ErrorNode(node, "Missing/Invalid type", true);
             }
 
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
@@ -47,7 +47,7 @@ namespace Robust.Client.Serialization
 
             if (type == null)
             {
-                return new ErrorNode(node, $"Failed to resolve type: {valueNode.Value}");
+                return new ErrorNode(node, $"Failed to resolve type: {valueNode.Value}", true);
             }
 
             return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().RemoveNode("type"));

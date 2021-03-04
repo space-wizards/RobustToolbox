@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing Color.");
+            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing Color.", true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Color value, bool alwaysWrite = false,

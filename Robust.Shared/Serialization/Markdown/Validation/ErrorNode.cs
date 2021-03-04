@@ -9,7 +9,7 @@ namespace Robust.Shared.Serialization.Markdown.Validation
         public readonly string ErrorReason;
         public readonly bool AlwaysRelevant;
 
-        public ErrorNode(DataNode node, string errorReason, bool alwaysRelevant = false)
+        public ErrorNode(DataNode node, string errorReason, bool alwaysRelevant = true)
         {
             Node = node;
             ErrorReason = errorReason;

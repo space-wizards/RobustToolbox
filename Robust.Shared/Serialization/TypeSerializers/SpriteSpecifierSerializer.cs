@@ -89,7 +89,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context)
         {
             //todo paul actually validate the id
-            return string.IsNullOrWhiteSpace(node.Value) ? new ErrorNode(node, "Invalid entityprototypeid") : new ValidatedValueNode(node);
+            return string.IsNullOrWhiteSpace(node.Value) ? new ErrorNode(node, "Invalid entityprototypeid", true) : new ValidatedValueNode(node);
         }
 
 
@@ -110,12 +110,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
         {
             if (!node.TryGetNode("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
             {
-                return new ErrorNode(node, "Missing/Invalid spritenode");
+                return new ErrorNode(node, "Missing/Invalid spritenode", true);
             }
 
             if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode)
             {
-                return new ErrorNode(node, "Missing/Invalid statenode");
+                return new ErrorNode(node, "Missing/Invalid statenode", true);
             }
 
             var path = serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);

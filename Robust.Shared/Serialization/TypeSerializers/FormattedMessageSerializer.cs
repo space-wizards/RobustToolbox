@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
-            return FormattedMessage.ValidMarkup(node.Value) ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid markup in FormattedMessage.");
+            return FormattedMessage.ValidMarkup(node.Value) ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid markup in FormattedMessage.", true);
         }
 
         public DataNode Write(ISerializationManager serializationManager, FormattedMessage value,

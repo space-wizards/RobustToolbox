@@ -124,11 +124,11 @@ namespace Robust.Shared.Serialization.Manager
             var underlyingType = type.EnsureNotNullableType();
 
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
-                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for primitive/decimal.");
+                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for primitive/decimal.", true);
 
             if (underlyingType.IsArray)
             {
-                if (node is not SequenceDataNode sequenceDataNode) return new ErrorNode(node, "Invalid nodetype for array.");
+                if (node is not SequenceDataNode sequenceDataNode) return new ErrorNode(node, "Invalid nodetype for array.", true);
                 var elementType = underlyingType.GetElementType();
                 if (elementType == null)
                     throw new ArgumentException($"Failed to get elementtype of arraytype {underlyingType}", nameof(underlyingType));
@@ -151,11 +151,11 @@ namespace Robust.Shared.Serialization.Manager
                         SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
                         _ => null
                     };
-                    return res != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid NodeType for Enum.");
+                    return res != null ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid NodeType for Enum.", true);
                 }
-                catch
+                catch(Exception e)
                 {
-                    return new ErrorNode(node, "Failed parsing Enum.");
+                    return new ErrorNode(node, $"Failed parsing Enum. ({e.Message})", false);
                 }
             }
 
@@ -168,26 +168,26 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 catch (InvalidOperationException)
                 {
-                    return new ErrorNode(node, $"Failed to resolve !type tag: {typeString}");
+                    return new ErrorNode(node, $"Failed to resolve !type tag: {typeString}", false);
                 }
             }
 
             if (TryValidateWithTypeReader(underlyingType, node, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
-                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize");
+                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize", true);
 
             if (TryGetDataDefinition(underlyingType, out var dataDefinition))
             {
                 return node switch
                 {
-                    ValueDataNode valueDataNode => valueDataNode.Value == "" ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for Datadefinition"),
+                    ValueDataNode valueDataNode => valueDataNode.Value == "" ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for Datadefinition", false),
                     MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode, context),
-                    _ => new ErrorNode(node, "Invalid nodetype for Datadefinition")
+                    _ => new ErrorNode(node, "Invalid nodetype for Datadefinition", true)
                 };
             }
 
-            return new ErrorNode(node, "Failed to read node.");
+            return new ErrorNode(node, "Failed to read node.", false);
         }
 
         public ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null)

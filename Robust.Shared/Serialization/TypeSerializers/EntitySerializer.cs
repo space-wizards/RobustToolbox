@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<IEntity>(entity);
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return EntityUid.TryParse(node.Value, out var uid) &&

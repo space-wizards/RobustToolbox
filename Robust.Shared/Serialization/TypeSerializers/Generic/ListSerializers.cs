@@ -74,36 +74,36 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedCollection<List<T>, T>(list, results, elements => elements);
         }
 
-        ValidatedNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode, ISerializationContext? context)
+        ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode sequenceDataNode, ISerializationContext? context)
         {
-            var list = new List<ValidatedNode>();
+            var list = new List<ValidationNode>();
             foreach (var elem in sequenceDataNode.Sequence)
             {
                 list.Add(serializationManager.ValidateNode(typeof(T), elem, context));

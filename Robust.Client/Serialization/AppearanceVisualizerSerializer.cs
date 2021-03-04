@@ -34,7 +34,7 @@ namespace Robust.Client.Serialization
             return serializationManager.Read(type, newNode, context, skipHook);
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context)
         {
             if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)

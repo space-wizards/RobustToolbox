@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null);
 
-        ValidatedNode Validate(ISerializationManager serializationManager, TNode node,
+        ValidationNode Validate(ISerializationManager serializationManager, TNode node,
             ISerializationContext? context = null);
     }
 }

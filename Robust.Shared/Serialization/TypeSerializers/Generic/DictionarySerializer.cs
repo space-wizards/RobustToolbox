@@ -52,28 +52,28 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        ValidatedNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager,
             MappingDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
-            var mapping = new Dictionary<ValidatedNode, ValidatedNode>();
+            var mapping = new Dictionary<ValidationNode, ValidationNode>();
             foreach (var (key, val) in node.Children)
             {
                 mapping.Add(serializationManager.ValidateNode(typeof(TKey), key, context), serializationManager.ValidateNode(typeof(TValue), val, context));

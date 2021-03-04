@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<Angle>(angle);
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             var nodeValue = node.Value;

@@ -1,6 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -21,18 +22,27 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
+            var path = node.Value;
+            if (path.EndsWith(".rsi"))
+            {
+                path = $"{path}{ResourcePath.SYSTEM_SEPARATOR}meta.json";
+                if (!path.StartsWith(ResourcePath.SYSTEM_SEPARATOR))
+                {
+                    path = $"{SharedSpriteComponent.TextureRoot}{ResourcePath.SYSTEM_SEPARATOR}{path}";
+                }
+            }
             try
             {
-                return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(node.Value))
+                return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(path))
                     ? new ValidatedValueNode(node)
-                    : new ErrorNode(node, "File not found.");
+                    : new ErrorNode(node, $"File not found. ({path})", true);
             }
             catch (Exception e)
             {
-                return new ErrorNode(node, "Failed parsing filepath.");
+                return new ErrorNode(node, $"Failed parsing filepath. ({path}) ({e.Message})", true);
             }
         }
 

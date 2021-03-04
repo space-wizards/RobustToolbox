@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<TimeSpan>(TimeSpan.FromSeconds(seconds));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return double.TryParse(node.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out _)

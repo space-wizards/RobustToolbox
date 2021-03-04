@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<UIBox2>(new UIBox2(l, t, r, b));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             string raw = node.Value;

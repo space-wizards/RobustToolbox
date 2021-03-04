@@ -35,22 +35,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
         }
 
-        ValidatedNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, ISerializationContext? context = null)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
+        ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, ISerializationContext? context)
         {
-            var list = new List<ValidatedNode>();
+            var list = new List<ValidationNode>();
             foreach (var elem in node.Sequence)
             {
                 list.Add(serializationManager.ValidateNode(typeof(T), elem, context));

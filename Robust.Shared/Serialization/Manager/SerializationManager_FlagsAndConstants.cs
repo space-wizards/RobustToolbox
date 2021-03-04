@@ -98,7 +98,7 @@ namespace Robust.Shared.Serialization.Manager
             }
         }
 
-        public ValidatedNode ValidateFlag(Type tagType, DataNode node)
+        public ValidationNode ValidateFlag(Type tagType, DataNode node)
         {
             var flagType = GetFlagTypeFromTag(tagType);
             switch (node)
@@ -125,7 +125,7 @@ namespace Robust.Shared.Serialization.Manager
             return (int) Enum.Parse(constType, valueDataNode.Value);
         }
 
-        public ValidatedNode ValidateConstant(Type tagType, DataNode node)
+        public ValidationNode ValidateConstant(Type tagType, DataNode node)
         {
             if (node is not ValueDataNode valueDataNode) return new ErrorNode(node, "Invalid nodetype for constant.");
             var constType = GetConstantTypeFromTag(tagType);

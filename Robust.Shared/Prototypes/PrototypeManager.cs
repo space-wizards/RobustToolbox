@@ -71,7 +71,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
-        Dictionary<Type, List<(string file, ValidatedNode node)>> ValidateDirectory(ResourcePath path);
+        Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -341,12 +341,12 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public Dictionary<Type, List<(string file, ValidatedNode node)>> ValidateDirectory(ResourcePath path)
+        public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
         {
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
-            var dict = new Dictionary<Type, List<(string file, ValidatedNode node)>>();
+            var dict = new Dictionary<string, HashSet<ErrorNode>>();
             foreach (var resourcePath in streams)
             {
                 using var reader = ReadFile(resourcePath);
@@ -375,12 +375,15 @@ namespace Robust.Shared.Prototypes
                             throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
                         }
 
-                        if (!dict.TryGetValue(prototypeTypes[type], out var hashSet))
-                            dict[prototypeTypes[type]] = new List<(string, ValidatedNode)>();
-
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
                         mapping.RemoveNode("type");
-                        dict[prototypeTypes[type]].Add((resourcePath.ToString(), _serializationManager.ValidateNode(prototypeTypes[type], mapping)));
+                        var errorNodes = _serializationManager.ValidateNode(prototypeTypes[type], mapping).GetErrors().ToHashSet();
+                        if (errorNodes.Count != 0)
+                        {
+                            if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
+                                dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
+                            dict[resourcePath.ToString()].UnionWith(errorNodes);
+                        }
                     }
                 }
             }

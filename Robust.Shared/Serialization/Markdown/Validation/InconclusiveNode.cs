@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class InconclusiveNode : ValidatedNode
+    public class InconclusiveNode : ValidationNode
     {
         public readonly DataNode DataNode;
 
@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 
         public override bool Valid => true;
 
-        public override IEnumerable<string> Invalids() => Enumerable.Empty<string>();
+        public override IEnumerable<ErrorNode> GetErrors() => Enumerable.Empty<ErrorNode>();
 
         public override string? ToString()
         {

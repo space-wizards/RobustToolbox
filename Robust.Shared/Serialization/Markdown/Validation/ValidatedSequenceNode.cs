@@ -4,26 +4,23 @@ using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class ValidatedSequenceNode : ValidatedNode
+    public class ValidatedSequenceNode : ValidationNode
     {
-        public readonly List<ValidatedNode> Sequence;
+        public readonly List<ValidationNode> Sequence;
 
         public override bool Valid => Sequence.All(p => p.Valid);
-        public override IEnumerable<string> Invalids()
+        public override IEnumerable<ErrorNode> GetErrors()
         {
             for (int i = 0; i < Sequence.Count; i++)
             {
-                var entry = Sequence[i];
-                if(entry.Valid) continue;
-
-                foreach (var invalid in entry.Invalids())
+                foreach (var invalid in Sequence[i].GetErrors())
                 {
-                    yield return $"[{i}] <> {invalid}";
+                    yield return invalid;
                 }
             }
         }
 
-        public ValidatedSequenceNode(List<ValidatedNode> sequence)
+        public ValidatedSequenceNode(List<ValidationNode> sequence)
         {
             Sequence = sequence;
         }

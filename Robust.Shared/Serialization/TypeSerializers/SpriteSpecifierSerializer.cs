@@ -73,7 +73,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, skipHook, context);
         }
 
-        ValidatedNode ITypeReader<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+        ValidationNode ITypeReader<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context)
         {
             var texNode = ((ITypeReader<Texture, ValueDataNode>) this).Validate(serializationManager, node, context);
@@ -85,7 +85,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new ValidatedValueNode(node);
         }
 
-        ValidatedNode ITypeReader<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+        ValidationNode ITypeReader<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context)
         {
             //todo paul actually validate the id
@@ -93,19 +93,19 @@ namespace Robust.Shared.Serialization.TypeSerializers
         }
 
 
-        ValidatedNode ITypeReader<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
+        ValidationNode ITypeReader<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context)
         {
             return serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
         }
 
-        ValidatedNode ITypeReader<SpriteSpecifier, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
+        ValidationNode ITypeReader<SpriteSpecifier, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context)
         {
             return ((ITypeReader<Rsi, MappingDataNode>) this).Validate(serializationManager, node, context);
         }
 
-        ValidatedNode ITypeReader<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
+        ValidationNode ITypeReader<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context)
         {
             if (!node.TryGetNode("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
@@ -118,7 +118,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 return new ErrorNode(node, "Missing/Invalid statenode");
             }
 
-            var path = serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{(SharedSpriteComponent.TextureRoot / valuePathNode.Value) / "meta.json"}"), context);
+            var path = serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / valuePathNode.Value}"), context);
 
             if (path is ErrorNode) return path;
 

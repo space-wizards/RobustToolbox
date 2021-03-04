@@ -1,6 +1,6 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -9,9 +9,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public interface ISerializationManager
     {
-        IComponentFactory ComponentFactory { get; }
-
-        IEntityManager EntityManager { get; }
+        IDependencyCollection DependencyCollection { get; }
 
         #region Serialization
 

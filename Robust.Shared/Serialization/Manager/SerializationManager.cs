@@ -7,7 +7,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -22,8 +21,6 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [field: Dependency] public IComponentFactory ComponentFactory { get; } = default!;
-        [field: Dependency] public IEntityManager EntityManager { get; } = default!;
 
         public const string LogCategory = "serialization";
 
@@ -32,6 +29,8 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
         private readonly List<Type> _copyByRefRegistrations = new();
+
+        public IDependencyCollection DependencyCollection { get; private set; } = default!;
 
         public void Initialize()
         {
@@ -46,6 +45,8 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             _initializing = true;
+
+            DependencyCollection = IoCManager.Instance ?? throw new NullReferenceException();
 
             InitializeFlagsAndConstants();
             InitializeTypeSerializers();

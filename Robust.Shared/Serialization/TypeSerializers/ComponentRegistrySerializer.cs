@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             bool skipHook,
             ISerializationContext? context = null)
         {
-            var factory = serializationManager.ComponentFactory;
+            var factory = serializationManager.DependencyCollection.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
             var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context = null)
         {
-            var factory = serializationManager.ComponentFactory;
+            var factory = serializationManager.DependencyCollection.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
             var list = new List<ValidationNode>();
 

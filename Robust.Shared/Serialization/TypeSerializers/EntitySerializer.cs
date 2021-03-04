@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 throw new InvalidMappingException($"{node.Value} is not a valid entity uid.");
             }
 
-            var entity = serializationManager.EntityManager.GetEntity(uid);
+            var entity = serializationManager.DependencyCollection.Resolve<IEntityManager>().GetEntity(uid);
 
             // TODO Paul what type to return here
             return new DeserializedValue<IEntity>(entity);
@@ -31,7 +31,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             // TODO Paul should we be checking entity exists here
             return EntityUid.TryParse(node.Value, out var uid) &&
                    uid.IsValid() &&
-                   serializationManager.EntityManager.EntityExists(uid)
+                   serializationManager.DependencyCollection.Resolve<IEntityManager>().EntityExists(uid)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Failed parsing EntityUid");
         }

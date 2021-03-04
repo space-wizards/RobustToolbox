@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedReadOnlyCollection<TCollection, TElement> : DeserializationResult<TCollection> where TCollection : IReadOnlyCollection<TElement>
+    public class DeserializedCollection<TCollection, TElement> : DeserializationResult<TCollection> where TCollection : IReadOnlyCollection<TElement>
     {
         public delegate TCollection Create(List<TElement> elements);
 
-        public DeserializedReadOnlyCollection(
+        public DeserializedCollection(
             TCollection? value,
             IEnumerable<DeserializationResult> mappings,
             Create createDelegate)
@@ -26,7 +27,7 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
-            var sourceCollection = source.Cast<DeserializedReadOnlyCollection<TCollection, TElement>>();
+            var sourceCollection = source.Cast<DeserializedCollection<TCollection, TElement>>();
             var valueList = new List<TElement>();
             var resList = new List<DeserializationResult>();
 
@@ -50,7 +51,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 }
             }
 
-            return new DeserializedReadOnlyCollection<TCollection, TElement>(CreateDelegate(valueList), resList, CreateDelegate);
+            return new DeserializedCollection<TCollection, TElement>(CreateDelegate(valueList), resList, CreateDelegate);
         }
 
         public override DeserializationResult Copy()
@@ -60,12 +61,12 @@ namespace Robust.Shared.Serialization.Manager.Result
 
             foreach (var oldRes in Mappings)
             {
-                var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                valueList.Add(newRes.Value!);
+                var newRes = oldRes.Copy();
+                valueList.Add((TElement) newRes.RawValue!);
                 resList.Add(newRes);
             }
 
-            return new DeserializedReadOnlyCollection<TCollection, TElement>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
+            return new DeserializedCollection<TCollection, TElement>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
         }
 
         public override void CallAfterDeserializationHook()

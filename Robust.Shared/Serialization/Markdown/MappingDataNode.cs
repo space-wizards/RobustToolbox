@@ -1,12 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
 {
-    public class MappingDataNode : DataNode
+    public class MappingDataNode : DataNode<MappingDataNode>
     {
         private Dictionary<DataNode, DataNode> _mapping = new();
         public IReadOnlyDictionary<DataNode, DataNode> Children => _mapping;
@@ -128,7 +130,7 @@ namespace Robust.Shared.Serialization.Markdown
             return newMapping;
         }
 
-        public override DataNode Copy()
+        public override MappingDataNode Copy()
         {
             var newMapping = new MappingDataNode() {Tag = Tag};
 
@@ -138,6 +140,40 @@ namespace Robust.Shared.Serialization.Markdown
             }
 
             return newMapping;
+        }
+
+        public override MappingDataNode? Except(MappingDataNode node)
+        {
+            var mappingNode = new MappingDataNode();
+
+            foreach (var (key, val) in _mapping)
+            {
+                var other = node._mapping.FirstOrNull(p => p.Key.Equals(key));
+                if (other == null)
+                {
+                    mappingNode.AddNode(key.Copy(), val.Copy());
+                }
+                else
+                {
+                    var newValue = val.Except(other.Value.Value);
+                    if(newValue == null) continue;
+                    mappingNode.AddNode(key.Copy(), newValue);
+                }
+            }
+
+            return mappingNode;
+        }
+
+        public override int GetHashCode()
+        {
+            var code = new HashCode();
+            foreach (var (key, value) in _mapping)
+            {
+                code.Add(key);
+                code.Add(value);
+            }
+
+            return code.ToHashCode();
         }
 
         // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.

@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappings.Add(result);
             }
 
-            return new DeserializedMutableCollection<HashSet<T>, T>(set, mappings);
+            return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
         }
 
         ValidatedNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
@@ -96,7 +96,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappings.Add(result);
             }
 
-            return new DeserializedImmutableSet<T>(set.ToImmutable(), mappings);
+            return new DeserializedCollection<ImmutableHashSet<T>, T>(set.ToImmutable(), mappings, elements => ImmutableHashSet.Create(elements.ToArray()));
         }
 
         [MustUseReturnValue]

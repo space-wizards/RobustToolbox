@@ -729,6 +729,7 @@ namespace Robust.Server.Maps
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
+                var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
                 foreach (var entity in Entities.OrderBy(e => EntityUidMap[e.Uid]))
                 {
                     CurrentWritingEntity = entity;
@@ -740,6 +741,14 @@ namespace Robust.Server.Maps
                     if (entity.Prototype != null)
                     {
                         mapping.Add("type", entity.Prototype.ID);
+                        if (!prototypeCompCache.ContainsKey(entity.Prototype.ID))
+                        {
+                            prototypeCompCache[entity.Prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            foreach (var (compType, comp) in entity.Prototype.Components)
+                            {
+                                prototypeCompCache[entity.Prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                            }
+                        }
                     }
 
                     var components = new YamlSequenceNode();
@@ -751,6 +760,12 @@ namespace Robust.Server.Maps
 
                         CurrentWritingComponent = component.Name;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
+
+                        if (entity.Prototype != null && prototypeCompCache[entity.Prototype.ID].TryGetValue(component.Name, out var protMapping))
+                        {
+                            compMapping = compMapping.Except(protMapping);
+                            if(compMapping == null) continue;
+                        }
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)

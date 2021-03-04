@@ -1,8 +1,9 @@
+using YamlDotNet.Core.Tokens;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
 {
-    public class ValueDataNode : DataNode
+    public class ValueDataNode : DataNode<ValueDataNode>
     {
         public ValueDataNode(string value)
         {
@@ -17,9 +18,15 @@ namespace Robust.Shared.Serialization.Markdown
 
         public string Value { get; set; }
 
-        public override DataNode Copy()
+        public override ValueDataNode Copy()
         {
             return new ValueDataNode(Value) {Tag = Tag};
+        }
+
+        public override ValueDataNode? Except(ValueDataNode node)
+        {
+            if (node.Value == Value) return null;
+            return Copy();
         }
 
         public override bool Equals(object? obj)

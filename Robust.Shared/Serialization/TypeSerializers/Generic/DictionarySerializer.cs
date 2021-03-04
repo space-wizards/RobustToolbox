@@ -49,7 +49,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappedFields.Add(keyResult, valueResult);
             }
 
-            return new DeserializedReadOnlyDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
         ValidatedNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
@@ -120,7 +120,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappedFields.Add(keyResult, valueResult);
             }
 
-            return new DeserializedReadOnlyDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return new DeserializedDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
         DeserializationResult
@@ -140,7 +140,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
                 mappedFields.Add(keyResult, valueResult);
             }
 
-            return new DeserializedReadOnlyDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));
+            return new DeserializedDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));
         }
 
         [MustUseReturnValue]

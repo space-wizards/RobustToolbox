@@ -171,6 +171,8 @@ namespace Robust.Shared.Serialization.Markdown
                 }
             }
 
+            if (mappingNode._mapping.Count == 0) return null;
+
             return mappingNode;
         }
 

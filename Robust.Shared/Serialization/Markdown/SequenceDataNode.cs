@@ -102,7 +102,7 @@ namespace Robust.Shared.Serialization.Markdown
             return code.ToHashCode();
         }
 
-        public override SequenceDataNode Except(SequenceDataNode node)
+        public override SequenceDataNode? Except(SequenceDataNode node)
         {
             var set = new HashSet<DataNode>(node._nodes);
             var newList = new List<DataNode>();
@@ -110,12 +110,18 @@ namespace Robust.Shared.Serialization.Markdown
             {
                 if (!set.Contains(nodeNode)) newList.Add(nodeNode);
             }
-            return new SequenceDataNode(newList)
+
+            if(newList.Count > 0)
             {
-                Tag = Tag,
-                Start = Start,
-                End = End
-            };
+                return new SequenceDataNode(newList)
+                {
+                    Tag = Tag,
+                    Start = Start,
+                    End = End
+                };
+            }
+
+            return null;
         }
     }
 }

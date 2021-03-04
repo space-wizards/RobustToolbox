@@ -74,11 +74,11 @@ namespace Robust.Shared.Physics {
             get;
         }
 
-        bool Add(in T item);
+        bool Add(in T item, Box2? newAABB = null);
 
         bool Remove(in T item);
 
-        bool Update(in T item);
+        bool Update(in T item, Box2? newAABB = null);
 
         void QueryAabb(
             DynamicTree<T>.QueryCallbackDelegate callback,

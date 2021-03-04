@@ -336,7 +336,7 @@ namespace Robust.Server.GameObjects
                 return;
             }
 
-            var bounds = GetEntityBox(moveEvent.Sender);
+            var bounds = moveEvent.WorldAABB ?? GetEntityBox(moveEvent.Sender);
             var newNodes = GetOrCreateNodes(moveEvent.NewPosition, bounds);
 
             if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))

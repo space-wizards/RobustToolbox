@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
@@ -425,9 +426,6 @@ namespace Robust.Shared.Physics.Broadphase
 
             body.CreateProxies(_mapManager, this);
             SetBroadPhases(body);
-
-            // TODO: Remove this garbage
-            EntityManager.UpdateEntityTree(body.Owner);
         }
 
         public void RemoveBody(IPhysBody body)
@@ -438,12 +436,6 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             body.ClearProxies();
-
-            // TODO: Remove after pvs refactor
-            if (!body.Owner.Deleted)
-            {
-                EntityManager.UpdateEntityTree(body.Owner);
-            }
 
             _lastBroadPhases.Remove(body);
         }
@@ -552,14 +544,18 @@ namespace Robust.Shared.Physics.Broadphase
             var mapId = body.Owner.Transform.MapID;
             worldAABB ??= body.GetWorldAABB(_mapManager);
 
+            // 99% of the time this is going to be 1, maybe 2, so HashSet probably slower?
+
             var newBroadPhases = _mapManager
                 .FindGridIdsIntersecting(mapId, worldAABB.Value, true)
                 .Select(gridId => GetBroadPhase(mapId, gridId))
-                .ToArray();
+                .ToList();
 
             // Remove from old broadphases
-            foreach (var broadPhase in oldBroadPhases.ToArray())
+            for (var i = oldBroadPhases.Count - 1; i >= 0; i--)
             {
+                var broadPhase = oldBroadPhases[i];
+
                 if (newBroadPhases.Contains(broadPhase)) continue;
 
                 var gridId = GetGridId(broadPhase);
@@ -569,7 +565,7 @@ namespace Robust.Shared.Physics.Broadphase
                     fixture.ClearProxies(mapId, this, gridId);
                 }
 
-                oldBroadPhases.Remove(broadPhase);
+                oldBroadPhases.RemoveAt(i);
             }
 
             // Update retained broadphases

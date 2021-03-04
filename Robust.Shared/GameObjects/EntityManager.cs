@@ -602,7 +602,7 @@ namespace Robust.Shared.GameObjects
             // for debugging
             var necessary = 0;
 
-            if (entTree.AddOrUpdate(entity))
+            if (entTree.AddOrUpdate(entity, worldAABB))
             {
                 ++necessary;
             }

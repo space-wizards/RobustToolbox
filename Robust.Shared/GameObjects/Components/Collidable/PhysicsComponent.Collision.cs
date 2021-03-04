@@ -1,41 +1,53 @@
 ﻿using System;
-using System.Collections.Generic;
-using Robust.Shared.Containers;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Called every tick for colliding bodies.
+    ///     Called every tick for colliding bodies. Called once per pair.
     /// </summary>
-    public interface ICollideBehavior
+    public sealed class CollisionMessage : EntitySystemMessage
+    {
+        public readonly IPhysBody BodyA;
+        public readonly IPhysBody BodyB;
+        public readonly float FrameTime;
+        public readonly Manifold Manifold;
+
+        public CollisionMessage(IPhysBody bodyA, IPhysBody bodyB, float frameTime, Manifold manifold)
+        {
+            BodyA = bodyA;
+            BodyB = bodyB;
+            FrameTime = frameTime;
+            Manifold = manifold;
+        }
+    }
+
+    /// <summary>
+    ///     Called once when a collision starts
+    /// </summary>
+    public interface IStartCollide
     {
         /// <summary>
         ///     We'll pass in both our body and the other body to save the behaviors having to get these components themselves.
         /// </summary>
-        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, float frameTime, in Manifold manifold);
+        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
     }
 
-    public interface IPostCollide
+    /// <summary>
+    ///     Called once when a collision ends.
+    /// </summary>
+    public interface IEndCollide
     {
         /// <summary>
         ///     Run behaviour after all other collision behaviors have run.
         /// </summary>
         /// <param name="ourBody"></param>
         /// <param name="otherBody"></param>
-        void PostCollide(IPhysBody ourBody, IPhysBody otherBody);
+        /// <param name="manifold"></param>
+        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
     }
 
     public interface ICollideSpecial

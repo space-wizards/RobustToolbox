@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -111,6 +112,7 @@ namespace Robust.Shared.Physics
         /// <param name="quaternion2D"></param>
         /// <param name="vector"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Mul(in Quaternion2D quaternion2D, in Vector2 vector)
         {
             return new(quaternion2D.C * vector.X - quaternion2D.S * vector.Y, quaternion2D.S * vector.X + quaternion2D.C * vector.Y);

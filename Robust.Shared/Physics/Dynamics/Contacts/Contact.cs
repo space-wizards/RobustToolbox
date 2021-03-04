@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -345,7 +346,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
 
             IsTouching = touching;
-            // TODO: Need to do collision behaviors around here.
 
             if (!wasTouching)
             {
@@ -375,6 +375,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     if (enabledA && enabledB && contactManager.BeginContact != null)
                         Enabled = contactManager.BeginContact(this);
                     */
+                    foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
+                    {
+                        if (bodyB.Deleted) break;
+                        comp.CollideWith(bodyA, bodyB, Manifold);
+                    }
+
+                    foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
+                    {
+                        if (bodyA.Deleted) break;
+                        comp.CollideWith(bodyB, bodyA, Manifold);
+                    }
                 }
             }
             else
@@ -394,6 +405,18 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     if (contactManager.EndContact != null)
                         contactManager.EndContact(this);
                     */
+
+                    foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
+                    {
+                        if (bodyB.Deleted) break;
+                        comp.CollideWith(bodyA, bodyB, Manifold);
+                    }
+
+                    foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
+                    {
+                        if (bodyA.Deleted) break;
+                        comp.CollideWith(bodyB, bodyA, Manifold);
+                    }
                 }
             }
 

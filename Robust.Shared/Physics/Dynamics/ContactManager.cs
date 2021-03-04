@@ -25,6 +25,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics.Dynamics
@@ -51,9 +52,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// This list is cleared after every update.
         /// </summary>
         private List<Contact> ActiveList = new(128);
-
-        private List<ICollideBehavior> _collisionBehaviors = new();
-        private List<IPostCollide> _postCollideBehaviors = new();
 
         public ContactManager()
         {
@@ -396,73 +394,11 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 if (!contact.IsTouching || !contact.Enabled) continue;
 
-                // God this area's hard to read but tl;dr run ICollideBehavior and IPostCollide and try to optimise it a little.
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                if (!bodyA.Entity.Deleted)
-                {
-                    foreach (var behavior in bodyA.Owner.GetAllComponents<ICollideBehavior>())
-                    {
-                        _collisionBehaviors.Add(behavior);
-                    }
-
-                    foreach (var behavior in _collisionBehaviors)
-                    {
-                        if (bodyB.Deleted) break;
-                        behavior.CollideWith(bodyA, bodyB, frameTime, contact.Manifold);
-                    }
-
-                    _collisionBehaviors.Clear();
-                }
-
-                if (!bodyB.Entity.Deleted)
-                {
-                    foreach (var behavior in bodyB.Owner.GetAllComponents<ICollideBehavior>())
-                    {
-                        _collisionBehaviors.Add(behavior);
-                    }
-
-                    foreach (var behavior in _collisionBehaviors)
-                    {
-                        if (bodyA.Deleted) break;
-                        behavior.CollideWith(bodyB, bodyA, frameTime, contact.Manifold);
-                    }
-
-                    _collisionBehaviors.Clear();
-                }
-
-                if (!bodyA.Entity.Deleted)
-                {
-                    foreach (var behavior in bodyA.Owner.GetAllComponents<IPostCollide>())
-                    {
-                        _postCollideBehaviors.Add(behavior);
-                    }
-
-                    foreach (var behavior in _postCollideBehaviors)
-                    {
-                        behavior.PostCollide(bodyA, bodyB);
-                        if (bodyB.Deleted) break;
-                    }
-
-                    _postCollideBehaviors.Clear();
-                }
-
-                if (!bodyB.Entity.Deleted)
-                {
-                    foreach (var behavior in bodyB.Owner.GetAllComponents<IPostCollide>())
-                    {
-                        _postCollideBehaviors.Add(behavior);
-                    }
-
-                    foreach (var behavior in _postCollideBehaviors)
-                    {
-                        behavior.PostCollide(bodyB, bodyA);
-                        if (bodyA.Deleted) break;
-                    }
-
-                    _postCollideBehaviors.Clear();
-                }
+                // We're only issuing one message because this is called for every collision.
+                bodyA.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionMessage(bodyA, bodyB, frameTime, contact.Manifold));
             }
 
             ActiveList.Clear();

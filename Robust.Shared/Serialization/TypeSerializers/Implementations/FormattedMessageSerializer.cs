@@ -5,9 +5,10 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
@@ -23,7 +24,9 @@ namespace Robust.Shared.Serialization.TypeSerializers
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            return FormattedMessage.ValidMarkup(node.Value) ? new ValidatedValueNode(node) : new ErrorNode(node, "Invalid markup in FormattedMessage.", true);
+            return FormattedMessage.ValidMarkup(node.Value)
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node, "Invalid markup in FormattedMessage.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, FormattedMessage value,

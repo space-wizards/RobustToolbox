@@ -6,8 +6,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class Vector4Serializer : ITypeSerializer<Vector4, ValueDataNode>
@@ -57,7 +58,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public DataNode Write(ISerializationManager serializationManager, Vector4 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)},{value.Y.ToString(CultureInfo.InvariantCulture)},{value.Z.ToString(CultureInfo.InvariantCulture)},{value.W.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Y.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Z.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.W.ToString(CultureInfo.InvariantCulture)}");
         }
 
         public Vector4 Copy(ISerializationManager serializationManager, Vector4 source, Vector4 target,

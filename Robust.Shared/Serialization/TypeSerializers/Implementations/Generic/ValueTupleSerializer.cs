@@ -7,8 +7,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Generic
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
     public class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>

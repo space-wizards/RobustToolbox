@@ -7,8 +7,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class UIBox2Serializer : ITypeSerializer<UIBox2, ValueDataNode>
@@ -56,7 +57,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public DataNode Write(ISerializationManager serializationManager, UIBox2 value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)},{value.Left.ToString(CultureInfo.InvariantCulture)},{value.Bottom.ToString(CultureInfo.InvariantCulture)},{value.Right.ToString(CultureInfo.InvariantCulture)}");
+            return new ValueDataNode($"{value.Top.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Left.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Bottom.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Right.ToString(CultureInfo.InvariantCulture)}");
         }
 
         [MustUseReturnValue]

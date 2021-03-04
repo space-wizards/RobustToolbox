@@ -17,7 +17,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server

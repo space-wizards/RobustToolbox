@@ -10,9 +10,10 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
@@ -51,7 +52,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     continue;
                 }
 
-                var copy = (componentMapping.Copy() as MappingDataNode)!;
+                var copy = componentMapping.Copy()!;
                 copy.RemoveNode("type");
 
                 var type = factory.GetRegistration(compType).Type;
@@ -115,7 +116,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     continue;
                 }
 
-                var copy = (componentMapping.Copy() as MappingDataNode)!;
+                var copy = componentMapping.Copy()!;
                 copy.RemoveNode("type");
 
                 var type = factory.GetRegistration(compType).Type;
@@ -124,6 +125,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             }
 
             var referenceTypes = new List<Type>();
+
             // Assert that there are no conflicting component references.
             foreach (var componentName in components.Keys)
             {

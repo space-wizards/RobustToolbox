@@ -8,9 +8,10 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class ResourcePathSerializer : ITypeSerializer<ResourcePath, ValueDataNode>
@@ -28,6 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             ISerializationContext? context = null)
         {
             var path = node.Value;
+
             if (path.EndsWith(".rsi"))
             {
                 path = $"{path}{ResourcePath.SYSTEM_SEPARATOR}meta.json";
@@ -36,15 +38,16 @@ namespace Robust.Shared.Serialization.TypeSerializers
                     path = $"{SharedSpriteComponent.TextureRoot}{ResourcePath.SYSTEM_SEPARATOR}{path}";
                 }
             }
+
             try
             {
                 return IoCManager.Resolve<IResourceManager>().ContentFileExists(new ResourcePath(path))
                     ? new ValidatedValueNode(node)
-                    : new ErrorNode(node, $"File not found. ({path})", true);
+                    : new ErrorNode(node, $"File not found. ({path})");
             }
             catch (Exception e)
             {
-                return new ErrorNode(node, $"Failed parsing filepath. ({path}) ({e.Message})", true);
+                return new ErrorNode(node, $"Failed parsing filepath. ({path}) ({e.Message})");
             }
         }
 

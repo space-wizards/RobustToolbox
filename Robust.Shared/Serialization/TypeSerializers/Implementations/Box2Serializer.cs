@@ -7,8 +7,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class Box2Serializer : ITypeSerializer<Box2, ValueDataNode>
@@ -41,7 +42,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 4)
             {
-                return new ErrorNode(node, "Invalid amount of args for Box2.", true);
+                return new ErrorNode(node, "Invalid amount of args for Box2.");
             }
 
             return float.TryParse(args[0], out _) &&
@@ -49,7 +50,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
                    float.TryParse(args[2], out _) &&
                    float.TryParse(args[3], out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node, "Failed parsing values of Box2.", true);
+                : new ErrorNode(node, "Failed parsing values of Box2.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, Box2 value, bool alwaysWrite = false,

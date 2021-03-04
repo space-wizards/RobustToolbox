@@ -1,47 +1,51 @@
-using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class MapIdSerializer : ITypeSerializer<MapId, ValueDataNode>
+    public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
-            var val = int.Parse(node.Value, CultureInfo.InvariantCulture);
-            return new DeserializedValue<MapId>(new MapId(val));
+            var deserializedColor = Color.TryFromName(node.Value, out var color)
+                ? color :
+                Color.FromHex(node.Value);
+
+            return new DeserializedValue<Color>(deserializedColor);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            return int.TryParse(node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing MapId");
+            return Color.TryFromName(node.Value, out _) || Color.TryFromHex(node.Value) != null
+                ? new ValidatedValueNode(node)
+                : new ErrorNode(node, "Failed parsing Color.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, MapId value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Color value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var val = (int)value;
-            return new ValueDataNode(val.ToString());
+            return new ValueDataNode(value.ToHex());
         }
 
         [MustUseReturnValue]
-        public MapId Copy(ISerializationManager serializationManager, MapId source, MapId target,
+        public Color Copy(ISerializationManager serializationManager, Color source, Color target,
             bool skipHook,
             ISerializationContext? context = null)
         {
-            return new(source.Value);
+            return new(source.R, source.G, source.B, source.A);
         }
     }
 }

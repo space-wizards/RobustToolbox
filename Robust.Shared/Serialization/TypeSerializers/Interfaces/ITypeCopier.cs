@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
+using Robust.Shared.Serialization.Manager;
 
-namespace Robust.Shared.Serialization.Manager
+namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
     public interface ITypeCopier<TType>
     {

@@ -6,11 +6,12 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class Vector2Serializer : ITypeSerializer<Vector2, ValueDataNode>
+    public class Vector2iSerializer : ITypeSerializer<Vector2i, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
@@ -25,11 +26,11 @@ namespace Robust.Shared.Serialization.TypeSerializers
                 throw new InvalidMappingException($"Could not parse {nameof(Vector2)}: '{raw}'");
             }
 
-            var x = float.Parse(args[0], CultureInfo.InvariantCulture);
-            var y = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var vector = new Vector2(x, y);
+            var x = int.Parse(args[0], CultureInfo.InvariantCulture);
+            var y = int.Parse(args[1], CultureInfo.InvariantCulture);
+            var vector = new Vector2i(x, y);
 
-            return new DeserializedValue<Vector2>(vector);
+            return new DeserializedValue<Vector2i>(vector);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
@@ -41,25 +42,23 @@ namespace Robust.Shared.Serialization.TypeSerializers
 
             if (args.Length != 2)
             {
-                return new ErrorNode(node, "Invalid amount of arguments for Vector2.");
+                return new ErrorNode(node, "Invalid amount of arguments for Vector2i.");
             }
 
-            return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
-                   float.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
+            return int.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&
+                   int.TryParse(args[1], NumberStyles.Any, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
-                : new ErrorNode(node, "Failed parsing values for Vector2.");
+                : new ErrorNode(node, "Failed parsing values for Vector2i.");
         }
 
-        public DataNode Write(ISerializationManager serializationManager, Vector2 value, bool alwaysWrite = false,
+        public DataNode Write(ISerializationManager serializationManager, Vector2i value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            var valueString = $"{value.X.ToString(CultureInfo.InvariantCulture)}," +
-                              $"{value.Y.ToString(CultureInfo.InvariantCulture)}";
-
-            return new ValueDataNode(valueString);
+            return new ValueDataNode($"{value.X.ToString(CultureInfo.InvariantCulture)}," +
+                                     $"{value.Y.ToString(CultureInfo.InvariantCulture)}");
         }
 
-        public Vector2 Copy(ISerializationManager serializationManager, Vector2 source, Vector2 target,
+        public Vector2i Copy(ISerializationManager serializationManager, Vector2i source, Vector2i target,
             bool skipHook,
             ISerializationContext? context = null)
         {

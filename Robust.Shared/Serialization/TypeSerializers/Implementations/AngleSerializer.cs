@@ -7,8 +7,9 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
     public class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
@@ -35,7 +36,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             var nodeValue = node.Value;
             var value = nodeValue.EndsWith("rad") ? nodeValue.Substring(0, nodeValue.Length - 3) : nodeValue;
 
-            return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing angle.", true);
+            return double.TryParse(value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing angle.");
         }
 
         public DataNode Write(ISerializationManager serializationManager, Angle value, bool alwaysWrite = false,

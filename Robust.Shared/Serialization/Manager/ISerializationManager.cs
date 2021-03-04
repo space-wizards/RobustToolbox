@@ -151,7 +151,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A serialized datanode created from the given <see cref="value"/>
         ///     of type <see cref="type"/>.
         /// </returns>
-        DataNode WriteValue(Type type, object value, bool alwaysWrite = false, ISerializationContext? context = null);
+        DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
 
         /// <summary>
         ///     Copies the values of one object into another.

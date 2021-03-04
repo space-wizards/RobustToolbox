@@ -195,14 +195,14 @@ namespace Robust.Shared.Serialization.Manager
                 .First(m => m.Name == nameof(TryReadWithTypeSerializers) && m.GetParameters().Length == 4)
                 .MakeGenericMethod(type, node.GetType());
 
-            obj = null;
+            obj = default;
 
             var arr = new object?[] {node, obj, skipHook, context};
             var res = method.Invoke(this, arr);
 
             if (res as bool? ?? false)
             {
-                obj = (DeserializationResult?) arr[1];
+                obj = (DeserializationResult) arr[1]!;
                 return true;
             }
 
@@ -263,7 +263,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private bool TryReadWithTypeSerializers<T, TNode>(
             TNode node,
-            out DeserializationResult? obj,
+            [NotNullWhen(true)] out DeserializationResult? obj,
             bool skipHook,
             ISerializationContext? context = null)
             where T : notnull
@@ -289,6 +289,7 @@ namespace Robust.Shared.Serialization.Manager
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
+
             node = null;
 
             var arr = new[] {obj, node, alwaysWrite, context};
@@ -296,7 +297,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (res as bool? ?? false)
             {
-                node = (DataNode?) arr[1];
+                node = (DataNode) arr[1]!;
                 return true;
             }
 
@@ -315,7 +316,9 @@ namespace Robust.Shared.Serialization.Manager
             return TryGetGenericWriter(out writer);
         }
 
-        private bool TryWriteWithTypeSerializers<T>(T obj, [NotNullWhen(true)] out DataNode? node,
+        private bool TryWriteWithTypeSerializers<T>(
+            T obj,
+            [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {

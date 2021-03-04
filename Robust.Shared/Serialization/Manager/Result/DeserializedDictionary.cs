@@ -10,7 +10,7 @@ namespace Robust.Shared.Serialization.Manager.Result
         public delegate TDict Create(Dictionary<TKey, TValue> elements);
 
         public DeserializedDictionary(
-            TDict? value,
+            TDict value,
             IReadOnlyDictionary<DeserializationResult, DeserializationResult> mappings,
             Create createDelegate)
         {
@@ -19,13 +19,13 @@ namespace Robust.Shared.Serialization.Manager.Result
             CreateDelegate = createDelegate;
         }
 
-        public override TDict? Value { get; }
+        public override TDict Value { get; }
 
         public IReadOnlyDictionary<DeserializationResult, DeserializationResult> Mappings { get; }
 
         public Create CreateDelegate { get; }
 
-        public override object? RawValue => Value;
+        public override object RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -8,7 +7,7 @@ namespace Robust.Shared.Serialization.Manager.Result
         public delegate TCollection Create(List<TElement> elements);
 
         public DeserializedCollection(
-            TCollection? value,
+            TCollection value,
             IEnumerable<DeserializationResult> mappings,
             Create createDelegate)
         {
@@ -17,7 +16,7 @@ namespace Robust.Shared.Serialization.Manager.Result
             CreateDelegate = createDelegate;
         }
 
-        public override TCollection? Value { get; }
+        public override TCollection Value { get; }
 
         public IEnumerable<DeserializationResult> Mappings { get; }
 
@@ -31,24 +30,18 @@ namespace Robust.Shared.Serialization.Manager.Result
             var valueList = new List<TElement>();
             var resList = new List<DeserializationResult>();
 
-            if (sourceCollection.Value != null)
+            foreach (var oldRes in sourceCollection.Mappings)
             {
-                foreach (var oldRes in sourceCollection.Mappings)
-                {
-                    var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                    valueList.Add(newRes.Value!);
-                    resList.Add(newRes);
-                }
+                var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
+                valueList.Add(newRes.Value!);
+                resList.Add(newRes);
             }
 
-            if (Value != null)
+            foreach (var oldRes in Mappings)
             {
-                foreach (var oldRes in Mappings)
-                {
-                    var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
-                    valueList.Add(newRes.Value!);
-                    resList.Add(newRes);
-                }
+                var newRes = oldRes.Copy().Cast<DeserializationResult<TElement>>();
+                valueList.Add(newRes.Value!);
+                resList.Add(newRes);
             }
 
             return new DeserializedCollection<TCollection, TElement>(CreateDelegate(valueList), resList, CreateDelegate);
@@ -66,7 +59,7 @@ namespace Robust.Shared.Serialization.Manager.Result
                 resList.Add(newRes);
             }
 
-            return new DeserializedCollection<TCollection, TElement>(Value == null ? default : CreateDelegate(valueList), resList, CreateDelegate);
+            return new DeserializedCollection<TCollection, TElement>(CreateDelegate(valueList), resList, CreateDelegate);
         }
 
         public override void CallAfterDeserializationHook()

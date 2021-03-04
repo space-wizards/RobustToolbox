@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             {
                 mappingNode.AddNode(
                     serializationManager.WriteValue(key, alwaysWrite, context),
-                    serializationManager.WriteValue(val, alwaysWrite, context));
+                    serializationManager.WriteValue(typeof(TValue), val, alwaysWrite, context));
             }
 
             return mappingNode;

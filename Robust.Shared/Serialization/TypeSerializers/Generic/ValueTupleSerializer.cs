@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
-            if (node.Children.Count != 1) return new ErrorNode(node, "More or less than 1 Mapping for ValueTuple found.", true);
+            if (node.Children.Count != 1) return new ErrorNode(node, "More or less than 1 Mapping for ValueTuple found.");
 
             var entry = node.Children.First();
             var dict = new Dictionary<ValidationNode, ValidationNode>
@@ -47,9 +47,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
+
             mapping.AddNode(
-                serializationManager.WriteValue(value.Item1, alwaysWrite, context),
-                serializationManager.WriteValue(value.Item2, alwaysWrite, context)
+                serializationManager.WriteValue(typeof(T1), value.Item1, alwaysWrite, context),
+                serializationManager.WriteValue(typeof(T2), value.Item2, alwaysWrite, context)
             );
 
             return mapping;

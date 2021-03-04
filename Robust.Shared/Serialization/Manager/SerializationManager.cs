@@ -366,7 +366,7 @@ namespace Robust.Shared.Serialization.Manager
             return WriteValue(typeof(T), value, alwaysWrite, context);
         }
 
-        public DataNode WriteValue(Type type, object value, bool alwaysWrite = false,
+        public DataNode WriteValue(Type type, object? value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;

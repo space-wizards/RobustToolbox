@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedDefinition where T : new()
+    public class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedDefinition where T : notnull, new()
     {
         public DeserializedDefinition(T value, DeserializedFieldEntry[] mapping)
         {
@@ -15,13 +15,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public DeserializedFieldEntry[] Mapping { get; }
 
-        public override object? RawValue => Value;
+        public override object RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
             var dataDef = source.Cast<DeserializedDefinition<T>>();
             if (dataDef.Mapping.Length != Mapping.Length)
-                throw new ArgumentException($"Mappinglength mismatch in PushInheritanceFrom ({typeof(T)})");
+                throw new ArgumentException($"Mapping length mismatch in PushInheritanceFrom ({typeof(T)})");
 
             var newMapping = new DeserializedFieldEntry[Mapping.Length];
 

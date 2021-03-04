@@ -13,14 +13,10 @@ namespace Robust.Shared.Serialization.TypeSerializers
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node, bool skipHook,
             ISerializationContext? context = null)
         {
-            if (!EntityUid.TryParse(node.Value, out var uid))
+            if (!EntityUid.TryParse(node.Value, out var uid) ||
+                !uid.IsValid())
             {
                 throw new InvalidMappingException($"{node.Value} is not a valid entity uid.");
-            }
-
-            if (!uid.IsValid())
-            {
-                return new DeserializedValue<IEntity>(null);
             }
 
             var entity = serializationManager.EntityManager.GetEntity(uid);

@@ -23,7 +23,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
             foreach (var elem in value)
             {
-                sequence.Add(serializationManager.WriteValue(elem, alwaysWrite, context));
+                sequence.Add(serializationManager.WriteValue(typeof(T), elem, alwaysWrite, context));
             }
 
             return sequence;

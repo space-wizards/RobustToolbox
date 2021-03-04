@@ -130,6 +130,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public void ExposeData(ObjectSerializer serializer)
         {
+            if (!serializer.Reading) return;
             // Helper, at least for now
             var bounds = serializer.ReadDataField("bounds", Box2.UnitCentered);
 

@@ -33,7 +33,7 @@ namespace Robust.Shared.Map
         }
 
         private float _radius;
-        public ShapeType ShapeType => ShapeType.Polygon;
+        public ShapeType ShapeType => ShapeType.Grid;
 
         private GridId _gridId;
 

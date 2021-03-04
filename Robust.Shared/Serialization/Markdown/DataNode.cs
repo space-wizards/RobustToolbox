@@ -5,10 +5,10 @@ namespace Robust.Shared.Serialization.Markdown
     public abstract class DataNode
     {
         public string? Tag;
-        public DataPosition Start;
-        public DataPosition End;
+        public NodeMark Start;
+        public NodeMark End;
 
-        public DataNode(DataPosition start, DataPosition end)
+        public DataNode(NodeMark start, NodeMark end)
         {
             Start = start;
             End = end;
@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.Markdown
 
     public abstract class DataNode<T> : DataNode where T : DataNode<T>
     {
-        protected DataNode(DataPosition start, DataPosition end) : base(start, end)
+        protected DataNode(NodeMark start, NodeMark end) : base(start, end)
         { }
 
         public abstract override T Copy();

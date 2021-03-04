@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.Markdown
         private Dictionary<DataNode, DataNode> _mapping = new();
         public IReadOnlyDictionary<DataNode, DataNode> Children => _mapping;
 
-        public MappingDataNode() : base(DataPosition.Invalid, DataPosition.Invalid)
+        public MappingDataNode() : base(NodeMark.Invalid, NodeMark.Invalid)
         { }
 
         public MappingDataNode(YamlMappingNode mapping) : base(mapping.Start, mapping.End)

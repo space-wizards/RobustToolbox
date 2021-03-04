@@ -4,7 +4,7 @@ namespace Robust.Shared.Serialization.Markdown
 {
     public class ValueDataNode : DataNode<ValueDataNode>
     {
-        public ValueDataNode(string value) : base(DataPosition.Invalid, DataPosition.Invalid)
+        public ValueDataNode(string value) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
             Value = value;
         }

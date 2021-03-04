@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
@@ -9,7 +8,7 @@ namespace Robust.Shared.Serialization.Markdown
     {
         private readonly List<DataNode> _nodes = new();
 
-        public SequenceDataNode() : base(DataPosition.Invalid, DataPosition.Invalid) { }
+        public SequenceDataNode() : base(NodeMark.Invalid, NodeMark.Invalid) { }
 
         public SequenceDataNode(List<DataNode> nodes) : this()
         {

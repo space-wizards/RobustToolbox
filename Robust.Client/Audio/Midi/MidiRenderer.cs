@@ -124,7 +124,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Render and play MIDI to the audio source.
         /// </summary>
-        void Render();
+        internal void Render();
 
         /// <summary>
         ///     Loads a new soundfont into the renderer.
@@ -175,7 +175,7 @@ namespace Robust.Client.Audio.Midi
         internal void InternalDispose();
     }
 
-    public class MidiRenderer : IMidiRenderer
+    internal class MidiRenderer : IMidiRenderer
     {
         [Dependency] private readonly IClydeAudio _clydeAudio = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
@@ -388,7 +388,12 @@ namespace Robust.Client.Audio.Midi
         public event Action<Shared.Audio.Midi.MidiEvent>? OnMidiEvent;
         public event Action? OnMidiPlayerFinished;
 
-        internal void Render(int length = SampleRate / 250)
+        void IMidiRenderer.Render()
+        {
+            Render();
+        }
+
+        private void Render(int length = SampleRate / 250)
         {
             if (Disposed) return;
 

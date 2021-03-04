@@ -247,7 +247,9 @@ namespace Robust.Client.Audio.Midi
                 }
 
                 lock (_renderers)
+                {
                     _renderers.Add(renderer);
+                }
 
                 return renderer;
             }
@@ -266,6 +268,7 @@ namespace Robust.Client.Audio.Midi
 
             // Update positions of streams every frame.
             lock (_renderers)
+            {
                 foreach (var renderer in _renderers)
                 {
                     if (renderer.Disposed)
@@ -328,6 +331,7 @@ namespace Robust.Client.Audio.Midi
                         renderer.Source.StopPlaying();
                     }
                 }
+            }
         }
 
         /// <summary>
@@ -338,6 +342,7 @@ namespace Robust.Client.Audio.Midi
             while (_alive)
             {
                 lock (_renderers)
+                {
                     for (var i = 0; i < _renderers.Count; i++)
                     {
                         var renderer = _renderers[i];
@@ -349,6 +354,7 @@ namespace Robust.Client.Audio.Midi
                             _renderers.Remove(renderer);
                         }
                     }
+                }
 
                 Thread.Sleep(1);
             }
@@ -359,9 +365,13 @@ namespace Robust.Client.Audio.Midi
             _alive = false;
             _midiThread?.Join();
             _settings?.Dispose();
-            foreach (var renderer in _renderers)
+
+            lock (_renderers)
             {
-                renderer?.Dispose();
+                foreach (var renderer in _renderers)
+                {
+                    renderer?.Dispose();
+                }
             }
 
             if (FluidsynthInitialized && !_failedInitialize)

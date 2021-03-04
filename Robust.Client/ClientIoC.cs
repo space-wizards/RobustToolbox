@@ -27,6 +27,8 @@ using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client
 {
@@ -101,7 +103,6 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
-            //IoCManager.Register<IXamlCompiler, XamlCompiler>();
         }
     }
 }

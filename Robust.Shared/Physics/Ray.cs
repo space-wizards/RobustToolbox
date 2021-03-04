@@ -1,7 +1,8 @@
-﻿using Robust.Shared.Utility;
-using System;
+﻿using System;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
-namespace Robust.Shared.Maths
+namespace Robust.Shared.Physics
 {
     /// <summary>
     ///     A representation of a 2D ray.

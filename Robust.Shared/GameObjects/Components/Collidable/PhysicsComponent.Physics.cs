@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -168,11 +170,13 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        private float _mass = 1;
+        [DataField("mass")]
+        private float _mass = 1.0f;
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
+        [DataField("anchored")]
         private bool _anchored = true;
         private float _friction = 1;
 

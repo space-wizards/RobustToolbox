@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -54,16 +55,26 @@ namespace Robust.Shared.GameObjects
         }
 
         [Serializable, NetSerializable]
-        protected struct PrototypeLayerData : IExposeData
+        [DataDefinition]
+        public class PrototypeLayerData
         {
+            [DataField("shader")]
             public string? Shader;
+            [DataField("texture")]
             public string? TexturePath;
+            [DataField("sprite")]
             public string? RsiPath;
+            [DataField("state")]
             public string? State;
-            public Vector2 Scale;
-            public Angle Rotation;
-            public bool Visible;
-            public Color Color;
+            [DataField("scale")]
+            public Vector2 Scale = Vector2.One;
+            [DataField("rotation")]
+            public Angle Rotation = Angle.Zero;
+            [DataField("visible")]
+            public bool Visible = true;
+            [DataField("color")]
+            public Color Color = Color.White;
+            [DataField("map")]
             public List<string>? MapKeys;
 
             public static PrototypeLayerData New()
@@ -74,19 +85,6 @@ namespace Robust.Shared.GameObjects
                     Color = Color.White,
                     Visible = true,
                 };
-            }
-
-            void IExposeData.ExposeData(ObjectSerializer serializer)
-            {
-                serializer.DataField(ref Shader, "shader", null);
-                serializer.DataField(ref TexturePath, "texture", null);
-                serializer.DataField(ref RsiPath, "sprite", null);
-                serializer.DataField(ref State, "state", null);
-                serializer.DataField(ref Scale, "scale", Vector2.One);
-                serializer.DataField(ref Rotation, "rotation", Angle.Zero);
-                serializer.DataField(ref Visible, "visible", true);
-                serializer.DataField(ref Color, "color", Color.White);
-                serializer.DataField(ref MapKeys, "map", null);
             }
         }
     }

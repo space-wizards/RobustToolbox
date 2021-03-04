@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -11,10 +12,14 @@ namespace Robust.Shared.Physics
     /// entity origin in world space.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeAabb : IPhysShape
     {
+        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
         private int _collisionLayer;
+        [DataFieldWithFlag("mask", typeof(CollisionMask))]
         private int _collisionMask;
+        [DataField("bounds")]
         private Box2 _localBounds = Box2.UnitCentered;
 
         /// <summary>
@@ -77,14 +82,6 @@ namespace Robust.Shared.Physics
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return _localBounds;
-        }
-
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-            serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
         }
     }
 }

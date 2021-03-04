@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
@@ -56,6 +57,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             MapManager.CreateMap();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();

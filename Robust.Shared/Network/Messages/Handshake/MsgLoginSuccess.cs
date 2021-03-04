@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Robust.Shared.Network.Messages
+namespace Robust.Shared.Network.Messages.Handshake
 {
     internal sealed class MsgLoginSuccess : NetMessage
     {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Containers
 {
@@ -25,7 +26,8 @@ namespace Robust.Shared.Containers
     /// </remarks>
     /// <seealso cref="IContainerManager" />
     [PublicAPI]
-    public interface IContainer : IExposeData
+    [ImplicitDataDefinitionForInheritors]
+    public interface IContainer
     {
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container

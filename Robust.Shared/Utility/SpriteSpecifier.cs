@@ -13,7 +13,7 @@ namespace Robust.Shared.Utility
     ///     Is a reference to EITHER an RSI + RSI State, OR a bare texture path.
     /// </summary>
     [Serializable, NetSerializable]
-    public class SpriteSpecifier
+    public abstract class SpriteSpecifier
     {
         public static readonly SpriteSpecifier Invalid = new Texture(new ResourcePath("."));
 

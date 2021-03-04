@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Containers
 {
@@ -22,37 +21,14 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
-        private List<IEntity> _containerList = new();
+        [DataField("ents")]
+        private readonly List<IEntity> _containerList = new();
 
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;
-        
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-#if SERV3
-            // ONLY PAUL CAN MAKE ME WHOLE
-            serializer.DataField(ref _containerList, "ents", new List<IEntity>());
-#else
-            if (serializer.Writing)
-            {
-                serializer.DataWriteFunction("ents", new List<EntityUid>(),
-                    () => _containerList.Select(e => e.Uid).ToList());
-            }
-            else
-            {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
-                serializer.DataReadFunction("ents", new List<EntityUid>(),
-                    value => _containerList = value.Select((uid => entMan.GetEntity(uid))).ToList());
-            }
-#endif
-        }
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)

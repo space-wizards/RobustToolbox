@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
@@ -26,7 +26,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             return sim;
         }
-        
+
         const string PROTOTYPES = @"
 - type: entity
   name: dummy
@@ -182,7 +182,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.Insert(mapEnt), Is.False);
             Assert.That(container.CanInsert(mapEnt), Is.False);
         }
-        
+
         [Test]
         public void BaseContainer_InsertGrid_False()
         {

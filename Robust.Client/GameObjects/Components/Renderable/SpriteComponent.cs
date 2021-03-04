@@ -164,8 +164,8 @@ namespace Robust.Client.GameObjects
                         if (theRsi == null)
                         {
                             Logger.ErrorS(LogCategory,
-                                "Layer has no RSI to load states from."
-                                + "cannot use 'state' property. ({0})", layerDatum.State);
+                                "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
+                                layerDatum.State);
                         }
                         else
                         {

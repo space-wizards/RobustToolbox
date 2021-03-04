@@ -71,7 +71,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
-        IEnumerable<KeyValuePair<string, HashSet<ErrorNode>>> ValidateDirectory(ResourcePath path);
+        Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -341,11 +341,12 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public IEnumerable<KeyValuePair<string, HashSet<ErrorNode>>> ValidateDirectory(ResourcePath path)
+        public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
         {
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
+            var dict = new Dictionary<string, HashSet<ErrorNode>>();
             foreach (var resourcePath in streams)
             {
                 using var reader = ReadFile(resourcePath);
@@ -358,9 +359,9 @@ namespace Robust.Shared.Prototypes
                 var yamlStream = new YamlStream();
                 yamlStream.Load(reader);
 
-                foreach (var doc in yamlStream.Documents)
+                for (var i = 0; i < yamlStream.Documents.Count; i++)
                 {
-                    var rootNode = (YamlSequenceNode) doc.RootNode;
+                    var rootNode = (YamlSequenceNode) yamlStream.Documents[i].RootNode;
                     foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                     {
                         var type = node.GetNode("type").AsString();
@@ -371,8 +372,7 @@ namespace Robust.Shared.Prototypes
                                 continue;
                             }
 
-                            // throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
-                            continue; // TODO populate ignored prototypes in a better way
+                            throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
                         }
 
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
@@ -380,11 +380,15 @@ namespace Robust.Shared.Prototypes
                         var errorNodes = _serializationManager.ValidateNode(prototypeTypes[type], mapping).GetErrors().ToHashSet();
                         if (errorNodes.Count != 0)
                         {
-                            yield return new KeyValuePair<string, HashSet<ErrorNode>>(resourcePath.ToString(), errorNodes);
+                            if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
+                                dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
+                            dict[resourcePath.ToString()].UnionWith(errorNodes);
                         }
                     }
                 }
             }
+
+            return dict;
         }
 
         private StreamReader? ReadFile(ResourcePath file, bool @throw = true)

@@ -14,13 +14,13 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
-    [RegisterComponent]
-    [ComponentReference(typeof(IContainerManager))]
+    // [RegisterComponent]
+    // [ComponentReference(typeof(IContainerManager))]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        
+
         [ViewVariables] private Dictionary<string, IContainer> _containers = new();
 
         /// <inheritdoc />
@@ -81,7 +81,7 @@ namespace Robust.Shared.Containers
                     _containers.Remove(dead);
                 }
             }
-            
+
             // Add new containers and update existing contents.
 
             foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
@@ -139,7 +139,7 @@ namespace Robust.Shared.Containers
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
-            
+
             serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
         }
 

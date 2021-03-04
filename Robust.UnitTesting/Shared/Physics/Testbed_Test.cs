@@ -24,6 +24,7 @@ SOFTWARE.
 These tests are derived from box2d's testbed tests but done in a way as to be automated and useful for CI.
  */
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -88,7 +89,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     0.0f, -10.0f, -5.0f, 5.0f, 10.0f
                 };
 
-                PhysShapeAabb shape;
+                PolygonShape shape;
 
                 for (var j = 0; j < columnCount; j++)
                 {
@@ -101,7 +102,13 @@ namespace Robust.UnitTesting.Shared.Physics
 
                         box.BodyType = BodyType.Dynamic;
                         box.SleepingAllowed = false;
-                        shape = new PhysShapeAabb {LocalBounds = Box2.UnitCentered};
+                        shape = new PolygonShape(0.001f) {Vertices = new List<Vector2>()
+                        {
+                            new(0.5f, -0.5f),
+                            new(0.5f, 0.5f),
+                            new(-0.5f, 0.5f),
+                            new(-0.5f, -0.5f),
+                        }};
                         box.FixedRotation = true;
                         // TODO: Need to detect shape and work out if we need to use fixedrotation
 

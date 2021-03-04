@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -80,7 +81,8 @@ entities:
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IComponentFactory>().Register<MapDeserializeTestComponent>();
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            compFactory.Register<MapDeserializeTestComponent>();
 
             IoCManager.Resolve<IComponentManager>().Initialize();
 

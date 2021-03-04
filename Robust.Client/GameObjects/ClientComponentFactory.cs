@@ -25,6 +25,11 @@ namespace Robust.Client.GameObjects
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
 
+            Register<CollisionWakeComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
+
             RegisterIgnore("KeyBindingInput");
 
             Register<InputComponent>();

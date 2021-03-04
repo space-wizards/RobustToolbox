@@ -512,7 +512,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     // TODO: Dis
                     throw new NotImplementedException();
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException($"Collision between {FixtureA!.Shape.GetType()} and {FixtureB!.Shape.GetType()} not supported");
             }
         }
 

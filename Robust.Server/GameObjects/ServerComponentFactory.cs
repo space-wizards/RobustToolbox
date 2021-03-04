@@ -32,6 +32,11 @@ namespace Robust.Server.GameObjects
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
 
+            Register<CollisionWakeComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
+
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");

@@ -25,7 +25,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     The buffered audio source of this renderer.
         /// </summary>
-        IClydeBufferedAudioSource Source { get; }
+        internal IClydeBufferedAudioSource Source { get; }
 
         /// <summary>
         ///     Whether this renderer has been disposed or not.
@@ -204,6 +204,7 @@ namespace Robust.Client.Audio.Midi
         private readonly object _playerStateLock = new();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
+        IClydeBufferedAudioSource IMidiRenderer.Source => Source;
         public bool Disposed { get; private set; } = false;
 
         public byte MidiProgram

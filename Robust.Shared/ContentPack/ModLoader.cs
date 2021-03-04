@@ -88,6 +88,8 @@ namespace Robust.Shared.ContentPack
 
             if (_sandboxingEnabled)
             {
+                var checkerSw = Stopwatch.StartNew();
+
                 var typeChecker = MakeTypeChecker();
 
                 Parallel.ForEach(files, pair =>
@@ -100,6 +102,8 @@ namespace Robust.Shared.ContentPack
                         throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
                     }
                 });
+
+                Logger.DebugS("res.mod", $"Verified assemblies in {checkerSw.ElapsedMilliseconds}ms");
             }
 
             // Actually load them in the order they depend on each other.

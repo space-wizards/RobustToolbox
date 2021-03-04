@@ -28,6 +28,9 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal sealed partial class AssemblyTypeChecker
     {
+        // Used to be in Sandbox.yml, moved out of there to facilitate faster loading.
+        private const string SystemAssemblyName = "System.Runtime";
+
         private readonly IResourceManager _res;
 
         /// <summary>
@@ -43,13 +46,16 @@ namespace Robust.Shared.ContentPack
         // Necessary for loads with launcher loader.
         public Func<string, Stream?>? ExtraRobustLoader { get; init; }
         private readonly ISawmill _sawmill;
-        private readonly SandboxConfig _config;
+        private readonly Task<SandboxConfig> _config;
 
         public AssemblyTypeChecker(IResourceManager res, ISawmill sawmill)
         {
             _res = res;
             _sawmill = sawmill;
-            _config = LoadConfig();
+            // Config is huge and YAML is slow so config loading is delayed.
+            // This means we can parallelize config loading with IL verification
+            // (first time we need the config is when we print verifier errors).
+            _config = Task.Run(LoadConfig);
         }
 
         private Resolver CreateResolver()
@@ -148,12 +154,14 @@ namespace Robust.Shared.ContentPack
                 return true;
             }
 
+            var loadedConfig = _config.Result;
+
             // We still do explicit type reference scanning, even though the actual whitelists work with raw members.
             // This is so that we can simplify handling of generic type specifications during member checking:
             // we won't have to check that any types in their type arguments are whitelisted.
             foreach (var type in types)
             {
-                if (!IsTypeAccessAllowed(type, out _))
+                if (!IsTypeAccessAllowed(loadedConfig, type, out _))
                 {
                     errors.Add(new SandboxError($"Access to type not allowed: {type}"));
                 }
@@ -161,11 +169,11 @@ namespace Robust.Shared.ContentPack
 
             _sawmill.Debug($"Types... {fullStopwatch.ElapsedMilliseconds}ms");
 
-            CheckInheritance(inherited, errors);
+            CheckInheritance(loadedConfig, inherited, errors);
 
             _sawmill.Debug($"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
 
-            CheckMemberReferences(members, errors);
+            CheckMemberReferences(loadedConfig, members, errors);
 
             foreach (var error in errors)
             {
@@ -185,17 +193,33 @@ namespace Robust.Shared.ContentPack
         {
             _sawmill.Debug($"{name}: Verifying IL...");
             var sw = Stopwatch.StartNew();
-            var ver = new Verifier(resolver);
-            ver.SetSystemModuleName(new AssemblyName(_config.SystemAssemblyName));
-            var verifyErrors = false;
-            foreach (var res in ver.Verify(peReader))
+            var bag = new ConcurrentBag<VerificationResult>();
+            var partitioner = Partitioner.Create(reader.TypeDefinitions);
+
+            Parallel.ForEach(partitioner.GetPartitions(Environment.ProcessorCount), handle =>
             {
-                if (_config.AllowedVerifierErrors.Contains(res.Code))
+                var ver = new Verifier(resolver);
+                ver.SetSystemModuleName(new AssemblyName(SystemAssemblyName));
+                while (handle.MoveNext())
+                {
+                    foreach (var result in ver.Verify(peReader, handle.Current, verifyMethods: true))
+                    {
+                        bag.Add(result);
+                    }
+                }
+            });
+
+            var loadedCfg = _config.Result;
+
+            var verifyErrors = false;
+            foreach (var res in bag)
+            {
+                if (loadedCfg.AllowedVerifierErrors.Contains(res.Code))
                 {
                     continue;
                 }
 
-                var msg = $"{name}: ILVerify: {res.Message}";
+                var msg = $"{name}: ILVerify: {string.Format(res.Message, res.Args)}";
 
                 try
                 {
@@ -237,6 +261,7 @@ namespace Robust.Shared.ContentPack
         }
 
         private void CheckMemberReferences(
+            SandboxConfig sandboxConfig,
             List<MMemberRef> members,
             ConcurrentBag<SandboxError> errors)
         {
@@ -273,7 +298,7 @@ namespace Robust.Shared.ContentPack
 
                 var baseTypeReferenced = (MTypeReferenced) baseType;
 
-                if (!IsTypeAccessAllowed(baseTypeReferenced, out var typeCfg))
+                if (!IsTypeAccessAllowed(sandboxConfig, baseTypeReferenced, out var typeCfg))
                 {
                     // Technically this error isn't necessary since we have an earlier pass
                     // checking all referenced types. That should have caught this
@@ -338,6 +363,7 @@ namespace Robust.Shared.ContentPack
         }
 
         private void CheckInheritance(
+            SandboxConfig sandboxConfig,
             List<(MType type, MType parent, ArraySegment<MType> interfaceImpls)> inherited,
             ConcurrentBag<SandboxError> errors)
         {
@@ -367,7 +393,7 @@ namespace Robust.Shared.ContentPack
                         _ => throw new InvalidOperationException() // Can't happen.
                     };
 
-                    if (!IsTypeAccessAllowed(realBaseType, out var cfg))
+                    if (!IsTypeAccessAllowed(sandboxConfig, realBaseType, out var cfg))
                     {
                         return false;
                     }
@@ -377,13 +403,13 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private bool IsTypeAccessAllowed(MTypeReferenced type, [NotNullWhen(true)] out TypeConfig? cfg)
+        private bool IsTypeAccessAllowed(SandboxConfig sandboxConfig, MTypeReferenced type, [NotNullWhen(true)] out TypeConfig? cfg)
         {
             if (type.Namespace == null)
             {
                 if (type.ResolutionScope is MResScopeType parentType)
                 {
-                    if (!IsTypeAccessAllowed((MTypeReferenced) parentType.Type, out var parentCfg))
+                    if (!IsTypeAccessAllowed(sandboxConfig, (MTypeReferenced) parentType.Type, out var parentCfg))
                     {
                         cfg = null;
                         return false;
@@ -413,7 +439,7 @@ namespace Robust.Shared.ContentPack
             }
 
             // Check if in whitelisted namespaces.
-            foreach (var whNamespace in _config.WhitelistedNamespaces)
+            foreach (var whNamespace in sandboxConfig.WhitelistedNamespaces)
             {
                 if (type.Namespace.StartsWith(whNamespace))
                 {
@@ -422,7 +448,7 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            if (!_config.Types.TryGetValue(type.Namespace, out var nsDict))
+            if (!sandboxConfig.Types.TryGetValue(type.Namespace, out var nsDict))
             {
                 cfg = null;
                 return false;
@@ -749,8 +775,9 @@ namespace Robust.Shared.ContentPack
             return handle.IsNil ? null : reader.GetString(handle);
         }
 
-        private sealed class Resolver : ResolverBase
+        private sealed class Resolver : IResolver
         {
+            private readonly ConcurrentDictionary<string, PEReader?> _dictionary = new();
             private readonly AssemblyTypeChecker _parent;
             private readonly string[] _diskLoadPaths;
             private readonly ResourcePath[] _resLoadPaths;
@@ -762,7 +789,7 @@ namespace Robust.Shared.ContentPack
                 _resLoadPaths = resLoadPaths;
             }
 
-            protected override PEReader? ResolveCore(string simpleName)
+            private PEReader? ResolveCore(string simpleName)
             {
                 var dllName = $"{simpleName}.dll";
                 foreach (var diskLoadPath in _diskLoadPaths)
@@ -796,6 +823,11 @@ namespace Robust.Shared.ContentPack
                 }
 
                 return null;
+            }
+
+            public PEReader? Resolve(string simpleName)
+            {
+                return _dictionary.GetOrAdd(simpleName, ResolveCore);
             }
         }
 

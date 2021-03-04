@@ -20,6 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -52,6 +53,11 @@ namespace Robust.Shared.Physics.Dynamics
         /// This list is cleared after every update.
         /// </summary>
         private List<Contact> ActiveList = new(128);
+
+        /// <summary>
+        ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicConmtroller
+        /// </summary>
+        internal event Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
 
         public ContactManager()
         {
@@ -397,8 +403,16 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                // We're only issuing one message because this is called for every collision.
-                bodyA.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionMessage(bodyA, bodyB, frameTime, contact.Manifold));
+                // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
+                // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
+                if (bodyA.BodyType == BodyType.KinematicController)
+                {
+                    KinematicControllerCollision?.Invoke(bodyA, bodyB, frameTime, contact.Manifold);
+                }
+                else if (bodyB.BodyType == BodyType.KinematicController)
+                {
+                    KinematicControllerCollision?.Invoke(bodyB, bodyA, frameTime, contact.Manifold);
+                }
             }
 
             ActiveList.Clear();

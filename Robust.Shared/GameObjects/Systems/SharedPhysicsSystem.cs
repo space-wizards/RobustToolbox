@@ -5,6 +5,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Reflection;
@@ -56,7 +57,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyList<VirtualController> Controllers => _controllers;
         private List<VirtualController> _controllers = new();
 
-        // TODO: Stoer all the controllers here akshully
+        public Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
 
         public override void Initialize()
         {
@@ -155,11 +156,15 @@ namespace Robust.Shared.GameObjects
             var map = new PhysicsMap(eventArgs.Map);
             _maps.Add(eventArgs.Map, map);
             map.Initialize();
+            map.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
             Logger.DebugS("physics", $"Created physics map for {eventArgs.Map}");
         }
 
         private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
         {
+            var map = _maps[eventArgs.Map];
+            map.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
+
             _maps.Remove(eventArgs.Map);
             Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
         }

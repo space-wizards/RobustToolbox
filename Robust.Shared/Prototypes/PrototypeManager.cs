@@ -71,7 +71,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         List<IPrototype> LoadDirectory(ResourcePath path);
 
-        Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
+        IEnumerable<KeyValuePair<string, HashSet<ErrorNode>>> ValidateDirectory(ResourcePath path);
 
         List<IPrototype> LoadFromStream(TextReader stream);
 
@@ -341,12 +341,11 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
+        public IEnumerable<KeyValuePair<string, HashSet<ErrorNode>>> ValidateDirectory(ResourcePath path)
         {
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
-            var dict = new Dictionary<string, HashSet<ErrorNode>>();
             foreach (var resourcePath in streams)
             {
                 using var reader = ReadFile(resourcePath);
@@ -359,9 +358,9 @@ namespace Robust.Shared.Prototypes
                 var yamlStream = new YamlStream();
                 yamlStream.Load(reader);
 
-                for (var i = 0; i < yamlStream.Documents.Count; i++)
+                foreach (var doc in yamlStream.Documents)
                 {
-                    var rootNode = (YamlSequenceNode) yamlStream.Documents[i].RootNode;
+                    var rootNode = (YamlSequenceNode) doc.RootNode;
                     foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                     {
                         var type = node.GetNode("type").AsString();
@@ -372,7 +371,8 @@ namespace Robust.Shared.Prototypes
                                 continue;
                             }
 
-                            throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+                            // throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+                            continue; // TODO populate ignored prototypes in a better way
                         }
 
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
@@ -380,15 +380,11 @@ namespace Robust.Shared.Prototypes
                         var errorNodes = _serializationManager.ValidateNode(prototypeTypes[type], mapping).GetErrors().ToHashSet();
                         if (errorNodes.Count != 0)
                         {
-                            if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                                dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
-                            dict[resourcePath.ToString()].UnionWith(errorNodes);
+                            yield return new KeyValuePair<string, HashSet<ErrorNode>>(resourcePath.ToString(), errorNodes);
                         }
                     }
                 }
             }
-
-            return dict;
         }
 
         private StreamReader? ReadFile(ResourcePath file, bool @throw = true)

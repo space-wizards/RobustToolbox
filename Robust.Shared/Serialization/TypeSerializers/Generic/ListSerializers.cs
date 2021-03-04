@@ -76,27 +76,27 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         ValidationNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }

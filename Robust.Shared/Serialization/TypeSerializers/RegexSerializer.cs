@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             {
                 _ = new Regex(node.Value);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return new ErrorNode(node, "Failed compiling regex.");
             }

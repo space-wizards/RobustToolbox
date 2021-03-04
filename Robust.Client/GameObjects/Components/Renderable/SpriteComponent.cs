@@ -31,7 +31,6 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IReflectionManager reflectionManager = default!;
 
         [DataField("visible")]
         private bool _visible = true;

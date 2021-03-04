@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects
             [DataField("type", readOnly: true, required: true)]
             public string ClientType { get; set; } = default!;
 
-            public void AfterDeserialization()
+            void ISerializationHooks.AfterDeserialization()
             {
                 var reflectionManager = IoCManager.Resolve<IReflectionManager>();
 

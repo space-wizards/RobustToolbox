@@ -37,13 +37,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
 
         ValidationNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
         ValidationNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
-            SequenceDataNode node, ISerializationContext? context = null)
+            SequenceDataNode node, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }

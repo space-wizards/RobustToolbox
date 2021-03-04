@@ -179,7 +179,7 @@ namespace Robust.Client.GameObjects
                 Mask = null;
         }
 
-        public void AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization()
         {
             if (_maskPath != null)
             {

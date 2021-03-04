@@ -30,8 +30,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 

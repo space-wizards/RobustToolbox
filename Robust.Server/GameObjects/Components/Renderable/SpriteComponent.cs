@@ -151,7 +151,7 @@ namespace Robust.Server.GameObjects
         [ViewVariables]
         public int LayerCount => Layers.Count;
 
-        public void AfterDeserialization()
+        void ISerializationHooks.AfterDeserialization()
         {
             if (Layers.Count == 0)
             {

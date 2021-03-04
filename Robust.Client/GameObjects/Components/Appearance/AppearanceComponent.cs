@@ -19,10 +19,6 @@ namespace Robust.Client.GameObjects
         [DataField("visuals")]
         internal List<AppearanceVisualizer> Visualizers = new();
 
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-
-        private static bool _didRegisterSerializer;
-
         [ViewVariables]
         private bool _appearanceDirty;
 

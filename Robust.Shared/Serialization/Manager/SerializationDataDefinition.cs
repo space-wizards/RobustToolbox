@@ -132,19 +132,20 @@ namespace Robust.Shared.Serialization.Manager
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
-            var validatedmapping = new Dictionary<ValidationNode, ValidationNode>();
+            var validatedMapping = new Dictionary<ValidationNode, ValidationNode>();
+
             foreach (var (key, val) in node.Children)
             {
                 if (key is not ValueDataNode valueDataNode)
                 {
-                    validatedmapping.Add(new ErrorNode(key, "Key not ValueDataNode."), new InconclusiveNode(val));
+                    validatedMapping.Add(new ErrorNode(key, "Key not ValueDataNode."), new InconclusiveNode(val));
                     continue;
                 }
 
                 var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
-                    validatedmapping.Add(new ErrorNode(key, "No corresponding field found."), new InconclusiveNode(val));
+                    validatedMapping.Add(new ErrorNode(key, $"Field {valueDataNode.Value} not found."), new InconclusiveNode(val));
                     continue;
                 }
 
@@ -158,10 +159,10 @@ namespace Robust.Shared.Serialization.Manager
                     _ => serializationManager.ValidateNode(field.FieldType, val, context)
                 };
 
-                validatedmapping.Add(keyValidated, valValidated);
+                validatedMapping.Add(keyValidated, valValidated);
             }
 
-            return new ValidatedMappingNode(validatedmapping);
+            return new ValidatedMappingNode(validatedMapping);
         }
 
         private DeserializeDelegate EmitDeserializationDelegate()

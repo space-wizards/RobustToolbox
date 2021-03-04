@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<MapId>(new MapId(val));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             return int.TryParse(node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing MapId");

@@ -119,7 +119,7 @@ namespace Robust.Shared.Serialization.Manager
             return _dataDefinitions.ContainsKey(type);
         }
 
-        public ValidatedNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
+        public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
 
@@ -132,7 +132,7 @@ namespace Robust.Shared.Serialization.Manager
                 var elementType = underlyingType.GetElementType();
                 if (elementType == null)
                     throw new ArgumentException($"Failed to get elementtype of arraytype {underlyingType}", nameof(underlyingType));
-                var validatedList = new List<ValidatedNode>();
+                var validatedList = new List<ValidationNode>();
                 foreach (var dataNode in sequenceDataNode.Sequence)
                 {
                     validatedList.Add(ValidateNode(elementType, dataNode, context));
@@ -190,7 +190,7 @@ namespace Robust.Shared.Serialization.Manager
             return new ErrorNode(node, "Failed to read node.");
         }
 
-        public ValidatedNode ValidateNode<T>(DataNode node, ISerializationContext? context = null)
+        public ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null)
         {
             return ValidateNode(typeof(T), node, context);
         }

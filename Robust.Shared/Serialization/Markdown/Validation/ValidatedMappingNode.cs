@@ -4,32 +4,27 @@ using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class ValidatedMappingNode : ValidatedNode
+    public class ValidatedMappingNode : ValidationNode
     {
-        public readonly Dictionary<ValidatedNode, ValidatedNode> Mapping;
+        public readonly Dictionary<ValidationNode, ValidationNode> Mapping;
         public override bool Valid => Mapping.All(p => p.Key.Valid && p.Value.Valid);
-        public override IEnumerable<string> Invalids()
+        public override IEnumerable<ErrorNode> GetErrors()
         {
             foreach (var (key, value) in Mapping.Where(p => !p.Key.Valid || !p.Value.Valid))
             {
-                if (!key.Valid)
+                foreach (var invalid in key.GetErrors())
                 {
-                    foreach (var invalid in key.Invalids())
-                    {
-                        yield return invalid;
-                    }
+                    yield return invalid;
                 }
-                else if (!value.Valid)
+
+                foreach (var invalid in value.GetErrors())
                 {
-                    foreach (var invalid in value.Invalids())
-                    {
-                        yield return $"[{key}] <> {invalid}";
-                    }
+                    yield return invalid;
                 }
             }
         }
 
-        public ValidatedMappingNode(Dictionary<ValidatedNode, ValidatedNode> mapping)
+        public ValidatedMappingNode(Dictionary<ValidationNode, ValidationNode> mapping)
         {
             Mapping = mapping;
         }

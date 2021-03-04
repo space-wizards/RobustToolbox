@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedValue<IEntity>(entity);
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             ISerializationContext? context = null)
         {
             // TODO Paul should we be checking entity exists here

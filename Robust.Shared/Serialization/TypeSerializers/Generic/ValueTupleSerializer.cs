@@ -26,13 +26,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Generic
             return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
             ISerializationContext? context = null)
         {
             if (node.Children.Count != 1) return new ErrorNode(node, "More or less than 1 Mapping for ValueTuple found.");
 
             var entry = node.Children.First();
-            var dict = new Dictionary<ValidatedNode, ValidatedNode>
+            var dict = new Dictionary<ValidationNode, ValidationNode>
             {
                 {
                     serializationManager.ValidateNode(typeof(T1), entry.Key, context),

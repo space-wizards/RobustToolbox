@@ -37,7 +37,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
-        ValidatedNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
+        ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null);
 
         /// <summary>
         ///     Validates that a node has all the properties required by a certain type with its serializer.
@@ -48,7 +48,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
-        ValidatedNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
+        ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
 
         /// <summary>
         ///     Creates a deserialization result from a generic type and its fields,
@@ -228,7 +228,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
-        ValidatedNode ValidateFlag(Type tagType, DataNode node);
+        ValidationNode ValidateFlag(Type tagType, DataNode node);
 
         /// <summary>
         ///     Deserializes a node into an enum value of the given type.
@@ -247,7 +247,7 @@ namespace Robust.Shared.Serialization.Manager
         ///     A node with whether or not <see cref="node"/> is valid and which of its fields
         ///     are invalid, if any.
         /// </returns>
-        ValidatedNode ValidateConstant(Type tagType, DataNode node);
+        ValidationNode ValidateConstant(Type tagType, DataNode node);
 
         /// <summary>
         ///     Serializes an enum flag into a node.

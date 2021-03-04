@@ -209,7 +209,7 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryValidateWithTypeReader(Type type, DataNode node, ISerializationContext? context, [NotNullWhen(true)] out ValidatedNode? valid)
+        private bool TryValidateWithTypeReader(Type type, DataNode node, ISerializationContext? context, [NotNullWhen(true)] out ValidationNode? valid)
         {
             //TODO Paul: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
@@ -220,7 +220,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (res as bool? ?? false)
             {
-                valid = (ValidatedNode)arr[2]!;
+                valid = (ValidationNode)arr[2]!;
                 return true;
             }
 
@@ -231,7 +231,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool TryValidateWithTypeReader<T, TNode>(
             TNode node,
             ISerializationContext? context,
-            [NotNullWhen(true)] out ValidatedNode? valid)
+            [NotNullWhen(true)] out ValidationNode? valid)
             where T : notnull
             where TNode : DataNode
         {

@@ -9,14 +9,14 @@ namespace Robust.Shared.Serialization.Markdown
     {
         private readonly List<DataNode> _nodes = new();
 
-        public SequenceDataNode() { }
+        public SequenceDataNode() : base(DataPosition.Invalid, DataPosition.Invalid) { }
 
-        public SequenceDataNode(List<DataNode> nodes)
+        public SequenceDataNode(List<DataNode> nodes) : this()
         {
             _nodes = nodes;
         }
 
-        public SequenceDataNode(YamlSequenceNode sequenceNode)
+        public SequenceDataNode(YamlSequenceNode sequenceNode) : base(sequenceNode.Start, sequenceNode.End)
         {
             foreach (var node in sequenceNode.Children)
             {
@@ -26,7 +26,7 @@ namespace Robust.Shared.Serialization.Markdown
             Tag = sequenceNode.Tag;
         }
 
-        public SequenceDataNode(params DataNode[] nodes)
+        public SequenceDataNode(params DataNode[] nodes) : this()
         {
             foreach (var node in nodes)
             {
@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.Markdown
             }
         }
 
-        public SequenceDataNode(params string[] strings)
+        public SequenceDataNode(params string[] strings) : this()
         {
             foreach (var s in strings)
             {
@@ -76,7 +76,12 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override SequenceDataNode Copy()
         {
-            var newSequence = new SequenceDataNode() {Tag = Tag};
+            var newSequence = new SequenceDataNode()
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
 
             foreach (var node in Sequence)
             {
@@ -105,7 +110,12 @@ namespace Robust.Shared.Serialization.Markdown
             {
                 if (!set.Contains(nodeNode)) newList.Add(nodeNode);
             }
-            return new SequenceDataNode(newList);
+            return new SequenceDataNode(newList)
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
         }
     }
 }

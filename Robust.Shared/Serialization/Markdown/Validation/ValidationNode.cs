@@ -2,10 +2,10 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public abstract class ValidatedNode
+    public abstract class ValidationNode
     {
         public abstract bool Valid { get; }
 
-        public abstract IEnumerable<string> Invalids();
+        public abstract IEnumerable<ErrorNode> GetErrors();
     }
 }

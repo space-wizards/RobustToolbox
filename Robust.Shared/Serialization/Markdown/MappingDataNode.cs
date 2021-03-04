@@ -13,9 +13,10 @@ namespace Robust.Shared.Serialization.Markdown
         private Dictionary<DataNode, DataNode> _mapping = new();
         public IReadOnlyDictionary<DataNode, DataNode> Children => _mapping;
 
-        public MappingDataNode() { }
+        public MappingDataNode() : base(DataPosition.Invalid, DataPosition.Invalid)
+        { }
 
-        public MappingDataNode(YamlMappingNode mapping)
+        public MappingDataNode(YamlMappingNode mapping) : base(mapping.Start, mapping.End)
         {
             foreach (var (key, val) in mapping.Children)
             {
@@ -25,7 +26,7 @@ namespace Robust.Shared.Serialization.Markdown
             Tag = mapping.Tag;
         }
 
-        public MappingDataNode(Dictionary<DataNode, DataNode> nodes)
+        public MappingDataNode(Dictionary<DataNode, DataNode> nodes) : this()
         {
             foreach (var (key, val) in nodes)
             {
@@ -118,7 +119,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public MappingDataNode Merge(MappingDataNode otherMapping)
         {
-            var newMapping = (Copy() as MappingDataNode)!;
+            var newMapping = Copy();
             foreach (var (key, val) in otherMapping.Children)
             {
                 //intentionally provokes argumentexception
@@ -127,12 +128,21 @@ namespace Robust.Shared.Serialization.Markdown
 
             newMapping.Tag = Tag;
 
+            //todo paul should prob make this smarter
+            newMapping.Start = Start;
+            newMapping.End = End;
+
             return newMapping;
         }
 
         public override MappingDataNode Copy()
         {
-            var newMapping = new MappingDataNode() {Tag = Tag};
+            var newMapping = new MappingDataNode()
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
 
             foreach (var (key, val) in _mapping)
             {
@@ -144,7 +154,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override MappingDataNode? Except(MappingDataNode node)
         {
-            var mappingNode = new MappingDataNode();
+            var mappingNode = new MappingDataNode(){Tag = Tag, Start = Start, End = End};
 
             foreach (var (key, val) in _mapping)
             {

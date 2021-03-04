@@ -860,7 +860,7 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            ValidatedNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, ISerializationContext? context)
             {
                 if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
@@ -871,7 +871,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidatedNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, ISerializationContext? context)
             {
                 if (node.Value == "null")
@@ -887,7 +887,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidatedNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, ISerializationContext? context)
             {
                 if (node.Value == "null") return new ValidatedValueNode(node);

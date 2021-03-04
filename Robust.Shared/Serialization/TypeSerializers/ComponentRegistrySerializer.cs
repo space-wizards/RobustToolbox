@@ -79,12 +79,12 @@ namespace Robust.Shared.Serialization.TypeSerializers
             return new DeserializedComponentRegistry(components, mappings);
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
+        public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             ISerializationContext? context = null)
         {
             var factory = serializationManager.ComponentFactory;
             var components = new ComponentRegistry();
-            var list = new List<ValidatedNode>();
+            var list = new List<ValidationNode>();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {

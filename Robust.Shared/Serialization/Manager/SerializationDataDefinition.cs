@@ -130,9 +130,9 @@ namespace Robust.Shared.Serialization.Manager
             return duplicates.Length > 0;
         }
 
-        public ValidatedNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
+        public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node, ISerializationContext? context)
         {
-            var validatedmapping = new Dictionary<ValidatedNode, ValidatedNode>();
+            var validatedmapping = new Dictionary<ValidationNode, ValidationNode>();
             foreach (var (key, val) in node.Children)
             {
                 if (key is not ValueDataNode valueDataNode)

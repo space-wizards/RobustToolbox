@@ -15,14 +15,14 @@ namespace Robust.Shared.GameObjects
 
     public interface IComponentEventBus
     {
-        void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
+        void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args)
             where TEvent:EntitySystemMessage;
 
-        void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage;
 
-        void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage;
     }
@@ -45,14 +45,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
+        public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args)
             where TEvent:EntitySystemMessage
         {
             _eventTables.Dispatch(uid, typeof(TEvent), args);
         }
 
         /// <inheritdoc />
-        public void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage
         {
@@ -63,7 +63,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        public void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage
         {

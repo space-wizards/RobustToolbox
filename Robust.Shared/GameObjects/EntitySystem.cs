@@ -117,24 +117,24 @@ namespace Robust.Shared.GameObjects
             return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
         }
         
-        protected void SubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        protected void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage
         {
-            EntityManager.EventBus.SubscribeCompEvent(handler);
+            EntityManager.EventBus.SubscribeLocalEvent(handler);
         }
 
-        protected void UnsubscribeCompEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntitySystemMessage
         {
-            EntityManager.EventBus.UnsubscribeCompEvent(handler);
+            EntityManager.EventBus.UnsubscribeLocalEvent(handler);
         }
 
-        protected void RaiseCompEvent<TEvent>(EntityUid uid, TEvent args)
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args)
             where TEvent : EntitySystemMessage
         {
-            EntityManager.EventBus.RaiseCompEvent(uid, args);
+            EntityManager.EventBus.RaiseLocalEvent(uid, args);
         }
         
         #endregion

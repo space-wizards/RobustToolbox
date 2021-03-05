@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -15,9 +18,13 @@ namespace Robust.Shared.GameObjects
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
+        [DataField("parent")]
         private EntityUid _parent;
-        private Vector2 _localPosition; // holds offset from grid, or offset from parent
+        [DataField("pos")]
+        private Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
+        [DataField("rot")]
         private Angle _localRotation; // local rotation
+        [DataField("noRot")]
         private bool _noLocalRotation;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
@@ -672,16 +679,6 @@ namespace Robust.Shared.GameObjects
                     ContainsEntity(entityTransform
                         .Parent); //Recursively search up the entities containers for this object
             }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _parent, "parent", new EntityUid());
-            serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
-            serializer.DataField(ref _localRotation, "rot", new Angle());
-            serializer.DataField(ref _noLocalRotation, "noRot", false);
         }
 
         /// <param name="player"></param>

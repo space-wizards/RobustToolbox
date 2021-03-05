@@ -17,7 +17,6 @@ namespace Robust.Client
             RegisterReflection();
         }
 
-
         internal static void RegisterReflection()
         {
             // Gets a handle to the shared and the current (client) dll.

@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Shapes
@@ -10,6 +11,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     /// and it's origin is always the same as the entity position.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeCircle : IPhysShape
     {
         public int ChildCount => 1;

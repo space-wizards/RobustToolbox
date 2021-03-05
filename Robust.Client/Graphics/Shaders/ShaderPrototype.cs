@@ -1,23 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.ResourceManagement;
-using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.Graphics
 {
     [Prototype("shader")]
-    public sealed class ShaderPrototype : IPrototype
+    public sealed class ShaderPrototype : IPrototype, ISerializationHooks
     {
-        [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public string ID { get; private set; } = default!;
+        [ViewVariables]
+        [field: DataField("id", required: true)]
+        public string ID { get; } = default!;
+
+        [ViewVariables]
+        [field: DataField("parent")]
+        public string? Parent { get; }
 
         private ShaderKind Kind;
 
@@ -31,11 +38,14 @@ namespace Robust.Client.Graphics
         private ShaderInstance? _cachedInstance;
 
         private bool _stencilEnabled;
-        private int _stencilRef;
-        private int _stencilReadMask = unchecked((int) uint.MaxValue);
-        private int _stencilWriteMask = unchecked((int) uint.MaxValue);
-        private StencilFunc _stencilFunc = StencilFunc.Always;
-        private StencilOp _stencilOp = StencilOp.Keep;
+        private int _stencilRef => StencilDataHolder?.StencilRef ?? 0;
+        private int _stencilReadMask => StencilDataHolder?.ReadMask ?? unchecked((int) uint.MaxValue);
+        private int _stencilWriteMask => StencilDataHolder?.WriteMask ?? unchecked((int) uint.MaxValue);
+        private StencilFunc _stencilFunc => StencilDataHolder?.StencilFunc ?? StencilFunc.Always;
+        private StencilOp _stencilOp => StencilDataHolder?.StencilOp ?? StencilOp.Keep;
+
+        [DataField("stencil")]
+        private StencilData? StencilDataHolder;
 
         /// <summary>
         ///     Retrieves a ready-to-use instance of this shader.
@@ -64,12 +74,12 @@ namespace Robust.Client.Graphics
             switch (Kind)
             {
                 case ShaderKind.Source:
-                    instance = _clyde.InstanceShader(Source!.ClydeHandle);
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(Source!.ClydeHandle);
                     _applyDefaultParameters(instance);
                     break;
 
                 case ShaderKind.Canvas:
-                    instance = _clyde.InstanceShader(CompiledCanvasShader);
+                    instance = IoCManager.Resolve<IClydeInternal>().InstanceShader(CompiledCanvasShader);
                     break;
 
                 default:
@@ -95,135 +105,108 @@ namespace Robust.Client.Graphics
             return Instance().Duplicate();
         }
 
-        public void LoadFrom(YamlMappingNode mapping)
-        {
-            ID = mapping.GetNode("id").ToString();
+        [DataField("kind", readOnly: true, required: true)] private string _rawKind = default!;
+        [DataField("path", readOnly: true)] private ResourcePath? path;
+        [DataField("params", readOnly: true)] private Dictionary<string, string>? paramMapping;
+        [DataField("light_mode", readOnly: true)] private string? rawMode;
+        [DataField("blend_mode", readOnly: true)] private string? rawBlendMode;
 
-            var kind = mapping.GetNode("kind").AsString();
-            switch (kind)
+        void ISerializationHooks.AfterDeserialization()
+        {
+            switch (_rawKind)
             {
                 case "source":
                     Kind = ShaderKind.Source;
-                    ReadSourceKind(mapping);
+                    if (path == null) throw new InvalidOperationException();
+                    Source = IoCManager.Resolve<IResourceCache>().GetResource<ShaderSourceResource>(path);
+
+                    if (paramMapping != null)
+                    {
+                        ShaderParams = new Dictionary<string, object>();
+                        foreach (var item in paramMapping!)
+                        {
+                            var name = item.Key;
+                            if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
+                            {
+                                Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
+                                continue;
+                            }
+
+                            var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
+                            ShaderParams.Add(name, value);
+                        }
+                    }
                     break;
 
                 case "canvas":
                     Kind = ShaderKind.Canvas;
-                    ReadCanvasKind(mapping);
+                    var source = "";
+
+                    if(rawMode != null)
+                    {
+                        switch (rawMode)
+                        {
+                            case "normal":
+                                break;
+
+                            case "unshaded":
+                                source += "light_mode unshaded;\n";
+                                break;
+
+                            default:
+                                throw new InvalidOperationException($"Invalid light mode: '{rawMode}'");
+                        }
+                    }
+
+                    if(rawBlendMode != null){
+                        switch (rawBlendMode)
+                        {
+                            case "mix":
+                                source += "blend_mode mix;\n";
+                                break;
+
+                            case "add":
+                                source += "blend_mode add;\n";
+                                break;
+
+                            case "subtract":
+                                source += "blend_mode subtract;\n";
+                                break;
+
+                            case "multiply":
+                                source += "blend_mode multiply;\n";
+                                break;
+
+                            default:
+                                throw new InvalidOperationException($"Invalid blend mode: '{rawBlendMode}'");
+                        }
+                    }
+
+                    source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
+
+                    var preset = ShaderParser.Parse(source, _resourceCache);
+                    CompiledCanvasShader = IoCManager.Resolve<IClydeInternal>().LoadShader(preset, $"canvas_preset_{ID}");
                     break;
 
                 default:
-                    throw new InvalidOperationException($"Invalid shader kind: '{kind}'");
+                    throw new InvalidOperationException($"Invalid shader kind: '{_rawKind}'");
             }
 
-            // Load stencil data.
-            if (mapping.TryGetNode("stencil", out YamlMappingNode? stencilData))
-            {
-                ReadStencilData(stencilData);
-            }
+            if (StencilDataHolder != null) _stencilEnabled = true;
         }
 
-        private void ReadStencilData(YamlMappingNode stencilData)
+        [DataDefinition]
+        public class StencilData
         {
-            _stencilEnabled = true;
+            [DataField("ref")] public int StencilRef;
 
-            if (stencilData.TryGetNode("ref", out var dataNode))
-            {
-                _stencilRef = dataNode.AsInt();
-            }
+            [DataField("op")] public StencilOp StencilOp;
 
-            if (stencilData.TryGetNode("op", out dataNode))
-            {
-                _stencilOp = dataNode.AsEnum<StencilOp>();
-            }
+            [DataField("func")] public StencilFunc StencilFunc;
 
-            if (stencilData.TryGetNode("func", out dataNode))
-            {
-                _stencilFunc = dataNode.AsEnum<StencilFunc>();
-            }
+            [DataField("readMask")] public int ReadMask = unchecked((int) uint.MaxValue);
 
-            if (stencilData.TryGetNode("readMask", out dataNode))
-            {
-                _stencilReadMask = dataNode.AsInt();
-            }
-
-            if (stencilData.TryGetNode("writeMask", out dataNode))
-            {
-                _stencilWriteMask = dataNode.AsInt();
-            }
-        }
-
-        private void ReadSourceKind(YamlMappingNode mapping)
-        {
-            var path = mapping.GetNode("path").AsResourcePath();
-            Source = _resourceCache.GetResource<ShaderSourceResource>(path);
-            if (mapping.TryGetNode<YamlMappingNode>("params", out var paramMapping))
-            {
-                ShaderParams = new Dictionary<string, object>();
-                foreach (var item in paramMapping)
-                {
-                    var name = item.Key.AsString();
-                    if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
-                    {
-                        Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
-                        continue;
-                    }
-
-                    var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
-                    ShaderParams.Add(name, value);
-                }
-            }
-        }
-
-        private void ReadCanvasKind(YamlMappingNode mapping)
-        {
-            var source = "";
-
-            if (mapping.TryGetNode("light_mode", out var node))
-            {
-                switch (node.AsString())
-                {
-                    case "normal":
-                        break;
-
-                    case "unshaded":
-                        source += "light_mode unshaded;\n";
-                        break;
-
-                    default:
-                        throw new InvalidOperationException($"Invalid light mode: '{node.AsString()}'");
-                }
-            }
-
-            if (mapping.TryGetNode("blend_mode", out node))
-            {
-                switch (node.AsString())
-                {
-                    case "mix":
-                        source += "blend_mode mix;\n";
-                        break;
-
-                    case "add":
-                        source += "blend_mode add;\n";
-                        break;
-
-                    case "subtract":
-                        source += "blend_mode subtract;\n";
-                        break;
-
-                    case "multiply":
-                        source += "blend_mode multiply;\n";
-                        break;
-
-                    default:
-                        throw new InvalidOperationException($"Invalid blend mode: '{node.AsString()}'");
-                }
-            }
-
-            source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
-
-            var preset = ShaderParser.Parse(source, _resourceCache);
-            CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");
+            [DataField("writeMask")] public int WriteMask = unchecked((int) uint.MaxValue);
         }
 
         private static object _parseUniformValue(YamlNode node, ShaderDataType dataType)

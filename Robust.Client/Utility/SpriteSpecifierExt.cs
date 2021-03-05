@@ -26,12 +26,10 @@ namespace Robust.Client.Utility
         {
             if (cache.TryGetResource<RSIResource>(
                 SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath,
-                out var theRsi))
+                out var theRsi) &&
+                theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
             {
-                if (theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
-                {
-                    return state;
-                }
+                return state;
             }
 
             Logger.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);

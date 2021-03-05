@@ -9,6 +9,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
 {
@@ -59,6 +60,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             MapManager.Initialize();
             MapManager.Startup();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();

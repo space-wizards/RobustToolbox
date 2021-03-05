@@ -1,16 +1,26 @@
 ﻿using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown;
 using YamlDotNet.RepresentationModel;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    [TestOf(typeof(YamlObjectSerializer))]
     public class TypePropertySerialization_Test : RobustUnitTest
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+        }
+
         [Test]
         public void SerializeTypePropertiesTest()
         {
@@ -19,24 +29,23 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
                 TestPropertyOne = "B",
                 TestPropertyTwo = 10
             };
-            var mapping = new YamlMappingNode();
-            var writer = YamlObjectSerializer.NewWriter(mapping);
-
-            writer.DataField(ref type, "test", null!);
+            var serMan = IoCManager.Resolve<ISerializationManager>();
+            var mapping = (MappingDataNode) serMan.WriteValue(type);
 
             Assert.IsNotEmpty(mapping.Children);
 
-            var testPropertyOne = (YamlScalarNode) mapping["test"]["testPropertyOne"];
-            var testPropertyTwo = (YamlScalarNode) mapping["test"]["testPropertyTwo"];
+            var testPropertyOne = mapping.GetNode("testPropertyOne") as ValueDataNode;
+            var testPropertyTwo = mapping.GetNode("testPropertyTwo") as ValueDataNode;
 
-            Assert.That(testPropertyOne.Value, Is.EqualTo("B"));
-            Assert.That(testPropertyTwo.Value, Is.EqualTo("10"));
+            Assert.NotNull(testPropertyOne);
+            Assert.NotNull(testPropertyTwo);
+            Assert.That(testPropertyOne!.Value, Is.EqualTo("B"));
+            Assert.That(testPropertyTwo!.Value, Is.EqualTo("10"));
         }
 
         [Test]
         public void DeserializeTypePropertiesTest()
         {
-            ITestType? type = null;
             var yaml = @"
 - test:
     !type:testtype2
@@ -57,8 +66,8 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode[0];
 
-            var reader = YamlObjectSerializer.NewReader(mapping);
-            reader.DataField(ref type, "test", null);
+            var serMan = IoCManager.Resolve<ISerializationManager>();
+            var type = serMan.ReadValue<ITestType>(mapping["test"].ToDataNode());
 
             Assert.NotNull(type);
             Assert.IsInstanceOf<TestTypeTwo>(type);
@@ -71,17 +80,14 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     }
 
     [SerializedType("testtype2")]
+    [DataDefinition]
     public class TestTypeTwo : ITestType
     {
+        [DataField("testPropertyOne")]
         public string? TestPropertyOne { get; set; }
 
+        [DataField("testPropertyTwo")]
         public int TestPropertyTwo { get; set; }
-
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(this, x => TestPropertyOne, "testPropertyOne", null);
-            serializer.DataField(this, x => TestPropertyTwo, "testPropertyTwo", 0);
-        }
     }
 
     [RegisterComponent]
@@ -89,13 +95,6 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     {
         public override string Name => "Test";
 
-        public ITestType? TestType { get; set; }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(this, x => x.TestType, "testType", null);
-        }
+        [DataField("testType")] public ITestType? TestType { get; set; }
     }
 }

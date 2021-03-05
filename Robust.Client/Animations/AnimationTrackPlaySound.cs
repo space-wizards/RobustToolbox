@@ -15,7 +15,7 @@ namespace Robust.Client.Animations
         /// <summary>
         ///     A list of key frames for when to fire flicks.
         /// </summary>
-        public readonly List<KeyFrame> KeyFrames = new();
+        public List<KeyFrame> KeyFrames { get; private set; } = new();
 
         public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
         {

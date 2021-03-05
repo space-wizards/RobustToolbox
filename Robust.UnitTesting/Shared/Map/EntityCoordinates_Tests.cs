@@ -9,6 +9,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -47,6 +48,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapManager.Initialize();
             mapManager.Startup();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

@@ -1,6 +1,8 @@
 ﻿using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics.Contracts;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Audio
 {
@@ -8,43 +10,52 @@ namespace Robust.Shared.Audio
     ///     Contains common audio parameters for audio playback on the client.
     /// </summary>
     [Serializable, NetSerializable]
-    public struct AudioParams : IExposeData
+    [DataDefinition]
+    public struct AudioParams : IPopulateDefaultValues
     {
         /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
+        [DataField("volume")]
         public float Volume { get; set; }
 
         /// <summary>
         ///     Scale for the audio pitch.
         /// </summary>
+        [DataField("pitchscale")]
         public float PitchScale { get; set; }
 
         /// <summary>
         ///     Audio bus to play on.
         /// </summary>
+        [DataField("busname")]
         public string BusName { get; set; }
 
         /// <summary>
         ///     Only applies to positional audio.
         ///     The maximum distance from which the audio is hearable.
         /// </summary>
+        [DataField("maxdistance")]
         public float MaxDistance { get; set; }
 
         /// <summary>
         ///     Only applies to positional audio.
         ///     Positional audio is dampened over distance with this as exponent.
         /// </summary>
+        [DataField("attenuation")]
         public float Attenuation { get; set; }
 
         /// <summary>
         ///     Only applies to global (non-positional) audio.
         ///     Target channels if the audio configuration has more than 2 speakers.
         /// </summary>
+        [DataField("mixtarget")]
         public AudioMixTarget MixTarget { get; set; }
 
+        [DataField("loop")]
         public bool Loop { get; set; }
 
+        [DataField("playoffset")]
         public float PlayOffsetSeconds { get; set; }
 
         // For the max distance value: it's 2000 in Godot, but I assume that's PIXELS due to the 2D positioning,
@@ -53,18 +64,6 @@ namespace Robust.Shared.Audio
         ///     The "default" audio configuration.
         /// </summary>
         public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
-
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            Volume = serializer.ReadDataField("volume", 0f);
-            PitchScale = serializer.ReadDataField("pitchscale", 1f);
-            BusName = serializer.ReadDataField("busname", "Master");
-            MaxDistance = serializer.ReadDataField("maxdistance", 62.5f);
-            Attenuation = serializer.ReadDataField("attenuation", 1f);
-            MixTarget = serializer.ReadDataField("mixtarget", AudioMixTarget.Stereo);
-            Loop = serializer.ReadDataField("loop", false);
-            PlayOffsetSeconds = serializer.ReadDataField("playoffset", 0f);
-        }
 
         public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation,
             AudioMixTarget mixTarget, bool loop, float playOffsetSeconds) : this()
@@ -168,6 +167,15 @@ namespace Robust.Shared.Audio
             var me = this;
             me.PlayOffsetSeconds = offset;
             return me;
+        }
+
+        public void PopulateDefaultValues()
+        {
+            PitchScale = 1f;
+            BusName = "Master";
+            MaxDistance = 62.5f;
+            Attenuation = 1f;
+            MixTarget = AudioMixTarget.Stereo;
         }
     }
 

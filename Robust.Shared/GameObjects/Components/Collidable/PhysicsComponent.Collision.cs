@@ -16,6 +16,12 @@ namespace Robust.Shared.GameObjects
         public readonly float FrameTime;
         public readonly Manifold Manifold;
 
+        void RemovedFromPhysicsTree(MapId mapId);
+        void AddedToPhysicsTree(MapId mapId);
+    }
+
+    public partial class PhysicsComponent : Component, IPhysicsComponent
+    {
         public CollisionMessage(IPhysBody bodyA, IPhysBody bodyB, float frameTime, Manifold manifold)
         {
             BodyA = bodyA;

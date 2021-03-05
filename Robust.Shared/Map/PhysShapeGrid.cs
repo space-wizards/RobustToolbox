@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
@@ -12,7 +13,8 @@ namespace Robust.Shared.Map
     /// A physics shape that represents a <see cref="MapGrid"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class PhysShapeGrid : IPhysShape
+    [DataDefinition]
+    public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
         public int ChildCount => 1;
 
@@ -39,6 +41,12 @@ namespace Robust.Shared.Map
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
+        }
 
         /// <inheritdoc />
         public void ApplyState()

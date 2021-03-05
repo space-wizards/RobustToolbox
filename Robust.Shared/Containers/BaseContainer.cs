@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -32,6 +32,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [field: DataField("occludes")]
         public bool OccludesLight { get; set; } = true;
 
         /// <inheritdoc />
@@ -40,6 +41,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [field: DataField("showEnts")]
         public bool ShowContents { get; set; }
 
         /// <summary>
@@ -164,14 +166,6 @@ namespace Robust.Shared.Containers
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
             Manager.Dirty();
-        }
-
-        /// <inheritdoc />
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            // ID and Manager are filled in Initialize
-            serializer.DataReadWriteFunction("showEnts", false, value => ShowContents = value, () => ShowContents);
-            serializer.DataReadWriteFunction("occludes", true, value => OccludesLight = value, () => OccludesLight);
         }
     }
 }

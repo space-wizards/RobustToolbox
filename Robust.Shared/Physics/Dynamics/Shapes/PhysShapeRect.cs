@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Shapes
@@ -15,6 +16,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     /// entity origin in world space.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public class PhysShapeRect : IPhysShape
     {
         public int ChildCount => 1;

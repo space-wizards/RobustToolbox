@@ -865,7 +865,7 @@ namespace Robust.Server.Maps
             ValidationNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
-                if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
+                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
                 {
                     return new ErrorNode(node, "Invalid EntityUid", true);
                 }
@@ -881,7 +881,7 @@ namespace Robust.Server.Maps
                     return new ValidatedValueNode(node);
                 }
 
-                if (!int.TryParse(node.Value, out var val) || val >= Entities.Count)
+                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
                 {
                     return new ErrorNode(node, "Invalid EntityUid", true);
                 }
@@ -905,15 +905,7 @@ namespace Robust.Server.Maps
             public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
-                if (!EntityUidMap.TryGetValue(value.Uid, out var entityMapped))
-                {
-                    Logger.WarningS("map", "Cannot write entity UID '{0}'.", value.Uid);
-                    return new ValueDataNode("");
-                }
-                else
-                {
-                    return new ValueDataNode(entityMapped.ToString(CultureInfo.InvariantCulture));
-                }
+                return Write(serializationManager, value.Uid, alwaysWrite, context);
             }
 
             public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
@@ -982,14 +974,14 @@ namespace Robust.Server.Maps
             {
                 var val = int.Parse(node.Value);
 
-                if (val >= Entities.Count)
+                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrDefault(e => e.Uid == UidEntityMap[val], out var entity))
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                     return null!;
                 }
                 else
                 {
-                    return new DeserializedValue<IEntity>(Entities[val]);
+                    return new DeserializedValue<IEntity>(entity);
                 }
             }
 

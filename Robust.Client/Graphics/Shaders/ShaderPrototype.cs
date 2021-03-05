@@ -22,10 +22,6 @@ namespace Robust.Client.Graphics
         [field: DataField("id", required: true)]
         public string ID { get; } = default!;
 
-        [ViewVariables]
-        [field: DataField("parent")]
-        public string? Parent { get; }
-
         private ShaderKind Kind;
 
         // Source shader variables.

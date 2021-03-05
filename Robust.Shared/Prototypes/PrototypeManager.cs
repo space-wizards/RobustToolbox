@@ -229,6 +229,7 @@ namespace Robust.Shared.Prototypes
 
             foreach (var prototype in changed)
             {
+                if(prototype is not IInheritingPrototype inheritingPrototype) continue;
                 var type = prototype.GetType();
                 if (!pushed.ContainsKey(type)) pushed[type] = new HashSet<string>();
                 var baseNode = prototype.ID;
@@ -239,7 +240,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var tree = _inheritanceTrees[type];
-                var currentNode = prototype.Parent;
+                var currentNode = inheritingPrototype.Parent;
 
                 if (currentNode == null)
                 {
@@ -318,7 +319,14 @@ namespace Robust.Shared.Prototypes
                 PushInheritance(type, childID, newResult, changed);
             }
 
-            newResult.CallAfterDeserializationHook();
+            if(newResult.RawValue is not IInheritingPrototype inheritingPrototype)
+            {
+                Logger.ErrorS("Serv3", $"PushInheritance was called on non-inheriting prototype! ({type}, {id})");
+                return;
+            }
+
+            if(!inheritingPrototype.Abstract)
+                newResult.CallAfterDeserializationHook();
             var populatedRes = _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition)newResult);
             prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }
@@ -537,7 +545,15 @@ namespace Robust.Shared.Prototypes
                 }
 
                 _prototypeResults[prototypeType][prototype.ID] = res;
-                _inheritanceTrees[prototypeType].AddId(prototype.ID, prototype.Parent, true);
+                if (prototype is IInheritingPrototype inheritingPrototype)
+                {
+                    _inheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
+                }
+                else
+                {
+                    //we call it here since it wont get called when pushing inheritance
+                    res.CallAfterDeserializationHook();
+                }
 
                 prototypes[prototypeType][prototype.ID] = prototype;
                 changedPrototypes.Add(prototype);
@@ -600,7 +616,8 @@ namespace Robust.Shared.Prototypes
             {
                 prototypes[type] = new Dictionary<string, IPrototype>();
                 _prototypeResults[type] = new Dictionary<string, DeserializationResult>();
-                _inheritanceTrees[type] = new PrototypeInheritanceTree();
+                if(typeof(IInheritingPrototype).IsAssignableFrom(type))
+                    _inheritanceTrees[type] = new PrototypeInheritanceTree();
             }
         }
 

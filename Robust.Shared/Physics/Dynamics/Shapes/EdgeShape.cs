@@ -80,11 +80,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public ShapeType ShapeType => ShapeType.Edge;
 
-        public void ExposeData(ObjectSerializer serializer)
-        {
-
-        }
-
         /// <summary>
         ///     Create a 1-sided edge.
         /// </summary>

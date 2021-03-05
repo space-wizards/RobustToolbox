@@ -36,6 +36,7 @@ using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -44,7 +45,8 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(IPhysBody))]
     public sealed class PhysicsComponent : Component, IPhysBody
     {
-        private BodyStatus _bodyStatus;
+        [DataField("status")]
+        private BodyStatus _bodyStatus = BodyStatus.OnGround;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -129,7 +131,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private BodyType _bodyType;
+        // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
+        [DataField("bodyType")]
+        private BodyType _bodyType = BodyType.Dynamic;
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
@@ -194,6 +198,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [DataField("sleepingAllowed")]
         private bool _sleepingAllowed;
 
         [ViewVariables]
@@ -255,10 +260,6 @@ namespace Robust.Shared.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _bodyStatus, "status", BodyStatus.OnGround);
-            // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
-            serializer.DataField(ref _bodyType, "bodyType", BodyType.Dynamic);
-            serializer.DataField(ref _fixedRotation, "fixedRotation", true);
             serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), fixtures =>
             {
                 foreach (var fixture in fixtures)
@@ -268,24 +269,6 @@ namespace Robust.Shared.GameObjects
                 }
             }, () => Fixtures);
 
-            serializer.DataReadWriteFunction("joints", new List<Joint>(), joints =>
-            {
-                if (joints.Count == 0) return;
-
-                // TODO: Brain no worky rn
-                throw new NotImplementedException();
-            }, () =>
-            {
-                var joints = new List<Joint>();
-
-                for (var jn = JointEdges; jn != null; jn = jn.Next)
-                {
-                    joints.Add(jn.Joint);
-                }
-
-                return joints;
-            });
-
             // TODO: Dump someday
             serializer.DataReadFunction("anchored", true, value =>
             {
@@ -293,15 +276,11 @@ namespace Robust.Shared.GameObjects
                     _bodyType = BodyType.Static;
             });
 
-            serializer.DataField(ref _linearDamping, "linearDamping", 0.02f);
-            serializer.DataField(ref _angularDamping, "angularDamping", 0.02f);
-            serializer.DataField(ref _mass, "mass", 1.0f);
+            //serializer.DataField(ref _mass, "mass", 1.0f);
             if (_mass > 0f && (BodyType & BodyType.Dynamic | BodyType.KinematicController) != 0)
             {
                 _invMass = 1.0f / _mass;
             }
-
-            serializer.DataField(ref _sleepingAllowed, "sleepingAllowed", true);
         }
 
         /// <inheritdoc />
@@ -604,7 +583,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _mass;
+        [DataField("mass")]
+        private float _mass = 1.0f;
 
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).
@@ -674,7 +654,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private bool _fixedRotation;
+        // TODO: Should default to false someday IMO
+        [DataField("fixedRotation")]
+        private bool _fixedRotation = true;
 
         // TODO: Will be used someday
         /// <summary>
@@ -758,7 +740,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _linearDamping;
+        [DataField("linearDamping")]
+        private float _linearDamping = 0.02f;
 
         /// <summary>
         ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -781,7 +764,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private float _angularDamping;
+        [DataField("angularDamping")]
+        private float _angularDamping = 0.02f;
 
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.

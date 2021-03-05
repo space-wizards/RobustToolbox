@@ -36,11 +36,12 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             }
         }
 
-        private float _radius;
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
 
         public ShapeType ShapeType => ShapeType.Rectangle;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("bounds")]
         private Box2 _rectangle = Box2.UnitCentered;
 
         public Box2 CachedBounds => _cachedBounds;
@@ -58,13 +59,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             handle.SetTransform(rotationMatrix * modelMatrix);
             handle.DrawRect(_rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
-        }
-
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
-
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         [field: NonSerialized]

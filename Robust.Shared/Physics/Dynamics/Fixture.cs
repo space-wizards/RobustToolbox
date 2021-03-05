@@ -29,6 +29,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -40,7 +41,7 @@ namespace Robust.Shared.Physics.Dynamics
     }
 
     [Serializable, NetSerializable]
-    public sealed class Fixture : IFixture, IExposeData, IEquatable<Fixture>
+    public sealed class Fixture : IFixture, IEquatable<Fixture>
     {
         public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
 
@@ -51,7 +52,9 @@ namespace Robust.Shared.Physics.Dynamics
         [NonSerialized]
         public int ProxyCount = 0;
 
-        [ViewVariables] public IPhysShape Shape { get; private set; } = default!;
+        [ViewVariables]
+        [DataField("shape")]
+        public IPhysShape Shape { get; private set; } = new PolygonShape();
 
         [ViewVariables]
         [field:NonSerialized]
@@ -70,7 +73,8 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private float _friction;
+        [DataField("friction")]
+        private float _friction = 0.4f;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Restitution
@@ -85,7 +89,8 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private float _restitution;
+        [DataField("restitution")]
+        private float _restitution = 0f;
 
         /// <summary>
         ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
@@ -109,7 +114,8 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private bool _hard;
+        [DataField("hard")]
+        private bool _hard = true;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -129,6 +135,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
+        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
         private int _collisionLayer;
 
         /// <summary>
@@ -149,6 +156,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
+        [DataFieldWithFlag("mask", typeof(CollisionMask))]
         private int _collisionMask;
 
         public Fixture(PhysicsComponent body, IPhysShape shape)
@@ -166,16 +174,6 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         public Fixture() {}
-
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(this, x => x.Shape, "shape", new PolygonShape());
-            serializer.DataField(ref _friction, "friction", 0.4f);
-            serializer.DataField(ref _restitution, "restitution", 0f);
-            serializer.DataField(ref _hard, "hard", true);
-            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
-            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
-        }
 
         /// <summary>
         ///     As a bunch of things aren't serialized we need to instantiate Fixture from an empty ctor and then copy values across.

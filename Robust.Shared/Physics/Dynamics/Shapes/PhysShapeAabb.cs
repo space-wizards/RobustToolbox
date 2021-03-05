@@ -36,10 +36,11 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             }
         }
 
-        private float _radius;
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
 
         public ShapeType ShapeType => ShapeType.Aabb;
 
+        [DataField("bounds")]
         private Box2 _localBounds = Box2.UnitCentered;
 
         /// <summary>
@@ -83,14 +84,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         {
             // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
             return _localBounds.Scale(1 + Radius);
-        }
-
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
-
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         [Pure]

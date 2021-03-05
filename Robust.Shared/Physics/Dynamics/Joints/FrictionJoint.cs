@@ -26,6 +26,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -74,12 +75,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The maximum friction force in N.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [field:DataField("maxForce")]
         public float MaxForce { get; set; }
 
         /// <summary>
         ///     The maximum friction torque in N-m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [field:DataField("maxTorque")]
         public float MaxTorque { get; set; }
 
         /// <summary>
@@ -141,13 +144,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 LocalAnchorA = Vector2.Zero;
                 LocalAnchorB = Vector2.Zero;
             }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-            serializer.DataField(this, x => x.MaxForce, "maxForce", 0f);
-            serializer.DataField(this, x => x.MaxTorque, "maxTorque", 0f);
         }
 
         public override Vector2 GetReactionForce(float invDt)

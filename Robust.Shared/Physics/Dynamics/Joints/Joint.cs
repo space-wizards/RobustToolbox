@@ -25,6 +25,7 @@ using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -56,7 +57,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     }
 
     [Serializable, NetSerializable]
-    public abstract class Joint : IExposeData, IEquatable<Joint>
+    public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>
         /// Indicate if this join is enabled or not. Disabling a joint
@@ -75,6 +76,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("enabled")]
         private bool _enabled = true;
 
         [NonSerialized] internal JointEdge EdgeA = new();
@@ -133,6 +135,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("collideConnected")]
         private bool _collideConnected;
 
         /// <summary>
@@ -155,14 +158,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _breakpoint = float.MaxValue;
         private double _breakpointSquared = Double.MaxValue;
 
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(this, x => x.Enabled, "enabled", true);
-            // TODO: Later nerd
-            // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
-            // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
-            serializer.DataField(this, x => x.CollideConnected, "collideConnected", false);
-        }
+        // TODO: Later nerd
+        // serializer.DataField(this, x => x.BodyA, "bodyA", EntityUid.Invalid);
+        // serializer.DataField(this, x => x.BodyB, "bodyB", Ent);
 
         protected void Dirty()
         {

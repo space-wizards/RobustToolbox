@@ -34,10 +34,11 @@ namespace Robust.Shared.Map
             }
         }
 
-        private float _radius;
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         public ShapeType ShapeType => ShapeType.Grid;
 
-        private GridId _gridId;
+        [DataField("grid")]
+        private GridId _gridId = GridId.Invalid;
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
@@ -92,15 +93,11 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         void IExposeData.ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _gridId, "grid", GridId.Invalid);
-
             if (serializer.Reading) // There is no Initialize function
             {
                 var mapMan = IoCManager.Resolve<IMapManager>();
                 _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
             }
-
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         public event Action? OnDataChanged { add { } remove { } }

@@ -19,6 +19,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         private const float DefaultRadius = 0.5f;
 
+        [DataField("radius")]
         private float _radius = DefaultRadius;
 
         /// <inheritdoc />
@@ -38,12 +39,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
-        }
-
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _radius, "radius", DefaultRadius);
         }
 
         /// <inheritdoc />

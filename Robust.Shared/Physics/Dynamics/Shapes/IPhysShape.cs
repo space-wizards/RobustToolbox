@@ -21,7 +21,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// A primitive physical shape that is used by a <see cref="IPhysBody"/>.
     /// </summary>
-    public interface IPhysShape : IExposeData, IEquatable<IPhysShape>
+    public interface IPhysShape : IEquatable<IPhysShape>
     {
         /// <summary>
         ///     Get the number of child primitives. Only relevant for chain shape.

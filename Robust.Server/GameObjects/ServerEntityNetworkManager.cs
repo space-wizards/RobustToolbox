@@ -87,7 +87,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message)
+        public void SendSystemNetworkMessage(EntityEventArgs message)
         {
             var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
@@ -98,7 +98,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
         {
             var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;

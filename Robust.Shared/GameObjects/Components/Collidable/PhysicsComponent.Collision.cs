@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics;
@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Called every tick for colliding bodies. Called once per pair.
     /// </summary>
-    public sealed class CollisionMessage : EntitySystemMessage
+    public sealed class CollisionMessage : EntityEventArgs
     {
         public readonly IPhysBody BodyA;
         public readonly IPhysBody BodyB;
@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Sent whenever a <see cref="IPhysBody"/> is changed.
     /// </summary>
-    public sealed class PhysicsUpdateMessage : EntitySystemMessage
+    public sealed class PhysicsUpdateMessage : EntityEventArgs
     {
         public PhysicsComponent Component { get; }
 
@@ -75,7 +75,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public sealed class FixtureUpdateMessage : EntitySystemMessage
+    public sealed class FixtureUpdateMessage : EntityEventArgs
     {
         public PhysicsComponent Body { get; }
 

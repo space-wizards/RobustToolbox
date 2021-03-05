@@ -22,7 +22,7 @@ namespace Robust.Shared.Network.Messages
 
         public EntityMessageType Type { get; set; }
 
-        public EntitySystemMessage SystemMessage { get; set; }
+        public EntityEventArgs SystemMessage { get; set; }
         public ComponentMessage ComponentMessage { get; set; }
 
         public EntityUid EntityUid { get; set; }
@@ -43,7 +43,7 @@ namespace Robust.Shared.Network.Messages
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAlignedMemory(length);
-                    SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                    SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                 }
                     break;
 

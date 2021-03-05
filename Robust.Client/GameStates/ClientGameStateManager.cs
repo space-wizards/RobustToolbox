@@ -27,7 +27,7 @@ namespace Robust.Client.GameStates
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
@@ -126,7 +126,7 @@ namespace Robust.Client.GameStates
             _nextInputCmdSeq++;
         }
 
-        public uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage
+        public uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs
         {
             if (!Predicting)
             {

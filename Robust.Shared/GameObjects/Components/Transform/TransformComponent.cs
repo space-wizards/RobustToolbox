@@ -872,7 +872,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever an entity moves.
     ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
     /// </summary>
-    public class MoveEvent : EntitySystemMessage
+    public class MoveEvent : HandledEntityEventArgs
     {
         public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
         {
@@ -885,7 +885,6 @@ namespace Robust.Shared.GameObjects
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
-        public bool Handled { get; set; }
 
         /// <summary>
         ///     New AABB of the entity.
@@ -896,7 +895,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Raised whenever this entity rotates in relation to their parent.
     /// </summary>
-    public class RotateEvent : EntitySystemMessage
+    public class RotateEvent : EntityEventArgs
     {
         public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {

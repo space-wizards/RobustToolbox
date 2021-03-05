@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Physics
 {
-    internal class IslandSolveMessage : EntitySystemMessage
+    internal class IslandSolveMessage : EntityEventArgs
     {
         public List<IPhysBody> Bodies { get; }
 

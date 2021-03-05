@@ -9,5 +9,6 @@ namespace Robust.Shared.Serialization.Manager
         Dictionary<(Type, Type), object> TypeReaders { get; }
         Dictionary<Type, object> TypeWriters { get; }
         Dictionary<Type, object> TypeCopiers { get; }
+        Dictionary<(Type, Type), object> TypeValidators { get; }
     }
 }

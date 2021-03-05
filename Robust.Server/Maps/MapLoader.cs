@@ -266,6 +266,7 @@ namespace Robust.Server.Maps
             public Dictionary<(Type, Type), object> TypeReaders { get; }
             public Dictionary<Type, object> TypeWriters { get; }
             public Dictionary<Type, object> TypeCopiers => TypeWriters;
+            public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
 
             public bool MapIsPostInit { get; private set; }
 
@@ -862,7 +863,7 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            ValidationNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
@@ -873,7 +874,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidationNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null")
@@ -889,7 +890,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidationNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null") return new ValidatedValueNode(node);

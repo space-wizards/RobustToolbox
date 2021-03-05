@@ -85,7 +85,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
         }
 
-        ValidationNode ITypeReader<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context)
@@ -99,7 +99,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return new ValidatedValueNode(node);
         }
 
-        ValidationNode ITypeReader<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<EntityPrototype, ValueDataNode>.Validate(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context)
@@ -111,7 +111,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
 
-        ValidationNode ITypeReader<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<Texture, ValueDataNode>.Validate(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context)
@@ -119,7 +119,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return serializationManager.ValidateNode(typeof(ResourcePath), new ValueDataNode($"{SharedSpriteComponent.TextureRoot / node.Value}"), context);
         }
 
-        ValidationNode ITypeReader<SpriteSpecifier, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<SpriteSpecifier, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context)
@@ -127,7 +127,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return ((ITypeReader<Rsi, MappingDataNode>) this).Validate(serializationManager, node, dependencies, context);
         }
 
-        ValidationNode ITypeReader<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<Rsi, MappingDataNode>.Validate(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context)

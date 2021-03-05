@@ -77,28 +77,28 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedCollection<List<T>, T>(list, results, elements => elements);
         }
 
-        ValidationNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<ImmutableList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);

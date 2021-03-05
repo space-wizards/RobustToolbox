@@ -38,14 +38,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
         }
 
-        ValidationNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);

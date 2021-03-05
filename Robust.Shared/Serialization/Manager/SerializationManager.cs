@@ -177,7 +177,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            if (TryValidateWithTypeReader(underlyingType, node, DependencyCollection, context, out var valid)) return valid;
+            if (TryValidateWithTypeValidator(underlyingType, node, DependencyCollection, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
                 return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize", true);

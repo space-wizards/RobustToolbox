@@ -369,7 +369,14 @@ namespace Robust.Shared.Serialization.Manager
                     var sourceValue = info.GetValue(source);
                     var targetValue = info.GetValue(target);
 
-                    var copy = manager.Copy(sourceValue, targetValue, context);
+                    object? copy;
+                    if (sourceValue != null && targetValue != null && TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
+                    {
+                        copy = manager.CreateCopy(sourceValue, context);
+                    }else
+                    {
+                        copy = manager.Copy(sourceValue, targetValue, context);
+                    }
 
                     info.SetValue(target, copy);
                 }

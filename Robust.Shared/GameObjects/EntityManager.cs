@@ -47,7 +47,7 @@ namespace Robust.Shared.GameObjects
 
         protected readonly List<Entity> AllEntities = new();
 
-        private readonly CombinedEventBus _eventBus;
+        private CombinedEventBus _eventBus = null!;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -63,11 +63,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public EntityManager()
         {
-            _eventBus = new CombinedEventBus(this);
         }
 
         public virtual void Initialize()
         {
+            _eventBus = new CombinedEventBus(this);
+
             EntityNetworkManager.SetupNetworking();
             EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
             EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
@@ -227,8 +228,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
-            EntityDeleted?.Invoke(this, e.Uid);
             e.Shutdown();
+            EntityDeleted?.Invoke(this, e.Uid);
         }
 
         public void DeleteEntity(EntityUid uid)
@@ -294,6 +295,9 @@ namespace Robust.Shared.GameObjects
 
             var entity = new Entity(this, uid.Value);
 
+            // we want this called before adding components
+            EntityAdded?.Invoke(this, entity.Uid);
+
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
 
@@ -303,7 +307,6 @@ namespace Robust.Shared.GameObjects
             Entities[entity.Uid] = entity;
             AllEntities.Add(entity);
 
-            EntityAdded?.Invoke(this, entity.Uid);
             return entity;
         }
 

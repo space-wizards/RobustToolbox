@@ -15,7 +15,7 @@ namespace Robust.Shared.GameObjects
 
     public interface IComponentEventBus
     {
-        void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args)
+        void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs;
 
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
@@ -45,13 +45,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args)
+        public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs
         {
             _eventTables.Dispatch(uid, typeof(TEvent), args);
 
             // we also broadcast it so the call site does not have to.
-            RaiseEvent(EventSource.Local, args);
+            if(broadcast)
+                RaiseEvent(EventSource.Local, args);
         }
 
         /// <inheritdoc />

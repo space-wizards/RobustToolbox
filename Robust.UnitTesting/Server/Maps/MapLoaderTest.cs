@@ -6,7 +6,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.Maps
@@ -65,6 +66,8 @@ entities:
 
             IoCManager.Resolve<IComponentManager>().Initialize();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
             resourceManager.MountString("/TestMap.yml", MapData);
@@ -98,22 +101,14 @@ entities:
             Assert.That(c.Baz, Is.EqualTo(-1));
         }
 
+        [DataDefinition]
         private sealed class MapDeserializeTestComponent : Component
         {
             public override string Name => "MapDeserializeTest";
 
-            public int Foo { get; set; }
-            public int Bar { get; set; }
-            public int Baz { get; set; }
-
-            public override void ExposeData(ObjectSerializer serializer)
-            {
-                base.ExposeData(serializer);
-
-                serializer.DataField(this, p => p.Foo, "foo", -1);
-                serializer.DataField(this, p => p.Bar, "bar", -1);
-                serializer.DataField(this, p => p.Baz, "baz", -1);
-            }
+            [DataField("foo")] public int Foo { get; set; } = -1;
+            [DataField("bar")] public int Bar { get; set; } = -1;
+            [DataField("baz")] public int Baz { get; set; } = -1;
         }
     }
 }

@@ -1,5 +1,8 @@
 using System;
+using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects
 {
@@ -8,15 +11,28 @@ namespace Robust.Shared.GameObjects
         public sealed override string Name => "UserInterface";
         public sealed override uint? NetID => NetIDs.USERINTERFACE;
 
-        protected sealed class PrototypeData : IExposeData
+        [DataDefinition]
+        public sealed class PrototypeData : ISerializationHooks
         {
-            public object UiKey { get; private set; } = default!;
-            public string ClientType { get; private set; } = default!;
+            public object UiKey { get; set; } = default!;
 
-            void IExposeData.ExposeData(ObjectSerializer serializer)
+            [DataField("key", readOnly: true, required: true)]
+            private string _uiKeyRaw = default!;
+
+            [DataField("type", readOnly: true, required: true)]
+            public string ClientType { get; set; } = default!;
+
+            void ISerializationHooks.AfterDeserialization()
             {
-                UiKey = serializer.ReadStringEnumKey("key");
-                ClientType = serializer.ReadDataField<string>("type");
+                var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+                if (reflectionManager.TryParseEnumReference(_uiKeyRaw, out var @enum))
+                {
+                    UiKey = @enum;
+                    return;
+                }
+
+                UiKey = _uiKeyRaw;
             }
         }
 

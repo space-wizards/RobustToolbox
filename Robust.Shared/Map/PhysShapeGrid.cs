@@ -3,6 +3,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
@@ -11,9 +12,11 @@ namespace Robust.Shared.Map
     /// A physics shape that represents a <see cref="MapGrid"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class PhysShapeGrid : IPhysShape
+    [DataDefinition]
+    public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
-        private GridId _gridId;
+        [DataField("grid")]
+        private GridId _gridId = GridId.Invalid;
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
@@ -38,6 +41,12 @@ namespace Robust.Shared.Map
         {
             get => MapGridHelpers.CollisionGroup;
             set { }
+        }
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
         }
 
         /// <inheritdoc />
@@ -79,18 +88,6 @@ namespace Robust.Shared.Map
         {
             _mapGrid = (IMapGridInternal)mapGrid;
             _gridId = _mapGrid.Index;
-        }
-
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _gridId, "grid", GridId.Invalid);
-
-            if (serializer.Reading) // There is no Initialize function
-            {
-                var mapMan = IoCManager.Resolve<IMapManager>();
-                _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
-            }
         }
 
         public event Action? OnDataChanged { add { } remove { } }

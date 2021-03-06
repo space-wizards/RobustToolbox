@@ -6,41 +6,31 @@ using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects
 {
-    public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
+    public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new();
 
-        private Dictionary<object, PrototypeData> _interfaceData = default!;
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-#pragma warning restore 649
+        private readonly Dictionary<object, PrototypeData> _interfaces = new();
 
-        public override void ExposeData(ObjectSerializer serializer)
+        [DataField("interfaces", readOnly: true)]
+        private List<PrototypeData> _interfaceData = new();
+
+        void ISerializationHooks.AfterDeserialization()
         {
-            base.ExposeData(serializer);
+            _interfaces.Clear();
 
-            const string cache = "ui_cache";
-
-            if (serializer.TryGetCacheData<Dictionary<object, PrototypeData>>(cache, out var interfaceData))
+            foreach (var data in _interfaceData)
             {
-                _interfaceData = interfaceData;
-                return;
+                _interfaces[data.UiKey] = data;
             }
-
-            var data = serializer.ReadDataFieldCached("interfaces", new List<PrototypeData>());
-            interfaceData = new Dictionary<object, PrototypeData>();
-            foreach (var prototypeData in data)
-            {
-                interfaceData[prototypeData.UiKey] = prototypeData;
-            }
-
-            serializer.SetCacheData(cache, interfaceData);
-            _interfaceData = interfaceData;
         }
 
         public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
@@ -81,7 +71,7 @@ namespace Robust.Client.GameObjects
 
         private void OpenInterface(BoundInterfaceMessageWrapMessage wrapped)
         {
-            var data = _interfaceData[wrapped.UiKey];
+            var data = _interfaces[wrapped.UiKey];
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
             var boundInterface = (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[]{this, wrapped.UiKey});

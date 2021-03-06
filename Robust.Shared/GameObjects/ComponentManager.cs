@@ -129,13 +129,6 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
 
-            if (entity.Initialized || entity.Initializing)
-            {
-                var defaultSerializer = DefaultValueSerializer.Reader();
-                defaultSerializer.CurrentType = component.GetType();
-                component.ExposeData(defaultSerializer);
-            }
-
             _componentDependencyManager.OnComponentAdd(entity, component);
 
             component.OnAdd();

@@ -3,6 +3,7 @@
 namespace Robust.Shared.GameObjects
 {
     [AttributeUsage(AttributeTargets.Field)]
+    [MeansImplicitAssignment]
     public class ComponentDependencyAttribute : Attribute
     {
         public readonly string? OnAddMethodName;

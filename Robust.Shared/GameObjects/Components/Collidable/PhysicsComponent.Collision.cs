@@ -5,8 +5,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -43,10 +45,15 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
-        private bool _canCollide;
-        private bool _isHard;
-        private BodyStatus _status;
-        private BodyType _bodyType;
+        [DataField("on")]
+        private bool _canCollide = true;
+        [DataField("hard")]
+        private bool _isHard = true;
+        [DataField("status")]
+        private BodyStatus _status = BodyStatus.OnGround;
+        [DataField("bodyType")]
+        private BodyType _bodyType = BodyType.Static;
+        [DataField("shapes")]
         private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />
@@ -117,20 +124,6 @@ namespace Robust.Shared.GameObjects
         public PhysicsComponent()
         {
             PhysicsShapes = new PhysShapeList(this);
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _canCollide, "on", true);
-            serializer.DataField(ref _isHard, "hard", true);
-            serializer.DataField(ref _status, "status", BodyStatus.OnGround);
-            serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
-            serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
-            serializer.DataField(ref _anchored, "anchored", true);
-            serializer.DataField(ref _mass, "mass", 1.0f);
         }
 
         /// <param name="player"></param>

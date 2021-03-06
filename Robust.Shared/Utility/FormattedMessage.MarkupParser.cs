@@ -59,6 +59,11 @@ namespace Robust.Shared.Utility
         private static readonly Parser<char, IEnumerable<Tag>> ParsePermissive =
             ParseTagText.Cast<Tag>().Or(ParseTagOrFallBack).Many();
 
+        public static bool ValidMarkup(string markup)
+        {
+            return Parse.Parse(markup).Success;
+        }
+
         public void AddMarkup(string markup)
         {
             _tags.AddRange(Parse.ParseOrThrow(markup));

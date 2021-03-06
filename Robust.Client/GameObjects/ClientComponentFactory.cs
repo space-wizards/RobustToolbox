@@ -54,7 +54,6 @@ namespace Robust.Client.GameObjects
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();
-            Register<DebugExceptionExposeDataComponent>();
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif

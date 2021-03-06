@@ -41,6 +41,7 @@ namespace Robust.Shared.Physics.Dynamics
     }
 
     [Serializable, NetSerializable]
+    [DataDefinition]
     public sealed class Fixture : IFixture, IEquatable<Fixture>
     {
         public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;

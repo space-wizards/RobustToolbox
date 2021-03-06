@@ -67,7 +67,7 @@ entities:
         protected override void OverrideIoC()
         {
             base.OverrideIoC();
-            var mockFormat = new Mock<ICustomFormatManager>();
+            //var mockFormat = new Mock<ICustomFormatManager>();
             var mock = new Mock<IEntitySystemManager>();
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
@@ -75,7 +75,7 @@ entities:
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-            IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
+            //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
         }
 
 

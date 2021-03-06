@@ -57,6 +57,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     }
 
     [Serializable, NetSerializable]
+    [DataDefinition]
     public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>

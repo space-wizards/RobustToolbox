@@ -90,16 +90,6 @@ namespace Robust.Shared.Map
             _gridId = _mapGrid.Index;
         }
 
-        /// <inheritdoc />
-        void IExposeData.ExposeData(ObjectSerializer serializer)
-        {
-            if (serializer.Reading) // There is no Initialize function
-            {
-                var mapMan = IoCManager.Resolve<IMapManager>();
-                _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
-            }
-        }
-
         public event Action? OnDataChanged { add { } remove { } }
 
         /// <inheritdoc />

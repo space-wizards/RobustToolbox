@@ -43,7 +43,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(IPhysBody))]
-    public sealed class PhysicsComponent : Component, IPhysBody
+    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
         [DataField("status")]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
@@ -255,28 +255,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
+        void ISerializationHooks.AfterDeserialization()
         {
-            base.ExposeData(serializer);
-
-            serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), fixtures =>
+            foreach (var fixture in _fixtures)
             {
-                foreach (var fixture in fixtures)
-                {
-                    fixture.Body = this;
-                    _fixtures.Add(fixture);
-                }
-            }, () => Fixtures);
+                fixture.Body = this;
+            }
 
-            // TODO: Dump someday
-            serializer.DataReadFunction("anchored", true, value =>
-            {
-                if (value)
-                    _bodyType = BodyType.Static;
-            });
-
-            //serializer.DataField(ref _mass, "mass", 1.0f);
             if (_mass > 0f && (BodyType & BodyType.Dynamic | BodyType.KinematicController) != 0)
             {
                 _invMass = 1.0f / _mass;

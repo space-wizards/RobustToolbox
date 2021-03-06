@@ -25,10 +25,12 @@ using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     [Serializable, NetSerializable]
+    [DataDefinition]
     public sealed class EdgeShape : IPhysShape
     {
         /// <summary>

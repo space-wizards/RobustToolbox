@@ -28,18 +28,22 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using YamlDotNet.Serialization;
 
 namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     [Serializable, NetSerializable]
-    public class PolygonShape : IPhysShape
+    [DataDefinition]
+    public class PolygonShape : IPhysShape, ISerializationHooks
     {
         /// <summary>
         ///     Counter-clockwise (CCW) order.
         /// </summary>
         [ViewVariables]
+        [DataField("vertices")]
         public List<Vector2> Vertices
         {
             get => _vertices;
@@ -49,7 +53,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
                 var configManager = IoCManager.Resolve<IConfigurationManager>();
                 DebugTools.Assert(_vertices.Count >= 3 && _vertices.Count <= configManager.GetCVar(CVars.MaxPolygonVertices));
-
 
                 if (configManager.GetCVar(CVars.ConvexHullPolygons))
                 {
@@ -128,26 +131,8 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             };
         }
 
-        public void ExposeData(ObjectSerializer serializer)
+        void ISerializationHooks.AfterDeserialization()
         {
-            if (!serializer.Reading) return;
-            // Helper, at least for now
-            var bounds = serializer.ReadDataField("bounds", Box2.UnitCentered);
-
-            Vertices = new List<Vector2>
-            {
-                bounds.BottomRight,
-                bounds.TopRight,
-                bounds.TopLeft,
-                bounds.BottomLeft,
-            };
-
-            // Was probably a box2 so just assume that
-            // TODO: Below needs cleanup once PhysShapeAabb gets working again and other stuff is cleaned up
-            if (serializer.TryReadDataField("vertices", out List<Vector2>? vertices) && vertices != null)
-            {
-                Vertices = vertices;
-            }
             // ComputeProperties();
         }
 

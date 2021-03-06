@@ -1,7 +1,5 @@
 ﻿using System;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Dynamics.Shapes;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics
 {

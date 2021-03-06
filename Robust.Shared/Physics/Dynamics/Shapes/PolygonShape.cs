@@ -24,14 +24,11 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.Serialization;
 
 namespace Robust.Shared.Physics.Dynamics.Shapes
 {

@@ -453,6 +453,7 @@ namespace Robust.Shared.GameObjects
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
 
         [DataField("fixtures")]
+        [NeverPushInheritance]
         private List<Fixture> _fixtures = new();
 
         /// <summary>

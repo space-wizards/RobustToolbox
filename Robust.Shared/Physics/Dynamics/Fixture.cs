@@ -55,7 +55,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         [ViewVariables]
         [DataField("shape")]
-        public IPhysShape Shape { get; private set; } = new PolygonShape();
+        public IPhysShape Shape { get; private set; } = new PhysShapeAabb();
 
         [ViewVariables]
         [field:NonSerialized]

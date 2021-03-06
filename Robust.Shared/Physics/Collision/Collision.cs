@@ -1164,13 +1164,130 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+            var aRect = new AlignedRectangle(transformA.Position, new Vector2(aabbA.LocalBounds.Width / 2, aabbA.LocalBounds.Height / 2));
+
+            // closest point inside the rectangle to the center of the sphere.
+            var closestPoint = aRect.ClosestPoint(transformB.Position);
+
+            // If the point is outside the sphere, the sphere and OBB do not intersect.
+            var distanceSq = (closestPoint - transformB.Position).LengthSquared;
+            if (distanceSq > circleB.Radius * circleB.Radius)
+            {
+                // TODO: Don't need to set any other data for these?
+                manifold.PointCount = 0;
+                return;
+            }
+
+            Vector2 normal;
+            if (distanceSq.Equals(0.0f))
+            {
+                var mSq = (closestPoint - aRect.Center).LengthSquared;
+                if (mSq.Equals(0.0f))
+                {
+                    // TODO: As above
+                    manifold.PointCount = 0;
+                    return;
+                }
+
+                // Closest point is at the center of the sphere
+                normal = (closestPoint - aRect.Center).Normalized;
+            }
+            else
+                normal = (transformB.Position - closestPoint).Normalized;
+
+            var outsidePoint = transformB.Position - normal * circleB.Radius;
+            //var distance = (closestPoint - outsidePoint).Length;
+            var contacts = new Vector2[1]; // TODO: Make it not an array
+            contacts[0] = closestPoint + (outsidePoint - closestPoint) * 0.5f;
+            //var depth = distance * 0.5f;
+
+            manifold.PointCount = 1;
+            manifold.Type = ManifoldType.FaceA;
+            manifold.LocalNormal = normal;
+            manifold.LocalPoint = contacts[0];
+
+            var p0 = manifold.Points[0];
+            p0.Id.Key = 0;
+            p0.LocalPoint = Vector2.Zero; // TODO: CirclePosition
+            manifold.Points[0] = p0;
         }
 
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+            var A = new AlignedRectangle(aabbA.LocalBounds.Translated(transformA.Position));
+            var B = new AlignedRectangle(aabbB.LocalBounds.Translated(transformB.Position));
+
+            // Vector from A to B
+            Vector2 n = B.Center - A.Center;
+
+            // Calculate half extents along x axis for each object
+            float a_extent_x = A.HalfExtents.X;
+            float b_extent_x = B.HalfExtents.X;
+
+            // Calculate overlap on x axis
+            float x_overlap = a_extent_x + b_extent_x - MathF.Abs(n.X);
+
+            // SAT test on x axis
+            if (!(x_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            // Calculate half extents along y axis for each object
+            float a_extent_y = A.HalfExtents.Y;
+            float b_extent_y = B.HalfExtents.Y;
+
+            // Calculate overlap on y axis
+            float y_overlap = a_extent_y + b_extent_y - MathF.Abs(n.Y);
+
+            // SAT test on y axis
+            if (!(y_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            Vector2 normal;
+            float penetration;
+            Vector2 contact;
+
+            // Find out which axis is axis of least penetration
+            if (x_overlap < y_overlap)
+            {
+                // Point towards B knowing that n points from A to B
+                if (n.X < 0)
+                    normal = new Vector2(-1, 0);
+                else
+                    normal = new Vector2(1, 0);
+                penetration = x_overlap / 2;
+                var hitx = A.Center.X + (a_extent_x * normal.X);
+                var hity = B.Center.Y;
+                contact = new Vector2(hitx, hity);
+            }
+            else
+            {
+                // Point toward B knowing that n points from A to B
+                if (n.Y < 0)
+                    normal = new Vector2(0, -1);
+                else
+                    normal = new Vector2(0, 1);
+                penetration = y_overlap / 2;
+                var hitx = B.Center.X;
+                var hity = A.Center.Y + (a_extent_y * normal.Y);
+                contact = new Vector2(hitx, hity);
+            }
+
+            // TODO: uhh these points are fucky wucky I think
+            manifold.PointCount = 1;
+            manifold.Type = ManifoldType.FaceA;
+            manifold.LocalNormal = normal;
+            manifold.LocalPoint = contact;
+            var p0 = manifold.Points[0];
+            p0.LocalPoint = Vector2.Zero;
+            p0.Id.Key = 0;
+            manifold.Points[0] = p0;
         }
 
         public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,

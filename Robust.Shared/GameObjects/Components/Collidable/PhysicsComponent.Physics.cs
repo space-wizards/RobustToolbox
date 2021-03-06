@@ -131,9 +131,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // Farseer defaults this to static buuut knowing our audience most are gonnna forget to set it.
+
         [DataField("bodyType")]
-        private BodyType _bodyType = BodyType.Dynamic;
+        private BodyType _bodyType = BodyType.Static;
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />

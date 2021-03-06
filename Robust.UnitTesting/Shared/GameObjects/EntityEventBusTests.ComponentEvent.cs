@@ -27,7 +27,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 .Returns(compInstance);
 
             entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
-            var bus = new ComponentEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
             int calledCount = 0;
@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 .Returns(compInstance);
 
             entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
-            var bus = new ComponentEventBus(entManMock.Object);
+            var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
             int calledCount = 0;

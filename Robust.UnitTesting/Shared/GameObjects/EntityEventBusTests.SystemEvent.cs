@@ -9,6 +9,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
     [TestFixture, Parallelizable, TestOf(typeof(EntityEventBus))]
     public partial class EntityEventBusTests
     {
+        private static EntityEventBus BusFactory()
+        {
+            var entityMan = new Mock<IEntityManager>();
+            var compMan = new Mock<IComponentManager>();
+            entityMan.Setup(m => m.ComponentManager).Returns(compMan.Object);
+            var bus = new EntityEventBus(entityMan.Object);
+            return bus;
+        }
+
         /// <summary>
         /// Trying to subscribe a null handler causes a <see cref="ArgumentNullException"/> to be thrown.
         /// </summary>
@@ -16,7 +25,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_NullHandler_NullArgumentException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             // Act
@@ -33,7 +42,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_NullSubscriber_NullArgumentException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.SubscribeEvent<TestEventArgs>(EventSource.Local, null!, ev => {});
@@ -50,7 +59,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_DuplicateSubscription_RaisedOnce()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delegateCallCount = 0;
@@ -75,7 +84,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_MultipleDelegates_BothRaised()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delFooCount = 0;
@@ -99,7 +108,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_MultipleSubscriptions_IndividuallyCalled()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delFooCount = 0;
@@ -128,7 +137,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void SubscribeEvent_SourceNone_ArgOutOfRange()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             // Act
@@ -145,7 +154,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvent_DoubleUnsubscribe_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             void Handler(TestEventArgs ev) { }
@@ -166,7 +175,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvent_NoSubscription_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             // Act
@@ -182,7 +191,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvent_NullSubscriber_NullArgumentException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, null!);
@@ -199,7 +208,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvent_SourceNone_ArgOutOfRange()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             // Act
@@ -216,7 +225,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RaiseEvent_NullEvent_ArgumentNullException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.RaiseEvent(EventSource.Local, null!);
@@ -232,7 +241,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RaiseEvent_NoSubscriptions_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delCalledCount = 0;
@@ -252,7 +261,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RaiseEvent_Unsubscribed_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delCallCount = 0;
@@ -276,7 +285,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RaiseEvent_SourceNone_ArgOutOfRange()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.RaiseEvent(EventSource.None, new TestEventArgs());
@@ -292,7 +301,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvents_NullSubscriber_NullArgumentException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.UnsubscribeEvents(null!);
@@ -308,7 +317,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvents_NoSubscriptions_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             // Act
@@ -324,7 +333,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void UnsubscribeEvents_UnsubscribedHandler_Nop()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delCallCount = 0;
@@ -347,7 +356,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void QueueEvent_NullEvent_ArgumentNullException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.QueueEvent(EventSource.Local, null!);
@@ -363,7 +372,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void QueueEvent_EventQueued_DoesNotImmediatelyRaise()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delCallCount = 0;
@@ -386,7 +395,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void QueueEvent_SourceNone_ArgOutOfRange()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.QueueEvent(EventSource.None, new TestEventArgs());
@@ -402,7 +411,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void ProcessQueue_EventQueued_HandlerRaised()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
             int delCallCount = 0;
@@ -422,7 +431,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public async Task AwaitEvent()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             var args = new TestEventArgs();
 
             // Act
@@ -438,7 +447,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void AwaitEvent_SourceNone_ArgOutOfRange()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
 
             // Act
             void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.None);
@@ -451,7 +460,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void AwaitEvent_DoubleTask_InvalidException()
         {
             // Arrange
-            var bus = new EntityEventBus();
+            var bus = BusFactory();
             bus.AwaitEvent<TestEventArgs>(EventSource.Local);
 
             // Act

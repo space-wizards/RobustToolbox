@@ -3,17 +3,9 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <summary>
-    /// A central unified event bus that can raise both entity and component events.
-    /// </summary>
-    public interface IEventBus : IComponentEventBus, IEntityEventBus { }
+    public interface IEventBus : IDirectedEventBus, IBroadcastEventBus { }
 
-    internal class CombinedEventBus : ComponentEventBus, IEventBus
-    {
-        public CombinedEventBus(IEntityManager entMan) : base(entMan) { }
-    }
-
-    public interface IComponentEventBus
+    public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs;
@@ -27,18 +19,18 @@ namespace Robust.Shared.GameObjects
             where TEvent : EntityEventArgs;
     }
 
-    internal class ComponentEventBus : EntityEventBus, IComponentEventBus, IDisposable
+    internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
     {
-        private delegate void EventHandler(EntityUid uid, IComponent comp, EntityEventArgs args);
+        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, EntityEventArgs args);
 
         private IEntityManager _entMan;
         private EventTables _eventTables;
-        
+
         /// <summary>
-        /// Constructs a new instance of <see cref="ComponentEventBus"/>.
+        /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
-        /// <param name="entMan">The component manager to use</param>
-        public ComponentEventBus(IEntityManager entMan)
+        /// <param name="entMan">The entity manager to watch for entity/component events.</param>
+        public EntityEventBus(IEntityManager entMan)
         {
             _entMan = entMan;
             _eventTables = new EventTables(_entMan);
@@ -82,7 +74,7 @@ namespace Robust.Shared.GameObjects
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
 
             // EventType -> CompType -> Handler
-            private Dictionary<Type, Dictionary<Type, EventHandler>> _subscriptions;
+            private Dictionary<Type, Dictionary<Type, DirectedEventHandler>> _subscriptions;
 
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
@@ -124,14 +116,14 @@ namespace Robust.Shared.GameObjects
                 RemoveComponent(e.OwnerUid, e.Component.GetType());
             }
 
-            public void Subscribe(Type compType, Type eventType, EventHandler handler)
+            public void Subscribe(Type compType, Type eventType, DirectedEventHandler handler)
             {
                 if (_subscriptionLock)
                     throw new InvalidOperationException("Subscription locked.");
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {
-                    compSubs = new Dictionary<Type, EventHandler>();
+                    compSubs = new Dictionary<Type, DirectedEventHandler>();
                     _subscriptions.Add(compType, compSubs);
 
                     compSubs.Add(eventType, handler);

@@ -47,7 +47,7 @@ namespace Robust.Shared.GameObjects
 
         protected readonly List<Entity> AllEntities = new();
 
-        private CombinedEventBus _eventBus = null!;
+        private EntityEventBus _eventBus = null!;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Initialize()
         {
-            _eventBus = new CombinedEventBus(this);
+            _eventBus = new EntityEventBus(this);
 
             EntityNetworkManager.SetupNetworking();
             EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);

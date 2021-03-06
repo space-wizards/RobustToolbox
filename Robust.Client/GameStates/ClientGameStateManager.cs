@@ -298,7 +298,7 @@ namespace Robust.Client.GameStates
                     // because the rest of the main loop will call into it with the target tick later,
                     // and it won't be a past prediction.
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
-                    ((IEntityEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                    ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
                 }
             }
         }

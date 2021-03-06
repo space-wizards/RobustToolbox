@@ -48,6 +48,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// It provides 2D translational friction and angular friction.
     /// </summary>
     [Serializable, NetSerializable]
+    [DataDefinition]
     public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
     {
         // Solver shared

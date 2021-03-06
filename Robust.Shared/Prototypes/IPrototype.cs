@@ -16,7 +16,12 @@ namespace Robust.Shared.Prototypes
         /// If this is a duplicate, an error will be thrown.
         /// </summary>
         string ID { get; }
+    }
 
+    public interface IInheritingPrototype
+    {
         string? Parent { get; }
+
+        bool Abstract { get; }
     }
 }

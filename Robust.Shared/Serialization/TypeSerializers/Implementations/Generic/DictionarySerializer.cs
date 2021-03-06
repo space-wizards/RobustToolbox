@@ -54,21 +54,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        ValidationNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
             ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
             ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager,
             MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {

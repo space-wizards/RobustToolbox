@@ -19,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public class EntityPrototype : IPrototype
+    public class EntityPrototype : IPrototype, IInheritingPrototype
     {
         /// <summary>
         /// The "in code name" of the object. Must be unique.

@@ -47,12 +47,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         private struct ContactEnumerator : IEnumerator<Contact>
         {
-            private ContactHead? _head;
-            private Contact? _current;
+            private ContactHead _head;
+            private Contact _current;
 
-            public Contact? Current => _current;
-            object? IEnumerator.Current => _current;
-
+            public Contact Current => _current;
+            object IEnumerator.Current => _current;
 
             public ContactEnumerator(ContactHead contact)
             {
@@ -67,14 +66,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             public bool MoveNext()
             {
-                _current = _current?.Next;
-                return (_current != _head);
+                _current = _current.Next!;
+                return _current != _head;
             }
 
             public void Dispose()
             {
-                _head = null;
-                _current = null;
+                _head = null!;
+                _current = null!;
             }
         }
 

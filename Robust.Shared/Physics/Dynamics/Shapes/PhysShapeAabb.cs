@@ -36,7 +36,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             }
         }
 
-        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        private float _radius;
 
         public ShapeType ShapeType => ShapeType.Aabb;
 
@@ -58,6 +58,16 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 _localBounds = value;
                 OnDataChanged?.Invoke();
             }
+        }
+
+        public PhysShapeAabb(float radius)
+        {
+            _radius = radius;
+        }
+
+        public PhysShapeAabb()
+        {
+            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
         /// <inheritdoc />

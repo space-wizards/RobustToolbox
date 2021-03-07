@@ -199,7 +199,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("sleepingAllowed")]
-        private bool _sleepingAllowed;
+        private bool _sleepingAllowed = true;
 
         [ViewVariables]
         public float SleepTime

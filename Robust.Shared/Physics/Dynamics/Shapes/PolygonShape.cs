@@ -208,7 +208,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             return new PolygonShape(aabb.Radius)
             {
                 // Giftwrap seems to use bottom-right first.
-                _vertices = new List<Vector2>
+                Vertices = new List<Vector2>
                 {
                     bounds.BottomRight,
                     bounds.TopRight,
@@ -216,6 +216,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                     bounds.BottomLeft,
                 },
 
+                /*
                 _normals = new List<Vector2>
                 {
                     new(1, -0),
@@ -223,6 +224,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                     new (-1, -0),
                     new (0, -1),
                 }
+                */
             };
         }
 

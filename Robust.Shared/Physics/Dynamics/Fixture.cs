@@ -42,7 +42,7 @@ namespace Robust.Shared.Physics.Dynamics
 
     [Serializable, NetSerializable]
     [DataDefinition]
-    public sealed class Fixture : IFixture, IEquatable<Fixture>
+    public sealed class Fixture : IFixture, IEquatable<Fixture>, ISerializationHooks
     {
         public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
 
@@ -159,6 +159,25 @@ namespace Robust.Shared.Physics.Dynamics
 
         [DataFieldWithFlag("mask", typeof(CollisionMask))]
         private int _collisionMask;
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            // TODO: Temporary until PhysShapeAabb is fixed because some weird shit happens with collisions.
+            // You'll also need a dedicated solver for circles (and ideally AABBs) as otherwise it'll be laggier casting to PolygonShape.
+            if (Shape is PhysShapeAabb aabb)
+            {
+                Shape = new PolygonShape
+                {
+                    Vertices = new List<Vector2>
+                    {
+                        aabb.LocalBounds.BottomRight,
+                        aabb.LocalBounds.TopRight,
+                        aabb.LocalBounds.TopLeft,
+                        aabb.LocalBounds.BottomLeft,
+                    }
+                };
+            }
+        }
 
         public Fixture(PhysicsComponent body, IPhysShape shape)
         {

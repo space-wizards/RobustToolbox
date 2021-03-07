@@ -332,7 +332,7 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                bool? overlap = null;
+                bool? overlap = false;
 
                 // Sloth addition: Kind of hacky and might need to be removed at some point.
                 // One of the bodies was probably put into nullspace so we need to remove I think.

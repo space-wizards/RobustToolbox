@@ -477,6 +477,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [DataField("canCollide")]
         private bool _canCollide = true;
 
         /// <summary>

@@ -27,6 +27,11 @@ namespace Robust.Shared.GameObjects
          * Poly cutting
          * Chain shape
          * (Content) grenade launcher grenades that explode after time rather than impact.
+         * pulling prediction
+         * PVS + Collide allocations / performance
+         * When someone yeets out of disposals need to have no collision on that object until they stop colliding
+         * A bunch of objects have collision on round start
+         * Need a way to specify conditional non-hard collisions (i.e. so items collide with players for IThrowCollide but can still be moved through freely but walls can't collide with them)
          */
 
         /*

@@ -763,7 +763,8 @@ namespace Robust.Shared.GameObjects
             get => _linVelocity;
             set
             {
-                DebugTools.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
+                // Curse you Q
+                // DebugTools.Assert(!float.IsNaN(value.X) && !float.IsNaN(value.Y));
 
                 if (BodyType == BodyType.Static)
                     return;

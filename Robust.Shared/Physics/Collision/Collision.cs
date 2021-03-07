@@ -1164,48 +1164,91 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            var aRect = new AlignedRectangle(transformA.Position, new Vector2(aabbA.LocalBounds.Width / 2, aabbA.LocalBounds.Height / 2));
+            // From https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
+            // Vector from A to B
+            var n = transformB.Position - transformA.Position;
 
-            // closest point inside the rectangle to the center of the sphere.
-            var closestPoint = aRect.ClosestPoint(transformB.Position);
+            // Closest point on A to center of B
+            var closest = n;
+            var bounds = aabbA.LocalBounds;
 
-            // If the point is outside the sphere, the sphere and OBB do not intersect.
-            var distanceSq = (closestPoint - transformB.Position).LengthSquared;
-            if (distanceSq > circleB.Radius * circleB.Radius)
+            // Calculate half extents along each axis
+            float x_extent = (bounds.Right - bounds.Left) / 2;
+            float y_extent = (bounds.Top - bounds.Bottom) / 2;
+
+            // Clamp point to edges of the AABB
+            closest.X = Math.Clamp(closest.X, -x_extent, x_extent);
+            closest.Y = Math.Clamp(closest.Y, -y_extent, y_extent);
+
+            bool inside = false;
+
+            // Circle is inside the AABB, so we need to clamp the circle's center
+            // to the closest edge
+            if (n.Equals(closest))
             {
-                // TODO: Don't need to set any other data for these?
+                inside = true;
+
+                // Find closest axis
+                if(MathF.Abs(n.X) > MathF.Abs(n.Y))
+                {
+                    // Clamp to closest extent
+                    if (closest.X > 0)
+                        closest.X = x_extent;
+                    else
+                        closest.X = -x_extent;
+                }
+
+                // y axis is shorter
+                else
+                {
+                    // Clamp to closest extent
+                    if (closest.Y > 0)
+                        closest.Y = y_extent;
+                    else
+                        closest.Y = -y_extent;
+                }
+            }
+
+            var normal = n - closest;
+            var normalLength = normal.LengthSquared;
+            var bRadius = circleB.Radius;
+
+            // Early out of the radius is shorter than distance to closest point and
+            // Circle not inside the AABB
+            if (normalLength > bRadius * bRadius && !inside)
+            {
                 manifold.PointCount = 0;
                 return;
             }
 
-            Vector2 normal;
-            if (distanceSq.Equals(0.0f))
-            {
-                var mSq = (closestPoint - aRect.Center).LengthSquared;
-                if (mSq.Equals(0.0f))
-                {
-                    // TODO: As above
-                    manifold.PointCount = 0;
-                    return;
-                }
+            // Avoided sqrt until we need
+            normalLength = MathF.Sqrt(normalLength);
 
-                // Closest point is at the center of the sphere
-                normal = (closestPoint - aRect.Center).Normalized;
+            // Collision normal needs to be flipped to point outside if circle was
+            // inside the AABB
+            if (inside)
+            {
+                manifold.LocalNormal = -normal.Normalized;
             }
             else
-                normal = (transformB.Position - closestPoint).Normalized;
+            {
+                manifold.LocalNormal = normal.Normalized;
+            }
 
-            var outsidePoint = transformB.Position - normal * circleB.Radius;
-            //var distance = (closestPoint - outsidePoint).Length;
-            var contacts = new Vector2[1]; // TODO: Make it not an array
-            contacts[0] = closestPoint + (outsidePoint - closestPoint) * 0.5f;
-            //var depth = distance * 0.5f;
+            var penetration = bRadius - normalLength;
+
+            if (MathF.Abs(closest.X) > MathF.Abs(closest.Y))
+            {
+                manifold.LocalPoint = new Vector2(closest.X, 0);
+            }
+            else
+            {
+                manifold.LocalPoint = new Vector2(0, closest.Y);
+            }
 
             manifold.PointCount = 1;
             manifold.Type = ManifoldType.FaceA;
-            manifold.LocalNormal = normal;
-            manifold.LocalPoint = contacts[0];
-
+            //manifold.LocalPoint =
             var p0 = manifold.Points[0];
             p0.Id.Key = 0;
             p0.LocalPoint = Vector2.Zero; // TODO: CirclePosition

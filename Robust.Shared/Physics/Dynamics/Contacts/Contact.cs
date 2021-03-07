@@ -314,7 +314,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
         /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager)
+        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -408,17 +408,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     if (enabledA && enabledB && contactManager.BeginContact != null)
                         Enabled = contactManager.BeginContact(this);
                     */
-                    foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
-                    {
-                        if (bodyB.Deleted) break;
-                        comp.CollideWith(bodyA, bodyB, Manifold);
-                    }
-
-                    foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
-                    {
-                        if (bodyA.Deleted) break;
-                        comp.CollideWith(bodyB, bodyA, Manifold);
-                    }
+                    startCollisions.Add(this);
                 }
             }
             else
@@ -439,17 +429,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         contactManager.EndContact(this);
                     */
 
-                    foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
-                    {
-                        if (bodyB.Deleted) break;
-                        comp.CollideWith(bodyA, bodyB, oldManifold);
-                    }
-
-                    foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
-                    {
-                        if (bodyA.Deleted) break;
-                        comp.CollideWith(bodyB, bodyA, oldManifold);
-                    }
+                    endCollisions.Add(this);
                 }
             }
 

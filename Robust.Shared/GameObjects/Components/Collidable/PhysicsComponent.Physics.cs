@@ -1062,6 +1062,7 @@ namespace Robust.Shared.GameObjects
             HasProxies = true;
         }
 
+        // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
         public void DestroyContacts()
         {
             ContactEdge? contactEdge = ContactEdges;
@@ -1183,6 +1184,10 @@ namespace Robust.Shared.GameObjects
         public override void OnRemove()
         {
             base.OnRemove();
+            // Need to do these immediately in case collision behaviors deleted the body
+            // TODO: Could be more optimal as currently broadphase will call this ANYWAY
+            DestroyContacts();
+            ClearProxies();
             CanCollide = false;
         }
 

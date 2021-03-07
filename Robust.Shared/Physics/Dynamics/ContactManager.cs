@@ -29,6 +29,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -54,10 +55,17 @@ namespace Robust.Shared.Physics.Dynamics
         public int ContactCount { get; private set; }
         internal readonly ContactHead ContactPoolList;
 
+        // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
-        ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicConmtroller
+        ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicController
         /// </summary>
         internal event Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
+
+        // TODO: Need to migrate the interfaces to comp bus when possible
+        // TODO: Also need to clean the station up to not have 160 contacts on roundstart
+        // TODO: CollideMultiCore
+        private List<Contact> _startCollisions = new();
+        private List<Contact> _endCollisions = new();
 
         public ContactManager()
         {
@@ -267,6 +275,7 @@ namespace Robust.Shared.Physics.Dynamics
                 Fixture fixtureB = contact.FixtureB!;
                 int indexA = contact.ChildIndexA;
                 int indexB = contact.ChildIndexB;
+
                 PhysicsComponent bodyA = fixtureA.Body;
                 PhysicsComponent bodyB = fixtureB.Body;
 
@@ -338,10 +347,53 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // The contact persists.
-                contact.Update(this);
+                contact.Update(this, _startCollisions, _endCollisions);
 
                 contact = contact.Next;
             }
+
+            foreach (var contact in _startCollisions)
+            {
+                // It's possible for contacts to get nuked by other collision behaviors running on an entity deleting it
+                // so we'll do this (TODO: Maybe it's shitty design and we should move to PostCollide? Though we still need to check for each contact anyway I guess).
+                if (!contact.IsTouching) continue;
+
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
+                {
+                    if (bodyB.Deleted) break;
+                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                }
+
+                foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
+                {
+                    if (bodyA.Deleted) break;
+                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                }
+            }
+
+            foreach (var contact in _endCollisions)
+            {
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
+                {
+                    if (bodyB.Deleted) break;
+                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                }
+
+                foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
+                {
+                    if (bodyA.Deleted) break;
+                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                }
+            }
+
+            _startCollisions.Clear();
+            _endCollisions.Clear();
         }
 
         public void PreSolve(float frameTime)

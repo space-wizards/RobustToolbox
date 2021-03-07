@@ -42,7 +42,7 @@ namespace Robust.Shared.Physics.Broadphase
         private Queue<RotateEvent> _queuedRotateEvent = new();
         private Queue<EntMapIdChangedMessage> _queuedMapChanges = new();
         private Queue<FixtureUpdateMessage> _queuedFixtureUpdates = new();
-        private Queue<CollisionChangeMessage> _queuedCollisionChanges = new();
+        private Queue<PhysicsUpdateMessage> _queuedCollisionChanges = new();
         private Queue<EntInsertedIntoContainerMessage> _queuedContainerInsert = new();
         private Queue<EntRemovedFromContainerMessage> _queuedContainerRemove = new();
 
@@ -132,7 +132,7 @@ namespace Robust.Shared.Physics.Broadphase
         {
             base.Initialize();
 
-            SubscribeLocalEvent<CollisionChangeMessage>(QueueCollisionChange);
+            SubscribeLocalEvent<PhysicsUpdateMessage>(QueueCollisionChange);
             SubscribeLocalEvent<MoveEvent>(QueuePhysicsMove);
             SubscribeLocalEvent<RotateEvent>(QueuePhysicsRotate);
             SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
@@ -198,13 +198,13 @@ namespace Robust.Shared.Physics.Broadphase
             while (_queuedCollisionChanges.Count > 0)
             {
                 var message = _queuedCollisionChanges.Dequeue();
-                if (message.CanCollide && !message.Body.Deleted)
+                if (message.Component.CanCollide && !message.Component.Deleted)
                 {
-                    AddBody(message.Body);
+                    AddBody(message.Component);
                 }
                 else
                 {
-                    RemoveBody(message.Body);
+                    RemoveBody(message.Component);
                 }
             }
 
@@ -243,7 +243,7 @@ namespace Robust.Shared.Physics.Broadphase
             SynchronizeFixtures(physicsComponent, Vector2.Zero);
         }
 
-        private void QueueCollisionChange(CollisionChangeMessage message)
+        private void QueueCollisionChange(PhysicsUpdateMessage message)
         {
             _queuedCollisionChanges.Enqueue(message);
         }
@@ -436,7 +436,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             body.ClearProxies();
-
+            body.DestroyContacts();
             _lastBroadPhases.Remove(body);
         }
 

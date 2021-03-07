@@ -58,6 +58,11 @@ namespace Robust.Shared.Physics
 
         void ClearProxies();
 
+        /// <summary>
+        ///     Removes all of the currently active contacts for this body.
+        /// </summary>
+        void DestroyContacts();
+
         IReadOnlyList<Fixture> Fixtures { get; }
 
         /// <summary>

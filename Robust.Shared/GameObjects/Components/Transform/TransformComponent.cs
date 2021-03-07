@@ -433,25 +433,6 @@ namespace Robust.Shared.GameObjects
             UpdateEntityTree();
         }
 
-        /// <inheritdoc />
-        public override void OnRemove()
-        {
-            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var childUid in _children.ToArray())
-            {
-                // Recursion: DeleteEntity calls the Transform.OnRemove function of child entities.
-                Owner.EntityManager.DeleteEntity(childUid);
-            }
-
-            // map does not have a parent node
-            if (Parent != null)
-            {
-                DetachParentToNull();
-            }
-
-            base.OnRemove();
-        }
-
         public void RunDeferred(Box2 worldAABB)
         {
             // if we resolved to (close enough) to the OG position then no update.
@@ -525,7 +506,8 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        private void DetachParentToNull()
+        /// <inheritdoc />
+        public void DetachParentToNull()
         {
             var oldParent = Parent;
             if (oldParent == null)

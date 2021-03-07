@@ -84,9 +84,6 @@ entities:
         {
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             compFactory.Register<MapDeserializeTestComponent>();
-
-            IoCManager.Resolve<IComponentManager>().Initialize();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
@@ -95,10 +92,6 @@ entities:
             resourceManager.MountString("/Prototypes/TestMapEntity.yml", Prototype);
 
             IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
-
-            var map = IoCManager.Resolve<IMapManager>();
-            map.Initialize();
-            map.Startup();
         }
 
         [Test]

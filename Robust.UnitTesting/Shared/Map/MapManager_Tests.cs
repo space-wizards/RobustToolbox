@@ -27,16 +27,6 @@ namespace Robust.UnitTesting.Shared.Map
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
-        {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            mapMan.Initialize();
-        }
-
         [SetUp]
         public void Setup()
         {

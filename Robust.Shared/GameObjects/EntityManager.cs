@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -84,6 +85,7 @@ namespace Robust.Shared.GameObjects
         public virtual void Shutdown()
         {
             FlushEntities();
+            _eventBus.ClearEventTables();
             EntitySystemManager.Shutdown();
             Started = false;
             _componentManager.Clear();
@@ -228,10 +230,43 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
-            e.Shutdown();
-            EntityDeleted?.Invoke(this, e.Uid);
+            // Networking blindly spams entities at this function, they can already be
+            // deleted from being a child of a previously deleted entity
+            // TODO: Why does networking need to send deletes for child entities?
+            if (e.Deleted)
+                return;
+
+            RecursiveDeleteEntity(e);
         }
 
+        private void RecursiveDeleteEntity(IEntity entity)
+        {
+            if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
+                return;
+            
+            var transform = entity.Transform;
+
+            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
+            foreach (var childTransform in transform.Children.ToArray())
+            {
+                // Recursion Alert
+                RecursiveDeleteEntity(childTransform.Owner);
+            }
+
+            // Dispose all my components, in a safe order so transform is available
+            ComponentManager.DisposeComponents(entity.Uid);
+
+            // map does not have a parent node, everything else needs to be detached
+            if (transform.ParentUid != EntityUid.Invalid)
+            {
+                // Detach from my parent, if any
+                transform.DetachParentToNull();
+            }
+
+            entity.Shutdown();
+            EntityDeleted?.Invoke(this, entity.Uid);
+        }
+        
         public void DeleteEntity(EntityUid uid)
         {
             if (TryGetEntity(uid, out var entity))
@@ -253,7 +288,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var e in GetEntities())
             {
-                e.Shutdown();
+                DeleteEntity(e);
             }
 
             CullDeletedEntities();
@@ -385,7 +420,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion Entity Management
+#endregion Entity Management
 
         private void DispatchComponentMessage(NetworkComponentMessage netMsg)
         {
@@ -411,7 +446,7 @@ namespace Robust.Shared.GameObjects
 
         protected abstract EntityUid GenerateEntityUid();
 
-        #region Spatial Queries
+#region Spatial Queries
 
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
@@ -580,10 +615,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion
+#endregion
 
 
-        #region Entity DynamicTree
+#region Entity DynamicTree
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
             new();
@@ -669,7 +704,7 @@ namespace Robust.Shared.GameObjects
             return new Box2(pos, pos);
         }
 
-        #endregion
+#endregion
 
         public virtual void Update()
         {

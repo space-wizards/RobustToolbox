@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
@@ -62,14 +62,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-
             EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.Initialize();
-            MapManager.Startup();
-
             MapManager.CreateMap();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();

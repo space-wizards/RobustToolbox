@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -86,6 +86,8 @@ namespace Robust.Shared.Map
 
             Logger.DebugS("map", "Starting...");
 
+            _entityManager.ComponentManager.ComponentRemoved += OnComponentRemoved;
+
             if (!_maps.Contains(MapId.Nullspace))
             {
                 CreateMap(MapId.Nullspace);
@@ -104,6 +106,24 @@ namespace Robust.Shared.Map
             DebugTools.Assert(!GridExists(GridId.Invalid));
         }
 
+        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        {
+            if(e.Component is not IMapGridComponent)
+                return;
+
+            var gridComp = (IMapGridComponent)e.Component;
+
+            var gridIndex = gridComp.GridIndex;
+            if (gridIndex != GridId.Invalid)
+            {
+                if (GridExists(gridIndex))
+                {
+                    Logger.DebugS("map", $"Entity {e.OwnerUid} removed grid component, removing bound grid {gridIndex}");
+                    DeleteGrid(gridIndex);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public void Shutdown()
         {
@@ -111,6 +131,8 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardInit);
 #endif
             Logger.DebugS("map", "Stopping...");
+
+            _entityManager.ComponentManager.ComponentRemoved -= OnComponentRemoved;
 
             foreach (var map in _maps.ToArray())
             {

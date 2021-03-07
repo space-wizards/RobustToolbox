@@ -44,9 +44,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
+        private bool initialized;
         public void Initialize()
         {
+            if (initialized)
+                throw new InvalidOperationException("Already initialized.");
+
+            initialized = true;
+
             FillComponentDict();
+            _componentFactory.ComponentAdded += OnComponentAdded;
+            _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
         }
 
         /// <inheritdoc />
@@ -57,6 +65,26 @@ namespace Robust.Shared.GameObjects
             _entCompIndex.Clear();
             _deleteSet.Clear();
             FillComponentDict();
+        }
+        
+        public void Dispose()
+        {
+            _componentFactory.ComponentAdded -= OnComponentAdded;
+            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
+        }
+
+        private void OnComponentAdded(IComponentRegistration obj)
+        {
+            _entTraitDict.Add(obj.Type, new Dictionary<EntityUid, Component>());
+
+            var netID = obj.NetID;
+            if (netID.HasValue)
+                _entNetIdDict.Add(netID.Value, new Dictionary<EntityUid, Component>());
+        }
+
+        private void OnComponentReferenceAdded((IComponentRegistration, Type) obj)
+        {
+            _entTraitDict.Add(obj.Item2, new Dictionary<EntityUid, Component>());
         }
 
         #region Component Management
@@ -119,7 +147,6 @@ namespace Robust.Shared.GameObjects
             if (component.NetID != null)
             {
                 // the main comp grid keeps this in sync
-
                 var netId = component.NetID.Value;
                 _entNetIdDict[netId].Add(uid, component);
 

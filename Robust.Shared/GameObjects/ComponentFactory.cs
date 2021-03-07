@@ -65,6 +65,15 @@ namespace Robust.Shared.GameObjects
         private readonly HashSet<string> IgnoredComponentNames = new();
 
         /// <inheritdoc />
+        public event Action<IComponentRegistration>? ComponentAdded;
+
+        /// <inheritdoc />
+        public event Action<(IComponentRegistration, Type)>? ComponentReferenceAdded;
+
+        /// <inheritdoc />
+        public event Action<string>? ComponentIgnoreAdded;
+        
+        /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
@@ -137,6 +146,7 @@ namespace Robust.Shared.GameObjects
             {
                 netIDs[netID.Value] = registration;
             }
+            ComponentAdded?.Invoke(registration);
         }
 
         [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
@@ -158,6 +168,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
             registration.References.Add(@interface);
+            ComponentReferenceAdded?.Invoke((registration, @interface));
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
@@ -178,12 +189,13 @@ namespace Robust.Shared.GameObjects
             }
 
             IgnoredComponentNames.Add(name);
+            ComponentIgnoreAdded?.Invoke(name);
         }
 
         private void RemoveComponent(string name)
         {
             var registration = names[name];
-
+            
             names.Remove(registration.Name);
             _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);

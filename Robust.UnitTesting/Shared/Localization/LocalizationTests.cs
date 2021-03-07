@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -20,7 +20,6 @@ namespace Robust.UnitTesting.Shared.Localization
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
             IoCManager.Resolve<IComponentFactory>().Register<GrammarComponent>();
-            IoCManager.Resolve<IComponentManager>().Initialize();
 
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);

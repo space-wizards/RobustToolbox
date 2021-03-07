@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -15,33 +16,32 @@ namespace Robust.Shared.Map
     [DataDefinition]
     public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
+        public int ChildCount => 1;
+
+        public Box2 LocalBounds => _mapGrid.LocalBounds;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+            }
+        }
+
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        public ShapeType ShapeType => ShapeType.Grid;
+
         [DataField("grid")]
         private GridId _gridId = GridId.Invalid;
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision layer of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
-        }
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision mask of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
-        }
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -95,7 +95,14 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox();
+            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox().Scale(1 + Radius);
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeGrid otherGrid) return false;
+            return MathHelper.CloseTo(_radius, otherGrid._radius) &&
+                   _gridId == otherGrid._gridId;
         }
     }
 }

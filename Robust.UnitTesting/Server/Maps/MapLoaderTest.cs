@@ -1,10 +1,15 @@
 using System.Linq;
+using Moq;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Server.Maps;
+using Robust.Server.Physics;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -35,9 +40,10 @@ entities:
     type: Transform
   - index: 0
     type: MapGrid
-  - shapes:
-    - !type:PhysShapeGrid
-      grid: 0
+  - fixtures:
+    - shape:
+        !type:PhysShapeGrid
+          grid: 0
     type: Physics
 - uid: 1
   type: MapDeserializeTest
@@ -58,11 +64,26 @@ entities:
 
 ";
 
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+            //var mockFormat = new Mock<ICustomFormatManager>();
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+            //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
+        }
+
 
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IComponentFactory>().Register<MapDeserializeTestComponent>();
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            compFactory.Register<MapDeserializeTestComponent>();
 
             IoCManager.Resolve<IComponentManager>().Initialize();
 
@@ -83,6 +104,7 @@ entities:
         [Test]
         public void TestDataLoadPriority()
         {
+            // TODO: Fix after serv3
             var map = IoCManager.Resolve<IMapManager>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();

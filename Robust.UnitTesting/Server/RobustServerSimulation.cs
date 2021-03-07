@@ -213,7 +213,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterReference<MapGridComponent, IMapGridComponent>();
 
             compFactory.Register<PhysicsComponent>();
-            compFactory.RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            compFactory.RegisterReference<PhysicsComponent, IPhysBody>();
 
             _regDelegate?.Invoke(compFactory);
 

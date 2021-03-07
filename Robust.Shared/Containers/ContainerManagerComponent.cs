@@ -16,8 +16,8 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
-    [RegisterComponent]
-    [ComponentReference(typeof(IContainerManager))]
+    // [RegisterComponent]
+    // [ComponentReference(typeof(IContainerManager))]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;

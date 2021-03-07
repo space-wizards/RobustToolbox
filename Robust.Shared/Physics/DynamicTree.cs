@@ -125,7 +125,7 @@ namespace Robust.Shared.Physics
             => Add(item);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Add(in T item)
+        public bool Add(in T item, Box2? aabb = null)
         {
             if (TryGetProxy(item, out var proxy))
             {
@@ -180,16 +180,16 @@ namespace Robust.Shared.Physics
             => Remove(item);
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public bool Update(in T item)
+        public bool Update(in T item, Box2? newBox = null)
         {
             if (!TryGetProxy(item, out var proxy))
             {
                 return false;
             }
 
-            var newBox = _extractAabb(item);
+            newBox ??= _extractAabb(item);
 
-            if (CheckNaNs(newBox))
+            if (CheckNaNs(newBox.Value))
             {
                 if (proxy == Proxy.Free)
                 {
@@ -203,11 +203,11 @@ namespace Robust.Shared.Physics
 
             if (proxy == Proxy.Free)
             {
-                _nodeLookup[item] = _b2Tree.CreateProxy(newBox, item);
+                _nodeLookup[item] = _b2Tree.CreateProxy(newBox.Value, item);
                 return true;
             }
 
-            return _b2Tree.MoveProxy(proxy, newBox, Vector2.Zero);
+            return _b2Tree.MoveProxy(proxy, newBox.Value, Vector2.Zero);
         }
 
         public void QueryAabb(QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
@@ -331,7 +331,7 @@ namespace Robust.Shared.Physics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AddOrUpdate(T item) => Update(item) || Add(item);
+        public bool AddOrUpdate(T item, Box2? newAABB = null) => Update(item, newAABB) || Add(item, newAABB);
 
         private static bool CheckNaNs(in Box2 box)
         {

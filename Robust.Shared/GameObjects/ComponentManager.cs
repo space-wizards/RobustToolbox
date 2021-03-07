@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -186,7 +187,7 @@ namespace Robust.Shared.GameObjects
                 {
                     ITransformComponent _ => 0,
                     IMetaDataComponent _ => 1,
-                    IPhysicsComponent _ => 2,
+                    IPhysBody _ => 2,
                     _ => int.MaxValue
                 };
 
@@ -442,7 +443,7 @@ namespace Robust.Shared.GameObjects
             var comps = _entCompIndex[uid];
             foreach (var comp in comps)
             {
-                if (comp.Deleted || !(comp is T tComp)) continue;
+                if (comp.Deleted || comp is not T tComp) continue;
 
                 yield return tComp;
             }

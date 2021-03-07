@@ -1,6 +1,8 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 
+using Robust.Shared.Physics;
+
 namespace Robust.Server.GameObjects
 {
     public class ServerComponentFactory : ComponentFactory
@@ -28,7 +30,13 @@ namespace Robust.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
+
+            Register<CollisionWakeComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
+
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");

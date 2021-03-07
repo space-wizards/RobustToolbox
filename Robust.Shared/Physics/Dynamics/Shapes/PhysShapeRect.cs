@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using JetBrains.Annotations;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents an OBB.
@@ -15,47 +19,35 @@ namespace Robust.Shared.Physics
     [DataDefinition]
     public class PhysShapeRect : IPhysShape
     {
-        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
-        private int _collisionLayer;
-        [DataFieldWithFlag("mask", typeof(CollisionMask))]
-        private int _collisionMask;
+        public int ChildCount => 1;
 
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+                OnDataChanged?.Invoke();
+            }
+        }
+
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+
+        public ShapeType ShapeType => ShapeType.Rectangle;
+
+        [ViewVariables(VVAccess.ReadWrite)]
         [DataField("bounds")]
         private Box2 _rectangle = Box2.UnitCentered;
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Box2 Rectangle
-        {
-            get => _rectangle;
-            set
-            {
-                _rectangle = value;
-                OnDataChanged?.Invoke();
-            }
-        }
 
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            set
-            {
-                _collisionLayer = value;
-                OnDataChanged?.Invoke();
-            }
-        }
+        public Box2 CachedBounds => _cachedBounds;
 
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            set
-            {
-                _collisionMask = value;
-                OnDataChanged?.Invoke();
-            }
-        }
+        [ViewVariables]
+        private Box2 _cachedBounds;
 
         /// <inheritdoc />
         public void ApplyState() { }
@@ -74,7 +66,14 @@ namespace Robust.Shared.Physics
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox();
+            _cachedBounds = new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
+            return _cachedBounds;
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeRect rect) return false;
+            return _rectangle.EqualsApprox(rect._rectangle);
         }
     }
 }

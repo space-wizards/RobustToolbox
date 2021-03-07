@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Dynamics.Shapes
 {
     /// <summary>
     /// A physics shape that represents a circle. The circle cannot be rotated,
@@ -14,42 +14,17 @@ namespace Robust.Shared.Physics
     [DataDefinition]
     public class PhysShapeCircle : IPhysShape
     {
+        public int ChildCount => 1;
+        public ShapeType ShapeType => ShapeType.Circle;
+
         private const float DefaultRadius = 0.5f;
 
-        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
-        private int _collisionLayer;
-        [DataFieldWithFlag("mask", typeof(CollisionMask))]
-        private int _collisionMask;
         [DataField("radius")]
         private float _radius = DefaultRadius;
 
         /// <inheritdoc />
         [field: NonSerialized]
         public event Action? OnDataChanged;
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get => _collisionLayer;
-            set
-            {
-                _collisionLayer = value;
-                OnDataChanged?.Invoke();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => _collisionMask;
-            set
-            {
-                _collisionMask = value;
-                OnDataChanged?.Invoke();
-            }
-        }
 
         /// <summary>
         /// The radius of this circle.
@@ -60,6 +35,7 @@ namespace Robust.Shared.Physics
             get => _radius;
             set
             {
+                if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
@@ -81,6 +57,12 @@ namespace Robust.Shared.Physics
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(in Matrix3.Identity);
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeCircle otherCircle) return false;
+            return MathHelper.CloseTo(_radius, otherCircle._radius);
         }
     }
 }

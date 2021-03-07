@@ -6,6 +6,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -443,10 +445,6 @@ namespace Robust.Shared.Map
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
-
-                    var collideComp = newEnt.AddComponent<PhysicsComponent>();
-                    collideComp.CanCollide = true;
-                    collideComp.PhysicsShapes.Add(new PhysShapeGrid(grid));
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 

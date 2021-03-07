@@ -2,7 +2,6 @@
 using System.Linq;
 using Moq;
 using NUnit.Framework;
-using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -17,7 +16,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); })
+                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); factory.RegisterReference<ContainerManagerComponent, IContainerManager>(); })
                 .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
                 .InitializeInstance();
 

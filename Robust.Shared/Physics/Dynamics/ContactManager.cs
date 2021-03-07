@@ -332,10 +332,19 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                var proxyA = fixtureA.Proxies[contact.GridId][indexA];
-                var proxyB = fixtureB.Proxies[contact.GridId][indexB];
+                bool? overlap = null;
 
-                bool overlap = _broadPhaseSystem.TestOverlap(proxyA, proxyB);
+                // Sloth addition: Kind of hacky and might need to be removed at some point.
+                // One of the bodies was probably put into nullspace so we need to remove I think.
+                if (fixtureA.Proxies.ContainsKey(contact.GridId) && fixtureB.Proxies.ContainsKey(contact.GridId))
+                {
+                    var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
+                    var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
+
+                    var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
+
+                    overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
+                }
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)

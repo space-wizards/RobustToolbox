@@ -791,7 +791,8 @@ namespace Robust.Shared.GameObjects
             get => _angVelocity;
             set
             {
-                DebugTools.Assert(!float.IsNaN(value));
+                // TODO: This and linearvelocity asserts
+                // DebugTools.Assert(!float.IsNaN(value));
 
                 if (BodyType == BodyType.Static)
                     return;

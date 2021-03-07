@@ -137,7 +137,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         [DataField("collideConnected")]
-        private bool _collideConnected = false;
+        private bool _collideConnected = true;
 
         /// <summary>
         ///     The Breakpoint simply indicates the maximum Value the JointError can be before it breaks.

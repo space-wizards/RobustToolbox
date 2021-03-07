@@ -1194,7 +1194,7 @@ namespace Robust.Shared.GameObjects
             InvI = 0.0f;
             // Sweep
 
-            if (BodyType == BodyType.Kinematic)
+            if ((BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0)
             {
                 return;
             }

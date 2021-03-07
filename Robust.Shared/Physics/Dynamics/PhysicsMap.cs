@@ -106,11 +106,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
-        /// <summary>
-        ///     We'll re-use contacts where possible to save on allocations.
-        /// </summary>
-        internal Queue<Contact> ContactPool = new(128);
-
         private PhysicsIsland _island = default!;
 
         /// <summary>
@@ -486,13 +481,13 @@ namespace Robust.Shared.Physics.Dynamics
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
             // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(Bodies.Count, ContactManager.ActiveContacts.Count, Joints.Count);
+            _island.Reset(Bodies.Count, ContactManager.ContactCount, Joints.Count);
 
             DebugTools.Assert(_islandSet.Count == 0);
 
-            foreach (var contact in ContactManager.ActiveContacts)
+            for (Contact? c = ContactManager.ContactList.Next; c != ContactManager.ContactList; c = c.Next)
             {
-                contact.IslandFlag = false;
+                c!.IslandFlag = false;
             }
 
             foreach (var joint in Joints)

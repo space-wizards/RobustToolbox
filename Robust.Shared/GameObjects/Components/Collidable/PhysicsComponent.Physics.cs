@@ -158,8 +158,6 @@ namespace Robust.Shared.GameObjects
                 if (value)
                 {
                     _sleepTime = 0.0f;
-                    PhysicsMap.ContactManager.UpdateContacts(ContactEdges, true);
-
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
                 else
@@ -167,7 +165,6 @@ namespace Robust.Shared.GameObjects
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                     ResetDynamics();
                     _sleepTime = 0.0f;
-                    PhysicsMap.ContactManager.UpdateContacts(ContactEdges, false);
                 }
 
                 Dirty();

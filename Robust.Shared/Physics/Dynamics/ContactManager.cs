@@ -1,3 +1,10 @@
+// Copyright (c) 2017 Kastellanos Nikolaos
+
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -42,17 +49,10 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public BroadPhaseDelegate OnBroadPhaseCollision;
 
-        /// <summary>
-        /// The set of active contacts.
-        /// </summary>
-        internal HashSet<Contact> ActiveContacts = new(128);
 
-        /// <summary>
-        /// A temporary copy of active contacts that is used during updates so
-        /// the hash set can have members added/removed during the update.
-        /// This list is cleared after every update.
-        /// </summary>
-        private List<Contact> ActiveList = new(128);
+        public readonly ContactHead ContactList;
+        public int ContactCount { get; private set; }
+        internal readonly ContactHead ContactPoolList;
 
         /// <summary>
         ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicConmtroller
@@ -61,6 +61,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         public ContactManager()
         {
+            ContactList = new ContactHead();
+            ContactCount = 0;
+            ContactPoolList = new ContactHead();
             OnBroadPhaseCollision = AddPair;
         }
 
@@ -75,39 +78,6 @@ namespace Robust.Shared.Physics.Dynamics
             foreach (var broadPhase in _broadPhaseSystem.GetBroadPhases(mapId))
             {
                 broadPhase.UpdatePairs(OnBroadPhaseCollision);
-            }
-        }
-
-        internal void UpdateContacts(ContactEdge? contactEdge, bool value)
-        {
-            if (value)
-            {
-                while (contactEdge != null)
-                {
-                    var contact = contactEdge.Contact!;
-                    if (!ActiveContacts.Contains(contact))
-                    {
-                        ActiveContacts.Add(contact);
-                    }
-                    contactEdge = contactEdge.Next;
-                }
-            }
-            else
-            {
-                while (contactEdge != null)
-                {
-                    var contact = contactEdge.Contact!;
-
-                    if (!contactEdge.Other!.Awake)
-                    {
-                        if (ActiveContacts.Contains(contact))
-                        {
-                            ActiveContacts.Remove(contact);
-                        }
-                    }
-
-                    contactEdge = contactEdge.Next;
-                }
             }
         }
 
@@ -137,16 +107,15 @@ namespace Robust.Shared.Physics.Dynamics
                 return;
 
             // Does a contact already exist?
-            var edge = bodyB.ContactEdges;
 
-            while (edge != null)
+            for (ContactEdge? ceB = bodyB.ContactEdges; ceB != null; ceB = ceB?.Next)
             {
-                if (edge.Other == bodyA)
+                if (ceB.Other == bodyA)
                 {
-                    Fixture fA = edge.Contact?.FixtureA!;
-                    Fixture fB = edge.Contact?.FixtureB!;
-                    var iA = edge.Contact!.ChildIndexA;
-                    var iB = edge.Contact!.ChildIndexB;
+                    Fixture fA = ceB.Contact?.FixtureA!;
+                    Fixture fB = ceB.Contact?.FixtureB!;
+                    var iA = ceB.Contact!.ChildIndexA;
+                    var iB = ceB.Contact!.ChildIndexB;
 
                     if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
                     {
@@ -161,7 +130,7 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
-                edge = edge.Next;
+                ceB = ceB.Next;
             }
 
             // Does a joint override collision? Is at least one body dynamic?
@@ -180,16 +149,21 @@ namespace Robust.Shared.Physics.Dynamics
             // Call the factory.
             Contact c = Contact.Create(gridId, fixtureA, indexA, fixtureB, indexB);
 
+            // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
+            if (c == null) return;
+
             // Contact creation may swap fixtures.
             fixtureA = c.FixtureA!;
             fixtureB = c.FixtureB!;
             bodyA = fixtureA.Body;
             bodyB = fixtureB.Body;
 
-            // Insert into the world.
-            ActiveContacts.Add(c);
-
-            // Connect to island graph.
+            // Insert into world
+            c.Prev = ContactList;
+            c.Next = c.Prev.Next;
+            c.Prev.Next = c;
+            c.Next!.Prev = c;
+            ContactCount++;
 
             // Connect to body A
             c.NodeA.Contact = c;
@@ -252,68 +226,54 @@ namespace Robust.Shared.Physics.Dynamics
                 // EndContact(contact);
             }
 
+            // Remove from the world
+            contact.Prev!.Next = contact.Next;
+            contact.Next!.Prev = contact.Prev;
+            contact.Next = null;
+            contact.Prev = null;
+            ContactCount--;
+
             // Remove from body 1
-            if (contact.NodeA.Previous != null)
-            {
-                contact.NodeA.Previous.Next = contact.NodeA.Next;
-            }
-
-            if (contact.NodeA.Next != null)
-            {
-                contact.NodeA.Next.Previous = contact.NodeA.Previous;
-            }
-
             if (contact.NodeA == bodyA.ContactEdges)
-            {
                 bodyA.ContactEdges = contact.NodeA.Next;
-            }
+            if (contact.NodeA.Previous != null)
+                contact.NodeA.Previous.Next = contact.NodeA.Next;
+            if (contact.NodeA.Next != null)
+                contact.NodeA.Next.Previous = contact.NodeA.Previous;
 
             // Remove from body 2
-            if (contact.NodeB.Previous != null)
-            {
-                contact.NodeB.Previous.Next = contact.NodeB.Next;
-            }
-
-            if (contact.NodeB.Next != null)
-            {
-                contact.NodeB.Next.Previous = contact.NodeB.Previous;
-            }
-
             if (contact.NodeB == bodyB.ContactEdges)
-            {
                 bodyB.ContactEdges = contact.NodeB.Next;
-            }
-
-            ActiveContacts.Remove(contact);
+            if (contact.NodeB.Previous != null)
+                contact.NodeB.Previous.Next = contact.NodeB.Next;
+            if (contact.NodeB.Next != null)
+                contact.NodeB.Next.Previous = contact.NodeB.Previous;
 
             contact.Destroy();
+
+            // Insert into the pool.
+            contact.Next = ContactPoolList.Next;
+            ContactPoolList.Next = contact;
         }
 
         internal void Collide()
         {
-            ActiveList.Clear();
-            // TODO: We need to handle collisions during prediction but also handle the start / stop colliding shit during sim ONLY
-
-            // Update awake contacts
-            ActiveList.AddRange(ActiveContacts);
-
             // Can be changed while enumerating
-            foreach (var contact in ActiveList)
+            // TODO: check for null instead?
+            for (var contact = ContactList.Next; contact != ContactList;)
             {
+                if (contact == null) break;
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
-
                 int indexA = contact.ChildIndexA;
                 int indexB = contact.ChildIndexB;
                 PhysicsComponent bodyA = fixtureA.Body;
                 PhysicsComponent bodyB = fixtureB.Body;
 
-                // Do not try to collide disabled bodies
-                // FPE just continues here but in our case I think it's better to also destroy the contact.
+                //Do no try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
-                    Contact cNuke = contact;
-                    Destroy(cNuke);
+                    contact = contact.Next;
                     continue;
                 }
 
@@ -321,17 +281,19 @@ namespace Robust.Shared.Physics.Dynamics
                 if (contact.FilterFlag)
                 {
                     // Should these bodies collide?
-                    if (!bodyB.ShouldCollide(bodyA))
+                    if (bodyB.ShouldCollide(bodyA) == false)
                     {
                         Contact cNuke = contact;
+                        contact = contact.Next;
                         Destroy(cNuke);
                         continue;
                     }
 
                     // Check default filtering
-                    if (!ShouldCollide(fixtureA, fixtureB))
+                    if (ShouldCollide(fixtureA, fixtureB) == false)
                     {
                         Contact cNuke = contact;
+                        contact = contact.Next;
                         Destroy(cNuke);
                         continue;
                     }
@@ -341,6 +303,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (ContactFilter != null && ContactFilter(fixtureA, fixtureB) == false)
                     {
                         Contact cNuke = c;
+                        c = c.Next;
                         Destroy(cNuke);
                         continue;
                     }
@@ -350,55 +313,46 @@ namespace Robust.Shared.Physics.Dynamics
                     contact.FilterFlag = false;
                 }
 
-                var activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
-                var activeB = bodyB.Awake && bodyB.BodyType != BodyType.Static;
+                bool activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
+                bool activeB = bodyB.Awake && bodyB.BodyType != BodyType.Static;
 
                 // At least one body must be awake and it must be dynamic or kinematic.
-                if (!activeA && !activeB)
+                if (activeA == false && activeB == false)
                 {
-                    ActiveContacts.Remove(contact);
+                    contact = contact.Next;
                     continue;
                 }
 
-                // TODO: Need to handle moving grids
-                bool? overlap = false;
+                var proxyA = fixtureA.Proxies[contact.GridId][indexA];
+                var proxyB = fixtureB.Proxies[contact.GridId][indexB];
 
-                // Sloth addition: Kind of hacky and might need to be removed at some point.
-                // One of the bodies was probably put into nullspace so we need to remove I think.
-                if (fixtureA.Proxies.ContainsKey(contact.GridId) && fixtureB.Proxies.ContainsKey(contact.GridId))
-                {
-                    var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
-                    var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
-
-                    var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
-
-                    overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
-                }
+                bool overlap = _broadPhaseSystem.TestOverlap(proxyA, proxyB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)
                 {
                     Contact cNuke = contact;
+                    contact = contact.Next;
                     Destroy(cNuke);
                     continue;
                 }
 
                 // The contact persists.
                 contact.Update(this);
-            }
 
-            ActiveList.Clear();
+                contact = contact.Next;
+            }
         }
 
         public void PreSolve(float frameTime)
         {
-            // TODO: Optimise this coz it allocates a fuckton
-            ActiveList.AddRange(ActiveContacts);
-
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
-            foreach (var contact in ActiveList)
+            for (var contact = ContactList.Next; contact != ContactList; contact = contact?.Next)
             {
-                if (!contact.IsTouching || !contact.Enabled) continue;
+                if (contact == null || !contact.IsTouching || !contact.Enabled)
+                {
+                    continue;
+                }
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
@@ -414,8 +368,6 @@ namespace Robust.Shared.Physics.Dynamics
                     KinematicControllerCollision?.Invoke(bodyB, bodyA, frameTime, contact.Manifold);
                 }
             }
-
-            ActiveList.Clear();
         }
 
         public void PostSolve()

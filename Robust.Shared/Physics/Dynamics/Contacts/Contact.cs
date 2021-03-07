@@ -1,3 +1,10 @@
+// Copyright (c) 2017 Kastellanos Nikolaos
+
+/* Original source Farseer Physics Engine:
+ * Copyright (c) 2014 Ian Qvist, http://farseerphysics.codeplex.com
+ * Microsoft Permissive License (Ms-PL) v1.1
+ */
+
 /*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
@@ -33,7 +40,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
-    public sealed class Contact : IEquatable<Contact>
+    public class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly ICollisionManager _collisionManager = default!;
 #if DEBUG
@@ -42,6 +49,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public ContactEdge NodeA = new();
         public ContactEdge NodeB = new();
+
+        /// <summary>
+        ///     Get the next world contact.
+        /// </summary>
+        public Contact? Next { get; internal set; }
+
+        /// <summary>
+        ///     Get the previous world contact.
+        /// </summary>
+        public Contact? Prev { get; internal set; }
 
         public Fixture? FixtureA;
         public Fixture? FixtureB;
@@ -137,17 +154,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Determines whether the contact is touching.
         /// </summary>
-        public bool IsTouching { get; set; }
+        public bool IsTouching { get; internal set; }
 
         // Some day we'll refactor it to be more like EntityCoordinates
-        public GridId GridId { get; set; } = GridId.Invalid;
+        public GridId GridId { get; internal set; } = GridId.Invalid;
 
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
-        /// NOTE: If you are setting Enabled to a constant true or false,
-        /// use the explicit Enable() or Disable() functions instead to
-        /// save the CPU from doing a branch operation.
         public bool Enabled { get; set; }
 
         /// <summary>
@@ -175,7 +189,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public float TangentSpeed { get; set; }
 
-        public Contact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        public Contact(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
             IoCManager.InjectDependencies(this);
 #if DEBUG
@@ -187,11 +201,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        /// <param name="fixtureA"></param>
-        /// <param name="indexA"></param>
-        /// <param name="fixtureB"></param>
-        /// <param name="indexB"></param>
-        /// <returns></returns>
         internal static Contact Create(GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
@@ -200,33 +209,38 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             DebugTools.Assert(ShapeType.Unknown < type1 && type1 < ShapeType.TypeCount);
             DebugTools.Assert(ShapeType.Unknown < type2 && type2 < ShapeType.TypeCount);
 
-            Queue<Contact> pool = fixtureA.Body.PhysicsMap.ContactPool;
-            if (pool.TryDequeue(out var contact))
+            // Pull out a spare contact object and then add it into the world's linked-list.
+            Contact? contact = null;
+            // TODO: Just pass in ContactManager directly.
+            var contactPoolList = fixtureA.Body.PhysicsMap.ContactManager.ContactPoolList;
+
+            // ReSharper disable once PossibleUnintendedReferenceComparison
+            if (contactPoolList.Next != contactPoolList)
             {
-                if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
-                {
-                    contact.Reset(fixtureA, indexA, fixtureB, indexB);
-                }
+                // get first item in the pool.
+                contact = contactPoolList.Next;
+                // Remove from the pool.
+                contactPoolList.Next = contact?.Next;
+                contact!.Next = null;
+            }
+            // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
+            if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
+            {
+                if (contact == null)
+                    contact = new Contact(fixtureA, indexA, fixtureB, indexB);
                 else
-                {
-                    contact.Reset(fixtureB, indexB, fixtureA, indexA);
-                }
+                    contact.Reset(fixtureA, indexA, fixtureB, indexB);
             }
             else
             {
-                // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
-                if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
-                {
-                    contact = new Contact(fixtureA, indexA, fixtureB, indexB);
-                }
-                else
-                {
+                if (contact == null)
                     contact = new Contact(fixtureB, indexB, fixtureA, indexA);
-                }
+                else
+                    contact.Reset(fixtureB, indexB, fixtureA, indexA);
             }
 
             contact.GridId = gridId;
-            contact._type = _registers[(int) type1, (int) type2];
+            contact._type = _registers[(int)type1, (int)type2];
 
             return contact;
         }
@@ -256,6 +270,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             ChildIndexB = indexB;
 
             Manifold.PointCount = 0;
+
+            Next = null;
+            Prev = null;
 
             NodeA.Contact = null;
             NodeA.Previous = null;
@@ -313,7 +330,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             bool touching;
             bool wasTouching = IsTouching;
 
-            bool sensor = !FixtureA.Hard || !FixtureB.Hard;
+            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
 
             // Is this contact a sensor?
             if (sensor)
@@ -425,13 +442,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
                     {
                         if (bodyB.Deleted) break;
-                        comp.CollideWith(bodyA, bodyB, Manifold);
+                        comp.CollideWith(bodyA, bodyB, oldManifold);
                     }
 
                     foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
                     {
                         if (bodyA.Deleted) break;
-                        comp.CollideWith(bodyB, bodyA, Manifold);
+                        comp.CollideWith(bodyB, bodyA, oldManifold);
                     }
                 }
             }
@@ -518,10 +535,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         internal void Destroy()
         {
-            // Seems like active contacts were never used in farseer anyway
-            // FixtureA?.Body.PhysicsMap.ContactManager.RemoveActiveContact(this);
-            FixtureA?.Body.PhysicsMap.ContactPool.Enqueue(this);
-
             if (Manifold.PointCount > 0 && FixtureA?.Hard == true && FixtureB?.Hard == true)
             {
                 FixtureA.Body.Awake = true;

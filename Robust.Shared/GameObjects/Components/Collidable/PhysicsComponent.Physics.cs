@@ -216,6 +216,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [DataField("sleepTime")]
         private float _sleepTime;
 
         /// <inheritdoc />

@@ -952,7 +952,7 @@ namespace Robust.Shared.GameObjects
 
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
-            if (_bodyType != BodyType.Dynamic) return;
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
@@ -960,7 +960,7 @@ namespace Robust.Shared.GameObjects
 
         public void ApplyAngularImpulse(float impulse)
         {
-            if (_bodyType != BodyType.Dynamic) return;
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             AngularVelocity += impulse * InvI;

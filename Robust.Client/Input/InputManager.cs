@@ -19,6 +19,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.Core;
@@ -117,8 +119,8 @@ namespace Robust.Client.Input
 
         public void SaveToUserData()
         {
-            var mapping = new YamlMappingNode();
-            var ser = YamlObjectSerializer.NewWriter(mapping);
+            var mapping = new MappingDataNode();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -141,15 +143,13 @@ namespace Robust.Client.Input
                 .Where(p => _bindingsByFunction[p].Count == 0)
                 .ToArray();
 
-            var version = 1;
-
-            ser.DataField(ref version, "version", 1);
-            ser.DataField(ref modifiedBindings, "binds", Array.Empty<KeyBindingRegistration>());
-            ser.DataField(ref leaveEmpty, "leaveEmpty", Array.Empty<BoundKeyFunction>());
+            mapping.AddNode("version", new ValueDataNode("1"));
+            mapping.AddNode("binds", serializationManager.WriteValue(modifiedBindings));
+            mapping.AddNode("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new(mapping)};
+            var stream = new YamlStream {new(mapping.ToMappingNode())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -416,12 +416,14 @@ namespace Robust.Client.Input
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
-            var baseSerializer = YamlObjectSerializer.NewReader(mapping);
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var robustMapping = mapping.ToDataNode() as MappingDataNode;
+            if (robustMapping == null) throw new InvalidOperationException();
 
-            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
-
-            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
+            if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
             {
+                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
+
                 foreach (var reg in baseKeyRegs)
                 {
                     if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
@@ -447,11 +449,11 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData)
+            if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
             {
-                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
 
-                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
+                if (leaveEmpty.Length > 0)
                 {
                     // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
                     // Because they've been explicitly cleared.

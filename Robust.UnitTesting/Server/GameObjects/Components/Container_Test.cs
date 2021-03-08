@@ -1,8 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
-using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -17,7 +16,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); })
+                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); factory.RegisterReference<ContainerManagerComponent, IContainerManager>(); })
                 .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
                 .InitializeInstance();
 
@@ -26,7 +25,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             return sim;
         }
-        
+
         const string PROTOTYPES = @"
 - type: entity
   name: dummy
@@ -182,7 +181,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.Insert(mapEnt), Is.False);
             Assert.That(container.CanInsert(mapEnt), Is.False);
         }
-        
+
         [Test]
         public void BaseContainer_InsertGrid_False()
         {

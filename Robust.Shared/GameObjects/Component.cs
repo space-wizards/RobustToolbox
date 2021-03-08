@@ -1,8 +1,10 @@
 ﻿using System;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -10,6 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
+    [ImplicitDataDefinitionForInheritorsAttribute]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
@@ -24,6 +27,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
+        [DataField("netsync")]
         private bool _netSyncEnabled = true;
         /// <inheritdoc />
         [ViewVariables]
@@ -157,12 +161,6 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
 
             _running = false;
-        }
-
-        /// <inheritdoc />
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _netSyncEnabled, "netsync", true);
         }
 
         /// <inheritdoc />

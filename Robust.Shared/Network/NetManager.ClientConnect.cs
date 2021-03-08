@@ -13,6 +13,7 @@ using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network

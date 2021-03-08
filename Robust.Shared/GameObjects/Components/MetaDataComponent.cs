@@ -3,6 +3,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -68,7 +69,9 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IPrototypeManager _prototypes = default!;
 
+        [DataField("name")]
         private string? _entityName;
+        [DataField("desc")]
         private string? _entityDescription;
         private EntityPrototype? _entityPrototype;
 
@@ -158,18 +161,6 @@ namespace Robust.Shared.GameObjects
 
             if(state.PrototypeId != null)
                 _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _entityName, "name", null);
-            serializer.DataField(ref _entityDescription, "desc", null);
-            //serializer.DataField(ref _entityPrototype, "proto", null,
-            //    s => _prototypes.Index<EntityPrototype>(s),
-            //    p => p.ID);
         }
 
         internal override void ClearTicks()

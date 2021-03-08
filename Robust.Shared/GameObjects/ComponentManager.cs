@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Exceptions;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -129,13 +130,6 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
 
-            if (entity.Initialized || entity.Initializing)
-            {
-                var defaultSerializer = DefaultValueSerializer.Reader();
-                defaultSerializer.CurrentType = component.GetType();
-                component.ExposeData(defaultSerializer);
-            }
-
             _componentDependencyManager.OnComponentAdd(entity, component);
 
             component.OnAdd();
@@ -193,7 +187,7 @@ namespace Robust.Shared.GameObjects
                 {
                     ITransformComponent _ => 0,
                     IMetaDataComponent _ => 1,
-                    IPhysicsComponent _ => 2,
+                    IPhysBody _ => 2,
                     _ => int.MaxValue
                 };
 
@@ -449,7 +443,7 @@ namespace Robust.Shared.GameObjects
             var comps = _entCompIndex[uid];
             foreach (var comp in comps)
             {
-                if (comp.Deleted || !(comp is T tComp)) continue;
+                if (comp.Deleted || comp is not T tComp) continue;
 
                 yield return tComp;
             }

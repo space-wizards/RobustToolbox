@@ -21,16 +21,6 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <summary>
-    /// Throws an exception in <see cref="ExposeData" />.
-    /// </summary>
-    public sealed class DebugExceptionExposeDataComponent : Component
-    {
-        public override string Name => "DebugExceptionExposeData";
-
-        public override void ExposeData(ObjectSerializer serializer) => throw new NotSupportedException();
-    }
-
-    /// <summary>
     /// Throws an exception in <see cref="Initialize" />.
     /// </summary>
     public sealed class DebugExceptionInitializeComponent : Component

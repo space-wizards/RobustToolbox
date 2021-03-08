@@ -12,7 +12,6 @@ using Robust.Client.Input;
 using Robust.Client.Debugging;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;

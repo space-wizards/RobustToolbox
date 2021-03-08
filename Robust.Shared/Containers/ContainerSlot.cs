@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
@@ -14,8 +13,6 @@ namespace Robust.Shared.Containers
     public class ContainerSlot : BaseContainer
     {
         private const string ClassName = "ContainerSlot";
-
-        private IEntity? _containedEntity;
 
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities
@@ -29,38 +26,11 @@ namespace Robust.Shared.Containers
         }
 
         [ViewVariables]
-        public IEntity? ContainedEntity
-        {
-            get => _containedEntity;
-            private set => _containedEntity = value;
-        }
+        [field: DataField("ent")]
+        public IEntity? ContainedEntity { get; private set; }
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;
-        
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-#if SERV3
-            // ONLY PAUL CAN MAKE ME WHOLE
-            serializer.DataField(ref _containedEntity, "ent", default);
-#else
-            if (serializer.Writing)
-            {
-                serializer.DataWriteFunction("ents", EntityUid.Invalid,
-                    () => _containedEntity?.Uid ?? EntityUid.Invalid);
-            }
-            else
-            {
-                var entMan = IoCManager.Resolve<IEntityManager>();
-
-                serializer.DataReadFunction("ent", EntityUid.Invalid,
-                    value => _containedEntity = value != EntityUid.Invalid ? entMan.GetEntity(value) : null);
-            }
-#endif
-        }
 
         /// <inheritdoc />
         public override bool CanInsert(IEntity toinsert)

@@ -7,6 +7,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Containers
@@ -14,14 +16,16 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
-    [RegisterComponent]
-    [ComponentReference(typeof(IContainerManager))]
+    // [RegisterComponent]
+    // [ComponentReference(typeof(IContainerManager))]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
-        
-        [ViewVariables] private Dictionary<string, IContainer> _containers = new();
+
+        [ViewVariables]
+        [DataField("containers")]
+        private Dictionary<string, IContainer> _containers = new();
 
         /// <inheritdoc />
         public sealed override string Name => "ContainerContainer";
@@ -81,7 +85,7 @@ namespace Robust.Shared.Containers
                     _containers.Remove(dead);
                 }
             }
-            
+
             // Add new containers and update existing contents.
 
             foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
@@ -134,13 +138,6 @@ namespace Robust.Shared.Containers
             newContainer.ID = id;
             newContainer.Manager = this;
             return newContainer;
-        }
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-            
-            serializer.DataField(ref _containers, "containers", new Dictionary<string, IContainer>());
         }
 
         /// <inheritdoc />
@@ -319,9 +316,13 @@ namespace Robust.Shared.Containers
             }
         }
 
-        private struct ContainerPrototypeData : IExposeData
+        [DataDefinition]
+        private struct ContainerPrototypeData : IPopulateDefaultValues
         {
+            [DataField("entities")]
             public List<EntityUid> Entities;
+
+            [DataField("type")]
             public string? Type;
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
@@ -330,10 +331,9 @@ namespace Robust.Shared.Containers
                 Type = type;
             }
 
-            void IExposeData.ExposeData(ObjectSerializer serializer)
+            public void PopulateDefaultValues()
             {
-                serializer.DataField(ref Entities, "entities", new List<EntityUid>());
-                serializer.DataField(ref Type, "type", null);
+                Entities = new List<EntityUid>();
             }
         }
 

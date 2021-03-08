@@ -2,11 +2,14 @@ using System.IO;
 using Moq;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
 {
@@ -38,7 +41,11 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 
             var mock = new Mock<IEntitySystemManager>();
             var system = new SharedTransformSystem();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
             mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(system);
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
@@ -53,6 +60,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             MapManager.Initialize();
             MapManager.Startup();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();

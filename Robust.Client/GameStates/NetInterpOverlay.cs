@@ -31,7 +31,7 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>(true))
+            foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;
@@ -44,7 +44,7 @@ namespace Robust.Client.GameStates
                 if(transform.LerpDestination == null)
                     continue;
 
-                var aabb = ((IPhysBody)boundingBox).AABB;
+                var aabb = boundingBox.GetWorldAABB();
 
                 // if not on screen, or too small, continue
                 if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())

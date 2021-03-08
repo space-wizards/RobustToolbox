@@ -9,9 +9,11 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Random;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared
@@ -20,6 +22,7 @@ namespace Robust.Shared
     {
         public static void RegisterIoC()
         {
+            IoCManager.Register<ISerializationManager, SerializationManager>();
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
@@ -39,7 +42,6 @@ namespace Robust.Shared
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
-            IoCManager.Register<ICustomFormatManager, CustomFormatManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
@@ -47,6 +49,7 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
+            IoCManager.Register<ICollisionManager, CollisionManager>();
         }
     }
 }

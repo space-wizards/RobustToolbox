@@ -372,8 +372,9 @@ namespace Robust.Shared
 
         // - Maximums
         // Squared
+        // 35 m/s, AKA half a tile per frame allowed. Divide this by frametime to get units per second.
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 4.0f);
+            CVarDef.Create("physics.maxlinvelocity", 0.56f);
 
         // Squared
         public static readonly CVarDef<float> MaxAngVelocity =

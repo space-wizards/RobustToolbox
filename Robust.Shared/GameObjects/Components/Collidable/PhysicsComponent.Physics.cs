@@ -102,6 +102,7 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType == value)
                     return;
 
+                var oldAnchored = _bodyType == BodyType.Static;
                 _bodyType = value;
 
                 ResetMassData();
@@ -120,8 +121,7 @@ namespace Robust.Shared.GameObjects
 
                 RegenerateContacts();
 
-                var oldAnchored = _bodyType == BodyType.Static;
-                var anchored = _bodyType == BodyType.Static;
+                var anchored = value == BodyType.Static;
 
                 if (oldAnchored != anchored)
                 {

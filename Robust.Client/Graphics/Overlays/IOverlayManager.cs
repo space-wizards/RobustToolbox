@@ -16,8 +16,8 @@ namespace Robust.Client.Graphics
         bool RemoveOverlay(Type overlayClass);
         bool RemoveOverlay<T>() where T : Overlay;
 
-        bool TryGetOverlay(Type overlayClass, out Overlay overlay);
-        bool TryGetOverlay<T>(out T overlay) where T : Overlay;
+        bool TryGetOverlay(Type overlayClass, out Overlay? overlay);
+        bool TryGetOverlay<T>(out T? overlay) where T : Overlay;
 
         Overlay GetOverlay(Type overlayClass);
         T GetOverlay<T>() where T : Overlay;

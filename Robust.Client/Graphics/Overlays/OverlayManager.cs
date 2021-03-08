@@ -49,8 +49,7 @@ namespace Robust.Client.Graphics
 
 
 
-
-        public bool TryGetOverlay(Type overlayClass, out Overlay overlay)
+        public bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay)
         {
             overlay = null;
             if (!overlayClass.IsSubclassOf(typeof(Overlay))){
@@ -60,9 +59,9 @@ namespace Robust.Client.Graphics
             return _overlays.TryGetValue(overlayClass, out overlay);
         }
 
-        public bool TryGetOverlay<T>(out T overlay) where T : Overlay {
+        public bool TryGetOverlay<T>([NotNullWhen(true)] out T? overlay) where T : Overlay {
             overlay = null;
-            if(_overlays.TryGetValue(typeof(T), out Overlay toReturn)){
+            if(_overlays.TryGetValue(typeof(T), out Overlay? toReturn)){
                 overlay = (T)toReturn;
                 return true;
             }
@@ -73,17 +72,11 @@ namespace Robust.Client.Graphics
 
 
         public Overlay GetOverlay(Type overlayClass) {
-            if (!overlayClass.IsSubclassOf(typeof(Overlay))) {
-                Logger.Error("GetOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
-                return null;
-            }
-            _overlays.TryGetValue(overlayClass, out Overlay toReturn);
-            return toReturn;
+            return _overlays[overlayClass];
         }
 
         public T GetOverlay<T>() where T : Overlay {
-            _overlays.TryGetValue(typeof(T), out Overlay toReturn);
-            return (T)toReturn;
+            return (T)_overlays[typeof(T)];
         }
 
 

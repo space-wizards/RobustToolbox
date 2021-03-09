@@ -29,7 +29,7 @@ namespace Robust.Client.GameStates
 
         /// <inheritdoc />
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
-        
+
         private readonly Font _font;
         private readonly int _lineHeight;
         private readonly List<NetEntity> _netEnts = new();
@@ -43,12 +43,12 @@ namespace Robust.Client.GameStates
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
-        
+
         private void HandleGameStateApplied(GameStateAppliedArgs args)
         {
             if(_gameTiming.InPrediction) // we only care about real server states.
                 return;
-            
+
             // Shift traffic history down one
             for (var i = 0; i < _netEnts.Count; i++)
             {
@@ -75,7 +75,7 @@ namespace Robust.Client.GameStates
 
                         if (netEnt.Id != entityState.Uid)
                             continue;
-                    
+
                         //TODO: calculate size of state and record it here.
                         netEnt.Traffic[^1] = 1;
                         netEnt.LastUpdate = gameState.ToSequence;
@@ -103,7 +103,7 @@ namespace Robust.Client.GameStates
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
-                
+
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
@@ -124,7 +124,7 @@ namespace Robust.Client.GameStates
                 _netEnts[i] = netEnt; // copy struct back
             }
         }
-        
+
         protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             if (!_netManager.IsConnected)
@@ -132,7 +132,7 @@ namespace Robust.Client.GameStates
 
             // remember, 0,0 is top left of ui with +X right and +Y down
             var screenHandle = (DrawingHandleScreen)handle;
-            
+
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
@@ -190,9 +190,9 @@ namespace Robust.Client.GameStates
         {
             var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
-            foreach (var chr in str)
+            foreach (var rune in str.EnumerateRunes())
             {
-                var advance = font.DrawChar(handle, chr, baseLine, 1, textColor);
+                var advance = font.DrawChar(handle, rune, baseLine, 1, textColor);
                 baseLine += new Vector2(advance, 0);
             }
         }

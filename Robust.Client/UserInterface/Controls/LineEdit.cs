@@ -555,9 +555,9 @@ namespace Robust.Client.UserInterface.Controls
             var index = 0;
             var chrPosX = contentBox.Left - _drawOffset;
             var lastChrPostX = contentBox.Left - _drawOffset;
-            foreach (var chr in _text)
+            foreach (var rune in _text.EnumerateRunes())
             {
-                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                 {
                     index += 1;
                     continue;
@@ -767,7 +767,7 @@ namespace Robust.Client.UserInterface.Controls
                 var posX = 0;
                 var actualCursorPosition = 0;
                 var actualSelectionStartPosition = 0;
-                foreach (var chr in renderedText)
+                foreach (var chr in renderedText.EnumerateRunes())
                 {
                     if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                     {
@@ -816,9 +816,9 @@ namespace Robust.Client.UserInterface.Controls
                 var baseLine = (-drawOffset, offsetY + font.GetAscent(UIScale)) +
                                contentBox.TopLeft;
 
-                foreach (var chr in renderedText)
+                foreach (var rune in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                     {
                         continue;
                     }
@@ -832,7 +832,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Make sure we're not off the left edge of the box.
                     if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
                     {
-                        font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                        font.DrawChar(handle, rune, baseLine, UIScale, renderedTextColor);
                     }
 
                     baseLine += (metrics.Advance, 0);

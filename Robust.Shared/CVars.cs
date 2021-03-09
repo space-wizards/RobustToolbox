@@ -93,6 +93,10 @@ namespace Robust.Shared
         public static readonly CVarDef<int> SysWinTickPeriod =
             CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
 
+        // On non-FULL_RELEASE builds, use ProfileOptimization/tiered JIT to speed up game startup.
+        public static readonly CVarDef<bool> SysProfileOpt =
+            CVarDef.Create("sys.profile_opt", true);
+
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
         public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);

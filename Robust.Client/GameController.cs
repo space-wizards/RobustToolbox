@@ -119,6 +119,8 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
+            ProfileOptSetup.Setup(_configurationManager);
+
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
             ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);

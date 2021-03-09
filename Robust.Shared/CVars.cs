@@ -386,5 +386,12 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
+
+        /*
+         * RES
+         */
+
+        public static readonly CVarDef<bool> ResCheckPathCasing =
+            CVarDef.Create("res.checkpathcasing", false);
     }
 }

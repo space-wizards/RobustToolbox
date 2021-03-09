@@ -178,10 +178,12 @@ namespace Robust.Server.GameObjects
         public List<EntityState>? GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
         {
             // if you want to research yourself I think it's normally called interest management
-            // Future optimisations:
-            // Given most clients will just need the latest tick updated we could pre-calculate the update entities in every chunk (in parallel once)
-            // Then, we work out the relevant chunks for each player
-            // We then share the same message for all players that have the same chunk updates (probably just do a hashset union or something)
+            // Future optimisation pipeline idea:
+            // Given most clients will just need the latest tick updated we could :
+            // 1. pre-calculate the updated entities in every chunk and store it in a List.
+            // (we can probably do this when doing HandleDirtyEvent)
+            // 2. Work out the relevant chunks for each player in parallel all at once (i.e. GetChunksInRange)
+            // 3. Sort players so that any with the same chunks to update get the same message object (should have big savings for busy areas like the bar)
             // This would essentially be the "fast path" and if needed we fallback to the below if they need more data.
 
             // Old PVS used to just get all for no session...

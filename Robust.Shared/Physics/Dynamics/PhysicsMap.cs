@@ -342,6 +342,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 bool collideConnected = joint.CollideConnected;
 
+                // TODO: See above how much I hate joints rn
+                if (!Joints.Contains(joint)) continue;
                 // Remove from the world list.
                 Joints.Remove(joint);
 

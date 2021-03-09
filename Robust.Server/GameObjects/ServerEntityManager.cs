@@ -17,8 +17,11 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Shared.GameObjects.TransformComponent;
 
 namespace Robust.Server.GameObjects
 {
@@ -367,9 +370,9 @@ namespace Robust.Server.GameObjects
         /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
-        /// <param name="newEntity"></param>
+        /// <param name="player">The player to generate this state for.</param>
         /// <returns>New entity State for the given entity.</returns>
-        public EntityState GetEntityState(IPlayerSession? session, IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity=false)
+        private static EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, IPlayerSession player)
         {
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
@@ -389,12 +392,8 @@ namespace Robust.Server.GameObjects
                 // to what the component state / ComponentChanged would send.
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
-                if (comp.NetSyncEnabled &&
-                    comp.LastModifiedTick != GameTick.Zero &&
-                    comp.LastModifiedTick >= lastTick)
-                {
-                    compStates.Add(comp.GetComponentState());
-                }
+                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                    compStates.Add(comp.GetComponentState(player));
 
                 if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= lastTick && !comp.Deleted)
                 {

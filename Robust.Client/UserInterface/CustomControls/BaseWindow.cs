@@ -1,8 +1,10 @@
 ﻿using System;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -125,34 +127,39 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                var top = Rect.Top;
-                var bottom = Rect.Bottom;
-                var left = Rect.Left;
-                var right = Rect.Right;
-                var (minSizeX, minSizeY) = CombinedMinimumSize;
+                var (left, top) = Position;
+                var (right, bottom) = Position + SetSize;
+
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    var maxY = bottom - minSizeY;
-                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, maxY);
+                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, bottom);
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top + minSizeY);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top);
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    var maxX = right - minSizeX;
-                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, maxX);
+                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, right);
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left + minSizeX);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left);
                 }
 
                 var rect = new UIBox2(left, top, right, bottom);
                 LayoutContainer.SetPosition(this, rect.TopLeft);
-                LayoutContainer.SetSize(this, rect.Size);
+                SetSize = rect.Size;
+
+                /*
+                var timing = IoCManager.Resolve<IGameTiming>();
+
+                var l = GetValue<float>(LayoutContainer.MarginLeftProperty);
+                var t = GetValue<float>(LayoutContainer.MarginTopProperty);
+
+                Logger.Debug($"{timing.CurFrame}: {rect.TopLeft}/({l}, {t}), {rect.Size}/{SetSize}");
+                */
             }
         }
 
@@ -215,12 +222,13 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (_firstTimeOpened)
             {
-                LayoutContainer.SetSize(this, CombinedMinimumSize);
+                Measure(Vector2.Infinity);
+                SetSize = DesiredSize;
                 Open();
                 // An explaination: The BadOpenGLVersionWindow was showing up off the top-left corner of the screen.
                 // Basically, if OpenCentered happens super-early, RootControl doesn't get time to layout children.
                 // But we know that this is always going to be one of the roots anyway for now.
-                LayoutContainer.SetPosition(this, (UserInterfaceManager.RootControl.Size - Size) / 2);
+                LayoutContainer.SetPosition(this, (UserInterfaceManager.RootControl.Size - SetSize) / 2);
                 _firstTimeOpened = false;
             }
             else
@@ -233,9 +241,10 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (_firstTimeOpened)
             {
-                LayoutContainer.SetSize(this, CombinedMinimumSize);
+                Measure(Vector2.Infinity);
+                SetSize = DesiredSize;
                 Open();
-                LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - Size.Y) / 2));
+                LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - DesiredSize.Y) / 2));
                 _firstTimeOpened = false;
             }
             else

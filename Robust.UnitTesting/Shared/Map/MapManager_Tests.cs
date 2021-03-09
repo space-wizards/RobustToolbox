@@ -1,11 +1,12 @@
-﻿using NUnit.Framework;
+﻿using Moq;
+using NUnit.Framework;
+using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -13,6 +14,18 @@ namespace Robust.UnitTesting.Shared.Map
     class MapManager_Tests : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Server;
+
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+        }
 
         [OneTimeSetUp]
         public void OneTimeSetup()

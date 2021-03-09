@@ -2,10 +2,7 @@
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -24,6 +21,7 @@ namespace Robust.Client.Graphics.Clyde
         public IRenderWindow MainWindowRenderTarget { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
         public Vector2 DefaultWindowScale => (1, 1);
+        public override bool IsFocused => true;
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -77,6 +75,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized
+        {
+            add { }
+            remove { }
+        }
+
+        public override event Action<WindowFocusedEventArgs> OnWindowFocused
         {
             add { }
             remove { }
@@ -457,11 +461,6 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Render()
             {
-            }
-
-            public Vector2 WorldToLocal(Vector2 point)
-            {
-                return point;
             }
         }
     }

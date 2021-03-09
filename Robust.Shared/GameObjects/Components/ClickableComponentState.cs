@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
     class ClickableComponentState : ComponentState

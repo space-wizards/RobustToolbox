@@ -1,29 +1,42 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using Robust.Client.Console;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Console;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
+    public interface IDebugConsoleView
+    {
+        /// <summary>
+        /// Write a line with a specific color to the console window.
+        /// </summary>
+        void AddLine(string text, Color color);
+
+        void AddLine(string text);
+
+        void AddFormattedLine(FormattedMessage message);
+
+        void Clear();
+    }
+
     // Quick note on how thread safety works in here:
     // Messages from other threads are not actually immediately drawn. They're stored in a queue.
     // Every frame OR the next time a message on the main thread comes in, this queue is drained.
     // This keeps thread safety while still making it so messages are ordered how they come in.
     // And also if Update() stops firing due to an exception loop the console will still work.
     // (At least from the main thread, which is what's throwing the exceptions..)
-    public class DebugConsole : Control, IDebugConsole
+    public class DebugConsole : Control, IDebugConsoleView
     {
-        private readonly IClientConsole _console;
+        private readonly IClientConsoleHost _consoleHost;
         private readonly IResourceManager _resourceManager;
 
         private static readonly ResourcePath HistoryPath = new("/debug_console_history.json");
@@ -32,7 +45,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly OutputPanel Output;
         private readonly Control MainControl;
 
-        public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
 
         private bool _targetVisible;
@@ -41,9 +53,9 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly List<string> searchResults;
         private int searchIndex = 0;
 
-        public DebugConsole(IClientConsole console, IResourceManager resMan)
+        public DebugConsole(IClientConsoleHost consoleHost, IResourceManager resMan)
         {
-            _console = console;
+            _consoleHost = consoleHost;
             _resourceManager = resMan;
 
             Visible = false;
@@ -65,7 +77,7 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (Output = new OutputPanel
                             {
-                                SizeFlagsVertical = SizeFlags.FillExpand,
+                                VerticalExpand = true,
                                 StyleBoxOverride = styleBox
                             }),
                             (CommandBar = new HistoryLineEdit {PlaceHolder = "Command Here"})
@@ -82,13 +94,18 @@ namespace Robust.Client.UserInterface.CustomControls
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnHistoryChanged += OnHistoryChanged;
 
-            _console.AddString += (_, args) => AddLine(args.Text, args.Color);
-            _console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
-            _console.ClearText += (_, args) => Clear();
+            _consoleHost.AddString += (_, args) => AddLine(args.Text, DetermineColor(args.Local, args.Error));
+            _consoleHost.AddFormatted += (_, args) => AddFormattedLine(args.Message);
+            _consoleHost.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
 
             searchResults = new List<string>();
+        }
+
+        private Color DetermineColor(bool local, bool error)
+        {
+            return Color.White;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -141,9 +158,10 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (!string.IsNullOrWhiteSpace(args.Text))
             {
-                _console.ProcessCommand(args.Text);
+                _consoleHost.ExecuteCommand(args.Text);
                 CommandBar.Clear();
             }
+
             commandChanged = true;
         }
 
@@ -211,7 +229,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 NextCommand();
                 args.Handle();
             }
-            else if(args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
+            else if (args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
             {
                 PrevCommand();
                 args.Handle();
@@ -229,7 +247,7 @@ namespace Robust.Client.UserInterface.CustomControls
             searchResults.Clear();
             searchIndex = 0;
             commandChanged = false;
-            foreach (var cmd in Commands)
+            foreach (var cmd in _consoleHost.RegisteredCommands)
             {
                 if (cmd.Key.StartsWith(CommandBar.Text))
                 {
@@ -264,7 +282,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 if (searchResults.Count == 0)
                     return;
 
-searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
+                searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
                 SetInput(searchResults[searchIndex]);
                 return;
             }

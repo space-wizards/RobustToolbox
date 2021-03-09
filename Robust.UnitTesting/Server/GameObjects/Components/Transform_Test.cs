@@ -1,16 +1,17 @@
 ﻿using System.IO;
 using System.Reflection;
+using Moq;
 using NUnit.Framework;
-using Robust.Server.Interfaces.GameObjects;
+using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
@@ -46,6 +47,18 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
         private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
 
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+        }
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -59,6 +72,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             MapManager.CreateMap();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();

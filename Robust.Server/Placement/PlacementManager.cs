@@ -1,18 +1,15 @@
-﻿using System;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Server.Interfaces.Placement;
-using Robust.Server.Interfaces.Player;
-using Robust.Shared.Interfaces.GameObjects;
+using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.GameObjects;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.Placement
@@ -61,6 +58,9 @@ namespace Robust.Server.Placement
                     break;
                 case PlacementManagerMessage.RequestEntRemove:
                     HandleEntRemoveReq(msg.EntityUid);
+                    break;
+                case PlacementManagerMessage.RequestRectRemove:
+                    HandleRectRemoveReq(msg);
                     break;
             }
         }
@@ -203,6 +203,19 @@ namespace Robust.Server.Placement
             //TODO: Some form of admin check
             if (_entityManager.TryGetEntity(entityUid, out var entity))
                 _entityManager.DeleteEntity(entity);
+        }
+
+        private void HandleRectRemoveReq(MsgPlacement msg)
+        {
+            EntityCoordinates start = msg.EntityCoordinates;
+            Vector2 rectSize = msg.RectSize;
+            foreach (IEntity entity in _entityManager.GetEntitiesIntersecting(start.GetMapId(_entityManager),
+                new Box2(start.Position, start.Position + rectSize)))
+            {
+                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
+                    continue;
+                entity.Delete();
+            }
         }
 
         /// <summary>

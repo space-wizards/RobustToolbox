@@ -8,8 +8,7 @@ using System.Threading;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Localization;
@@ -56,6 +55,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLFWCallbacks.WindowSizeCallback _windowSizeCallback = default!;
         private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback = default!;
         private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback = default!;
+        private GLFWCallbacks.WindowFocusCallback _windowFocusCallback = default!;
 
         private bool _glfwInitialized;
 
@@ -63,6 +63,7 @@ namespace Robust.Client.Graphics.Clyde
         private Window* _glfwWindow;
 
         private Vector2i _framebufferSize;
+        private bool _isFocused;
         private Vector2i _windowSize;
         private Vector2i _prevWindowSize;
         private Vector2i _prevWindowPos;
@@ -75,6 +76,7 @@ namespace Robust.Client.Graphics.Clyde
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
         public override Vector2i ScreenSize => _framebufferSize;
+        public override bool IsFocused => _isFocused;
         public Vector2 DefaultWindowScale => _windowScale;
         public Vector2 MouseScreenPosition => _lastMousePos;
 
@@ -232,6 +234,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
             GLFW.SetWindowContentScaleCallback(_glfwWindow, _windowContentScaleCallback);
             GLFW.SetWindowIconifyCallback(_glfwWindow, _windowIconifyCallback);
+            GLFW.SetWindowFocusCallback(_glfwWindow, _windowFocusCallback);
 
             GLFW.MakeContextCurrent(_glfwWindow);
 
@@ -511,6 +514,11 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.Viewport(0, 0, fbW, fbH);
                 CheckGlError();
+                if (fbW != 0 && fbH != 0)
+                {
+                    _mainViewport.Dispose();
+                    CreateMainViewport();
+                }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
             }
@@ -544,6 +552,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private void OnGlfwWindowFocus(Window* window, bool focused)
+        {
+            try
+            {
+                _isFocused = focused;
+                OnWindowFocused?.Invoke(new WindowFocusedEventArgs(focused));
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
+        }
+
         private void StoreCallbacks()
         {
             _errorCallback = OnGlfwError;
@@ -556,6 +577,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowSizeCallback = OnGlfwWindowSize;
             _windowContentScaleCallback = OnGlfwWindownContentScale;
             _windowIconifyCallback = OnGlfwWindowIconify;
+            _windowFocusCallback = OnGlfwWindowFocus;
         }
 
         public override void SetWindowTitle(string title)

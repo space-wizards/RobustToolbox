@@ -2,15 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Threading.Tasks;
-using System.Timers;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
 using Robust.Shared.Input;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Timer = Robust.Shared.Timers.Timer;
+using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -48,9 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Name = "_v_scroll",
 
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
-
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
@@ -408,7 +401,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var size = Vector2.Zero;
             if (ActualBackground != null)
@@ -480,6 +473,8 @@ namespace Robust.Client.UserInterface.Controls
 
             _scrollBar.ValueTarget -= _getScrollSpeed() * args.Delta.Y;
             _isAtBottom = _scrollBar.IsAtEnd;
+
+            args.Handle();
         }
 
         [Pure]

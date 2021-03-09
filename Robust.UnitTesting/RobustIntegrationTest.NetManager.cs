@@ -4,8 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
@@ -14,6 +15,7 @@ namespace Robust.UnitTesting
     {
         internal sealed class IntegrationNetManager : IClientNetManager, IServerNetManager
         {
+            [Dependency] private readonly IGameTiming _gameTiming = default!;
             public bool IsServer { get; private set; }
             public bool IsClient => !IsServer;
             public bool IsRunning { get; private set; }
@@ -117,9 +119,15 @@ namespace Robust.UnitTesting
                                     return;
                                 }
 
-                                writer.TryWrite(new ConfirmConnectMessage(uid, sessionId, userName));
-                                var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId,
-                                    connect.Uid, userName);
+                                var userData = new NetUserData(sessionId, userName);
+
+                                writer.TryWrite(new ConfirmConnectMessage(uid, userData));
+                                var channel = new IntegrationNetChannel(
+                                    this,
+                                    connect.ChannelWriter,
+                                    uid,
+                                    userData,
+                                    connect.Uid);
                                 _channels.Add(uid, channel);
                                 Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
@@ -191,8 +199,12 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsClient);
 
-                            var channel = new IntegrationNetChannel(this, NextConnectChannel!, _clientConnectingUid,
-                                confirm.UserId, confirm.AssignedUid, confirm.AssignedName);
+                            var channel = new IntegrationNetChannel(
+                                this,
+                                NextConnectChannel!,
+                                _clientConnectingUid,
+                                confirm.UserData,
+                                confirm.AssignedUid);
 
                             _channels.Add(channel.ConnectionUid, channel);
 
@@ -217,6 +229,7 @@ namespace Robust.UnitTesting
                 {
                     await conn(args);
                 }
+
                 return args;
             }
 
@@ -365,29 +378,38 @@ namespace Robust.UnitTesting
                 long INetChannel.ConnectionId => ConnectionUid;
 
                 public bool IsConnected { get; set; }
+                public NetUserData UserData { get; }
 
                 // TODO: Should this port value make sense?
                 public IPEndPoint RemoteEndPoint { get; } = new(IPAddress.Loopback, 1212);
-                public NetUserId UserId { get; }
-                public string UserName { get; }
+                public NetUserId UserId => UserData.UserId;
+                public string UserName => UserData.UserName;
                 public LoginType AuthType => LoginType.GuestAssigned;
+                public TimeSpan RemoteTimeOffset => TimeSpan.Zero; // TODO: Fix this
+                public TimeSpan RemoteTime => _owner._gameTiming.RealTime + RemoteTimeOffset;
                 public short Ping => default;
 
-                public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,
-                    NetUserId userId, string userName)
+                public IntegrationNetChannel(
+                    IntegrationNetManager owner,
+                    ChannelWriter<object> otherChannel,
+                    int uid,
+                    NetUserData userData)
                 {
                     _owner = owner;
                     ConnectionUid = uid;
-                    UserId = userId;
-                    UserName = userName;
+                    UserData = userData;
                     OtherChannel = otherChannel;
                     IsConnected = true;
                 }
 
-                public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,
-                    NetUserId userId, int remoteUid, string userName) : this(owner, otherChannel, uid, userId, userName)
+                public IntegrationNetChannel(
+                    IntegrationNetManager owner,
+                    ChannelWriter<object> otherChannel,
+                    int uid,
+                    NetUserData userData,
+                    int remoteUid) : this(owner, otherChannel, uid, userData)
                 {
-                    RemoteUid = uid;
+                    RemoteUid = remoteUid;
                 }
 
                 public T CreateNetMessage<T>() where T : NetMessage
@@ -422,16 +444,14 @@ namespace Robust.UnitTesting
 
             private sealed class ConfirmConnectMessage
             {
-                public ConfirmConnectMessage(int assignedUid, NetUserId userId, string assignedName)
+                public ConfirmConnectMessage(int assignedUid, NetUserData userData)
                 {
                     AssignedUid = assignedUid;
-                    UserId = userId;
-                    AssignedName = assignedName;
+                    UserData = userData;
                 }
 
                 public int AssignedUid { get; }
-                public NetUserId UserId { get; }
-                public string AssignedName { get; }
+                public NetUserData UserData { get; }
             }
 
             private sealed class DeniedConnectMessage

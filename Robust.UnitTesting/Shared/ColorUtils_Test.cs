@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.Maths;
 using NUnit.Framework;
 
 namespace Robust.UnitTesting.Shared

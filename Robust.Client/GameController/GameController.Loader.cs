@@ -1,4 +1,4 @@
-﻿using Robust.Client;
+using Robust.Client;
 using Robust.LoaderApi;
 
 [assembly: LoaderEntryPoint(typeof(GameController.LoaderEntryPoint))]
@@ -11,7 +11,7 @@ namespace Robust.Client
         {
             public void Main(IMainArgs args)
             {
-                GameController.Start(args.Args, contentStart: false, args);
+                Start(args.Args, contentStart: false, args);
             }
         }
     }

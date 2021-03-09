@@ -1,35 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
+using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.State;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
+using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
+using Robust.Shared.Configuration;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
+    internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -39,9 +35,9 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        public UITheme ThemeDefaults { get; private set; } = default!;
+        [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
-        public Stylesheet? Stylesheet
+        [ViewVariables] public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
@@ -55,27 +51,28 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public Control? KeyboardFocused { get; private set; }
+        [ViewVariables] public Control? KeyboardFocused { get; private set; }
 
-        public Control? ControlFocused { get; private set; }
+        [ViewVariables] public Control? ControlFocused { get; private set; }
 
-        public ViewportContainer MainViewport { get; private set; } = default!;
-        public LayoutContainer StateRoot { get; private set; } = default!;
-        public PopupContainer ModalRoot { get; private set; } = default!;
-        public Control? CurrentlyHovered { get; private set; } = default!;
-        public float UIScale { get; private set; } = 1;
-        public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
-        public Control RootControl { get; private set; } = default!;
-        public LayoutContainer WindowRoot { get; private set; } = default!;
-        public LayoutContainer PopupRoot { get; private set; } = default!;
-        public DebugConsole DebugConsole { get; private set; } = default!;
-        public IDebugMonitors DebugMonitors => _debugMonitors;
+        [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
+        [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
+        [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
+        [ViewVariables] public float UIScale { get; private set; } = 1;
+        [ViewVariables] public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
+        [ViewVariables] public Control RootControl { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
+        [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
+        [ViewVariables] public DebugConsole DebugConsole { get; private set; } = default!;
+        [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
         private readonly List<Control> _modalStack = new();
 
         private bool _rendering = true;
+
         private float _tooltipTimer;
+
         // set to null when not counting down
         private float? _tooltipDelay;
         private Tooltip _tooltip = default!;
@@ -84,7 +81,8 @@ namespace Robust.Client.UserInterface
         private const float TooltipDelay = 1;
 
         private readonly Queue<Control> _styleUpdateQueue = new();
-        private readonly Queue<Control> _layoutUpdateQueue = new();
+        private readonly Queue<Control> _measureUpdateQueue = new();
+        private readonly Queue<Control> _arrangeUpdateQueue = new();
         private Stylesheet? _stylesheet;
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
@@ -98,7 +96,7 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_console, _resourceManager);
+            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
@@ -126,17 +124,15 @@ namespace Robust.Client.UserInterface
             {
                 Name = "UIRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,
+                HorizontalAlignment = Control.HAlignment.Stretch,
+                VerticalAlignment = Control.VAlignment.Stretch,
                 IsInsideTree = true
             };
-            RootControl.Size = _displayManager.ScreenSize / UIScale;
-            _displayManager.OnWindowResized += args => _updateRootSize();
 
-            MainViewport = new MainViewportContainer(_eyeManager)
-            {
-                Name = "MainViewport",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(MainViewport);
+            RootControl.InvalidateMeasure();
+            QueueMeasureUpdate(RootControl);
+
+            _displayManager.OnWindowResized += args => _updateRootSize();
 
             StateRoot = new LayoutContainer
             {
@@ -178,11 +174,6 @@ namespace Robust.Client.UserInterface
             _initializeCommon();
         }
 
-        public void Dispose()
-        {
-            RootControl?.Dispose();
-        }
-
         public void Update(FrameEventArgs args)
         {
             RootControl.DoUpdate(args);
@@ -205,16 +196,28 @@ namespace Robust.Client.UserInterface
                 control.DoStyleUpdate();
             }
 
-            while (_layoutUpdateQueue.Count != 0)
+            while (_measureUpdateQueue.Count != 0)
             {
-                var control = _layoutUpdateQueue.Dequeue();
+                var control = _measureUpdateQueue.Dequeue();
 
                 if (control.Disposed)
                 {
                     continue;
                 }
 
-                control.DoLayoutUpdate();
+                RunMeasure(control);
+            }
+
+            while (_arrangeUpdateQueue.Count != 0)
+            {
+                var control = _arrangeUpdateQueue.Dequeue();
+
+                if (control.Disposed)
+                {
+                    continue;
+                }
+
+                RunArrange(control);
             }
 
             // count down tooltip delay if we're not showing one yet and
@@ -232,6 +235,46 @@ namespace Robust.Client.UserInterface
             {
                 _needUpdateActiveCursor = false;
                 UpdateActiveCursor();
+            }
+        }
+
+        private void RunMeasure(Control control)
+        {
+            if (control.IsMeasureValid || !control.IsInsideTree)
+                return;
+
+            if (control.Parent != null)
+            {
+                RunMeasure(control.Parent);
+            }
+
+            if (control == RootControl)
+            {
+                control.Measure(_displayManager.ScreenSize / UIScale);
+            }
+            else if (control.PreviousMeasure.HasValue)
+            {
+                control.Measure(control.PreviousMeasure.Value);
+            }
+        }
+
+        private void RunArrange(Control control)
+        {
+            if (control.IsArrangeValid || !control.IsInsideTree)
+                return;
+
+            if (control.Parent != null)
+            {
+                RunArrange(control.Parent);
+            }
+
+            if (control == RootControl)
+            {
+                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, _displayManager.ScreenSize / UIScale));
+            }
+            else if (control.PreviousArrange.HasValue)
+            {
+                control.Arrange(control.PreviousArrange.Value);
             }
         }
 
@@ -267,6 +310,7 @@ namespace Robust.Client.UserInterface
             {
                 return false;
             }
+
             ControlFocused?.ControlFocusExited();
             ControlFocused = control;
 
@@ -454,6 +498,7 @@ namespace Robust.Client.UserInterface
         }
 
         public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+
         public Vector2 ScreenToUIPosition(Vector2 position)
         {
             return position / UIScale;
@@ -569,9 +614,15 @@ namespace Robust.Client.UserInterface
             _styleUpdateQueue.Enqueue(control);
         }
 
-        public void QueueLayoutUpdate(Control control)
+        public void QueueMeasureUpdate(Control control)
         {
-            _layoutUpdateQueue.Enqueue(control);
+            _measureUpdateQueue.Enqueue(control);
+            _arrangeUpdateQueue.Enqueue(control);
+        }
+
+        public void QueueArrangeUpdate(Control control)
+        {
+            _arrangeUpdateQueue.Enqueue(control);
         }
 
         public void CursorChanged(Control control)
@@ -724,6 +775,7 @@ namespace Robust.Client.UserInterface
                 PopupRoot.RemoveChild(_suppliedTooltip);
                 _suppliedTooltip = null;
             }
+
             CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
             showingTooltip = false;
@@ -773,7 +825,7 @@ namespace Robust.Client.UserInterface
                 // show simple tooltip if there is one
                 _tooltip.Visible = true;
                 _tooltip.Text = hovered.ToolTip;
-               Tooltips.PositionTooltip(_tooltip);
+                Tooltips.PositionTooltip(_tooltip);
             }
 
             hovered.PerformShowTooltip();
@@ -804,7 +856,7 @@ namespace Robust.Client.UserInterface
 
         private void _updateRootSize()
         {
-            RootControl.Size = _displayManager.ScreenSize / UIScale;
+            RootControl.InvalidateMeasure();
         }
 
         /// <summary>
@@ -826,6 +878,7 @@ namespace Robust.Client.UserInterface
             {
                 return true;
             }
+
             return false;
         }
     }

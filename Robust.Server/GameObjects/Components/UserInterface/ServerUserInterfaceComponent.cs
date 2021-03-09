@@ -1,21 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.EntitySystems;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Server.GameObjects.Components.UserInterface
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Contains a collection of entity-bound user interfaces that can be opened per client.
@@ -23,27 +20,24 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
-    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
+    public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
+
+        [DataField("interfaces", readOnly: true)]
+        private List<PrototypeData> _interfaceData = new();
 
         /// <summary>
         ///     Enumeration of all the interfaces this component provides.
         /// </summary>
         public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
 
-        public override void ExposeData(ObjectSerializer serializer)
+        void ISerializationHooks.AfterDeserialization()
         {
-            base.ExposeData(serializer);
+            _interfaces.Clear();
 
-            if (!serializer.Reading)
-            {
-                return;
-            }
-
-            var data = serializer.ReadDataFieldCached("interfaces", new List<PrototypeData>());
-            foreach (var prototypeData in data)
+            foreach (var prototypeData in _interfaceData)
             {
                 _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData.UiKey, this);
             }

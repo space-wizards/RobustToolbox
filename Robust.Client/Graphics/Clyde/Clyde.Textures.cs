@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -57,19 +56,19 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Disable sRGB so stuff doesn't get interpreter wrong.
                     actualParams.Srgb = false;
-                    var img = ApplyA8Swizzle((Image<A8>) (object) image);
+                    using var img = ApplyA8Swizzle((Image<A8>) (object) image);
                     return LoadTextureFromImage(img, name, loadParams);
                 }
 
                 if (pixelType == typeof(L8) && !actualParams.Srgb)
                 {
-                    var img = ApplyL8Swizzle((Image<L8>) (object) image);
+                    using var img = ApplyL8Swizzle((Image<L8>) (object) image);
                     return LoadTextureFromImage(img, name, loadParams);
                 }
             }
 
             // Flip image because OpenGL reads images upside down.
-            var copy = FlipClone(image);
+            using var copy = FlipClone(image);
 
             var texture = CreateBaseTextureInternal<T>(image.Width, image.Height, actualParams, name);
 

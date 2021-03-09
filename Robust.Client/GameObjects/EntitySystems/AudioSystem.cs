@@ -1,27 +1,23 @@
-﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : EntitySystem
+    public class AudioSystem : EntitySystem, IAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -29,17 +25,21 @@ namespace Robust.Client.GameObjects.EntitySystems
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly List<PlayingStream> _playingClydeStreams = new();
+        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
 
-        public int OcclusionCollisionMask;
+        private readonly List<PlayingStream> _playingClydeStreams = new();
 
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
             SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
             SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
             SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
+
+            SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
+            _broadPhaseSystem = Get<SharedBroadPhaseSystem>();
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
@@ -146,7 +146,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,
@@ -181,7 +181,6 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             stream.Source.Dispose();
             stream.Done = true;
-            stream.DoPlaybackDone();
         }
 
         /// <summary>
@@ -340,20 +339,30 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 Source.StopPlaying();
             }
-
-            public event Action? PlaybackDone;
-
-            public void DoPlaybackDone()
-            {
-                PlaybackDone?.Invoke();
-            }
         }
-    }
 
-    public interface IPlayingAudioStream
-    {
-        void Stop();
+        /// <inheritdoc />
+        public int DefaultSoundRange => 25;
 
-        event Action PlaybackDone;
+        /// <inheritdoc />
+        public int OcclusionCollisionMask { get; set; }
+
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
+        {
+            return Play(filename, audioParams);
+        }
+
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        {
+            return Play(filename, entity, audioParams);
+        }
+
+        /// <inheritdoc />
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        {
+            return Play(filename, coordinates, audioParams);
+        }
     }
 }

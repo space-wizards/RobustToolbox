@@ -43,23 +43,7 @@ namespace Robust.Shared.ContentPack
         /// <returns>Enumerable of all file paths in that directory and sub directories.</returns>
         public static IEnumerable<string> GetFiles(string path)
         {
-            var queue = new Queue<string>();
-            queue.Enqueue(path);
-
-            while (queue.Count > 0)
-            {
-                path = queue.Dequeue();
-
-                foreach (var subDir in Directory.GetDirectories(path))
-                {
-                    queue.Enqueue(subDir);
-                }
-
-                foreach (var file in Directory.GetFiles(path))
-                {
-                    yield return file;
-                }
-            }
+            return Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories);
         }
 
         public static bool IsFileInUse(IOException exception)

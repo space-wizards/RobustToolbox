@@ -1,24 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Map;
+using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Shared;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -46,8 +39,6 @@ namespace Robust.Client.Graphics.Clyde
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
 
-        private RenderTexture EntityPostRenderTarget = default!;
-
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
         private GLHandle BatchVAO;
@@ -55,6 +46,8 @@ namespace Robust.Client.Graphics.Clyde
         // VBO to draw a single quad.
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
+
+        private Viewport _mainViewport = default!;
 
         private bool _drawingSplash = true;
 
@@ -93,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
-            
+
             _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
@@ -156,6 +149,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {
@@ -319,9 +314,23 @@ namespace Robust.Client.Graphics.Clyde
             ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: nameof(EntityPostRenderTarget));
+            CreateMainViewport();
+
+            screenBufferHandle = new GLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+            ApplySampleParameters(TextureSampleParameters.Default);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _framebufferSize, true, null, TexturePixelType.Rgba32);
+        }
+
+        private void CreateMainViewport()
+        {
+            var (w, h) = _framebufferSize;
+
+            // Ensure viewport size is always even to avoid artifacts.
+            if (w % 2 == 1) w += 1;
+            if (h % 2 == 1) h += 1;
+
+            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         [Conditional("DEBUG")]

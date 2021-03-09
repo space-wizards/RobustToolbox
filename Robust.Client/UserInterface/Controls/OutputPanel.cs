@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -33,8 +31,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar = new VScrollBar
             {
                 Name = "_v_scroll",
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
@@ -46,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _styleBoxOverride = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
                 _invalidateEntries();
             }
         }
@@ -170,7 +167,7 @@ namespace Robust.Client.UserInterface.Controls
             _invalidateEntries();
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             return _getStyleBox()?.MinimumSize ?? Vector2.Zero;
         }

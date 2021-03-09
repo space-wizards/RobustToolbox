@@ -1,13 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Network;
+using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -20,11 +17,11 @@ namespace Robust.Shared.GameObjects
         #region Members
 
         /// <inheritdoc />
-        public IEntityManager EntityManager { get; private set; } = default!;
+        public IEntityManager EntityManager { get; }
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityUid Uid { get; private set; }
+        public EntityUid Uid { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -71,7 +68,19 @@ namespace Robust.Shared.GameObjects
         public bool Deleted { get; private set; }
 
         [ViewVariables]
-        public bool Paused { get; set; }
+        public bool Paused
+        {
+            get => _paused;
+            set
+            {
+                if (_paused == value || value && HasComponent<IgnorePauseComponent>())
+                    return;
+
+                _paused = value;
+            }
+        }
+
+        private bool _paused;
 
         private ITransformComponent? _transform;
 
@@ -91,47 +100,16 @@ namespace Robust.Shared.GameObjects
 
         #region Initialization
 
-        /// <summary>
-        ///     Sets fundamental managers after the entity has been created.
-        /// </summary>
-        /// <remarks>
-        ///     This is a separate method because C# makes constructors painful.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has initialized managers.
-        /// </exception>
-        public void SetManagers(IEntityManager entityManager)
+        public Entity(IEntityManager entityManager, EntityUid uid)
         {
-            if (EntityManager != null)
-            {
-                throw new InvalidOperationException("Entity already has initialized managers.");
-            }
-
             EntityManager = entityManager;
+            Uid = uid;
         }
 
         /// <inheritdoc />
         public bool IsValid()
         {
             return !Deleted;
-        }
-
-        /// <summary>
-        ///     Initialize the entity's UID. This can only be called once.
-        /// </summary>
-        /// <param name="uid">The new UID.</param>
-        /// <exception cref="InvalidOperationException">
-        ///     Thrown if the method is called and the entity already has a UID.
-        /// </exception>
-        public void SetUid(EntityUid uid)
-        {
-            if (!uid.IsValid())
-                throw new ArgumentException("Uid is not valid.", nameof(uid));
-
-            if (Uid.IsValid())
-                throw new InvalidOperationException("Entity already has a UID.");
-
-            Uid = uid;
         }
 
         /// <summary>
@@ -145,7 +123,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -184,7 +162,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 

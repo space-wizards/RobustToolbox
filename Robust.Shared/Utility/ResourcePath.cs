@@ -58,21 +58,13 @@ namespace Robust.Shared.Utility
         /// <exception cref="ArgumentNullException">Thrown if either argument is null.</exception>
         public ResourcePath(string path, string separator = "/")
         {
-            if (separator == ".")
-            {
-                throw new ArgumentException("Yeah no.", nameof(separator));
-            }
+            ValidateSeparate(separator);
 
             Separator = separator;
 
             if (path == null)
             {
                 throw new ArgumentNullException(nameof(path));
-            }
-
-            if (separator == null)
-            {
-                throw new ArgumentNullException(nameof(separator));
             }
 
             if (path == "")
@@ -252,19 +244,10 @@ namespace Robust.Shared.Utility
         ///     Returns a new instance with a different separator set.
         /// </summary>
         /// <param name="newSeparator">The new separator to use.</param>
-        /// <exception cref="ArgumentException">Thrown if the new separator is "."</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newSeparator"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the new separator is invalid.</exception>
         public ResourcePath ChangeSeparator(string newSeparator)
         {
-            if (newSeparator == ".")
-            {
-                throw new ArgumentException("Yeah no.", nameof(newSeparator));
-            }
-
-            if (newSeparator == null)
-            {
-                throw new ArgumentNullException(nameof(newSeparator));
-            }
+            ValidateSeparate(newSeparator);
 
             // Convert the segments into a string path, then re-parse it.
             // Solves the edge case of the segments containing the new separator.
@@ -714,6 +697,19 @@ namespace Robust.Shared.Utility
             }
 
             return array;
+        }
+
+        private static void ValidateSeparate(string separator)
+        {
+            if (string.IsNullOrWhiteSpace(separator))
+            {
+                throw new ArgumentException("Separator may not be null or whitespace.");
+            }
+
+            if (separator == "." || separator == "..")
+            {
+                throw new ArgumentException("Separator may not be . or ..");
+            }
         }
     }
 }

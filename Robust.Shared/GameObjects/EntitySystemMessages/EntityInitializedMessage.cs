@@ -1,6 +1,4 @@
-using Robust.Shared.Interfaces.GameObjects;
-
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+namespace Robust.Shared.GameObjects
 {
     public sealed class EntityInitializedMessage : EntitySystemMessage
     {

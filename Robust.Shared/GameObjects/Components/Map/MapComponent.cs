@@ -1,11 +1,12 @@
 ﻿using System;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a world map inside the ECS system.
@@ -20,7 +21,8 @@ namespace Robust.Shared.GameObjects.Components.Map
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]
-        private MapId _mapIndex;
+        [DataField("index")]
+        private MapId _mapIndex = MapId.Nullspace;
 
         /// <inheritdoc />
         public override string Name => "Map";
@@ -41,8 +43,9 @@ namespace Robust.Shared.GameObjects.Components.Map
             _mapIndex = MapId.Nullspace;
         }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MapComponentState(_mapIndex);
         }
@@ -58,14 +61,6 @@ namespace Robust.Shared.GameObjects.Components.Map
             _mapIndex = state.MapId;
 
             ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _mapIndex, "index", MapId.Nullspace);
         }
     }
 

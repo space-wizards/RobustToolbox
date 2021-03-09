@@ -1,15 +1,12 @@
-﻿using Robust.Client.Interfaces.Debugging;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Timing;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Enums;
+using Robust.Shared.Network;
 
 namespace Robust.Client.Debugging
 {
@@ -42,13 +39,13 @@ namespace Robust.Client.Debugging
 
                 _debugDrawRays = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlay<DebugDrawRayOverlay>())
                 {
                     _overlayManager.AddOverlay(new DebugDrawRayOverlay(this));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(DebugDrawRayOverlay));
+                    _overlayManager.RemoveOverlay<DebugDrawRayOverlay>();
                 }
             }
         }
@@ -85,7 +82,7 @@ namespace Robust.Client.Debugging
             private readonly DebugDrawingManager _owner;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugDrawRayOverlay(DebugDrawingManager owner) : base(nameof(DebugDrawRayOverlay))
+            public DebugDrawRayOverlay(DebugDrawingManager owner)
             {
                 _owner = owner;
             }

@@ -1,15 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
-using Robust.Shared.EntityLookup;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -276,10 +268,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity();
-
-            entity.SetManagers(this);
-            entity.SetUid(uid.Value);
+            var entity = new Entity(this, uid.Value);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
@@ -449,9 +438,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -466,9 +455,9 @@ namespace Robust.Shared.GameObjects
 
         private static bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
-            if (entity.TryGetComponent(out IPhysicsComponent? component))
+            if (entity.TryGetComponent(out IPhysBody? component))
             {
-                if (component.WorldAABB.Contains(mapPosition))
+                if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
             }
             else
@@ -512,9 +501,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);

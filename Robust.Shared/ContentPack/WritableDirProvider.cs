@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -113,6 +112,13 @@ namespace Robust.Shared.ContentPack
         private static string GetFullPath(string root, ResourcePath path)
         {
             var relPath = path.Clean().ToRelativeSystemPath();
+            if (relPath.Contains("\\..") || relPath.Contains("/.."))
+            {
+                // Hard cap on any exploit smuggling a .. in there.
+                // Since that could allow leaving sandbox.
+                throw new InvalidOperationException("This branch should never be reached.");
+            }
+
             return Path.GetFullPath(Path.Combine(root, relPath));
         }
     }

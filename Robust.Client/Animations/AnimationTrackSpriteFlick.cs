@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations
@@ -15,7 +15,7 @@ namespace Robust.Client.Animations
         /// <summary>
         ///     A list of key frames for when to fire flicks.
         /// </summary>
-        public readonly List<KeyFrame> KeyFrames = new();
+        public List<KeyFrame> KeyFrames { get; private set; } = new();
 
         // TODO: Should this layer key be per keyframe maybe?
         /// <summary>

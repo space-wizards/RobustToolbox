@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
@@ -159,13 +159,19 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public IEnumerable<Type> FindTypesWithAttribute<T>()
+        public IEnumerable<Type> FindTypesWithAttribute<T>() where T : Attribute
+        {
+            return FindTypesWithAttribute(typeof(T));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<Type> FindTypesWithAttribute(Type attributeType)
         {
             var types = new List<Type>();
 
             foreach (var assembly in Assemblies)
             {
-                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, typeof(T))));
+                types.AddRange(assembly.GetTypes().Where(type => Attribute.IsDefined(type, attributeType)));
             }
 
             return types;
@@ -218,7 +224,21 @@ namespace Robust.Shared.Reflection
             Type? found = null;
             foreach (var derivedType in GetAllChildren(baseType))
             {
-                if (derivedType.Name == typeName && (derivedType.IsPublic))
+                if (!derivedType.IsPublic)
+                {
+                    continue;
+                }
+
+                if (derivedType.Name == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+
+                var serializedAttribute = derivedType.GetCustomAttribute<SerializedTypeAttribute>();
+
+                if (serializedAttribute != null &&
+                    serializedAttribute.SerializeName == typeName)
                 {
                     found = derivedType;
                     break;

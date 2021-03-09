@@ -1,9 +1,10 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -11,6 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
+    [ImplicitDataDefinitionForInheritorsAttribute]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
@@ -25,6 +27,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
+        [DataField("netsync")]
         private bool _netSyncEnabled = true;
         /// <inheritdoc />
         [ViewVariables]
@@ -178,12 +181,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _netSyncEnabled, "netsync", true);
-        }
-
-        /// <inheritdoc />
         public void Dirty()
         {
             if (Owner != null)
@@ -220,8 +217,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public virtual ComponentState GetComponentState()
+        public virtual ComponentState GetComponentState(ICommonSession player)
         {
             if (NetID == null)
                 throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");

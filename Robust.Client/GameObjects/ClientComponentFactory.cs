@@ -1,18 +1,5 @@
-﻿using Robust.Client.GameObjects.Components;
-using Robust.Client.GameObjects.Components.Animations;
-using Robust.Client.GameObjects.Components.Containers;
-using Robust.Client.GameObjects.Components.UserInterface;
-using Robust.Client.Interfaces.GameObjects.Components;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Appearance;
-using Robust.Shared.GameObjects.Components.Eye;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Renderable;
-using Robust.Shared.GameObjects.Components.Timers;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Components.UserInterface;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects
@@ -37,9 +24,13 @@ namespace Robust.Client.GameObjects
 
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
-            RegisterReference<PhysicsComponent, IPhysicsComponent>();
+
+            Register<CollisionWakeComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
+
             RegisterIgnore("KeyBindingInput");
-            Register<PointLightComponent>();
 
             Register<InputComponent>();
 
@@ -55,25 +46,19 @@ namespace Robust.Client.GameObjects
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
-            
+
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
             Register<ClientUserInterfaceComponent>();
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
 
-            RegisterIgnore("IgnorePause");
-
             Register<AnimationPlayerComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<TimerComponent>();
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();
-            Register<DebugExceptionExposeDataComponent>();
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif

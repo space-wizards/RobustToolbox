@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map

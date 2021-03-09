@@ -1,18 +1,51 @@
-﻿using Robust.Shared.Enums;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.Players
 {
     /// <summary>
-    ///     Common info between client and server sessions.
+    /// Common info between client and server sessions.
     /// </summary>
-    public interface ICommonSession : IBaseSession
+    public interface ICommonSession
     {
         /// <summary>
-        ///     Status of the session.
+        /// Status of the session.
         /// </summary>
-        SessionStatus Status { get; set; }
+        SessionStatus Status { get; internal set; }
 
+        /// <summary>
+        /// Entity that this session is represented by in the world, if any.
+        /// </summary>
         IEntity? AttachedEntity { get; }
+
+        /// <summary>
+        /// Entity UID that this session is represented by in the world, if any.
+        /// </summary>
+        EntityUid? AttachedEntityUid { get; }
+
+        /// <summary>
+        /// The UID of this session.
+        /// </summary>
+        NetUserId UserId { get; }
+
+        /// <summary>
+        /// Current name of this player.
+        /// </summary>
+         string Name { get; internal set; }
+
+        /// <summary>
+        /// Current connection latency of this session from the server to their client.
+        /// </summary>
+        short Ping { get; internal set; }
+
+        /// <summary>
+        /// The current network channel for this player.
+        /// </summary>
+        /// <remarks>
+        /// On the Server every player has a network channel,
+        /// on the Client only the LocalPlayer has a network channel.
+        /// </remarks>
+        INetChannel ConnectedClient { get; }
     }
 }

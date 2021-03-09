@@ -5,21 +5,17 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Prometheus;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -58,6 +54,11 @@ namespace Robust.Server.Player
         [ViewVariables]
         private readonly Dictionary<string, NetUserId> _userIdMap = new();
 
+        /// <inheritdoc />
+        public IEnumerable<ICommonSession> NetworkedSessions => _sessions.Values;
+
+        /// <inheritdoc />
+        public IEnumerable<ICommonSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
         [ViewVariables]

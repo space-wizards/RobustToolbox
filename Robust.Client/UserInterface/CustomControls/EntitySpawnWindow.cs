@@ -1,17 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Robust.Client.GameObjects;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -31,11 +27,13 @@ namespace Robust.Client.UserInterface.CustomControls
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
+
         private EntitySpawnButton MeasureButton;
-        protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
+        //protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
         // List of prototypes that are visible based on current filter criteria.
         private readonly List<EntityPrototype> _filteredPrototypes = new();
+
         // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
         // This is inclusive, so end is the index of the last prototype, not right after it.
         private (int start, int end) _lastPrototypeIndices;
@@ -59,8 +57,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private EntitySpawnButton? SelectedButton;
         private EntityPrototype? SelectedPrototype;
 
-        protected override Vector2? CustomSize => (250, 300);
-
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache)
@@ -71,8 +67,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Title = Loc.GetString("Entity Spawn Panel");
 
+
+            SetSize = (250, 300);
+            MinSize = (250, 200);
+
             Contents.AddChild(MainVBox = new VBoxContainer
             {
+                Name = "AAAAAA",
                 Children =
                 {
                     new HBoxContainer
@@ -81,7 +82,7 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (SearchBar = new LineEdit
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 PlaceHolder = Loc.GetString("Search")
                             }),
 
@@ -94,8 +95,8 @@ namespace Robust.Client.UserInterface.CustomControls
                     },
                     new ScrollContainer
                     {
-                        CustomMinimumSize = new Vector2(200.0f, 0.0f),
-                        SizeFlagsVertical = SizeFlags.FillExpand,
+                        MinSize = new Vector2(200.0f, 0.0f),
+                        VerticalExpand = true,
                         Children =
                         {
                             (PrototypeList = new PrototypeListContainer())
@@ -113,14 +114,23 @@ namespace Robust.Client.UserInterface.CustomControls
 
                             (OverrideMenu = new OptionButton
                             {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                HorizontalExpand = true,
                                 ToolTip = Loc.GetString("Override placement")
                             })
                         }
                     },
-                    (MeasureButton = new EntitySpawnButton {Visible = false})
+                    new DoNotMeasure
+                    {
+                        Visible = false,
+                        Children =
+                        {
+                            (MeasureButton = new EntitySpawnButton())
+                        }
+                    }
                 }
             });
+
+            MeasureButton.Measure(Vector2.Infinity);
 
             for (var i = 0; i < initOpts.Length; i++)
             {
@@ -137,13 +147,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             this.placementManager.PlacementChanged += OnPlacementCanceled;
             SearchBar.GrabKeyboardFocus();
-        }
-
-        public override void Close()
-        {
-            base.Close();
-
-            Dispose();
         }
 
         protected override void Dispose(bool disposing)
@@ -192,6 +195,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
             placementManager.ToggleEraser();
+            OverrideMenu.Disabled = args.Pressed;
         }
 
         private void BuildEntityList(string? searchStr = null)
@@ -229,8 +233,8 @@ namespace Robust.Client.UserInterface.CustomControls
             // Update visible buttons in the prototype list.
 
             // Calculate index of first prototype to render based on current scroll.
-            var height = MeasureButton.CombinedMinimumSize.Y + PrototypeListContainer.Separation;
-            var offset = -PrototypeList.Position.Y;
+            var height = MeasureButton.DesiredSize.Y + PrototypeListContainer.Separation;
+            var offset = Math.Max(-PrototypeList.Position.Y, 0);
             var startIndex = (int) Math.Floor(offset / height);
             PrototypeList.ItemOffset = startIndex;
 
@@ -398,7 +402,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 set
                 {
                     _totalItemCount = value;
-                    MinimumSizeChanged();
+                    InvalidateMeasure();
                 }
             }
 
@@ -408,13 +412,13 @@ namespace Robust.Client.UserInterface.CustomControls
                 set
                 {
                     _itemOffset = value;
-                    UpdateLayout();
+                    InvalidateMeasure();
                 }
             }
 
             public const float Separation = 2;
 
-            protected override Vector2 CalculateMinimumSize()
+            protected override Vector2 MeasureOverride(Vector2 availableSize)
             {
                 if (ChildCount == 0)
                 {
@@ -423,28 +427,31 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 var first = GetChild(0);
 
-                var (minX, minY) = first.CombinedMinimumSize;
+                first.Measure(availableSize);
+                var (minX, minY) = first.DesiredSize;
 
                 return (minX, minY * TotalItemCount + (TotalItemCount - 1) * Separation);
             }
 
-            protected override void LayoutUpdateOverride()
+            protected override Vector2 ArrangeOverride(Vector2 finalSize)
             {
                 if (ChildCount == 0)
                 {
-                    return;
+                    return Vector2.Zero;
                 }
 
                 var first = GetChild(0);
 
-                var height = first.CombinedMinimumSize.Y;
+                var height = first.DesiredSize.Y;
                 var offset = ItemOffset * height + (ItemOffset - 1) * Separation;
 
                 foreach (var child in Children)
                 {
-                    FitChildInBox(child, UIBox2.FromDimensions(0, offset, Width, height));
+                    child.Arrange(UIBox2.FromDimensions(0, offset, Width, height));
                     offset += Separation + height;
                 }
+
+                return finalSize;
             }
         }
 
@@ -462,8 +469,6 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 AddChild(ActualButton = new Button
                 {
-                    SizeFlagsHorizontal = SizeFlags.FillExpand,
-                    SizeFlagsVertical = SizeFlags.FillExpand,
                     ToggleMode = true,
                 });
 
@@ -473,16 +478,16 @@ namespace Robust.Client.UserInterface.CustomControls
                     {
                         (EntityTextureRects = new LayeredTextureRect
                         {
-                            CustomMinimumSize = (32, 32),
-                            SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
-                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                            MinSize = (32, 32),
+                            HorizontalAlignment = HAlignment.Center,
+                            VerticalAlignment = VAlignment.Center,
                             Stretch = TextureRect.StretchMode.KeepAspectCentered,
                             CanShrink = true
                         }),
                         (EntityLabel = new Label
                         {
-                            SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                            SizeFlagsHorizontal = SizeFlags.FillExpand,
+                            VerticalAlignment = VAlignment.Center,
+                            HorizontalExpand = true,
                             Text = "Backpack",
                             ClipText = true
                         })
@@ -500,6 +505,15 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             EraseButton.Pressed = false;
+            OverrideMenu.Disabled = false;
+        }
+
+        private class DoNotMeasure : Control
+        {
+            protected override Vector2 MeasureOverride(Vector2 availableSize)
+            {
+                return Vector2.Zero;
+            }
         }
     }
 }

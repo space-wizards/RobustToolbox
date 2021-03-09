@@ -189,6 +189,8 @@ namespace Robust.Client
 
             _authManager.LoadFromEnv();
 
+            GC.Collect();
+
             _clyde.Ready();
 
             if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)

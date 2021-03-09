@@ -181,7 +181,8 @@ namespace Robust.Server.GameObjects
             // Future optimisations:
             // Given most clients will just need the latest tick updated we could pre-calculate the update entities in every chunk (in parallel once)
             // Then, we work out the relevant chunks for each player
-            // We then share the same message for all players that have the same chunk updates
+            // We then share the same message for all players that have the same chunk updates (probably just do a hashset union or something)
+            // This would essentially be the "fast path" and if needed we fallback to the below if they need more data.
 
             // Old PVS used to just get all for no session...
             var playerEnt = player.AttachedEntity;

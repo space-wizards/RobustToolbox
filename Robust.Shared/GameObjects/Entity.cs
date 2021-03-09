@@ -147,7 +147,7 @@ namespace Robust.Shared.GameObjects
 #endif
             Initialized = true;
             Initializing = false;
-            EntityManager.EventBus.QueueEvent(EventSource.Local, new EntityInitializedMessage(this));
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
         }
 
         /// <summary>
@@ -335,7 +335,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Dirty()
         {
-            LastModifiedTick = EntityManager.CurrentTick;
+            var currentTick = EntityManager.CurrentTick;
+            if (LastModifiedTick == currentTick) return;
+            LastModifiedTick = currentTick;
             EntityManager.EventBus.QueueEvent(EventSource.Local, new DirtyEntityMessage(this));
         }
 

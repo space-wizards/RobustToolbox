@@ -206,7 +206,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
-            EventBus.QueueEvent(EventSource.Local, new EntityDeletedMessage(e));
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(e));
             e.Shutdown();
         }
 

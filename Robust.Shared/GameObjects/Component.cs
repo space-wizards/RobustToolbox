@@ -45,23 +45,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused => Owner.Paused;
 
-        /// <inheritdoc />
-        [ViewVariables]
-        public virtual bool PlayerOnlyState
-        {
-            get => _playerOnlyState;
-            set
-            {
-                if (_playerOnlyState == value)
-                    return;
-
-                _playerOnlyState = value;
-                Dirty();
-            }
-        }
-
-        private bool _playerOnlyState;
-
         /// <summary>
         ///     True if this entity is a client-only entity.
         ///     That is, it does not exist on the server, only THIS client.

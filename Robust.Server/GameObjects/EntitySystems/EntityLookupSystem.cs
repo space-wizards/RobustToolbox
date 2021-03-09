@@ -27,8 +27,6 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private HashSet<ICommonSession> _debugSubscribed = new();
 
-        private HashSet<EntityUid> _handledDirty = new();
-
         public override void Initialize()
         {
             base.Initialize();
@@ -36,12 +34,6 @@ namespace Robust.Server.GameObjects.EntitySystems
             SubscribeLocalEvent<DirtyEntityMessage>(HandleDirtyEntity);
             SubscribeLocalEvent<ChunkSubscribeMessage>(HandleSubscribe);
             SubscribeLocalEvent<ChunkUnsubscribeMessage>(HandleUnsubscribe);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-            _handledDirty.Clear();
         }
 
         public override void Shutdown()
@@ -85,7 +77,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             // Removing from lookup should be handled elsewhere already.
             // As the message can be raised multiple times we'll just check if we've already handled it this tick.
-            if (message.Entity.Deleted || !_handledDirty.Add(message.Entity.Uid)) return;
+            if (message.Entity.Deleted) return;
 
             var entity = message.Entity;
 
@@ -104,6 +96,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 return;
 
             var currentTick = _gameTiming.CurTick;
+            // TODO: Each chunk needs a List<IEntity> of each entity that has been modified in this tick which gets cleared every tick.
 
             foreach (var node in nodes)
             {

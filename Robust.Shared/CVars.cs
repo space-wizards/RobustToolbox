@@ -331,6 +331,9 @@ namespace Robust.Shared
         /// A small length used as a collision and constraint tolerance. Usually it is
         /// chosen to be numerically significant, but visually insignificant.
         /// </summary>
+        /// <remarks>
+        ///     Note that some joints may have this cached and not update on value change.
+        /// </remarks>
         public static readonly CVarDef<float> LinearSlop =
             CVarDef.Create("physics.linearslop", 0.005f);
 

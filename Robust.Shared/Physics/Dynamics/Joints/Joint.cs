@@ -235,7 +235,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                    MathHelper.CloseTo(_breakpoint, other._breakpoint);
         }
 
-        public sealed class JointBreakMessage : EntitySystemMessage
+        public sealed class JointBreakMessage : EntityEventArgs
         {
             public Joint Joint { get; }
             public float JointError { get; }

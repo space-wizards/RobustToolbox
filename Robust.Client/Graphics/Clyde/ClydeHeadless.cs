@@ -267,6 +267,11 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Nada.
             }
+
+            public void SetVelocity(Vector2 velocity)
+            {
+                // Nada.
+            }
         }
 
         private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource

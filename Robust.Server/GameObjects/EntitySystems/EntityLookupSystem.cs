@@ -27,6 +27,8 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private HashSet<ICommonSession> _debugSubscribed = new();
 
+        private HashSet<PlayerLookupChunks> _dirtyChunks = new();
+
         public override void Initialize()
         {
             base.Initialize();
@@ -62,6 +64,12 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 data.EntityLastSeen.Remove(message.Entity.Uid);
             }
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+            _dirtyChunks.Clear();
         }
 
         protected override void RemoveChunk(EntityLookupChunk chunk)

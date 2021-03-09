@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Visible
+        public override bool Visible
         {
             get => _visible;
             set => _visible = value;

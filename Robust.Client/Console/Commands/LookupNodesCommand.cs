@@ -1,6 +1,6 @@
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces.Console;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Client.GameObjects;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Console.Commands
 {
@@ -9,7 +9,7 @@ namespace Robust.Client.Console.Commands
         public string Command => "lookupnodes";
         public string Description => "Shows the entities on each client-side lookup node";
         public string Help => "lookupnodes <show/hide>";
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
 #if DEBUG
             if (args.Length == 1)
@@ -18,23 +18,20 @@ namespace Robust.Client.Console.Commands
                 {
                     case "show":
                         EntitySystem.Get<EntityLookupSystem>().DebugNodes = true;
-                        return false;
+                        return;
                     case "hide":
                         EntitySystem.Get<EntityLookupSystem>().DebugNodes = false;
-                        return false;
+                        return;
                     default:
-                        console.AddLine("Invalid arg");
-                        return true;
+                        shell.WriteLine("Invalid arg");
+                        return;
                 }
             }
-            else
-            {
-                console.AddLine($"Invalid amount of args supplied (need 1 found {args.Length})");
-                return true;
-            }
+
+            shell.WriteLine($"Invalid amount of args supplied (need 1 found {args.Length})");
 #else
-            console.AddLine("Command only works in DEBUG");
-            return true;
+            shell.WriteLine("Command only works in DEBUG");
+            return;
 #endif
         }
     }

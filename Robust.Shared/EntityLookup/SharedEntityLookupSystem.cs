@@ -4,16 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared.EntityLookup
 {
@@ -444,8 +439,11 @@ namespace Robust.Shared.EntityLookup
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out IPhysicsComponent? physics))
-                return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
+            if (entity.TryGetComponent(out IPhysBody? physics))
+            {
+                var aabb = physics.GetWorldAABB(MapManager);
+                return new Box2(aabb.BottomLeft + 0.01f, aabb.TopRight - 0.01f);
+            }
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
             return Box2.CenteredAround(entity.Transform.WorldPosition, Vector2.One / 2);

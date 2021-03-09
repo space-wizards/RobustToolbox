@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
@@ -146,7 +147,7 @@ namespace Robust.Shared.GameObjects
 #endif
             Initialized = true;
             Initializing = false;
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
+            EntityManager.EventBus.QueueEvent(EventSource.Local, new EntityInitializedMessage(this));
         }
 
         /// <summary>

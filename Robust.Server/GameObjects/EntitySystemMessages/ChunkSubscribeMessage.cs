@@ -1,13 +1,13 @@
-using Robust.Server.Interfaces.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Players;
 
-namespace Robust.Server.GameObjects.EntitySystemMessages
+namespace Robust.Server.GameObjects
 {
     internal sealed class ChunkSubscribeMessage : EntitySystemMessage
     {
-        public IPlayerSession Session { get; }
+        public ICommonSession Session { get; }
 
-        public ChunkSubscribeMessage(IPlayerSession session)
+        public ChunkSubscribeMessage(ICommonSession session)
         {
             Session = session;
         }
@@ -15,9 +15,9 @@ namespace Robust.Server.GameObjects.EntitySystemMessages
 
     internal sealed class ChunkUnsubscribeMessage : EntitySystemMessage
     {
-        public IPlayerSession Session { get; }
+        public ICommonSession Session { get; }
 
-        public ChunkUnsubscribeMessage(IPlayerSession session)
+        public ChunkUnsubscribeMessage(ICommonSession session)
         {
             Session = session;
         }

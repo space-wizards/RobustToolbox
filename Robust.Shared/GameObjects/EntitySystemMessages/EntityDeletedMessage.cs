@@ -1,5 +1,3 @@
-using Robust.Shared.Interfaces.GameObjects;
-
 namespace Robust.Shared.GameObjects.EntitySystemMessages
 {
     /// <summary>

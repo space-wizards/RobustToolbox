@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
@@ -256,7 +257,7 @@ namespace Robust.Shared.Containers
             if (entity.Deleted || !entity.TryGetComponent(out IContainerManager? containerManager))
                 return existing;
 
-            var cast = (SharedContainerManagerComponent) containerManager;
+            var cast = (ContainerManagerComponent) containerManager;
 
             foreach (var container in cast.GetAllContainers())
             {

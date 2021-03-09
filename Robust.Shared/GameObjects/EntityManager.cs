@@ -1,10 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
+using Robust.Shared.EntityLookup;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -384,6 +387,7 @@ namespace Robust.Shared.GameObjects
         #region Spatial Queries
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
         {
             if (mapId == MapId.Nullspace)
@@ -398,6 +402,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
             if (mapId == MapId.Nullspace)
@@ -410,6 +415,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false)
         {
             if (mapId == MapId.Nullspace)
@@ -423,12 +429,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false)
         {
             return GetEntitiesIntersecting(position.MapId, position.Position, approximate);
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false)
         {
             var mapPos = position.ToMap(this);
@@ -436,6 +444,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
@@ -447,12 +456,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public bool IsIntersecting(IEntity entityOne, IEntity entityTwo)
         {
             var position = entityOne.Transform.MapPosition.Position;
             return Intersecting(entityTwo, position);
         }
 
+        [Obsolete("Use SharedEntityLookupSystem")]
         private static bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
             if (entity.TryGetComponent(out IPhysBody? component))
@@ -475,6 +486,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false)
         {
             var mapCoordinates = position.ToMap(this);
@@ -485,6 +497,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approximate = false)
         {
             var aabb = box.Enlarged(range);
@@ -492,6 +505,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approximate = false)
         {
             var aabb = new Box2(point, point).Enlarged(range);
@@ -499,6 +513,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
@@ -510,6 +525,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use SharedEntityLookupSystem")]
         public IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
             float arcWidth, bool approximate = false)
         {
@@ -526,10 +542,11 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
+        [Obsolete]
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
-            if (ent.TryGetComponent(out IPhysicsComponent? collider))
-                return collider.WorldAABB;
+            if (ent.TryGetComponent(out IPhysBody? collider))
+                return collider.GetWorldAABB();
 
             var pos = ent.Transform.WorldPosition;
             return new Box2(pos, pos);

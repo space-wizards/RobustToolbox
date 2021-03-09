@@ -1,21 +1,18 @@
 #if DEBUG
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Client.Graphics;
 using Robust.Client.Player;
 using Robust.Shared.EntityLookup;
+using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     internal sealed class DebugChunkSystem : EntitySystem
     {
@@ -44,7 +41,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             base.Shutdown();
             UnsubscribeNetworkEvent<ChunkDirtyMessage>();
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(nameof(ChunkOverlay));
+            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(ChunkOverlay));
         }
 
         private void HandleChunkDirty(ChunkDirtyMessage message)
@@ -154,7 +151,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public ChunkOverlay(IEyeManager eyeManager, IGameTiming gameTiming, IMapManager mapManager, IPlayerManager playerManager) : base(nameof(ChunkOverlay))
+        public ChunkOverlay(IEyeManager eyeManager, IGameTiming gameTiming, IMapManager mapManager, IPlayerManager playerManager)
         {
             _eyeManager = eyeManager;
             _gameTiming = gameTiming;

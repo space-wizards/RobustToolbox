@@ -1,19 +1,16 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.EntitySystemMessages;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.EntityLookup;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
-using EntityDeletedMessage = Robust.Shared.GameObjects.EntitySystemMessages.EntityDeletedMessage;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -26,9 +23,9 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <summary>
         ///     Last tick the player saw a particular entity.
         /// </summary>
-        private Dictionary<IPlayerSession, PlayerLookupChunks> _lastSeen = new();
+        private Dictionary<ICommonSession, PlayerLookupChunks> _lastSeen = new();
 
-        private HashSet<IPlayerSession> _debugSubscribed = new();
+        private HashSet<ICommonSession> _debugSubscribed = new();
 
         private HashSet<EntityUid> _handledDirty = new();
 
@@ -168,6 +165,11 @@ namespace Robust.Server.GameObjects.EntitySystems
 
 internal sealed class PlayerLookupChunks
 {
+    /// <summary>
+    ///     Save the list to avoid having to create a new one every time.
+    /// </summary>
+    public List<EntityState> EntityStates { get; } = new(256);
+
     public Dictionary<EntityUid, GameTick> EntityLastSeen { get; } = new();
 
     public readonly Dictionary<EntityLookupChunk, GameTick> KnownChunks = new();

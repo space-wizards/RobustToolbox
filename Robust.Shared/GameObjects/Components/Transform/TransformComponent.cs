@@ -125,7 +125,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    
+
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
                 }
@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects
                         Owner.EntityManager.EventBus.RaiseEvent(
                             EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
-                    
+
                 }
                 else
                 {
@@ -318,7 +318,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    
+
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
                 }
@@ -458,7 +458,6 @@ namespace Robust.Shared.GameObjects
             }
 
             RebuildMatrices();
-            UpdateEntityTree(worldAABB);
 
             if (_oldCoords != null)
             {
@@ -604,7 +603,6 @@ namespace Robust.Shared.GameObjects
             MapID = newMapId;
             MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
-            TryUpdatePhysicsTree();
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)
@@ -628,7 +626,7 @@ namespace Robust.Shared.GameObjects
         {
             if (oldId != MapId.Nullspace)
             {
-                
+
             }
 
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
@@ -800,7 +798,7 @@ namespace Robust.Shared.GameObjects
             _invLocalMatrix = itransMat;
         }
 
-        
+
 
         public string GetDebugString()
         {

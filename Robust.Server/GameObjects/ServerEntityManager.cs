@@ -1,27 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using Prometheus;
-using Robust.Server.GameObjects.Components;
-using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.GameObjects.EntitySystems;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
-using Robust.Server.Interfaces.Timing;
 using Robust.Server.Player;
 using Robust.Shared;
-using Robust.Shared.Containers;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using static Robust.Shared.GameObjects.TransformComponent;
 
 namespace Robust.Server.GameObjects
 {
@@ -148,7 +138,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState>? GetAllEntityStates(GameTick fromTick, IPlayerSession? session)
+        public List<EntityState>? GetAllEntityStates(GameTick fromTick, IPlayerSession session)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -161,18 +151,15 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                stateEntities.Add(GetEntityState(session, ComponentManager, entity.Uid, fromTick, true));
+                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick, session));
             }
 
-            if (session != null)
+            var data = _lookupSystem.GetPlayerLastSeen(session);
+            if (data != null)
             {
-                var data = _lookupSystem.GetPlayerLastSeen(session);
-                if (data != null)
+                foreach (var state in stateEntities)
                 {
-                    foreach (var state in stateEntities)
-                    {
-                        data.EntityLastSeen[state.Uid] = fromTick;
-                    }
+                    data.EntityLastSeen[state.Uid] = fromTick;
                 }
             }
 
@@ -190,6 +177,12 @@ namespace Robust.Server.GameObjects
         /// <returns></returns>
         public List<EntityState>? GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
         {
+            // if you want to research yourself I think it's normally called interest management
+            // Future optimisations:
+            // Given most clients will just need the latest tick updated we could pre-calculate the update entities in every chunk (in parallel once)
+            // Then, we work out the relevant chunks for each player
+            // We then share the same message for all players that have the same chunk updates
+
             // Old PVS used to just get all for no session...
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
@@ -203,7 +196,8 @@ namespace Robust.Server.GameObjects
             if (data.EntityLastSeen.Count == 0)
                 return GetAllEntityStates(fromTick, player);
 
-            var entityStates = new List<EntityState>();
+            var entityStates = data.EntityStates;
+            entityStates.Clear();
             var transform = playerEnt.Transform;
             var playerPos = transform.WorldPosition;
             var mapId = transform.MapID;
@@ -283,12 +277,12 @@ namespace Robust.Server.GameObjects
                     return;
                 }
 
-                state = GetEntityState(player, ComponentManager, entity.Uid, lastSeen);
+                state = GetEntityState(ComponentManager, entity.Uid, lastSeen, player);
             }
             // Never before seen entity
             else
             {
-                state = GetEntityState(player, ComponentManager, entity.Uid, fromTick, true);
+                state = GetEntityState(ComponentManager, entity.Uid, fromTick, player);
             }
 
             data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
@@ -303,7 +297,7 @@ namespace Robust.Server.GameObjects
         public override void DeleteEntity(IEntity e)
         {
             base.DeleteEntity(e);
-            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(e));
+            EventBus.QueueEvent(EventSource.Local, new EntityDeletedMessage(e));
             _deletionHistory.Add((CurrentTick, e.Uid));
         }
 
@@ -377,8 +371,6 @@ namespace Robust.Server.GameObjects
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 
-            var lastTick = newEntity ? GameTick.Zero : fromTick;
-
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(comp.Initialized);
@@ -395,13 +387,13 @@ namespace Robust.Server.GameObjects
                 if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
                     compStates.Add(comp.GetComponentState(player));
 
-                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= lastTick && !comp.Deleted)
+                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
                     changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
                 }
-                else if (comp.Deleted && comp.LastModifiedTick >= lastTick)
+                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException

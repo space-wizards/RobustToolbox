@@ -6,6 +6,7 @@ using System.Text.Json;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -41,13 +42,36 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            var metadata = LoadRsiMetadata(cache, path);
+            var clyde = IoCManager.Resolve<IClyde>();
+
+            var loadStepData = new LoadStepData {Path = path};
+            LoadPreTexture(cache, loadStepData);
+
+            // Load atlas.
+            LoadTexture(clyde, loadStepData);
+
+            LoadPostTexture(loadStepData);
+            LoadFinish(cache, loadStepData);
+
+            loadStepData.AtlasSheet.Dispose();
+        }
+
+        internal static void LoadTexture(IClyde clyde, LoadStepData loadStepData)
+        {
+            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+                loadStepData.AtlasSheet,
+                loadStepData.Path.ToString());
+        }
+
+        internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
+        {
+            var metadata = LoadRsiMetadata(cache, data.Path);
 
             var stateCount = metadata.States.Length;
             var toAtlas = new StateReg[stateCount];
 
             var frameSize = metadata.Size;
-            var rsi = new RSI(frameSize, path);
+            var rsi = new RSI(frameSize, data.Path);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
 
@@ -58,7 +82,7 @@ namespace Robust.Client.ResourceManagement
 
                 var stateObject = metadata.States[index];
                 // Load image from disk.
-                var texPath = path / (stateObject.StateId + ".png");
+                var texPath = data.Path / (stateObject.StateId + ".png");
                 using (var stream = cache.ContentFileRead(texPath))
                 {
                     reg.Src = Image.Load<Rgba32>(stream);
@@ -87,7 +111,8 @@ namespace Robust.Client.ResourceManagement
                 reg.Indices = foldedIndices;
                 reg.Offsets = callbackOffset;
 
-                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays, textures);
+                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays,
+                    textures);
                 rsi.AddState(state);
 
                 callbackOffsets[stateObject.StateId] = callbackOffset;
@@ -100,7 +125,7 @@ namespace Robust.Client.ResourceManagement
             var dimensionX = (int) MathF.Ceiling(MathF.Sqrt(totalFrameCount));
             var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
 
-            using var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
+            var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
 
             var sheetIndex = 0;
             for (var index = 0; index < toAtlas.Length; index++)
@@ -126,8 +151,26 @@ namespace Robust.Client.ResourceManagement
                 sheetIndex += reg.TotalFrameCount;
             }
 
-            // Load atlas.
-            var texture = Texture.LoadFromImage(sheet, path.ToString());
+            for (var i = 0; i < toAtlas.Length; i++)
+            {
+                ref var reg = ref toAtlas[i];
+                reg.Src.Dispose();
+            }
+
+            data.Rsi = rsi;
+            data.AtlasSheet = sheet;
+            data.AtlasList = toAtlas;
+            data.FrameSize = frameSize;
+            data.DimX = dimensionX;
+            data.CallbackOffsets = callbackOffsets;
+        }
+
+        internal static void LoadPostTexture(LoadStepData data)
+        {
+            var dimX = data.DimX;
+            var toAtlas = data.AtlasList;
+            var frameSize = data.FrameSize;
+            var texture = data.AtlasTexture;
 
             var sheetOffset = 0;
             for (var toAtlasIndex = 0; toAtlasIndex < toAtlas.Length; toAtlasIndex++)
@@ -143,8 +186,8 @@ namespace Robust.Client.ResourceManagement
                     {
                         var index = sheetOffset + dirIndices[j];
 
-                        var sheetColumn = index % dimensionX;
-                        var sheetRow = index / dimensionX;
+                        var sheetColumn = index % dimX;
+                        var sheetRow = index / dimX;
                         var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
 
                         dirOffsets[j] = sheetPos;
@@ -154,18 +197,15 @@ namespace Robust.Client.ResourceManagement
 
                 sheetOffset += reg.TotalFrameCount;
             }
+        }
 
-            for (var i = 0; i < toAtlas.Length; i++)
-            {
-                ref var reg = ref toAtlas[i];
-                reg.Src.Dispose();
-            }
-
-            RSI = rsi;
+        internal void LoadFinish(IResourceCache cache, LoadStepData data)
+        {
+            RSI = data.Rsi;
 
             if (cache is IResourceCacheInternal cacheInternal)
             {
-                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(path, this, sheet, callbackOffsets));
+                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
             }
         }
 
@@ -401,7 +441,20 @@ namespace Robust.Client.ResourceManagement
             return (floatDelays, arrayIndices);
         }
 
-        private struct StateReg
+        internal sealed class LoadStepData
+        {
+            public bool Bad;
+            public ResourcePath Path = default!;
+            public Image<Rgba32> AtlasSheet = default!;
+            public int DimX;
+            public StateReg[] AtlasList = default!;
+            public Vector2i FrameSize;
+            public Dictionary<RSI.StateId, Vector2i[][]> CallbackOffsets = default!;
+            public Texture AtlasTexture = default!;
+            public RSI Rsi = default!;
+        }
+
+        internal struct StateReg
         {
             public Image<Rgba32> Src;
             public Texture[][] Output;

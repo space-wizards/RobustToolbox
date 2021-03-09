@@ -280,7 +280,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         /// <summary>
-        ///     Flush the render handle, processing and re-pooling all the command lists.
+        ///     Flushes the render handle, processing and re-pooling all the command lists.
         /// </summary>
         private void FlushRenderQueue()
         {
@@ -371,6 +371,7 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
+            int textureUnitVal = 0;
             // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
@@ -412,6 +413,15 @@ namespace Robust.Client.Graphics.Clyde
                         break;
                     case Matrix4 matrix4:
                         program.SetUniform(name, matrix4);
+                        break;
+                    case ClydeTexture clydeTexture:
+                        //It's important to start at Texture6 here since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
+                        //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
+                        //Might change this in the future?
+                        TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
+                        SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
+                        program.SetUniformTexture(name, cTarget);
+                        textureUnitVal++;
                         break;
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");

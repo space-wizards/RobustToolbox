@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Enums;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -34,7 +36,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new(HistorySize+10);
 
-        public NetGraphOverlay() : base(nameof(NetGraphOverlay))
+        public NetGraphOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -142,11 +144,11 @@ namespace Robust.Client.GameStates
             DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
 
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
@@ -183,14 +185,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
                     shell.WriteLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                else if(overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
+                    overlayMan.RemoveOverlay(typeof(NetGraphOverlay));
                     shell.WriteLine("Disabled network overlay.");
                 }
             }

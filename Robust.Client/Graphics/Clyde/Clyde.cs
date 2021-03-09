@@ -315,6 +315,11 @@ namespace Robust.Client.Graphics.Clyde
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
             CreateMainViewport();
+
+            screenBufferHandle = new GLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+            ApplySampleParameters(TextureSampleParameters.Default);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _framebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private void CreateMainViewport()

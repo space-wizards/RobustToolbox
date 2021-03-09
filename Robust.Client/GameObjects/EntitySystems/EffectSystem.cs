@@ -11,6 +11,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.GameObjects
 {
@@ -42,7 +43,7 @@ namespace Robust.Client.GameObjects
         {
             base.Shutdown();
 
-            overlayManager.RemoveOverlay("EffectSystem");
+            overlayManager.RemoveOverlay(typeof(EffectOverlay));
         }
 
         public void CreateEffect(EffectSystemMessage message)
@@ -329,7 +330,6 @@ namespace Robust.Client.GameObjects
         {
             private readonly IPlayerManager _playerManager;
 
-            public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
             private readonly ShaderInstance _unshadedShader;
@@ -337,8 +337,7 @@ namespace Robust.Client.GameObjects
             private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base(
-                "EffectSystem")
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager)
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();

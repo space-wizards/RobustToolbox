@@ -24,6 +24,7 @@
 
 using System;
 using Robust.Client.Graphics;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -55,7 +56,7 @@ namespace Robust.Client.Debugging
                     IoCManager.Resolve<IOverlayManager>().AddOverlay(new PhysicsDebugOverlay(this));
 
                 if (value == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().RemoveOverlay(nameof(PhysicsDebugOverlay));
+                    IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));
 
                 _flags = value;
             }
@@ -119,7 +120,7 @@ namespace Robust.Client.Debugging
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public PhysicsDebugOverlay(DebugPhysicsSystem system) : base(nameof(PhysicsDebugOverlay))
+        public PhysicsDebugOverlay(DebugPhysicsSystem system)
         {
             _physics = system;
         }

@@ -70,6 +70,6 @@ namespace Robust.Client.GameStates
         /// <param name="message">Message being dispatched.</param>
         void InputCommandDispatched(FullInputCmdMessage message);
 
-        uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage;
+        uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs;
     }
 }

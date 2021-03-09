@@ -129,5 +129,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<EntityUid> ChildEntityUids { get; }
         Matrix3 GetLocalMatrix();
         Matrix3 GetLocalMatrixInv();
+        void DetachParentToNull();
     }
 }

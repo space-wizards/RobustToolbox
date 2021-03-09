@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     // Sending bus names and file names as strings is expensive and can be optimized.
     // Also there's redundant fields in AudioParams in most cases.
     [Serializable, NetSerializable]
-    public abstract class AudioMessage : EntitySystemMessage
+    public abstract class AudioMessage : EntityEventArgs
     {
         public uint Identifier { get; set; }
         public string FileName { get; set; }
@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class StopAudioMessageClient : EntitySystemMessage
+    public class StopAudioMessageClient : EntityEventArgs
     {
         public uint Identifier {get; set;}
     }

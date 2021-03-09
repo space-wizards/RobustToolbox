@@ -40,14 +40,6 @@ namespace Robust.UnitTesting.Shared.Map
         [OneTimeSetUp]
         public void Setup()
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            entityManager.Initialize();
-
-            var mapManager = IoCManager.Resolve<IMapManager>();
-
-            mapManager.Initialize();
-            mapManager.Startup();
-
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
@@ -253,7 +253,11 @@ namespace Robust.Shared.Map
                     // remove the existing client entity.
                     var cEntity = _entityManager.GetEntity(grid.GridEntityId);
                     var cGridComp = cEntity.GetComponent<IMapGridComponent>();
-                    cGridComp.ClearGridId();
+
+                    // prevents us from deleting the grid when deleting the grid entity
+                    if(cEntity.Uid.IsClientSide())
+                        cGridComp.ClearGridId();
+
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
                     var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true);

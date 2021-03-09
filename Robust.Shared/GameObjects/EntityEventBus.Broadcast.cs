@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     /// EntitySystems communicate with each other.
     /// </summary>
     [PublicAPI]
-    public interface IEventBus
+    public interface IBroadcastEventBus
     {
         /// <summary>
         /// Subscribes an event handler for a event type.
@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc />
-    internal interface IEntityEventBus : IEventBus
+    internal interface IBroadcastEventBusInternal : IBroadcastEventBus
     {
         /// <summary>
         /// Raises all queued events onto the event bus. This needs to be called often.
@@ -91,8 +91,10 @@ namespace Robust.Shared.GameObjects
         All = Local | Network,
     }
 
-    /// <inheritdoc />
-    internal class EntityEventBus : IEntityEventBus
+    /// <summary>
+    /// Implements the event broadcast functions.
+    /// </summary>
+    internal partial class EntityEventBus : IBroadcastEventBusInternal
     {
         private delegate void EventHandler(object ev);
 

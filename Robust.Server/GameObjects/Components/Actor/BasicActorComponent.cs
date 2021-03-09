@@ -51,7 +51,7 @@ namespace Robust.Server.GameObjects
         }
     }
 
-    public class PlayerAttachSystemMessage : EntitySystemMessage
+    public class PlayerAttachSystemMessage : EntityEventArgs
     {
         public PlayerAttachSystemMessage(IEntity entity, IPlayerSession newPlayer)
         {
@@ -63,7 +63,7 @@ namespace Robust.Server.GameObjects
         public IPlayerSession NewPlayer { get; }
     }
 
-    public class PlayerDetachedSystemMessage : EntitySystemMessage
+    public class PlayerDetachedSystemMessage : EntityEventArgs
     {
         public PlayerDetachedSystemMessage(IEntity entity)
         {

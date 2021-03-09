@@ -53,12 +53,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
             EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.Initialize();
-            MapManager.Startup();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();

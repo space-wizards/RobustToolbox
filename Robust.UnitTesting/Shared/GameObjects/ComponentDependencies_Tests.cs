@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -163,10 +163,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestFiveComponent>();
             componentFactory.Register<TestSixComponent>();
             componentFactory.Register<TestSevenComponent>();
-
-            var componentManager = IoCManager.Resolve<IComponentManager>();
-            componentManager.Initialize();
-
+            
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));

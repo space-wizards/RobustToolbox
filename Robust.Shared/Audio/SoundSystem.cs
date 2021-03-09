@@ -74,7 +74,7 @@ namespace Robust.Shared.Audio
             return GetAudio()?.Play(playerFilter, filename, coordinates, audioParams);
         }
 
-        internal class QueryAudioSystem : EntitySystemMessage
+        internal class QueryAudioSystem : EntityEventArgs
         {
             public IAudioSystem? Audio { get; set; }
         }

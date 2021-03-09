@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 namespace Robust.Shared.Physics
 {
     // Real pros use the system messages
-    public sealed class PhysicsWakeMessage : EntitySystemMessage
+    public sealed class PhysicsWakeMessage : EntityEventArgs
     {
         public PhysicsComponent Body { get; }
 
@@ -13,7 +13,7 @@ namespace Robust.Shared.Physics
         }
     }
 
-    public sealed class PhysicsSleepMessage : EntitySystemMessage
+    public sealed class PhysicsSleepMessage : EntityEventArgs
     {
         public PhysicsComponent Body { get; }
 

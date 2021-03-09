@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 
@@ -11,7 +11,16 @@ namespace Robust.Shared.GameObjects
     public delegate void EntitySessionEventHandler<in T>(T msg, EntitySessionEventArgs args);
 
     [Serializable, NetSerializable]
-    public class EntityEventArgs : EventArgs { }
+    public abstract class EntityEventArgs { }
+
+    [Serializable, NetSerializable]
+    public abstract class HandledEntityEventArgs : EntityEventArgs
+    {
+        /// <summary>
+        /// If this message has already been "handled" by a previous system.
+        /// </summary>
+        public bool Handled { get; set; }
+    }
 
     public readonly struct EntitySessionEventArgs
     {

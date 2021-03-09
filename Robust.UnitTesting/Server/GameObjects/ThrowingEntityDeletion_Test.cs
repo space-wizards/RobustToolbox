@@ -41,14 +41,9 @@ namespace Robust.UnitTesting.Server.GameObjects
             _componentFactory.Register<ThrowsInAddComponent>();
             _componentFactory.Register<ThrowsInInitializeComponent>();
             _componentFactory.Register<ThrowsInStartupComponent>();
-
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-
+            
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.Initialize();
-            MapManager.Startup();
 
             MapManager.CreateNewMapEntity(MapId.Nullspace);
 

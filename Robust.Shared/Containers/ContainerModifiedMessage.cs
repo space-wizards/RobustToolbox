@@ -7,7 +7,7 @@ namespace Robust.Shared.Containers
     /// Raised when the contents of a container have been modified.
     /// </summary>
     [PublicAPI]
-    public abstract class ContainerModifiedMessage : EntitySystemMessage
+    public abstract class ContainerModifiedMessage : EntityEventArgs
     {
         /// <summary>
         /// The container being acted upon.

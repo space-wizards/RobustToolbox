@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
     ///     Holds a collection of ECS components that are attached to entities.
     /// </summary>
     [PublicAPI]
-    public interface IComponentManager
+    public interface IComponentManager : IDisposable
     {
         /// <summary>
         ///     A component was added to the manager.

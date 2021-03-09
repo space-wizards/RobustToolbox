@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Shared.Map;
@@ -30,6 +31,10 @@ namespace Robust.Shared.GameObjects
         IEventBus EventBus { get; }
 
         #region Entity Management
+
+        event EventHandler<EntityUid>? EntityAdded;
+        event EventHandler<EntityUid>? EntityInitialized;
+        event EventHandler<EntityUid>? EntityDeleted;
 
         IEntity CreateEntityUninitialized(string? prototypeName);
 

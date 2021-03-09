@@ -157,7 +157,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Entity system message that is raised when the player changes attached entities.
     /// </summary>
-    public class PlayerAttachSysMessage : EntitySystemMessage
+    public class PlayerAttachSysMessage : EntityEventArgs
     {
         /// <summary>
         ///     New entity the player is attached to.

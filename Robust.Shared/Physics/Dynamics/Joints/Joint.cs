@@ -61,7 +61,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>
-        /// Indicate if this join is enabled or not. Disabling a joint
+        /// Indicate if this joint is enabled or not. Disabling a joint
         /// means it is still in the simulation, but inactive.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -212,12 +212,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 return;
 
             Enabled = false;
-
-            // BodyA
-            /* TODO: Dis, just use comp messages and a system message
-            if (Broke != null)
-                Broke(this, MathF.Sqrt(jointErrorSquared));
-                */
+            BodyA.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new JointBreakMessage(this, MathF.Sqrt(jointErrorSquared)));
         }
 
         internal abstract void SolveVelocityConstraints(SolverData data);
@@ -238,6 +233,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                    BodyBUid.Equals(other.BodyBUid) &&
                    CollideConnected == other.CollideConnected &&
                    MathHelper.CloseTo(_breakpoint, other._breakpoint);
+        }
+
+        public sealed class JointBreakMessage : EntitySystemMessage
+        {
+            public Joint Joint { get; }
+            public float JointError { get; }
+
+            public JointBreakMessage(Joint joint, float jointError)
+            {
+                Joint = joint;
+                JointError = jointError;
+            }
         }
     }
 }

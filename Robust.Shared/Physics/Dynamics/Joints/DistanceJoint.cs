@@ -36,7 +36,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
-    // TODO: FOR THIS LICENCE ALSO PUT BOX2D ON IT.
     // 1-D rained system
     // m (v2 - v1) = lambda
     // v2 + (beta/h) * x1 + gamma * lambda = 0, gamma has units of inverse mass.
@@ -87,6 +86,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [NonSerialized] private float _currentLength;
         [NonSerialized] private float _softMass;
 
+        [NonSerialized] private float _linearSlop;
+
         public override JointType JointType => JointType.Distance;
 
         /// <summary>
@@ -110,6 +111,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             Length = MathF.Max(configManager.GetCVar(CVars.LinearSlop), (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             WarmStarting = configManager.GetCVar(CVars.WarmStarting);
+            _linearSlop = configManager.GetCVar(CVars.LinearSlop);
             _minLength = _length;
             _maxLength = _length;
         }
@@ -557,7 +559,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Positions[_indexB] = cB;
             data.Angles[_indexB] = aB;
 
-            return MathF.Abs(C) < IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
+            return MathF.Abs(C) < _linearSlop;
         }
 
         public bool Equals(DistanceJoint? other)

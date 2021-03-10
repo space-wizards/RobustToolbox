@@ -49,10 +49,11 @@ namespace Robust.Client.Graphics
         /// <param name="baseline">The baseline from which to draw the character.</param>
         /// <param name="scale">DPI scale factor to render the font at.</param>
         /// <param name="color">The color of the character to draw.</param>
+        /// <param name="fallback">If the character is not available, render "�" instead.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
         public abstract float DrawChar(
             DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
-            Color color);
+            Color color, bool fallback=true);
 
         [Obsolete("Use Rune variant instead")]
         public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
@@ -65,17 +66,21 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <param name="rune">The unicode codepoint to fetch the glyph metrics for.</param>
         /// <param name="scale">DPI scale factor to render the font at.</param>
+        /// <param name="fallback">
+        ///     If the character is not available, return data for "�" instead.
+        ///     This can still fail if the font does not define � itself.
+        /// </param>
         /// <returns>
         ///     <c>null</c> if this font does not have a glyph for the specified character,
         ///     otherwise the metrics you asked for.
         /// </returns>
         /// <seealso cref="TryGetCharMetrics"/>
-        public abstract CharMetrics? GetCharMetrics(Rune rune, float scale);
+        public abstract CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true);
 
         /// <summary>
         ///     Try-pattern version of <see cref="GetCharMetrics"/>.
         /// </summary>
-        public bool TryGetCharMetrics(Rune rune, float scale, out CharMetrics metrics)
+        public bool TryGetCharMetrics(Rune rune, float scale, out CharMetrics metrics, bool fallback=true)
         {
             var maybe = GetCharMetrics(rune, scale);
             if (maybe.HasValue)
@@ -109,12 +114,20 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
             {
-                return 0;
+                if (fallback && !Rune.IsWhiteSpace(rune))
+                {
+                    rune = new Rune('�');
+                    metrics = Handle.GetCharMetrics(rune, scale);
+                    if (!metrics.HasValue)
+                        return 0;
+                }
+                else
+                    return 0;
             }
 
             var texture = Handle.GetCharTexture(rune, scale);
@@ -128,9 +141,12 @@ namespace Robust.Client.Graphics
             return metrics.Value.Advance;
         }
 
-        public override CharMetrics? GetCharMetrics(Rune rune, float scale)
+        public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
-            return Handle.GetCharMetrics(rune, scale);
+            var metrics = Handle.GetCharMetrics(rune, scale);
+            if (metrics == null && !Rune.IsWhiteSpace(rune) && fallback)
+                return Handle.GetCharMetrics(new Rune('�'), scale);
+            return metrics;
         }
     }
 
@@ -141,13 +157,13 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => default;
         public override int GetLineHeight(float scale) => default;
 
-        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;
         }
 
-        public override CharMetrics? GetCharMetrics(Rune rune, float scale)
+        public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return null;

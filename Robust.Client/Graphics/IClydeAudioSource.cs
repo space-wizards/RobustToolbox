@@ -20,5 +20,6 @@ namespace Robust.Client.Graphics
         void SetVolume(float decibels);
         void SetOcclusion(float blocks);
         void SetPlaybackPosition(float seconds);
+        void SetVelocity(Vector2 velocity);
     }
 }

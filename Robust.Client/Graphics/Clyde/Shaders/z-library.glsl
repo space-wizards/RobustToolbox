@@ -89,9 +89,10 @@ uniform highp vec2 TEXTURE_PIXEL_SIZE;
 // -- srgb emulation --
 
 #ifdef HAS_SRGB
-highp vec4 zTexture(highp vec2 uv)
+
+highp vec4 zTextureSpec(sampler2D tex, highp vec2 uv)
 {
-    return texture2D(TEXTURE, uv);
+    return texture2D(tex, uv);
 }
 
 highp vec4 zAdjustResult(highp vec4 col)
@@ -101,9 +102,9 @@ highp vec4 zAdjustResult(highp vec4 col)
 #else
 uniform lowp vec2 SRGB_EMU_CONFIG;
 
-highp vec4 zTexture(highp vec2 uv)
+highp vec4 zTextureSpec(sampler2D tex, highp vec2 uv)
 {
-    highp vec4 col = texture2D(TEXTURE, uv);
+    highp vec4 col = texture2D(tex, uv);
     if (SRGB_EMU_CONFIG.x > 0.5)
     {
         return zFromSrgb(col);
@@ -120,6 +121,11 @@ highp vec4 zAdjustResult(highp vec4 col)
     return col;
 }
 #endif
+
+highp vec4 zTexture(highp vec2 uv)
+{
+    return zTextureSpec(TEXTURE, uv);
+}
 
 // -- Utilities End --
 

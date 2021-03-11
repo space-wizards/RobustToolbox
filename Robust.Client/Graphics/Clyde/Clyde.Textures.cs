@@ -324,11 +324,13 @@ namespace Robust.Client.Graphics.Clyde
                 if (typeof(T) == typeof(A8))
                 {
                     SetSubImage(texture, dstTl, ApplyA8Swizzle((Image<A8>) (object) srcImage), srcBox);
+                    return;
                 }
 
                 if (typeof(T) == typeof(L8))
                 {
                     SetSubImage(texture, dstTl, ApplyL8Swizzle((Image<L8>) (object) srcImage), srcBox);
+                    return;
                 }
             }
 

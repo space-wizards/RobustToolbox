@@ -139,9 +139,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
             if (oTargets.Count > 0 && ScreenBufferTexture != null) {
-                if (lastFrameSize != _framebufferSize) { 
+                if (lastFrameSize != _framebufferSize) {
                     GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, _framebufferSize.X, _framebufferSize.Y, 0,
                         PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
                 }
                 lastFrameSize = _framebufferSize;

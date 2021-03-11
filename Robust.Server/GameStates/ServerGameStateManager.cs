@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
@@ -19,11 +20,13 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameStates
 {
     /// <inheritdoc />
-    public class ServerGameStateManager : IServerGameStateManager
+    public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
         private readonly Dictionary<long, GameTick> _ackedStates = new();
         private GameTick _lastOldestAck = GameTick.Zero;
+
+        private EntityViewCulling _entityView = null!;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -35,6 +38,12 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public bool PvsEnabled => _configurationManager.GetCVar(CVars.NetPVS);
+        public float PvsRange => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
+
+        public void PostInject()
+        {
+            _entityView = new EntityViewCulling(_entityManager, _mapManager);
+        }
 
         /// <inheritdoc />
         public void Initialize()
@@ -44,6 +53,27 @@ namespace Robust.Server.GameStates
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
+
+            _playerManager.PlayerStatusChanged += HandlePlayerStatusChanged;
+
+            _entityManager.EntityDeleted += HandleEntityDeleted;
+        }
+
+        private void HandleEntityDeleted(object? sender, EntityUid e)
+        {
+            _entityView.EntityDeleted(e);
+        }
+
+        private void HandlePlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.NewStatus == SessionStatus.InGame)
+            {
+                _entityView.AddPlayer(e.Session);
+            }
+            else if(e.OldStatus == SessionStatus.InGame)
+            {
+                _entityView.RemovePlayer(e.Session);
+            }
         }
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)
@@ -100,10 +130,17 @@ namespace Robust.Server.GameStates
 
             _entityManager.Update();
 
+            //TODO: Make these cvars
+            _entityView.ViewSize = PvsRange;
+            _entityView.CullingEnabled = PvsEnabled;
+
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
+#if OLD_PVS
                 _entityManager.CullDeletionHistory(GameTick.MaxValue);
+#endif
+                _entityView.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 return;
             }
@@ -112,16 +149,14 @@ namespace Robust.Server.GameStates
 
             var oldestAck = GameTick.MaxValue;
 
-            var oldDeps = IoCManager.Resolve<IDependencyCollection>();
-
-            var deps = new DependencyCollection();
-            deps.RegisterInstance<ILogManager>(new ProxyLogManager(IoCManager.Resolve<ILogManager>()));
-            deps.BuildGraph();
-
+            var mainThread = Thread.CurrentThread;
             (MsgState, INetChannel) GenerateMail(IPlayerSession session)
             {
-                IoCManager.InitThread(deps, true);
+                // KILL IT WITH FIRE
+                if(mainThread != Thread.CurrentThread)
+                    IoCManager.InitThread(new DependencyCollection(), true);
 
+                // people not in the game don't get states
                 if (session.Status != SessionStatus.InGame)
                 {
                     return default;
@@ -133,13 +168,17 @@ namespace Robust.Server.GameStates
                 {
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
-
+#if OLD_PVS
                 var entStates = lastAck == GameTick.Zero || !PvsEnabled
                     ? _entityManager.GetEntityStates(lastAck, session)
                     : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
-                var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);
+#else
+                var (entStates, deletions) = _entityView.CalculateEntityStates(session, lastAck);
+#endif
+                var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
+
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
@@ -167,15 +206,8 @@ namespace Robust.Server.GameStates
             }
 
             var mailBag = _playerManager.GetAllPlayers()
-                .AsParallel().Select(GenerateMail).ToList();
-
-            // TODO: oh god oh fuck kill it with fire.
-            // PLINQ *seems* to be scheduling to the main thread partially (I guess that makes sense?)
-            // Which causes that IoC "hack" up there to override IoC in the main thread, nuking the game.
-            // At least, that's our running theory. I reproduced it once locally and can't reproduce it again.
-            // Throwing shit at the wall to hope it fixes it.
-            IoCManager.InitThread(oldDeps, true);
-
+                .Where(s=>s.Status == SessionStatus.InGame).Select(GenerateMail).ToList();
+            
             foreach (var (msg, chan) in mailBag)
             {
                 // see session.Status != SessionStatus.InGame above
@@ -187,7 +219,10 @@ namespace Robust.Server.GameStates
             if (oldestAck > _lastOldestAck)
             {
                 _lastOldestAck = oldestAck;
+#if OLD_PVS
                 _entityManager.CullDeletionHistory(oldestAck);
+#endif
+                _entityView.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }
         }

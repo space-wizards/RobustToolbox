@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameObjects
@@ -10,7 +11,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        List<EntityState>? GetEntityStates(GameTick fromTick, IPlayerSession player);
+        List<EntityState>? GetEntityStates(ICommonSession player, GameTick fromTick);
 
         /// <summary>
         ///     Gets all entity states within an AABB that have been modified after and including the provided tick.
@@ -37,5 +38,14 @@ namespace Robust.Server.GameObjects
 
         float MaxUpdateRange { get; }
 
+        /// <summary>
+        /// Generates a network entity state for the given entity.
+        /// </summary>
+        /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
+        /// <param name="entityUid">Uid of the entity to generate the state from.</param>
+        /// <param name="fromTick">Only provide delta changes from this tick.</param>
+        /// <param name="player">The player to generate this state for.</param>
+        /// <returns>New entity State for the given entity.</returns>
+        EntityState GetEntityState(EntityUid entityUid, GameTick fromTick, ICommonSession player);
     }
 }

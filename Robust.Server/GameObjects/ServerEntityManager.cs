@@ -11,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -26,8 +27,6 @@ namespace Robust.Server.GameObjects
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
             "Amount of alive entities.");
-
-        private const float MinimumMotionForMovers = 1 / 128f;
 
         #region IEntityManager Members
 
@@ -133,7 +132,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState>? GetEntityStates(GameTick fromTick, IPlayerSession player)
+        public List<EntityState>? GetEntityStates(ICommonSession player, GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -148,7 +147,7 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick, player));
+                stateEntities.Add(GetEntityState(entity.Uid, fromTick, player));
             }
 
             // no point sending an empty collection
@@ -159,13 +158,6 @@ namespace Robust.Server.GameObjects
             = new();
 
         // Is thread safe.
-        private SortedSet<EntityUid> GetSeenMovers(IPlayerSession player)
-        {
-            lock (_seenMovers)
-            {
-                return GetSeenMoversUnlocked(player);
-            }
-        }
 
         private SortedSet<EntityUid> GetSeenMoversUnlocked(IPlayerSession player)
         {
@@ -266,7 +258,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
+        private static void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
             foreach (var child in children)
             {
@@ -326,11 +318,13 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
+            const float MinimumMotionForMovers = 1 / 128f;
+            
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
             {
                 // super-observer?
-                return GetEntityStates(fromTick, player);
+                return GetEntityStates(player, fromTick);
             }
 
             var playerUid = playerEnt.Uid;
@@ -340,7 +334,13 @@ namespace Robust.Server.GameObjects
             var mapId = transform.MapID;
             var viewbox = new Box2(position, position).Enlarged(MaxUpdateRange);
 
-            var seenMovers = GetSeenMovers(player);
+            SortedSet<EntityUid> ret;
+            lock (_seenMovers)
+            {
+                ret = GetSeenMoversUnlocked(player);
+            }
+
+            var seenMovers = ret;
             var lSeen = GetLastSeen(player);
 
             var pseStateRes = _playerSeenEntityStatesResources.Value!;
@@ -384,7 +384,7 @@ namespace Robust.Server.GameObjects
                     }
                 }
 
-                var state = GetEntityState(ComponentManager, uid, fromTick, player);
+                var state = GetEntityState(uid, fromTick, player);
 
                 if (checkedEnts.Add(uid))
                 {
@@ -514,7 +514,7 @@ namespace Robust.Server.GameObjects
                 }
 
                 // should this be lastSeen or fromTick?
-                var entityState = GetEntityState(ComponentManager, uid, lastSeen, player);
+                var entityState = GetEntityState(uid, lastSeen, player);
 
                 checkedEnts.Add(uid);
 
@@ -574,7 +574,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                var state = GetEntityState(ComponentManager, uid, fromTick, player);
+                var state = GetEntityState(uid, fromTick, player);
 
                 if (state.ComponentStates == null)
                 {
@@ -627,7 +627,7 @@ namespace Robust.Server.GameObjects
                     }
 
                     var entity = GetEntity(uid);
-                    var state = GetEntityState(ComponentManager, uid, fromTick, player);
+                    var state = GetEntityState(uid, fromTick, player);
 
                     if (state.ComponentStates == null || viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                     {
@@ -881,8 +881,9 @@ namespace Robust.Server.GameObjects
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <param name="player">The player to generate this state for.</param>
         /// <returns>New entity State for the given entity.</returns>
-        private static EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, IPlayerSession player)
+        public EntityState GetEntityState(EntityUid entityUid, GameTick fromTick, ICommonSession player)
         {
+            IComponentManager compMan = ComponentManager;
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 
@@ -917,7 +918,6 @@ namespace Robust.Server.GameObjects
             return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
         }
 
-
         private void IncludeMapCriticalEntities(HashSet<IEntity> set)
         {
             foreach (var mapId in _mapManager.GetAllMapIds())
@@ -937,7 +937,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
+        private static void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
         {
             set.RemoveWhere(e =>
             {

@@ -225,7 +225,7 @@ namespace Robust.Client.GameStates
             {
                 if (args.Length != 1)
                 {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    shell.WriteError("Invalid argument amount. Expected 1 arguments.");
                     return;
                 }
 

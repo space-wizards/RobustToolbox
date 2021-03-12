@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
 using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
@@ -16,36 +16,72 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-using Dependency = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.UnitTesting
 {
-    public class IntegrationPrototypeManager : IPrototypeManager
+    public class IntegrationPrototypeManager : IIntegrationPrototypeManager, IPostInjectInit
     {
-        private static readonly ResourcePath DefaultDirectory = new("/Prototypes")
-            ;
-        private static ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>> _defaultPrototypes = ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>>.Empty;
+        private static readonly ResourcePath DefaultDirectory = new("/Prototypes");
+
+        private static ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>> _defaultPrototypes =
+            ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>>.Empty;
 
         private static ImmutableHashSet<string> _defaultFiles = ImmutableHashSet<string>.Empty;
 
-        private static ImmutableDictionary<string, ImmutableHashSet<IPrototype>> _defaultFilePrototypes = ImmutableDictionary<string, ImmutableHashSet<IPrototype>>.Empty;
+        private static ImmutableDictionary<string, ImmutableHashSet<IPrototype>> _defaultFilePrototypes =
+            ImmutableDictionary<string, ImmutableHashSet<IPrototype>>.Empty;
 
-        private static ImmutableHashSet<(YamlStream data, string file)> _defaultData = ImmutableHashSet<(YamlStream data, string file)>.Empty;
+        private static ImmutableHashSet<(YamlStream data, string file)> _defaultData =
+            ImmutableHashSet<(YamlStream data, string file)>.Empty;
+
+        private static ImmutableDictionary<Type, PrototypeInheritanceTree> _defaultInheritanceTrees = ImmutableDictionary<Type, PrototypeInheritanceTree>.Empty;
+
+        private static ImmutableHashSet<Type> _defaultTypes = ImmutableHashSet<Type>.Empty;
+
+        private static ImmutableDictionary<Type, int> _defaultPriorities = ImmutableDictionary<Type, int>.Empty;
+
+        private static ImmutableDictionary<Type, ImmutableDictionary<string, DeserializationResult>> _defaultResults = ImmutableDictionary<Type, ImmutableDictionary<string, DeserializationResult>>.Empty;
+
+        private static ImmutableHashSet<string> _defaultIgnored = ImmutableHashSet<string>.Empty;
 
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private readonly Dictionary<string, Type> _types = new();
+        // todo dont fill this with empty placeholders
         private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
-        protected readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _results = new();
+        private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _results = new();
         private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
         private readonly HashSet<string> _ignored = new();
         private readonly Dictionary<Type, int> _priorities = new();
+        private readonly HashSet<string> _queuedStrings = new();
 
-        public void Setup(IResourceManager resourceManager, ISerializationManager serializationManager)
+        // todo move this somewhere else
+        private void Setup(IResourceManager resourceManager, ISerializationManager serializationManager)
         {
-            var changedPrototypes = new Dictionary<Type, Dictionary<string, IPrototype>>();
+            var defaultPriorities = new Dictionary<Type, int>();
+            var defaultTypes = new Dictionary<string, Type>();
+            var defaultPrototypes = new Dictionary<Type, Dictionary<string, IPrototype>>();
+            var defaultResults = new Dictionary<Type, Dictionary<string, DeserializationResult>>();
+            var defaultInheritanceTrees = new Dictionary<Type, PrototypeInheritanceTree>();
+
+            foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
+            {
+                var attribute = (PrototypeAttribute?) Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute))!;
+
+                defaultTypes.Add(attribute.Type, type);
+                defaultPriorities[type] = attribute.LoadPriority;
+
+                if (typeof(IPrototype).IsAssignableFrom(type))
+                {
+                    defaultPrototypes[type] = new Dictionary<string, IPrototype>();
+                    defaultResults[type] = new Dictionary<string, DeserializationResult>();
+                    if (typeof(IInheritingPrototype).IsAssignableFrom(type))
+                        defaultInheritanceTrees[type] = new PrototypeInheritanceTree();
+                }
+            }
+
             var files = new HashSet<string>();
             var allFilePrototypes = new Dictionary<string, HashSet<IPrototype>>();
             var data = new HashSet<(YamlStream data, string file)>();
@@ -77,29 +113,25 @@ namespace Robust.UnitTesting
                     foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
                     {
                         var type = node.GetNode("type").AsString();
-                        if (!_types.ContainsKey(type))
+                        if (!defaultTypes.ContainsKey(type))
                         {
-                            if (_ignored.Contains(type))
-                            {
-                                continue;
-                            }
-
-                            throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+                            // Skip validating prototype ignores here
+                            continue;
                         }
 
                         var prototypeType = _types[type];
                         var res = serializationManager.Read(prototypeType, node.ToDataNode(), skipHook: true);
                         var prototype = (IPrototype) res.RawValue!;
 
-                        if (_prototypes[prototypeType].ContainsKey(prototype.ID))
+                        if (defaultPrototypes[prototypeType].ContainsKey(prototype.ID))
                         {
                             throw new PrototypeLoadException($"Duplicate ID: '{prototype.ID}'");
                         }
 
-                        _results[prototypeType][prototype.ID] = res;
+                        defaultResults[prototypeType][prototype.ID] = res;
                         if (prototype is IInheritingPrototype inheritingPrototype)
                         {
-                            _inheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
+                            defaultInheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
                         }
                         else
                         {
@@ -107,8 +139,7 @@ namespace Robust.UnitTesting
                             res.CallAfterDeserializationHook();
                         }
 
-                        _prototypes[prototypeType][prototype.ID] = prototype;
-                        changedPrototypes.GetOrNew(prototypeType).Add(prototype.ID, prototype);
+                        defaultPrototypes[prototypeType][prototype.ID] = prototype;
                         filePrototypes.Add(prototype);
                     }
                 }
@@ -116,26 +147,39 @@ namespace Robust.UnitTesting
                 allFilePrototypes.Add(file.ToString(), filePrototypes);
             }
 
-            _defaultPrototypes = changedPrototypes.ToImmutableDictionary(k => k.Key, v => v.Value.ToImmutableDictionary());
+            Resync(defaultInheritanceTrees, defaultPriorities, defaultResults, defaultPrototypes);
+
+            _defaultPrototypes = defaultPrototypes.ToImmutableDictionary(k => k.Key, v => v.Value.ToImmutableDictionary());
             _defaultFiles = files.ToImmutableHashSet();
             _defaultFilePrototypes = allFilePrototypes.ToImmutableDictionary(k => k.Key, v => v.Value.ToImmutableHashSet());
             _defaultData = data.ToImmutableHashSet();
-
-            Resync(_inheritanceTrees);
+            _defaultInheritanceTrees = defaultInheritanceTrees.ToImmutableDictionary();
+            _defaultPriorities = defaultPriorities.ToImmutableDictionary();
         }
 
-        [OneTimeTearDown]
-        public void Teardown()
+        public IntegrationPrototypeManager()
         {
-            _defaultPrototypes = null!;
+
+        }
+
+        public void PostInject()
+        {
+            _reflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
+            ReloadPrototypeTypes();
+        }
+
+        private void ReloadPrototypeTypes()
+        {
+            Clear();
+
+            foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
+            {
+                RegisterType(type);
+            }
         }
 
         public void Initialize()
         {
-            if (_netManager.IsServer)
-            {
-                RegisterIgnore("shader");
-            }
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -158,7 +202,8 @@ namespace Robust.UnitTesting
 
         public T Index<T>(string id) where T : class, IPrototype
         {
-            if (_defaultPrototypes[typeof(T)].TryGetValue(id, out var prototype))
+            if (_defaultPrototypes.TryGetValue(typeof(T), out var prototypeIds) &&
+                prototypeIds.TryGetValue(id, out var prototype))
             {
                 return (T) prototype;
             }
@@ -184,12 +229,17 @@ namespace Robust.UnitTesting
 
         public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
         {
-            if (_defaultPrototypes[typeof(T)].TryGetValue(id, out var prototypeUnCast) ||
-                _prototypes[typeof(T)].TryGetValue(id, out prototypeUnCast))
+            if (_defaultPrototypes.TryGetValue(typeof(T), out var prototypeIds) &&
+                prototypeIds.TryGetValue(id, out var prototypeUnCast))
             {
                 prototype = (T) prototypeUnCast;
                 return true;
+            }
 
+            if (_prototypes[typeof(T)].TryGetValue(id, out prototypeUnCast))
+            {
+                prototype = (T) prototypeUnCast;
+                return true;
             }
 
             prototype = default;
@@ -377,18 +427,21 @@ namespace Robust.UnitTesting
 
         public void ReloadPrototypes(ResourcePath file)
         {
-            throw new NotImplementedException();
         }
 
         public void Resync()
         {
-            Resync(_inheritanceTrees);
+            Resync(_inheritanceTrees, _priorities, _results, _prototypes);
         }
 
-        public void Resync(Dictionary<Type, PrototypeInheritanceTree> trees)
+        public void Resync(
+            Dictionary<Type, PrototypeInheritanceTree> trees,
+            Dictionary<Type, int> priorities,
+            Dictionary<Type, Dictionary<string, DeserializationResult>> results,
+            Dictionary<Type, Dictionary<string, IPrototype>> prototypes)
         {
             var treeKeys = trees.Keys.ToList();
-            treeKeys.Sort();
+            treeKeys.Sort((a, b) => priorities[b].CompareTo(priorities[a]));
 
             foreach (var type in treeKeys)
             {
@@ -396,33 +449,43 @@ namespace Robust.UnitTesting
 
                 foreach (var baseNode in tree.BaseNodes)
                 {
-                    PushInheritance(type, baseNode, null, new HashSet<string>());
+                    PushInheritance(type, baseNode, null, new HashSet<string>(), results, trees, prototypes);
                 }
             }
         }
 
-        public void PushInheritance(Type type, string id, DeserializationResult? baseResult, HashSet<string> changed)
+        public void PushInheritance(
+            Type type,
+            string id,
+            DeserializationResult? baseResult,
+            HashSet<string> changed,
+            Dictionary<Type, Dictionary<string, DeserializationResult>> results,
+            Dictionary<Type, PrototypeInheritanceTree> trees,
+            Dictionary<Type, Dictionary<string, IPrototype>> prototypes)
         {
             changed.Add(id);
 
-            var myRes = _results[type][id];
+            var myRes = results[type][id];
             var newResult = baseResult != null ? myRes.PushInheritanceFrom(baseResult) : myRes;
 
-            foreach (var childID in _inheritanceTrees[type].Children(id))
+            foreach (var childID in trees[type].Children(id))
             {
-                PushInheritance(type, childID, newResult, changed);
+                PushInheritance(type, childID, newResult, changed, results, trees, prototypes);
             }
 
-            if(newResult.RawValue is not IInheritingPrototype inheritingPrototype)
+            if (newResult.RawValue is not IInheritingPrototype inheritingPrototype)
             {
                 Logger.ErrorS("Serv3", $"PushInheritance was called on non-inheriting prototype! ({type}, {id})");
                 return;
             }
 
-            if(!inheritingPrototype.Abstract)
+            if (!inheritingPrototype.Abstract)
                 newResult.CallAfterDeserializationHook();
-            var populatedRes = _serializationManager.PopulateDataDefinition(_prototypes[type][id], (IDeserializedDefinition)newResult);
-            _prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
+
+            var populatedRes =
+                _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition) newResult);
+
+            prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }
 
         public void RegisterIgnore(string name)
@@ -432,7 +495,7 @@ namespace Robust.UnitTesting
 
         public void RegisterType(Type type)
         {
-            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute))!;
+            var attribute = (PrototypeAttribute?) Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute))!;
 
             _types.Add(attribute.Type, type);
             _priorities[type] = attribute.LoadPriority;
@@ -447,5 +510,10 @@ namespace Robust.UnitTesting
         }
 
         public event Action<YamlStream, string>? LoadedData;
+
+        public void QueueLoadString(string str)
+        {
+            _queuedStrings.Add(str);
+        }
     }
 }

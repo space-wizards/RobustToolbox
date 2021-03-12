@@ -318,6 +318,7 @@ namespace Robust.UnitTesting
                     IoCManager.InitThread(DependencyCollection);
                     ServerIoC.RegisterIoC();
                     IoCManager.Register<IPrototypeManager, IntegrationPrototypeManager>(true);
+                    IoCManager.Register<IIntegrationPrototypeManager, IntegrationPrototypeManager>();
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
@@ -351,6 +352,8 @@ namespace Robust.UnitTesting
                         {
                             IoCManager.Resolve<IResourceManagerInternal>()
                                 .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+
+                            IoCManager.Resolve<IIntegrationPrototypeManager>().QueueLoadString(_options.ExtraPrototypes);
                         }
                     }
 
@@ -412,6 +415,8 @@ namespace Robust.UnitTesting
                 {
                     IoCManager.InitThread(DependencyCollection);
                     ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
+                    IoCManager.Register<IPrototypeManager, IntegrationPrototypeManager>(true);
+                    IoCManager.Register<IIntegrationPrototypeManager, IntegrationPrototypeManager>();
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
@@ -443,6 +448,8 @@ namespace Robust.UnitTesting
                         {
                             IoCManager.Resolve<IResourceManagerInternal>()
                                 .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+
+                            IoCManager.Resolve<IIntegrationPrototypeManager>().QueueLoadString(_options.ExtraPrototypes);
                         }
                     }
 

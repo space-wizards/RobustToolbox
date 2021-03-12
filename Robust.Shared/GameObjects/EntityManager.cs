@@ -136,9 +136,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
 
-        /// <inheritdoc />
-        public abstract IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
-
         /// <summary>
         /// Returns an entity by id
         /// </summary>

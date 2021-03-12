@@ -400,5 +400,8 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> ResCheckPathCasing =
             CVarDef.Create("res.checkpathcasing", false);
+
+        public static readonly CVarDef<bool> TexturePreloadingEnabled =
+            CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
     }
 }

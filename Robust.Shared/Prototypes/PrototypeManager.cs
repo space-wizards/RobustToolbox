@@ -430,7 +430,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        protected virtual HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
+        protected HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
         {
             var changedPrototypes = new HashSet<IPrototype>();
 

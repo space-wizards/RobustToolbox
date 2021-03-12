@@ -137,19 +137,19 @@ namespace Robust.Shared.Prototypes
         [Dependency] public readonly INetManager NetManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        private readonly Dictionary<string, Type> prototypeTypes = new();
+        protected readonly Dictionary<string, Type> prototypeTypes = new();
         private readonly Dictionary<Type, int> prototypePriorities = new();
 
         private bool _initialized;
-        private bool _hasEverBeenReloaded;
+        protected bool HasEverBeenReloaded;
         private bool _hasEverResynced;
 
         #region IPrototypeManager members
-        private readonly Dictionary<Type, Dictionary<string, IPrototype>> prototypes = new();
-        private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
-        private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
+        protected readonly Dictionary<Type, Dictionary<string, IPrototype>> prototypes = new();
+        protected readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
+        protected readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
 
-        private readonly HashSet<string> IgnoredPrototypeTypes = new();
+        protected readonly HashSet<string> IgnoredPrototypeTypes = new();
 
         public virtual void Initialize()
         {
@@ -161,9 +161,9 @@ namespace Robust.Shared.Prototypes
             _initialized = true;
         }
 
-        public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
+        public virtual IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
-            if (!_hasEverBeenReloaded)
+            if (!HasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
@@ -171,9 +171,9 @@ namespace Robust.Shared.Prototypes
             return prototypes[typeof(T)].Values.Select(p => (T) p);
         }
 
-        public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
+        public virtual IEnumerable<IPrototype> EnumeratePrototypes(Type type)
         {
-            if (!_hasEverBeenReloaded)
+            if (!HasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
@@ -181,9 +181,9 @@ namespace Robust.Shared.Prototypes
             return prototypes[type].Values;
         }
 
-        public T Index<T>(string id) where T : class, IPrototype
+        public virtual T Index<T>(string id) where T : class, IPrototype
         {
-            if (!_hasEverBeenReloaded)
+            if (!HasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
@@ -197,9 +197,9 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public IPrototype Index(Type type, string id)
+        public virtual IPrototype Index(Type type, string id)
         {
-            if (!_hasEverBeenReloaded)
+            if (!HasEverBeenReloaded)
             {
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
@@ -332,11 +332,11 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public List<IPrototype> LoadDirectory(ResourcePath path)
+        public virtual List<IPrototype> LoadDirectory(ResourcePath path)
         {
             var changedPrototypes = new List<IPrototype>();
 
-            _hasEverBeenReloaded = true;
+            HasEverBeenReloaded = true;
             var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
 
@@ -399,7 +399,7 @@ namespace Robust.Shared.Prototypes
             return dict;
         }
 
-        private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
+        protected StreamReader? ReadFile(ResourcePath file, bool @throw = true)
         {
             var retries = 0;
 
@@ -430,7 +430,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
+        protected virtual HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
         {
             var changedPrototypes = new HashSet<IPrototype>();
 
@@ -473,7 +473,7 @@ namespace Robust.Shared.Prototypes
         public List<IPrototype> LoadFromStream(TextReader stream)
         {
             var changedPrototypes = new List<IPrototype>();
-            _hasEverBeenReloaded = true;
+            HasEverBeenReloaded = true;
             var yaml = new YamlStream();
             yaml.Load(stream);
 
@@ -562,7 +562,7 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public bool HasIndex<T>(string id) where T : IPrototype
+        public virtual bool HasIndex<T>(string id) where T : IPrototype
         {
             if (!prototypes.TryGetValue(typeof(T), out var index))
             {
@@ -571,7 +571,7 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
+        public virtual bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
         {
             if (!prototypes.TryGetValue(typeof(T), out var index))
             {
@@ -623,6 +623,10 @@ namespace Robust.Shared.Prototypes
 
         public event Action<YamlStream, string>? LoadedData;
 
+        protected void DataLoaded(YamlStream stream, string name)
+        {
+            LoadedData?.Invoke(stream, name);
+        }
     }
 
     [Serializable]

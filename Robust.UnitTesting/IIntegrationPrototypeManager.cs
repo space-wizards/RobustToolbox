@@ -1,4 +1,7 @@
-﻿using Robust.Shared.Prototypes;
+﻿using System;
+using System.Collections.Generic;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager.Result;
 
 namespace Robust.UnitTesting
 {
@@ -15,5 +18,11 @@ namespace Robust.UnitTesting
         /// </summary>
         /// <param name="str">The string to load, containing the extra prototypes.</param>
         void QueueLoadString(string str);
+
+        void Resync(
+            Dictionary<Type, PrototypeInheritanceTree> trees,
+            Dictionary<Type, int> priorities,
+            Dictionary<Type, Dictionary<string, DeserializationResult>> results,
+            Dictionary<Type, Dictionary<string, IPrototype>> prototypes);
     }
 }

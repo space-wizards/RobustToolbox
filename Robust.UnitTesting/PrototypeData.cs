@@ -11,6 +11,7 @@ using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using static Robust.UnitTesting.RobustIntegrationTest;
 
 namespace Robust.UnitTesting
 {
@@ -20,27 +21,20 @@ namespace Robust.UnitTesting
 
         public ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>> DefaultPrototypes = ImmutableDictionary<Type, ImmutableDictionary<string, IPrototype>>.Empty;
 
-        private ImmutableHashSet<string> _defaultFiles;
-
         public readonly ImmutableDictionary<string, ImmutableHashSet<IPrototype>> DefaultFilePrototypes;
 
         public readonly ImmutableHashSet<(YamlStream data, string file)> DefaultData;
 
         private readonly Dictionary<Type, PrototypeInheritanceTree> _defaultInheritanceTrees;
 
-        private ImmutableHashSet<Type> _defaultTypes = ImmutableHashSet<Type>.Empty;
-
         private readonly Dictionary<Type, int> _defaultPriorities;
 
         private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _defaultResults;
 
-        private ImmutableHashSet<string> _defaultIgnored = ImmutableHashSet<string>.Empty;
-
         public PrototypeData(
             IResourceManager resourceManager,
             ISerializationManager serializationManager,
-            IReflectionManager reflectionManager,
-            IIntegrationPrototypeManager prototypeManager)
+            IReflectionManager reflectionManager)
         {
             var defaultPriorities = new Dictionary<Type, int>();
             var defaultTypes = new Dictionary<string, Type>();
@@ -131,7 +125,6 @@ namespace Robust.UnitTesting
 
 
             _defaultPrototypes = defaultPrototypes;
-            _defaultFiles = files.ToImmutableHashSet();
             DefaultFilePrototypes = allFilePrototypes.ToImmutableDictionary(k => k.Key, v => v.Value.ToImmutableHashSet());
             DefaultData = data.ToImmutableHashSet();
             _defaultInheritanceTrees = defaultInheritanceTrees;

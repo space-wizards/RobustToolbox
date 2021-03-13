@@ -59,17 +59,6 @@ namespace Robust.Shared.GameObjects
         IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <summary>
-        /// Spawns an initialized entity at the default location, using the given prototype.
-        /// </summary>
-        /// <remarks>
-        ///     Does not run map init. This only matters on the server.
-        /// </remarks>
-        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
-        /// <param name="coordinates"></param>
-        /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
-
-        /// <summary>
         /// Returns an entity by id
         /// </summary>
         /// <param name="uid"></param>

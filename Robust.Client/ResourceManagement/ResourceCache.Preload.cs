@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
@@ -12,10 +14,17 @@ namespace Robust.Client.ResourceManagement
     {
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public void PreloadTextures()
         {
             var sawmill = _logManager.GetSawmill("res.preload");
+
+            if (!_configurationManager.GetCVar(CVars.TexturePreloadingEnabled))
+            {
+                sawmill.Debug($"Skipping texture preloading due to CVar value.");
+                return;
+            }
 
             PreloadTextures(sawmill);
             PreloadRsis(sawmill);

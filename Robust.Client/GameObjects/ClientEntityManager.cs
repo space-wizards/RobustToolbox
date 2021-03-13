@@ -212,12 +212,6 @@ namespace Robust.Client.GameObjects
             return entity;
         }
 
-        /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates)
-        {
-            return SpawnEntity(protoName, coordinates);
-        }
-
         protected override EntityUid GenerateEntityUid()
         {
             return new(_nextClientEntityUid++);

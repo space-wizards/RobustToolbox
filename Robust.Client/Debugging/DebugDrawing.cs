@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Enums;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -41,14 +42,14 @@ namespace Robust.Client.Debugging
 
                 _debugColliders = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlay<PhysicsOverlay>())
                 {
                     _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager, _physicsManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(PhysicsOverlay));
+                    _overlayManager.RemoveOverlay<PhysicsOverlay>();
                 }
             }
         }
@@ -66,13 +67,13 @@ namespace Robust.Client.Debugging
 
                 _debugPositions = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
                     _overlayManager.AddOverlay(new EntityPositionOverlay(_entityManager, _eyeManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(EntityPositionOverlay));
+                    _overlayManager.RemoveOverlay<EntityPositionOverlay>();
                 }
             }
         }
@@ -91,8 +92,8 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new();
 
+
             public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
-                : base(nameof(PhysicsOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
@@ -193,9 +194,9 @@ namespace Robust.Client.Debugging
             {
                 var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
-                foreach (var chr in str)
+                foreach (var rune in str.EnumerateRunes())
                 {
-                    var advance = font.DrawChar(handle, chr, baseLine, 1, Color.White);
+                    var advance = font.DrawChar(handle, rune, baseLine, 1, Color.White);
                     baseLine += new Vector2(advance, 0);
                 }
             }
@@ -265,7 +266,7 @@ namespace Robust.Client.Debugging
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager) : base(nameof(EntityPositionOverlay))
+            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager)
             {
                 _entityManager = entityManager;
                 _eyeManager = eyeManager;

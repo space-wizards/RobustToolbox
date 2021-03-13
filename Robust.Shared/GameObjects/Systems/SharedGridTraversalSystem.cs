@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
                     grid.GridEntityId != entity.Uid)
                 {
                     // Also this may deparent if 2 entities are parented but not using containers so fix that
-                    if (grid.GridEntityId != transform.ParentUid)
+                    if (grid.Index != transform.GridID)
                     {
                         transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
                     }

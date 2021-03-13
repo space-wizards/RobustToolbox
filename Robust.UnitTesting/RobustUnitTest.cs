@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +7,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
@@ -63,6 +64,18 @@ namespace Robust.UnitTesting
             {
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
+
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            if(entMan.EventBus == null)
+            {
+                entMan.Initialize();
+                entMan.Startup();
+            }
+
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            mapMan.Initialize();
+            mapMan.Startup();
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 

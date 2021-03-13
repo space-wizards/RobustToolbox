@@ -43,7 +43,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             container.Resolve<IReflectionManager>().LoadAssemblies(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
 
-            IoCManager.InitThread(container);
+            IoCManager.InitThread(container, replaceExisting: true);
 
             cfg.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 

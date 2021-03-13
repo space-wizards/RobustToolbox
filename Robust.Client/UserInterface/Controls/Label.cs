@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
@@ -180,15 +181,15 @@ namespace Robust.Client.UserInterface.Controls
 
             var baseLine = CalcBaseline();
 
-            foreach (var chr in _text)
+            foreach (var rune in _text.EnumerateRunes())
             {
-                if (chr == '\n')
+                if (rune == new Rune('\n'))
                 {
                     newlines += 1;
                     baseLine = CalcBaseline();
                 }
 
-                var advance = font.DrawChar(handle, chr, baseLine, UIScale, actualFontColor);
+                var advance = font.DrawChar(handle, rune, baseLine, UIScale, actualFontColor);
                 baseLine += (advance, 0);
             }
         }
@@ -252,16 +253,16 @@ namespace Robust.Client.UserInterface.Controls
 
             var font = ActualFont;
             var height = font.GetHeight(UIScale);
-            foreach (var chr in _text)
+            foreach (var rune in _text.EnumerateRunes())
             {
-                if (chr == '\n')
+                if (rune == new Rune('\n'))
                 {
                     _cachedTextWidths.Add(0);
                     height += font.GetLineHeight(UIScale);
                 }
                 else
                 {
-                    var metrics = font.GetCharMetrics(chr, UIScale);
+                    var metrics = font.GetCharMetrics(rune, UIScale);
                     if (metrics == null)
                     {
                         continue;

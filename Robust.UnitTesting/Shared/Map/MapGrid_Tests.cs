@@ -29,18 +29,6 @@ namespace Robust.UnitTesting.Shared.Map
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
 
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-
-            var mapMan = IoCManager.Resolve<IMapManager>();
-
-            mapMan.Initialize();
-            mapMan.Startup();
-        }
-
         [Test]
         public void GetTileRefCoords()
         {

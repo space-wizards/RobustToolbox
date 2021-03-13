@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Shared.Map;
@@ -31,6 +32,10 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
+        event EventHandler<EntityUid>? EntityAdded;
+        event EventHandler<EntityUid>? EntityInitialized;
+        event EventHandler<EntityUid>? EntityDeleted;
+
         IEntity CreateEntityUninitialized(string? prototypeName);
 
         IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
@@ -52,17 +57,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="coordinates"></param>
         /// <returns></returns>
         IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
-
-        /// <summary>
-        /// Spawns an initialized entity at the default location, using the given prototype.
-        /// </summary>
-        /// <remarks>
-        ///     Does not run map init. This only matters on the server.
-        /// </remarks>
-        /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
-        /// <param name="coordinates"></param>
-        /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id

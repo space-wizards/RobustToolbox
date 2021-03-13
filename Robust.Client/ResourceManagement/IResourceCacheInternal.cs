@@ -10,5 +10,6 @@ namespace Robust.Client.ResourceManagement
         void RsiLoaded(RsiLoadedEventArgs eventArgs);
 
         void MountLoaderApi(IFileApi api, string apiPrefix, ResourcePath? prefix=null);
+        void PreloadTextures();
     }
 }

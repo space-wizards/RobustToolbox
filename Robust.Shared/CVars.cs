@@ -93,6 +93,10 @@ namespace Robust.Shared
         public static readonly CVarDef<int> SysWinTickPeriod =
             CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
 
+        // On non-FULL_RELEASE builds, use ProfileOptimization/tiered JIT to speed up game startup.
+        public static readonly CVarDef<bool> SysProfileOpt =
+            CVarDef.Create("sys.profile_opt", true);
+
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
         public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
@@ -331,6 +335,9 @@ namespace Robust.Shared
         /// A small length used as a collision and constraint tolerance. Usually it is
         /// chosen to be numerically significant, but visually insignificant.
         /// </summary>
+        /// <remarks>
+        ///     Note that some joints may have this cached and not update on value change.
+        /// </remarks>
         public static readonly CVarDef<float> LinearSlop =
             CVarDef.Create("physics.linearslop", 0.005f);
 
@@ -372,8 +379,9 @@ namespace Robust.Shared
 
         // - Maximums
         // Squared
+        // 35 m/s, AKA half a tile per frame allowed. Divide this by frametime to get units per second.
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 4.0f);
+            CVarDef.Create("physics.maxlinvelocity", 0.56f);
 
         // Squared
         public static readonly CVarDef<float> MaxAngVelocity =
@@ -385,5 +393,15 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
+
+        /*
+         * RES
+         */
+
+        public static readonly CVarDef<bool> ResCheckPathCasing =
+            CVarDef.Create("res.checkpathcasing", false);
+
+        public static readonly CVarDef<bool> TexturePreloadingEnabled =
+            CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
     }
 }

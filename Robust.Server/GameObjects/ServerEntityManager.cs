@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -130,14 +130,6 @@ namespace Robust.Server.GameObjects
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
             return entity;
-        }
-
-        /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates)
-        {
-            var newEnt = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) newEnt);
-            return newEnt;
         }
 
         /// <inheritdoc />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -66,6 +66,7 @@ namespace Robust.Client.UserInterface.CustomControls
             this.resourceCache = resourceCache;
 
             Title = Loc.GetString("Entity Spawn Panel");
+
 
             SetSize = (250, 300);
             MinSize = (250, 200);

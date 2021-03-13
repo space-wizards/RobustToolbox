@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
@@ -141,6 +142,10 @@ namespace Robust.Server
         /// <inheritdoc />
         public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
+            var profilePath = Path.Join(Environment.CurrentDirectory, "AAAAAAAA");
+            ProfileOptimization.SetProfileRoot(profilePath);
+            ProfileOptimization.StartProfile("AAAAAAAAAA");
+
             _config.Initialize(true);
 
             if (LoadConfigAndUserData)
@@ -177,6 +182,8 @@ namespace Robust.Server
             {
                 _config.OverrideConVars(_commandLineArgs.CVars);
             }
+
+            ProfileOptSetup.Setup(_config);
 
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
@@ -326,6 +333,8 @@ namespace Robust.Server
             {
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
+
+            GC.Collect();
 
             return false;
         }

@@ -119,6 +119,8 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
+            ProfileOptSetup.Setup(_configurationManager);
+
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
             ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
@@ -161,6 +163,7 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
+            _resourceCache.PreloadTextures();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
@@ -187,6 +190,8 @@ namespace Robust.Client
             }
 
             _authManager.LoadFromEnv();
+
+            GC.Collect();
 
             _clyde.Ready();
 

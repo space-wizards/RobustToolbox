@@ -179,11 +179,11 @@ namespace Robust.Shared.GameObjects
             if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;
 
+            physicsComponent.ClearJoints();
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
                 _maps[oldMapId].RemoveBody(physicsComponent);
-                physicsComponent.ClearJoints();
             }
 
             var newMapId = message.Entity.Transform.MapID;
@@ -236,6 +236,7 @@ namespace Robust.Shared.GameObjects
 
             var mapId = message.Container.Owner.Transform.MapID;
 
+            physicsComponent.ClearJoints();
             _maps[mapId].RemoveBody(physicsComponent);
         }
 

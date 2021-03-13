@@ -57,9 +57,9 @@ namespace Robust.Shared.GameObjects
             EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
         }
 
-        public override void OnRemove()
+        protected override void Shutdown()
         {
-            base.OnRemove();
+            base.Shutdown();
 
             var transform = Owner.Transform;
             var map = transform.MapID;

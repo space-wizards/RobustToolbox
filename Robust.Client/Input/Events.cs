@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
@@ -58,6 +59,7 @@ namespace Robust.Client.Input
         }
 
         public uint CodePoint { get; }
+        public Rune AsRune => new Rune(CodePoint);
     }
 
     public class KeyEventArgs : ModifierInputEventArgs

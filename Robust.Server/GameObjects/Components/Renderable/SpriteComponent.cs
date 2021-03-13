@@ -54,17 +54,19 @@ namespace Robust.Server.GameObjects
             get => _drawDepth;
             set
             {
+                if (_drawDepth == value) return;
                 _drawDepth = value;
                 Dirty();
             }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Visible
+        public override bool Visible
         {
             get => _visible;
             set
             {
+                if (_visible == value) return;
                 _visible = value;
                 Dirty();
             }

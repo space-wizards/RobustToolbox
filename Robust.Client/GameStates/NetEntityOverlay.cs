@@ -3,6 +3,7 @@ using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -28,12 +29,12 @@ namespace Robust.Client.GameStates
 
         /// <inheritdoc />
         public override OverlaySpace Space => OverlaySpace.ScreenSpace;
-        
+
         private readonly Font _font;
         private readonly int _lineHeight;
         private readonly List<NetEntity> _netEnts = new();
 
-        public NetEntityOverlay() : base(nameof(NetEntityOverlay))
+        public NetEntityOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -42,12 +43,12 @@ namespace Robust.Client.GameStates
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
-        
+
         private void HandleGameStateApplied(GameStateAppliedArgs args)
         {
             if(_gameTiming.InPrediction) // we only care about real server states.
                 return;
-            
+
             // Shift traffic history down one
             for (var i = 0; i < _netEnts.Count; i++)
             {
@@ -74,7 +75,7 @@ namespace Robust.Client.GameStates
 
                         if (netEnt.Id != entityState.Uid)
                             continue;
-                    
+
                         //TODO: calculate size of state and record it here.
                         netEnt.Traffic[^1] = 1;
                         netEnt.LastUpdate = gameState.ToSequence;
@@ -102,7 +103,7 @@ namespace Robust.Client.GameStates
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
-                
+
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
@@ -123,7 +124,7 @@ namespace Robust.Client.GameStates
                 _netEnts[i] = netEnt; // copy struct back
             }
         }
-        
+
         protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             if (!_netManager.IsConnected)
@@ -131,7 +132,7 @@ namespace Robust.Client.GameStates
 
             // remember, 0,0 is top left of ui with +X right and +Y down
             var screenHandle = (DrawingHandleScreen)handle;
-            
+
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
@@ -179,20 +180,19 @@ namespace Robust.Client.GameStates
             return Color.Green; // Entity in PVS, but not updated recently.
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
-
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
 
         private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str, Color textColor)
         {
             var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
-            foreach (var chr in str)
+            foreach (var rune in str.EnumerateRunes())
             {
-                var advance = font.DrawChar(handle, chr, baseLine, 1, textColor);
+                var advance = font.DrawChar(handle, rune, baseLine, 1, textColor);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -238,14 +238,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
                     overlayMan.AddOverlay(new NetEntityOverlay());
                     shell.WriteLine("Enabled network entity report overlay.");
                 }
-                else if(!bValue && overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                else if(!bValue && overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetEntityOverlay));
+                    overlayMan.RemoveOverlay(typeof(NetEntityOverlay));
                     shell.WriteLine("Disabled network entity report overlay.");
                 }
             }

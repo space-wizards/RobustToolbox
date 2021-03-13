@@ -7,6 +7,8 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -68,8 +70,7 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
             _mainViewport.Eye = _eyeManager.CurrentEye;
-            RenderViewport(_mainViewport);
-
+            RenderViewport(_mainViewport); //Worldspace overlays are rendered here.
             {
                 var handle = _renderHandle.DrawingHandleScreen;
                 var tex = _mainViewport.RenderTarget.Texture;
@@ -107,24 +108,66 @@ namespace Robust.Client.Graphics.Clyde
                         list.Add(overlay);
                     }
                 }
-
-                list.Sort(OverlayComparer.Instance);
-
-                foreach (var overlay in list)
-                {
-                    overlay.ClydeRender(_renderHandle, space);
-                }
-
                 FlushRenderQueue();
+                list.Sort(OverlayComparer.Instance);
+                foreach (var overlay in list) {
+                    if (overlay.RequestScreenTexture) {
+                        FlushRenderQueue();
+                        UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
+                    }
+                    if (overlay.OverwriteTargetFrameBuffer()) {
+                        ClearFramebuffer(default);
+                    }
+                    overlay.ClydeRender(_renderHandle, space);
+                    FlushRenderQueue();
+                }
             }
         }
 
-        private void DrawEntitiesAndWorldOverlay(Viewport viewport, Box2 worldBounds)
+        private ClydeTexture? ScreenBufferTexture;
+        private GLHandle screenBufferHandle;
+        private Vector2 lastFrameSize;
+        /// <summary>
+        ///    Sends SCREEN_TEXTURE to all overlays in the given OverlaySpace that request it.
+        /// </summary>
+        private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
+            //This currently does NOT consider viewports and just grabs the current screen framebuffer. This will need to be improved upon in the future.
+            List<Overlay> oTargets = new List<Overlay>();
+            foreach (var overlay in _overlayManager.AllOverlays) {
+                if (overlay.RequestScreenTexture && overlay.Space == space) {
+                    oTargets.Add(overlay);
+                }
+            }
+            if (oTargets.Count > 0 && ScreenBufferTexture != null) {
+                if (lastFrameSize != _framebufferSize) {
+                    GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, _framebufferSize.X, _framebufferSize.Y, 0,
+                        PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+                }
+                lastFrameSize = _framebufferSize;
+                CopyRenderTextureToTexture(texture, ScreenBufferTexture);
+                foreach (Overlay overlay in oTargets) {
+                    overlay.ScreenTexture = ScreenBufferTexture;
+                }
+                oTargets.Clear();
+                return true;
+            }
+            return false;
+        }
+
+
+
+
+
+
+        private void DrawEntities(Viewport viewport, Box2 worldBounds)
         {
             if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
             {
                 return;
             }
+
+            RenderOverlays(OverlaySpace.WorldSpaceBelowEntities);
 
             var screenSize = viewport.Size;
 
@@ -267,14 +310,6 @@ namespace Robust.Client.Graphics.Clyde
 
             _drawingSpriteList.Clear();
             FlushRenderQueue();
-
-            // Cleanup remainders
-            foreach (var overlay in worldOverlays)
-            {
-                overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
-            }
-
-            FlushRenderQueue();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -368,12 +403,21 @@ namespace Robust.Client.Graphics.Clyde
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntitiesAndWorldOverlay(viewport, worldBounds);
+                        DrawEntities(viewport, worldBounds);
                     }
+
+                    RenderOverlays(OverlaySpace.WorldSpaceBelowFOV);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
+                        GL.Clear(ClearBufferMask.StencilBufferBit);
+                        GL.Enable(EnableCap.StencilTest);
+                        GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
+                        GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+                        GL.StencilMask(0xFF);
                         ApplyFovToBuffer(viewport, eye);
+                        GL.StencilMask(0x00);
+                        GL.Disable(EnableCap.StencilTest);
                     }
                 }
 
@@ -401,6 +445,14 @@ namespace Robust.Client.Graphics.Clyde
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
+
+
+                RenderOverlays(OverlaySpace.WorldSpace);
+
+                GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
+                GL.Disable(EnableCap.DepthTest);
+                RenderOverlays(OverlaySpace.WorldSpaceFOVStencil);
+                GL.Disable(EnableCap.StencilTest);
             }
 
             PopRenderStateFull(state);

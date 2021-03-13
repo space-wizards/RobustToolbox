@@ -7,10 +7,12 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public class SharedSpriteComponent : Component
+    public abstract class SharedSpriteComponent : Component
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
+
+        public abstract bool Visible { get; set; }
 
         /// <summary>
         ///     The resource path from which all texture paths are relative to.

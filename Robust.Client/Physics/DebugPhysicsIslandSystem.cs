@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -67,7 +68,7 @@ namespace Robust.Client.Physics
         public override void Shutdown()
         {
             base.Shutdown();
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(nameof(PhysicsIslandOverlay));
+            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
         }
 
         private void HandleIslandSolveMessage(IslandSolveMessage message)
@@ -94,7 +95,7 @@ namespace Robust.Client.Physics
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public PhysicsIslandOverlay() : base(nameof(PhysicsIslandOverlay))
+        public PhysicsIslandOverlay()
         {
             _islandSystem = EntitySystem.Get<DebugPhysicsIslandSystem>();
             _eyeManager = IoCManager.Resolve<IEyeManager>();

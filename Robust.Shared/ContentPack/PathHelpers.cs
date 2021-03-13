@@ -13,7 +13,7 @@ namespace Robust.Shared.ContentPack
         /// <summary>
         ///     Get the full directory path that the executable is located in.
         /// </summary>
-        private static string GetExecutableDirectory()
+        internal static string GetExecutableDirectory()
         {
             // TODO: remove this shitty hack, either through making it less hardcoded into shared,
             //   or by making our file structure less spaghetti somehow.

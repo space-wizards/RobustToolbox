@@ -342,6 +342,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 bool collideConnected = joint.CollideConnected;
 
+                // TODO: See above how much I hate joints rn
+                if (!Joints.Contains(joint)) continue;
                 // Remove from the world list.
                 Joints.Remove(joint);
 
@@ -531,10 +533,12 @@ namespace Robust.Shared.Physics.Dynamics
                     var body = _stack[--stackCount];
                     _island.Add(body);
                     _islandSet.Add(body);
-                    body.Awake = true;
 
                     // Static bodies don't propagate islands
                     if (body.BodyType == BodyType.Static) continue;
+
+                    // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
+                    body.Awake = true;
 
                     for (var contactEdge = body.ContactEdges; contactEdge != null; contactEdge = contactEdge.Next)
                     {

@@ -219,7 +219,8 @@ namespace Robust.Shared.ContentPack
                     continue;
                 }
 
-                var msg = $"{name}: ILVerify: {string.Format(res.Message, res.Args)}";
+                var formatted = res.Args == null ? res.Message : string.Format(res.Message, res.Args);
+                var msg = $"{name}: ILVerify: {formatted}";
 
                 try
                 {

@@ -1,13 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics
 {
     internal class OverlayManager : IOverlayManagerInternal
     {
-        private readonly Dictionary<string, Overlay> _overlays = new();
+        private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();
+        public IEnumerable<Overlay> AllOverlays => _overlays.Values;
 
         public void FrameUpdate(FrameEventArgs args)
         {
@@ -17,59 +19,80 @@ namespace Robust.Client.Graphics
             }
         }
 
-        public void AddOverlay(Overlay overlay)
+        public bool AddOverlay(Overlay overlay)
         {
-            if (_overlays.ContainsKey(overlay.ID))
-            {
-                throw new InvalidOperationException($"We already have an overlay with ID '{overlay.ID}'");
+            if(_overlays.ContainsKey(overlay.GetType()))
+                return false;
+            _overlays.Add(overlay.GetType(), overlay);
+            return true;
+        }
+
+
+
+        public bool RemoveOverlay(Type overlayClass)
+        {
+            if(!overlayClass.IsSubclassOf(typeof(Overlay))){
+                Logger.Error("RemoveOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
+                return false;
             }
-
-            _overlays.Add(overlay.ID, overlay);
+            return _overlays.Remove(overlayClass);
         }
 
-        public Overlay GetOverlay(string id)
-        {
-            return _overlays[id];
+        public bool RemoveOverlay<T>() where T : Overlay{
+            return RemoveOverlay(typeof(T));
         }
 
-        public T GetOverlay<T>(string id) where T : Overlay
-        {
-            return (T) GetOverlay(id);
+        public bool RemoveOverlay(Overlay overlay) {
+            return _overlays.Remove(overlay.GetType());
         }
 
-        public bool HasOverlay(string id)
-        {
-            return _overlays.ContainsKey(id);
-        }
 
-        public void RemoveOverlay(string id)
+
+
+
+        public bool TryGetOverlay(Type overlayClass, [NotNullWhen(true)] out Overlay? overlay)
         {
-            if (!_overlays.TryGetValue(id, out var overlay))
-            {
-                return;
+            overlay = null;
+            if (!overlayClass.IsSubclassOf(typeof(Overlay))){
+                Logger.Error("TryGetOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
+                return false;
             }
-
-            overlay.Dispose();
-            _overlays.Remove(id);
+            return _overlays.TryGetValue(overlayClass, out overlay);
         }
 
-        public bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay)
-        {
-            return _overlays.TryGetValue(id, out overlay);
-        }
-
-        public bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay
-        {
-            if (_overlays.TryGetValue(id, out var value))
-            {
-                overlay = (T) value;
+        public bool TryGetOverlay<T>([NotNullWhen(true)] out T? overlay) where T : Overlay {
+            overlay = null;
+            if(_overlays.TryGetValue(typeof(T), out Overlay? toReturn)){
+                overlay = (T)toReturn;
                 return true;
             }
-
-            overlay = default;
             return false;
         }
 
-        public IEnumerable<Overlay> AllOverlays => _overlays.Values;
+
+
+
+        public Overlay GetOverlay(Type overlayClass) {
+            return _overlays[overlayClass];
+        }
+
+        public T GetOverlay<T>() where T : Overlay {
+            return (T)_overlays[typeof(T)];
+        }
+
+
+
+
+
+        public bool HasOverlay(Type overlayClass) {
+            if (!overlayClass.IsSubclassOf(typeof(Overlay)))
+                Logger.Error("HasOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
+            return _overlays.Remove(overlayClass);
+        }
+
+        public bool HasOverlay<T>() where T : Overlay  {
+            return _overlays.Remove(typeof(T));
+        }
+
     }
 }

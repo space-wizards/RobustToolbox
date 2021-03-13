@@ -18,16 +18,19 @@ namespace Robust.Shared.ContentPack
         {
             private readonly DirectoryInfo _directory;
             private readonly ISawmill _sawmill;
+            private readonly bool _checkCasing;
 
             /// <summary>
             ///     Constructor.
             /// </summary>
             /// <param name="directory">Directory to mount.</param>
             /// <param name="sawmill"></param>
-            public DirLoader(DirectoryInfo directory, ISawmill sawmill)
+            /// <param name="checkCasing"></param>
+            public DirLoader(DirectoryInfo directory, ISawmill sawmill, bool checkCasing)
             {
                 _directory = directory;
                 _sawmill = sawmill;
+                _checkCasing = checkCasing;
             }
 
             /// <inheritdoc />
@@ -80,6 +83,9 @@ namespace Robust.Shared.ContentPack
             [Conditional("DEBUG")]
             private void CheckPathCasing(ResourcePath path)
             {
+                if (!_checkCasing)
+                    return;
+
                 // Run this inside the thread pool due to overhead.
                 Task.Run(() =>
                 {

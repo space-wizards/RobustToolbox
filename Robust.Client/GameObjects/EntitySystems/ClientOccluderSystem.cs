@@ -106,7 +106,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Event raised by a <see cref="ClientOccluderComponent"/> when it needs to be recalculated.
     /// </summary>
-    internal sealed class OccluderDirtyEvent : EntitySystemMessage
+    internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
         public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition, SnapGridOffset offset)
         {

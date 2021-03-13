@@ -126,6 +126,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="box"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
+        
+        void FastEntitiesIntersecting(MapId mapId, ref Box2 position, EntityQueryCallback callback);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this box
@@ -218,6 +220,5 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         void Update();
-
     }
 }

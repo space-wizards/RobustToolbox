@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -14,18 +15,20 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    public delegate void EntityQueryCallback(IEntity entity);
+
     /// <inheritdoc />
     public abstract class EntityManager : IEntityManager
     {
         #region Dependencies
 
-        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
+        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [IoC.Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
+        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
 
         #endregion Dependencies
 
@@ -475,6 +478,16 @@ namespace Robust.Shared.GameObjects
                 return true;
             }, box, approximate);
             return found;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public void FastEntitiesIntersecting(MapId mapId, ref Box2 position, EntityQueryCallback callback)
+        {
+            if (mapId == MapId.Nullspace)
+                return;
+
+            _entityTreesPerMap[mapId]._b2Tree
+                .FastQuery(ref position, (ref IEntity data) => callback(data));
         }
 
         /// <inheritdoc />

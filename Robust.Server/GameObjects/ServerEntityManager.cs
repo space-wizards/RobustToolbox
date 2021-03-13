@@ -319,7 +319,7 @@ namespace Robust.Server.GameObjects
         public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
             const float MinimumMotionForMovers = 1 / 128f;
-            
+
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
             {
@@ -475,7 +475,7 @@ namespace Robust.Server.GameObjects
                 eyeComp = null;
 
             // Exclude any entities that are currently invisible to the player.
-            ExcludeInvisible(relatives, (int)(eyeComp?.VisibilityMask ?? 0));
+            ExcludeInvisible(relatives, eyeComp?.VisibilityMask ?? 0);
 
             // Always send updates for all grid and map entities.
             // If we don't, the client-side game state manager WILL blow up.
@@ -937,7 +937,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private static void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
+        private static void ExcludeInvisible(HashSet<IEntity> set, uint visibilityMask)
         {
             set.RemoveWhere(e =>
             {

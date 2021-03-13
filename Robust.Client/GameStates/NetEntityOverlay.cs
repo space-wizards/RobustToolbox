@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
@@ -28,7 +29,7 @@ namespace Robust.Client.GameStates
         private const int TrafficHistorySize = 64; // Size of the traffic history bar in game ticks.
 
         /// <inheritdoc />
-        public override OverlaySpace Space => OverlaySpace.ScreenSpace;
+        public override OverlaySpace Space => OverlaySpace.ScreenSpace | OverlaySpace.WorldSpace;
 
         private readonly Font _font;
         private readonly int _lineHeight;
@@ -97,7 +98,7 @@ namespace Robust.Client.GameStates
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
             float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
             var pvsCenter = _eyeManager.CurrentEye.Position;
-            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize*2, pvsSize*2));
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
 
             int timeout = _gameTiming.TickRate * 3;
             for (int i = 0; i < _netEnts.Count; i++)
@@ -130,8 +131,37 @@ namespace Robust.Client.GameStates
             if (!_netManager.IsConnected)
                 return;
 
+            switch (currentSpace)
+            {
+                case OverlaySpace.ScreenSpace:
+                    DrawScreen(handle);
+                    break;
+                case OverlaySpace.WorldSpace:
+                    DrawWorld(handle);
+                    break;
+            }
+        }
+
+        private void DrawWorld(DrawingHandleBase handle)
+        {
+            bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
+
+            if(!pvsEnabled)
+                return;
+
+            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            var pvsCenter = _eyeManager.CurrentEye.Position;
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
+
+            var worldHandle = (DrawingHandleWorld)handle;
+
+            worldHandle.DrawRect(pvsBox, Color.Red, false);
+        }
+
+        private void DrawScreen(DrawingHandleBase handle)
+        {
             // remember, 0,0 is top left of ui with +X right and +Y down
-            var screenHandle = (DrawingHandleScreen)handle;
+            var screenHandle = (DrawingHandleScreen) handle;
 
             for (int i = 0; i < _netEnts.Count; i++)
             {

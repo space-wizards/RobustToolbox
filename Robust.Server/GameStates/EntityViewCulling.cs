@@ -16,10 +16,11 @@ namespace Robust.Server.GameStates
     internal class EntityViewCulling
     {
         private const int ViewSetSize = 128; // starting number of entities that are in view
-        private const int PlayerSetSize = 64; // Starting size of the number of players
+        private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 256; // Maximum number of pooled objects, this should always be at least the max number of players
 
         private readonly IServerEntityManager _entMan;
+        private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
@@ -28,6 +29,7 @@ namespace Robust.Server.GameStates
 
         private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+
 
         /// <summary>
         /// Size of the side of the view bounds square.
@@ -42,7 +44,9 @@ namespace Robust.Server.GameStates
         public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager)
         {
             _entMan = entMan;
+            _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
+            _compMan = _entMan.ComponentManager;
         }
 
         // Not thread safe
@@ -89,6 +93,7 @@ namespace Robust.Server.GameStates
         public bool IsPointVisible(ICommonSession session, in MapCoordinates position)
         {
             //TODO: This needs to support multiple bubbles per client
+            //TODO: Visibility checks
 
             var bounds = CalcViewBounds(session);
 
@@ -123,21 +128,38 @@ namespace Robust.Server.GameStates
             if (currentSet is null)
                 return (null, null);
 
-            var previousSet = _playerVisibleSets[session];
-
-            //TODO: Set theory to calc enter/exit events
-
             // pretty big allocations :(
             List<EntityState> entityStates = new(currentSet.Count);
-            foreach (var entityUid in currentSet)
-            {
-                var newState = _entMan.GetEntityState(entityUid, fromTick, session);
+            var previousSet = _playerVisibleSets[session];
 
-                if(!newState.Empty)
-                    entityStates.Add(newState);
+            // complement set
+            var leaveSet = ExceptIterator(previousSet, currentSet);
+            foreach (var entityUid in leaveSet)
+            {
+                //TODO: PVS Leave Message
             }
 
-            // pivot out vis sets
+            foreach (var entityUid in currentSet)
+            {
+                if (previousSet.Contains(entityUid))
+                {
+                    //Still Visible
+                    // only send new changes
+                    var newState = _entMan.GetEntityState(entityUid, fromTick, session);
+
+                    if (!newState.Empty)
+                        entityStates.Add(newState);
+                }
+                else
+                {
+                    // PVS enter message
+                    // don't assume the client knows anything about us
+                    var newState = _entMan.GetEntityState(entityUid, GameTick.Zero, session);
+                    entityStates.Add(newState);
+                }
+            }
+            
+            // swap out vis sets
             _playerVisibleSets[session] = currentSet;
             previousSet.Clear();
             _visSetPool.Return(previousSet);
@@ -145,6 +167,24 @@ namespace Robust.Server.GameStates
             deletions = GetDeletedEntities(fromTick);
 
             return (entityStates, deletions);
+        }
+
+        private IEnumerable<EntityUid> ExceptIterator(HashSet<EntityUid> first, HashSet<EntityUid> second)
+        {
+            // Pulled out of linq, figure out a better way
+            HashSet<EntityUid> set = _visSetPool.Get();
+            set.UnionWith(second);
+
+            foreach (var element in first)
+            {
+                if (set.Add(element))
+                {
+                    yield return element;
+                }
+            }
+
+            set.Clear();
+            _visSetPool.Return(set);
         }
 
         private HashSet<EntityUid>? CalcCurrentViewSet(ICommonSession session, GameTick fromTick)
@@ -156,20 +196,19 @@ namespace Robust.Server.GameStates
             
             var (viewBox, mapId) = bounds.Value;
 
-            // assume there are no deleted ents in here, cull them first in ent/comp manager
-            var potentialVisibleEnts = _entMan.GetEntitiesIntersecting(mapId, viewBox);
+            //TODO: Eye Components
+            if (session.AttachedEntityUid is null ||
+                !_compMan.TryGetComponent<EyeComponent>(session.AttachedEntityUid.Value, out var eyeComp))
+                return null;
+
+            var visibilityMask = eyeComp.VisibilityMask;
             var visibleEnts = _visSetPool.Get();
-            //TODO: Move visibility to EyeComponent
 
-            foreach (var potentialEnt in potentialVisibleEnts)
+            // assume there are no deleted ents in here, cull them first in ent/comp manager
+            _entMan.FastEntitiesIntersecting(mapId, ref viewBox, entity =>
             {
-                //TODO: Add Parents
-                //TODO: Container culling
-                //TODO: per-eye VisibilityComponent cull
-
-                //TODO: If parent is already in the set, it has already been checked
-                visibleEnts.Add(potentialEnt.Uid);
-            }
+                RecursiveAdd(entity.Transform, visibleEnts, visibilityMask);
+            });
 
             // TODO: Need eye-based technology
             //Always include client AttachedEnt
@@ -182,6 +221,37 @@ namespace Robust.Server.GameStates
             return visibleEnts;
         }
 
+        private bool RecursiveAdd(ITransformComponent xform, ISet<EntityUid> visSet, uint visMask)
+        {
+            // we are done, this ent has already been checked and is visible
+            if(visSet.Contains(xform.Owner.Uid))
+                return true;
+
+            // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
+            if (_compMan.TryGetComponent<VisibilityComponent>(xform.Owner.Uid, out var visComp))
+            {
+                if ((visMask & visComp.Layer) == 0)
+                    return false;
+            }
+
+            var xformParent = xform.Parent;
+
+            // this is the world entity, it is always visible
+            if (xformParent is null)
+            {
+                visSet.Add(xform.Owner.Uid);
+                return true;
+            }
+
+            // parent was not added, so we are not either
+            if (!RecursiveAdd(xformParent, visSet, visMask))
+                return false;
+
+            // add us
+            visSet.Add(xform.Owner.Uid);
+            return true;
+        }
+
         // thread safe
         private (Box2 view, MapId mapId)? CalcViewBounds(ICommonSession playerSession)
         {
@@ -192,7 +262,7 @@ namespace Robust.Server.GameStates
             if (clientEnt is null)
                 return null;
 
-            var xform = _entMan.ComponentManager.GetComponent<ITransformComponent>(clientEnt.Value);
+            var xform = _compMan.GetComponent<ITransformComponent>(clientEnt.Value);
 
             if (!CullingEnabled)
                 return (new Box2(), xform.MapID);

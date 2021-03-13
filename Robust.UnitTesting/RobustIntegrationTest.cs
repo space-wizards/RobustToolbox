@@ -19,7 +19,6 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -500,8 +499,6 @@ namespace Robust.UnitTesting
                 // Ack tick message 1 is implied as "init done"
                 _channelWriter.TryWrite(new AckTicksMessage(1));
                 Running = true;
-
-                Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
 
                 _gameTiming.InSimulation = true;
 

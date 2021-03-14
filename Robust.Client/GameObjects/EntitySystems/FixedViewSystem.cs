@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         private void HandlePlayerAttached(PlayerAttachSysMessage msg)
         {
             var player = _playerManager.LocalPlayer?.ControlledEntity;
-            if (!player.TryGetComponent(out EyeComponent? eyeComponent) || eyeComponent.Eye == null) return;
+            if (player == null || !player.TryGetComponent(out EyeComponent? eyeComponent) || eyeComponent.Eye == null) return;
             _eyeManager.CurrentEye = eyeComponent.Eye;
 
             ResizeWindow();

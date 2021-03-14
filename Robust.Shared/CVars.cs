@@ -267,14 +267,17 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
+        // These are essentially minimums for each direction.
+        // Given the viewport is likely not square then the edge with the greater length will have black bars covering it.
+
         /// <summary>
-        ///     How many metres high are in the main viewport.
+        ///     How many metres high an eye should be.
         /// </summary>
         public static readonly CVarDef<float> ViewHeight =
             CVarDef.Create("display.view_height", 10.0f, CVar.CHEAT | CVar.REPLICATED);
 
         /// <summary>
-        ///     How many metres wide are in the main viewport.
+        ///     How many metres wide an eye should be.
         /// </summary>
         public static readonly CVarDef<float> ViewWidth =
             CVarDef.Create("display.view_width", 10.0f, CVar.CHEAT | CVar.REPLICATED);

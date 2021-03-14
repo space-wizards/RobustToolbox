@@ -220,7 +220,7 @@ namespace Robust.Shared.Physics.Dynamics
                 // Sloth note: So FPE doesn't seem to handle static bodies being woken gracefully as they never sleep
                 // (No static body's an island so can't increase their min sleep time).
                 // AFAIK not adding it to woken bodies shouldn't matter for anything tm...
-                if (!Bodies.Contains(body) || !body.Awake || body.BodyType == BodyType.Static) continue;
+                if (!body.Awake || body.BodyType == BodyType.Static || !Bodies.Contains(body)) continue;
                 AwakeBodies.Add(body);
             }
 

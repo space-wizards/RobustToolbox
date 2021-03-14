@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Farseer Physics Engine:
 * Copyright (c) 2012 Ian Qvist
 *
@@ -109,12 +109,15 @@ namespace Robust.Shared.GameObjects
 
                 if (_bodyType == BodyType.Static)
                 {
+                    Awake = false;
                     _linVelocity = Vector2.Zero;
                     _angVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
-
-                Awake = true;
+                else
+                {
+                    Awake = true;
+                }     
 
                 Force = Vector2.Zero;
                 Torque = 0.0f;
@@ -145,13 +148,6 @@ namespace Robust.Shared.GameObjects
             {
                 if (_awake == value)
                     return;
-
-                if (BodyType == BodyType.Static)
-                {
-                    // Check nothing slipped through
-                    DebugTools.Assert(!_awake);
-                    return;
-                }
 
                 _awake = value;
 

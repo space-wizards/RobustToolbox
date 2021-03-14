@@ -23,13 +23,42 @@ namespace Robust.UnitTesting
 
         public readonly ImmutableDictionary<string, ImmutableHashSet<IPrototype>> DefaultFilePrototypes;
 
-        public readonly ImmutableHashSet<(YamlStream data, string file)> DefaultData;
+        public readonly ImmutableHashSet<(YamlStream data, string file)> DefaultStreams;
 
         private readonly Dictionary<Type, PrototypeInheritanceTree> _defaultInheritanceTrees;
 
+        public IEnumerable<(Type, PrototypeInheritanceTree)> DefaultInheritanceTrees
+        {
+            get
+            {
+                foreach (var (type, tree) in _defaultInheritanceTrees)
+                {
+                    yield return (type, new PrototypeInheritanceTree(tree));
+                }
+            }
+        }
+
         private readonly Dictionary<Type, int> _defaultPriorities;
 
+        public IReadOnlyDictionary<Type, int> DefaultPriorities => _defaultPriorities;
+
         private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _defaultResults;
+
+        public IEnumerable<(Type type, (string id, DeserializationResult result))> DefaultResults
+        {
+            get
+            {
+                foreach (var (type, results) in _defaultResults)
+                {
+                    foreach (var (id, result) in results)
+                    {
+                        yield return (type, (id, result));
+                    }
+                }
+            }
+        }
+
+        public readonly ImmutableDictionary<string, Type> DefaultTypes;
 
         public PrototypeData(
             IResourceManager resourceManager,
@@ -123,13 +152,13 @@ namespace Robust.UnitTesting
                 allFilePrototypes.Add(file.ToString(), filePrototypes);
             }
 
-
             _defaultPrototypes = defaultPrototypes;
             DefaultFilePrototypes = allFilePrototypes.ToImmutableDictionary(k => k.Key, v => v.Value.ToImmutableHashSet());
-            DefaultData = data.ToImmutableHashSet();
+            DefaultStreams = data.ToImmutableHashSet();
             _defaultInheritanceTrees = defaultInheritanceTrees;
             _defaultPriorities = defaultPriorities;
             _defaultResults = defaultResults;
+            DefaultTypes = defaultTypes.ToImmutableDictionary();
         }
 
         public void Resync(IIntegrationPrototypeManager prototypeManager)

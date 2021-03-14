@@ -565,7 +565,7 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            var target = Activator.CreateInstance(source.GetType())!;
+            var target = Activator.CreateInstance(source.GetType(), true)!;
             return Copy(source, target, context, skipHook);
         }
 

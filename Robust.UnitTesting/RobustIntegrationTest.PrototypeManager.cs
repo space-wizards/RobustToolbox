@@ -36,14 +36,17 @@ namespace Robust.UnitTesting
             [Dependency] private readonly IReflectionManager _reflectionManager = default!;
             [Dependency] private readonly INetManager _netManager = default!;
 
+            private PrototypeData _defaultData = default!;
+
             private readonly Dictionary<string, Type> _types = new();
-            // todo dont fill this with empty placeholders
             private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
+            private readonly Dictionary<Type, Dictionary<string, IPrototype>> _testPrototypes = new();
             private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _results = new();
             private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
             private readonly HashSet<string> _ignored = new();
             private readonly Dictionary<Type, int> _priorities = new();
             private readonly HashSet<string> _queuedStrings = new();
+            private readonly Dictionary<string, HashSet<IPrototype>> _defaultFilePrototypes = new();
 
             private PrototypeData GetData()
             {
@@ -106,6 +109,48 @@ namespace Robust.UnitTesting
 
             public void Initialize()
             {
+                _defaultData = GetData();
+
+                foreach (var (type, prototypes) in _defaultData.DefaultPrototypes)
+                {
+                    foreach (var (id, prototype) in prototypes)
+                    {
+                        var copy = _serializationManager.CreateCopy(prototype)
+                                    ?? throw new NullReferenceException();
+
+                        _prototypes[type].Add(id, copy);
+                    }
+                }
+
+                foreach (var (type, (id, result)) in _defaultData.DefaultResults)
+                {
+                    _results.GetOrNew(type).Add(id, result);
+                }
+
+                foreach (var (type, tree) in _defaultData.DefaultInheritanceTrees)
+                {
+                    _inheritanceTrees[type] = tree;
+                }
+
+                foreach (var (type, priority) in _defaultData.DefaultPriorities)
+                {
+                    _priorities[type] = priority;
+                }
+
+                foreach (var (file, prototypes) in _defaultData.DefaultFilePrototypes)
+                {
+                    var prototypesCopy = new HashSet<IPrototype>();
+
+                    foreach (var prototype in prototypes)
+                    {
+                        var copy = _serializationManager.CreateCopy(prototype)
+                                   ?? throw new NullReferenceException();
+                        prototypesCopy.Add(copy);
+                    }
+
+                    _defaultFilePrototypes.Add(file, prototypesCopy);
+                }
+
                 foreach (var str in _queuedStrings)
                 {
                     LoadString(str);
@@ -114,11 +159,6 @@ namespace Robust.UnitTesting
 
             public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
             {
-                foreach (var prototype in GetData().DefaultPrototypes[typeof(T)].Values)
-                {
-                    yield return (T) prototype;
-                }
-
                 foreach (var prototype in _prototypes[typeof(T)].Values)
                 {
                     yield return (T) prototype;
@@ -127,18 +167,12 @@ namespace Robust.UnitTesting
 
             public IEnumerable<IPrototype> EnumeratePrototypes(Type type)
             {
-                return GetData().DefaultPrototypes[type].Values.Concat(_prototypes[type].Values);
+                return _prototypes[type].Values;
             }
 
             public T Index<T>(string id) where T : class, IPrototype
             {
-                if (GetData().DefaultPrototypes.TryGetValue(typeof(T), out var prototypeIds) &&
-                    prototypeIds.TryGetValue(id, out var prototype))
-                {
-                    return (T) prototype;
-                }
-
-                if (!_prototypes[typeof(T)].TryGetValue(id, out prototype))
+                if (!_prototypes[typeof(T)].TryGetValue(id, out var prototype))
                 {
                     throw new UnknownPrototypeException(id);
                 }
@@ -148,30 +182,17 @@ namespace Robust.UnitTesting
 
             public IPrototype Index(Type type, string id)
             {
-                if (GetData().DefaultPrototypes[type].TryGetValue(id, out var prototype))
-                {
-                    return prototype;
-                }
-
                 return _prototypes[type][id];
             }
 
             public bool HasIndex<T>(string id) where T : IPrototype
             {
-                return GetData().DefaultPrototypes[typeof(T)].ContainsKey(id) ||
-                       _prototypes[typeof(T)].ContainsKey(id);
+                return _prototypes[typeof(T)].ContainsKey(id);
             }
 
             public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
             {
-                if (GetData().DefaultPrototypes.TryGetValue(typeof(T), out var prototypeIds) &&
-                    prototypeIds.TryGetValue(id, out var prototypeUnCast))
-                {
-                    prototype = (T) prototypeUnCast;
-                    return true;
-                }
-
-                if (_prototypes[typeof(T)].TryGetValue(id, out prototypeUnCast))
+                if (_prototypes[typeof(T)].TryGetValue(id, out var prototypeUnCast))
                 {
                     prototype = (T) prototypeUnCast;
                     return true;
@@ -184,8 +205,7 @@ namespace Robust.UnitTesting
             protected HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
             {
                 // TODO make this not return a new hash set each time
-                if (
-                    GetData().DefaultFilePrototypes.TryGetValue(file.ToString(), out var filePrototypes))
+                if (_defaultFilePrototypes.TryGetValue(file.ToString(), out var filePrototypes))
                 {
                     return filePrototypes.ToHashSet();
                 }
@@ -228,14 +248,12 @@ namespace Robust.UnitTesting
                 // TODO cache this
                 if (path == DefaultDirectory)
                 {
-                    var data = GetData();
-
-                    foreach (var (stream, file) in data.DefaultData)
+                    foreach (var (stream, file) in _defaultData.DefaultStreams)
                     {
                         LoadedData?.Invoke(stream, file);
                     }
 
-                    return data.DefaultPrototypes.Values.SelectMany(e => e.Values).ToList();
+                    return _defaultFilePrototypes.SelectMany(x => x.Value).ToList();
                 }
 
                 var changedPrototypes = new List<IPrototype>();
@@ -299,6 +317,7 @@ namespace Robust.UnitTesting
                     }
 
                     _prototypes[prototypeType][prototype.ID] = prototype;
+                    _testPrototypes.GetOrNew(prototypeType)[prototype.ID] = prototype;
                     changedPrototypes.Add(prototype);
                 }
 
@@ -338,6 +357,7 @@ namespace Robust.UnitTesting
             {
                 _types.Clear();
                 _prototypes.Clear();
+                _testPrototypes.Clear();
                 _results.Clear();
                 _inheritanceTrees.Clear();
             }
@@ -348,7 +368,7 @@ namespace Robust.UnitTesting
 
             public void Resync()
             {
-                Resync(_inheritanceTrees, _priorities, _results, _prototypes);
+                Resync(_inheritanceTrees, _priorities, _results, _testPrototypes);
             }
 
             public void Resync(
@@ -399,10 +419,16 @@ namespace Robust.UnitTesting
                 if (!inheritingPrototype.Abstract)
                     newResult.CallAfterDeserializationHook();
 
-                var populatedRes =
-                    _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition) newResult);
+                var obj =
+                    prototypes.TryGetValue(type, out var typePrototypes) &&
+                    typePrototypes.TryGetValue(id, out var prototype)
+                        ? prototype
+                        : Index(type, id);
 
-                prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
+                var populatedRes =
+                    _serializationManager.PopulateDataDefinition(obj, (IDeserializedDefinition) newResult);
+
+                prototypes.GetOrNew(type)[id] = (IPrototype) populatedRes.RawValue!;
             }
 
             public void RegisterIgnore(string name)
@@ -421,7 +447,7 @@ namespace Robust.UnitTesting
                 {
                     _prototypes[type] = new Dictionary<string, IPrototype>();
                     _results[type] = new Dictionary<string, DeserializationResult>();
-                    if(typeof(IInheritingPrototype).IsAssignableFrom(type))
+                    if (typeof(IInheritingPrototype).IsAssignableFrom(type))
                         _inheritanceTrees[type] = new PrototypeInheritanceTree();
                 }
             }

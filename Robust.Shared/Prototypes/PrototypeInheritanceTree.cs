@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Robust.Shared.Prototypes
 {
@@ -12,6 +13,18 @@ namespace Robust.Shared.Prototypes
         private HashSet<string> _baseNodes = new();
 
         private Dictionary<string, string> _parents = new();
+
+        public PrototypeInheritanceTree()
+        {
+        }
+
+        public PrototypeInheritanceTree(PrototypeInheritanceTree other)
+        {
+            _nodes = other._nodes.ToDictionary(x => x.Key, x => x.Value.ToHashSet());
+            _pendingParent = other._pendingParent.ToDictionary(x => x.Key, x => x.Value.ToHashSet());
+            _baseNodes = other._baseNodes.ToHashSet();
+            _parents = other._parents.ToDictionary(x => x.Key, x => x.Value);
+        }
 
         public IReadOnlySet<string> BaseNodes => _baseNodes;
 

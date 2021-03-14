@@ -36,6 +36,12 @@ namespace Robust.Shared.Utility
             public readonly ResourcePath RsiPath;
             public readonly string RsiState;
 
+            internal Rsi()
+            {
+                RsiPath = default!;
+                RsiState = default!;
+            }
+
             public Rsi(ResourcePath rsiPath, string rsiState)
             {
                 RsiPath = rsiPath;

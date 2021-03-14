@@ -54,10 +54,9 @@ namespace Robust.UnitTesting
         }
 
         [OneTimeTearDown]
-        public async Task TearDown()
+        public void TearDown()
         {
             _integrationInstances.ForEach(p => p.Stop());
-            await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
             _integrationInstances.Clear();
         }
 
@@ -205,14 +204,8 @@ namespace Robust.UnitTesting
             /// <exception cref="Exception">
             ///     Thrown if <paramref name="throwOnUnhandled"/> is true and the instance shuts down on an unhandled exception.
             /// </exception>
-            public async Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
+            public void WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                if (_isAlive || _currentTicksId == _ackTicksId)
-                {
-                    return;
-                }
-
-                await _onIdle.Task;
             }
 
             /// <summary>
@@ -230,10 +223,10 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     <see cref="RunTicks"/> followed by <see cref="WaitIdleAsync"/>
             /// </summary>
-            public async Task WaitRunTicks(int ticks)
+            public void WaitRunTicks(int ticks)
             {
                 RunTicks(ticks);
-                await WaitIdleAsync();
+                WaitIdleAsync();
             }
 
             /// <summary>
@@ -260,10 +253,10 @@ namespace Robust.UnitTesting
                 GameLoop.Read(new PostMessage(post, _currentTicksId));
             }
 
-            public async Task WaitPost(Action post)
+            public void WaitPost(Action post)
             {
                 Post(post);
-                await WaitIdleAsync();
+                WaitIdleAsync();
             }
 
             /// <summary>
@@ -282,10 +275,10 @@ namespace Robust.UnitTesting
                 GameLoop.Read(new AssertMessage(assertion, _currentTicksId));
             }
 
-            public async Task WaitAssertion(Action assertion)
+            public void WaitAssertion(Action assertion)
             {
                 Assert(assertion);
-                await WaitIdleAsync();
+                WaitIdleAsync();
             }
 
             public void Dispose()

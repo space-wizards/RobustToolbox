@@ -78,11 +78,7 @@ namespace Robust.UnitTesting
             // todo remove = default!
             internal IntegrationGameLoop GameLoop = default!;
 
-            private protected Action<object>? _toInstanceReader;
-            private protected Action<object>? _toInstanceWriter;
-            private protected Action<object>? _fromInstanceReader;
-            private protected Action<object>? _fromInstanceWriter;
-            private protected TaskCompletionSource _onIdle = new();
+            private TaskCompletionSource _onIdle = new();
 
             private int _currentTicksId = 1;
             private int _ackTicksId;
@@ -134,45 +130,46 @@ namespace Robust.UnitTesting
 
             private protected IntegrationInstance()
             {
-                _fromInstanceWriter += msg =>
+            }
+
+            protected void OnMessage(object msg)
+            {
+                switch (msg)
                 {
-                    switch (msg)
+                    case ShutDownMessage shutDownMessage:
                     {
-                        case ShutDownMessage shutDownMessage:
-                        {
-                            _isAlive = false;
-                            _isSurelyIdle = true;
-                            _unhandledException = shutDownMessage.UnhandledException;
-                            if (_unhandledException != null)
-                            {
-                                ExceptionDispatchInfo.Capture(_unhandledException).Throw();
-                                return;
-                            }
-
-                            break;
-                        }
-
-                        case AckTicksMessage ack:
-                        {
-                            _ackTicksId = ack.MessageId;
-                            break;
-                        }
-
-                        case AssertFailMessage assertFailMessage:
-                        {
-                            // Rethrow exception without losing stack trace.
-                            ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
-                            break; // Unreachable.
-                        }
-                    }
-
-                    if (!_isAlive || _currentTicksId == _ackTicksId)
-                    {
+                        _isAlive = false;
                         _isSurelyIdle = true;
-                        _onIdle.SetResult();
-                        _onIdle = new TaskCompletionSource();
+                        _unhandledException = shutDownMessage.UnhandledException;
+                        if (_unhandledException != null)
+                        {
+                            ExceptionDispatchInfo.Capture(_unhandledException).Throw();
+                            return;
+                        }
+
+                        break;
                     }
-                };
+
+                    case AckTicksMessage ack:
+                    {
+                        _ackTicksId = ack.MessageId;
+                        break;
+                    }
+
+                    case AssertFailMessage assertFailMessage:
+                    {
+                        // Rethrow exception without losing stack trace.
+                        ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
+                        break; // Unreachable.
+                    }
+                }
+
+                if (!_isAlive || _currentTicksId == _ackTicksId)
+                {
+                    _isSurelyIdle = true;
+                    _onIdle.SetResult();
+                    _onIdle = new TaskCompletionSource();
+                }
             }
 
             /// <summary>
@@ -349,18 +346,18 @@ namespace Robust.UnitTesting
 
                     GameLoop = new IntegrationGameLoop(
                         DependencyCollection.Resolve<IGameTiming>(),
-                        ref _fromInstanceWriter, DependencyCollection);
+                        OnMessage, DependencyCollection);
                     server.OverrideMainLoop(GameLoop);
 
                     server.MainLoop();
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceWriter?.Invoke(new ShutDownMessage(e));
+                    OnMessage(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceWriter?.Invoke(new ShutDownMessage(null));
+                OnMessage(new ShutDownMessage(null));
             }
         }
 
@@ -435,18 +432,17 @@ namespace Robust.UnitTesting
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 
-                    GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
-                        ref _fromInstanceWriter, DependencyCollection);
+                    GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(), OnMessage, DependencyCollection);
                     client.OverrideMainLoop(GameLoop);
                     client.MainLoop(GameController.DisplayMode.Headless);
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceWriter?.Invoke(new ShutDownMessage(e));
+                    OnMessage(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceWriter?.Invoke(new ShutDownMessage(null));
+                OnMessage(new ShutDownMessage(null));
             }
         }
 
@@ -456,14 +452,14 @@ namespace Robust.UnitTesting
 
         internal sealed class IntegrationGameLoop : IGameLoop
         {
+            public delegate void OnLoopMessage(object msg);
+
             private readonly IGameTiming _gameTiming;
 
             private bool _running;
 
-            private readonly Action<object>? _channelWriter;
-            private readonly Action<object>? _channelReader;
-
-            private readonly TaskCompletionSource Done = new();
+            private readonly OnLoopMessage _onLoopMessageDelegate;
+            private readonly TaskCompletionSource _done = new();
             private readonly IDependencyCollection _dependencyCollection;
 
 #pragma warning disable 67
@@ -489,7 +485,7 @@ namespace Robust.UnitTesting
 
                     if (!value)
                     {
-                        Done.SetResult();
+                        _done.SetResult();
                     }
                 }
             }
@@ -497,14 +493,14 @@ namespace Robust.UnitTesting
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            public IntegrationGameLoop(IGameTiming gameTiming, ref Action<object>? channelWriter, IDependencyCollection dependencyCollection)
+            public IntegrationGameLoop(IGameTiming gameTiming, OnLoopMessage onLoopMessageDelegate, IDependencyCollection dependencyCollection)
             {
                 _dependencyCollection = dependencyCollection;
                 _gameTiming = gameTiming;
-                _channelWriter = channelWriter;
+                _onLoopMessageDelegate = onLoopMessageDelegate;
 
                 // Ack tick message 1 is implied as "init done"
-                _channelWriter?.Invoke(new AckTicksMessage(1));
+                _onLoopMessageDelegate(new AckTicksMessage(1));
                 Running = true;
                 _gameTiming.InSimulation = true;
             }
@@ -531,7 +527,7 @@ namespace Robust.UnitTesting
                             Update?.Invoke(this, simFrameEvent);
                         }
 
-                        _channelWriter?.Invoke(new AckTicksMessage(msg.MessageId));
+                        _onLoopMessageDelegate(new AckTicksMessage(msg.MessageId));
                         break;
 
                     case StopMessage _:
@@ -540,7 +536,7 @@ namespace Robust.UnitTesting
 
                     case PostMessage postMessage:
                         postMessage.Post();
-                        _channelWriter?.Invoke(new AckTicksMessage(postMessage.MessageId));
+                        _onLoopMessageDelegate(new AckTicksMessage(postMessage.MessageId));
                         break;
 
                     case AssertMessage assertMessage:
@@ -550,17 +546,17 @@ namespace Robust.UnitTesting
                         }
                         catch (Exception e)
                         {
-                            _channelWriter?.Invoke(new AssertFailMessage(e));
+                            _onLoopMessageDelegate(new AssertFailMessage(e));
                         }
 
-                        _channelWriter?.Invoke(new AckTicksMessage(assertMessage.MessageId));
+                        _onLoopMessageDelegate(new AckTicksMessage(assertMessage.MessageId));
                         break;
                 }
             }
 
             public async Task Run()
             {
-                await Done.Task;
+                await _done.Task;
             }
         }
 

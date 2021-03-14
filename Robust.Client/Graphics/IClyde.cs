@@ -31,10 +31,10 @@ namespace Robust.Client.Graphics
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
-        Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
 
-        Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
 
         /// <summary>

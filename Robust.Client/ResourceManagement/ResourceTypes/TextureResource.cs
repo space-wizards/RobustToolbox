@@ -1,6 +1,8 @@
 ﻿using System.IO;
+using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -10,8 +12,10 @@ namespace Robust.Client.ResourceManagement
 {
     public sealed class TextureResource : BaseResource
     {
+        private OwnedTexture _texture = default!;
         public override ResourcePath Fallback => new("/Textures/noSprite.png");
-        public Texture Texture { get; private set; } = default!;
+
+        public Texture Texture => _texture;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
@@ -41,7 +45,7 @@ namespace Robust.Client.ResourceManagement
 
         internal void LoadFinish(IResourceCache cache, LoadStepData data)
         {
-            Texture = data.Texture;
+            _texture = data.Texture;
 
             if (cache is IResourceCacheInternal cacheInternal)
             {
@@ -78,12 +82,35 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
+        public override void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
+        {
+            var clyde = IoCManager.Resolve<IClyde>();
+
+            var data = new LoadStepData {Path = path};
+            LoadPreTexture(cache, data);
+
+            if (data.Image.Width == Texture.Width && data.Image.Height == Texture.Height)
+            {
+                // Dimensions match, rewrite texture in place.
+                _texture.SetSubImage(Vector2i.Zero, data.Image);
+            }
+            else
+            {
+                // Dimensions do not match, make new texture.
+                _texture.Dispose();
+                LoadTexture(clyde, data);
+                _texture = data.Texture;
+            }
+
+            data.Image.Dispose();
+        }
+
         internal sealed class LoadStepData
         {
             public ResourcePath Path = default!;
             public Image<Rgba32> Image = default!;
             public TextureLoadParameters LoadParameters;
-            public Texture Texture = default!;
+            public OwnedTexture Texture = default!;
             public bool Bad;
         }
 

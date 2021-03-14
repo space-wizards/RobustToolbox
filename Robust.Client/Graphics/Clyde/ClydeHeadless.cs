@@ -101,7 +101,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             using (var image = Image.Load<Rgba32>(stream))
@@ -110,7 +110,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));

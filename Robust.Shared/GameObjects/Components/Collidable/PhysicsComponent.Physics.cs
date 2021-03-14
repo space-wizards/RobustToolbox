@@ -146,9 +146,6 @@ namespace Robust.Shared.GameObjects
             get => _awake;
             set
             {
-                if (_awake == value)
-                    return;
-
                 if (_bodyType == BodyType.Static) return;
                 
                 SetAwake(_awake);

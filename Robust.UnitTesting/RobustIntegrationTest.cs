@@ -30,7 +30,7 @@ public class GlobalRunner
     private static readonly ConcurrentBag<ServerIntegrationInstance> ServerPool = new();
 
     [OneTimeTearDown]
-    public static async void TearDown()
+    public static async Task TearDown()
     {
         foreach (var client in ClientPool)
         {

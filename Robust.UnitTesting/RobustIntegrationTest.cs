@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -19,7 +20,57 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using static Robust.UnitTesting.RobustIntegrationTest;
 using ServerProgram = Robust.Server.Program;
+
+[SetUpFixture]
+public class GlobalRunner
+{
+    private static readonly ConcurrentBag<ClientIntegrationInstance> ClientPool = new();
+    private static readonly ConcurrentBag<ServerIntegrationInstance> ServerPool = new();
+
+    [OneTimeTearDown]
+    public static async void TearDown()
+    {
+        foreach (var client in ClientPool)
+        {
+            client.Stop();
+        }
+
+        await Task.WhenAll(ClientPool.Select(client => client.WaitIdleAsync()));
+
+        ClientPool.Clear();
+
+        foreach (var server in ServerPool)
+        {
+            server.Stop();
+        }
+
+        await Task.WhenAll(ServerPool.Select(server => server.WaitIdleAsync()));
+
+        ServerPool.Clear();
+    }
+
+    public static ClientIntegrationInstance GetClient(ClientIntegrationOptions? options = null)
+    {
+        return ClientPool.TryTake(out var client) ? client : new ClientIntegrationInstance(options);
+    }
+
+    public static void Return(ClientIntegrationInstance client)
+    {
+        ClientPool.Add(client);
+    }
+
+    public static ServerIntegrationInstance GetServer(ServerIntegrationOptions? options = null)
+    {
+        return ServerPool.TryTake(out var server) ? server : new ServerIntegrationInstance(options);
+    }
+
+    public static void Return(ServerIntegrationInstance server)
+    {
+        ServerPool.Add(server);
+    }
+}
 
 namespace Robust.UnitTesting
 {
@@ -32,16 +83,17 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
-        private readonly List<IntegrationInstance> _integrationInstances = new();
+        private readonly List<ClientIntegrationInstance> _clients = new();
+        private readonly List<ServerIntegrationInstance> _servers = new();
 
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
-            var instance = new ServerIntegrationInstance(options);
-            _integrationInstances.Add(instance);
-            return instance;
+            var server = options == null ? GlobalRunner.GetServer(options) : new ServerIntegrationInstance(options);
+            _servers.Add(server);
+            return server;
         }
 
         /// <summary>
@@ -49,17 +101,28 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
-            var instance = new ClientIntegrationInstance(options);
-            _integrationInstances.Add(instance);
-            return instance;
+            var client = options == null ? GlobalRunner.GetClient(options) : new ClientIntegrationInstance(options);
+            _clients.Add(client);
+            return client;
         }
 
         [OneTimeTearDown]
         public async Task TearDown()
         {
-            _integrationInstances.ForEach(p => p.Stop());
-            await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
-            _integrationInstances.Clear();
+            _clients.ForEach(client =>
+            {
+                if (client.IsDefault) GlobalRunner.Return(client);
+            });
+
+            _servers.ForEach(server =>
+            {
+                if (server.IsDefault) GlobalRunner.Return(server);
+            });
+
+            await Task.WhenAll(_clients.Select(p => p.WaitIdleAsync()));
+
+            _clients.Clear();
+            _servers.Clear();
         }
 
         /// <summary>
@@ -130,6 +193,12 @@ namespace Robust.UnitTesting
                     return _unhandledException;
                 }
             }
+
+            /// <summary>
+            ///     Whether or not this instance was created with any additional configuration options.
+            ///     See <see cref="IntegrationOptions"/>
+            /// </summary>
+            public abstract bool IsDefault { get; }
 
             private protected IntegrationInstance()
             {
@@ -310,6 +379,8 @@ namespace Robust.UnitTesting
                 InstanceThread.Start();
             }
 
+            public override bool IsDefault => _options == null;
+
             private void _serverMain()
             {
                 try
@@ -387,6 +458,8 @@ namespace Robust.UnitTesting
                 DependencyCollection = new DependencyCollection();
                 InstanceThread.Start();
             }
+
+            public override bool IsDefault => _options == null;
 
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.

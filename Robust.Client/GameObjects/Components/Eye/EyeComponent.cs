@@ -19,8 +19,6 @@ namespace Robust.Client.GameObjects
         [ViewVariables]
         private Eye? _eye = default!;
 
-        // Horrible hack to get around ordering issues.
-        private bool _setCurrentOnInitialize;
         [DataField("drawFov")]
         private bool _setDrawFovOnInitialize = true;
         private Vector2 _offset = Vector2.Zero;
@@ -35,7 +33,6 @@ namespace Robust.Client.GameObjects
             {
                 if (_eye == null)
                 {
-                    _setCurrentOnInitialize = value;
                     return;
                 }
 
@@ -119,27 +116,15 @@ namespace Robust.Client.GameObjects
             _eye = new Eye
             {
                 Position = Owner.Transform.MapPosition,
-                DrawFov = _setDrawFovOnInitialize
+                DrawFov = _setDrawFovOnInitialize,
             };
-
-            if ((_eyeManager.CurrentEye == _eye) != _setCurrentOnInitialize)
-            {
-                if (_setCurrentOnInitialize)
-                {
-                    _eyeManager.ClearCurrentEye();
-                }
-                else
-                {
-                    _eyeManager.CurrentEye = _eye;
-                }
-            }
         }
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is EyeComponentState state))
+            if (curState is not EyeComponentState state)
             {
                 return;
             }

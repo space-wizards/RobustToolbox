@@ -1,10 +1,9 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -24,8 +23,6 @@ namespace Robust.Client.GameObjects
         private bool _setCurrentOnInitialize;
         [DataField("drawFov")]
         private bool _setDrawFovOnInitialize = true;
-        [DataField("zoom")]
-        private Vector2 _setZoomOnInitialize = Vector2.One/2f;
         private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
@@ -58,12 +55,12 @@ namespace Robust.Client.GameObjects
 
         public override Vector2 Zoom
         {
-            get => _eye?.Zoom ?? _setZoomOnInitialize;
+            get => _eye?.Zoom ?? Vector2.One / 0.5f;
             set
             {
                 if (_eye == null)
                 {
-                    _setZoomOnInitialize = value;
+                    Logger.ErrorS("eye", "Tried to set Zoom for default Eye which doesn't exist!");
                 }
                 else
                 {
@@ -122,7 +119,6 @@ namespace Robust.Client.GameObjects
             _eye = new Eye
             {
                 Position = Owner.Transform.MapPosition,
-                Zoom = _setZoomOnInitialize,
                 DrawFov = _setDrawFovOnInitialize
             };
 

@@ -267,6 +267,18 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     How many metres high are in the main viewport.
+        /// </summary>
+        public static readonly CVarDef<float> ViewHeight =
+            CVarDef.Create("display.view_height", 10.0f, CVar.CHEAT | CVar.REPLICATED);
+
+        /// <summary>
+        ///     How many metres wide are in the main viewport.
+        /// </summary>
+        public static readonly CVarDef<float> ViewWidth =
+            CVarDef.Create("display.view_width", 10.0f, CVar.CHEAT | CVar.REPLICATED);
+
         /*
          * AUDIO
          */

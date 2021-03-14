@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Threading;
-using Robust.Shared.Log;
+using System.Threading.Tasks;
+using Prometheus;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Prometheus;
 
 namespace Robust.Shared.Timing
 {
@@ -40,7 +41,7 @@ namespace Robust.Shared.Timing
         ///     Start running the loop. This function will block for as long as the loop is Running.
         ///     Set Running to false to exit the loop and return from this function.
         /// </summary>
-        void Run();
+        Task Run();
     }
 
     /// <summary>
@@ -113,7 +114,7 @@ namespace Robust.Shared.Timing
         ///     Start running the loop. This function will block for as long as the loop is Running.
         ///     Set Running to false to exit the loop and return from this function.
         /// </summary>
-        public void Run()
+        public Task Run()
         {
             if (_timing.TickRate <= 0)
                 throw new InvalidOperationException("TickRate must be greater than 0.");
@@ -265,6 +266,8 @@ namespace Robust.Shared.Timing
                 if (SleepMode != SleepMode.None)
                     Thread.Sleep((int) SleepMode);
             }
+
+            return Task.CompletedTask;
         }
 
         private TimeSpan CalcTickPeriod()

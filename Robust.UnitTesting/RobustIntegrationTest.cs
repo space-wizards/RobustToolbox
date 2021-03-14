@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
@@ -75,13 +74,16 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
-            private protected Thread InstanceThread = default!;
             private protected IDependencyCollection DependencyCollection = default!;
 
-            private protected readonly ChannelReader<object> _toInstanceReader;
-            private protected readonly ChannelWriter<object> _toInstanceWriter;
-            private protected readonly ChannelReader<object> _fromInstanceReader;
-            private protected readonly ChannelWriter<object> _fromInstanceWriter;
+            // todo remove = default!
+            internal IntegrationGameLoop GameLoop = default!;
+
+            private protected Action<object>? _toInstanceReader;
+            private protected Action<object>? _toInstanceWriter;
+            private protected Action<object>? _fromInstanceReader;
+            private protected Action<object>? _fromInstanceWriter;
+            private protected TaskCompletionSource _onIdle = new();
 
             private int _currentTicksId = 1;
             private int _ackTicksId;
@@ -133,23 +135,45 @@ namespace Robust.UnitTesting
 
             private protected IntegrationInstance()
             {
-                var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
+                _fromInstanceWriter += msg =>
                 {
-                    SingleReader = true,
-                    SingleWriter = true
-                });
+                    switch (msg)
+                    {
+                        case ShutDownMessage shutDownMessage:
+                        {
+                            _isAlive = false;
+                            _isSurelyIdle = true;
+                            _unhandledException = shutDownMessage.UnhandledException;
+                            if (_unhandledException != null)
+                            {
+                                ExceptionDispatchInfo.Capture(_unhandledException).Throw();
+                                return;
+                            }
 
-                _toInstanceReader = toInstance.Reader;
-                _toInstanceWriter = toInstance.Writer;
+                            break;
+                        }
 
-                var fromInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
-                {
-                    SingleReader = true,
-                    SingleWriter = true
-                });
+                        case AckTicksMessage ack:
+                        {
+                            _ackTicksId = ack.MessageId;
+                            break;
+                        }
 
-                _fromInstanceReader = fromInstance.Reader;
-                _fromInstanceWriter = fromInstance.Writer;
+                        case AssertFailMessage assertFailMessage:
+                        {
+                            // Rethrow exception without losing stack trace.
+                            ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
+                            break; // Unreachable.
+                        }
+                    }
+
+                    if (!_isAlive || _currentTicksId == _ackTicksId)
+                    {
+                        _isSurelyIdle = true;
+                        _onIdle.SetResult();
+                        _onIdle = new TaskCompletionSource();
+                    }
+                };
             }
 
             /// <summary>
@@ -183,44 +207,16 @@ namespace Robust.UnitTesting
             /// </exception>
             public async Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                while (_isAlive && _currentTicksId != _ackTicksId)
+                if (_isAlive || _currentTicksId == _ackTicksId)
                 {
-                    var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
-                    switch (msg)
-                    {
-                        case ShutDownMessage shutDownMessage:
-                        {
-                            _isAlive = false;
-                            _isSurelyIdle = true;
-                            _unhandledException = shutDownMessage.UnhandledException;
-                            if (throwOnUnhandled && _unhandledException != null)
-                            {
-                                ExceptionDispatchInfo.Capture(_unhandledException).Throw();
-                                return;
-                            }
-
-                            break;
-                        }
-
-                        case AckTicksMessage ack:
-                        {
-                            _ackTicksId = ack.MessageId;
-                            break;
-                        }
-
-                        case AssertFailMessage assertFailMessage:
-                        {
-                            // Rethrow exception without losing stack trace.
-                            ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
-                            break; // Unreachable.
-                        }
-                    }
+                    return;
                 }
 
-                _isSurelyIdle = true;
+                await _onIdle.Task;
             }
 
             /// <summary>
+            ///     Queue for the server to run n ticks.
             ///     Queue for the server to run n ticks.
             /// </summary>
             /// <param name="ticks">The amount of ticks to run.</param>
@@ -228,7 +224,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
+                GameLoop.Read(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
             }
 
             /// <summary>
@@ -248,7 +244,7 @@ namespace Robust.UnitTesting
                 _isSurelyIdle = false;
                 // Won't get ack'd directly but the shutdown is convincing enough.
                 _currentTicksId += 1;
-                _toInstanceWriter.TryWrite(new StopMessage());
+                GameLoop.Read(new StopMessage());
             }
 
             /// <summary>
@@ -261,7 +257,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceWriter.TryWrite(new PostMessage(post, _currentTicksId));
+                GameLoop.Read(new PostMessage(post, _currentTicksId));
             }
 
             public async Task WaitPost(Action post)
@@ -283,7 +279,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceWriter.TryWrite(new AssertMessage(assertion, _currentTicksId));
+                GameLoop.Read(new AssertMessage(assertion, _currentTicksId));
             }
 
             public async Task WaitAssertion(Action assertion)
@@ -305,16 +301,15 @@ namespace Robust.UnitTesting
             internal ServerIntegrationInstance(ServerIntegrationOptions? options)
             {
                 _options = options;
-                InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 DependencyCollection = new DependencyCollection();
-                InstanceThread.Start();
+                _serverMain();
             }
 
             private void _serverMain()
             {
                 try
                 {
-                    IoCManager.InitThread(DependencyCollection);
+                    IoCManager.InitThread(DependencyCollection, true);
                     ServerIoC.RegisterIoC();
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
@@ -359,20 +354,20 @@ namespace Robust.UnitTesting
                         throw new Exception("Server failed to start.");
                     }
 
-                    var gameLoop = new IntegrationGameLoop(
+                    GameLoop = new IntegrationGameLoop(
                         DependencyCollection.Resolve<IGameTiming>(),
-                        _fromInstanceWriter, _toInstanceReader);
-                    server.OverrideMainLoop(gameLoop);
+                        ref _fromInstanceWriter, DependencyCollection);
+                    server.OverrideMainLoop(GameLoop);
 
                     server.MainLoop();
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceWriter.TryWrite(new ShutDownMessage(e));
+                    _fromInstanceWriter?.Invoke(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
+                _fromInstanceWriter?.Invoke(new ShutDownMessage(null));
             }
         }
 
@@ -383,9 +378,8 @@ namespace Robust.UnitTesting
             internal ClientIntegrationInstance(ClientIntegrationOptions? options)
             {
                 _options = options;
-                InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 DependencyCollection = new DependencyCollection();
-                InstanceThread.Start();
+                _clientMain();
             }
 
             /// <summary>
@@ -408,7 +402,7 @@ namespace Robust.UnitTesting
             {
                 try
                 {
-                    IoCManager.InitThread(DependencyCollection);
+                    IoCManager.InitThread(DependencyCollection, true);
                     ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
@@ -448,18 +442,18 @@ namespace Robust.UnitTesting
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 
-                    var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
-                        _fromInstanceWriter, _toInstanceReader);
-                    client.OverrideMainLoop(gameLoop);
+                    GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
+                        ref _fromInstanceWriter, DependencyCollection);
+                    client.OverrideMainLoop(GameLoop);
                     client.MainLoop(GameController.DisplayMode.Headless);
                 }
                 catch (Exception e)
                 {
-                    _fromInstanceWriter.TryWrite(new ShutDownMessage(e));
+                    _fromInstanceWriter?.Invoke(new ShutDownMessage(e));
                     return;
                 }
 
-                _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
+                _fromInstanceWriter?.Invoke(new ShutDownMessage(null));
             }
         }
 
@@ -471,8 +465,13 @@ namespace Robust.UnitTesting
         {
             private readonly IGameTiming _gameTiming;
 
-            private readonly ChannelWriter<object> _channelWriter;
-            private readonly ChannelReader<object> _channelReader;
+            private bool _running;
+
+            private readonly Action<object>? _channelWriter;
+            private readonly Action<object>? _channelReader;
+
+            private readonly TaskCompletionSource Done = new();
+            private readonly IDependencyCollection _dependencyCollection;
 
 #pragma warning disable 67
             public event EventHandler<FrameEventArgs>? Input;
@@ -482,69 +481,93 @@ namespace Robust.UnitTesting
 #pragma warning restore 67
 
             public bool SingleStep { get; set; }
-            public bool Running { get; set; }
+
+            public bool Running
+            {
+                get => _running;
+                set
+                {
+                    if (_running == value)
+                    {
+                        return;
+                    }
+
+                    _running = value;
+
+                    if (!value)
+                    {
+                        Done.SetResult();
+                    }
+                }
+            }
+
             public int MaxQueuedTicks { get; set; }
             public SleepMode SleepMode { get; set; }
 
-            public IntegrationGameLoop(IGameTiming gameTiming, ChannelWriter<object> channelWriter,
-                ChannelReader<object> channelReader)
+            public IntegrationGameLoop(IGameTiming gameTiming, ref Action<object>? channelWriter, IDependencyCollection dependencyCollection)
             {
+                _dependencyCollection = dependencyCollection;
                 _gameTiming = gameTiming;
                 _channelWriter = channelWriter;
-                _channelReader = channelReader;
+
+                // Ack tick message 1 is implied as "init done"
+                _channelWriter?.Invoke(new AckTicksMessage(1));
+                Running = true;
+                _gameTiming.InSimulation = true;
             }
 
-            public void Run()
+            public void Read(object message)
             {
-                // Ack tick message 1 is implied as "init done"
-                _channelWriter.TryWrite(new AckTicksMessage(1));
-                Running = true;
-
-                _gameTiming.InSimulation = true;
-
-                while (Running)
+                if (!Running)
                 {
-                    var message = _channelReader.ReadAsync().AsTask().Result;
-
-                    switch (message)
-                    {
-                        case RunTicksMessage msg:
-                            _gameTiming.InSimulation = true;
-                            var simFrameEvent = new FrameEventArgs(msg.Delta);
-                            for (var i = 0; i < msg.Ticks && Running; i++)
-                            {
-                                Input?.Invoke(this, simFrameEvent);
-                                Tick?.Invoke(this, simFrameEvent);
-                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
-                                Update?.Invoke(this, simFrameEvent);
-                            }
-
-                            _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));
-                            break;
-
-                        case StopMessage _:
-                            Running = false;
-                            break;
-
-                        case PostMessage postMessage:
-                            postMessage.Post();
-                            _channelWriter.TryWrite(new AckTicksMessage(postMessage.MessageId));
-                            break;
-
-                        case AssertMessage assertMessage:
-                            try
-                            {
-                                assertMessage.Assertion();
-                            }
-                            catch (Exception e)
-                            {
-                                _channelWriter.TryWrite(new AssertFailMessage(e));
-                            }
-
-                            _channelWriter.TryWrite(new AckTicksMessage(assertMessage.MessageId));
-                            break;
-                    }
+                    return;
                 }
+
+                IoCManager.InitThread(_dependencyCollection, true);
+
+                switch (message)
+                {
+                    case RunTicksMessage msg:
+                        _gameTiming.InSimulation = true;
+                        var simFrameEvent = new FrameEventArgs(msg.Delta);
+                        for (var i = 0; i < msg.Ticks && Running; i++)
+                        {
+                            Input?.Invoke(this, simFrameEvent);
+                            Tick?.Invoke(this, simFrameEvent);
+                            _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
+                            Update?.Invoke(this, simFrameEvent);
+                        }
+
+                        _channelWriter?.Invoke(new AckTicksMessage(msg.MessageId));
+                        break;
+
+                    case StopMessage _:
+                        Running = false;
+                        break;
+
+                    case PostMessage postMessage:
+                        postMessage.Post();
+                        _channelWriter?.Invoke(new AckTicksMessage(postMessage.MessageId));
+                        break;
+
+                    case AssertMessage assertMessage:
+                        try
+                        {
+                            assertMessage.Assertion();
+                        }
+                        catch (Exception e)
+                        {
+                            _channelWriter?.Invoke(new AssertFailMessage(e));
+                        }
+
+                        _channelWriter?.Invoke(new AckTicksMessage(assertMessage.MessageId));
+                        break;
+                }
+            }
+
+            public async Task Run()
+            {
+                await Done.Task;
             }
         }
 

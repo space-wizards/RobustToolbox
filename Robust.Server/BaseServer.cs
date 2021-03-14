@@ -401,7 +401,7 @@ namespace Robust.Server
         }
 
         /// <inheritdoc />
-        public void MainLoop()
+        public async void MainLoop()
         {
             if (_mainLoop == null)
             {
@@ -423,7 +423,7 @@ namespace Robust.Server
 
             // set GameLoop.Running to false to return from this function.
             _time.Paused = false;
-            _mainLoop.Run();
+            await _mainLoop.Run();
 
             _time.InSimulation = true;
             Cleanup();

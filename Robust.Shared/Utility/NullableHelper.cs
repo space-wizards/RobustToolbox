@@ -47,6 +47,11 @@ namespace Robust.Shared.Utility
             return cflag != NotAnnotatedNullableFlag;
         }
 
+        public static bool IsNullable(this Type type)
+        {
+            return Nullable.GetUnderlyingType(type) != type;
+        }
+
         private static byte[] GetNullableFlags(FieldInfo field)
         {
             lock (_nullableAttributeTypeCache)

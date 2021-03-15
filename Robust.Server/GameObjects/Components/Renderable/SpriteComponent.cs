@@ -8,6 +8,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -24,7 +25,7 @@ namespace Robust.Server.GameObjects
         [DataField("visible")]
         private bool _visible = true;
 
-        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
+        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
         private int _drawDepth = DrawDepthTag.Default;
 
         [DataField("scale")]

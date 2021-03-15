@@ -200,6 +200,15 @@ namespace Robust.Shared.Serialization.Manager
             return ValidateNode(typeof(T), node, context);
         }
 
+        public ValidationNode ValidateNodeWithCustomTypeSerializer(Type type, Type typeSerializer, DataNode node,
+            ISerializationContext? context = null)
+        {
+            var method =
+                typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(ValidateWithCustomTypeSerializer))!.MakeGenericMethod(
+                    type, node.GetType(), typeSerializer);
+            return (ValidationNode)method.Invoke(this, new object?[] {node, context})!;
+        }
+
         public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false)
             where T : notnull, new()
         {
@@ -365,6 +374,14 @@ namespace Robust.Shared.Serialization.Manager
             return ReadValueCast<T>(typeof(T), node, context, skipHook);
         }
 
+        public DeserializationResult ReadWithTypeSerializer(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null,
+            bool skipHook = false)
+        {
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(ReadWithCustomTypeSerializer))!
+                .MakeGenericMethod(type, node.GetType(), typeSerializer);
+            return (DeserializationResult) method.Invoke(this, new object?[] {node, context, skipHook})!;
+        }
+
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
             ISerializationContext? context = null) where T : notnull
         {
@@ -439,6 +456,16 @@ namespace Robust.Shared.Serialization.Manager
             mapping = mapping.Merge(newMapping);
 
             return mapping;
+        }
+
+        public DataNode WriteWithTypeSerializer(Type type, Type typeSerializer, object? value, bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            if (type.IsNullable() && value == null) return new MappingDataNode(); //todo just return null
+
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(WriteWithCustomTypeSerializer))!
+                .MakeGenericMethod(type, typeSerializer);
+            return (DataNode) method.Invoke(this, new object?[] {value, context, alwaysWrite})!;
         }
 
         private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)
@@ -554,6 +581,21 @@ namespace Robust.Shared.Serialization.Manager
             var copy = CopyToTarget(source, target, context, skipHook);
 
             return copy == null ? default : (T?) copy;
+        }
+
+        public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
+            ISerializationContext? context = null, bool skipHook = false)
+        {
+            if (source == null || target == null) return null;
+            var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
+            if (commonType == null)
+            {
+                throw new InvalidOperationException($"Could not find common type in {nameof(CopyWithTypeSerializer)}!");
+            }
+
+            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(CopyWithCustomTypeSerializer))!
+                .MakeGenericMethod(commonType, source.GetType(), target.GetType(), typeSerializer);
+            return method.Invoke(this, new object?[] {source, target, skipHook, context});
         }
 
         private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)

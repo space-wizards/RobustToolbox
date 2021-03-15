@@ -3,13 +3,12 @@ using JetBrains.Annotations;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.Manager
 {
     public interface ISerializationManager
     {
-        #region Serialization
-
         /// <summary>
         ///     Initializes the serialization manager.
         /// </summary>
@@ -21,6 +20,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type to check for.</param>
         /// <returns>True if it does, false otherwise.</returns>
         bool HasDataDefinition(Type type);
+
+        #region Validation
 
         /// <summary>
         ///     Validates that a node has all the properties required by a certain type with its serializer.
@@ -45,6 +46,10 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
 
+        ValidationNode ValidateNodeWithCustomTypeSerializer(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null);
+
+        #endregion
+
         /// <summary>
         ///     Creates a deserialization result from a generic type and its fields,
         ///     populating the object.
@@ -54,6 +59,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <typeparam name="T">The type to populate.</typeparam>
         /// <returns>A result with the populated type.</returns>
         DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false) where T : notnull, new();
+
+        #region Populate
 
         /// <summary>
         ///     Creates a deserialization result from a generic type and its definition,
@@ -75,6 +82,10 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>A result with the populated object.</returns>
         DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false);
+
+        #endregion
+
+        #region Read
 
         /// <summary>
         ///     Deserializes a node into an object, populating it.
@@ -118,6 +129,13 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>The deserialized object, or null.</returns>
         T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
+        DeserializationResult ReadWithTypeSerializer(Type type, Type typeSerializer, DataNode node,
+            ISerializationContext? context = null, bool skipHook = false);
+
+        #endregion
+
+        #region Write
+
         /// <summary>
         ///     Serializes a value into a node.
         /// </summary>
@@ -147,6 +165,13 @@ namespace Robust.Shared.Serialization.Manager
         ///     of type <see cref="type"/>.
         /// </returns>
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
+
+        DataNode WriteWithTypeSerializer(Type type, Type typeSerializer, object? value, bool alwaysWrite = false,
+            ISerializationContext? context = null);
+
+        #endregion
+
+        #region Copy
 
         /// <summary>
         ///     Copies the values of one object into another.
@@ -183,6 +208,13 @@ namespace Robust.Shared.Serialization.Manager
         [MustUseReturnValue]
         T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
 
+        object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
+            ISerializationContext? context = null, bool skipHook = false);
+
+        #endregion
+
+        #region CreateCopy
+
         /// <summary>
         ///     Creates a copy of the given object.
         /// </summary>
@@ -206,59 +238,9 @@ namespace Robust.Shared.Serialization.Manager
 
         #region Flags And Constants
 
-        /// <summary>
-        ///     Deserializes a node into an enum flag value of the given type.
-        /// </summary>
-        /// <param name="tagType">The type of enum to deserialize into.</param>
-        /// <param name="node">The node to deserialize.</param>
-        /// <returns>The deserialized enum flags.</returns>
-        int ReadFlag(Type tagType, DataNode node);
+        Type GetFlagTypeFromTag(Type tagType);
 
-        /// <summary>
-        ///     Validates that a node can be deserialized into the specified flagtype.
-        /// </summary>
-        /// <param name="tagType">The tagtype for used to retrieve the flagtype.</param>
-        /// <param name="node">The node to check.</param>
-        /// <returns>
-        ///     A node with whether or not <see cref="node"/> is valid and which of its fields
-        ///     are invalid, if any.
-        /// </returns>
-        ValidationNode ValidateFlag(Type tagType, DataNode node);
-
-        /// <summary>
-        ///     Deserializes a node into an enum value of the given type.
-        /// </summary>
-        /// <param name="tagType">The type of enum to deserialize into.</param>
-        /// <param name="node">The node to deserialize.</param>
-        /// <returns>The deserialized enum.</returns>
-        int ReadConstant(Type tagType, DataNode node);
-
-        /// <summary>
-        ///     Validates that a node can be deserialized into the specified constanttype.
-        /// </summary>
-        /// <param name="tagType">The tagtype for used to retrieve the constanttype.</param>
-        /// <param name="node">The node to check.</param>
-        /// <returns>
-        ///     A node with whether or not <see cref="node"/> is valid and which of its fields
-        ///     are invalid, if any.
-        /// </returns>
-        ValidationNode ValidateConstant(Type tagType, DataNode node);
-
-        /// <summary>
-        ///     Serializes an enum flag into a node.
-        /// </summary>
-        /// <param name="tagType">The type of enum to serialize.</param>
-        /// <param name="flag">The enum flags value to serialize.</param>
-        /// <returns>The serialized node.</returns>
-        DataNode WriteFlag(Type tagType, int flag);
-
-        /// <summary>
-        ///     Serializes an enum into a node.
-        /// </summary>
-        /// <param name="tagType">The type of enum to serialize.</param>
-        /// <param name="constant">The enum value to serialize.</param>
-        /// <returns>The serialized node.</returns>
-        DataNode WriteConstant(Type tagType, int constant);
+        Type GetConstantTypeFromTag(Type tagType);
 
         #endregion
     }

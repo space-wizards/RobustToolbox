@@ -30,6 +30,7 @@ using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Shapes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -136,7 +137,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        [DataFieldWithFlag("layer", typeof(CollisionLayer))]
+        [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>))]
         private int _collisionLayer;
 
         /// <summary>
@@ -157,7 +158,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        [DataFieldWithFlag("mask", typeof(CollisionMask))]
+        [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
         private int _collisionMask;
 
         void ISerializationHooks.AfterDeserialization()

@@ -155,14 +155,10 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var keyValidated = serializationManager.ValidateNode(typeof(string), key, context);
-                var valValidated = field.Attribute switch
-                {
-                    DataFieldWithFlagAttribute flagAttribute => serializationManager.ValidateFlag(flagAttribute.FlagTag,
-                        val),
-                    DataFieldWithConstantAttribute constantAttribute => serializationManager.ValidateConstant(
-                        constantAttribute.ConstantTag, val),
-                    _ => serializationManager.ValidateNode(field.FieldType, val, context)
-                };
+                ValidationNode valValidated = field.Attribute.CustomTypeSerializer != null
+                    ? serializationManager.ValidateNodeWithCustomTypeSerializer(field.FieldType,
+                        field.Attribute.CustomTypeSerializer, val, context)
+                    : serializationManager.ValidateNode(field.FieldType, val, context);
 
                 validatedMapping.Add(keyValidated, valValidated);
             }
@@ -195,41 +191,13 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    DeserializationResult? result;
-
-                    switch (fieldDefinition.Attribute)
-                    {
-                        case DataFieldWithConstantAttribute constantAttribute:
-                        {
-                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int))
-                                throw new InvalidOperationException();
-
-                            var type = constantAttribute.ConstantTag;
-                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            var constant = serializationManager.ReadConstant(type, node);
-
-                            result = new DeserializedValue<int>(constant);
-                            break;
-                        }
-                        case DataFieldWithFlagAttribute flagAttribute:
-                        {
-                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
-
-                            var type = flagAttribute.FlagTag;
-                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            var flag = serializationManager.ReadFlag(type, node);
-
-                            result = new DeserializedValue<int>(flag);
-                            break;
-                        }
-                        default:
-                        {
-                            var type = fieldDefinition.FieldType;
-                            var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
-                            result = serializationManager.Read(type, node, serializationContext, skipHook);
-                            break;
-                        }
-                    }
+                    var type = fieldDefinition.FieldType;
+                    var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+                    var result = fieldDefinition.Attribute.CustomTypeSerializer != null
+                        ? serializationManager.ReadWithTypeSerializer(type,
+                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext,
+                            skipHook)
+                        : serializationManager.Read(type, node, serializationContext, skipHook);
 
                     var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehaviour, result);
                     mappedInfo[i] = entry;
@@ -314,36 +282,11 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    DataNode node;
-
-                    switch (fieldDefinition.Attribute)
-                    {
-                        case DataFieldWithConstantAttribute constantAttribute:
-                        {
-                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
-
-                            var tag = constantAttribute.ConstantTag;
-                            node = manager.WriteConstant(tag, (int) value);
-
-                            break;
-                        }
-                        case DataFieldWithFlagAttribute flagAttribute:
-                        {
-                            if (fieldDefinition.FieldType.EnsureNotNullableType() != typeof(int)) throw new InvalidOperationException();
-
-                            var tag = flagAttribute.FlagTag;
-                            node = manager.WriteFlag(tag, (int) value);
-
-                            break;
-                        }
-                        default:
-                        {
-                            var type = fieldDefinition.FieldType;
-                            node = manager.WriteValue(type, value, alwaysWrite, context);
-
-                            break;
-                        }
-                    }
+                    var type = fieldDefinition.FieldType;
+                    var node = fieldDefinition.Attribute.CustomTypeSerializer != null
+                        ? manager.WriteWithTypeSerializer(type, fieldDefinition.Attribute.CustomTypeSerializer,
+                            value, alwaysWrite, context)
+                        : manager.WriteValue(type, value, alwaysWrite, context);
 
                     mapping[fieldDefinition.Attribute.Tag] = node;
                 }
@@ -355,6 +298,7 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
+        // todo paul add skiphooks
         private CopyDelegateSignature EmitCopyDelegate()
         {
             object PopulateDelegate(
@@ -375,7 +319,10 @@ namespace Robust.Shared.Serialization.Manager
                         copy = manager.CreateCopy(sourceValue, context);
                     }else
                     {
-                        copy = manager.Copy(sourceValue, targetValue, context);
+                        copy = field.Attribute.CustomTypeSerializer != null
+                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue, targetValue,
+                                context)
+                            : manager.Copy(sourceValue, targetValue, context);
                     }
 
                     info.SetValue(target, copy);

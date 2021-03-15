@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics.Dynamics;
@@ -12,6 +13,9 @@ namespace Robust.Shared.Physics.Controllers
     {
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntityManager EntityManager = default!;
+
+        public Histogram.Child BeforeMonitor = default!;
+        public Histogram.Child AfterMonitor = default!;
 
         public virtual List<Type> UpdatesBefore => new();
 

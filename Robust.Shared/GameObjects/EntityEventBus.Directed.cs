@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
         public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs
         {
-            _eventTables.Dispatch(uid, typeof(TEvent), args);
+            _eventTables.Dispatch(uid, args.GetType(), args);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
-        
+
         private class EventTables : IDisposable
         {
             private IEntityManager _entMan;
@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
 
                 _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
                 _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
-                
+
                 _eventTables = new();
                 _subscriptions = new();
                 _subscriptionLock = false;
@@ -103,7 +103,7 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveEntity(e);
             }
-            
+
             private void OnComponentAdded(object? sender, ComponentEventArgs e)
             {
                 _subscriptionLock = true;
@@ -144,7 +144,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                     return;
-                
+
                 compSubs.Remove(eventType);
             }
 
@@ -198,7 +198,7 @@ namespace Robust.Shared.GameObjects
             public void Dispatch(EntityUid euid, Type eventType, EntityEventArgs args)
             {
                 var eventTable = _eventTables[euid];
-                
+
                 if(!eventTable.TryGetValue(eventType, out var subscribedComps))
                     return;
 

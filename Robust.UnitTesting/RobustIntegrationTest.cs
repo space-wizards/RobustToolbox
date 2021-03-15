@@ -10,6 +10,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using Robust.Client;
 using Robust.Server;
 using Robust.Server.Console;
@@ -18,8 +19,11 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using static Robust.UnitTesting.RobustIntegrationTest;
 using ServerProgram = Robust.Server.Program;
 
@@ -37,37 +41,85 @@ public class GlobalRunner
             client.Stop();
         }
 
-        await Task.WhenAll(ClientPool.Select(client => client.WaitIdleAsync()));
-
-        ClientPool.Clear();
-
         foreach (var server in ServerPool)
         {
             server.Stop();
         }
 
-        await Task.WhenAll(ServerPool.Select(server => server.WaitIdleAsync()));
+        await Task.WhenAll(ClientPool.Select(client => client.WaitIdleAsync())
+            .Concat(ServerPool.Select(server => server.WaitIdleAsync())));
 
+        ClientPool.Clear();
         ServerPool.Clear();
     }
 
-    public static ClientIntegrationInstance GetClient(ClientIntegrationOptions? options = null)
+    public static ClientIntegrationInstance GetClient(out bool cached, ClientIntegrationOptions? options = null)
     {
-        return ClientPool.TryTake(out var client) ? client : new ClientIntegrationInstance(options);
+        if (options?.SkipPool ?? false)
+        {
+            cached = false;
+            return new ClientIntegrationInstance(options);
+        }
+
+        if (ClientPool.TryTake(out var client))
+        {
+            cached = true;
+            return client;
+        }
+
+        cached = false;
+        return new ClientIntegrationInstance(options);
     }
 
     public static void Return(ClientIntegrationInstance client)
     {
+        if (ClientPool.Contains(client))
+        {
+            Console.Write("");
+        }
+
+        if (client.Options?.SkipPool ?? !client.IsAlive)
+        {
+            return;
+        }
+
+        client.WaitIdleAsync().Wait();
+        DebugTools.Assert(client.IsAlive, "Cannot return a dead instance.");
         ClientPool.Add(client);
     }
 
-    public static ServerIntegrationInstance GetServer(ServerIntegrationOptions? options = null)
+    public static ServerIntegrationInstance GetServer(out bool cached, ServerIntegrationOptions? options = null)
     {
-        return ServerPool.TryTake(out var server) ? server : new ServerIntegrationInstance(options);
+        if (options?.SkipPool ?? false)
+        {
+            cached = false;
+            return new ServerIntegrationInstance(options);
+        }
+
+        if (ServerPool.TryTake(out var server))
+        {
+            cached = true;
+            return server;
+        }
+
+        cached = false;
+        return new ServerIntegrationInstance(options);
     }
 
     public static void Return(ServerIntegrationInstance server)
     {
+        if (ServerPool.Contains(server))
+        {
+            Console.Write("");
+        }
+
+        if (server.Options?.SkipPool ?? !server.IsAlive)
+        {
+            return;
+        }
+
+        server.WaitIdleAsync().Wait();
+        DebugTools.Assert(server.IsAlive, "Cannot return a dead instance.");
         ServerPool.Add(server);
     }
 }
@@ -83,16 +135,25 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
-        private readonly List<ClientIntegrationInstance> _clients = new();
-        private readonly List<ServerIntegrationInstance> _servers = new();
+        private readonly ConcurrentDictionary<string, ConcurrentBag<IntegrationInstance>> _instances = new();
 
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
-            var server = options == null ? GlobalRunner.GetServer(options) : new ServerIntegrationInstance(options);
-            _servers.Add(server);
+            var server = GlobalRunner.GetServer(out var cached, options);
+
+            if (cached)
+            {
+                server.Options = options;
+                PrepareInstance(server).ConfigureAwait(false);
+            }
+
+            _instances
+                .GetOrAdd(TestContext.CurrentContext.Test.ID, id => new ConcurrentBag<IntegrationInstance>())
+                .Add(server);
+
             return server;
         }
 
@@ -101,28 +162,114 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
-            var client = options == null ? GlobalRunner.GetClient(options) : new ClientIntegrationInstance(options);
-            _clients.Add(client);
+            var client = GlobalRunner.GetClient(out var cached, options);
+
+            if (cached)
+            {
+                client.Options = options;
+                PrepareInstance(client).ConfigureAwait(false);
+            }
+
+            _instances.GetOrNew(TestContext.CurrentContext.Test.ID).Add(client);
             return client;
         }
 
-        [OneTimeTearDown]
+        protected virtual async Task<bool> CleanupInstance(IntegrationInstance instance)
+        {
+            await instance.WaitPost(() =>
+            {
+                IoCManager.Resolve<IMapManager>().Restart();
+
+                var netManager = IoCManager.Resolve<INetManager>();
+                if (netManager is IServerNetManager serverNetManager)
+                {
+                    foreach (var channel in serverNetManager.Channels.ToArray())
+                    {
+                        serverNetManager.DisconnectChannel(channel, string.Empty);
+                    }
+                }
+            });
+
+            return true;
+        }
+
+        protected virtual async Task PrepareInstance(IntegrationInstance instance)
+        {
+            var options = instance.Options;
+
+            if (options?.ExtraPrototypes != null)
+            {
+                await instance.WaitPost(() =>
+                {
+                    IoCManager.Resolve<IPrototypeManager>().LoadString(options.ExtraPrototypes, true);
+                });
+            }
+
+            instance.Options = options;
+        }
+
+        private async Task OnInstanceFinish(IntegrationInstance instance)
+        {
+            try
+            {
+                await instance.WaitIdleAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            await CleanupInstance(instance);
+
+            // if (instance.IsDefault)
+            // {
+                switch (instance)
+                {
+                    case ClientIntegrationInstance client:
+                        GlobalRunner.Return(client);
+                        break;
+                    case ServerIntegrationInstance server:
+                        GlobalRunner.Return(server);
+                        break;
+                    default:
+                        throw new ArgumentException($"Unknown instance type: {instance.GetType()}");
+                }
+            // }
+        }
+
+        [TearDown]
         public async Task TearDown()
         {
-            _clients.ForEach(client =>
+            if (_instances.TryRemove(TestContext.CurrentContext.Test.ID, out var testInstances))
             {
-                if (client.IsDefault) GlobalRunner.Return(client);
-            });
+                // Don't return potentially broken instances to the pool
+                var shouldReturn = TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Passed;
 
-            _servers.ForEach(server =>
-            {
-                if (server.IsDefault) GlobalRunner.Return(server);
-            });
+                foreach (var instance in testInstances)
+                {
+                    await instance.WaitIdleAsync();
 
-            await Task.WhenAll(_clients.Select(p => p.WaitIdleAsync()));
+                    if (shouldReturn && instance.IsAlive)
+                    {
+                        await OnInstanceFinish(instance);
+                    }
+                    else
+                    {
+                        instance.Stop();
+                        await instance.WaitIdleAsync();
+                    }
+                }
+            }
+        }
 
-            _clients.Clear();
-            _servers.Clear();
+        [OneTimeTearDown]
+        public async Task OneTimeTearDown()
+        {
+            await Task.WhenAll(_instances
+                .SelectMany(x => x.Value)
+                .Select(OnInstanceFinish));
+
+            _instances.Clear();
         }
 
         /// <summary>
@@ -138,6 +285,8 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
+            public abstract IntegrationOptions? Options { get; internal set; }
+
             private protected Thread InstanceThread = default!;
             private protected IDependencyCollection DependencyCollection = default!;
 
@@ -193,12 +342,6 @@ namespace Robust.UnitTesting
                     return _unhandledException;
                 }
             }
-
-            /// <summary>
-            ///     Whether or not this instance was created with any additional configuration options.
-            ///     See <see cref="IntegrationOptions"/>
-            /// </summary>
-            public abstract bool IsDefault { get; }
 
             private protected IntegrationInstance()
             {
@@ -369,17 +512,15 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            private readonly ServerIntegrationOptions? _options;
+            public override IntegrationOptions? Options { get; internal set; }
 
-            internal ServerIntegrationInstance(ServerIntegrationOptions? options)
+            internal ServerIntegrationInstance(IntegrationOptions? options)
             {
-                _options = options;
+                Options = options;
                 InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 DependencyCollection = new DependencyCollection();
                 InstanceThread.Start();
             }
-
-            public override bool IsDefault => _options == null;
 
             private void _serverMain()
             {
@@ -395,7 +536,7 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
                     IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                     IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
-                    _options?.InitIoC?.Invoke();
+                    Options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
                     //ServerProgram.SetupLogging();
                     ServerProgram.InitReflectionManager();
@@ -404,22 +545,22 @@ namespace Robust.UnitTesting
 
                     server.LoadConfigAndUserData = false;
 
-                    if (_options?.ContentAssemblies != null)
+                    if (Options?.ContentAssemblies != null)
                     {
-                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                        IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                     }
 
                     var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
-                    if (_options != null)
+                    if (Options != null)
                     {
-                        _options.BeforeStart?.Invoke();
-                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                        Options.BeforeStart?.Invoke();
+                        cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
-                        if (_options.ExtraPrototypes != null)
+                        if (Options.ExtraPrototypes != null)
                         {
                             IoCManager.Resolve<IResourceManagerInternal>()
-                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                                .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                         }
                     }
 
@@ -449,17 +590,15 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            private readonly ClientIntegrationOptions? _options;
+            public override IntegrationOptions? Options { get; internal set; }
 
-            internal ClientIntegrationInstance(ClientIntegrationOptions? options)
+            internal ClientIntegrationInstance(IntegrationOptions? options)
             {
-                _options = options;
+                Options = options;
                 InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 DependencyCollection = new DependencyCollection();
                 InstanceThread.Start();
             }
-
-            public override bool IsDefault => _options == null;
 
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
@@ -489,31 +628,31 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IModLoader, TestingModLoader>(true);
                     IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
                     IoCManager.Register<TestingModLoader, TestingModLoader>(true);
-                    _options?.InitIoC?.Invoke();
+                    Options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
 
                     GameController.RegisterReflection();
 
                     var client = DependencyCollection.Resolve<IGameControllerInternal>();
 
-                    if (_options?.ContentAssemblies != null)
+                    if (Options?.ContentAssemblies != null)
                     {
-                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                        IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                     }
 
                     client.LoadConfigAndUserData = false;
 
                     var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
-                    if (_options != null)
+                    if (Options != null)
                     {
-                        _options.BeforeStart?.Invoke();
-                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                        Options.BeforeStart?.Invoke();
+                        cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
-                        if (_options.ExtraPrototypes != null)
+                        if (Options.ExtraPrototypes != null)
                         {
                             IoCManager.Resolve<IResourceManagerInternal>()
-                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                                .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                         }
                     }
 
@@ -635,6 +774,7 @@ namespace Robust.UnitTesting
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
+            public bool SkipPool { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
         }

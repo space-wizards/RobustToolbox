@@ -73,9 +73,9 @@ namespace Robust.Shared.Prototypes
 
         Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
 
-        List<IPrototype> LoadFromStream(TextReader stream);
+        List<IPrototype> LoadFromStream(TextReader stream, bool overwrite = false);
 
-        List<IPrototype> LoadString(string str);
+        List<IPrototype> LoadString(string str, bool overwrite = false);
 
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
@@ -470,7 +470,7 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public List<IPrototype> LoadFromStream(TextReader stream)
+        public List<IPrototype> LoadFromStream(TextReader stream, bool overwrite = false)
         {
             var changedPrototypes = new List<IPrototype>();
             _hasEverBeenReloaded = true;
@@ -481,7 +481,7 @@ namespace Robust.Shared.Prototypes
             {
                 try
                 {
-                    var documentPrototypes = LoadFromDocument(yaml.Documents[i]);
+                    var documentPrototypes = LoadFromDocument(yaml.Documents[i], overwrite);
                     changedPrototypes.AddRange(documentPrototypes);
                 }
                 catch (Exception e)
@@ -495,9 +495,9 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public List<IPrototype> LoadString(string str)
+        public List<IPrototype> LoadString(string str, bool overwrite = false)
         {
-            return LoadFromStream(new StringReader(str));
+            return LoadFromStream(new StringReader(str), overwrite);
         }
 
         #endregion IPrototypeManager members

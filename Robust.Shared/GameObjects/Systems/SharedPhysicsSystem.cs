@@ -4,6 +4,7 @@ using System.Linq;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
@@ -72,7 +73,6 @@ namespace Robust.Shared.GameObjects
             });
 
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
@@ -106,15 +106,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
-            
-            LoadMetricCVar();
-            _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
         }
 
-        private void LoadMetricCVar()
-        {
-            MetricsEnabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
-        }
 
         private void BuildControllers()
         {

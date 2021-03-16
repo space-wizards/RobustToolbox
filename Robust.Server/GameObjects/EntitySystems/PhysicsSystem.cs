@@ -1,4 +1,6 @@
 using JetBrains.Annotations;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -10,11 +12,19 @@ namespace Robust.Server.GameObjects
     public class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public override void Initialize()
         {
             base.Initialize();
             _mapManager.OnGridCreated += HandleGridCreated;
+            LoadMetricCVar();
+            _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
+        }
+
+        private void LoadMetricCVar()
+        {
+            MetricsEnabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
         }
 
         public override void Shutdown()

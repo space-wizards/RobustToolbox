@@ -1,8 +1,8 @@
-using Robust.Shared.GameStates;
-using Robust.Server.GameObjects;
 using System;
+using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
@@ -43,7 +43,7 @@ namespace Robust.Server.Player
         private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
-        
+
         [ViewVariables]
         internal string Name { get; set; }
 
@@ -109,7 +109,7 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity a)
+        public void AttachToEntity(IEntity? a)
         {
             DetachFromEntity();
 

@@ -55,8 +55,7 @@ namespace Robust.Shared.GameObjects
         {
             if (curState is not CollisionWakeState state) return;
 
-            _enabled = state.Enabled;
-            RaiseStateChange();
+            Enabled = state.Enabled;
         }
 
         [Serializable, NetSerializable]

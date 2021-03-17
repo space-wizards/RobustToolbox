@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +9,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
 {
+    public delegate T DependencyFactoryDelegate<out T>()
+        where T : class;
+
     /// <inheritdoc />
     internal class DependencyCollection : IDependencyCollection
     {
@@ -26,6 +29,8 @@ namespace Robust.Shared.IoC
         /// </summary>
         private readonly Dictionary<Type, Type> _resolveTypes = new();
 
+        private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
+
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
         private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
@@ -35,10 +40,17 @@ namespace Robust.Shared.IoC
         public void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new()
         {
+            Register<TInterface, TImplementation>(() => new TImplementation(), overwrite);
+        }
+
+        public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
+            where TImplementation : class, TInterface
+        {
             var interfaceType = typeof(TInterface);
             CheckRegisterInterface(interfaceType, typeof(TImplementation), overwrite);
 
             _resolveTypes[interfaceType] = typeof(TImplementation);
+            _resolveFactories[typeof(TImplementation)] = factory;
         }
 
         [AssertionMethod]
@@ -96,6 +108,7 @@ namespace Robust.Shared.IoC
 
             _services.Clear();
             _resolveTypes.Clear();
+            _resolveFactories.Clear();
             _injectorCache.Clear();
         }
 
@@ -156,7 +169,8 @@ namespace Robust.Shared.IoC
 
                 try
                 {
-                    var instance = Activator.CreateInstance(value)!;
+                    // Yay for delegate covariance
+                    object instance = _resolveFactories[value].Invoke();
                     _services[key] = instance;
                     injectList.Add(instance);
                 }
@@ -165,6 +179,10 @@ namespace Robust.Shared.IoC
                     throw new ImplementationConstructorException(value, e.InnerException);
                 }
             }
+
+            // Because we only ever construct an instance once per registration, there is no need to keep the factory
+            // delegates. Also we need to free the delegates because lambdas capture variables.
+            _resolveFactories.Clear();
 
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)

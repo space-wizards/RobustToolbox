@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde

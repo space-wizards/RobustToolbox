@@ -11,9 +11,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -122,10 +122,10 @@ namespace Robust.Shared.Network
         private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
             CancellationToken cancel)
         {
-            var authToken = _config.GetSecureCVar<string>("auth.token");
-            var pubKey = _config.GetSecureCVar<string>("auth.serverpubkey");
-            var authServer = _config.GetSecureCVar<string>("auth.server");
-            var userIdStr = _config.GetSecureCVar<string>("auth.userid");
+            var authToken = _authManager.Token;
+            var pubKey = _authManager.PubKey;
+            var authServer = _authManager.Server;
+            var userId = _authManager.UserId;
 
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
@@ -160,7 +160,7 @@ namespace Robust.Shared.Network
                 if (hasPubKey)
                 {
                     // public key provided by launcher.
-                    keyBytes = Convert.FromBase64String(pubKey);
+                    keyBytes = Convert.FromBase64String(pubKey!);
                 }
                 else
                 {
@@ -190,7 +190,7 @@ namespace Robust.Shared.Network
                 {
                     SharedSecret = encryptedSecret,
                     VerifyToken = encryptedVerifyToken,
-                    UserId = new Guid(userIdStr)
+                    UserId = userId!.Value.UserId
                 };
 
                 var outEncRespMsg = peer.Peer.CreateMessage();
@@ -205,7 +205,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response);
 
-            var channel = new NetChannel(this, connection, new NetUserId(msgSuc.UserId), msgSuc.UserName, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 

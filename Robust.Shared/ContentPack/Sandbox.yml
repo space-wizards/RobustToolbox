@@ -1,14 +1,13 @@
 ﻿# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
 # Yes, I typed most of this out by hand.
 
-
-SystemAssemblyName: System.Runtime
-
 # ILVerify errors that are allowed.
 AllowedVerifierErrors:
 # InitOnly happens a lot when calling e.g. ToString() on a readonly field.
 # It's fine and doesn't break anything runtime related so...
 - InitOnly
+# ILVerify has problems with Default Interface Methods so...
+- InterfaceMethodNotImplemented
 
 # EVERYTHING in these namespaces is allowed.
 WhitelistedNamespaces:
@@ -330,6 +329,7 @@ Types:
   System.Globalization:
     CompareOptions: { }
     CultureInfo: { All: True }
+    DateTimeStyles: { All: True } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"
@@ -406,10 +406,16 @@ Types:
       - "System.Reflection.Assembly GetAssembly(System.Type)"
       - "System.Reflection.Assembly GetExecutingAssembly()"
       - "System.Type[] GetTypes()"
+      - "System.Reflection.AssemblyName GetName()"
     AssemblyCompanyAttribute: { All: True }
     AssemblyConfigurationAttribute: { All: True }
     AssemblyFileVersionAttribute: { All: True }
     AssemblyInformationalVersionAttribute: { All: True }
+    AssemblyName:
+      Methods:
+      - "string get_FullName()"
+      - "System.Version get_Version()"
+      - "string get_Name()"
     AssemblyProductAttribute: { All: True }
     AssemblyTitleAttribute: { All: True }
     DefaultMemberAttribute: { All: True }
@@ -561,6 +567,7 @@ Types:
       - "System.Text.Encoding get_UTF8()"
       - "System.Text.Encoding get_UTF32()"
     NormalizationForm: { } # Enum
+    Rune: { All: True }
     StringBuilder:
       Methods:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
@@ -863,6 +870,7 @@ Types:
     IDisposable: { All: True }
     IEquatable`1: { }
     IFormatProvider: { All: True }
+    IFormattable: { All: True }
     IndexOutOfRangeException: { All: True }
     Int16: { All: True }
     Int32: { All: True }
@@ -894,6 +902,7 @@ Types:
     MidpointRounding: { } # Enum
     MulticastDelegate:
       Inherit: Allow
+    NotImplementedException: { All: True }
     NotSupportedException: { All: True }
     Nullable: { All: True }
     Nullable`1: { All: True }
@@ -1123,7 +1132,7 @@ Types:
       - "string[] Split(string, System.StringSplitOptions)"
       - "string[] Split(string[], int, System.StringSplitOptions)"
       - "string[] Split(string[], System.StringSplitOptions)"
-      - "StringRuneEnumerator EnumerateRunes()"
+      - "System.Text.StringRuneEnumerator EnumerateRunes()"
       - "System.CharEnumerator GetEnumerator()"
       - "System.ReadOnlySpan`1<char> op_Implicit(string)"
       - "System.TypeCode GetTypeCode()"
@@ -1271,6 +1280,7 @@ Types:
     ValueTuple`7: { All: True }
     ValueTuple`8: { All: True }
     ValueType: { All: True }
+    Version: { All: True }
     Void: { All: True }
   YamlDotNet.Core.Events:
     MappingStyle: { } # Enum

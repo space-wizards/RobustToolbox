@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -25,6 +24,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
+        // It is assumed that these two positions are NEVER inside a surrogate pair in the text buffer.
         private int _cursorPosition;
         private int _selectionStart;
         private string _text = "";
@@ -128,7 +128,11 @@ namespace Robust.Client.UserInterface.Controls
             get => _cursorPosition;
             set
             {
-                _cursorPosition = MathHelper.Clamp(value, 0, _text.Length);
+                var clamped = MathHelper.Clamp(value, 0, _text.Length);
+                if (_text.Length != 0 && _text.Length != clamped && !Rune.TryGetRuneAt(_text, clamped, out _))
+                    throw new ArgumentException("Cannot set cursor inside surrogate pair.");
+
+                _cursorPosition = clamped;
                 _selectionStart = _cursorPosition;
             }
         }
@@ -136,7 +140,14 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionStart
         {
             get => _selectionStart;
-            set => _selectionStart = MathHelper.Clamp(value, 0, _text.Length);
+            set
+            {
+                var clamped = MathHelper.Clamp(value, 0, _text.Length);
+                if (_text.Length != 0 && _text.Length != clamped && !Rune.TryGetRuneAt(_text, clamped, out _))
+                    throw new ArgumentException("Cannot set cursor inside surrogate pair.");
+
+                _selectionStart = clamped;
+            }
         }
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
@@ -244,18 +255,22 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             var font = _getFont();
             var style = _getStyleBox();
             return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
         }
 
-        protected override void LayoutUpdateOverride()
+        protected override Vector2 ArrangeOverride(Vector2 finalSize)
         {
             var style = _getStyleBox();
 
-            FitChildInPixelBox(_renderBox, (UIBox2i) style.GetContentBox(PixelSizeBox));
+            _renderBox.ArrangePixel(
+                (UIBox2i) style.GetContentBox(
+                    UIBox2.FromDimensions(Vector2.Zero, finalSize * UIScale)));
+
+            return finalSize;
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)
@@ -273,7 +288,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            InsertAtCursor(((char) args.CodePoint).ToString());
+            InsertAtCursor(args.AsRune.ToString());
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -300,8 +315,16 @@ namespace Robust.Client.UserInterface.Controls
                         }
                         else if (_cursorPosition != 0)
                         {
-                            _text = _text.Remove(_cursorPosition - 1, 1);
-                            _cursorPosition -= 1;
+                            var remPos = _cursorPosition - 1;
+                            var remAmt = 1;
+                            // If this is a low surrogate remove two chars to remove the whole pair.
+                            if (char.IsLowSurrogate(_text[remPos]))
+                            {
+                                remPos -= 1;
+                                remAmt = 2;
+                            }
+                            _text = _text.Remove(remPos, remAmt);
+                            _cursorPosition -= remAmt;
                             changed = true;
                         }
 
@@ -328,7 +351,10 @@ namespace Robust.Client.UserInterface.Controls
                         }
                         else if (_cursorPosition < _text.Length)
                         {
-                            _text = _text.Remove(_cursorPosition, 1);
+                            var remAmt = 1;
+                            if (char.IsHighSurrogate(_text[_cursorPosition]))
+                                remAmt = 2;
+                            _text = _text.Remove(_cursorPosition, remAmt);
                             changed = true;
                         }
 
@@ -350,10 +376,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        if (_cursorPosition != 0)
-                        {
-                            _cursorPosition -= 1;
-                        }
+                        ShiftCursorLeft();
 
                         _selectionStart = _cursorPosition;
                     }
@@ -368,10 +391,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     else
                     {
-                        if (_cursorPosition != _text.Length)
-                        {
-                            _cursorPosition += 1;
-                        }
+                        ShiftCursorRight();
 
                         _selectionStart = _cursorPosition;
                     }
@@ -402,19 +422,13 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectLeft)
                 {
-                    if (_cursorPosition != 0)
-                    {
-                        _cursorPosition -= 1;
-                    }
+                    ShiftCursorLeft();
 
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorSelectRight)
                 {
-                    if (_cursorPosition != _text.Length)
-                    {
-                        _cursorPosition += 1;
-                    }
+                    ShiftCursorRight();
 
                     args.Handle();
                 }
@@ -523,6 +537,32 @@ namespace Robust.Client.UserInterface.Controls
 
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();
+
+            void ShiftCursorLeft()
+            {
+                if (_cursorPosition == 0)
+                    return;
+
+                _cursorPosition -= 1;
+
+                if (char.IsLowSurrogate(_text[_cursorPosition]))
+                    _cursorPosition -= 1;
+            }
+
+            void ShiftCursorRight()
+            {
+                if (_cursorPosition == _text.Length)
+                    return;
+
+                _cursorPosition += 1;
+
+                // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
+                // (Because yes, I did myself too a week after writing it)
+                // char.IsLowSurrogate(_text[_cursorPosition]) means "is the cursor between a surrogate pair"
+                // because we ALREADY moved.
+                if (_cursorPosition != _text.Length && char.IsLowSurrogate(_text[_cursorPosition]))
+                    _cursorPosition += 1;
+            }
         }
 
         protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
@@ -553,11 +593,11 @@ namespace Robust.Client.UserInterface.Controls
             var index = 0;
             var chrPosX = contentBox.Left - _drawOffset;
             var lastChrPostX = contentBox.Left - _drawOffset;
-            foreach (var chr in _text)
+            foreach (var rune in _text.EnumerateRunes())
             {
-                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                 {
-                    index += 1;
+                    index += rune.Utf16SequenceLength;
                     continue;
                 }
 
@@ -568,7 +608,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 lastChrPostX = chrPosX;
                 chrPosX += metrics.Advance;
-                index += 1;
+                index += rune.Utf16SequenceLength;
 
                 if (chrPosX > contentBox.Right)
                 {
@@ -584,6 +624,9 @@ namespace Robust.Client.UserInterface.Controls
             if (index > 0 && distanceRight > distanceLeft)
             {
                 index -= 1;
+
+                if (char.IsLowSurrogate(_text[index]))
+                    index -= 1;
             }
 
             return index;
@@ -650,60 +693,87 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         // Approach for NextWordPosition and PrevWordPosition taken from Avalonia.
-        private int NextWordPosition(string str, int cursor)
+        internal static int NextWordPosition(string str, int cursor)
         {
             if (cursor >= str.Length)
             {
                 return str.Length;
             }
 
-            var charClass = GetCharClass(str[cursor]);
+            var charClass = GetCharClass(Rune.GetRuneAt(str, cursor));
 
             var i = cursor;
-            for (; i < str.Length && GetCharClass(str[i]) == charClass; i++)
-            {
-            }
 
-            for (; i < str.Length && GetCharClass(str[i]) == CharClass.Whitespace; i++)
-            {
-            }
+            IterForward(charClass);
+            IterForward(CharClass.Whitespace);
 
             return i;
+
+            void IterForward(CharClass cClass)
+            {
+                while (i < str.Length)
+                {
+                    var rune = Rune.GetRuneAt(str, i);
+
+                    if (GetCharClass(rune) != cClass)
+                        break;
+
+                    i += rune.Utf16SequenceLength;
+                }
+            }
         }
 
-        private int PrevWordPosition(string str, int cursor)
+        internal static int PrevWordPosition(string str, int cursor)
         {
             if (cursor == 0)
             {
                 return 0;
             }
 
-            var charClass = GetCharClass(str[cursor - 1]);
+            var startRune = GetRuneBackwards(str, cursor - 1);
+            var charClass = GetCharClass(startRune);
 
             var i = cursor;
-            for (; i > 0 && GetCharClass(str[i - 1]) == charClass; i--)
-            {
-            }
+            IterBackward();
 
             if (charClass == CharClass.Whitespace)
             {
-                charClass = GetCharClass(str[i - 1]);
-                for (; i > 0 && GetCharClass(str[i - 1]) == charClass; i--)
-                {
-                }
+                if (!Rune.TryGetRuneAt(str, i - 1, out var midRune))
+                    midRune = Rune.GetRuneAt(str, i - 2);
+                charClass = GetCharClass(midRune);
+
+                IterBackward();
             }
 
             return i;
+
+            void IterBackward()
+            {
+                while (i > 0)
+                {
+                    var rune = GetRuneBackwards(str, i - 1);
+
+                    if (GetCharClass(rune) != charClass)
+                        break;
+
+                    i -= rune.Utf16SequenceLength;
+                }
+            }
+
+            static Rune GetRuneBackwards(string str, int i)
+            {
+                return Rune.TryGetRuneAt(str, i, out var rune) ? rune : Rune.GetRuneAt(str, i - 1);
+            }
         }
 
-        private CharClass GetCharClass(char chr)
+        internal static CharClass GetCharClass(Rune rune)
         {
-            if (char.IsWhiteSpace(chr))
+            if (Rune.IsWhiteSpace(rune))
             {
                 return CharClass.Whitespace;
             }
 
-            if (char.IsLetterOrDigit(chr))
+            if (Rune.IsLetterOrDigit(rune))
             {
                 return CharClass.AlphaNumeric;
             }
@@ -711,7 +781,7 @@ namespace Robust.Client.UserInterface.Controls
             return CharClass.Other;
         }
 
-        private enum CharClass : byte
+        internal enum CharClass : byte
         {
             Other,
             AlphaNumeric,
@@ -765,7 +835,7 @@ namespace Robust.Client.UserInterface.Controls
                 var posX = 0;
                 var actualCursorPosition = 0;
                 var actualSelectionStartPosition = 0;
-                foreach (var chr in renderedText)
+                foreach (var chr in renderedText.EnumerateRunes())
                 {
                     if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                     {
@@ -774,7 +844,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     posX += metrics.Advance;
-                    count += 1;
+                    count += chr.Utf16SequenceLength;
 
                     if (count == _master._cursorPosition)
                     {
@@ -814,9 +884,9 @@ namespace Robust.Client.UserInterface.Controls
                 var baseLine = (-drawOffset, offsetY + font.GetAscent(UIScale)) +
                                contentBox.TopLeft;
 
-                foreach (var chr in renderedText)
+                foreach (var rune in renderedText.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                     {
                         continue;
                     }
@@ -830,7 +900,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Make sure we're not off the left edge of the box.
                     if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
                     {
-                        font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                        font.DrawChar(handle, rune, baseLine, UIScale, renderedTextColor);
                     }
 
                     baseLine += (metrics.Advance, 0);

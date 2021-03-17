@@ -1,10 +1,7 @@
-﻿using Robust.Shared.Maths;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface.CustomControls
 {

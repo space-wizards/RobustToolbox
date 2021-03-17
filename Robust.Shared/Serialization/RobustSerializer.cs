@@ -1,15 +1,13 @@
-﻿using NetSerializer;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
+using NetSerializer;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Network;
+using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
@@ -185,6 +183,23 @@ namespace Robust.Shared.Serialization
         public bool CanSerialize(Type type)
             => _serializableTypes.Contains(type);
 
+        /// <inheritdoc />
+        public Type? FindSerializedType(Type assignableType, string serializedTypeName)
+        {
+            var types = _reflectionManager.GetAllChildren(assignableType);
+            foreach (var type in types)
+            {
+                var serializedAttribute = type.GetCustomAttribute<SerializedTypeAttribute>();
+
+                if(serializedAttribute is null)
+                    continue;
+
+                if (serializedAttribute.SerializeName == serializedTypeName)
+                    return type;
+            }
+
+            return null;
+        }
     }
 
 }

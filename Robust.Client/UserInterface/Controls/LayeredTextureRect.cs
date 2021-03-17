@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -29,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _textures = value;
-                CalculateMinimumSize();
+                InvalidateMeasure();
             }
         }
 
@@ -45,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _textureScale = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -62,7 +60,7 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _canShrink = value;
-                MinimumSizeChanged();
+                InvalidateMeasure();
             }
         }
 
@@ -150,7 +148,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             if (_textures.Count == 0 || CanShrink)
             {

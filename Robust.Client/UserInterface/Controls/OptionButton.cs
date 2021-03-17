@@ -15,8 +15,28 @@ namespace Robust.Client.UserInterface.Controls
         private readonly Popup _popup;
         private readonly VBoxContainer _popupVBox;
         private readonly Label _label;
+        private readonly TextureRect _triangle;
 
         public int ItemCount => _buttonData.Count;
+
+        /// <summary>
+        /// If true, hides the triangle that normally appears to the right of the button label
+        /// </summary>
+        public bool HideTriangle
+        {
+            get => _hideTriangle;
+            set
+            {
+                _hideTriangle = value;
+                _triangle.Visible = !_hideTriangle;
+            }
+        }
+        private bool _hideTriangle;
+
+        /// <summary>
+        /// StyleClasses to apply to the options that popup when clicking this button.
+        /// </summary>
+        public ICollection<string> OptionStyleClasses { get; }
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
@@ -24,6 +44,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OptionButton()
         {
+            OptionStyleClasses = new List<string>();
             AddStyleClass(StyleClassButton);
             Prefix = "";
             OnPressed += OnPressedInternal;
@@ -39,16 +60,17 @@ namespace Robust.Client.UserInterface.Controls
             _label = new Label
             {
                 StyleClasses = { StyleClassOptionButton },
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
             hBox.AddChild(_label);
 
-            var textureRect = new TextureRect
+            _triangle = new TextureRect
             {
                 StyleClasses = { StyleClassOptionTriangle },
-                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                VerticalAlignment = VAlignment.Center,
+                Visible = !HideTriangle
             };
-            hBox.AddChild(textureRect);
+            hBox.AddChild(_triangle);
         }
 
         public void AddItem(Texture icon, string label, int? id = null)
@@ -73,6 +95,10 @@ namespace Robust.Client.UserInterface.Controls
                 Text = label,
                 ToggleMode = true
             };
+            foreach (var styleClass in OptionStyleClasses)
+            {
+                button.AddStyleClass(styleClass);
+            }
             button.OnPressed += ButtonOnPressed;
             var data = new ButtonData(label, button)
             {
@@ -92,7 +118,8 @@ namespace Robust.Client.UserInterface.Controls
             if (show)
             {
                 var globalPos = GlobalPosition;
-                var (minX, minY) = _popupVBox.CombinedMinimumSize;
+                _popupVBox.Measure(Vector2.Infinity);
+                var (minX, minY) = _popupVBox.DesiredSize;
                 var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
                 UserInterfaceManager.ModalRoot.AddChild(_popup);
                 _popup.Open(box);
@@ -170,6 +197,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        /// <summary>
+        /// Select by index rather than id. Throws exception if item with that index
+        /// not in this control.
+        /// </summary>
         public void Select(int idx)
         {
             if (_idMap.TryGetValue(SelectedId, out var prevIdx))
@@ -182,9 +213,27 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Pressed = true;
         }
 
+        /// <summary>
+        /// Select by index rather than id.
+        /// </summary>
+        /// <returns>false if item with that index not in this control</returns>
+        public bool TrySelect(int idx)
+        {
+            if (idx < 0 || idx >= _buttonData.Count) return false;
+            Select(idx);
+            return true;
+        }
+
+        /// throws exception if item with this ID is not in this control
         public void SelectId(int id)
         {
             Select(GetIdx(id));
+        }
+
+        /// <returns>false if item with id not in this control</returns>
+        public bool TrySelectId(int id)
+        {
+            return _idMap.TryGetValue(id, out var idx) && TrySelect(idx);
         }
 
         public int GetIdx(int id)

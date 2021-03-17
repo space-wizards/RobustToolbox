@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack

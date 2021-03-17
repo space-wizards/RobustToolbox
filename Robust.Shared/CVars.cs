@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 
 namespace Robust.Shared
 {
@@ -78,10 +79,10 @@ namespace Robust.Shared
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPVS =
-            CVarDef.Create("net.pvs", true, CVar.ARCHIVE);
+            CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
+            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
@@ -91,6 +92,10 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> SysWinTickPeriod =
             CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
+
+        // On non-FULL_RELEASE builds, use ProfileOptimization/tiered JIT to speed up game startup.
+        public static readonly CVarDef<bool> SysProfileOpt =
+            CVarDef.Create("sys.profile_opt", true);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
@@ -218,17 +223,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> AuthAllowLocal =
             CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> AuthServerPubKey =
-            CVarDef.Create("auth.serverpubkey", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthToken =
-            CVarDef.Create("auth.token", "", CVar.SECURE | CVar.CLIENTONLY);
-
-        public static readonly CVarDef<string> AuthUserId =
-            CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
-
+        // Only respected on server, client goes through IAuthManager for security.
         public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
+            CVarDef.Create("auth.server", AuthManager.DefaultAuthServer, CVar.SERVERONLY);
 
         /*
          * DISPLAY
@@ -288,10 +285,123 @@ namespace Robust.Shared
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
+         * PHYSICS
+         */
+
+        // - Sleep
+        public static readonly CVarDef<float> AngularSleepTolerance =
+            CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);
+
+        public static readonly CVarDef<float> LinearSleepTolerance =
+            CVarDef.Create("physics.linsleeptol", 0.001f);
+
+        public static readonly CVarDef<bool> SleepAllowed =
+            CVarDef.Create("physics.sleepallowed", true);
+
+        // Box2D default is 0.5f
+        public static readonly CVarDef<float> TimeToSleep =
+            CVarDef.Create("physics.timetosleep", 0.2f);
+
+        // - Solver
+        // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
+        // Trade-off is obviously performance vs how long it takes to stabilise.
+        public static readonly CVarDef<int> PositionIterations =
+            CVarDef.Create("physics.positer", 3);
+
+        public static readonly CVarDef<int> VelocityIterations =
+            CVarDef.Create("physics.veliter", 8);
+
+        public static readonly CVarDef<bool> WarmStarting =
+            CVarDef.Create("physics.warmstart", true);
+
+        public static readonly CVarDef<bool> AutoClearForces =
+            CVarDef.Create("physics.autoclearforces", true);
+
+        /// <summary>
+        /// A velocity threshold for elastic collisions. Any collision with a relative linear
+        /// velocity below this threshold will be treated as inelastic.
+        /// </summary>
+        public static readonly CVarDef<float> VelocityThreshold =
+            CVarDef.Create("physics.velocitythreshold", 0.5f);
+
+        // TODO: Copy Box2D's comments on baumgarte I think it's on the solver class.
+        /// <summary>
+        ///     How much overlap is resolved per tick.
+        /// </summary>
+        public static readonly CVarDef<float> Baumgarte =
+            CVarDef.Create("physics.baumgarte", 0.2f);
+
+        /// <summary>
+        /// A small length used as a collision and constraint tolerance. Usually it is
+        /// chosen to be numerically significant, but visually insignificant.
+        /// </summary>
+        /// <remarks>
+        ///     Note that some joints may have this cached and not update on value change.
+        /// </remarks>
+        public static readonly CVarDef<float> LinearSlop =
+            CVarDef.Create("physics.linearslop", 0.005f);
+
+        /// <summary>
+        /// A small angle used as a collision and constraint tolerance. Usually it is
+        /// chosen to be numerically significant, but visually insignificant.
+        /// </summary>
+        public static readonly CVarDef<float> AngularSlop =
+            CVarDef.Create("physics.angularslop", 2.0f / 180.0f * MathF.PI);
+
+        /// <summary>
+        /// The radius of the polygon/edge shape skin. This should not be modified. Making
+        /// this smaller means polygons will have an insufficient buffer for continuous collision.
+        /// Making it larger may create artifacts for vertex collision.
+        /// </summary>
+        /// <remarks>
+        ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
+        /// </remarks>
+        public static readonly CVarDef<float> PolygonRadius =
+            CVarDef.Create("physics.polygonradius", 2 * 0.005f);
+
+        /// <summary>
+        /// If true, it will run a GiftWrap convex hull on all polygon inputs.
+        /// This makes for a more stable engine when given random input,
+        /// but if speed of the creation of polygons are more important,
+        /// you might want to set this to false.
+        /// </summary>
+        public static readonly CVarDef<bool> ConvexHullPolygons =
+            CVarDef.Create("physics.convexhullpolygons", true);
+
+        public static readonly CVarDef<int> MaxPolygonVertices =
+            CVarDef.Create("physics.maxpolygonvertices", 8);
+
+        public static readonly CVarDef<float> MaxLinearCorrection =
+            CVarDef.Create("physics.maxlinearcorrection", 0.2f);
+
+        public static readonly CVarDef<float> MaxAngularCorrection =
+            CVarDef.Create("physics.maxangularcorrection", 8.0f / 180.0f * MathF.PI);
+
+        // - Maximums
+        // Squared
+        // 35 m/s, AKA half a tile per frame allowed. Divide this by frametime to get units per second.
+        public static readonly CVarDef<float> MaxLinVelocity =
+            CVarDef.Create("physics.maxlinvelocity", 0.56f);
+
+        // Squared
+        public static readonly CVarDef<float> MaxAngVelocity =
+            CVarDef.Create("physics.maxangvelocity", 0.5f * MathF.PI);
+
+        /*
          * DISCORD
          */
 
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true, CVar.CLIENTONLY);
+
+        /*
+         * RES
+         */
+
+        public static readonly CVarDef<bool> ResCheckPathCasing =
+            CVarDef.Create("res.checkpathcasing", false);
+
+        public static readonly CVarDef<bool> TexturePreloadingEnabled =
+            CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
     }
 }

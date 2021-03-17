@@ -1,9 +1,6 @@
 using System;
 using System.IO;
 using System.Text;
-using Robust.Shared.IoC;
-using Robust.Shared.IoC.Exceptions;
-using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Utility

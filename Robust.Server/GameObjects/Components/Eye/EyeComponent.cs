@@ -1,15 +1,19 @@
-﻿using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Eye;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects.Components.Eye
+namespace Robust.Server.GameObjects
 {
     public class EyeComponent : SharedEyeComponent
     {
-        private bool _drawFov;
-        private Vector2 _zoom;
+        [DataField("drawFov")]
+        private bool _drawFov = true;
+        [DataField("zoom")]
+        private Vector2 _zoom = Vector2.One/2f;
         private Vector2 _offset;
         private Angle _rotation;
 
@@ -65,17 +69,9 @@ namespace Robust.Server.GameObjects.Components.Eye
             }
         }
 
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new EyeComponentState(DrawFov, Zoom, Offset, Rotation);
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _zoom, "zoom", Vector2.One/2f);
-            serializer.DataFieldCached(ref _drawFov, "drawFov", true);
         }
     }
 }

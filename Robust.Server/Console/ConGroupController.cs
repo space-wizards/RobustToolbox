@@ -1,4 +1,4 @@
-﻿using Robust.Server.Interfaces.Player;
+﻿using Robust.Server.Player;
 
 namespace Robust.Server.Console
 {
@@ -29,6 +29,11 @@ namespace Robust.Server.Console
         public bool CanAdminMenu(IPlayerSession session)
         {
             return Implementation?.CanAdminMenu(session) ?? false;
+        }
+
+        public bool CanAdminReloadPrototypes(IPlayerSession session)
+        {
+            return Implementation?.CanAdminReloadPrototypes(session) ?? false;
         }
     }
 }

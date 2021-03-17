@@ -7,6 +7,7 @@
         PlacementFailed,
         RequestPlacement,
         RequestEntRemove,
+        RequestRectRemove,
     }
 
     public enum SessionStatus : byte

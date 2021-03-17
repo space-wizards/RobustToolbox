@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Log;
 using Serilog;
 using Serilog.Events;

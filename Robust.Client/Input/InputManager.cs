@@ -7,19 +7,20 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface;
+using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.Core;
@@ -118,8 +119,8 @@ namespace Robust.Client.Input
 
         public void SaveToUserData()
         {
-            var mapping = new YamlMappingNode();
-            var ser = YamlObjectSerializer.NewWriter(mapping);
+            var mapping = new MappingDataNode();
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
 
             var modifiedBindings = _modifiedKeyFunctions
                 .Select(p => _bindingsByFunction[p])
@@ -142,15 +143,13 @@ namespace Robust.Client.Input
                 .Where(p => _bindingsByFunction[p].Count == 0)
                 .ToArray();
 
-            var version = 1;
-
-            ser.DataField(ref version, "version", 1);
-            ser.DataField(ref modifiedBindings, "binds", Array.Empty<KeyBindingRegistration>());
-            ser.DataField(ref leaveEmpty, "leaveEmpty", Array.Empty<BoundKeyFunction>());
+            mapping.AddNode("version", new ValueDataNode("1"));
+            mapping.AddNode("binds", serializationManager.WriteValue(modifiedBindings));
+            mapping.AddNode("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new(mapping)};
+            var stream = new YamlStream {new(mapping.ToMappingNode())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -417,12 +416,14 @@ namespace Robust.Client.Input
 
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
-            var baseSerializer = YamlObjectSerializer.NewReader(mapping);
+            var serializationManager = IoCManager.Resolve<ISerializationManager>();
+            var robustMapping = mapping.ToDataNode() as MappingDataNode;
+            if (robustMapping == null) throw new InvalidOperationException();
 
-            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
-
-            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
+            if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
             {
+                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
+
                 foreach (var reg in baseKeyRegs)
                 {
                     if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
@@ -448,11 +449,11 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData)
+            if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
             {
-                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
 
-                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
+                if (leaveEmpty.Length > 0)
                 {
                     // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
                     // Because they've been explicitly cleared.
@@ -812,34 +813,34 @@ namespace Robust.Client.Input
         public string Description => "Binds an input key to an input command.";
         public string Help => "bind <KeyName> <BindMode> <InputCommand>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length < 3)
             {
-                console.AddLine("Too few arguments.");
-                return false;
+                shell.WriteLine("Too few arguments.");
+                return;
             }
 
             if (args.Length > 3)
             {
-                console.AddLine("Too many arguments.");
-                return false;
+                shell.WriteLine("Too many arguments.");
+                return;
             }
 
             var keyName = args[0];
 
             if (!Enum.TryParse(typeof(Key), keyName, true, out var keyIdObj))
             {
-                console.AddLine($"Key '{keyName}' is unrecognized.");
-                return false;
+                shell.WriteLine($"Key '{keyName}' is unrecognized.");
+                return;
             }
 
             var keyId = (Key) keyIdObj!;
 
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
-                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
-                return false;
+                shell.WriteLine($"BindMode '{args[1]}' is unrecognized.");
+                return;
             }
 
             var keyMode = (KeyBindingType) keyModeObj!;
@@ -856,8 +857,6 @@ namespace Robust.Client.Input
             };
 
             inputMan.RegisterBinding(registration);
-
-            return false;
         }
     }
 
@@ -868,12 +867,10 @@ namespace Robust.Client.Input
         public string Description => "";
         public string Help => "";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             IoCManager.Resolve<IInputManager>()
                 .SaveToUserData();
-
-            return false;
         }
     }
 }

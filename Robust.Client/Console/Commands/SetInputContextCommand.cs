@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Input;
+using Robust.Client.Input;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
@@ -12,24 +12,23 @@ namespace Robust.Client.Console.Commands
         public string Description => "Sets the active input context.";
         public string Help => "setinputcontext <context>";
 
-        public bool Execute(IDebugConsole console, params string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine("Invalid number of arguments!");
-                return false;
+                shell.WriteLine("Invalid number of arguments!");
+                return;
             }
 
             var inputMan = IoCManager.Resolve<IInputManager>();
 
             if (!inputMan.Contexts.Exists(args[0]))
             {
-                console.AddLine("Context not found!");
-                return false;
+                shell.WriteLine("Context not found!");
+                return;
             }
 
             inputMan.Contexts.SetActiveContext(args[0]);
-            return false;
         }
     }
 }

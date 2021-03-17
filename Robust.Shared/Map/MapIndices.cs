@@ -1,6 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 

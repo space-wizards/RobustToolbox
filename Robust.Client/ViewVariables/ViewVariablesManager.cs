@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
 
@@ -225,13 +223,17 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.SetSize = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new SS14Window
+            {
+                Title = "View Variables",
+                SetSize = _defaultWindowSize
+            };
             var loadingLabel = new Label {Text = "Retrieving remote object data from server..."};
             window.Contents.AddChild(loadingLabel);
 
@@ -266,8 +268,8 @@ namespace Robust.Client.ViewVariables
             instance.Initialize(window, blob, session);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
+            window.Size = _defaultWindowSize;
             window.Open();
-            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)

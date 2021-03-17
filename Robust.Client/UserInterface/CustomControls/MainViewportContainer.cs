@@ -1,9 +1,5 @@
-﻿using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Timing;
+using Robust.Client.Graphics;
 
 namespace Robust.Client.UserInterface.CustomControls
 {

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
@@ -35,8 +34,8 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar = new VScrollBar
             {
                 Name = "_v_scroll",
-                SizeFlagsVertical = SizeFlags.Fill,
-                SizeFlagsHorizontal = SizeFlags.ShrinkEnd
+                VerticalAlignment = VAlignment.Stretch,
+                HorizontalAlignment = HAlignment.Right
             };
             AddChild(_scrollBar);
         }
@@ -220,9 +219,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var offset = itemSelected.GetContentOffset(Vector2.Zero);
                 var baseLine = offset + (hOffset, vOffset + font.GetAscent(UIScale));
-                foreach (var chr in item.Text)
+                foreach (var rune in item.Text.EnumerateRunes())
                 {
-                    baseLine += (font.DrawChar(handle, chr, baseLine, UIScale, Color.White), 0);
+                    baseLine += (font.DrawChar(handle, rune, baseLine, UIScale, Color.White), 0);
                 }
             }
 

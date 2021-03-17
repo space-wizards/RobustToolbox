@@ -1,7 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -10,6 +11,7 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// Helper functions for the container system.
     /// </summary>
+    [PublicAPI]
     public static class ContainerHelpers
     {
         /// <summary>
@@ -24,9 +26,11 @@ namespace Robust.Shared.Containers
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
-            if (entity.Transform.Parent != null)
-                if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
-                    return containerComp.ContainsEntity(entity);
+            if (entity.Transform.Parent == null)
+                return false;
+
+            if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
+                return containerComp.ContainsEntity(entity);
 
             return false;
         }
@@ -42,7 +46,8 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
-            if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager) && manager.ContainsEntity(entity))
+            var parentTransform = entity.Transform.Parent;
+            if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
             manager = default;
@@ -68,7 +73,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove an entity from its container, if any.
+        /// Attempts to remove an entity from its container, if any.
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
@@ -88,7 +93,6 @@ namespace Robust.Shared.Containers
 
                 container.ForceRemove(entity);
                 return true;
-
             }
 
             wasInContainer = false;
@@ -96,7 +100,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove an entity from its container, if any.
+        /// Attempts to remove an entity from its container, if any.
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
@@ -107,9 +111,9 @@ namespace Robust.Shared.Containers
         }
 
         /// <summary>
-        ///     Attempts to remove all entities in a container.
+        /// Attempts to remove all entities in a container.
         /// </summary>
-        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null)
+        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null, bool attachToGridOrMap = false)
         {
             foreach (var entity in container.ContainedEntities.ToArray())
             {
@@ -122,11 +126,14 @@ namespace Robust.Shared.Containers
 
                 if (moveTo.HasValue)
                     entity.Transform.Coordinates = moveTo.Value;
+
+                if(attachToGridOrMap)
+                    entity.Transform.AttachToGridOrMap();
             }
         }
 
         /// <summary>
-        ///     Attempts to remove and delete all entities in a container.
+        /// Attempts to remove and delete all entities in a container.
         /// </summary>
         public static void CleanContainer(this IContainer container)
         {
@@ -143,23 +150,16 @@ namespace Robust.Shared.Containers
             if (transform.Parent == null
                 || !TryGetContainer(transform.Parent.Owner, out var container)
                 || !TryInsertIntoContainer(transform, container))
-            {
                 transform.AttachToGridOrMap();
-            }
         }
 
         private static bool TryInsertIntoContainer(this ITransformComponent transform, IContainer container)
         {
-            if (container.Insert(transform.Owner))
-            {
-                return true;
-            }
+            if (container.Insert(transform.Owner)) return true;
 
             if (container.Owner.Transform.Parent != null
                 && TryGetContainer(container.Owner, out var newContainer))
-            {
                 return TryInsertIntoContainer(transform, newContainer);
-            }
 
             return false;
         }
@@ -188,19 +188,58 @@ namespace Robust.Shared.Containers
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 
             // Both entities are not in a container
-            if (!isUserContained && !isOtherContained)
-            {
-                return true;
-            }
+            if (!isUserContained && !isOtherContained) return true;
 
             // Both entities are in different contained states
-            if (isUserContained != isOtherContained)
-            {
-                return false;
-            }
+            if (isUserContained != isOtherContained) return false;
 
             // Both entities are in the same container
             return userContainer == otherContainer;
+        }
+
+        /// <summary>
+        /// Shortcut method to make creation of containers easier.
+        /// Creates a new container on the entity and gives it back to you.
+        /// </summary>
+        /// <param name="entity">The entity to create the container for.</param>
+        /// <param name="containerId"></param>
+        /// <returns>The new container.</returns>
+        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
+        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        public static T CreateContainer<T>(this IEntity entity, string containerId)
+            where T : IContainer
+        {
+            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
+                containermanager = entity.AddComponent<ContainerManagerComponent>();
+
+            return containermanager.MakeContainer<T>(containerId);
+        }
+
+        public static T EnsureContainer<T>(this IEntity entity, string containerId)
+            where T : IContainer
+        {
+            return EnsureContainer<T>(entity, containerId, out _);
+        }
+
+        public static T EnsureContainer<T>(this IEntity entity, string containerId, out bool alreadyExisted)
+            where T : IContainer
+        {
+            var containerManager = entity.EnsureComponent<ContainerManagerComponent>();
+
+            if (!containerManager.TryGetContainer(containerId, out var existing))
+            {
+                alreadyExisted = false;
+                return containerManager.MakeContainer<T>(containerId);
+            }
+
+            if (!(existing is T container))
+            {
+                throw new InvalidOperationException(
+                    $"The container exists but is of a different type: {existing.GetType()}");
+            }
+
+            alreadyExisted = true;
+            return container;
         }
     }
 }

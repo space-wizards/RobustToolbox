@@ -1,12 +1,10 @@
-﻿using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.ComponentDependencies;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
+
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -165,10 +163,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestFiveComponent>();
             componentFactory.Register<TestSixComponent>();
             componentFactory.Register<TestSevenComponent>();
-
-            var componentManager = IoCManager.Resolve<IComponentManager>();
-            componentManager.Initialize();
-
+            
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();

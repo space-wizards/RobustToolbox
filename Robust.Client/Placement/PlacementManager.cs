@@ -1,37 +1,25 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.Placement;
-using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
+using Robust.Client.Input;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Maths;
-using Robust.Shared.Map;
-using Robust.Shared.Network.Messages;
-using Robust.Client.Graphics;
-using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Player;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Utility;
-using Robust.Shared.Serialization;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
 {
@@ -98,7 +86,17 @@ namespace Robust.Client.Placement
         public bool Eraser { get; private set; }
 
         /// <summary>
-        ///     The texture we use to show from our placement manager to represent the entity to place
+        /// Holds the selection rectangle for the eraser
+        /// </summary>
+        public Box2? EraserRect { get; set; }
+
+        /// <summary>
+        /// Drawing shader for drawing without being affected by lighting
+        /// </summary>
+        private ShaderInstance? _drawingShader { get; set; }
+
+        /// <summary>
+        /// The texture we use to show from our placement manager to represent the entity to place
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures { get; set; }
 
@@ -126,14 +124,6 @@ namespace Robust.Client.Placement
                 if (value != null)
                 {
                     PlacementOffset = value.PlacementOffset;
-
-                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Physics"))
-                    {
-                        var map = value.Components["BoundingBox"];
-                        var serializer = YamlObjectSerializer.NewReader(map);
-                        serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
-                        return;
-                    }
                 }
 
                 _colliderAABB = new Box2(0f, 0f, 0f, 0f);
@@ -164,6 +154,8 @@ namespace Robust.Client.Placement
 
         public void Initialize()
         {
+            _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+
             NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
 
             _modeDictionary.Clear();
@@ -193,13 +185,30 @@ namespace Robust.Client.Placement
                 .Bind(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
                     session =>
                     {
-                        if (IsActive && !Eraser) ActivateGridMode();
+                        if (IsActive)
+                        {
+                            if (Eraser)
+                            {
+                                EraseRectMode();
+                            }
+                            else
+                            {
+                                ActivateGridMode();
+                            }
+                        }
                     }))
                 .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
                     (session, coords, uid) =>
                     {
                         if (!IsActive)
                             return false;
+
+                        if (EraserRect.HasValue)
+                        {
+                            HandleRectDeletion(StartPoint, EraserRect.Value);
+                            EraserRect = null;
+                            return true;
+                        }
 
                         if (Eraser)
                         {
@@ -319,6 +328,7 @@ namespace Robust.Client.Placement
             _placenextframe = false;
             IsActive = false;
             Eraser = false;
+            EraserRect = null;
             PlacementOffset = Vector2i.Zero;
         }
 
@@ -392,6 +402,15 @@ namespace Robust.Client.Placement
             var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
             msg.EntityUid = entity.Uid;
+            NetworkManager.ClientSendMessage(msg);
+        }
+
+        public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
+        {
+            var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
+            msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
+            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.RectSize = rect.Size;
             NetworkManager.ClientSendMessage(msg);
         }
 
@@ -470,11 +489,62 @@ namespace Robust.Client.Placement
             return true;
         }
 
+        private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
+        {
+            var ent = PlayerManager.LocalPlayer?.ControlledEntity;
+            if (ent == null)
+            {
+                coordinates = new EntityCoordinates();
+                return false;
+            }
+            else
+            {
+                var map = ent.Transform.MapID;
+                if (map == MapId.Nullspace || !Eraser)
+                {
+                    coordinates = new EntityCoordinates();
+                    return false;
+                }
+                coordinates = EntityCoordinates.FromMap(ent.EntityManager, MapManager,
+                    eyeManager.ScreenToMap(new ScreenCoordinates(_inputManager.MouseScreenPosition)));
+                return true;
+            }
+        }
+
         /// <inheritdoc />
         public void FrameUpdate(FrameEventArgs e)
         {
             if (!CurrentMousePosition(out var mouseScreen))
+            {
+                if (EraserRect.HasValue)
+                {
+                    if (!CurrentEraserMouseCoordinates(out EntityCoordinates end))
+                        return;
+                    float b, l, t, r;
+                    if (StartPoint.X < end.X)
+                    {
+                        l = StartPoint.X;
+                        r = end.X;
+                    }
+                    else
+                    {
+                        l = end.X;
+                        r = StartPoint.X;
+                    }
+                    if (StartPoint.Y < end.Y)
+                    {
+                        b = StartPoint.Y;
+                        t = end.Y;
+                    }
+                    else
+                    {
+                        b = end.Y;
+                        t = StartPoint.Y;
+                    }
+                    EraserRect = new Box2(l, b, r, t);
+                }
                 return;
+            }
 
             CurrentMode!.AlignPlacementMode(mouseScreen);
 
@@ -512,6 +582,15 @@ namespace Robust.Client.Placement
             PlacementType = PlacementTypes.Grid;
         }
 
+        private void EraseRectMode()
+        {
+            if (!CurrentEraserMouseCoordinates(out EntityCoordinates coordinates))
+                return;
+
+            StartPoint = coordinates;
+            EraserRect = new Box2(coordinates.Position, Vector2.Zero);
+        }
+
         private bool DeactivateSpecialPlacement()
         {
             if (PlacementType == PlacementTypes.None)
@@ -524,7 +603,14 @@ namespace Robust.Client.Placement
         private void Render(DrawingHandleWorld handle)
         {
             if (CurrentMode == null || !IsActive)
+            {
+                if (EraserRect.HasValue)
+                {
+                    handle.UseShader(_drawingShader);
+                    handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
+                }
                 return;
+            }
 
             CurrentMode.Render(handle);
 

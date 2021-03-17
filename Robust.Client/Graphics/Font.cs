@@ -1,10 +1,8 @@
 ﻿using System;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
+using System.Text;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics
 {
@@ -43,63 +41,48 @@ namespace Robust.Client.Graphics
             return GetLineHeight(scale) - GetHeight(scale);
         }
 
-        [Obsolete("Use GetAscent")] public int Ascent => GetAscent(1);
-        [Obsolete("Use GetHeight")] public int Height => GetHeight(1);
-        [Obsolete("Use GetDescent")] public int Descent => GetDescent(1);
-        [Obsolete("Use GetLineHeight")] public int LineHeight => GetLineHeight(1);
-        [Obsolete("Use GetLineSeparation")] public int LineSeparation => GetLineSeparation(1);
-
-        // Yes, I am aware that using char is bad.
-        // At the same time the font system is nowhere close to rendering Unicode so...
         /// <summary>
         ///     Draw a character at a certain baseline position on screen.
         /// </summary>
         /// <param name="handle">The drawing handle to draw to.</param>
-        /// <param name="chr">
-        ///     The Unicode code point to draw. Yes I'm aware about UTF-16 being crap,
-        ///     do you think this system can draw anything except ASCII?
-        /// </param>
+        /// <param name="rune">The Unicode code point to draw.</param>
         /// <param name="baseline">The baseline from which to draw the character.</param>
+        /// <param name="scale">DPI scale factor to render the font at.</param>
         /// <param name="color">The color of the character to draw.</param>
+        /// <param name="fallback">If the character is not available, render "�" instead.</param>
         /// <returns>How much to advance the cursor to draw the next character.</returns>
-        [Obsolete("Use DrawChar with scale support.")]
-        public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, Color color)
-        {
-            return DrawChar(handle, chr, baseline, 1, color);
-        }
+        public abstract float DrawChar(
+            DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
+            Color color, bool fallback=true);
 
-        public abstract float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale,
-            Color color);
+        [Obsolete("Use Rune variant instead")]
+        public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
+        {
+            return DrawChar(handle, (Rune) chr, baseline, scale, color);
+        }
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.
         /// </summary>
-        /// <param name="chr">The character to fetch the glyph metrics for.</param>
+        /// <param name="rune">The unicode codepoint to fetch the glyph metrics for.</param>
+        /// <param name="scale">DPI scale factor to render the font at.</param>
+        /// <param name="fallback">
+        ///     If the character is not available, return data for "�" instead.
+        ///     This can still fail if the font does not define � itself.
+        /// </param>
         /// <returns>
         ///     <c>null</c> if this font does not have a glyph for the specified character,
         ///     otherwise the metrics you asked for.
         /// </returns>
         /// <seealso cref="TryGetCharMetrics"/>
-        [Obsolete("Use GetCharMetrics with scale support.")]
-        public CharMetrics? GetCharMetrics(char chr)
-        {
-            return GetCharMetrics(chr, 1);
-        }
-
-        public abstract CharMetrics? GetCharMetrics(char chr, float scale);
+        public abstract CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true);
 
         /// <summary>
         ///     Try-pattern version of <see cref="GetCharMetrics"/>.
         /// </summary>
-        [Obsolete("Use TryGetCharMetrics with scale support.")]
-        public bool TryGetCharMetrics(char chr, out CharMetrics metrics)
+        public bool TryGetCharMetrics(Rune rune, float scale, out CharMetrics metrics, bool fallback=true)
         {
-            return TryGetCharMetrics(chr, 1, out metrics);
-        }
-
-        public bool TryGetCharMetrics(char chr, float scale, out CharMetrics metrics)
-        {
-            var maybe = GetCharMetrics(chr, scale);
+            var maybe = GetCharMetrics(rune, scale);
             if (maybe.HasValue)
             {
                 metrics = maybe.Value;
@@ -131,15 +114,23 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => Handle.GetDescent(scale);
         public override int GetLineHeight(float scale) => Handle.GetLineHeight(scale);
 
-        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
-            var metrics = Handle.GetCharMetrics(chr, scale);
+            var metrics = Handle.GetCharMetrics(rune, scale);
             if (!metrics.HasValue)
             {
-                return 0;
+                if (fallback && !Rune.IsWhiteSpace(rune))
+                {
+                    rune = new Rune('�');
+                    metrics = Handle.GetCharMetrics(rune, scale);
+                    if (!metrics.HasValue)
+                        return 0;
+                }
+                else
+                    return 0;
             }
 
-            var texture = Handle.GetCharTexture(chr, scale);
+            var texture = Handle.GetCharTexture(rune, scale);
             if (texture == null)
             {
                 return metrics.Value.Advance;
@@ -150,9 +141,12 @@ namespace Robust.Client.Graphics
             return metrics.Value.Advance;
         }
 
-        public override CharMetrics? GetCharMetrics(char chr, float scale)
+        public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
-            return Handle.GetCharMetrics(chr, scale);
+            var metrics = Handle.GetCharMetrics(rune, scale);
+            if (metrics == null && !Rune.IsWhiteSpace(rune) && fallback)
+                return Handle.GetCharMetrics(new Rune('�'), scale);
+            return metrics;
         }
     }
 
@@ -163,13 +157,13 @@ namespace Robust.Client.Graphics
         public override int GetDescent(float scale) => default;
         public override int GetLineHeight(float scale) => default;
 
-        public override float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
+        public override float DrawChar(DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale, Color color, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return 0;
         }
 
-        public override CharMetrics? GetCharMetrics(char chr, float scale)
+        public override CharMetrics? GetCharMetrics(Rune rune, float scale, bool fallback=true)
         {
             // Nada, it's a dummy after all.
             return null;

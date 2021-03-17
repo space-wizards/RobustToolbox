@@ -1,7 +1,7 @@
 ﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Serialization;
 using System;
+using Robust.Shared.Serialization;
 
 namespace Robust.Client.ViewVariables.Editors
 {
@@ -13,7 +13,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = ((ISelfSerialize)value!).Serialize(),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
             };
 
             if (!ReadOnly)

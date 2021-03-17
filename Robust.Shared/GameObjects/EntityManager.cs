@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -54,15 +48,28 @@ namespace Robust.Shared.GameObjects
 
         protected readonly List<Entity> AllEntities = new();
 
-        private readonly EntityEventBus _eventBus = new();
+        private EntityEventBus _eventBus = null!;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
 
+        public event EventHandler<EntityUid>? EntityAdded;
+        public event EventHandler<EntityUid>? EntityInitialized;
+        public event EventHandler<EntityUid>? EntityDeleted;
+
         public bool Started { get; protected set; }
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="EntityManager"/>.
+        /// </summary>
+        public EntityManager()
+        {
+        }
 
         public virtual void Initialize()
         {
+            _eventBus = new EntityEventBus(this);
+
             EntityNetworkManager.SetupNetworking();
             EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
             EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
@@ -78,6 +85,7 @@ namespace Robust.Shared.GameObjects
         public virtual void Shutdown()
         {
             FlushEntities();
+            _eventBus.ClearEventTables();
             EntitySystemManager.Shutdown();
             Started = false;
             _componentManager.Clear();
@@ -127,9 +135,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
-
-        /// <inheritdoc />
-        public abstract IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
@@ -222,9 +227,43 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
-            e.Shutdown();
+            // Networking blindly spams entities at this function, they can already be
+            // deleted from being a child of a previously deleted entity
+            // TODO: Why does networking need to send deletes for child entities?
+            if (e.Deleted)
+                return;
+
+            RecursiveDeleteEntity(e);
         }
 
+        private void RecursiveDeleteEntity(IEntity entity)
+        {
+            if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
+                return;
+            
+            var transform = entity.Transform;
+
+            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
+            foreach (var childTransform in transform.Children.ToArray())
+            {
+                // Recursion Alert
+                RecursiveDeleteEntity(childTransform.Owner);
+            }
+
+            // Dispose all my components, in a safe order so transform is available
+            ComponentManager.DisposeComponents(entity.Uid);
+
+            // map does not have a parent node, everything else needs to be detached
+            if (transform.ParentUid != EntityUid.Invalid)
+            {
+                // Detach from my parent, if any
+                transform.DetachParentToNull();
+            }
+
+            entity.Shutdown();
+            EntityDeleted?.Invoke(this, entity.Uid);
+        }
+        
         public void DeleteEntity(EntityUid uid)
         {
             if (TryGetEntity(uid, out var entity))
@@ -246,7 +285,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var e in GetEntities())
             {
-                e.Shutdown();
+                DeleteEntity(e);
             }
 
             CullDeletedEntities();
@@ -286,10 +325,10 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity();
+            var entity = new Entity(this, uid.Value);
 
-            entity.SetManagers(this);
-            entity.SetUid(uid.Value);
+            // we want this called before adding components
+            EntityAdded?.Invoke(this, entity.Uid);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
@@ -336,6 +375,7 @@ namespace Robust.Shared.GameObjects
             try
             {
                 InitializeEntity(entity);
+                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
             }
             catch (Exception e)
@@ -377,7 +417,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion Entity Management
+#endregion Entity Management
 
         private void DispatchComponentMessage(NetworkComponentMessage netMsg)
         {
@@ -403,7 +443,7 @@ namespace Robust.Shared.GameObjects
 
         protected abstract EntityUid GenerateEntityUid();
 
-        #region Spatial Queries
+#region Spatial Queries
 
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
@@ -486,9 +526,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -503,9 +543,9 @@ namespace Robust.Shared.GameObjects
 
         private static bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
-            if (entity.TryGetComponent(out IPhysicsComponent? component))
+            if (entity.TryGetComponent(out IPhysBody? component))
             {
-                if (component.WorldAABB.Contains(mapPosition))
+                if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
             }
             else
@@ -549,9 +589,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
-            if (entity.TryGetComponent<IPhysicsComponent>(out var component))
+            if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
@@ -572,15 +612,15 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        #endregion
+#endregion
 
 
-        #region Entity DynamicTree
+#region Entity DynamicTree
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
             new();
 
-        public virtual bool UpdateEntityTree(IEntity entity)
+        public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
             if (entity.Deleted)
             {
@@ -601,14 +641,18 @@ namespace Robust.Shared.GameObjects
 
             if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
             {
-                entTree = EntityTreeFactory();
+                entTree = new DynamicTree<IEntity>(
+                    GetWorldAabbFromEntity,
+                    capacity: 16,
+                    growthFunc: x => x == 16 ? 3840 : x + 256
+                );
                 _entityTreesPerMap.Add(mapId, entTree);
             }
 
             // for debugging
             var necessary = 0;
 
-            if (entTree.AddOrUpdate(entity))
+            if (entTree.AddOrUpdate(entity, worldAABB))
             {
                 ++necessary;
             }
@@ -645,26 +689,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static DynamicTree<IEntity> EntityTreeFactory() =>
-            new(
-                GetWorldAabbFromEntity,
-                capacity: 16,
-                growthFunc: x => x == 16 ? 3840 : x + 256
-            );
-
-        protected static Box2 GetWorldAabbFromEntity(in IEntity ent)
+        protected Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            if (ent.TryGetComponent(out IPhysicsComponent? collider))
-                return collider.WorldAABB;
+            if (ent.TryGetComponent(out IPhysBody? collider))
+                return collider.GetWorldAABB(_mapManager);
 
             var pos = ent.Transform.WorldPosition;
             return new Box2(pos, pos);
         }
 
-        #endregion
+#endregion
 
         public virtual void Update()
         {

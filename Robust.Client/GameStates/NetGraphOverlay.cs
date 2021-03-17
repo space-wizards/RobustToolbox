@@ -1,16 +1,12 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Enums;
+using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -40,7 +36,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new(HistorySize+10);
 
-        public NetGraphOverlay() : base(nameof(NetGraphOverlay))
+        public NetGraphOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -148,20 +144,20 @@ namespace Robust.Client.GameStates
             DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
 
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
 
         private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
         {
             var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
-            foreach (var chr in str)
+            foreach (var rune in str.EnumerateRunes())
             {
-                var advance = font.DrawChar(handle, chr, baseLine, 1, Color.White);
+                var advance = font.DrawChar(handle, rune, baseLine, 1, Color.White);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -172,35 +168,33 @@ namespace Robust.Client.GameStates
             public string Help => "net_graph <0|1>";
             public string Description => "Toggles the net statistics pannel.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     overlayMan.AddOverlay(new NetGraphOverlay());
-                    console.AddLine("Enabled network overlay.");
+                    shell.WriteLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                else if(overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
-                    console.AddLine("Disabled network overlay.");
+                    overlayMan.RemoveOverlay(typeof(NetGraphOverlay));
+                    shell.WriteLine("Disabled network overlay.");
                 }
-
-                return false;
             }
         }
     }

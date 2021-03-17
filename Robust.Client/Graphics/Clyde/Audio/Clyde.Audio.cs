@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +8,6 @@ using System.Threading;
 using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
@@ -36,6 +35,9 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _sourceDisposeQueue = new();
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new();
         private readonly ConcurrentQueue<int> _bufferDisposeQueue = new();
+
+        // The base gain value for a listener, used to boost the default volume.
+        private const float _baseGain = 2f;
 
         public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
         public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -183,7 +185,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void SetMasterVolume(float newVolume)
         {
-            AL.Listener(ALListenerf.Gain, newVolume);
+            AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -480,7 +482,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var (x, y) = position;
 
-                if (!ValidatePosition(x, y))
+                if (!AreFinite(x, y))
                 {
                     return false;
                 }
@@ -501,7 +503,7 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            private static bool ValidatePosition(float x, float y)
+            private static bool AreFinite(float x, float y)
             {
                 if (float.IsFinite(x) && float.IsFinite(y))
                 {
@@ -509,6 +511,22 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return false;
+            }
+
+            public void SetVelocity(Vector2 velocity)
+            {
+                _checkDisposed();
+
+                var (x, y) = velocity;
+
+                if (!AreFinite(x, y))
+                {
+                    return;
+                }
+
+                AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
+
+                _checkAlError();
             }
 
             public void SetPitch(float pitch)
@@ -665,7 +683,6 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
-
             private void SetOcclusionEfx(float gain, float cutoff)
             {
                 if (FilterHandle == 0)
@@ -692,7 +709,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var (x, y) = position;
 
-                if (!ValidatePosition(x, y))
+                if (!AreFinite(x, y))
                 {
                     return false;
                 }
@@ -704,7 +721,7 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            private static bool ValidatePosition(float x, float y)
+            private static bool AreFinite(float x, float y)
             {
                 if (float.IsFinite(x) && float.IsFinite(y))
                 {
@@ -712,6 +729,22 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return false;
+            }
+
+            public void SetVelocity(Vector2 velocity)
+            {
+                _checkDisposed();
+
+                var (x, y) = velocity;
+
+                if (!AreFinite(x, y))
+                {
+                    return;
+                }
+
+                AL.Source(SourceHandle!.Value, ALSource3f.Velocity, x, y, 0);
+
+                _checkAlError();
             }
 
             public void SetPitch(float pitch)

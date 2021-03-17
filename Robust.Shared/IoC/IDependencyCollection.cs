@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Reflection;
 
 namespace Robust.Shared.IoC
 {
@@ -23,7 +24,7 @@ namespace Robust.Shared.IoC
     /// These implementations can then be fetched with <see cref="Resolve{T}"/>, or through field injection with <see cref="DependencyAttribute" />.
     /// </para>
     /// </remarks>
-    /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
+    /// <seealso cref="IReflectionManager"/>
     public interface IDependencyCollection
     {
         /// <summary>
@@ -42,6 +43,24 @@ namespace Robust.Shared.IoC
         /// </exception>
         void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new();
+
+        /// <summary>
+        /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>
+        /// <see cref="IDependencyCollection.BuildGraph"/> MUST be called after this method to make the new interface available.
+        /// </summary>
+        /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
+        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
+        /// </exception>
+        void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
+            where TImplementation : class, TInterface;
 
         /// <summary>
         ///     Registers an interface to an existing instance of an implementation,

@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 using JetBrains.Annotations;
 using SysVector3 = System.Numerics.Vector3;
 using SysVector4 = System.Numerics.Vector4;
@@ -880,6 +881,18 @@ namespace Robust.Shared.Maths
             if (fallback.HasValue)
                 return fallback.Value;
             throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
+        }
+
+        public static Color FromXaml(string name)
+        {
+            var color = TryFromHex(name);
+            if (color != null)
+                return color.Value;
+
+            if (TryFromName(name, out var namedColor))
+                return namedColor;
+
+            throw new ArgumentException($"Invalid XAML color name: '{name}'");
         }
 
         public static Color Blend(Color dstColor, Color srcColor, BlendFactor dstFactor, BlendFactor srcFactor)

@@ -1,6 +1,5 @@
-﻿#nullable enable
+#nullable enable
 using System;
-using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects
 {
@@ -17,11 +16,20 @@ namespace Robust.Shared.GameObjects
         public IComponent Component { get; }
 
         /// <summary>
+        /// EntityUid of the entity this component belongs to.
+        /// </summary>
+        public EntityUid OwnerUid { get; }
+
+        /// <summary>
         /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        protected ComponentEventArgs(IComponent component) => Component = component;
-
+        /// <param name="ownerUid">EntityUid of the entity this component belongs to.</param>
+        protected ComponentEventArgs(IComponent component, EntityUid ownerUid)
+        {
+            Component = component;
+            OwnerUid = ownerUid;
+        }
     }
 
     /// <summary>
@@ -33,7 +41,8 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="AddedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public AddedComponentEventArgs(IComponent component) : base(component) { }
+        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
+        public AddedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
     }
 
     /// <summary>
@@ -45,7 +54,8 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="RemovedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public RemovedComponentEventArgs(IComponent component) : base(component) { }
+        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
+        public RemovedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
     }
 
     /// <summary>
@@ -57,7 +67,7 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="DeletedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public DeletedComponentEventArgs(IComponent component) : base(component) { }
+        /// <param name="uid">EntityUid of the entity this component belongs to.</param>
+        public DeletedComponentEventArgs(IComponent component, EntityUid uid) : base(component, uid) { }
     }
-
 }

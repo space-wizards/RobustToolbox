@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Client.Interfaces.GameStates;
+using Robust.Client.GameStates;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -47,12 +45,12 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message)
+        public void SendSystemNetworkMessage(EntityEventArgs message)
         {
             SendSystemNetworkMessage(message, default(uint));
         }
 
-        public void SendSystemNetworkMessage(EntitySystemMessage message, uint sequence)
+        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.SystemMessage;
@@ -64,7 +62,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel)
         {
             throw new NotSupportedException();
         }

@@ -1,107 +1,276 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Maths;
+using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Controllers;
+using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using Logger = Robust.Shared.Log.Logger;
 
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public abstract class SharedPhysicsSystem : EntitySystem
     {
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        /*
+         * TODO:
+         * Port acruid's box solver in to reduce allocs for building manifolds (this one is important for perf to remove the disgusting ctors and casts)
+         * Raycasts for non-box shapes.
+         * SetTransformIgnoreContacts for teleports (and anything else left on the physics body in Farseer)
+         * Actual center of mass for shapes (currently just assumes center coordinate)
+         * Circle offsets to entity.
+         * TOI Solver (continuous collision detection)
+         * Poly cutting
+         * Chain shape
+         * (Content) grenade launcher grenades that explode after time rather than impact.
+         * pulling prediction
+         * PVS + Collide allocations / performance
+         * When someone yeets out of disposals need to have no collision on that object until they stop colliding
+         * A bunch of objects have collision on round start
+         * Need a way to specify conditional non-hard collisions (i.e. so items collide with players for IThrowCollide but can still be moved through freely but walls can't collide with them)
+         */
+
+        /*
+         * Multi-threading notes:
+         * Sources:
+         * https://github.com/VelcroPhysics/VelcroPhysics/issues/29
+         * Aether2D
+         * Rapier
+         * https://www.slideshare.net/takahiroharada/solver-34909157
+         *
+         * SO essentially what we should look at doing from what I can discern:
+         * Build islands sequentially and then solve them all in parallel (as static bodies are the only thing shared
+         * it should be okay given they're never written to)
+         * After this, we can then look at doing narrowphase in parallel maybe (at least Aether2D does it) +
+         * position constraints in parallel + velocity constraints in parallel
+         *
+         * The main issue to tackle is graph colouring; Aether2D just seems to use locks for the parallel constraints solver
+         * though rapier has a graph colouring implementation (and because of this we should be able to avoid using locks) which we could try using.
+         *
+         * Given the kind of game SS14 is (our target game I guess) parallelising the islands will probably be the biggest benefit.
+         */
+
+        private static readonly Histogram _tickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
+            "Amount of time spent running a controller's UpdateBeforeSolve", new HistogramConfiguration
+            {
+                LabelNames = new[] {"controller"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
+        private static readonly Histogram _tickUsageControllerAfterSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_after_solve",
+            "Amount of time spent running a controller's UpdateAfterSolve", new HistogramConfiguration
+            {
+                LabelNames = new[] {"controller"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-        [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
 
-        private const float Epsilon = 1.0e-6f;
+        public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
+        private Dictionary<MapId, PhysicsMap> _maps = new();
 
-        private readonly List<Manifold> _collisionCache = new();
+        internal IReadOnlyList<VirtualController> Controllers => _controllers;
+        private List<VirtualController> _controllers = new();
 
-        /// <summary>
-        ///     Physics objects that are awake and usable for world simulation.
-        /// </summary>
-        private readonly HashSet<IPhysicsComponent> _awakeBodies = new();
+        public Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
 
-        /// <summary>
-        ///     Physics objects that are awake and predicted and usable for world simulation.
-        /// </summary>
-        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new();
-
-        /// <summary>
-        ///     VirtualControllers on applicable <see cref="IPhysicsComponent"/>s
-        /// </summary>
-        private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers =
-            new();
-
-        // We'll defer changes to IPhysicsComponent until each step is done.
-        private readonly List<IPhysicsComponent> _queuedDeletions = new();
-        private readonly List<IPhysicsComponent> _queuedUpdates = new();
-
-        /// <summary>
-        ///     Updates to EntityTree etc. that are deferred until the end of physics.
-        /// </summary>
-        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new();
-
-        // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
-        private float _speedLimit = 30.0f;
+        public bool MetricsEnabled;
+        private readonly Stopwatch _stopwatch = new();
 
         public override void Initialize()
         {
             base.Initialize();
+
+            // Having a nullspace map just makes a bunch of code easier, we just don't iterate on it.
+            var nullMap = new PhysicsMap(MapId.Nullspace);
+            _maps[MapId.Nullspace] = nullMap;
+            nullMap.Initialize();
+
+            _mapManager.MapCreated += HandleMapCreated;
+            _mapManager.MapDestroyed += HandleMapDestroyed;
+
             SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
+            SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
+            SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
+
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            BuildControllers();
+            Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
+        }
+
+
+        private void BuildControllers()
+        {
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
+            var allControllerTypes = new List<Type>();
+
+            foreach (var type in reflectionManager.GetAllChildren(typeof(VirtualController)))
+            {
+                if (type.IsAbstract) continue;
+                allControllerTypes.Add(type);
+            }
+
+            var instantiated = new Dictionary<Type, VirtualController>();
+
+            foreach (var type in allControllerTypes)
+            {
+                instantiated.Add(type, (VirtualController) typeFactory.CreateInstance(type));
+            }
+
+            // Build dependency graph, copied from EntitySystemManager *COUGH
+
+            var nodes = new Dictionary<Type, EntitySystemManager.GraphNode<VirtualController>>();
+
+            foreach (var (_, controller) in instantiated)
+            {
+                var node = new EntitySystemManager.GraphNode<VirtualController>(controller);
+                nodes[controller.GetType()] = node;
+            }
+
+            foreach (var (type, node) in nodes)
+            {
+                foreach (var before in instantiated[type].UpdatesBefore)
+                {
+                    nodes[before].DependsOn.Add(node);
+                }
+
+                foreach (var after in instantiated[type].UpdatesAfter)
+                {
+                    node.DependsOn.Add(nodes[after]);
+                }
+            }
+
+            _controllers = GameObjects.EntitySystemManager.TopologicalSort(nodes.Values).Select(c => c.System).ToList();
+
+            foreach (var controller in _controllers)
+            {
+                controller.BeforeMonitor = _tickUsageControllerBeforeSolveHistogram.WithLabels(controller.GetType().Name);
+                controller.AfterMonitor = _tickUsageControllerAfterSolveHistogram.WithLabels(controller.GetType().Name);
+                controller.Initialize();
+            }
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            _mapManager.MapCreated -= HandleMapCreated;
+            _mapManager.MapDestroyed -= HandleMapDestroyed;
+
+            UnsubscribeLocalEvent<PhysicsUpdateMessage>();
+            UnsubscribeLocalEvent<PhysicsWakeMessage>();
+            UnsubscribeLocalEvent<PhysicsSleepMessage>();
+            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+
+            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
+            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
+        }
+
+        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            // Server just creates nullspace map on its own but sends it to client hence we will just ignore it.
+            if (_maps.ContainsKey(eventArgs.Map)) return;
+
+            var map = new PhysicsMap(eventArgs.Map);
+            _maps.Add(eventArgs.Map, map);
+            map.Initialize();
+            map.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
+            Logger.DebugS("physics", $"Created physics map for {eventArgs.Map}");
+        }
+
+        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
+        {
+            var map = _maps[eventArgs.Map];
+            map.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
+
+            _maps.Remove(eventArgs.Map);
+            Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
+        }
+
+        private void HandleMapChange(EntMapIdChangedMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
+                return;
+
+            physicsComponent.ClearJoints();
+            var oldMapId = message.OldMapId;
+            if (oldMapId != MapId.Nullspace)
+            {
+                _maps[oldMapId].RemoveBody(physicsComponent);
+            }
+
+            var newMapId = message.Entity.Transform.MapID;
+            if (newMapId != MapId.Nullspace)
+            {
+                _maps[newMapId].AddBody(physicsComponent);
+            }
         }
 
         private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
         {
-            if (message.Component.Deleted || !message.Component.Awake)
+            var mapId = message.Component.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace)
+                return;
+
+            if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                _queuedDeletions.Add(message.Component);
+                _maps[mapId].RemoveBody(message.Component);
             }
             else
             {
-                _queuedUpdates.Add(message.Component);
+                _maps[mapId].AddBody(message.Component);
             }
         }
 
-        /// <summary>
-        ///     Process the changes to cached <see cref="IPhysicsComponent"/>s
-        /// </summary>
-        private void ProcessQueue()
+        private void HandleWakeMessage(PhysicsWakeMessage message)
         {
-            // At this stage only the dynamictree cares about asleep bodies
-            // Implicitly awake bodies so don't need to check .Awake again
-            // Controllers should wake their body up (inside)
-            foreach (var physics in _queuedUpdates)
-            {
-                if (physics.Predict)
-                    _predictedAwakeBodies.Add(physics);
+            var mapId = message.Body.Owner.Transform.MapID;
 
-                _awakeBodies.Add(physics);
+            if (mapId == MapId.Nullspace)
+                return;
 
-                if (physics.Controllers.Count > 0 && !_controllers.ContainsKey(physics))
-                    _controllers.Add(physics, physics.Controllers.Values);
+            _maps[mapId].AddAwakeBody(message.Body);
+        }
 
-            }
+        private void HandleSleepMessage(PhysicsSleepMessage message)
+        {
+            var mapId = message.Body.Owner.Transform.MapID;
 
-            _queuedUpdates.Clear();
+            if (mapId == MapId.Nullspace)
+                return;
 
-            foreach (var physics in _queuedDeletions)
-            {
-                _awakeBodies.Remove(physics);
-                _predictedAwakeBodies.Remove(physics);
-                _controllers.Remove(physics);
-            }
+            _maps[mapId].RemoveSleepBody(message.Body);
+        }
 
-            _queuedDeletions.Clear();
+        private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            var mapId = message.Container.Owner.Transform.MapID;
+
+            physicsComponent.ClearJoints();
+            _maps[mapId].RemoveBody(physicsComponent);
+        }
+
+        private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            var mapId = message.Container.Owner.Transform.MapID;
+
+            _maps[mapId].AddBody(physicsComponent);
         }
 
         /// <summary>
@@ -111,361 +280,44 @@ namespace Robust.Shared.GameObjects.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
-
-            ProcessQueue();
-
-            foreach (var body in simulatedBodies)
+            foreach (var controller in _controllers)
             {
-                // running prediction updates will not cause a body to go to sleep.
-                if(!prediction)
-                    body.SleepAccumulator++;
-
-                // if the body cannot move, nothing to do here
-                if(!body.CanMove())
-                    continue;
-
-                var linearVelocity = Vector2.Zero;
-
-                foreach (var controller in body.Controllers.Values)
+                if (MetricsEnabled)
                 {
-                    controller.UpdateBeforeProcessing();
-                    linearVelocity += controller.LinearVelocity;
+                    _stopwatch.Restart();
                 }
-
-                // i'm not sure if this is the proper way to solve this, but
-                // these are not kinematic bodies, so we need to preserve the previous
-                // velocity.
-                //if (body.LinearVelocity.LengthSquared < linearVelocity.LengthSquared)
-                    body.LinearVelocity = linearVelocity;
-
-                // Integrate forces
-                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
-                body.AngularVelocity += body.Torque * body.InvI * deltaTime;
-
-                // forces are instantaneous, so these properties are cleared
-                // once integrated. If you want to apply a continuous force,
-                // it has to be re-applied every tick.
-                body.Force = Vector2.Zero;
-                body.Torque = 0f;
-            }
-
-            // Calculate collisions and store them in the cache
-            ProcessCollisions(_awakeBodies);
-
-            // Remove all entities that were deleted during collision handling
-            ProcessQueue();
-
-            // Process frictional forces
-            foreach (var physics in _awakeBodies)
-            {
-                ProcessFriction(physics, deltaTime);
-            }
-
-            foreach (var (_, controllers) in _controllers)
-            {
-                foreach (var controller in controllers)
+                controller.UpdateBeforeSolve(prediction, deltaTime);
+                if (MetricsEnabled)
                 {
-                    controller.UpdateAfterProcessing();
+                    controller.BeforeMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
                 }
             }
 
-            // Remove all entities that were deleted due to the controller
-            ProcessQueue();
-
-            const int solveIterationsAt60 = 4;
-
-            var multiplier = deltaTime / (1f / 60);
-
-            var divisions = MathHelper.Clamp(
-                MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
-                1,
-                20
-            );
-
-            if (_timing.InSimulation) divisions = 1;
-
-            for (var i = 0; i < divisions; i++)
+            foreach (var (mapId, map) in _maps)
             {
-                foreach (var physics in simulatedBodies)
-                {
-                    if (physics.CanMove())
-                    {
-                        UpdatePosition(physics, deltaTime / divisions);
-                    }
-                }
+                if (mapId == MapId.Nullspace) continue;
+                map.Step(deltaTime, prediction);
+            }
 
-                for (var j = 0; j < divisions; ++j)
+            foreach (var controller in _controllers)
+            {
+                if (MetricsEnabled)
                 {
-                    if (FixClipping(_collisionCache, divisions))
-                    {
-                        break;
-                    }
+                    _stopwatch.Restart();
+                }
+                controller.UpdateAfterSolve(prediction, deltaTime);
+                if (MetricsEnabled)
+                {
+                    controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
                 }
             }
 
-            // As we also defer the updates for the _collisionCache we need to update all entities
-            foreach (var physics in _deferredUpdates)
+            // Go through and run all of the deferred events now
+            foreach (var (mapId, map) in _maps)
             {
-                var transform = physics.Owner.Transform;
-                transform.DeferUpdates = false;
-                transform.RunPhysicsDeferred();
+                if (mapId == MapId.Nullspace) continue;
+                map.ProcessQueue();
             }
-
-            _deferredUpdates.Clear();
-        }
-
-        // Runs collision behavior and updates cache
-        private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies)
-        {
-            _collisionCache.Clear();
-            var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var aPhysics in awakeBodies)
-            {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero, false))
-                {
-                    var aUid = aPhysics.Entity.Uid;
-                    var bUid = b.Uid;
-
-                    if (bUid.CompareTo(aUid) > 0)
-                    {
-                        var tmpUid = bUid;
-                        bUid = aUid;
-                        aUid = tmpUid;
-                    }
-
-                    if (!combinations.Add((aUid, bUid)))
-                    {
-                        continue;
-                    }
-
-                    var bPhysics = b.GetComponent<IPhysicsComponent>();
-                    _collisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
-                }
-            }
-
-            var counter = 0;
-
-            if (_collisionCache.Count > 0)
-            {
-                while(GetNextCollision(_collisionCache, counter, out var collision))
-                {
-                    collision.A.WakeBody();
-                    collision.B.WakeBody();
-
-                    counter++;
-                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                    if (collision.A.CanMove())
-                    {
-                        collision.A.ApplyImpulse(-impulse);
-                    }
-
-                    if (collision.B.CanMove())
-                    {
-                        collision.B.ApplyImpulse(impulse);
-                    }
-                }
-            }
-
-            var collisionsWith = new Dictionary<ICollideBehavior, int>();
-            foreach (var collision in _collisionCache)
-            {
-                // Apply onCollide behavior
-                foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
-                {
-                    var entity = collision.B.Entity;
-                    if (entity.Deleted) break;
-                    behavior.CollideWith(entity);
-                    if (collisionsWith.ContainsKey(behavior))
-                    {
-                        collisionsWith[behavior] += 1;
-                    }
-                    else
-                    {
-                        collisionsWith[behavior] = 1;
-                    }
-                }
-
-                foreach (var behavior in collision.B.Entity.GetAllComponents<ICollideBehavior>().ToArray())
-                {
-                    var entity = collision.A.Entity;
-                    if (entity.Deleted) break;
-                    behavior.CollideWith(entity);
-                    if (collisionsWith.ContainsKey(behavior))
-                    {
-                        collisionsWith[behavior] += 1;
-                    }
-                    else
-                    {
-                        collisionsWith[behavior] = 1;
-                    }
-                }
-            }
-
-            foreach (var behavior in collisionsWith.Keys)
-            {
-                behavior.PostCollide(collisionsWith[behavior]);
-            }
-        }
-
-        private bool GetNextCollision(IReadOnlyList<Manifold> collisions, int counter, out Manifold collision)
-        {
-            // The *4 is completely arbitrary
-            if (counter > collisions.Count * 4)
-            {
-                collision = default;
-                return false;
-            }
-
-            var offset = _random.Next(collisions.Count - 1);
-            for (var i = 0; i < collisions.Count; i++)
-            {
-                var index = (i + offset) % collisions.Count;
-                if (collisions[index].Unresolved)
-                {
-                    collision = collisions[index];
-                    return true;
-                }
-
-            }
-
-            collision = default;
-            return false;
-        }
-
-        private void ProcessFriction(IPhysicsComponent body, float deltaTime)
-        {
-            if (body.LinearVelocity == Vector2.Zero) return;
-
-            // sliding friction coefficient, and current gravity at current location
-            var (friction, gravity) = GetFriction(body);
-
-            // friction between the two objects
-            var effectiveFriction = friction * body.Friction;
-
-            // current acceleration due to friction
-            var fAcceleration = effectiveFriction * gravity;
-
-            // integrate acceleration
-            var fVelocity = fAcceleration * deltaTime;
-
-            // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(fVelocity, body.LinearVelocity.Length);
-
-            if (friction == 0.0f)
-            {
-                return;
-            }
-
-            // No multiplication/division by mass here since that would be redundant.
-            var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
-
-            body.LinearVelocity += frictionVelocityChange;
-        }
-
-        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
-        {
-            var ent = physics.Entity;
-
-            if (!physics.CanMove() || (physics.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(physics.AngularVelocity) < Epsilon))
-                return;
-
-            if (physics.LinearVelocity != Vector2.Zero)
-            {
-                if (ent.IsInContainer())
-                {
-                    var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
-                    ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
-                    // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                    physics.LinearVelocity = Vector2.Zero;
-                }
-            }
-
-            physics.Owner.Transform.DeferUpdates = true;
-            _deferredUpdates.Add(physics);
-
-            // Slow zone up in here
-            if (physics.LinearVelocity.Length > _speedLimit)
-                physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
-
-            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
-            var owner = physics.Owner;
-            var transform = owner.Transform;
-
-            // Change parent if necessary
-            if (!owner.IsInContainer())
-            {
-                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
-                    grid.GridEntityId.IsValid() &&
-                    grid.GridEntityId != owner.Uid)
-                {
-                    if (grid.GridEntityId != transform.ParentUid)
-                        transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
-                }
-                else
-                {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
-                }
-            }
-
-            physics.WorldRotation += physics.AngularVelocity * frameTime;
-            physics.WorldPosition = newPosition;
-        }
-
-        // Based off of Randy Gaul's ImpulseEngine code
-        // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
-        private bool FixClipping(List<Manifold> collisions, float divisions)
-        {
-            const float allowance = 1 / 128.0f;
-            var percent = MathHelper.Clamp(0.4f / divisions, 0.01f, 1f);
-            var done = true;
-            foreach (var collision in collisions)
-            {
-                if (!collision.Hard)
-                {
-                    continue;
-                }
-
-                if (collision.A.Owner.Deleted || collision.B.Owner.Deleted)
-                    continue;
-
-                var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
-
-                if (penetration <= allowance)
-                    continue;
-
-                done = false;
-                //var correction = collision.Normal * Math.Abs(penetration) * percent;
-                var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
-                if (collision.A.CanMove())
-                {
-                    collision.A.Owner.Transform.DeferUpdates = true;
-                    _deferredUpdates.Add(collision.A);
-                    collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
-                }
-
-                if (collision.B.CanMove())
-                {
-                    collision.B.Owner.Transform.DeferUpdates = true;
-                    _deferredUpdates.Add(collision.B);
-                    collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
-                }
-            }
-
-            return done;
-        }
-
-        private (float friction, float gravity) GetFriction(IPhysicsComponent body)
-        {
-            if (!body.OnGround)
-                return (0f, 0f);
-
-            var location = body.Owner.Transform;
-            var grid = _mapManager.GetGrid(location.Coordinates.GetGridId(EntityManager));
-            var tile = grid.GetTileRef(location.Coordinates);
-            var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return (tileDef.Friction, grid.HasGravity ? 9.8f : 0f);
         }
     }
 }

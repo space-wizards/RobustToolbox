@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 
 namespace Robust.Shared.GameObjects
 {
@@ -46,6 +45,11 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<string, ComponentRegistration> names = new();
 
         /// <summary>
+        /// Mapping of lowercase component names to their registration.
+        /// </summary>
+        private readonly Dictionary<string, string> _lowerCaseNames = new();
+
+        /// <summary>
         /// Mapping of network ID to type.
         /// </summary>
         private readonly Dictionary<uint, ComponentRegistration> netIDs = new();
@@ -61,16 +65,26 @@ namespace Robust.Shared.GameObjects
         private readonly HashSet<string> IgnoredComponentNames = new();
 
         /// <inheritdoc />
+        public event Action<IComponentRegistration>? ComponentAdded;
+
+        /// <inheritdoc />
+        public event Action<(IComponentRegistration, Type)>? ComponentReferenceAdded;
+
+        /// <inheritdoc />
+        public event Action<string>? ComponentIgnoreAdded;
+        
+        /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
+        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
         {
             Register(typeof(T), overwrite);
         }
 
-        private void Register(Type type, bool overwrite=false)
+        private void Register(Type type, bool overwrite = false)
         {
             if (types.ContainsKey(type))
             {
@@ -82,6 +96,7 @@ namespace Robust.Shared.GameObjects
             var dummy = (IComponent)Activator.CreateInstance(type)!;
 
             var name = dummy.Name;
+            var lowerCaseName = name.ToLowerInvariant();
             var netID = dummy.NetID;
             var netSyncExist = dummy.NetworkSynchronizeExistence;
 
@@ -105,6 +120,14 @@ namespace Robust.Shared.GameObjects
                 RemoveComponent(name);
             }
 
+            if (_lowerCaseNames.ContainsKey(lowerCaseName))
+            {
+                if (!overwrite)
+                {
+                    throw new InvalidOperationException($"{lowerCaseName} is already registered, previous: {_lowerCaseNames[lowerCaseName]}");
+                }
+            }
+
             if (netID != null && netIDs.ContainsKey(netID.Value))
             {
                 if (!overwrite)
@@ -117,13 +140,16 @@ namespace Robust.Shared.GameObjects
 
             var registration = new ComponentRegistration(name, type, netID, netSyncExist);
             names[name] = registration;
+            _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
             if (netID != null)
             {
                 netIDs[netID.Value] = registration;
             }
+            ComponentAdded?.Invoke(registration);
         }
 
+        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new()
         {
             RegisterReference(typeof(TTarget), typeof(TInterface));
@@ -142,6 +168,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
             registration.References.Add(@interface);
+            ComponentReferenceAdded?.Invoke((registration, @interface));
         }
 
         public void RegisterIgnore(string name, bool overwrite = false)
@@ -162,13 +189,15 @@ namespace Robust.Shared.GameObjects
             }
 
             IgnoredComponentNames.Add(name);
+            ComponentIgnoreAdded?.Invoke(name);
         }
 
         private void RemoveComponent(string name)
         {
             var registration = names[name];
-
+            
             names.Remove(registration.Name);
+            _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);
             if (registration.NetID != null)
             {
@@ -176,8 +205,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public ComponentAvailability GetComponentAvailability(string componentName)
+        public ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)
         {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             if (names.ContainsKey(componentName))
             {
                 return ComponentAvailability.Available;
@@ -209,8 +243,13 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
-        public IComponent GetComponent(string componentName)
+        public IComponent GetComponent(string componentName, bool ignoreCase = false)
         {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
@@ -219,8 +258,13 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
         }
 
-        public IComponentRegistration GetRegistration(string componentName)
+        public IComponentRegistration GetRegistration(string componentName, bool ignoreCase = false)
         {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             try
             {
                 return names[componentName];
@@ -265,8 +309,13 @@ namespace Robust.Shared.GameObjects
             return GetRegistration(component.GetType());
         }
 
-        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration)
+        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration, bool ignoreCase = false)
         {
+            if (ignoreCase && _lowerCaseNames.TryGetValue(componentName, out var lowerCaseName))
+            {
+                componentName = lowerCaseName;
+            }
+
             if (names.TryGetValue(componentName, out var tempRegistration))
             {
                 registration = tempRegistration;
@@ -313,32 +362,42 @@ namespace Robust.Shared.GameObjects
 
         public void DoAutoRegistrations()
         {
-            var iComponent = typeof(IComponent);
-
             foreach (var type in _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>())
             {
-                if (!iComponent.IsAssignableFrom(type))
+                RegisterClass(type);
+            }
+        }
+
+        /// <inheritdoc />
+        public void RegisterClass<T>(bool overwrite = false)
+            where T : IComponent, new()
+        {
+            RegisterClass(typeof(T));
+        }
+
+        private void RegisterClass(Type type)
+        {
+            if (!typeof(IComponent).IsAssignableFrom(type))
+            {
+                Logger.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
+                return;
+            }
+
+            Register(type);
+
+            foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
+            {
+                var cast = (ComponentReferenceAttribute) attribute;
+
+                var refType = cast.ReferenceType;
+
+                if (!refType.IsAssignableFrom(type))
                 {
-                    Logger.Error("Type {0} has RegisterComponentAttribute but does not implement IComponent.", type);
+                    Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
                     continue;
                 }
 
-                Register(type);
-
-                foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
-                {
-                    var cast = (ComponentReferenceAttribute) attribute;
-
-                    var refType = cast.ReferenceType;
-
-                    if (!refType.IsAssignableFrom(type))
-                    {
-                        Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
-                        continue;
-                    }
-
-                    RegisterReference(type, refType);
-                }
+                RegisterReference(type, refType);
             }
         }
 

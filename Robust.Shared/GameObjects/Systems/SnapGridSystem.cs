@@ -1,6 +1,4 @@
-using Robust.Shared.GameObjects.Components.Transform;
-
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     public class SnapGridSystem : EntitySystem
     {

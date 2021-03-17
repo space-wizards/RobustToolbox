@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using NUnit.Framework;
-using Robust.Client.Input;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
@@ -35,21 +33,21 @@ namespace Robust.UnitTesting.Client.UserInterface
             // We check that 4 and 1 do not receive events, that 3 receives before 2, and that positions are correct.
             var control1 = new LayoutContainer
             {
-                CustomMinimumSize = new Vector2(50, 50)
+                MinSize = new Vector2(50, 50)
             };
             var control2 = new LayoutContainer
             {
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Stop
             };
             var control3 = new LayoutContainer
             {
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Pass
             };
             var control4 = new LayoutContainer
             {
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Ignore
             };
 
@@ -62,7 +60,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control3.AddChild(control4);
             LayoutContainer.SetPosition(control4, (5, 5));
 
-            control1.ForceRunLayoutUpdate();
+            control1.Arrange(new UIBox2(0, 0, 50, 50));
 
             var mouseEvent = new BoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
                 new Robust.Shared.Map.ScreenCoordinates(30, 30), true);
@@ -210,13 +208,13 @@ namespace Robust.UnitTesting.Client.UserInterface
             {
                 CanKeyboardFocus = true,
                 KeyboardFocusOnClick = true,
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Stop
             };
 
             _userInterfaceManager.RootControl.AddChild(control);
 
-            _userInterfaceManager.RootControl.ForceRunLayoutUpdate();
+            _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 50, 50));
 
             _userInterfaceManager.HandleCanFocusDown((30, 30));
 
@@ -235,7 +233,7 @@ namespace Robust.UnitTesting.Client.UserInterface
         {
             var control = new Control
             {
-                CustomMinimumSize = new Vector2(50, 50),
+                MinSize = new Vector2(50, 50),
                 MouseFilter = Control.MouseFilterMode.Stop
             };
 

@@ -1,13 +1,9 @@
 ﻿using System;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -37,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             contents = new Label();
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
 
             contents = new Label
             {
@@ -72,7 +68,6 @@ namespace Robust.Client.UserInterface.CustomControls
             if (!NetManager.IsConnected)
             {
                 contents.Text = "Not connected to server.";
-                MinimumSizeChanged();
                 return;
             }
 
@@ -93,12 +88,7 @@ namespace Robust.Client.UserInterface.CustomControls
 DOWN: {receivedBytes / ONE_KIBIBYTE:N} KiB/s, {receivedPackets} pckt/s, {LastReceivedBytes / ONE_KIBIBYTE:N} KiB, {LastReceivedPackets} pckt
 PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
 
-            MinimumSizeChanged();
-        }
-
-        protected override Vector2 CalculateMinimumSize()
-        {
-            return new(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
+            // MinimumSizeChanged();
         }
     }
 }

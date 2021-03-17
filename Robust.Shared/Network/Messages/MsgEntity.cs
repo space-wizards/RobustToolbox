@@ -1,12 +1,11 @@
 ﻿using System;
 using Lidgren.Network;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.GameObjects;
 using System.IO;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System.Collections.Generic;
 using Robust.Shared.Enums;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 #nullable disable
@@ -23,7 +22,7 @@ namespace Robust.Shared.Network.Messages
 
         public EntityMessageType Type { get; set; }
 
-        public EntitySystemMessage SystemMessage { get; set; }
+        public EntityEventArgs SystemMessage { get; set; }
         public ComponentMessage ComponentMessage { get; set; }
 
         public EntityUid EntityUid { get; set; }
@@ -44,7 +43,7 @@ namespace Robust.Shared.Network.Messages
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAlignedMemory(length);
-                    SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                    SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                 }
                     break;
 

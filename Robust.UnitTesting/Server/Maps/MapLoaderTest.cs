@@ -1,14 +1,18 @@
 using System.Linq;
-using System.Threading.Tasks;
+using Moq;
 using NUnit.Framework;
-using Robust.Server.Interfaces.Maps;
+using Robust.Server.GameObjects;
+using Robust.Server.Maps;
+using Robust.Server.Physics;
+using Robust.Shared.Containers;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.Maps
@@ -36,9 +40,10 @@ entities:
     type: Transform
   - index: 0
     type: MapGrid
-  - shapes:
-    - !type:PhysShapeGrid
-      grid: 0
+  - fixtures:
+    - shape:
+        !type:PhysShapeGrid
+          grid: 0
     type: Physics
 - uid: 1
   type: MapDeserializeTest
@@ -59,13 +64,27 @@ entities:
 
 ";
 
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+            //var mockFormat = new Mock<ICustomFormatManager>();
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+            //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
+        }
+
 
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IComponentFactory>().Register<MapDeserializeTestComponent>();
-
-            IoCManager.Resolve<IComponentManager>().Initialize();
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            compFactory.Register<MapDeserializeTestComponent>();
+            IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.Initialize(null);
@@ -73,15 +92,12 @@ entities:
             resourceManager.MountString("/Prototypes/TestMapEntity.yml", Prototype);
 
             IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
-
-            var map = IoCManager.Resolve<IMapManager>();
-            map.Initialize();
-            map.Startup();
         }
 
         [Test]
         public void TestDataLoadPriority()
         {
+            // TODO: Fix after serv3
             var map = IoCManager.Resolve<IMapManager>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -100,22 +116,14 @@ entities:
             Assert.That(c.Baz, Is.EqualTo(-1));
         }
 
+        [DataDefinition]
         private sealed class MapDeserializeTestComponent : Component
         {
             public override string Name => "MapDeserializeTest";
 
-            public int Foo { get; set; }
-            public int Bar { get; set; }
-            public int Baz { get; set; }
-
-            public override void ExposeData(ObjectSerializer serializer)
-            {
-                base.ExposeData(serializer);
-
-                serializer.DataField(this, p => p.Foo, "foo", -1);
-                serializer.DataField(this, p => p.Bar, "bar", -1);
-                serializer.DataField(this, p => p.Baz, "baz", -1);
-            }
+            [DataField("foo")] public int Foo { get; set; } = -1;
+            [DataField("bar")] public int Bar { get; set; } = -1;
+            [DataField("baz")] public int Baz { get; set; } = -1;
         }
     }
 }

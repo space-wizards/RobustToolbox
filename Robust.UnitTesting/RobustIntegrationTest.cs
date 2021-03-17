@@ -10,21 +10,15 @@ using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Robust.Client;
-using Robust.Client.Interfaces;
 using Robust.Server;
 using Robust.Server.Console;
-using Robust.Server.Interfaces;
-using Robust.Server.Interfaces.Console;
-using Robust.Server.Interfaces.ServerStatus;
+using Robust.Server.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -505,8 +499,6 @@ namespace Robust.UnitTesting
                 // Ack tick message 1 is implied as "init done"
                 _channelWriter.TryWrite(new AckTicksMessage(1));
                 Running = true;
-
-                Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
 
                 _gameTiming.InSimulation = true;
 

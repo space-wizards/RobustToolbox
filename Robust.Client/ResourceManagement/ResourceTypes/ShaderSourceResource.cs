@@ -1,14 +1,11 @@
 ﻿using System.IO;
 using System.Threading;
 using Robust.Client.Graphics;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.ResourceManagement.ResourceTypes
+namespace Robust.Client.ResourceManagement
 {
     /// <summary>
     ///     Loads the **source code** of a shader.

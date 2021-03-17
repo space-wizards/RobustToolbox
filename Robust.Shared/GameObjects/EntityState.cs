@@ -1,6 +1,5 @@
 ﻿using Robust.Shared.Serialization;
 using System;
-using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {

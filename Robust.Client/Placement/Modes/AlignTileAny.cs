@@ -1,6 +1,4 @@
 ﻿using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement.Modes
 {

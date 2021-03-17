@@ -6,13 +6,6 @@ namespace Robust.Client.UserInterface.XAML
     {
     }
 
-    public class XmlnsDefinitionAttribute : Attribute
-    {
-        public XmlnsDefinitionAttribute(string xmlNamespace, string clrNamespace)
-        {
-        }
-    }
-
     public class UsableDuringInitializationAttribute : Attribute
     {
         public UsableDuringInitializationAttribute(bool usable)

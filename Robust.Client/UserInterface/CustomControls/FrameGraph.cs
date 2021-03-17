@@ -1,5 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Shared.Interfaces.Timing;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -40,10 +39,10 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             _gameTiming = gameTiming;
 
-            SizeFlagsHorizontal = SizeFlags.None;
+            HorizontalAlignment = HAlignment.Left;
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             return (TrackedFrames * FrameWidth, FrameHeight * 2);
         }

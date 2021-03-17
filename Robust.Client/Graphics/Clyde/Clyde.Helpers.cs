@@ -5,6 +5,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp.PixelFormats;
 using ES20 = OpenToolkit.Graphics.ES20;
 
 namespace Robust.Client.Graphics.Clyde
@@ -31,6 +32,27 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
             CheckGlError();
+            GL.ActiveTexture(TextureUnit.Texture0);
+        }
+
+        private void CopyRenderTextureToTexture(RenderTexture source, ClydeTexture target) {
+            LoadedRenderTarget sourceLoaded = RtToLoaded(source);
+            bool pause = sourceLoaded != _currentBoundRenderTarget;
+            FullStoredRendererState? store = null;
+            if (pause) {
+                store = PushRenderStateFull();
+                BindRenderTargetFull(source);
+                CheckGlError();
+            }
+
+            GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[target.TextureId].OpenGLObject.Handle);
+            CheckGlError();
+            GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, _framebufferSize.X, _framebufferSize.Y);
+            CheckGlError();
+
+            if (pause && store != null) {
+                PopRenderStateFull((FullStoredRendererState)store);
+            }
         }
 
         private static long EstPixelSize(PixelInternalFormat format)

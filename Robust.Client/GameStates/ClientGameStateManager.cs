@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using System.Diagnostics;
+using Robust.Client.GameObjects;
+using Robust.Client.Input;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
@@ -14,11 +11,9 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -32,7 +27,7 @@ namespace Robust.Client.GameStates
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
@@ -131,7 +126,7 @@ namespace Robust.Client.GameStates
             _nextInputCmdSeq++;
         }
 
-        public uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage
+        public uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs
         {
             if (!Predicting)
             {
@@ -303,7 +298,7 @@ namespace Robust.Client.GameStates
                     // because the rest of the main loop will call into it with the target tick later,
                     // and it won't be a past prediction.
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
-                    ((IEntityEventBus) _entities.EventBus).ProcessEventQueue();
+                    ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
                 }
             }
         }
@@ -358,7 +353,10 @@ namespace Robust.Client.GameStates
 
                 foreach (var component in _componentManager.GetNetComponents(createdEntity))
                 {
-                    var state = component.GetComponentState();
+                    Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
+
+                    var player = _players.LocalPlayer.Session;
+                    var state = component.GetComponentState(player);
 
                     if (state.GetType() == typeof(ComponentState))
                     {

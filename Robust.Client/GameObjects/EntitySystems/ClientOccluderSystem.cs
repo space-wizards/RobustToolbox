@@ -3,15 +3,11 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     // NOTE: this class handles both snap grid updates of occluders, as well as occluder tree updates (via its parent).
     // This seems like it's doing somewhat double work because it already has an update queue for occluders but...
@@ -110,7 +106,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Event raised by a <see cref="ClientOccluderComponent"/> when it needs to be recalculated.
     /// </summary>
-    internal sealed class OccluderDirtyEvent : EntitySystemMessage
+    internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
         public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition, SnapGridOffset offset)
         {

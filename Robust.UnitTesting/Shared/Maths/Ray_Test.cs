@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.UnitTesting.Shared.Maths
 {

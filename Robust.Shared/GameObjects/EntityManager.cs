@@ -233,6 +233,13 @@ namespace Robust.Shared.GameObjects
             if (e.Deleted)
                 return;
 
+            if (e.LifeStage >= EntityLifeStage.Terminating)
+#if !EXCEPTION_TOLERANCE
+                throw new InvalidOperationException("Called Delete on an entity already being deleted.");
+#else
+                return;
+#endif
+
             RecursiveDeleteEntity(e);
         }
 
@@ -242,6 +249,7 @@ namespace Robust.Shared.GameObjects
                 return;
             
             var transform = entity.Transform;
+            entity.LifeStage = EntityLifeStage.Terminating;
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childTransform in transform.Children.ToArray())
@@ -260,7 +268,7 @@ namespace Robust.Shared.GameObjects
                 transform.DetachParentToNull();
             }
 
-            entity.Shutdown();
+            entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
         }
         

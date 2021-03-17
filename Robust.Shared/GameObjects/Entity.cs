@@ -23,6 +23,28 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
+        private EntityLifeStage _lifeStage;
+
+        /// <inheritdoc cref="IEntity.LifeStage" />
+        [ViewVariables]
+        internal EntityLifeStage LifeStage
+        {
+            get => _lifeStage;
+            set
+            {
+                _lifeStage = value;
+                switch (value)
+                {
+                    case EntityLifeStage.Initializing:
+                        EntityManager.UpdateEntityTree(this);
+                        break;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        EntityLifeStage IEntity.LifeStage { get => LifeStage; set => LifeStage = value; }
+
         /// <inheritdoc />
         [ViewVariables]
         public EntityPrototype? Prototype
@@ -53,26 +75,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [ViewVariables]
-        public bool Initialized { get; private set; }
-
-        [ViewVariables]
-        public bool Initializing
-        {
-            get => _initializing;
-            private set
-            {
-                _initializing = value;
-                if (value)
-                {
-                    EntityManager.UpdateEntityTree(this);
-                }
-            }
-        }
+        public bool Initialized => EntityLifeStage.Initialized <= LifeStage && LifeStage <= EntityLifeStage.Terminating;
 
         /// <inheritdoc />
-        [ViewVariables]
-        public bool Deleted { get; private set; }
+        public bool Initializing => LifeStage == EntityLifeStage.Initializing;
+
+        /// <inheritdoc />
+        public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
         public bool Paused
@@ -96,8 +105,6 @@ namespace Robust.Shared.GameObjects
         public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
 
         private IMetaDataComponent? _metaData;
-
-        private bool _initializing;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -124,7 +131,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void InitializeComponents()
         {
-            Initializing = true;
+            DebugTools.Assert(LifeStage == EntityLifeStage.PreInit);
+            LifeStage = EntityLifeStage.Initializing;
+
             // Initialize() can modify the collection of components.
             var components = EntityManager.ComponentManager.GetComponents(Uid)
                 .OrderBy(x => x switch
@@ -151,8 +160,8 @@ namespace Robust.Shared.GameObjects
             }
 
 #endif
-            Initialized = true;
-            Initializing = false;
+            DebugTools.Assert(LifeStage == EntityLifeStage.Initializing);
+            LifeStage = EntityLifeStage.Initialized;
             EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
         }
 
@@ -305,13 +314,6 @@ namespace Robust.Shared.GameObjects
         public IComponent? GetComponentOrNull(uint netId)
         {
             return TryGetComponent(netId, out var component) ? component : null;
-        }
-
-        /// <inheritdoc />
-        public void Shutdown()
-        {
-            // Entity manager culls us because we're set to Deleted.
-            Deleted = true;
         }
 
         /// <inheritdoc />

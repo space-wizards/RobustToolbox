@@ -577,7 +577,7 @@ namespace Robust.Shared.Map
 
             var grid = _grids[gridID];
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) && gridEnt.LifeStage <= EntityLifeStage.Initialized)
                 gridEnt.Delete();
 
             grid.Dispose();

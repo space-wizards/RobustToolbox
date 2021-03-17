@@ -109,14 +109,14 @@ namespace Robust.Shared.GameObjects
 
                 if (_bodyType == BodyType.Static)
                 {
-                    Awake = false;
+                    SetAwake(false);
                     _linVelocity = Vector2.Zero;
                     _angVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
                 else
                 {
-                    Awake = true;
+                    SetAwake(true);
                 }     
 
                 Force = Vector2.Zero;
@@ -146,28 +146,33 @@ namespace Robust.Shared.GameObjects
             get => _awake;
             set
             {
-                if (_awake == value)
-                    return;
-
-                _awake = value;
-
-                if (value)
-                {
-                    _sleepTime = 0.0f;
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-                }
-                else
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
-                    ResetDynamics();
-                    _sleepTime = 0.0f;
-                }
-
-                Dirty();
+                if (_bodyType == BodyType.Static) return;
+                
+                SetAwake(_awake);
             }
         }
 
         private bool _awake = true;
+
+        private void SetAwake(bool value)
+        {
+            if (_awake == value) return;
+            _awake = value;
+
+            if (value)
+            {
+                _sleepTime = 0.0f;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+            }
+            else
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                ResetDynamics();
+                _sleepTime = 0.0f;
+            }
+
+            Dirty();
+        }
 
         /// <summary>
         /// You can disable sleeping on this body. If you disable sleeping, the

@@ -480,8 +480,9 @@ namespace Robust.Shared.GameObjects
             return found;
         }
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public void FastEntitiesIntersecting(MapId mapId, ref Box2 position, EntityQueryCallback callback)
+        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback)
         {
             if (mapId == MapId.Nullspace)
                 return;

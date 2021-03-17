@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
@@ -15,9 +13,9 @@ namespace Robust.Server.GameStates
 {
     internal class EntityViewCulling
     {
-        private const int ViewSetSize = 128; // starting number of entities that are in view
+        private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
-        private const int MaxVisPoolSize = 256; // Maximum number of pooled objects, this should always be at least the max number of players
+        private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
 
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
@@ -30,16 +28,18 @@ namespace Robust.Server.GameStates
         private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
 
-
-        /// <summary>
-        /// Size of the side of the view bounds square.
-        /// </summary>
-        public float ViewSize { get; set; }
+        private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
+            = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
 
         /// <summary>
         /// Is view culling enabled, or will we send the whole map?
         /// </summary>
         public bool CullingEnabled { get; set; }
+
+        /// <summary>
+        /// Size of the side of the view bounds square.
+        /// </summary>
+        public float ViewSize { get; set; }
 
         public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager)
         {
@@ -67,10 +67,7 @@ namespace Robust.Server.GameStates
             var list = new List<EntityUid>();
             foreach (var (tick, id) in _deletionHistory)
             {
-                if (tick >= fromTick)
-                {
-                    list.Add(id);
-                }
+                if (tick >= fromTick) list.Add(id);
             }
 
             // no point sending an empty collection
@@ -80,7 +77,7 @@ namespace Robust.Server.GameStates
         // Not thread safe
         public void AddPlayer(ICommonSession session)
         {
-            _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetSize));
+            _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetCapacity));
         }
 
         // Not thread safe
@@ -92,20 +89,40 @@ namespace Robust.Server.GameStates
         // thread safe
         public bool IsPointVisible(ICommonSession session, in MapCoordinates position)
         {
-            //TODO: This needs to support multiple bubbles per client
-            //TODO: Visibility checks
+            var viewables = GetSessionViewers(session);
 
-            var bounds = CalcViewBounds(session);
+            foreach (var euid in viewables)
+            {
+                var (viewBox, mapId) = CalcViewBounds(in euid);
 
-            if (bounds is null)
-                return false;
+                if (mapId != position.MapId)
+                    continue;
 
-            var (viewBox, mapId) = bounds.Value;
+                if (!CullingEnabled)
+                    return true;
 
-            if (!CullingEnabled && mapId == position.MapId)
-                return true;
-            
-            return mapId == position.MapId && viewBox.Contains(position.Position);
+                if (viewBox.Contains(position.Position))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
+        {
+            var viewers = _viewerEntsPool.Get();
+            if (session.Status != SessionStatus.InGame || session.AttachedEntityUid is null)
+                return viewers;
+
+            var query = _compMan.EntityQuery<BasicActorComponent>();
+
+            foreach (var actorComp in query)
+            {
+                if (actorComp.playerSession == session)
+                    viewers.Add(actorComp.Owner.Uid);
+            }
+
+            return viewers;
         }
 
         // thread safe
@@ -122,7 +139,7 @@ namespace Robust.Server.GameStates
                 return (allStates, deletions);
             }
 
-            var currentSet = CalcCurrentViewSet(session, fromTick);
+            var currentSet = CalcCurrentViewSet(session);
 
             // If they don't have a usable eye, nothing to send, and map remove will deal with ent removal
             if (currentSet is null)
@@ -158,7 +175,7 @@ namespace Robust.Server.GameStates
                     entityStates.Add(newState);
                 }
             }
-            
+
             // swap out vis sets
             _playerVisibleSets[session] = currentSet;
             previousSet.Clear();
@@ -178,57 +195,58 @@ namespace Robust.Server.GameStates
             foreach (var element in first)
             {
                 if (set.Add(element))
-                {
                     yield return element;
-                }
             }
 
             set.Clear();
             _visSetPool.Return(set);
         }
 
-        private HashSet<EntityUid>? CalcCurrentViewSet(ICommonSession session, GameTick fromTick)
+        private HashSet<EntityUid>? CalcCurrentViewSet(ICommonSession session)
         {
-            var bounds = CalcViewBounds(session);
-
-            if (bounds is null)
-                return null;
-            
-            var (viewBox, mapId) = bounds.Value;
-
-            //TODO: Eye Components
-            if (session.AttachedEntityUid is null ||
-                !_compMan.TryGetComponent<EyeComponent>(session.AttachedEntityUid.Value, out var eyeComp))
+            if (!CullingEnabled)
                 return null;
 
-            var visibilityMask = eyeComp.VisibilityMask;
+            // if you don't have an attached entity, you don't see the world.
+            if (session.AttachedEntityUid is null)
+                return null;
+
             var visibleEnts = _visSetPool.Get();
+            var viewers = GetSessionViewers(session);
 
-            // assume there are no deleted ents in here, cull them first in ent/comp manager
-            _entMan.FastEntitiesIntersecting(mapId, ref viewBox, entity =>
+            foreach (var eyeEuid in viewers)
             {
-                RecursiveAdd(entity.Transform, visibleEnts, visibilityMask);
-            });
+                var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
 
-            // TODO: Need eye-based technology
-            //Always include client AttachedEnt
-            var eyeEnt = session.AttachedEntityUid!; // already verified in CalcBounds
-            visibleEnts.Add(eyeEnt.Value);
+                uint visMask = 0;
+                if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
+                    visMask = eyeComp.VisibilityMask;
 
+                //Always include viewable ent itself
+                visibleEnts.Add(eyeEuid);
+
+                // assume there are no deleted ents in here, cull them first in ent/comp manager
+                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd(entity.Transform, visibleEnts, visMask));
+            }
+
+            //TODO: Don't send every map and grid entity, check bubble
             //Ensure map Critical ents are included
             IncludeMapCriticalEntities(visibleEnts);
 
             return visibleEnts;
         }
 
+        // Read Safe
         private bool RecursiveAdd(ITransformComponent xform, ISet<EntityUid> visSet, uint visMask)
         {
+            var xformUid = xform.Owner.Uid;
+
             // we are done, this ent has already been checked and is visible
-            if(visSet.Contains(xform.Owner.Uid))
+            if (visSet.Contains(xformUid))
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_compMan.TryGetComponent<VisibilityComponent>(xform.Owner.Uid, out var visComp))
+            if (_compMan.TryGetComponent<VisibilityComponent>(xformUid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
@@ -239,7 +257,7 @@ namespace Robust.Server.GameStates
             // this is the world entity, it is always visible
             if (xformParent is null)
             {
-                visSet.Add(xform.Owner.Uid);
+                visSet.Add(xformUid);
                 return true;
             }
 
@@ -248,24 +266,14 @@ namespace Robust.Server.GameStates
                 return false;
 
             // add us
-            visSet.Add(xform.Owner.Uid);
+            visSet.Add(xformUid);
             return true;
         }
 
-        // thread safe
-        private (Box2 view, MapId mapId)? CalcViewBounds(ICommonSession playerSession)
+        // Read Safe
+        private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid)
         {
-            //TODO: This needs to support multiple bubbles per client
-
-            var clientEnt = playerSession.AttachedEntityUid;
-
-            if (clientEnt is null)
-                return null;
-
-            var xform = _compMan.GetComponent<ITransformComponent>(clientEnt.Value);
-
-            if (!CullingEnabled)
-                return (new Box2(), xform.MapID);
+            var xform = _compMan.GetComponent<ITransformComponent>(euid);
 
             var view = Box2.UnitCentered.Scale(ViewSize).Translated(xform.WorldPosition);
             var map = xform.MapID;
@@ -278,33 +286,13 @@ namespace Robust.Server.GameStates
         {
             foreach (var mapId in _mapManager.GetAllMapIds())
             {
-                if (_mapManager.HasMapEntity(mapId))
-                {
-                    set.Add(_mapManager.GetMapEntityId(mapId));
-                }
+                if (_mapManager.HasMapEntity(mapId)) set.Add(_mapManager.GetMapEntityId(mapId));
             }
 
             foreach (var grid in _mapManager.GetAllGrids())
             {
-                if (grid.GridEntityId != EntityUid.Invalid)
-                {
-                    set.Add(grid.GridEntityId);
-                }
+                if (grid.GridEntityId != EntityUid.Invalid) set.Add(grid.GridEntityId);
             }
-        }
-
-        // Read Safe
-        private static void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
-        {
-            set.RemoveWhere(e =>
-            {
-                if (!e.TryGetComponent(out VisibilityComponent? visibility))
-                {
-                    return false;
-                }
-
-                return (visibilityMask & visibility.Layer) == 0;
-            });
         }
     }
 }

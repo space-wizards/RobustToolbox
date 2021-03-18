@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Robust.Shared.GameObjects
 {
     public enum EntityLifeStage
@@ -12,7 +6,15 @@ namespace Robust.Shared.GameObjects
         /// The entity has just been created, and needs to be initialized.
         /// </summary>
         PreInit = 0,
+
+        /// <summary>
+        /// The entity is currently being initialized.
+        /// </summary>
         Initializing,
+
+        /// <summary>
+        /// The entity has been initialized.
+        /// </summary>
         Initialized,
 
         /// <summary>

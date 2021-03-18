@@ -247,9 +247,11 @@ namespace Robust.Shared.GameObjects
         {
             if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
-            
+
             var transform = entity.Transform;
             entity.LifeStage = EntityLifeStage.Terminating;
+
+            EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childTransform in transform.Children.ToArray())
@@ -716,6 +718,11 @@ namespace Robust.Shared.GameObjects
         }
 
     }
+
+    /// <summary>
+    /// The children of this entity are about to be deleted.
+    /// </summary>
+    public class EntityTerminatingEvent : EntityEventArgs { }
 
     public enum EntityMessageType : byte
     {

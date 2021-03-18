@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
@@ -91,21 +92,30 @@ namespace Robust.Server.GameStates
         {
             var viewables = GetSessionViewers(session);
 
-            foreach (var euid in viewables)
+            bool CheckInView(MapCoordinates mapCoordinates, HashSet<EntityUid> entityUids)
             {
-                var (viewBox, mapId) = CalcViewBounds(in euid);
+                foreach (var euid in entityUids)
+                {
+                    var (viewBox, mapId) = CalcViewBounds(in euid);
 
-                if (mapId != position.MapId)
-                    continue;
+                    if (mapId != mapCoordinates.MapId)
+                        continue;
 
-                if (!CullingEnabled)
-                    return true;
+                    if (!CullingEnabled)
+                        return true;
 
-                if (viewBox.Contains(position.Position))
-                    return true;
+                    if (viewBox.Contains(mapCoordinates.Position))
+                        return true;
+                }
+
+                return false;
             }
 
-            return false;
+            bool result = CheckInView(position, viewables);
+
+            viewables.Clear();
+            _viewerEntsPool.Return(viewables);
+            return result;
         }
 
         private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
@@ -130,7 +140,7 @@ namespace Robust.Server.GameStates
         {
             DebugTools.Assert(session.Status == SessionStatus.InGame);
 
-            //TODO: Stop sending all sim entities to every player first tick
+            //TODO: Stop sending all entities to every player first tick
             List<EntityUid>? deletions;
             if (!CullingEnabled || fromTick == GameTick.Zero)
             {
@@ -150,10 +160,12 @@ namespace Robust.Server.GameStates
             var previousSet = _playerVisibleSets[session];
 
             // complement set
-            var leaveSet = ExceptIterator(previousSet, currentSet);
-            foreach (var entityUid in leaveSet)
+            foreach (var entityUid in previousSet)
             {
-                //TODO: PVS Leave Message
+                if (!currentSet.Contains(entityUid))
+                {
+                    //TODO: PVS Leave Message
+                }
             }
 
             foreach (var entityUid in currentSet)
@@ -186,22 +198,6 @@ namespace Robust.Server.GameStates
             return (entityStates, deletions);
         }
 
-        private IEnumerable<EntityUid> ExceptIterator(HashSet<EntityUid> first, HashSet<EntityUid> second)
-        {
-            // Pulled out of linq, figure out a better way
-            HashSet<EntityUid> set = _visSetPool.Get();
-            set.UnionWith(second);
-
-            foreach (var element in first)
-            {
-                if (set.Add(element))
-                    yield return element;
-            }
-
-            set.Clear();
-            _visSetPool.Return(set);
-        }
-
         private HashSet<EntityUid>? CalcCurrentViewSet(ICommonSession session)
         {
             if (!CullingEnabled)
@@ -222,22 +218,27 @@ namespace Robust.Server.GameStates
                 if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
+                //Always include the map entity
+                visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
+
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);
 
+                // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd(entity.Transform, visibleEnts, visMask));
+                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent)entity.Transform, visibleEnts, visMask));
             }
 
-            //TODO: Don't send every map and grid entity, check bubble
-            //Ensure map Critical ents are included
-            IncludeMapCriticalEntities(visibleEnts);
+            viewers.Clear();
+            _viewerEntsPool.Return(viewers);
 
             return visibleEnts;
         }
 
         // Read Safe
-        private bool RecursiveAdd(ITransformComponent xform, ISet<EntityUid> visSet, uint visMask)
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, uint visMask)
         {
             var xformUid = xform.Owner.Uid;
 
@@ -252,16 +253,24 @@ namespace Robust.Server.GameStates
                     return false;
             }
 
-            var xformParent = xform.Parent;
-
+            var xformParentUid = xform.ParentUid;
+            
             // this is the world entity, it is always visible
-            if (xformParent is null)
+            if (!xformParentUid.IsValid())
+            {
+                visSet.Add(xformUid);
+                return true;
+            }
+
+            // parent is already in the set
+            if (visSet.Contains(xformParentUid))
             {
                 visSet.Add(xformUid);
                 return true;
             }
 
             // parent was not added, so we are not either
+            var xformParent = _compMan.GetComponent<TransformComponent>(xformParentUid);
             if (!RecursiveAdd(xformParent, visSet, visMask))
                 return false;
 
@@ -279,20 +288,6 @@ namespace Robust.Server.GameStates
             var map = xform.MapID;
 
             return (view, map);
-        }
-
-        // Read safe
-        private void IncludeMapCriticalEntities(ISet<EntityUid> set)
-        {
-            foreach (var mapId in _mapManager.GetAllMapIds())
-            {
-                if (_mapManager.HasMapEntity(mapId)) set.Add(_mapManager.GetMapEntityId(mapId));
-            }
-
-            foreach (var grid in _mapManager.GetAllGrids())
-            {
-                if (grid.GridEntityId != EntityUid.Invalid) set.Add(grid.GridEntityId);
-            }
         }
     }
 }

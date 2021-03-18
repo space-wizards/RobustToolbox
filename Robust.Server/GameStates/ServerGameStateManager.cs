@@ -206,7 +206,7 @@ namespace Robust.Server.GameStates
             }
 
             var mailBag = _playerManager.GetAllPlayers()
-                .Where(s=>s.Status == SessionStatus.InGame).Select(GenerateMail).ToList();
+                .Where(s=>s.Status == SessionStatus.InGame).Select(GenerateMail);
             
             foreach (var (msg, chan) in mailBag)
             {

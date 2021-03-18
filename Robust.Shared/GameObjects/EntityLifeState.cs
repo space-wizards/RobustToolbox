@@ -18,6 +18,11 @@ namespace Robust.Shared.GameObjects
         Initialized,
 
         /// <summary>
+        /// The map this entity is on has been initialized, so this entity has been as well.
+        /// </summary>
+        MapInitialized,
+
+        /// <summary>
         /// The entity is currently removing all of it's components and is about to be deleted.
         /// </summary>
         Terminating,

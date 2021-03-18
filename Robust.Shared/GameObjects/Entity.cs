@@ -75,7 +75,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool Initialized => EntityLifeStage.Initialized <= LifeStage && LifeStage <= EntityLifeStage.Terminating;
+        public bool Initialized => LifeStage >= EntityLifeStage.Initialized;
 
         /// <inheritdoc />
         public bool Initializing => LifeStage == EntityLifeStage.Initializing;

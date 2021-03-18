@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
+using Robust.Shared.Map;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
@@ -37,7 +39,7 @@ namespace Robust.Shared.Player
     [PublicAPI]
     public class Filter : IFilter
     {
-        private bool _prediction;
+        private bool _prediction = true;
         private List<ICommonSession> _recipients = new();
         private bool _reliable;
 
@@ -59,14 +61,51 @@ namespace Robust.Shared.Player
         /// <summary>
         /// Adds all players inside an entity's PVS.
         /// </summary>
-        protected Filter AddPlayersByPvs(Vector2 origin)
+        protected Filter AddPlayersByPvs(IEntity origin)
         {
-            // Calculate this from the PVS system that does not exist.
-            throw new NotImplementedException();
-
-            //return this;
+            return AddPlayersByPvs(origin.Transform.MapPosition);
         }
 
+        /// <summary>
+        /// Adds all players inside an entity's PVS.
+        /// </summary>
+        protected Filter AddPlayersByPvs(ITransformComponent origin)
+        {
+            return AddPlayersByPvs(origin.MapPosition);
+        }
+
+        /// <summary>
+        /// Adds all players inside an entity's PVS.
+        /// </summary>
+        protected Filter AddPlayersByPvs(EntityCoordinates origin)
+        {
+            var entityMan = IoCManager.Resolve<IEntityManager>();
+            return AddPlayersByPvs(origin.ToMap(entityMan));
+        }
+
+        /// <summary>
+        /// Adds all players inside an entity's PVS.
+        /// </summary>
+        protected Filter AddPlayersByPvs(MapCoordinates origin)
+        {
+            //TODO: Calculate this from the PVS system that does not exist.
+            var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
+
+            const int range = 25;
+            var players = playerMan.NetworkedSessions.Where(x =>
+                x.AttachedEntity != null && origin.InRange(x.AttachedEntity.Transform.MapPosition, range));
+
+            foreach (var session in players)
+            {
+                AddPlayer(session);
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a set of players to the filter.
+        /// </summary>
         public Filter AddPlayers(IEnumerable<ICommonSession> players)
         {
             foreach (var player in players)
@@ -98,6 +137,9 @@ namespace Robust.Shared.Player
             return this;
         }
 
+        /// <summary>
+        /// Removes all players from the filter that match a predicate.
+        /// </summary>
         public Filter RemoveWhere(Predicate<ICommonSession> predicate)
         {
             for (int i = 0; i < _recipients.Count; i++)
@@ -114,6 +156,9 @@ namespace Robust.Shared.Player
             return this;
         }
 
+        /// <summary>
+        /// Adds all players that match a predicate.
+        /// </summary>
         public Filter AddWhere(Predicate<ICommonSession> predicate)
         {
             var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
@@ -129,11 +174,13 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        /// This filter will properly be handled by prediction.
+        /// Normally a filter will properly handle client side prediction. Calling this
+        /// function disables that, and the event will be spammed during every prediction
+        /// tick.
         /// </summary>
-        public Filter HandlePrediction()
+        public Filter Unpredicted()
         {
-            _prediction = true;
+            _prediction = false;
             return this;
         }
 
@@ -171,10 +218,35 @@ namespace Robust.Shared.Player
             return Empty().AddAllPlayers();
         }
 
+
+        /// <summary>
+        /// A filter with every player who's PVS overlaps this entity.
+        /// </summary>
+        public static Filter Pvs(IEntity origin)
+        {
+            return Empty().AddPlayersByPvs(origin);
+        }
+
         /// <summary>
         /// A filter with every player who's PVS overlaps this point.
         /// </summary>
-        public static Filter Pvs(Vector2 origin)
+        public static Filter Pvs(ITransformComponent origin)
+        {
+            return Empty().AddPlayersByPvs(origin);
+        }
+
+        /// <summary>
+        /// A filter with every player who's PVS overlaps this point.
+        /// </summary>
+        public static Filter Pvs(EntityCoordinates origin)
+        {
+            return Empty().AddPlayersByPvs(origin);
+        }
+
+        /// <summary>
+        /// A filter with every player who's PVS overlaps this point.
+        /// </summary>
+        public static Filter Pvs(MapCoordinates origin)
         {
             return Empty().AddPlayersByPvs(origin);
         }

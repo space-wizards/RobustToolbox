@@ -233,6 +233,13 @@ namespace Robust.Shared.GameObjects
             if (e.Deleted)
                 return;
 
+            if (e.LifeStage >= EntityLifeStage.Terminating)
+#if !EXCEPTION_TOLERANCE
+                throw new InvalidOperationException("Called Delete on an entity already being deleted.");
+#else
+                return;
+#endif
+
             RecursiveDeleteEntity(e);
         }
 
@@ -240,8 +247,11 @@ namespace Robust.Shared.GameObjects
         {
             if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
-            
+
             var transform = entity.Transform;
+            entity.LifeStage = EntityLifeStage.Terminating;
+
+            EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childTransform in transform.Children.ToArray())
@@ -260,7 +270,7 @@ namespace Robust.Shared.GameObjects
                 transform.DetachParentToNull();
             }
 
-            entity.Shutdown();
+            entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
         }
         
@@ -708,6 +718,11 @@ namespace Robust.Shared.GameObjects
         }
 
     }
+
+    /// <summary>
+    /// The children of this entity are about to be deleted.
+    /// </summary>
+    public class EntityTerminatingEvent : EntityEventArgs { }
 
     public enum EntityMessageType : byte
     {

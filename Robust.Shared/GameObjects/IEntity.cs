@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Network;
@@ -30,6 +30,12 @@ namespace Robust.Shared.GameObjects
         ///     and correspond to counterparts across the network.
         /// </summary>
         EntityUid Uid { get; }
+
+        /// <summary>
+        ///     The current lifetime stage of this entity. You can use this to check
+        ///     if the entity is initialized or being deleted.
+        /// </summary>
+        EntityLifeStage LifeStage { get; internal set; }
 
         /// <summary>
         ///     Whether this entity has fully initialized.
@@ -182,13 +188,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="netId">The component net ID to attempt to fetch.</param>
         /// <returns>The component, if it was found. Null otherwise.</returns>
         IComponent? GetComponentOrNull(uint netId);
-
-        /// <summary>
-        ///     Used by the entity manager to delete the entity.
-        ///     Do not call directly. If you want to delete entities,
-        ///     see <see cref="Delete" />.
-        /// </summary>
-        void Shutdown();
 
         /// <summary>
         ///     Deletes this entity.

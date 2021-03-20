@@ -1,4 +1,4 @@
-using System;
+using System.Diagnostics;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.IoC;
@@ -14,7 +14,7 @@ namespace Robust.Server.Prototypes
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConGroupController _conGroups = default!;
 
-        public ServerPrototypeManager() : base()
+        public ServerPrototypeManager()
         {
             RegisterIgnore("shader");
         }
@@ -35,14 +35,11 @@ namespace Robust.Server.Prototypes
                 return;
             }
 
-            var then = DateTime.Now;
+            var sw = Stopwatch.StartNew();
 
-            foreach (var path in msg.Paths)
-            {
-                ReloadPrototypes(path);
-            }
+            ReloadPrototypes(msg.Paths);
 
-            Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
+            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
 

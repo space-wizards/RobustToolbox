@@ -586,7 +586,7 @@ namespace Robust.Shared.Serialization.Manager
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null || target == null) return null;
+            if (source == null || target == null) return source;
             var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
             if (commonType == null)
             {

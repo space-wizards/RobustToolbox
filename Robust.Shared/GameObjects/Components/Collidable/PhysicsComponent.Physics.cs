@@ -117,7 +117,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     SetAwake(true);
-                }     
+                }
 
                 Force = Vector2.Zero;
                 Torque = 0.0f;
@@ -147,8 +147,8 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType == BodyType.Static) return;
-                
-                SetAwake(_awake);
+
+                SetAwake(value);
             }
         }
 

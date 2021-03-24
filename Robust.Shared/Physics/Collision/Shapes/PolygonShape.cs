@@ -30,7 +30,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
@@ -76,13 +76,14 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 }
 
                 // Compute the polygon mass data
-                // ComputeProperties();
+                // TODO: Update fixture. Maybe use events for it? Who tf knows.
+                // If we get grid polys then we'll actually need runtime updating of bbs.
             }
         }
 
         private List<Vector2> _vertices = new();
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadOnly)]
         public List<Vector2> Normals => _normals;
 
         private List<Vector2> _normals = new();
@@ -100,6 +101,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             {
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
+                // TODO: Update
             }
         }
 
@@ -128,11 +130,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             };
         }
 
-        void ISerializationHooks.AfterDeserialization()
-        {
-            // ComputeProperties();
-        }
-
         /// <summary>
         ///     A temporary optimisation that bypasses GiftWrapping until we get proper AABB and Rect collisions
         /// </summary>
@@ -149,7 +146,6 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public bool Equals(IPhysShape? other)
         {
-            // TODO: Could use casts for AABB and Rect
             if (other is not PolygonShape poly) return false;
             if (_vertices.Count != poly.Vertices.Count) return false;
             for (var i = 0; i < _vertices.Count; i++)

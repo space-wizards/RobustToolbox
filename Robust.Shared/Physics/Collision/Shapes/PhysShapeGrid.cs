@@ -1,13 +1,13 @@
 ﻿using System;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Map
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     /// <summary>
     /// A physics shape that represents a <see cref="MapGrid"/>.
@@ -17,6 +17,34 @@ namespace Robust.Shared.Map
     public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
         public int ChildCount => 1;
+
+        /// <summary>
+        /// Gets or sets the density.
+        /// Changing the density causes a recalculation of shape properties.
+        /// </summary>
+        public float Density
+        {
+            get => _density;
+            set
+            {
+                if (MathHelper.CloseTo(value, _density)) return;
+
+                _density = value;
+                // TODO: ONCHANGE
+                ComputeProperties();
+            }
+        }
+
+        [DataField("density")]
+        private float _density;
+
+        public MassData MassData
+        {
+            get => _massData;
+            private set => _massData = value;
+        }
+
+        private MassData _massData;
 
         public Box2 LocalBounds => _mapGrid.LocalBounds;
 
@@ -31,6 +59,7 @@ namespace Robust.Shared.Map
             {
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
+                ComputeProperties();
             }
         }
 
@@ -47,6 +76,11 @@ namespace Robust.Shared.Map
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
             _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
+        }
+
+        public void ComputeProperties()
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

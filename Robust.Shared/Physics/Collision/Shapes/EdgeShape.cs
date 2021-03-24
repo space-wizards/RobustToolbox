@@ -27,7 +27,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
@@ -65,6 +65,34 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         public int ChildCount => 1;
 
+        /// <summary>
+        /// Gets or sets the density.
+        /// Changing the density causes a recalculation of shape properties.
+        /// </summary>
+        public float Density
+        {
+            get => _density;
+            set
+            {
+                if (MathHelper.CloseTo(value, _density)) return;
+
+                _density = value;
+                // TODO: ONCHANGE
+                ComputeProperties();
+            }
+        }
+
+        [DataField("density")]
+        private float _density;
+
+        public MassData MassData
+        {
+            get => _massData;
+            private set => _massData = value;
+        }
+
+        private MassData _massData;
+
         public bool OneSided => !(HasVertex0 && HasVertex3);
 
         public float Radius
@@ -74,7 +102,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             {
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
-
+                ComputeProperties();
             }
         }
 
@@ -105,7 +133,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             HasVertex0 = false;
             HasVertex3 = false;
 
-            // TODO ComputeProperties();
+            ComputeProperties();
         }
 
         public bool Equals(IPhysShape? other)
@@ -131,6 +159,17 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 TopRight = upper + r
             };
             return aabb;
+        }
+
+        public float CalculateArea()
+        {
+            // It's a line
+            return 0f;
+        }
+
+        public void ComputeProperties()
+        {
+            _massData.Centroid = (Vertex1 + Vertex2) * 0.5f;
         }
 
         public void ApplyState()

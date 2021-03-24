@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     /// <summary>
     /// A physics shape that represents a circle. The circle cannot be rotated,
@@ -15,12 +15,57 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     public class PhysShapeCircle : IPhysShape
     {
         public int ChildCount => 1;
+
+        /// <summary>
+        /// Gets or sets the density.
+        /// Changing the density causes a recalculation of shape properties.
+        /// </summary>
+        public float Density
+        {
+            get => _density;
+            set
+            {
+                if (MathHelper.CloseTo(value, _density)) return;
+
+                _density = value;
+                // TODO: ONCHANGE
+                ComputeProperties();
+            }
+        }
+
+        [DataField("density")]
+        private float _density;
+
+        public MassData MassData
+        {
+            get => _massData;
+            private set => _massData = value;
+        }
+
+        private MassData _massData;
+
         public ShapeType ShapeType => ShapeType.Circle;
 
         private const float DefaultRadius = 0.5f;
 
         [DataField("radius")]
         private float _radius = DefaultRadius;
+
+        /// <summary>
+        /// Get or set the position of the circle
+        /// </summary>
+        public Vector2 Position
+        {
+            get => _position;
+            set
+            {
+                _position = value;
+                ComputeProperties(); //TODO: Optimize here
+            }
+        }
+
+        [DataField("position")]
+        private Vector2 _position;
 
         /// <inheritdoc />
         [field: NonSerialized]
@@ -38,6 +83,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
+                ComputeProperties();
             }
         }
 
@@ -45,6 +91,21 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return new(-_radius, -_radius, _radius, _radius);
+        }
+
+        public float CalculateArea()
+        {
+            return MathF.PI * _radius * _radius;
+        }
+
+        public void ComputeProperties()
+        {
+            var area = CalculateArea();
+            _massData.Mass = Density * area;
+            _massData.Centroid = Position;
+
+            // inertia about the local origin
+            _massData.Inertia = MassData.Mass * (0.5f * _radius * _radius + Vector2.Dot(Position, Position));
         }
 
         /// <inheritdoc />

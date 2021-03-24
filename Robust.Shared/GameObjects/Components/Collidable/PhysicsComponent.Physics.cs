@@ -117,7 +117,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     Awake = true;
-                }     
+                }
 
                 Force = Vector2.Zero;
                 Torque = 0.0f;
@@ -251,14 +251,21 @@ namespace Robust.Shared.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
+            {
+                _invMass = 1.0f / _mass;
+            }
+
+            // So inertia is calculated based on mass. "Ideally" you'd use the density values on fixtures and have that calculate inertia,
+            // but when you have a fixed-mass that sounds like CBT hence we do this which is way easier.
+            // Could also look at having a mass serializable field on fixtures
+            var totalArea = 0.0f;
+            var hardFixtures = new List<(Fixture Fixture, float Area)>();
+
             foreach (var fixture in _fixtures)
             {
                 fixture.Body = this;
-            }
-
-            if (_mass > 0f && (BodyType & BodyType.Dynamic | BodyType.KinematicController) != 0)
-            {
-                _invMass = 1.0f / _mass;
+                fixture.ComputeProperties();
             }
         }
 
@@ -346,6 +353,7 @@ namespace Robust.Shared.GameObjects
 
             var toAdd = new List<Fixture>();
             var toRemove = new List<Fixture>();
+            var computeProperties = false;
 
             // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
             for (var i = 0; i < newState.Fixtures.Count; i++)
@@ -372,13 +380,17 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            // When we get actual diffing and shit will need to check computeproperties more carefully.
+
             foreach (var fixture in toRemove)
             {
+                computeProperties = true;
                 RemoveFixture(fixture);
             }
 
             foreach (var fixture in toAdd)
             {
+                computeProperties = true;
                 AddFixture(fixture);
                 fixture.Shape.ApplyState();
             }
@@ -388,8 +400,10 @@ namespace Robust.Shared.GameObjects
              */
 
             Dirty();
-            // TODO: Should transform just be doing this??? UpdateEntityTree();
-            Mass = newState.Mass / 1000f; // gram to kilogram
+            if (computeProperties)
+            {
+                ResetMassData();
+            }
 
             LinearVelocity = newState.LinearVelocity;
             // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
@@ -539,34 +553,14 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool HasProxies { get; set; }
 
+        // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
         ///     Current mass of the entity in kilograms.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Mass
-        {
-            get => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
-            set
-            {
-                DebugTools.Assert(!float.IsNaN(value));
+        public float Mass => (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0 ? _mass : 0.0f;
 
-                if (MathHelper.CloseTo(_mass, value))
-                    return;
-
-                // Box2D blocks it if it's dynamic but in case objects can flip-flop between dynamic and static easily via anchoring.
-                // So we may as well support it and just guard the InvMass get
-                _mass = value;
-
-                if (_mass <= 0.0f)
-                    _mass = 1.0f;
-
-                _invMass = 1.0f / _mass;
-                Dirty();
-            }
-        }
-
-        [DataField("mass")]
-        private float _mass = 1.0f;
+        private float _mass;
 
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).
@@ -1207,9 +1201,13 @@ namespace Robust.Shared.GameObjects
 
             foreach (var fixture in Fixtures)
             {
-                // TODO: Density
-                continue;
-                // if (fixture.Shape.Density == 0.0f)
+                if (fixture.Mass <= 0.0f) continue;
+
+                var fixMass = fixture.Mass;
+
+                _mass += fixMass;
+                localCenter += fixture.Centroid * fixMass;
+                _inertia += fixture.Inertia;
             }
 
             if (BodyType == BodyType.Static)

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -8,7 +6,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     /// <summary>
     /// A physics shape that represents an OBB.
@@ -22,6 +20,34 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         public int ChildCount => 1;
 
         /// <summary>
+        /// Gets or sets the density.
+        /// Changing the density causes a recalculation of shape properties.
+        /// </summary>
+        public float Density
+        {
+            get => _density;
+            set
+            {
+                if (MathHelper.CloseTo(value, _density)) return;
+
+                _density = value;
+                // TODO: ONCHANGE
+                ComputeProperties();
+            }
+        }
+
+        [DataField("density")]
+        private float _density;
+
+        public MassData MassData
+        {
+            get => _massData;
+            private set => _massData = value;
+        }
+
+        private MassData _massData;
+
+        /// <summary>
         /// The radius of this AABB
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -33,6 +59,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
+                ComputeProperties();
             }
         }
 
@@ -48,6 +75,11 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
 
         [ViewVariables]
         private Box2 _cachedBounds;
+
+        public void ComputeProperties()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <inheritdoc />
         public void ApplyState() { }

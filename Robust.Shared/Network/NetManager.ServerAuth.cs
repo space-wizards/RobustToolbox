@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
 using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
@@ -138,7 +137,8 @@ namespace Robust.Shared.Network
                     var userId = new NetUserId(joinedRespJson.UserData!.UserId);
                     userData = new NetUserData(userId, joinedRespJson.UserData.UserName)
                     {
-                        PatronTier = joinedRespJson.UserData.PatronTier
+                        PatronTier = joinedRespJson.UserData.PatronTier,
+                        HWId = msgLogin.HWId
                     };
                     padSuccessMessage = false;
                     type = LoginType.LoggedIn;
@@ -170,7 +170,10 @@ namespace Robust.Shared.Network
                     NetUserId userId;
                     (userId, type) = await AssignUserIdAsync(name);
 
-                    userData = new NetUserData(userId, name);
+                    userData = new NetUserData(userId, name)
+                    {
+                        HWId = msgLogin.HWId
+                    };
                 }
 
                 var endPoint = connection.RemoteEndPoint;

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
@@ -9,6 +12,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -54,6 +58,20 @@ namespace Robust.Shared.GameObjects
          * Given the kind of game SS14 is (our target game I guess) parallelising the islands will probably be the biggest benefit.
          */
 
+        private static readonly Histogram _tickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
+            "Amount of time spent running a controller's UpdateBeforeSolve", new HistogramConfiguration
+            {
+                LabelNames = new[] {"controller"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
+        private static readonly Histogram _tickUsageControllerAfterSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_after_solve",
+            "Amount of time spent running a controller's UpdateAfterSolve", new HistogramConfiguration
+            {
+                LabelNames = new[] {"controller"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
@@ -63,6 +81,9 @@ namespace Robust.Shared.GameObjects
         private List<VirtualController> _controllers = new();
 
         public Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
+
+        public bool MetricsEnabled;
+        private readonly Stopwatch _stopwatch = new();
 
         public override void Initialize()
         {
@@ -86,6 +107,7 @@ namespace Robust.Shared.GameObjects
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
         }
+
 
         private void BuildControllers()
         {
@@ -133,6 +155,8 @@ namespace Robust.Shared.GameObjects
 
             foreach (var controller in _controllers)
             {
+                controller.BeforeMonitor = _tickUsageControllerBeforeSolveHistogram.WithLabels(controller.GetType().Name);
+                controller.AfterMonitor = _tickUsageControllerAfterSolveHistogram.WithLabels(controller.GetType().Name);
                 controller.Initialize();
             }
         }
@@ -258,7 +282,15 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var controller in _controllers)
             {
+                if (MetricsEnabled)
+                {
+                    _stopwatch.Restart();
+                }
                 controller.UpdateBeforeSolve(prediction, deltaTime);
+                if (MetricsEnabled)
+                {
+                    controller.BeforeMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
+                }
             }
 
             foreach (var (mapId, map) in _maps)
@@ -269,7 +301,15 @@ namespace Robust.Shared.GameObjects
 
             foreach (var controller in _controllers)
             {
+                if (MetricsEnabled)
+                {
+                    _stopwatch.Restart();
+                }
                 controller.UpdateAfterSolve(prediction, deltaTime);
+                if (MetricsEnabled)
+                {
+                    controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
+                }
             }
 
             // Go through and run all of the deferred events now

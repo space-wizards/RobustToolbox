@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
 using Robust.Client.Graphics;
@@ -181,8 +181,6 @@ namespace Robust.Client.UserInterface
 
         public void FrameUpdate(FrameEventArgs args)
         {
-            RootControl.DoFrameUpdate(args);
-
             // Process queued style & layout updates.
             while (_styleUpdateQueue.Count != 0)
             {
@@ -219,6 +217,8 @@ namespace Robust.Client.UserInterface
 
                 RunArrange(control);
             }
+
+            RootControl.DoFrameUpdate(args);
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it

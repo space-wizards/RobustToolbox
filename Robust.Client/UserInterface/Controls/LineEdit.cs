@@ -556,7 +556,11 @@ namespace Robust.Client.UserInterface.Controls
 
                 _cursorPosition += 1;
 
-                if (char.IsLowSurrogate(_text[_cursorPosition]))
+                // Before you confuse yourself on "shouldn't this be high surrogate since shifting left checks low"
+                // (Because yes, I did myself too a week after writing it)
+                // char.IsLowSurrogate(_text[_cursorPosition]) means "is the cursor between a surrogate pair"
+                // because we ALREADY moved.
+                if (_cursorPosition != _text.Length && char.IsLowSurrogate(_text[_cursorPosition]))
                     _cursorPosition += 1;
             }
         }

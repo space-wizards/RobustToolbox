@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Create update order for entity systems.
-            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values);
+            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values, _supertypeSystems);
 
             _frameUpdateOrder = fUpdate.ToArray();
             _updateOrder = update
@@ -156,7 +156,9 @@ namespace Robust.Shared.GameObjects
         }
 
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
-            CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
+            CalculateUpdateOrder(
+                Dictionary<Type, IEntitySystem>.ValueCollection systems,
+                Dictionary<Type, IEntitySystem> supertypeSystems)
         {
             var allNodes = new List<GraphNode<IEntitySystem>>();
             var typeToNode = new Dictionary<Type, GraphNode<IEntitySystem>>();
@@ -167,6 +169,12 @@ namespace Robust.Shared.GameObjects
 
                 allNodes.Add(node);
                 typeToNode.Add(system.GetType(), node);
+            }
+
+            foreach (var (type, system) in supertypeSystems)
+            {
+                var node = typeToNode[system.GetType()];
+                typeToNode[type] = node;
             }
 
             foreach (var node in allNodes)

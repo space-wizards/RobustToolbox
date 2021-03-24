@@ -26,7 +26,6 @@ namespace Robust.UnitTesting.Shared.Localization
             res.MountString("/Prototypes/a.yml", YAMLCode);
 
             IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
-            IoCManager.Resolve<IPrototypeManager>().ReloadPrototypes(new ResourcePath("/Prototypes/a.yml"));
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);

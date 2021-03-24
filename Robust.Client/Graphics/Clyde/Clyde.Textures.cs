@@ -26,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -37,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);

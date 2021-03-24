@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -2085,6 +2085,7 @@ namespace Robust.Client.GameObjects
             public IEntityManager EntityManager { get; } = null!;
             public string Name { get; set; } = string.Empty;
             public EntityUid Uid { get; } = EntityUid.Invalid;
+            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
             public bool Initialized { get; } = false;
             public bool Initializing { get; } = false;
             public bool Deleted { get; } = true;
@@ -2101,6 +2102,7 @@ namespace Robust.Client.GameObjects
             public IMetaDataComponent MetaData { get; } = null!;
 
             private Dictionary<Type, IComponent> _components = new();
+            private EntityLifeStage _lifeStage;
 
             public T AddComponent<T>() where T : Component, new()
             {
@@ -2189,11 +2191,7 @@ namespace Robust.Client.GameObjects
             {
                 return null;
             }
-
-            public void Shutdown()
-            {
-            }
-
+            
             public void Delete()
             {
             }

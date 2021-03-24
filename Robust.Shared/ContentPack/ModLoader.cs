@@ -345,7 +345,7 @@ namespace Robust.Shared.ContentPack
             // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
             if (_useLoadContext)
             {
-                Logger.DebugS("res.mod", $"RESOLVING DEFAULT: {name}");
+                _logManager.GetSawmill("res.mod").Debug($"RESOLVING DEFAULT: {name}");
                 foreach (var module in LoadedModules)
                 {
                     if (module.GetName().Name == name.Name)

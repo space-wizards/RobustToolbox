@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -53,20 +54,17 @@ namespace Robust.Client.Prototypes
         private void ReloadPrototypeQueue()
         {
 #if !FULL_RELEASE
-            var then = DateTime.Now;
+            var sw = Stopwatch.StartNew();
 
             var msg = NetManager.CreateNetMessage<MsgReloadPrototypes>();
             msg.Paths = _reloadQueue.ToArray();
             NetManager.ClientSendMessage(msg);
 
-            foreach (var path in _reloadQueue)
-            {
-                ReloadPrototypes(path);
-            }
+            ReloadPrototypes(_reloadQueue);
 
             _reloadQueue.Clear();
 
-            Logger.Info($"Reloaded prototypes in {(int) (DateTime.Now - then).TotalMilliseconds} ms");
+            Logger.Info($"Reloaded prototypes in {sw.ElapsedMilliseconds} ms");
 #endif
         }
 

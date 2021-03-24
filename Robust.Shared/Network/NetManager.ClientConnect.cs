@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,7 +13,6 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
 
@@ -130,11 +130,13 @@ namespace Robust.Shared.Network
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
+            var hwId = ImmutableArray.Create(HWId.Calc());
             var msgLogin = new MsgLoginStart
             {
                 UserName = userNameRequest,
                 CanAuth = authenticate,
-                NeedPubKey = !hasPubKey
+                NeedPubKey = !hasPubKey,
+                HWId = hwId
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -205,7 +207,7 @@ namespace Robust.Shared.Network
             var msgSuc = new MsgLoginSuccess();
             msgSuc.ReadFromBuffer(response);
 
-            var channel = new NetChannel(this, connection, msgSuc.UserData, msgSuc.Type);
+            var channel = new NetChannel(this, connection, msgSuc.UserData with { HWId = hwId }, msgSuc.Type);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 

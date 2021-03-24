@@ -16,5 +16,6 @@ namespace Robust.Shared.GameObjects
         public const uint OCCLUDER = 26;
         public const uint EYE = 28;
         public const uint GRAMMAR = 29;
+        public const uint COLLISION_WAKE = 30;
     }
 }

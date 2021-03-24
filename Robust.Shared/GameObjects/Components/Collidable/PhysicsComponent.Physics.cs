@@ -117,7 +117,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     SetAwake(true);
-                }     
+                }
 
                 Force = Vector2.Zero;
                 Torque = 0.0f;
@@ -147,8 +147,8 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType == BodyType.Static) return;
-                
-                SetAwake(_awake);
+
+                SetAwake(value);
             }
         }
 
@@ -256,21 +256,17 @@ namespace Robust.Shared.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
-            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
-            {
-                _invMass = 1.0f / _mass;
-            }
-
-            // So inertia is calculated based on mass. "Ideally" you'd use the density values on fixtures and have that calculate inertia,
-            // but when you have a fixed-mass that sounds like CBT hence we do this which is way easier.
-            // Could also look at having a mass serializable field on fixtures
-            var totalArea = 0.0f;
-            var hardFixtures = new List<(Fixture Fixture, float Area)>();
-
             foreach (var fixture in _fixtures)
             {
                 fixture.Body = this;
                 fixture.ComputeProperties();
+            }
+
+            ResetMassData();
+
+            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
+            {
+                _invMass = 1.0f / _mass;
             }
         }
 
@@ -1189,22 +1185,20 @@ namespace Robust.Shared.GameObjects
 
         public void ResetMassData()
         {
-            // _mass = 0.0f;
-            // _invMass = 0.0f;
+            _mass = 0.0f;
+            _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
             // Sweep
 
-            if ((BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0)
+            if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
             {
                 return;
             }
 
-            DebugTools.Assert(BodyType == BodyType.Dynamic || BodyType == BodyType.Static);
-
             var localCenter = Vector2.Zero;
 
-            foreach (var fixture in Fixtures)
+            foreach (var fixture in _fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 

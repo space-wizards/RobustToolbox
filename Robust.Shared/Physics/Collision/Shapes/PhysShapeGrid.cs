@@ -18,34 +18,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
     {
         public int ChildCount => 1;
 
-        /// <summary>
-        /// Gets or sets the density.
-        /// Changing the density causes a recalculation of shape properties.
-        /// </summary>
-        public float Density
-        {
-            get => _density;
-            set
-            {
-                if (MathHelper.CloseTo(value, _density)) return;
-
-                _density = value;
-                // TODO: ONCHANGE
-                ComputeProperties();
-            }
-        }
-
-        [DataField("density")]
-        private float _density;
-
-        public MassData MassData
-        {
-            get => _massData;
-            private set => _massData = value;
-        }
-
-        private MassData _massData;
-
         public Box2 LocalBounds => _mapGrid.LocalBounds;
 
         /// <summary>

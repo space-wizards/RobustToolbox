@@ -20,34 +20,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public int ChildCount => 1;
 
         /// <summary>
-        /// Gets or sets the density.
-        /// Changing the density causes a recalculation of shape properties.
-        /// </summary>
-        public float Density
-        {
-            get => _density;
-            set
-            {
-                if (MathHelper.CloseTo(value, _density)) return;
-
-                _density = value;
-                // TODO: ONCHANGE
-                ComputeProperties();
-            }
-        }
-
-        [DataField("density")]
-        private float _density;
-
-        public MassData MassData
-        {
-            get => _massData;
-            private set => _massData = value;
-        }
-
-        private MassData _massData;
-
-        /// <summary>
         /// The radius of this AABB
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -59,7 +31,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
-                ComputeProperties();
+                // ComputeProperties();
             }
         }
 
@@ -67,19 +39,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public ShapeType ShapeType => ShapeType.Rectangle;
 
+        /// <summary>
+        ///     The actual bounds of the rectangle. You probably want to use CachedBounds as it has the rotation applied.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField("bounds")]
-        private Box2 _rectangle = Box2.UnitCentered;
+        internal Box2 Rectangle = Box2.UnitCentered;
 
         public Box2 CachedBounds => _cachedBounds;
 
         [ViewVariables]
         private Box2 _cachedBounds;
-
-        public void ComputeProperties()
-        {
-            throw new NotImplementedException();
-        }
 
         /// <inheritdoc />
         public void ApplyState() { }
@@ -89,7 +59,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             var rotationMatrix = Matrix3.CreateRotation(Math.PI);
             handle.SetTransform(rotationMatrix * modelMatrix);
-            handle.DrawRect(_rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
+            handle.DrawRect(Rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 
@@ -98,14 +68,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            _cachedBounds = new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
+            _cachedBounds = new Box2Rotated(Rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);
             return _cachedBounds;
         }
 
         public bool Equals(IPhysShape? other)
         {
             if (other is not PhysShapeRect rect) return false;
-            return _rectangle.EqualsApprox(rect._rectangle);
+            return Rectangle.EqualsApprox(rect.Rectangle);
         }
     }
 }

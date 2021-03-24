@@ -134,8 +134,9 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Mass of the fixture. The sum of these is the mass of the body.
         /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
         [DataField("mass")]
-        public float Mass { get; } = 1.0f;
+        public float Mass { get; private set; } = 1.0f;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -430,7 +431,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void ComputeRect(PhysShapeRect rect)
         {
-            var area = rect.CachedBounds.Width * rect.CachedBounds.Height;
+            var area = rect.Rectangle.Width * rect.Rectangle.Height;
             float I = 0.0f;
 
             //The area is too small for the engine to handle.

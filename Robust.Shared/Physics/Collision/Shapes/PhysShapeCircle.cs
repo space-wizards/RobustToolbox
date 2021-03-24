@@ -16,34 +16,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
     {
         public int ChildCount => 1;
 
-        /// <summary>
-        /// Gets or sets the density.
-        /// Changing the density causes a recalculation of shape properties.
-        /// </summary>
-        public float Density
-        {
-            get => _density;
-            set
-            {
-                if (MathHelper.CloseTo(value, _density)) return;
-
-                _density = value;
-                // TODO: ONCHANGE
-                ComputeProperties();
-            }
-        }
-
-        [DataField("density")]
-        private float _density;
-
-        public MassData MassData
-        {
-            get => _massData;
-            private set => _massData = value;
-        }
-
-        private MassData _massData;
-
         public ShapeType ShapeType => ShapeType.Circle;
 
         private const float DefaultRadius = 0.5f;
@@ -60,7 +32,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             set
             {
                 _position = value;
-                ComputeProperties(); //TODO: Optimize here
+                //ComputeProperties(); //TODO: Optimize here
             }
         }
 
@@ -83,7 +55,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
-                ComputeProperties();
             }
         }
 
@@ -96,16 +67,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public float CalculateArea()
         {
             return MathF.PI * _radius * _radius;
-        }
-
-        public void ComputeProperties()
-        {
-            var area = CalculateArea();
-            _massData.Mass = Density * area;
-            _massData.Centroid = Position;
-
-            // inertia about the local origin
-            _massData.Inertia = MassData.Mass * (0.5f * _radius * _radius + Vector2.Dot(Position, Position));
         }
 
         /// <inheritdoc />

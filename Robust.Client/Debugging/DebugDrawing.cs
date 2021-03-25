@@ -161,6 +161,8 @@ namespace Robust.Client.Debugging
                 if (viewport.IsEmpty()) return;
 
                 var mapId = _eyeManager.CurrentMap;
+                var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
+                var colorEdge = Color.Red.WithAlpha(0.33f);
 
                 foreach (var physBody in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
@@ -169,9 +171,6 @@ namespace Robust.Client.Debugging
 
                     var worldBox = physBody.GetWorldAABB();
                     if (worldBox.IsEmpty()) continue;
-
-                    var colorEdge = Color.Red.WithAlpha(0.33f);
-                    var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
 
                     foreach (var fixture in physBody.Fixtures)
                     {

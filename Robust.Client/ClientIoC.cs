@@ -27,8 +27,6 @@ using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Client
 {
@@ -66,8 +64,6 @@ namespace Robust.Client
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IConsoleHost, ClientConsoleHost>();
-            IoCManager.Register<IFontManager, FontManager>();
-            IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
             switch (mode)
@@ -94,8 +90,9 @@ namespace Robust.Client
                     throw new ArgumentOutOfRangeException();
             }
 
+            IoCManager.Register<IFontManager, FontManager>();
+            IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
-
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IOverlayManagerInternal, OverlayManager>();

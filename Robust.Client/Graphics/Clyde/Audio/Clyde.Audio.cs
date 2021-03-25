@@ -53,7 +53,7 @@ namespace Robust.Client.Graphics.Clyde
 
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
-            _configurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
+            ConfigurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
         }
 
         private void _audioCreateContext()
@@ -81,7 +81,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _audioOpenDevice()
         {
-            var preferredDevice = _configurationManager.GetCVar(CVars.AudioDevice);
+            var preferredDevice = ConfigurationManager.GetCVar(CVars.AudioDevice);
 
             // Open device.
             if (!string.IsNullOrEmpty(preferredDevice))

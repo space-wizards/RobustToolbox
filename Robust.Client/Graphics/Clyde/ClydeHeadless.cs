@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -36,6 +36,13 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
+        
+        public event Action<TextEventArgs>? TextEntered;
+        public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<KeyEventArgs>? KeyUp;
+        public event Action<KeyEventArgs>? KeyDown;
+        public event Action<MouseWheelEventArgs>? MouseWheel;
+        public event Action<string>? CloseWindow;
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {

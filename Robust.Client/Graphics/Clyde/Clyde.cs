@@ -87,7 +87,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.Initialize();
 
-            _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+            ConfigurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
             {
@@ -124,9 +124,9 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
-            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
-            _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
+            _lightmapDivider = ConfigurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = ConfigurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
+            _enableSoftShadows = ConfigurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
         protected override void ReloadConfig()
@@ -238,7 +238,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
+            var overrideGLVersion = ConfigurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;

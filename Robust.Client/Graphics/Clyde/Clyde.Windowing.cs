@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -72,6 +72,13 @@ namespace Robust.Client.Graphics.Clyde
         private Thread? _mainThread;
 
         private Vector2 _lastMousePos;
+
+        public event Action<TextEventArgs>? TextEntered;
+        public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<KeyEventArgs>? KeyUp;
+        public event Action<KeyEventArgs>? KeyDown;
+        public event Action<MouseWheelEventArgs>? MouseWheel;
+        public event Action<string>? CloseWindow;
 
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
@@ -155,8 +162,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindow()
         {
-            var width = _configurationManager.GetCVar(CVars.DisplayWidth);
-            var height = _configurationManager.GetCVar(CVars.DisplayHeight);
+            var width = ConfigurationManager.GetCVar(CVars.DisplayWidth);
+            var height = ConfigurationManager.GetCVar(CVars.DisplayHeight);
 
             Monitor* monitor = null;
 
@@ -174,7 +181,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
             GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
 
-            var renderer = (Renderer) _configurationManager.GetCVar<int>(CVars.DisplayRenderer);
+            var renderer = (Renderer) ConfigurationManager.GetCVar<int>(CVars.DisplayRenderer);
 
             Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
                 Renderer.OpenGL33,
@@ -397,7 +404,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             try
             {
-                _gameController.TextEntered(new TextEventArgs(codepoint));
+                TextEntered?.Invoke(new TextEventArgs(codepoint));
             }
             catch (Exception e)
             {
@@ -413,8 +420,7 @@ namespace Robust.Client.Graphics.Clyde
                 var delta = newPos - _lastMousePos;
                 _lastMousePos = newPos;
 
-                var ev = new MouseMoveEventArgs(delta, newPos);
-                _gameController.MouseMove(ev);
+                MouseMove?.Invoke(new MouseMoveEventArgs(delta, newPos));
             }
             catch (Exception e)
             {
@@ -461,11 +467,11 @@ namespace Robust.Client.Graphics.Clyde
             switch (action)
             {
                 case InputAction.Release:
-                    _gameController.KeyUp(ev);
+                    KeyUp?.Invoke(ev);
                     break;
                 case InputAction.Press:
                 case InputAction.Repeat:
-                    _gameController.KeyDown(ev);
+                    KeyDown?.Invoke(ev);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(action), action, null);
@@ -477,7 +483,7 @@ namespace Robust.Client.Graphics.Clyde
             try
             {
                 var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
-                _gameController.MouseWheel(ev);
+                MouseWheel?.Invoke(ev);
             }
             catch (Exception e)
             {
@@ -489,7 +495,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             try
             {
-                _gameController.Shutdown("Window closed");
+                CloseWindow?.Invoke("Window closed");
             }
             catch (Exception e)
             {

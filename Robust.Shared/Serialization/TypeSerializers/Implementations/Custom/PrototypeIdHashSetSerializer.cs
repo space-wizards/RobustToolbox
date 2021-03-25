@@ -12,18 +12,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
     public class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : IPrototype
     {
+        private readonly PrototypeIdSerializer<TPrototype> _prototypeSerializer = new();
+
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            var protoMan = dependencies.Resolve<IPrototypeManager>();
             var list = new List<ValidationNode>();
 
             foreach (var dataNode in node.Sequence)
             {
                 var value = (ValueDataNode) dataNode;
-                list.Add(protoMan.HasIndex<TPrototype>(value.Value)
-                    ? new ValidatedValueNode(value)
-                    : new ErrorNode(value, $"PrototypeID {value.Value} for type {typeof(TPrototype)} not found"));
+                list.Add(_prototypeSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -54,7 +53,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 
                 foreach (var str in value)
                 {
-                    list.Add(new ValueDataNode(str));
+                    list.Add(_prototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
                 }
 
                 return new SequenceDataNode(list);

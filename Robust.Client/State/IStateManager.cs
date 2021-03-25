@@ -9,9 +9,7 @@ namespace Robust.Client.State
 
         State CurrentState { get; }
         void RequestStateChange<T>() where T : State, new();
-        void Update(FrameEventArgs e);
         void FrameUpdate(FrameEventArgs e);
-        void FormResize();
         void RequestStateChange(Type type);
     }
 }

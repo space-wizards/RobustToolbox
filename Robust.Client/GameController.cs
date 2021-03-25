@@ -302,7 +302,6 @@ namespace Robust.Client
                 _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
-            _stateManager.Update(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 

@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Timing;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.State
 {
@@ -14,16 +14,6 @@ namespace Robust.Client.State
         /// </summary>
         public abstract void Shutdown();
 
-        /// <summary>
-        ///     Update the contents of this screen.
-        /// </summary>
-        public virtual void Update(FrameEventArgs e) { }
-
         public virtual void FrameUpdate(FrameEventArgs e) { }
-
-        /// <summary>
-        ///     The screen has changed size, usually from resizing window. This is called automatically right after Startup.
-        /// </summary>
-        public virtual void FormResize() { }
     }
 }

@@ -28,6 +28,7 @@ namespace Robust.Shared.Containers
         }
 
         [ViewVariables]
+        [DataField("ent")]
         public IEntity? ContainedEntity
         {
             get => _containedEntity;
@@ -38,7 +39,7 @@ namespace Robust.Shared.Containers
             }
         }
 
-        [DataField("ent")] private IEntity? _containedEntity;
+        private IEntity? _containedEntity;
         // Used by ContainedEntities to avoid allocating.
         private readonly IEntity?[] _containedEntityArray = new IEntity[1];
 

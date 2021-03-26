@@ -18,17 +18,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }
 
-        public DeserializationResult<string> ReadInternal(ISerializationManager serializationManager,
-            ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return DeserializationResult.Value(node.Value);
-        }
-
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            return ReadInternal(serializationManager, node, dependencies, skipHook, context);
+            return DeserializationResult.Value(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, string value, bool alwaysWrite = false,

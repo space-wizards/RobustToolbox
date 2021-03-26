@@ -72,14 +72,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.ReadInternal(
+                var result = _prototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
                     context);
 
-                list.Add(result.Value);
+                list.Add((string) result.RawValue!);
                 mappings.Add(result);
             }
 

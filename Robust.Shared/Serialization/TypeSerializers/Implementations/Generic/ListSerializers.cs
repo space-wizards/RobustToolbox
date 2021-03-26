@@ -232,6 +232,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list;
         }
 
+        [MustUseReturnValue]
         public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
             ImmutableList<T> target, bool skipHook, ISerializationContext? context = null)
         {

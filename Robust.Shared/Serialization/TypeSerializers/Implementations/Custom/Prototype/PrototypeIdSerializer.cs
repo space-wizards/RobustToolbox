@@ -6,7 +6,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
     public class PrototypeIdSerializer<TPrototype> : ITypeSerializer<string, ValueDataNode> where TPrototype : IPrototype
     {
@@ -18,10 +18,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }
 
+        public DeserializationResult<string> ReadInternal(ISerializationManager serializationManager,
+            ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
+            ISerializationContext? context = null)
+        {
+            return DeserializationResult.Value(node.Value);
+        }
+
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            return DeserializationResult.Value(node.Value);
+            return ReadInternal(serializationManager, node, dependencies, skipHook, context);
         }
 
         public DataNode Write(ISerializationManager serializationManager, string value, bool alwaysWrite = false,

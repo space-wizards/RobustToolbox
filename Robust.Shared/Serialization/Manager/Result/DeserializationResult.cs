@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
@@ -13,10 +12,10 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public abstract void CallAfterDeserializationHook();
 
-        public static DeserializationResult Value<T>(T value) where T : notnull
+        public static DeserializedValue<T> Value<T>(T value) where T : notnull
         {
             var type = typeof(DeserializedValue<>).MakeGenericType(value.GetType());
-            return (DeserializationResult) Activator.CreateInstance(type, value)!;
+            return (DeserializedValue<T>) Activator.CreateInstance(type, value)!;
         }
 
         public static DeserializationResult Definition(object value, DeserializedFieldEntry[] mappings)

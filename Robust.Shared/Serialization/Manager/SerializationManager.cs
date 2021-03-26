@@ -14,6 +14,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
@@ -200,13 +201,21 @@ namespace Robust.Shared.Serialization.Manager
             return ValidateNode(typeof(T), node, context);
         }
 
-        public ValidationNode ValidateNodeWithCustomTypeSerializer(Type type, Type typeSerializer, DataNode node,
+        public ValidationNode ValidateNodeWith(Type type, Type typeSerializer, DataNode node,
             ISerializationContext? context = null)
         {
             var method =
                 typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(ValidateWithCustomTypeSerializer))!.MakeGenericMethod(
                     type, node.GetType(), typeSerializer);
             return (ValidationNode)method.Invoke(this, new object?[] {node, context})!;
+        }
+
+        public ValidationNode ValidateNodeWith<TType, TSerializer, TNode>(TNode node,
+            ISerializationContext? context = null)
+            where TSerializer : ITypeValidator<TType, TNode>
+            where TNode: DataNode
+        {
+            return ValidateNodeWith(typeof(TType), typeof(TSerializer), node, context);
         }
 
         public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false)

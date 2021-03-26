@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -9,7 +7,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set
 {
     public class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : IPrototype
     {
@@ -40,9 +38,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.Read(serializationManager, (ValueDataNode)dataNode, dependencies, skipHook, context);
+                var result = _prototypeSerializer.Read(
+                    serializationManager,
+                    (ValueDataNode) dataNode,
+                    dependencies,
+                    skipHook,
+                    context);
 
-                set.Add((string)result.RawValue!);
+                set.Add((string) result.RawValue!);
                 mappings.Add(result);
             }
 
@@ -64,7 +67,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 
         public HashSet<string> Copy(ISerializationManager serializationManager, HashSet<string> source, HashSet<string> target, bool skipHook, ISerializationContext? context = null)
         {
-            return new (source);
+            return new(source);
         }
     }
 }

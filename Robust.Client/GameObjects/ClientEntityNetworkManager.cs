@@ -34,7 +34,7 @@ namespace Robust.Client.GameObjects
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
         }
 
-        public void Update()
+        public void TickUpdate()
         {
             while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameStateManager.CurServerTick)
             {

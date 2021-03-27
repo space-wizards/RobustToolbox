@@ -96,12 +96,6 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public void Update(float frameTime)
-        {
-            // Uh, nothing anymore I guess.
-        }
-
-        /// <inheritdoc />
         public void Shutdown()
         {
             LocalPlayer = null;

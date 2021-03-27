@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -817,25 +817,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Called when the size of the control changes.
         /// </summary>
-        protected virtual void Resized()
-        {
-        }
-
-        internal void DoUpdate(FrameEventArgs args)
-        {
-            Update(args);
-            foreach (var child in Children)
-            {
-                child.DoUpdate(args);
-            }
-        }
-
-        /// <summary>
-        ///     This is called every process frame.
-        /// </summary>
-        protected virtual void Update(FrameEventArgs args)
-        {
-        }
+        protected virtual void Resized() { }
 
         internal void DoFrameUpdate(FrameEventArgs args)
         {

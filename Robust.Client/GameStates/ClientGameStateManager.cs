@@ -294,13 +294,15 @@ namespace Robust.Client.GameStates
 
                 if (t != targetTick)
                 {
-                    // Don't run EntitySystemManager.Update if this is the target tick,
+                    // Don't run EntitySystemManager.TickUpdate if this is the target tick,
                     // because the rest of the main loop will call into it with the target tick later,
                     // and it won't be a past prediction.
-                    _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
+                    _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
                     ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
                 }
             }
+
+            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
         }
 
         private void ResetPredictedEntities(GameTick curTick)

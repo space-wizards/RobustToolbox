@@ -950,9 +950,9 @@ namespace Robust.Server.GameObjects
             });
         }
 
-        public override void Update(float frameTime, Histogram? histogram)
+        public override void TickUpdate(float frameTime, Histogram? histogram)
         {
-            base.Update(frameTime, histogram);
+            base.TickUpdate(frameTime, histogram);
 
             EntitiesCount.Set(AllEntities.Count);
         }

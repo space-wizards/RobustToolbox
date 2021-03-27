@@ -174,11 +174,7 @@ namespace Robust.Client.UserInterface
             _initializeCommon();
         }
 
-        public void Update(FrameEventArgs args)
-        {
-            RootControl.DoUpdate(args);
-        }
-
+        /// <inheritdoc />
         public void FrameUpdate(FrameEventArgs args)
         {
             // Process queued style & layout updates.

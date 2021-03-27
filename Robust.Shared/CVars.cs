@@ -40,7 +40,7 @@ namespace Robust.Shared
             CVarDef.Create("net.cmdrate", 30, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetRate =
-            CVarDef.Create("net.rate", 10240, CVar.ARCHIVE | CVar.REPLICATED | CVar.CLIENTONLY);
+            CVarDef.Create("net.rate", 10240, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         // That's comma-separated, btw.
         public static readonly CVarDef<string> NetBindTo =

@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 {
     public partial class PrototypeIdListSerializer<T> :
         ITypeSerializer<ImmutableList<string>, SequenceDataNode>
-        where T : IPrototype
+        where T : class, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

@@ -73,21 +73,21 @@ namespace Robust.Shared.Prototypes
         IPrototype Index(Type type, string id);
 
         /// <summary>
-        ///     Returns whether a prototype of type <see cref="T"/> with the specified <see cref="id"/> exists.
+        ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
         /// </summary>
         bool HasIndex<T>(string id) where T : class, IPrototype;
         bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
         /// <summary>
-        ///     Returns whether a prototype variant <see cref="variant"/> exists.
+        ///     Returns whether a prototype variant <param name="variant"/> exists.
         /// </summary>
         /// <param name="variant">Identifier for the prototype variant.</param>
         /// <returns>Whether the prototype variant exists.</returns>
         bool HasVariant(string variant);
 
         /// <summary>
-        ///     Returns the <see cref="Type"/> for a prototype variant.
+        ///     Returns the Type for a prototype variant.
         /// </summary>
         /// <param name="variant">Identifier for the prototype variant.</param>
         /// <returns>The specified prototype Type.</returns>
@@ -97,7 +97,7 @@ namespace Robust.Shared.Prototypes
         Type GetVariantType(string variant);
 
         /// <summary>
-        ///     Attempts to get the <see cref="Type"/> for a prototype variant.
+        ///     Attempts to get the Type for a prototype variant.
         /// </summary>
         /// <param name="variant">Identifier for the prototype variant.</param>
         /// <param name="prototype">The specified prototype Type, or null.</param>

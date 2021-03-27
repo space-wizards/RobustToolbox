@@ -49,6 +49,14 @@ namespace Robust.Shared.Prototypes
         IEnumerable<IPrototype> EnumeratePrototypes(Type type);
 
         /// <summary>
+        /// Return an IEnumerable to iterate all prototypes of a certain variant.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if the variant of prototype is not registered.
+        /// </exception>
+        IEnumerable<IPrototype> EnumeratePrototypes(string variant);
+
+        /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -238,6 +246,11 @@ namespace Robust.Shared.Prototypes
             }
 
             return prototypes[type].Values;
+        }
+
+        public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
+        {
+            return EnumeratePrototypes(GetVariantType(variant));
         }
 
         public T Index<T>(string id) where T : class, IPrototype

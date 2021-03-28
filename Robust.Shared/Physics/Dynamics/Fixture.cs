@@ -135,7 +135,6 @@ namespace Robust.Shared.Physics.Dynamics
         ///     Mass of the fixture. The sum of these is the mass of the body.
         /// </summary>
         [ViewVariables(VVAccess.ReadOnly)]
-        [DataField("mass")]
         public float Mass
         {
             get => _mass;
@@ -147,6 +146,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
+        [DataField("mass")]
         private float _mass = 1.0f;
 
         /// <summary>

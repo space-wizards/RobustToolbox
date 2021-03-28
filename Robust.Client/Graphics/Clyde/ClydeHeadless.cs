@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -66,6 +67,11 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override void SetWindowTitle(string title)
+        {
+            // Nada.
+        }
+
+        public void SetWindowMonitor(IClydeMonitor monitor)
         {
             // Nada.
         }
@@ -167,6 +173,12 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, string? name = null)
         {
             return new Viewport();
+        }
+
+        public IEnumerable<IClydeMonitor> EnumerateMonitors()
+        {
+            // TODO: Actually return something.
+            yield break;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)

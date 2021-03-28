@@ -1,8 +1,5 @@
-﻿using Robust.Shared.Maths;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
+﻿using Robust.Client.Graphics;
+using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 

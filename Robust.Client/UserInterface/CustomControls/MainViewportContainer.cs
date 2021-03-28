@@ -1,8 +1,4 @@
-﻿using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -20,9 +16,9 @@ namespace Robust.Client.UserInterface.CustomControls
             _eyeManager = eyeManager;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
-            base.Update(args);
+            base.FrameUpdate(args);
 
             if(Viewport != null)
                 Viewport.Eye = _eyeManager.CurrentEye;

@@ -109,7 +109,8 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var overlay in list) {
                     if (overlay.RequestScreenTexture) {
                         FlushRenderQueue();
-                        UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
+                        // TODO: FIX THIS
+                        // UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
                     }
                     if (overlay.OverwriteTargetFrameBuffer()) {
                         ClearFramebuffer(default);

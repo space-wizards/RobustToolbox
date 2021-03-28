@@ -156,7 +156,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 var keyValidated = serializationManager.ValidateNode(typeof(string), key, context);
                 ValidationNode valValidated = field.Attribute.CustomTypeSerializer != null
-                    ? serializationManager.ValidateNodeWithCustomTypeSerializer(field.FieldType,
+                    ? serializationManager.ValidateNodeWith(field.FieldType,
                         field.Attribute.CustomTypeSerializer, val, context)
                     : serializationManager.ValidateNode(field.FieldType, val, context);
 

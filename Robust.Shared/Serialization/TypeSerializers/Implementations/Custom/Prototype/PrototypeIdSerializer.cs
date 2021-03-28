@@ -6,14 +6,14 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
-namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
+namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
-    public class PrototypeIdSerializer<TPrototype> : ITypeSerializer<string, ValueDataNode> where TPrototype : IPrototype
+    public class PrototypeIdSerializer<TPrototype> : ITypeSerializer<string, ValueDataNode> where TPrototype : class, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return IoCManager.Resolve<IPrototypeManager>().HasIndex<TPrototype>(node.Value)
+            return dependencies.Resolve<IPrototypeManager>().HasIndex<TPrototype>(node.Value)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }

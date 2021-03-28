@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -152,6 +152,7 @@ namespace Robust.Client.GameObjects
             Zoom = state.Zoom;
             Offset = state.Offset;
             Rotation = state.Rotation;
+            VisibilityMask = state.VisibilityMask;
         }
 
         public override void OnRemove()

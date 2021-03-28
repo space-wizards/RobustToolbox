@@ -1,5 +1,4 @@
 using System;
-using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {

@@ -42,7 +42,7 @@ namespace Robust.Shared.IoC
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
         void Register<TInterface, TImplementation>(bool overwrite = false)
-            where TImplementation : class, TInterface, new();
+            where TImplementation : class, TInterface;
 
         /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="DependencyCollection.Resolve{T}"/>

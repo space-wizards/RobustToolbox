@@ -471,8 +471,11 @@ namespace Robust.Server.GameObjects
             // scan pvs box and include children and parents recursively
             IncludeRelatives(GetEntitiesInRange(mapId, position, range, true), relatives);
 
+            if (player.AttachedEntity is null || !player.AttachedEntity.TryGetComponent<EyeComponent>(out var eyeComp))
+                eyeComp = null;
+
             // Exclude any entities that are currently invisible to the player.
-            ExcludeInvisible(relatives, player.VisibilityMask);
+            ExcludeInvisible(relatives, (int)(eyeComp?.VisibilityMask ?? 0));
 
             // Always send updates for all grid and map entities.
             // If we don't, the client-side game state manager WILL blow up.
@@ -947,9 +950,9 @@ namespace Robust.Server.GameObjects
             });
         }
 
-        public override void Update(float frameTime, Histogram? histogram)
+        public override void TickUpdate(float frameTime, Histogram? histogram)
         {
-            base.Update(frameTime, histogram);
+            base.TickUpdate(frameTime, histogram);
 
             EntitiesCount.Set(AllEntities.Count);
         }

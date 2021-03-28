@@ -1,4 +1,6 @@
-﻿using Robust.Client.Graphics;
+﻿using System;
+using System.Collections;
+using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -31,9 +33,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // We keep track of frame times in a ring buffer.
         private readonly float[] _frameTimes = new float[TrackedFrames];
+        private readonly BitArray _gcMarkers = new(TrackedFrames);
 
         // Position of the last frame in the ring buffer.
         private int _frameIndex;
+        private int _lastGCCount;
 
         public FrameGraph(IGameTiming gameTiming)
         {
@@ -49,13 +53,20 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override void FrameUpdate(FrameEventArgs args)
         {
+            var gcCount = GC.CollectionCount(0);
+
             _frameTimes[_frameIndex] = (float)_gameTiming.RealFrameTime.TotalSeconds;
+            _gcMarkers[_frameIndex] = gcCount > _lastGCCount;
+
             _frameIndex = (_frameIndex + 1) % TrackedFrames;
+            _lastGCCount = gcCount;
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
+
+            Span<Vector2> triangle = stackalloc Vector2[3];
 
             float maxHeight = 0;
             for (var i = 0; i < _frameTimes.Length; i++)
@@ -88,6 +99,16 @@ namespace Robust.Client.UserInterface.CustomControls
                     color = Color.Lime;
                 }
                 handle.DrawRect(rect, color);
+
+                var gc = _gcMarkers[currentFrameIndex];
+                if (gc)
+                {
+                    triangle[0] = (rect.Left, 0);
+                    triangle[1] = (rect.Right, 0);
+                    triangle[2] = (rect.Center.X, 5);
+
+                    handle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, triangle, Color.LightBlue);
+                }
             }
         }
     }

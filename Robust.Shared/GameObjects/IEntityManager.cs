@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
-        void Update(float frameTime, Histogram? histogram=null);
+        void TickUpdate(float frameTime, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.

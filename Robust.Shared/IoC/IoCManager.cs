@@ -97,7 +97,7 @@ namespace Robust.Shared.IoC
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
         public static void Register<TInterface, TImplementation>(bool overwrite = false)
-            where TImplementation : class, TInterface, new()
+            where TImplementation : class, TInterface
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 

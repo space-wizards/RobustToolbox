@@ -91,21 +91,26 @@ namespace Robust.Shared.GameObjects
             _componentManager.Clear();
         }
 
-        public virtual void Update(float frameTime, Histogram? histogram)
+        public virtual void TickUpdate(float frameTime, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                EntityNetworkManager.Update();
+                EntityNetworkManager.TickUpdate();
             }
 
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.Update(frameTime);
+                EntitySystemManager.TickUpdate(frameTime);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             {
                 _eventBus.ProcessEventQueue();
+            }
+
+            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            {
+                _componentManager.CullRemovedComponents();
             }
 
             using (histogram?.WithLabels("EntityCull").NewTimer())

@@ -31,6 +31,8 @@ namespace Robust.Client.Graphics
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
+        event Action OnWindowScaleChanged;
+
         OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
 

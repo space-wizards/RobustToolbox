@@ -46,7 +46,11 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         ValidationNode ValidateNode<T>(DataNode node, ISerializationContext? context = null);
 
-        ValidationNode ValidateNodeWithCustomTypeSerializer(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null);
+        ValidationNode ValidateNodeWith(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null);
+
+        ValidationNode ValidateNodeWith<TType, TSerializer, TNode>(TNode node, ISerializationContext? context = null)
+            where TSerializer : ITypeValidator<TType, TNode>
+            where TNode : DataNode;
 
         #endregion
 

@@ -65,6 +65,6 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Sends out queued messages based on current tick.
         /// </summary>
-        void Update();
+        void TickUpdate();
     }
 }

@@ -37,6 +37,13 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
+        public event Action<TextEventArgs>? TextEntered;
+        public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<KeyEventArgs>? KeyUp;
+        public event Action<KeyEventArgs>? KeyDown;
+        public event Action<MouseWheelEventArgs>? MouseWheel;
+        public event Action<string>? CloseWindow;
+
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
@@ -81,6 +88,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        {
+            add { }
+            remove { }
+        }
+
+        public event Action OnWindowScaleChanged
         {
             add { }
             remove { }

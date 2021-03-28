@@ -21,7 +21,6 @@ namespace Robust.Client.Player
 
         void Initialize();
         void Startup(INetChannel channel);
-        void Update(float frameTime);
         void Shutdown();
 
         void ApplyPlayerStates(IEnumerable<PlayerState>? list);

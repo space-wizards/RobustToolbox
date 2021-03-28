@@ -47,7 +47,7 @@ namespace Robust.Server.GameObjects
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
 
-        public void Update()
+        public void TickUpdate()
         {
             while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
             {

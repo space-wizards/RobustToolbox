@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         /// <seealso cref="IEntitySystem.Update(float)"/>
-        void Update(float frameTime);
+        void TickUpdate(float frameTime);
         void FrameUpdate(float frameTime);
 
         /// <summary>

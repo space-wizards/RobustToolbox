@@ -133,6 +133,7 @@ namespace Robust.Client.UserInterface
             QueueMeasureUpdate(RootControl);
 
             _displayManager.OnWindowResized += args => _updateRootSize();
+            _displayManager.OnWindowScaleChanged += UpdateUIScale;
 
             StateRoot = new LayoutContainer
             {
@@ -174,11 +175,7 @@ namespace Robust.Client.UserInterface
             _initializeCommon();
         }
 
-        public void Update(FrameEventArgs args)
-        {
-            RootControl.DoUpdate(args);
-        }
-
+        /// <inheritdoc />
         public void FrameUpdate(FrameEventArgs args)
         {
             // Process queued style & layout updates.
@@ -833,7 +830,13 @@ namespace Robust.Client.UserInterface
 
         private void _uiScaleChanged(float newValue)
         {
-            UIScale = newValue == 0f ? DefaultUIScale : newValue;
+            UpdateUIScale();
+        }
+
+        private void UpdateUIScale()
+        {
+            var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
+            UIScale = newVal == 0f ? DefaultUIScale : newVal;
 
             if (RootControl == null)
             {

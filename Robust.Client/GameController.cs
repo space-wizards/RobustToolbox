@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Management;
 using System.Net;
@@ -82,65 +82,8 @@ namespace Robust.Client
 
         public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
         {
-            ReadInitialLaunchState();
-
-            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
-
-            _taskManager.Initialize();
-
-            // Figure out user data directory.
-            var userDataDir = GetUserDataDir();
-
-            _configurationManager.Initialize(false);
-
-            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
-            // So SECURE CVars are blacklisted from config.
-            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
-            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
-
-            if (LoadConfigAndUserData)
-            {
-                var configFile = Path.Combine(userDataDir, "client_config.toml");
-                if (File.Exists(configFile))
-                {
-                    // Load config from user data if available.
-                    _configurationManager.LoadFromFile(configFile);
-                }
-                else
-                {
-                    // Else we just use code-defined defaults and let it save to file when the user changes things.
-                    _configurationManager.SetSaveFile(configFile);
-                }
-            }
-
-            _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
-
-            if (_commandLineArgs != null)
-            {
-                _configurationManager.OverrideConVars(_commandLineArgs.CVars);
-            }
-
-            ProfileOptSetup.Setup(_configurationManager);
-
-            _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
-
-            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
-            if (_loaderArgs != null)
-            {
-                _stringSerializer.EnableCaching = false;
-                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
-                _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
-            }
-
-            // Bring display up as soon as resources are mounted.
-            if (!_clyde.Initialize())
-            {
+            if (!StartupSystemSplash(logHandlerFactory))
                 return false;
-            }
-
-            _clyde.SetWindowTitle("Space Station 14");
-
-            _fontManager.Initialize();
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
@@ -202,6 +145,77 @@ namespace Robust.Client
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
             }
 
+            return true;
+        }
+
+        private bool StartupSystemSplash(Func<ILogHandler>? logHandlerFactory)
+        {
+            ReadInitialLaunchState();
+
+            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
+
+            _taskManager.Initialize();
+
+            // Figure out user data directory.
+            var userDataDir = GetUserDataDir();
+
+            _configurationManager.Initialize(false);
+
+            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
+            // So SECURE CVars are blacklisted from config.
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
+            if (LoadConfigAndUserData)
+            {
+                var configFile = Path.Combine(userDataDir, "client_config.toml");
+                if (File.Exists(configFile))
+                {
+                    // Load config from user data if available.
+                    _configurationManager.LoadFromFile(configFile);
+                }
+                else
+                {
+                    // Else we just use code-defined defaults and let it save to file when the user changes things.
+                    _configurationManager.SetSaveFile(configFile);
+                }
+            }
+
+            _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
+
+            if (_commandLineArgs != null)
+            {
+                _configurationManager.OverrideConVars(_commandLineArgs.CVars);
+            }
+
+            ProfileOptSetup.Setup(_configurationManager);
+
+            _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
+
+            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
+            if (_loaderArgs != null)
+            {
+                _stringSerializer.EnableCaching = false;
+                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
+            }
+
+            _clyde.TextEntered += TextEntered;
+            _clyde.MouseMove += MouseMove;
+            _clyde.KeyUp += KeyUp;
+            _clyde.KeyDown += KeyDown;
+            _clyde.MouseWheel += MouseWheel;
+            _clyde.CloseWindow += Shutdown;
+
+            // Bring display up as soon as resources are mounted.
+            if (!_clyde.Initialize())
+            {
+                return false;
+            }
+
+            _clyde.SetWindowTitle("Space Station 14");
+
+            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
             return true;
         }
 
@@ -278,17 +292,13 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
-            _userInterfaceManager.Update(frameEventArgs);
 
+            // GameStateManager is in full control of the simulation update.
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
-                _componentManager.CullRemovedComponents();
                 _gameStateManager.ApplyGameState();
-                _entityManager.Update(frameEventArgs.DeltaSeconds);
-                _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
-            _stateManager.Update(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 

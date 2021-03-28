@@ -177,10 +177,10 @@ namespace Robust.Shared.Network
         {
             get
             {
-                var sentPackets = 0;
-                var sentBytes = 0;
-                var recvPackets = 0;
-                var recvBytes = 0;
+                var sentPackets = 0L;
+                var sentBytes = 0L;
+                var recvPackets = 0L;
+                var recvBytes = 0L;
 
                 foreach (var peer in _netPeers)
                 {
@@ -1155,24 +1155,24 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Total sent bytes.
         /// </summary>
-        public readonly int SentBytes;
+        public readonly long SentBytes;
 
         /// <summary>
         ///     Total received bytes.
         /// </summary>
-        public readonly int ReceivedBytes;
+        public readonly long ReceivedBytes;
 
         /// <summary>
         ///     Total sent packets.
         /// </summary>
-        public readonly int SentPackets;
+        public readonly long SentPackets;
 
         /// <summary>
         ///     Total received packets.
         /// </summary>
-        public readonly int ReceivedPackets;
+        public readonly long ReceivedPackets;
 
-        public NetworkStats(int sentBytes, int receivedBytes, int sentPackets, int receivedPackets)
+        public NetworkStats(long sentBytes, long receivedBytes, long sentPackets, long receivedPackets)
         {
             SentBytes = sentBytes;
             ReceivedBytes = receivedBytes;

@@ -136,7 +136,18 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("mass")]
-        public float Mass { get; private set; } = 1.0f;
+        public float Mass
+        {
+            get => _mass;
+            set
+            {
+                if (MathHelper.CloseTo(value, _mass)) return;
+                _mass = value;
+                Body.FixtureChanged(this);
+            }
+        }
+
+        private float _mass = 1.0f;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.

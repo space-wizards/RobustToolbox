@@ -242,63 +242,63 @@ namespace Robust.Client.GameStates
 
             if (!Predicting) return;
 
-            using var _ = _timing.StartPastPredictionArea();
-
-
-            if (_pendingInputs.Count > 0)
+            using(var _ = _timing.StartPastPredictionArea())
             {
-                Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
-            }
-
-            var pendingInputEnumerator = _pendingInputs.GetEnumerator();
-            var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
-            var hasPendingInput = pendingInputEnumerator.MoveNext();
-            var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-
-            var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
-            var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
-
-            // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
-
-            for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
-            {
-                var tick = new GameTick(t);
-                _timing.CurTick = tick;
-
-                while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
+                if (_pendingInputs.Count > 0)
                 {
-                    var inputCmd = pendingInputEnumerator.Current;
-
-                    _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
-
-                    Logger.DebugS(CVars.NetPredict.Name,
-                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
-                        $"state={inputCmd.State}");
-
-
-                    input.PredictInputCommand(inputCmd);
-
-                    hasPendingInput = pendingInputEnumerator.MoveNext();
+                    Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
                 }
 
-                while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+                var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+                var hasPendingInput = pendingInputEnumerator.MoveNext();
+                var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+                var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
+                                 (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
+
+                // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
+
+                for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
                 {
-                    var msg = pendingMessagesEnumerator.Current.msg;
+                    var tick = new GameTick(t);
+                    _timing.CurTick = tick;
 
-                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
-                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
+                    while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
+                    {
+                        var inputCmd = pendingInputEnumerator.Current;
 
-                    hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-                }
+                        _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
-                if (t != targetTick)
-                {
-                    // Don't run EntitySystemManager.TickUpdate if this is the target tick,
-                    // because the rest of the main loop will call into it with the target tick later,
-                    // and it won't be a past prediction.
-                    _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
-                    ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                        Logger.DebugS(CVars.NetPredict.Name,
+                            $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                            $"state={inputCmd.State}");
+
+
+                        input.PredictInputCommand(inputCmd);
+
+                        hasPendingInput = pendingInputEnumerator.MoveNext();
+                    }
+
+                    while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                    {
+                        var msg = pendingMessagesEnumerator.Current.msg;
+
+                        _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
+
+                        hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+                    }
+
+                    if (t != targetTick)
+                    {
+                        // Don't run EntitySystemManager.TickUpdate if this is the target tick,
+                        // because the rest of the main loop will call into it with the target tick later,
+                        // and it won't be a past prediction.
+                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
+                        ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                    }
                 }
             }
 

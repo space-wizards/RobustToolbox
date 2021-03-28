@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -27,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -38,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -57,19 +56,19 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Disable sRGB so stuff doesn't get interpreter wrong.
                     actualParams.Srgb = false;
-                    var img = ApplyA8Swizzle((Image<A8>) (object) image);
+                    using var img = ApplyA8Swizzle((Image<A8>) (object) image);
                     return LoadTextureFromImage(img, name, loadParams);
                 }
 
                 if (pixelType == typeof(L8) && !actualParams.Srgb)
                 {
-                    var img = ApplyL8Swizzle((Image<L8>) (object) image);
+                    using var img = ApplyL8Swizzle((Image<L8>) (object) image);
                     return LoadTextureFromImage(img, name, loadParams);
                 }
             }
 
             // Flip image because OpenGL reads images upside down.
-            var copy = FlipClone(image);
+            using var copy = FlipClone(image);
 
             var texture = CreateBaseTextureInternal<T>(image.Width, image.Height, actualParams, name);
 
@@ -325,11 +324,13 @@ namespace Robust.Client.Graphics.Clyde
                 if (typeof(T) == typeof(A8))
                 {
                     SetSubImage(texture, dstTl, ApplyA8Swizzle((Image<A8>) (object) srcImage), srcBox);
+                    return;
                 }
 
                 if (typeof(T) == typeof(L8))
                 {
                     SetSubImage(texture, dstTl, ApplyL8Swizzle((Image<L8>) (object) srcImage), srcBox);
+                    return;
                 }
             }
 

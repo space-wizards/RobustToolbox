@@ -1,6 +1,5 @@
 ﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.GameObjects
 {
@@ -45,9 +44,9 @@ namespace Robust.Shared.GameObjects
         /// Server: Use the alternative overload to send to a single client.
         /// </summary>
         /// <param name="message">Message that should be sent.</param>
-        void SendSystemNetworkMessage(EntitySystemMessage message);
+        void SendSystemNetworkMessage(EntityEventArgs message);
 
-        void SendSystemNetworkMessage(EntitySystemMessage message, uint sequence)
+        void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
             throw new NotSupportedException();
         }
@@ -61,11 +60,11 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="NotSupportedException">
         ///    Thrown if called on the client.
         /// </exception>
-        void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel);
+        void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel);
 
         /// <summary>
         ///     Sends out queued messages based on current tick.
         /// </summary>
-        void Update();
+        void TickUpdate();
     }
 }

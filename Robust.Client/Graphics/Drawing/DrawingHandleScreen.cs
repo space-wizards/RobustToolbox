@@ -1,7 +1,7 @@
 using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     public abstract class DrawingHandleScreen : DrawingHandleBase
     {

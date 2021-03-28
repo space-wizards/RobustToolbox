@@ -1,21 +1,23 @@
-﻿using Robust.Client.GameObjects.EntitySystems;
+﻿using System;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
-using System;
 
 namespace Robust.Client.GameObjects
 {
-    public class PointLightComponent : Component
+    [RegisterComponent]
+    [ComponentReference(typeof(IPointLightComponent))]
+    public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
     {
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
 
@@ -68,6 +70,21 @@ namespace Robust.Client.GameObjects
             set => _rotation = value;
         }
 
+        /// <inheritdoc />
+        /// <summary>
+        /// The resource path to the mask texture the light will use.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string? MaskPath
+        {
+            get => _maskPath;
+            set
+            {
+                _maskPath = value;
+                UpdateMask();
+            }
+        }
+
         /// <summary>
         ///     Set a mask texture that will be applied to the light while rendering.
         ///     The mask's red channel will be linearly multiplied.p
@@ -118,16 +135,26 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private float _radius = 5;
+        [DataField("radius")]
+        private float _radius = 5f;
+        [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        private bool _lightOnParent = false;
+        private bool _lightOnParent;
+        [DataField("color")]
         private Color _color = Color.White;
-        private Vector2 _offset;
+        [DataField("offset")]
+        private Vector2 _offset = Vector2.Zero;
+        [DataField("enabled")]
         private bool _enabled = true;
+        [DataField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
-        private float _energy;
-        private float _softness;
+        [DataField("energy")]
+        private float _energy = 1f;
+        [DataField("softness")]
+        private float _softness = 1f;
+        [DataField("mask")]
+        private string? _maskPath;
 
         /// <summary>
         ///     Radius, in meters.
@@ -144,12 +171,34 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        private void UpdateMask()
+        {
+            if (_maskPath is not null)
+                Mask = _resourceCache.GetResource<TextureResource>(_maskPath);
+            else
+                Mask = null;
+        }
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            if (_maskPath != null)
+            {
+                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(_maskPath);
+            }
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            UpdateMask();
+        }
+
         /// <inheritdoc />
         public override void HandleMessage(ComponentMessage message, IComponent? component)
         {
             base.HandleMessage(message, component);
 
-            if ((message is ParentChangedMessage msg))
+            if (message is ParentChangedMessage msg)
             {
                 HandleTransformParentChanged(msg);
             }
@@ -170,23 +219,6 @@ namespace Robust.Client.GameObjects
             else
             {
                 _lightOnParent = false;
-            }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref _radius, "radius", 5f);
-            serializer.DataFieldCached(ref _color, "color", Color.White);
-            serializer.DataFieldCached(ref _enabled, "enabled", true);
-            serializer.DataFieldCached(ref _energy, "energy", 1f);
-            serializer.DataFieldCached(ref _softness, "softness", 1f);
-            serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
-            serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
-
-            if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
-            {
-                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
             }
         }
 

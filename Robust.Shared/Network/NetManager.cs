@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -11,12 +12,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Prometheus;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network
 {
@@ -35,7 +37,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
+    public partial class NetManager : IClientNetManager, IServerNetManager
     {
         internal const int AesKeyLength = 32;
 
@@ -111,6 +113,8 @@ namespace Robust.Shared.Network
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
+        [Dependency] private readonly IAuthManager _authManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -132,6 +136,8 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
             = new();
+
+        private readonly HashSet<NetUserId> _awaitingDisconnectToConnect = new HashSet<NetUserId>();
 
         /// <inheritdoc />
         public int Port => _config.GetCVar(CVars.NetPort);
@@ -171,10 +177,10 @@ namespace Robust.Shared.Network
         {
             get
             {
-                var sentPackets = 0;
-                var sentBytes = 0;
-                var recvPackets = 0;
-                var recvBytes = 0;
+                var sentPackets = 0L;
+                var sentBytes = 0L;
+                var recvPackets = 0L;
+                var recvBytes = 0L;
 
                 foreach (var peer in _netPeers)
                 {
@@ -190,6 +196,7 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IEnumerable<INetChannel> Channels => _channels.Values;
 
         /// <inheritdoc />
@@ -234,6 +241,8 @@ namespace Robust.Shared.Network
                 throw new InvalidOperationException("NetManager has already been initialized.");
             }
 
+            SynchronizeNetTime();
+
             IsServer = isServer;
 
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
@@ -261,6 +270,24 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 SAGenerateRsaKeys();
+            }
+        }
+
+        private void SynchronizeNetTime()
+        {
+            // Synchronize Lidgren NetTime with our RealTime.
+
+            for (var i = 0; i < 10; i++)
+            {
+                // Try and set this in a loop to avoid any JIT hang fuckery or similar.
+                // Loop until the time is within acceptable margin.
+                // Fixing this "properly" would basically require re-architecturing Lidgren to do DI stuff
+                // so we can more sanely wire these together.
+                NetTime.SetNow(_timing.RealTime.TotalSeconds);
+                var dev = TimeSpan.FromSeconds(NetTime.Now) - _timing.RealTime;
+
+                if (Math.Abs(dev.TotalMilliseconds) < 0.05)
+                    break;
             }
         }
 
@@ -332,11 +359,6 @@ namespace Robust.Shared.Network
             }
         }
 
-        public void Dispose()
-        {
-            Shutdown("Network manager getting disposed.");
-        }
-
         /// <inheritdoc />
         public void Shutdown(string reason)
         {
@@ -345,7 +367,6 @@ namespace Robust.Shared.Network
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Peer.Shutdown(reason));
-            _netPeers.Clear();
 
             // wait for the network thread to finish its work (like flushing packets and gracefully disconnecting)
             // Lidgren does not expose the thread, so we can't join or or anything
@@ -356,6 +377,8 @@ namespace Robust.Shared.Network
                 // sleep the thread for an arbitrary length so it isn't spinning in the while loop as much
                 Thread.Sleep(50);
             }
+
+            _netPeers.Clear();
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
@@ -647,14 +670,13 @@ namespace Robust.Shared.Network
 
         private async void HandleInitialHandshakeComplete(NetPeerData peer,
             NetConnection sender,
-            NetUserId userId,
-            string userName,
+            NetUserData userData,
             NetEncryption? encryption,
             LoginType loginType)
         {
-            var channel = new NetChannel(this, sender, userId, userName, loginType);
-            _assignedUserIds.Add(userId, sender);
-            _assignedUsernames.Add(userName, sender);
+            var channel = new NetChannel(this, sender, userData, loginType);
+            _assignedUserIds.Add(userData.UserId, sender);
+            _assignedUsernames.Add(userData.UserName, sender);
             _channels.Add(sender, channel);
             peer.AddChannel(channel);
             channel.Encryption = encryption;
@@ -1009,11 +1031,10 @@ namespace Robust.Shared.Network
 
         private async Task<NetConnectingArgs> OnConnecting(
             IPEndPoint ip,
-            NetUserId userId,
-            string userName,
+            NetUserData userData,
             LoginType loginType)
         {
-            var args = new NetConnectingArgs(userId, ip, userName, loginType);
+            var args = new NetConnectingArgs(userData, ip, loginType);
             foreach (var conn in _connectingEvent)
             {
                 await conn(args);
@@ -1134,24 +1155,24 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Total sent bytes.
         /// </summary>
-        public readonly int SentBytes;
+        public readonly long SentBytes;
 
         /// <summary>
         ///     Total received bytes.
         /// </summary>
-        public readonly int ReceivedBytes;
+        public readonly long ReceivedBytes;
 
         /// <summary>
         ///     Total sent packets.
         /// </summary>
-        public readonly int SentPackets;
+        public readonly long SentPackets;
 
         /// <summary>
         ///     Total received packets.
         /// </summary>
-        public readonly int ReceivedPackets;
+        public readonly long ReceivedPackets;
 
-        public NetworkStats(int sentBytes, int receivedBytes, int sentPackets, int receivedPackets)
+        public NetworkStats(long sentBytes, long receivedBytes, long sentPackets, long receivedPackets)
         {
             SentBytes = sentBytes;
             ReceivedBytes = receivedBytes;

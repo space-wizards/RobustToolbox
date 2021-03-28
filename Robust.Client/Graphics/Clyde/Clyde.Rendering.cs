@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,11 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Utility;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -18,7 +13,7 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
-using StencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
+using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -285,7 +280,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         /// <summary>
-        ///     Flush the render handle, processing and re-pooling all the command lists.
+        ///     Flushes the render handle, processing and re-pooling all the command lists.
         /// </summary>
         private void FlushRenderQueue()
         {
@@ -376,6 +371,7 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
+            int textureUnitVal = 0;
             // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
@@ -418,6 +414,15 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
+                    case ClydeTexture clydeTexture:
+                        //It's important to start at Texture6 here since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
+                        //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
+                        //Might change this in the future?
+                        TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
+                        SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
+                        program.SetUniformTexture(name, cTarget);
+                        textureUnitVal++;
+                        break;
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
                 }
@@ -438,7 +443,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
                 CheckGlError();
-                GL.StencilOp(StencilOp.Keep, StencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
                 CheckGlError();
             }
             else if (_isStencilling)
@@ -482,10 +487,20 @@ namespace Robust.Client.Graphics.Clyde
             _currentMatrixView = view;
         }
 
+        /// <summary>
+        /// Draws a texture quad to the screen.
+        /// </summary>
+        /// <param name="texture">Texture to draw.</param>
+        /// <param name="bl">Bottom left vertex of the quad in object space.</param>
+        /// <param name="br">Bottom right vertex of the quad in object space.</param>
+        /// <param name="tl">Top left vertex of the quad in object space.</param>
+        /// <param name="tr">Top right vertex of the quad in object space.</param>
+        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <param name="texCoords">The four corners of the texture coordinates, matching the four vertices.</param>
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
-            in Box2 sr)
+            in Box2 texCoords)
         {
-            EnsureBatchState(texture, modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
+            EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
@@ -494,10 +509,10 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
-            BatchVertexData[vIdx + 0] = new Vertex2D(bl, sr.BottomLeft);
-            BatchVertexData[vIdx + 1] = new Vertex2D(br, sr.BottomRight);
-            BatchVertexData[vIdx + 2] = new Vertex2D(tr, sr.TopRight);
-            BatchVertexData[vIdx + 3] = new Vertex2D(tl, sr.TopLeft);
+            BatchVertexData[vIdx + 0] = new Vertex2D(bl, texCoords.BottomLeft);
+            BatchVertexData[vIdx + 1] = new Vertex2D(br, texCoords.BottomRight);
+            BatchVertexData[vIdx + 2] = new Vertex2D(tr, texCoords.TopRight);
+            BatchVertexData[vIdx + 3] = new Vertex2D(tl, texCoords.TopLeft);
             BatchVertexIndex += 4;
             QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
@@ -716,18 +731,18 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastBatches += 1;
         }
 
-        private static StencilOp ToGLStencilOp(Shaders.StencilOp op)
+        private static TKStencilOp ToGLStencilOp(StencilOp op)
         {
             return op switch
             {
-                Shaders.StencilOp.Keep => StencilOp.Keep,
-                Shaders.StencilOp.Zero => StencilOp.Zero,
-                Shaders.StencilOp.Replace => StencilOp.Replace,
-                Shaders.StencilOp.IncrementClamp => StencilOp.Incr,
-                Shaders.StencilOp.IncrementWrap => StencilOp.IncrWrap,
-                Shaders.StencilOp.DecrementClamp => StencilOp.Decr,
-                Shaders.StencilOp.DecrementWrap => StencilOp.DecrWrap,
-                Shaders.StencilOp.Invert => StencilOp.Invert,
+                StencilOp.Keep => TKStencilOp.Keep,
+                StencilOp.Zero => TKStencilOp.Zero,
+                StencilOp.Replace => TKStencilOp.Replace,
+                StencilOp.IncrementClamp => TKStencilOp.Incr,
+                StencilOp.IncrementWrap => TKStencilOp.IncrWrap,
+                StencilOp.DecrementClamp => TKStencilOp.Decr,
+                StencilOp.DecrementWrap => TKStencilOp.DecrWrap,
+                StencilOp.Invert => TKStencilOp.Invert,
                 _ => throw new NotSupportedException()
             };
         }
@@ -800,7 +815,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            GL.CreateBuffers(1, out uint pbo);
+            GL.GenBuffers(1, out uint pbo);
             CheckGlError();
             GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
             CheckGlError();

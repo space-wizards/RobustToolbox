@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
-using Robust.Shared;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SharpFont;
@@ -21,18 +17,18 @@ namespace Robust.Client.Graphics
         private const int SheetWidth = 256;
         private const int SheetHeight = 256;
 
-        [Dependency] private readonly IConfigurationManager _configuration = default!;
-        [Dependency] private readonly IClyde _clyde = default!;
+        private readonly IClyde _clyde;
 
-        private uint BaseFontDPI;
+        private uint _baseFontDpi = 96;
 
         private readonly Library _library;
 
         private readonly Dictionary<(FontFaceHandle, int fontSize), FontInstanceHandle> _loadedInstances =
             new();
 
-        public FontManager()
+        public FontManager(IClyde clyde)
         {
+            _clyde = clyde;
             _library = new Library();
         }
 
@@ -43,9 +39,9 @@ namespace Robust.Client.Graphics
             return handle;
         }
 
-        void IFontManagerInternal.Initialize()
+        void IFontManagerInternal.SetFontDpi(uint fontDpi)
         {
-            BaseFontDPI = (uint) _configuration.GetCVar(CVars.DisplayFontDpi);
+            _baseFontDpi = fontDpi;
         }
 
         public IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size)
@@ -65,7 +61,7 @@ namespace Robust.Client.Graphics
         private ScaledFontData _generateScaledDatum(FontInstanceHandle instance, float scale)
         {
             var ftFace = instance.FaceHandle.Face;
-            ftFace.SetCharSize(0, instance.Size, 0, (uint) (BaseFontDPI * scale));
+            ftFace.SetCharSize(0, instance.Size, 0, (uint) (_baseFontDpi * scale));
 
             var ascent = ftFace.Size.Metrics.Ascender.ToInt32();
             var descent = -ftFace.Size.Metrics.Descender.ToInt32();
@@ -84,7 +80,7 @@ namespace Robust.Client.Graphics
                 return;
 
             var face = instance.FaceHandle.Face;
-            face.SetCharSize(0, instance.Size, 0, (uint) (BaseFontDPI * scale));
+            face.SetCharSize(0, instance.Size, 0, (uint) (_baseFontDpi * scale));
             face.LoadGlyph(glyph, LoadFlags.Default, LoadTarget.Normal);
             face.Glyph.RenderGlyph(RenderMode.Normal);
 
@@ -190,7 +186,7 @@ namespace Robust.Client.Graphics
             OwnedTexture GenSheet()
             {
                 var sheet = _clyde.CreateBlankTexture<A8>((SheetWidth, SheetHeight),
-                    $"font-{face.FamilyName}-{instance.Size}-{(uint) (BaseFontDPI * scale)}-sheet{scaled.AtlasTextures.Count}");
+                    $"font-{face.FamilyName}-{instance.Size}-{(uint) (_baseFontDpi * scale)}-sheet{scaled.AtlasTextures.Count}");
                 scaled.AtlasTextures.Add(sheet);
                 return sheet;
             }

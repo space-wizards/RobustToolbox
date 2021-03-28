@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using Robust.Shared.Log;
 
 namespace Robust.Shared.Timing
 {
@@ -19,6 +18,8 @@ namespace Robust.Shared.Timing
         private readonly IStopwatch _realTimer = new Stopwatch();
         private readonly List<long> _realFrameTimes = new(NumFrames);
         private TimeSpan _lastRealTime;
+
+        [Dependency] private readonly INetManager _netManager = default!;
 
         /// <summary>
         ///     Default constructor.
@@ -86,6 +87,20 @@ namespace Robust.Shared.Timing
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
+
+        public TimeSpan ServerTime
+        {
+            get
+            {
+                var offset = GetServerOffset();
+                if (offset == null)
+                {
+                    return TimeSpan.Zero;
+                }
+
+                return RealTime + offset.Value;
+            }
+        }
 
         /// <summary>
         ///     The simulated time it took to render the last frame.
@@ -217,15 +232,6 @@ namespace Robust.Shared.Timing
         }
 
         /// <summary>
-        ///     Resets the real uptime of the server.
-        /// </summary>
-        public void ResetRealTime()
-        {
-            _realTimer.Restart();
-            _lastRealTime = TimeSpan.Zero;
-        }
-
-        /// <summary>
         /// Resets the simulation time.
         /// </summary>
         public void ResetSimTime()
@@ -234,6 +240,35 @@ namespace Robust.Shared.Timing
             CurTick = GameTick.First;
             TickRemainder = TimeSpan.Zero;
             Paused = true;
+        }
+
+        public TimeSpan RealLocalToServer(TimeSpan local)
+        {
+            var offset = GetServerOffset();
+            if (offset == null)
+                return TimeSpan.Zero;
+
+            return local + offset.Value;
+        }
+
+        public TimeSpan RealServerToLocal(TimeSpan server)
+        {
+            var offset = GetServerOffset();
+            if (offset == null)
+                return TimeSpan.Zero;
+
+            return server - offset.Value;
+        }
+
+        private TimeSpan? GetServerOffset()
+        {
+            if (_netManager.IsServer)
+            {
+                return TimeSpan.Zero;
+            }
+
+            var clientNetManager = (IClientNetManager) _netManager;
+            return clientNetManager.ServerChannel?.RemoteTimeOffset;
         }
 
         public bool IsFirstTimePredicted { get; private set; } = true;

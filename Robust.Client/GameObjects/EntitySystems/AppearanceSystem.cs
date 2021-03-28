@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     internal sealed class AppearanceSystem : EntitySystem
     {

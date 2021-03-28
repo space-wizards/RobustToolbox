@@ -19,10 +19,10 @@ namespace Robust.Client.Graphics
         public sealed class State : IRsiStateLike
         {
             // List of delays for the frame to reach the next frame.
-            private readonly float[] Delays;
+            public readonly float[] Delays;
 
             // 2D array for the texture to use for each animation frame at each direction.
-            private readonly Texture[][] Icons;
+            public readonly Texture[][] Icons;
 
             internal State(Vector2i size, StateId stateId, DirectionType direction, float[] delays, Texture[][] icons)
             {

@@ -1,9 +1,8 @@
 ﻿using System;
 using Robust.Client.Audio;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Utility;
 using System.IO;
-using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.ResourceManagement

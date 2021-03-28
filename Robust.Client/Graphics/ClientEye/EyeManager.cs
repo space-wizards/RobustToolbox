@@ -1,14 +1,12 @@
-﻿using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.UserInterface;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Client.UserInterface;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 #nullable enable
 
-namespace Robust.Client.Graphics.ClientEye
+namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
     public sealed class EyeManager : IEyeManager
@@ -53,7 +51,7 @@ namespace Robust.Client.Graphics.ClientEye
             var topRight = ScreenToMap(new Vector2(vpSize.X, 0));
             var bottomRight = ScreenToMap(vpSize);
             var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y));
-            
+
             var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
             var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
             var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);

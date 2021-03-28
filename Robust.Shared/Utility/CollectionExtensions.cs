@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Robust.Shared.Utility
@@ -129,6 +130,36 @@ namespace Robust.Shared.Utility
             return enumerator.Current;
         }
 
+        /// <summary>
+        ///     Just like <see cref="Enumerable.FirstOrDefault{TSource}(System.Collections.Generic.IEnumerable{TSource}, Func{TSource, bool})"/> but returns null for value types as well.
+        /// </summary>
+        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns>True if an element has been found.</returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> or <paramref name="predicate" /> is <see langword="null" />.</exception>
+        public static bool TryFirstOrNull<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate, [NotNullWhen(true)] out TSource? element) where TSource : struct
+        {
+            element = source.FirstOrNull(predicate);
+            return element != null;
+        }
+
+        /// <summary>
+        ///     Wraps Linq's FirstOrDefault.
+        /// </summary>
+        /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns>True if an element has been found.</returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> or <paramref name="predicate" /> is <see langword="null" />.</exception>
+        public static bool TryFirstOrDefault<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate, [NotNullWhen(true)] out TSource? element) where TSource : class
+        {
+            element = source.FirstOrDefault(predicate);
+            return element != null;
+        }
+
         public static TValue GetOrNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()
             where TKey : notnull
         {
@@ -155,6 +186,23 @@ namespace Robust.Shared.Utility
             }
 
             return array;
+        }
+
+        /// <summary>
+        /// Tries to get a value from a dictionary and checks if that value is of type T
+        /// </summary>
+        /// <typeparam name="T">The type that sould be casted to</typeparam>
+        /// <returns>Whether the value was present in the dictionary and of the required type</returns>
+        public static bool TryCastValue<T, TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, [NotNullWhen(true)] out T? value) where TKey : notnull
+        {
+            if (dict.TryGetValue(key, out var untypedValue) && untypedValue is T typedValue)
+            {
+                value = typedValue;
+                return true;
+            }
+
+            value = default;
+            return false;
         }
     }
 }

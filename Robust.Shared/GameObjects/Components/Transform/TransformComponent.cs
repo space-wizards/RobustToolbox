@@ -1,28 +1,31 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Transform
+namespace Robust.Shared.GameObjects
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
+        [DataField("parent")]
         private EntityUid _parent;
-        private Vector2 _localPosition; // holds offset from grid, or offset from parent
+        [DataField("pos")]
+        private Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
+        [DataField("rot")]
         private Angle _localRotation; // local rotation
+        [DataField("noRot")]
+        private bool _noLocalRotation;
 
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
@@ -33,13 +36,18 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Vector2 _prevPosition;
         private Angle _prevRotation;
 
+        // Cache changes so we can distribute them after physics is done (better cache)
+        private EntityCoordinates? _oldCoords;
+        private Angle? _oldLocalRotation;
+
+        public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -53,6 +61,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private bool _mapIdInitialized;
 
+        public bool DeferUpdates { get; set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -78,11 +87,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
-        public bool DeferUpdates { get; set; }
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool NoLocalRotation
+        {
+            get => _noLocalRotation;
+            set
+            {
+                if (value)
+                    LocalRotation = Angle.Zero;
 
-        // Deferred fields
-        private Angle? _oldLocalRotation;
-        private EntityCoordinates? _oldCoords;
+                _noLocalRotation = value;
+                Dirty();
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -92,6 +109,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
+                if(_noLocalRotation)
+                    return;
+
                 if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
@@ -106,7 +126,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 {
                     RebuildMatrices();
                     UpdateEntityTree();
-                    UpdatePhysicsTree();
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
                 }
@@ -162,7 +181,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = _entityManager.GetEntity(value).Transform;
+            set => Parent = Owner.EntityManager.GetEntity(value).Transform;
         }
 
         /// <inheritdoc />
@@ -203,6 +222,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Vector2 WorldPosition
         {
             get
@@ -221,7 +241,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (!_parent.IsValid())
                 {
-                    DebugTools.Assert("Tried to move root node.");
+                    DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
                     return;
                 }
 
@@ -250,7 +270,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 if (value.EntityId != _parent)
                 {
-                    var newEntity = _entityManager.GetEntity(value.EntityId);
+                    var newEntity = Owner.EntityManager.GetEntity(value.EntityId);
                     AttachParent(newEntity);
                 }
 
@@ -268,7 +288,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     }
 
                     UpdateEntityTree();
-                    UpdatePhysicsTree();
                 }
                 else
                 {
@@ -301,7 +320,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 {
                     RebuildMatrices();
                     UpdateEntityTree();
-                    UpdatePhysicsTree();
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
                 }
@@ -309,35 +327,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 {
                     _oldCoords ??= oldGridPos;
                 }
-            }
-        }
-
-        /// <inheritdoc />
-        public void RunPhysicsDeferred()
-        {
-            // if we resolved to (close enough) to the OG position then no update.
-            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
-                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
-            {
-                return;
-            }
-
-            RebuildMatrices();
-            UpdateEntityTree();
-            UpdatePhysicsTree();
-
-            if (_oldCoords != null)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
-                _oldCoords = null;
-            }
-
-            if (_oldLocalRotation != null)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
-                _oldLocalRotation = null;
             }
         }
 
@@ -444,23 +433,31 @@ namespace Robust.Shared.GameObjects.Components.Transform
             UpdateEntityTree();
         }
 
-        /// <inheritdoc />
-        public override void OnRemove()
+        public void RunDeferred(Box2 worldAABB)
         {
-            // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var childUid in _children.ToArray())
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
             {
-                // Recursion: DeleteEntity calls the Transform.OnRemove function of child entities.
-                Owner.EntityManager.DeleteEntity(childUid);
+                return;
             }
 
-            // map does not have a parent node
-            if (Parent != null)
+            RebuildMatrices();
+            UpdateEntityTree(worldAABB);
+
+            if (_oldCoords != null)
             {
-                DetachParentToNull();
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
+                _oldCoords = null;
             }
 
-            base.OnRemove();
+            if (_oldLocalRotation != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
+                _oldLocalRotation = null;
+            }
         }
 
         /// <summary>
@@ -480,7 +477,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             IEntity newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
             {
-                newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+                newMapEntity = Owner.EntityManager.GetEntity(mapGrid.GridEntityId);
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId))
             {
@@ -501,12 +498,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             AttachParent(newMapEntity);
 
+            // Technically we're not moving, just changing parent.
+            DeferUpdates = true;
             WorldPosition = mapPos.Position;
+            DeferUpdates = false;
 
             Dirty();
         }
 
-        private void DetachParentToNull()
+        /// <inheritdoc />
+        public void DetachParentToNull()
         {
             var oldParent = Parent;
             if (oldParent == null)
@@ -612,24 +613,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            IPhysicsComponent? collider;
-
             if (oldId != MapId.Nullspace)
             {
-                _entityManager.RemoveFromEntityTree(Owner, oldId);
-
-                if (Initialized && Owner.TryGetComponent(out collider))
-                {
-                    collider.RemovedFromPhysicsTree(oldId);
-                }
+                Owner.EntityManager.RemoveFromEntityTree(Owner, oldId);
             }
 
-            if (MapID != MapId.Nullspace && Initialized && Owner.TryGetComponent(out collider))
-            {
-                collider.AddedToPhysicsTree(MapID);
-            }
-
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -674,19 +663,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _parent, "parent", new EntityUid());
-            serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
-            serializer.DataField(ref _localRotation, "rot", new Angle());
-        }
-
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new TransformComponentState(_localPosition, LocalRotation, _parent);
+            return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation);
         }
 
         /// <inheritdoc />
@@ -743,7 +724,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 Dirty();
                 UpdateEntityTree();
-                TryUpdatePhysicsTree();
             }
 
             if (nextState is TransformComponentState nextTransform)
@@ -765,6 +745,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         // Hooks for GodotTransformComponent go here.
         protected virtual void SetPosition(Vector2 position)
         {
+            // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
             _localPosition = position;
         }
 
@@ -807,12 +788,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _invLocalMatrix = itransMat;
         }
 
-        private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
-
-        private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out IPhysicsComponent? collider) && collider.UpdatePhysicsTree();
-
-        private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
+        public bool UpdateEntityTree(Box2? worldAABB = null) => Owner.EntityManager.UpdateEntityTree(Owner, worldAABB);
 
         public string GetDebugString()
         {
@@ -852,47 +828,71 @@ namespace Robust.Shared.GameObjects.Components.Transform
             public readonly Angle Rotation;
 
             /// <summary>
+            /// Is the transform able to be locally rotated?
+            /// </summary>
+            public readonly bool NoLocalRotation;
+
+            /// <summary>
             ///     Constructs a new state snapshot of a TransformComponent.
             /// </summary>
             /// <param name="localPosition">Current position offset of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
-            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId)
+            /// <param name="noLocalRotation"></param>
+            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation)
                 : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;
                 ParentID = parentId;
+                NoLocalRotation = noLocalRotation;
             }
         }
     }
 
-    public class MoveEvent : EntitySystemMessage
+    /// <summary>
+    ///     Raised whenever an entity moves.
+    ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
+    /// </summary>
+    public class MoveEvent : HandledEntityEventArgs
     {
-        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos)
+        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
+            WorldAABB = worldAABB;
         }
 
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
-        public bool Handled { get; set; }
+
+        /// <summary>
+        ///     New AABB of the entity.
+        /// </summary>
+        public Box2? WorldAABB { get; }
     }
 
-    public class RotateEvent : EntitySystemMessage
+    /// <summary>
+    ///     Raised whenever this entity rotates in relation to their parent.
+    /// </summary>
+    public class RotateEvent : EntityEventArgs
     {
-        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation)
+        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {
             Sender = sender;
             OldRotation = oldRotation;
             NewRotation = newRotation;
+            WorldAABB = worldAABB;
         }
 
         public IEntity Sender { get; }
         public Angle OldRotation { get; }
         public Angle NewRotation { get; }
+        /// <summary>
+        ///     New AABB of the entity.
+        /// </summary>
+        public Box2? WorldAABB { get; }
     }
 }

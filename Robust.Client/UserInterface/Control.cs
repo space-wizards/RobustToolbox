@@ -1,11 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Graphics;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
@@ -156,7 +154,8 @@ namespace Robust.Client.UserInterface
                 _propagateVisibilityChanged(value);
                 // TODO: unhardcode this.
                 // Many containers ignore children if they're invisible, so that's why we're replicating that ehre.
-                Parent?.MinimumSizeChanged();
+                Parent?.InvalidateMeasure();
+                InvalidateMeasure();
             }
         }
 
@@ -596,7 +595,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newChild">The new child.</param>
         protected virtual void ChildAdded(Control newChild)
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -606,7 +605,7 @@ namespace Robust.Client.UserInterface
         protected virtual void Parented(Control newParent)
         {
             StylesheetUpdateRecursive();
-            UpdateLayout();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -644,7 +643,7 @@ namespace Robust.Client.UserInterface
         /// <param name="child">The former child.</param>
         protected virtual void ChildRemoved(Control child)
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         /// <summary>
@@ -818,25 +817,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Called when the size of the control changes.
         /// </summary>
-        protected virtual void Resized()
-        {
-        }
-
-        internal void DoUpdate(FrameEventArgs args)
-        {
-            Update(args);
-            foreach (var child in Children)
-            {
-                child.DoUpdate(args);
-            }
-        }
-
-        /// <summary>
-        ///     This is called every process frame.
-        /// </summary>
-        protected virtual void Update(FrameEventArgs args)
-        {
-        }
+        protected virtual void Resized() { }
 
         internal void DoFrameUpdate(FrameEventArgs args)
         {

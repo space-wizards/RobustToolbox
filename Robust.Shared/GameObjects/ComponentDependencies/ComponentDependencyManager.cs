@@ -1,21 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.GameObjects.ComponentDependencies
+namespace Robust.Shared.GameObjects
 {
     public class ComponentDependencyManager : IComponentDependencyManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = null!;
+        [IoC.Dependency] private readonly IComponentManager _componentManager = null!;
 
         /// <summary>
         /// Cache of queries and their corresponding field offsets
@@ -26,18 +23,16 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 new();
 
         /// <inheritdoc />
-        public void OnComponentAdd(IEntity entity, IComponent newComp)
+        public void OnComponentAdd(EntityUid eUid, IComponent newComp)
         {
-            SetDependencyForEntityComponents(entity, newComp.GetType(), newComp);
-            InjectIntoComponent(entity, newComp);
+            SetDependencyForEntityComponents(eUid, newComp, newComp.GetType());
+            InjectIntoComponent(eUid, newComp);
         }
 
         /// <summary>
         /// Filling the dependencies of newComp by iterating over entity's components
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="newComp"></param>
-        public void InjectIntoComponent(IEntity entity, IComponent newComp)
+        private void InjectIntoComponent(EntityUid eUid, IComponent newComp)
         {
             var queries = GetPointerQueries(newComp);
 
@@ -47,7 +42,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             }
 
             //get all present components in entity
-            foreach (var entityComp in entity.GetAllComponents())
+            foreach (var entityComp in _componentManager.GetComponents(eUid))
             {
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
@@ -65,24 +60,22 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         }
 
         /// <inheritdoc />
-        public void OnComponentRemove(IEntity entity, IComponent removedComp)
+        public void OnComponentRemove(EntityUid eUid, IComponent removedComp)
         {
             ClearRemovedComponentDependencies(removedComp);
-            SetDependencyForEntityComponents(entity, removedComp.GetType(), null);
+            SetDependencyForEntityComponents(eUid, null, removedComp.GetType());
         }
 
         /// <summary>
         /// Updates all dependencies to type compType on the entity (in fields on components), to the value of comp
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="compType"></param>
-        /// <param name="comp"></param>
-        private void SetDependencyForEntityComponents(IEntity entity, Type compType, IComponent? comp)
+        private void SetDependencyForEntityComponents(EntityUid eUid, IComponent? comp, Type compType)
         {
             var compReg = _componentFactory.GetRegistration(compType);
 
             //check if any are requesting our component as a dependency
-            foreach (var entityComponent in entity.GetAllComponents())
+            var entityComponents = _componentManager.GetComponents(eUid);
+            foreach (var entityComponent in entityComponents)
             {
                 //get entry for out entityComponent
                 var queries = GetPointerQueries(entityComponent);
@@ -117,7 +110,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             }
         }
 
-        private void SetField(object o, int offset, object? value)
+        private static void SetField(object o, int offset, object? value)
         {
             var asDummy = Unsafe.As<FieldOffsetDummy>(o);
             ref var @ref = ref Unsafe.Add(ref asDummy.A, offset);
@@ -186,7 +179,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             return queries;
         }
 
-        private Action<object>? GetEventMethod(MethodInfo[] methods, string methodName, MethodInfo getterMethod)
+        private static Action<object>? GetEventMethod(MethodInfo[] methods, string methodName, MethodInfo getterMethod)
         {
             var method = methods.FirstOrDefault(m => m.Name == methodName);
             if (method == null) return null;
@@ -200,7 +193,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             return o => @delegate((T) o);
         }
 
-        private int GetFieldOffset(Type type, FieldInfo field)
+        private static int GetFieldOffset(Type type, FieldInfo field)
         {
             var fieldOffsetField = typeof(FieldOffsetDummy).GetField("A")!;
             var dynamicMethod = new DynamicMethod(

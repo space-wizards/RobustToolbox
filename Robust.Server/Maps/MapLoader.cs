@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Maps;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Resources;
+using System.Linq;
+using JetBrains.Annotations;
+using Robust.Server.GameObjects;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using YamlDotNet.RepresentationModel;
-using Robust.Shared.Utility;
-using Robust.Shared.Serialization;
-using Robust.Shared.GameObjects;
-using System.Globalization;
-using Robust.Shared.Interfaces.GameObjects;
-using System.Linq;
-using Robust.Server.GameObjects;
-using Robust.Server.Interfaces.Timing;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Result;
+using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
@@ -129,6 +128,14 @@ namespace Robust.Server.Maps
                         entity.RunMapInit();
                     }
                 }
+
+                if (_pauseManager.IsMapPaused(mapId))
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        entity.Paused = true;
+                    }
+                }
             }
 
             return grid;
@@ -221,7 +228,10 @@ namespace Robust.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : YamlObjectSerializer.Context, IEntityLoadContext
+        private class MapContext : ISerializationContext, IEntityLoadContext,
+            ITypeSerializer<GridId, ValueDataNode>,
+            ITypeSerializer<EntityUid, ValueDataNode>,
+            ITypeReaderWriter<IEntity, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -253,6 +263,11 @@ namespace Robust.Server.Maps
 
             private Dictionary<ushort, string>? _tileMap;
 
+            public Dictionary<(Type, Type), object> TypeReaders { get; }
+            public Dictionary<Type, object> TypeWriters { get; }
+            public Dictionary<Type, object> TypeCopiers => TypeWriters;
+            public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
+
             public bool MapIsPostInit { get; private set; }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
@@ -267,6 +282,18 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
+                TypeWriters = new Dictionary<Type, object>()
+                {
+                    {typeof(IEntity), this},
+                    {typeof(GridId), this},
+                    {typeof(EntityUid), this}
+                };
+                TypeReaders = new Dictionary<(Type, Type), object>()
+                {
+                    {(typeof(IEntity), typeof(ValueDataNode)), this},
+                    {(typeof(GridId), typeof(ValueDataNode)), this},
+                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
+                };
             }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
@@ -284,6 +311,18 @@ namespace Robust.Server.Maps
                 RootNode = node;
                 TargetMap = targetMapId;
                 _prototypeManager = prototypeManager;
+                TypeWriters = new Dictionary<Type, object>()
+                {
+                    {typeof(IEntity), this},
+                    {typeof(GridId), this},
+                    {typeof(EntityUid), this}
+                };
+                TypeReaders = new Dictionary<(Type, Type), object>()
+                {
+                    {(typeof(IEntity), typeof(ValueDataNode)), this},
+                    {(typeof(GridId), typeof(ValueDataNode)), this},
+                    {(typeof(EntityUid), typeof(ValueDataNode)), this}
+                };
             }
 
             // Deserialization
@@ -528,7 +567,10 @@ namespace Robust.Server.Maps
                     {
                         foreach (var compData in componentList)
                         {
-                            CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode) compData;
+                            var copy = new YamlMappingNode(((YamlMappingNode)compData).AsEnumerable());
+                            copy.Children.Remove(new YamlScalarNode("type"));
+                            //TODO Paul: maybe replace mapping with datanode
+                            CurrentReadingEntityComponents[compData["type"].AsString()] = copy;
                         }
                     }
 
@@ -685,9 +727,11 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
+                var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
                 foreach (var entity in Entities.OrderBy(e => EntityUidMap[e.Uid]))
                 {
                     CurrentWritingEntity = entity;
@@ -699,6 +743,14 @@ namespace Robust.Server.Maps
                     if (entity.Prototype != null)
                     {
                         mapping.Add("type", entity.Prototype.ID);
+                        if (!prototypeCompCache.ContainsKey(entity.Prototype.ID))
+                        {
+                            prototypeCompCache[entity.Prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            foreach (var (compType, comp) in entity.Prototype.Components)
+                            {
+                                prototypeCompCache[entity.Prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                            }
+                        }
                     }
 
                     var components = new YamlSequenceNode();
@@ -708,18 +760,21 @@ namespace Robust.Server.Maps
                         if (component is MapSaveIdComponent)
                             continue;
 
-                        var compMapping = new YamlMappingNode();
                         CurrentWritingComponent = component.Name;
-                        var compSerializer = YamlObjectSerializer.NewWriter(compMapping, this);
+                        var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
 
-                        component.ExposeData(compSerializer);
+                        if (entity.Prototype != null && prototypeCompCache[entity.Prototype.ID].TryGetValue(component.Name, out var protMapping))
+                        {
+                            compMapping = compMapping.Except(protMapping);
+                            if(compMapping == null) continue;
+                        }
 
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
+                            compMapping.AddNode("type", new ValueDataNode(component.Name));
                             // Something actually got written!
-                            compMapping.Add("type", component.Name);
-                            components.Add(compMapping);
+                            components.Add(compMapping.ToYamlNode());
                         }
                     }
 
@@ -732,173 +787,37 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public override bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
-            {
-                if (type == typeof(GridId))
-                {
-                    if (node.AsString() == "null")
-                    {
-                        obj = GridId.Invalid;
-                        return true;
-                    }
-
-                    var val = node.AsInt();
-                    if (val >= Grids.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
-                    }
-                    else
-                    {
-                        obj = Grids[val].Index;
-                        return true;
-                    }
-                }
-
-                if (type == typeof(EntityUid))
-                {
-                    if (node.AsString() == "null")
-                    {
-                        obj = EntityUid.Invalid;
-                        return true;
-                    }
-
-                    var val = node.AsInt();
-                    if (val >= Entities.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
-                            val);
-                    }
-                    else
-                    {
-                        obj = UidEntityMap[val];
-                        return true;
-                    }
-                }
-
-                if (typeof(IEntity).IsAssignableFrom(type))
-                {
-                    var val = node.AsInt();
-                    if (val >= Entities.Count)
-                    {
-                        Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.",
-                            val);
-                    }
-                    else
-                    {
-                        obj = Entities[val];
-                        return true;
-                    }
-                }
-
-                obj = null;
-                return false;
-            }
-
-            public override bool TryTypeToNode(object obj, [NotNullWhen(true)] out YamlNode? node)
-            {
-                switch (obj)
-                {
-                    case GridId gridId:
-                        if (!GridIDMap.TryGetValue(gridId, out var gridMapped))
-                        {
-                            Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridId);
-                            break;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(gridMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-
-                    case EntityUid entityUid:
-                        if (!EntityUidMap.TryGetValue(entityUid, out var entityUidMapped))
-                        {
-                            // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                            if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
-                                CurrentWritingComponent != "Transform")
-                            {
-                                Logger.WarningS("map", "Cannot write entity UID '{0}'.", entityUid);
-                            }
-
-                            node = new YamlScalarNode("null");
-                            return true;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-
-                    case IEntity entity:
-                        if (!EntityUidMap.TryGetValue(entity.Uid, out var entityMapped))
-                        {
-                            Logger.WarningS("map", "Cannot write entity UID '{0}'.", entity.Uid);
-                            break;
-                        }
-                        else
-                        {
-                            node = new YamlScalarNode(entityMapped.ToString(CultureInfo.InvariantCulture));
-                            return true;
-                        }
-                }
-
-                node = null;
-                return false;
-            }
-
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode? protoData)
+            IComponent IEntityLoadContext.GetComponentData(string componentName,
+                IComponent? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
                     throw new InvalidOperationException();
                 }
 
-                var list = new List<YamlMappingNode>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
+                var factory = IoCManager.Resolve<IComponentFactory>();
+
+                IComponent data = protoData != null
+                    ? serializationManager.CreateCopy(protoData, this)!
+                    : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
+
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    list.Add(mapping);
+                    var mapData = (IDeserializedDefinition) serializationManager.Read(
+                        factory.GetRegistration(componentName).Type,
+                        mapping.ToDataNode(), this);
+                    var newData = serializationManager.PopulateDataDefinition(data, mapData);
+                    data = (IComponent) newData.RawValue!;
                 }
 
-                if (protoData != null)
-                {
-                    list.Add(protoData);
-                }
-
-                return YamlObjectSerializer.NewReader(list, this);
+                return data;
             }
 
             public IEnumerable<string> GetExtraComponentTypes()
             {
                 return CurrentReadingEntityComponents!.Keys;
-            }
-
-            public override bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
-            {
-                if (CurrentWritingEntity!.Prototype == null)
-                {
-                    // No prototype, can't be default.
-                    return false;
-                }
-
-                if (!CurrentWritingEntity.Prototype.Components.TryGetValue(CurrentWritingComponent!, out var compData))
-                {
-                    // This component was added mid-game.
-                    return false;
-                }
-
-                var testSer = YamlObjectSerializer.NewReader(compData);
-                if (testSer.TryReadDataFieldCached(field, format, out var prototypeVal))
-                {
-                    if (value == null)
-                    {
-                        return prototypeVal == null;
-                    }
-
-                    return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
-                }
-
-                return false;
             }
 
             private bool IsMapSavable(IEntity entity)
@@ -922,6 +841,165 @@ namespace Robust.Server.Maps
                 }
 
                 return true;
+            }
+
+            public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+                IDependencyCollection dependencies,
+                bool skipHook,
+                ISerializationContext? context = null)
+            {
+                if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
+
+                var val = int.Parse(node.Value);
+                if (val >= Grids.Count)
+                {
+                    Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
+                }
+                else
+                {
+                    return new DeserializedValue<GridId>(Grids[val].Index);
+                }
+
+                return new DeserializedValue<GridId>(GridId.Invalid);
+            }
+
+            ValidationNode ITypeValidator<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+            {
+                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
+                {
+                    return new ErrorNode(node, "Invalid EntityUid", true);
+                }
+
+                return new ValidatedValueNode(node);
+            }
+
+            ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+            {
+                if (node.Value == "null")
+                {
+                    return new ValidatedValueNode(node);
+                }
+
+                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
+                {
+                    return new ErrorNode(node, "Invalid EntityUid", true);
+                }
+
+                return new ValidatedValueNode(node);
+            }
+
+            ValidationNode ITypeValidator<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
+            {
+                if (node.Value == "null") return new ValidatedValueNode(node);
+
+                if (!int.TryParse(node.Value, out var val) || val >= Grids.Count)
+                {
+                    return new ErrorNode(node, "Invalid GridId", true);
+                }
+
+                return new ValidatedValueNode(node);
+            }
+
+            public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                return Write(serializationManager, value.Uid, alwaysWrite, context);
+            }
+
+            public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
+                {
+                    // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
+                    if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
+                        CurrentWritingComponent != "Transform")
+                    {
+                        Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
+                    }
+
+                    return new ValueDataNode("null");
+                }
+                else
+                {
+                    return new ValueDataNode(entityUidMapped.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+
+            public DataNode Write(ISerializationManager serializationManager, GridId value, bool alwaysWrite = false,
+                ISerializationContext? context = null)
+            {
+                if (!GridIDMap.TryGetValue(value, out var gridMapped))
+                {
+                    Logger.WarningS("map", "Cannot write grid ID '{0}', falling back to nullspace.", gridMapped);
+                    return new ValueDataNode("");
+                }
+                else
+                {
+                    return new ValueDataNode(gridMapped.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+
+            DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
+                ValueDataNode node,
+                IDependencyCollection dependencies,
+                bool skipHook,
+                ISerializationContext? context)
+            {
+                if (node.Value == "null")
+                {
+                    return new DeserializedValue<EntityUid>(EntityUid.Invalid);
+                }
+
+                var val = int.Parse(node.Value);
+                if (val >= Entities.Count)
+                {
+                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                }
+                else
+                {
+                    return new DeserializedValue<EntityUid>(UidEntityMap[val]);
+                }
+
+                return new DeserializedValue<EntityUid>(EntityUid.Invalid);
+            }
+
+            DeserializationResult ITypeReader<IEntity, ValueDataNode>.Read(ISerializationManager serializationManager,
+                ValueDataNode node,
+                IDependencyCollection dependencies,
+                bool skipHook,
+                ISerializationContext? context)
+            {
+                var val = int.Parse(node.Value);
+
+                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrDefault(e => e.Uid == UidEntityMap[val], out var entity))
+                {
+                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
+                    return null!;
+                }
+                else
+                {
+                    return new DeserializedValue<IEntity>(entity);
+                }
+            }
+
+            [MustUseReturnValue]
+            public GridId Copy(ISerializationManager serializationManager, GridId source, GridId target,
+                bool skipHook,
+                ISerializationContext? context = null)
+            {
+                return new(source.Value);
+            }
+
+            [MustUseReturnValue]
+            public EntityUid Copy(ISerializationManager serializationManager, EntityUid source, EntityUid target,
+                bool skipHook,
+                ISerializationContext? context = null)
+            {
+                return new((int) source);
             }
         }
 

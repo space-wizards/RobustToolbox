@@ -28,5 +28,10 @@ void fragment()
 
     highp float occlusion = ChebyshevUpperBound(occlDist, ourDist);
 
+    if (occlusion >= 1.0)
+    {
+        discard;
+    }
+
     COLOR = vec4(0.0, 0.0, 0.0, 1.0 - occlusion);
 }

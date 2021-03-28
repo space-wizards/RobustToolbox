@@ -1,13 +1,14 @@
-﻿using System;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.GameObjects.Components.Map
+namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Represents a map grid inside the ECS system.
@@ -25,7 +26,8 @@ namespace Robust.Shared.GameObjects.Components.Map
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
-        private GridId _gridIndex;
+        [DataField("index")]
+        private GridId _gridIndex = GridId.Invalid;
 
         /// <inheritdoc />
         public override string Name => "MapGrid";
@@ -49,22 +51,9 @@ namespace Robust.Shared.GameObjects.Components.Map
             _gridIndex = GridId.Invalid;
         }
 
-        public override void OnRemove()
-        {
-            if(GridIndex != GridId.Invalid)
-            {
-                if(_mapManager.GridExists(_gridIndex))
-                {
-                    Logger.DebugS("map", $"Entity {Owner.Uid} removed grid component, removing bound grid {_gridIndex}");
-                    _mapManager.DeleteGrid(_gridIndex);
-                }
-            }
-
-            base.OnRemove();
-        }
-
+        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MapGridComponentState(_gridIndex, Grid.HasGravity);
         }
@@ -79,14 +68,6 @@ namespace Robust.Shared.GameObjects.Components.Map
 
             _gridIndex = state.GridIndex;
             Grid.HasGravity = state.HasGravity;
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _gridIndex, "index", GridId.Invalid);
         }
     }
 

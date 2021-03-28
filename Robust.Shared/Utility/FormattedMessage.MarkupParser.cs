@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Pidgin;
 using Robust.Shared.Maths;
@@ -16,7 +15,8 @@ namespace Robust.Shared.Utility
         private static readonly Parser<char, char> ParseEscapeSequence =
             Char('\\').Then(OneOf(
                 Char('\\'),
-                Char(TagBegin)));
+                Char(TagBegin),
+                Char(TagEnd)));
 
         private static readonly Parser<char, TagText> ParseTagText =
             ParseEscapeSequence.Or(Token(c => c != TagBegin && c != '\\'))
@@ -58,6 +58,11 @@ namespace Robust.Shared.Utility
 
         private static readonly Parser<char, IEnumerable<Tag>> ParsePermissive =
             ParseTagText.Cast<Tag>().Or(ParseTagOrFallBack).Many();
+
+        public static bool ValidMarkup(string markup)
+        {
+            return Parse.Parse(markup).Success;
+        }
 
         public void AddMarkup(string markup)
         {

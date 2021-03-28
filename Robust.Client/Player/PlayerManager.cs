@@ -1,17 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Interfaces;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -35,16 +32,45 @@ namespace Robust.Client.Player
         private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new();
 
         /// <inheritdoc />
+        public IEnumerable<ICommonSession> NetworkedSessions
+        {
+            get
+            {
+                if (LocalPlayer is not null)
+                    return new[] {LocalPlayer.Session};
+
+                return Enumerable.Empty<ICommonSession>();
+            }
+        }
+
+        /// <inheritdoc />
+        IEnumerable<ICommonSession> ISharedPlayerManager.Sessions => _sessions.Values;
+
+        /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
 
         /// <inheritdoc />
         public int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? 0;
 
         /// <inheritdoc />
-        [ViewVariables] public LocalPlayer? LocalPlayer { get; private set; }
+        [ViewVariables]
+        public LocalPlayer? LocalPlayer
+        {
+            get => _localPlayer;
+            private set
+            {
+                if (_localPlayer == value) return;
+                var oldValue = _localPlayer;
+                _localPlayer = value;
+                LocalPlayerChanged?.Invoke(new LocalPlayerChangedEventArgs(oldValue, _localPlayer));
+            }
+        }
+        private LocalPlayer? _localPlayer;
+        public event Action<LocalPlayerChangedEventArgs>? LocalPlayerChanged;
 
         /// <inheritdoc />
-        [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
+        [ViewVariables]
+        IEnumerable<IPlayerSession> IPlayerManager.Sessions => _sessions.Values;
 
         /// <inheritdoc />
         public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;
@@ -67,12 +93,6 @@ namespace Robust.Client.Player
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty
             _network.ClientSendMessage(msgList);
-        }
-
-        /// <inheritdoc />
-        public void Update(float frameTime)
-        {
-            // Uh, nothing anymore I guess.
         }
 
         /// <inheritdoc />
@@ -181,7 +201,7 @@ namespace Robust.Client.Player
                     if (state.UserId == LocalPlayer!.UserId)
                     {
                         LocalPlayer.InternalSession = newSession;
-
+                        newSession.ConnectedClient = _network.ServerChannel!;
                         // We just connected to the server, hurray!
                         LocalPlayer.SwitchState(SessionStatus.Connecting, newSession.Status);
                     }

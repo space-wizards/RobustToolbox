@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Log;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -19,16 +18,19 @@ namespace Robust.Shared.ContentPack
         {
             private readonly DirectoryInfo _directory;
             private readonly ISawmill _sawmill;
+            private readonly bool _checkCasing;
 
             /// <summary>
             ///     Constructor.
             /// </summary>
             /// <param name="directory">Directory to mount.</param>
             /// <param name="sawmill"></param>
-            public DirLoader(DirectoryInfo directory, ISawmill sawmill)
+            /// <param name="checkCasing"></param>
+            public DirLoader(DirectoryInfo directory, ISawmill sawmill, bool checkCasing)
             {
                 _directory = directory;
                 _sawmill = sawmill;
+                _checkCasing = checkCasing;
             }
 
             /// <inheritdoc />
@@ -81,6 +83,9 @@ namespace Robust.Shared.ContentPack
             [Conditional("DEBUG")]
             private void CheckPathCasing(ResourcePath path)
             {
+                if (!_checkCasing)
+                    return;
+
                 // Run this inside the thread pool due to overhead.
                 Task.Run(() =>
                 {
@@ -91,7 +96,7 @@ namespace Robust.Shared.ContentPack
                     {
                         var prevDir = new DirectoryInfo(prevPath);
                         var found = false;
-                        foreach (var info in prevDir.GetFileSystemInfos())
+                        foreach (var info in prevDir.EnumerateFileSystemInfos())
                         {
                             if (!string.Equals(info.Name, segment, StringComparison.InvariantCultureIgnoreCase))
                             {

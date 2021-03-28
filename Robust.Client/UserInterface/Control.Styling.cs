@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -234,7 +233,7 @@ namespace Robust.Client.UserInterface
 
         protected virtual void StylePropertiesChanged()
         {
-            MinimumSizeChanged();
+            InvalidateMeasure();
         }
 
         public void ForceRunStyleUpdate()

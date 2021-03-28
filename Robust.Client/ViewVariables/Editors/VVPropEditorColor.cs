@@ -1,4 +1,3 @@
-using System;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -13,7 +12,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 Text = ((Color)value!).ToHex(),
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 ToolTip = "Hex color here",
                 PlaceHolder = "Hex color here"
             };

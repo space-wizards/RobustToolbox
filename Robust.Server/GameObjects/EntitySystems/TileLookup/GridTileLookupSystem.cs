@@ -2,20 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
-namespace Robust.Server.GameObjects.EntitySystems.TileLookup
+namespace Robust.Server.GameObjects
 {
     /// <summary>
     ///     Stores what entities intersect a particular tile.
@@ -206,8 +199,8 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out IPhysicsComponent? physics))
-                return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
+            if (entity.TryGetComponent(out IPhysBody? physics))
+                return new Box2(physics.GetWorldAABB().BottomLeft + 0.01f, physics.GetWorldAABB().TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
             return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
@@ -343,7 +336,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                 return;
             }
 
-            var bounds = GetEntityBox(moveEvent.Sender);
+            var bounds = moveEvent.WorldAABB ?? GetEntityBox(moveEvent.Sender);
             var newNodes = GetOrCreateNodes(moveEvent.NewPosition, bounds);
 
             if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))

@@ -1,12 +1,15 @@
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
-    public class CollisionChangeMessage : EntitySystemMessage
+    public class CollisionChangeMessage : EntityEventArgs
     {
+        public PhysicsComponent Body { get; }
+
         public EntityUid Owner { get; }
         public bool CanCollide { get; }
 
-        public CollisionChangeMessage(EntityUid owner, bool canCollide)
+        public CollisionChangeMessage(PhysicsComponent body, EntityUid owner, bool canCollide)
         {
+            Body = body;
             Owner = owner;
             CanCollide = canCollide;
         }

@@ -1,5 +1,3 @@
-using Robust.Shared.Interfaces.Random;
-
 namespace Robust.Shared.Random
 {
     public class RobustRandom : IRobustRandom

@@ -1,5 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
+    <!-- Avoid MSBuild adding a None entry for XAML files because they'd show up TWICE in the project view. -->
+    <DefaultItemExcludes>**/*.xaml</DefaultItemExcludes>
     <RobustUseExternalMSBuild>true</RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild>$(RobustUseExternalMSBuild)</_RobustUseExternalMSBuild>
     <_RobustUseExternalMSBuild Condition="'$(_RobustForceInternalMSBuild)' == 'true'">false</_RobustUseExternalMSBuild>

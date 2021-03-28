@@ -1,8 +1,9 @@
-﻿using Lidgren.Network;
+﻿using System.Collections.Immutable;
+using Lidgren.Network;
 
 #nullable disable
 
-namespace Robust.Shared.Network.Messages
+namespace Robust.Shared.Network.Messages.Handshake
 {
     internal sealed class MsgLoginStart : NetMessage
     {
@@ -14,12 +15,15 @@ namespace Robust.Shared.Network.Messages
         }
 
         public string UserName;
+        public ImmutableArray<byte> HWId;
         public bool CanAuth;
         public bool NeedPubKey;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             UserName = buffer.ReadString();
+            var length = buffer.ReadByte();
+            HWId = ImmutableArray.Create(buffer.ReadBytes(length));
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
         }
@@ -27,6 +31,8 @@ namespace Robust.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write(UserName);
+            buffer.Write((byte) HWId.Length);
+            buffer.Write(HWId.AsSpan());
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
         }

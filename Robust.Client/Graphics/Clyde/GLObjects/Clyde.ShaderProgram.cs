@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -16,7 +16,7 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private class GLShaderProgram
         {
-            private readonly sbyte?[] _uniformIntCache = new sbyte?[Clyde.UniCount];
+            private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();
             private uint _handle = 0;
             private GLShader? _fragmentShader;

@@ -1,70 +1,54 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.IoC;
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Clyde;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Timing;
+using Robust.Shared.Enums;
+using System;
 
-namespace Robust.Client.Graphics.Overlays
+namespace Robust.Client.Graphics
 {
     /// <summary>
-    ///     An overlay is used for fullscreen drawing in the game, for example parallax.
+    ///     An overlay is used for fullscreen drawing in the game. This can range from drawing parallax to a full screen shader.
     /// </summary>
     [PublicAPI]
     public abstract class Overlay
     {
+
         /// <summary>
-        ///     The ID of this overlay. This is used to identify it inside the <see cref="IOverlayManager"/>.
+        ///     Determines when this overlay is drawn in the rendering queue.
         /// </summary>
-        public string ID { get; }
-
-        public virtual bool AlwaysDirty => false;
-        public bool IsDirty => AlwaysDirty || _isDirty;
-        public bool Drawing { get; private set; }
-
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+        /// <summary>
+        ///     If set to true, <see cref="ScreenTexture"/> will be set to the current frame (at the moment before the overlay is rendered). This can be costly to performance, but
+        ///     some shaders will require it as a passed in uniform to operate.
+        /// </summary>
+        public virtual bool RequestScreenTexture => false;
+
+        /// <summary>
+        ///     If <see cref="RequestScreenTexture"> is true, then this will be set to the texture corresponding to the current frame. If false, it will always be null.
+        /// </summary>
+        public Texture? ScreenTexture = null;
+
+        /// <summary>
+        ///    Overlays on the same OverlaySpace will be drawn from lowest ZIndex to highest ZIndex. As an example, ZIndex -1 will be drawn before ZIndex 2.
+        ///    This value is 0 by default. Overlays with same ZIndex will be drawn in an random order.
+        /// </summary>
+        public int? ZIndex { get; set; }
 
         protected IOverlayManager OverlayManager { get; }
 
-        public int? ZIndex { get; set; }
+        private bool Disposed = false;
 
-        public virtual bool SubHandlesUseMainShader { get; } = true;
-
-        private bool _isDirty = true;
-
-        private readonly List<DrawingHandleBase> TempHandles = new();
-
-        private bool Disposed;
-
-        protected Overlay(string id)
+        public Overlay()
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
-            ID = id;
         }
 
-        public void Dispose()
-        {
-            if (Disposed)
-            {
-                return;
-            }
-
-            Dispose(true);
-            Disposed = true;
-            GC.SuppressFinalize(this);
-        }
-
-        ~Overlay()
-        {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
+        /// <summary>
+        ///     If this function returns true, the target framebuffer will be wiped before applying this overlay to it.
+        /// </summary>
+        public virtual bool OverwriteTargetFrameBuffer(){
+            return false;
         }
 
         /// <summary>
@@ -74,50 +58,34 @@ namespace Robust.Client.Graphics.Overlays
         /// <param name="currentSpace">Current space that is being drawn. This function is called for every space that was set up in initialization.</param>
         protected abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
 
-        public void Dirty()
-        {
-            _isDirty = true;
+        protected internal virtual void FrameUpdate(FrameEventArgs args) { }
+
+        ~Overlay() {
+            Dispose();
         }
 
-        protected internal virtual void FrameUpdate(FrameEventArgs args) { }
+        public void Dispose() {
+            if (Disposed) 
+                return;
+            else
+                DisposeBehavior();
+        }
+
+        protected virtual void DisposeBehavior(){
+            Disposed = true;
+            GC.SuppressFinalize(this);
+        }
+
 
         internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
         {
             DrawingHandleBase handle;
-            if (currentSpace == OverlaySpace.WorldSpace)
-                handle = renderHandle.DrawingHandleWorld;
-            else
+            if (currentSpace == OverlaySpace.ScreenSpace || currentSpace == OverlaySpace.ScreenSpaceBelowWorld)
                 handle = renderHandle.DrawingHandleScreen;
+            else
+                handle = renderHandle.DrawingHandleWorld;
 
             Draw(handle, currentSpace);
         }
-    }
-
-
-    /// <summary>
-    ///     Determines in which canvas layers an overlay gets drawn.
-    /// </summary>
-    [Flags]
-    public enum OverlaySpace : byte
-    {
-        /// <summary>
-        ///     Used for matching bit flags.
-        /// </summary>
-        None = 0b0000,
-
-        /// <summary>
-        ///     This overlay will be drawn in the UI root, thus being in screen space.
-        /// </summary>
-        ScreenSpace = 0b0001,
-
-        /// <summary>
-        ///     This overlay will be drawn in the world root, thus being in world space.
-        /// </summary>
-        WorldSpace = 0b0010,
-
-        /// <summary>
-        ///     Drawn in screen coordinates, but behind the world.
-        /// </summary>
-        ScreenSpaceBelowWorld = 0b0100,
     }
 }

@@ -1,15 +1,15 @@
-﻿using System.IO;
+using System.IO;
 using Moq;
 using NUnit.Framework;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
+using Robust.Client.GameObjects;
+using Robust.Client.Physics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
 {
@@ -41,7 +41,11 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 
             var mock = new Mock<IEntitySystemManager>();
             var system = new SharedTransformSystem();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
             mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(system);
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
@@ -49,13 +53,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
             EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.Initialize();
-            MapManager.Startup();
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();
@@ -83,16 +84,16 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), new Angle(0), GridB.GridEntityId);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), new Angle(0), GridB.GridEntityId, false);
             parentTrans.HandleComponentState(compState, null);
 
-            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), new Angle(0), GridB.GridEntityId);
+            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), new Angle(0), GridB.GridEntityId, false);
             childTrans.HandleComponentState(compState, null);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), new Angle(0), parent.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), new Angle(0), parent.Uid, false);
             childTrans.HandleComponentState(compState, null);
             var newWpos = childTrans.WorldPosition;
 
@@ -120,11 +121,11 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.Transform;
             var node3Trans = node3.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), GridB.GridEntityId);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), GridB.GridEntityId, false);
             node1Trans.HandleComponentState(compState, null);
-            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), node1.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), node1.Uid, false);
             node2Trans.HandleComponentState(compState, null);
-            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), node2.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), node2.Uid, false);
             node3Trans.HandleComponentState(compState, null);
 
             // Act

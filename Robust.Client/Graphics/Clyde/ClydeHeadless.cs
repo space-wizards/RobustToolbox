@@ -1,11 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
-using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -24,6 +22,7 @@ namespace Robust.Client.Graphics.Clyde
         public IRenderWindow MainWindowRenderTarget { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
         public Vector2 DefaultWindowScale => (1, 1);
+        public override bool IsFocused => true;
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -38,6 +37,13 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
+
+        public event Action<TextEventArgs>? TextEntered;
+        public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<KeyEventArgs>? KeyUp;
+        public event Action<KeyEventArgs>? KeyDown;
+        public event Action<MouseWheelEventArgs>? MouseWheel;
+        public event Action<string>? CloseWindow;
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -65,6 +71,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetWindowMonitor(IClydeMonitor monitor)
+        {
+            // Nada.
+        }
+
         public void RequestWindowAttention()
         {
             // Nada.
@@ -77,6 +88,18 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized
+        {
+            add { }
+            remove { }
+        }
+
+        public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        {
+            add { }
+            remove { }
+        }
+
+        public event Action OnWindowScaleChanged
         {
             add { }
             remove { }
@@ -97,7 +120,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             using (var image = Image.Load<Rgba32>(stream))
@@ -106,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
@@ -150,6 +173,12 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, string? name = null)
         {
             return new Viewport();
+        }
+
+        public IEnumerable<IClydeMonitor> EnumerateMonitors()
+        {
+            // TODO: Actually return something.
+            yield break;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
@@ -260,6 +289,11 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetPlaybackPosition(float seconds)
+            {
+                // Nada.
+            }
+
+            public void SetVelocity(Vector2 velocity)
             {
                 // Nada.
             }

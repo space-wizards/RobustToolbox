@@ -1,10 +1,10 @@
 ﻿using JetBrains.Annotations;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Client.Graphics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 
-namespace Robust.Client.GameObjects.EntitySystems
+namespace Robust.Client.GameObjects
 {
     /// <summary>
     /// Updates the layer animation for every visible sprite.

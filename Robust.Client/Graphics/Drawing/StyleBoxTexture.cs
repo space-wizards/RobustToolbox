@@ -2,7 +2,7 @@ using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Drawing
+namespace Robust.Client.Graphics
 {
     /// <summary>
     ///     Style box based on a 9-patch texture.

@@ -4,12 +4,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Systems;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -144,7 +141,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Create update order for entity systems.
-            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values);
+            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values, _supertypeSystems);
 
             _frameUpdateOrder = fUpdate.ToArray();
             _updateOrder = update
@@ -159,17 +156,25 @@ namespace Robust.Shared.GameObjects
         }
 
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
-            CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
+            CalculateUpdateOrder(
+                Dictionary<Type, IEntitySystem>.ValueCollection systems,
+                Dictionary<Type, IEntitySystem> supertypeSystems)
         {
-            var allNodes = new List<GraphNode>();
-            var typeToNode = new Dictionary<Type, GraphNode>();
+            var allNodes = new List<GraphNode<IEntitySystem>>();
+            var typeToNode = new Dictionary<Type, GraphNode<IEntitySystem>>();
 
             foreach (var system in systems)
             {
-                var node = new GraphNode(system);
+                var node = new GraphNode<IEntitySystem>(system);
 
                 allNodes.Add(node);
                 typeToNode.Add(system.GetType(), node);
+            }
+
+            foreach (var (type, system) in supertypeSystems)
+            {
+                var node = typeToNode[system.GetType()];
+                typeToNode[type] = node;
             }
 
             foreach (var node in allNodes)
@@ -196,10 +201,10 @@ namespace Robust.Shared.GameObjects
             return (frameUpdate, update);
         }
 
-        private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes)
+        internal static IEnumerable<GraphNode<T>> TopologicalSort<T>(IEnumerable<GraphNode<T>> nodes)
         {
             var elems = nodes.ToDictionary(node => node,
-                node => new HashSet<GraphNode>(node.DependsOn));
+                node => new HashSet<GraphNode<T>>(node.DependsOn));
             while (elems.Count > 0)
             {
                 var elem =
@@ -246,7 +251,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void Update(float frameTime)
+        public void TickUpdate(float frameTime)
         {
             foreach (var updReg in _updateOrder)
             {
@@ -334,12 +339,12 @@ namespace Robust.Shared.GameObjects
         }
 
         [DebuggerDisplay("GraphNode: {" + nameof(System) + "}")]
-        private sealed class GraphNode
+        internal sealed class GraphNode<T>
         {
-            public readonly IEntitySystem System;
-            public readonly List<GraphNode> DependsOn = new();
+            public readonly T System;
+            public readonly List<GraphNode<T>> DependsOn = new();
 
-            public GraphNode(IEntitySystem system)
+            public GraphNode(T system)
             {
                 System = system;
             }

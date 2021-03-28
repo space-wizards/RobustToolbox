@@ -39,7 +39,8 @@ namespace Robust.Client.UserInterface
         {
             LayoutContainer.SetPosition(tooltip, screenPosition);
 
-            var combinedMinSize = tooltip.CombinedMinimumSize;
+            tooltip.Measure(Vector2.Infinity);
+            var combinedMinSize = tooltip.DesiredSize;
             var (right, bottom) = tooltip.Position + combinedMinSize;
 
             if (right > screenBounds.X)

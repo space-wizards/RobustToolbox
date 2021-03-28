@@ -1,11 +1,9 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-
-namespace Robust.Shared.GameObjects.EntitySystemMessages
+﻿namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     Raised when an entity parent is changed.
     /// </summary>
-    public class EntParentChangedMessage : EntitySystemMessage
+    public class EntParentChangedMessage : EntityEventArgs
     {
         /// <summary>
         ///     Entity that was adopted. The transform component has a property with the new parent.

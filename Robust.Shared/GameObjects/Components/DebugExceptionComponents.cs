@@ -1,7 +1,7 @@
 using System;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects.Components
+namespace Robust.Shared.GameObjects
 {
 #if DEBUG
     // If you wanna use these, add it to some random prototype.
@@ -18,16 +18,6 @@ namespace Robust.Shared.GameObjects.Components
         public override string Name => "DebugExceptionOnAdd";
 
         public override void OnAdd() => throw new NotSupportedException();
-    }
-
-    /// <summary>
-    /// Throws an exception in <see cref="ExposeData" />.
-    /// </summary>
-    public sealed class DebugExceptionExposeDataComponent : Component
-    {
-        public override string Name => "DebugExceptionExposeData";
-
-        public override void ExposeData(ObjectSerializer serializer) => throw new NotSupportedException();
     }
 
     /// <summary>

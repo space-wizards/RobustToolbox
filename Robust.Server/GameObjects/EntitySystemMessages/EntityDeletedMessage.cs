@@ -1,9 +1,8 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
 
-namespace Robust.Server.GameObjects.EntitySystemMessages
+namespace Robust.Server.GameObjects
 {
-    public sealed class EntityDeletedMessage : EntitySystemMessage
+    public sealed class EntityDeletedMessage : EntityEventArgs
     {
         public IEntity Entity { get; }
         

@@ -1,10 +1,8 @@
-using System;
+﻿using System;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -28,12 +26,10 @@ namespace Robust.Client.Utility
         {
             if (cache.TryGetResource<RSIResource>(
                 SharedSpriteComponent.TextureRoot / rsiSpecifier.RsiPath,
-                out var theRsi))
+                out var theRsi) &&
+                theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
             {
-                if (theRsi.RSI.TryGetState(rsiSpecifier.RsiState, out var state))
-                {
-                    return state;
-                }
+                return state;
             }
 
             Logger.Error("Failed to load RSI {0}", rsiSpecifier.RsiPath);
@@ -43,6 +39,40 @@ namespace Robust.Client.Utility
         public static Texture Frame0(this SpriteSpecifier specifier)
         {
             return specifier.RsiStateLike().Default;
+        }
+
+        public static float[] FrameDelays(this SpriteSpecifier specifier) {
+            var resc = IoCManager.Resolve<IResourceCache>();
+            switch (specifier) {
+                case SpriteSpecifier.Rsi rsi:
+                    if (resc.TryGetResource<RSIResource>(SpriteComponent.TextureRoot / rsi.RsiPath, out var theRsi)) {
+                        if (theRsi.RSI.TryGetState(rsi.RsiState, out var state)) {
+                            return state.Delays;
+                        }
+                    }
+                    Logger.Error("Failed to load RSI {0}", rsi.RsiPath);
+                    return new float[0];
+
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public static Texture[] FrameArr(this SpriteSpecifier specifier) {
+            var resc = IoCManager.Resolve<IResourceCache>();
+            switch (specifier) {
+                case SpriteSpecifier.Rsi rsi:
+                    if (resc.TryGetResource<RSIResource>(SpriteComponent.TextureRoot / rsi.RsiPath, out var theRsi)) {
+                        if (theRsi.RSI.TryGetState(rsi.RsiState, out var state)) {
+                            return state.Icons[0];
+                        }
+                    }
+                    Logger.Error("Failed to load RSI {0}", rsi.RsiPath);
+                    return new Texture[0];
+
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         public static IDirectionalTextureProvider DirFrame0(this SpriteSpecifier specifier)

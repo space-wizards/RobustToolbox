@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
 namespace Robust.Shared.Maths
@@ -16,12 +17,12 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>
-        public int X;
+        [JsonInclude] public int X;
 
         /// <summary>
         /// The Y component of the Vector2i.
         /// </summary>
-        public int Y;
+        [JsonInclude] public int Y;
 
         /// <summary>
         /// Construct a vector from its coordinates.

@@ -1,7 +1,6 @@
-using Robust.Client.Interfaces.GameStates;
+using Robust.Client.GameStates;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -10,7 +9,7 @@ namespace Robust.Client.GameObjects
     public static class EntityManagerExt
     {
         public static void RaisePredictiveEvent<T>(this IEntityManager entityManager, T msg)
-            where T : EntitySystemMessage
+            where T : EntityEventArgs
         {
             var localPlayer = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
             DebugTools.AssertNotNull(localPlayer);

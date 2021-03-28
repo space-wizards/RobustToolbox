@@ -1,7 +1,6 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 

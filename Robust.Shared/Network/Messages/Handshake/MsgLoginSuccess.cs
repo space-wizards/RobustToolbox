@@ -1,9 +1,8 @@
-﻿using System;
-using Lidgren.Network;
+﻿using Lidgren.Network;
 
 #nullable disable
 
-namespace Robust.Shared.Network.Messages
+namespace Robust.Shared.Network.Messages.Handshake
 {
     internal sealed class MsgLoginSuccess : NetMessage
     {
@@ -13,21 +12,26 @@ namespace Robust.Shared.Network.Messages
         {
         }
 
-        public string UserName;
-        public Guid UserId;
+        public NetUserData UserData;
         public LoginType Type;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            UserName = buffer.ReadString();
-            UserId = buffer.ReadGuid();
+            var name = buffer.ReadString();
+            var id = buffer.ReadGuid();
+            var patreonTier = buffer.ReadString();
+            if (patreonTier.Length == 0)
+                patreonTier = null;
+
+            UserData = new NetUserData(new NetUserId(id), name) {PatronTier = patreonTier};
             Type = (LoginType) buffer.ReadByte();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
-            buffer.Write(UserName);
-            buffer.Write(UserId);
+            buffer.Write(UserData.UserName);
+            buffer.Write(UserData.UserId);
+            buffer.Write(UserData.PatronTier);
             buffer.Write((byte) Type);
         }
     }

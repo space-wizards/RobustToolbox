@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
@@ -39,7 +36,7 @@ namespace Robust.Server.GameObjects
             new();
 
         private bool _logLateMsgs;
-
+        
         /// <inheritdoc />
         public void SetupNetworking()
         {
@@ -50,7 +47,7 @@ namespace Robust.Server.GameObjects
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
 
-        public void Update()
+        public void TickUpdate()
         {
             while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
             {
@@ -90,7 +87,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message)
+        public void SendSystemNetworkMessage(EntityEventArgs message)
         {
             var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
@@ -101,7 +98,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
         {
             var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;

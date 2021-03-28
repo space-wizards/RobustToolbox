@@ -1,4 +1,3 @@
-﻿using Robust.Client.Interfaces.State;
 using Robust.Shared.Log;
 using System;
 using Robust.Shared.IoC;
@@ -18,19 +17,9 @@ namespace Robust.Client.State
             CurrentState = new DefaultState();
         }
 
-        public void Update(FrameEventArgs e)
-        {
-            CurrentState?.Update(e);
-        }
-
         public void FrameUpdate(FrameEventArgs e)
         {
             CurrentState?.FrameUpdate(e);
-        }
-
-        public void FormResize()
-        {
-            CurrentState?.FormResize();
         }
 
         public void RequestStateChange<T>() where T : State, new()

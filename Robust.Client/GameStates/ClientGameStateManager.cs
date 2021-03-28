@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.Input;
+using System.Diagnostics;
+using Robust.Client.GameObjects;
+using Robust.Client.Input;
 using Robust.Shared.GameStates;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
@@ -14,11 +11,9 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -32,7 +27,7 @@ namespace Robust.Client.GameStates
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new();
 
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
 
@@ -131,7 +126,7 @@ namespace Robust.Client.GameStates
             _nextInputCmdSeq++;
         }
 
-        public uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage
+        public uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs
         {
             if (!Predicting)
             {
@@ -247,65 +242,67 @@ namespace Robust.Client.GameStates
 
             if (!Predicting) return;
 
-            using var _ = _timing.StartPastPredictionArea();
-
-
-            if (_pendingInputs.Count > 0)
+            using(var _ = _timing.StartPastPredictionArea())
             {
-                Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
+                if (_pendingInputs.Count > 0)
+                {
+                    Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
+                }
+
+                var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+                var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+                var hasPendingInput = pendingInputEnumerator.MoveNext();
+                var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+                var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
+                                 (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
+
+                // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
+
+                for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
+                {
+                    var tick = new GameTick(t);
+                    _timing.CurTick = tick;
+
+                    while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
+                    {
+                        var inputCmd = pendingInputEnumerator.Current;
+
+                        _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
+
+                        Logger.DebugS(CVars.NetPredict.Name,
+                            $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                            $"state={inputCmd.State}");
+
+
+                        input.PredictInputCommand(inputCmd);
+
+                        hasPendingInput = pendingInputEnumerator.MoveNext();
+                    }
+
+                    while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                    {
+                        var msg = pendingMessagesEnumerator.Current.msg;
+
+                        _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
+
+                        hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+                    }
+
+                    if (t != targetTick)
+                    {
+                        // Don't run EntitySystemManager.TickUpdate if this is the target tick,
+                        // because the rest of the main loop will call into it with the target tick later,
+                        // and it won't be a past prediction.
+                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
+                        ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
+                    }
+                }
             }
 
-            var pendingInputEnumerator = _pendingInputs.GetEnumerator();
-            var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
-            var hasPendingInput = pendingInputEnumerator.MoveNext();
-            var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-
-            var ping = _network.ServerChannel!.Ping / 1000f + PredictLagBias; // seconds.
-            var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictTickBias;
-
-            // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
-
-            for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
-            {
-                var tick = new GameTick(t);
-                _timing.CurTick = tick;
-
-                while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
-                {
-                    var inputCmd = pendingInputEnumerator.Current;
-
-                    _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
-
-                    Logger.DebugS(CVars.NetPredict.Name,
-                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
-                        $"state={inputCmd.State}");
-
-
-                    input.PredictInputCommand(inputCmd);
-
-                    hasPendingInput = pendingInputEnumerator.MoveNext();
-                }
-
-                while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
-                {
-                    var msg = pendingMessagesEnumerator.Current.msg;
-
-                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
-                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
-
-                    hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-                }
-
-                if (t != targetTick)
-                {
-                    // Don't run EntitySystemManager.Update if this is the target tick,
-                    // because the rest of the main loop will call into it with the target tick later,
-                    // and it won't be a past prediction.
-                    _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
-                    ((IEntityEventBus) _entities.EventBus).ProcessEventQueue();
-                }
-            }
+            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
         }
 
         private void ResetPredictedEntities(GameTick curTick)
@@ -358,7 +355,10 @@ namespace Robust.Client.GameStates
 
                 foreach (var component in _componentManager.GetNetComponents(createdEntity))
                 {
-                    var state = component.GetComponentState();
+                    Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
+
+                    var player = _players.LocalPlayer.Session;
+                    var state = component.GetComponentState(player);
 
                     if (state.GetType() == typeof(ComponentState))
                     {

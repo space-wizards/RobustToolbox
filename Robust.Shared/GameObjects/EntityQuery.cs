@@ -1,9 +1,8 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -82,7 +81,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.ComponentManager.GetAllComponents(ComponentType).Select(component => component.Owner);
+            return entityMan.ComponentManager.GetAllComponents(ComponentType, true).Select(component => component.Owner);
         }
     }
 
@@ -98,7 +97,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.ComponentManager.EntityQuery<T>().Select(component => component.Owner);
+            return entityMan.ComponentManager.EntityQuery<T>(true).Select(component => component.Owner);
         }
     }
 
@@ -122,9 +121,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool Match(IEntity entity)
         {
-            if(Entity.TryGetComponent<IPhysicsComponent>(out var physics))
+            if(Entity.TryGetComponent<IPhysBody>(out var physics))
             {
-                return physics.MapID == entity.Transform.MapID && physics.WorldAABB.Contains(entity.Transform.WorldPosition);
+                return physics.MapID == entity.Transform.MapID && physics.GetWorldAABB().Contains(entity.Transform.WorldPosition);
             }
             return false;
         }

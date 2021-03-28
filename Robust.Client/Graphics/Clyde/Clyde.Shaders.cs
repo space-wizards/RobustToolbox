@@ -1,14 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = Robust.Client.Graphics.Shaders.StencilOp;
+using StencilOp = Robust.Client.Graphics.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -184,7 +183,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    System.IO.File.WriteAllText("error.glsl", vertexSource);
+                    File.WriteAllText("error.glsl", vertexSource);
                     throw new ShaderCompilationException(
                         "Failed to compile vertex shader, see inner for details (and error.glsl for formatted source).", e);
                 }
@@ -195,7 +194,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
-                    System.IO.File.WriteAllText("error.glsl", fragmentSource);
+                    File.WriteAllText("error.glsl", fragmentSource);
                     throw new ShaderCompilationException(
                         "Failed to compile fragment shader, see inner for details (and error.glsl for formatted source).", e);
                 }
@@ -429,7 +428,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private protected override void SetParameterImpl(string name, Texture value)
             {
-                throw new NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
             private protected override void SetStencilOpImpl(StencilOp op)

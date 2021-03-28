@@ -10,8 +10,6 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -90,6 +88,8 @@ namespace Robust.Shared.ContentPack
 
             if (_sandboxingEnabled)
             {
+                var checkerSw = Stopwatch.StartNew();
+
                 var typeChecker = MakeTypeChecker();
 
                 Parallel.ForEach(files, pair =>
@@ -102,6 +102,8 @@ namespace Robust.Shared.ContentPack
                         throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
                     }
                 });
+
+                Logger.DebugS("res.mod", $"Verified assemblies in {checkerSw.ElapsedMilliseconds}ms");
             }
 
             // Actually load them in the order they depend on each other.
@@ -343,7 +345,7 @@ namespace Robust.Shared.ContentPack
             // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
             if (_useLoadContext)
             {
-                Logger.DebugS("res.mod", $"RESOLVING DEFAULT: {name}");
+                _logManager.GetSawmill("res.mod").Debug($"RESOLVING DEFAULT: {name}");
                 foreach (var module in LoadedModules)
                 {
                     if (module.GetName().Name == name.Name)

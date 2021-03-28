@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -119,6 +119,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Box2 CentredAroundZero(Vector2 size)
+        {
+            return FromDimensions(-size / 2, size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool Intersects(in Box2 other)
         {
             return other.Bottom <= this.Top && other.Top >= this.Bottom && other.Right >= this.Left &&
@@ -231,6 +237,16 @@ namespace Robust.Shared.Maths
 
             var center = Center;
             var halfSize = Size / 2 * scalar;
+            return new Box2(
+                center - halfSize,
+                center + halfSize);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Box2 Scale(Vector2 scale)
+        {
+            var center = Center;
+            var halfSize = (Size / 2) * scale;
             return new Box2(
                 center - halfSize,
                 center + halfSize);

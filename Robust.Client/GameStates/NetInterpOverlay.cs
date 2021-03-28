@@ -1,16 +1,13 @@
-﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Graphics.Overlays;
-using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Console;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Enums;
+﻿using Robust.Client.Graphics;
+using Robust.Shared.Console;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using System;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
@@ -23,7 +20,7 @@ namespace Robust.Client.GameStates
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
 
-        public NetInterpOverlay() : base(nameof(NetInterpOverlay))
+        public NetInterpOverlay()
         {
             IoCManager.InjectDependencies(this);
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
@@ -34,7 +31,7 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
+            foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;
@@ -47,7 +44,7 @@ namespace Robust.Client.GameStates
                 if(transform.LerpDestination == null)
                     continue;
 
-                var aabb = ((IPhysBody)boundingBox).AABB;
+                var aabb = boundingBox.GetWorldAABB();
 
                 // if not on screen, or too small, continue
                 if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())
@@ -73,35 +70,33 @@ namespace Robust.Client.GameStates
             public string Help => "net_draw_interp <0|1>";
             public string Description => "Toggles the debug drawing of the network interpolation.";
 
-            public bool Execute(IDebugConsole console, params string[] args)
+            public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 if (args.Length != 1)
                 {
-                    console.AddLine("Invalid argument amount. Expected 2 arguments.", Color.Red);
-                    return false;
+                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    return;
                 }
 
                 if (!byte.TryParse(args[0], out var iValue))
                 {
-                    console.AddLine("Invalid argument: Needs to be 0 or 1.");
-                    return false;
+                    shell.WriteLine("Invalid argument: Needs to be 0 or 1.");
+                    return;
                 }
 
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (bValue && !overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                if (bValue && !overlayMan.HasOverlay<NetInterpOverlay>())
                 {
                     overlayMan.AddOverlay(new NetInterpOverlay());
-                    console.AddLine("Enabled network interp overlay.");
+                    shell.WriteLine("Enabled network interp overlay.");
                 }
-                else if (overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                else if (overlayMan.HasOverlay<NetInterpOverlay>())
                 {
-                    overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
-                    console.AddLine("Disabled network interp overlay.");
+                    overlayMan.RemoveOverlay<NetInterpOverlay>();
+                    shell.WriteLine("Disabled network interp overlay.");
                 }
-
-                return false;
             }
         }
     }

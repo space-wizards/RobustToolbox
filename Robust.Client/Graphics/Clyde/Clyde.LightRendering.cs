@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
+using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -200,7 +196,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-
             _lightSoftShaderHandle = LoadShaderHandle("/Shaders/Internal/light-soft.swsl");
             _lightHardShaderHandle = LoadShaderHandle("/Shaders/Internal/light-hard.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
@@ -366,15 +361,22 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
-            CheckGlError();
-            GLClearColor(_lightManager.AmbientLightColor);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            CheckGlError();
+            GL.Enable(EnableCap.StencilTest);
+            _isStencilling = true;
 
             var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
             CheckGlError();
+
+            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
+            CheckGlError();
+            GLClearColor(_lightManager.AmbientLightColor);
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            CheckGlError();
+
+            ApplyLightingFovToBuffer(viewport, eye);
 
             var lightShader = _loadedShaders[_enableSoftShadows ? _lightSoftShaderHandle : _lightHardShaderHandle].Program;
             lightShader.Use();
@@ -385,6 +387,11 @@ namespace Robust.Client.Graphics.Clyde
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+            CheckGlError();
+
+            GL.StencilFunc(StencilFunction.Equal, 0xFF, 0xFF);
+            CheckGlError();
+            GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Keep);
             CheckGlError();
 
             var lastRange = float.NaN;
@@ -468,10 +475,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             ResetBlendFunc();
+            GL.Disable(EnableCap.StencilTest);
+            _isStencilling = false;
 
             CheckGlError();
-
-            ApplyLightingFovToBuffer(viewport, eye);
 
             BlurOntoWalls(viewport, eye);
 
@@ -695,6 +702,13 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
+            GL.StencilMask(0xFF);
+            CheckGlError();
+            GL.StencilFunc(StencilFunction.Always, 0, 0);
+            CheckGlError();
+            GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Replace);
+            CheckGlError();
+
             DrawBlit(viewport, fovShader);
 
             if (_hasGLSamplerObjects)
@@ -780,12 +794,10 @@ namespace Robust.Client.Graphics.Clyde
                         var worldTransform = transform.WorldMatrix;
                         var box = occluder.BoundingBox;
 
-                        // So uh, angle 0 = east... Apparently...
-                        // We account for that here so I don't go insane.
-                        var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
-                        var (trX, trY) = worldTransform.Transform(box.TopLeft);
-                        var (brX, brY) = worldTransform.Transform(box.TopRight);
-                        var (blX, blY) = worldTransform.Transform(box.BottomRight);
+                        var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
+                        var (trX, trY) = worldTransform.Transform(box.TopRight);
+                        var (brX, brY) = worldTransform.Transform(box.BottomRight);
+                        var (blX, blY) = worldTransform.Transform(box.BottomLeft);
 
                         // Faces.
                         var faceN = new Vector4(tlX, tlY, trX, trY);
@@ -946,7 +958,8 @@ namespace Robust.Client.Graphics.Clyde
             viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
                 name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
 
-            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
+            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize,
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 

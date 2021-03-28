@@ -2,14 +2,12 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
-using Robust.Server.Interfaces.GameObjects;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 
 namespace Robust.UnitTesting.Server.GameObjects
 {
@@ -26,10 +24,6 @@ namespace Robust.UnitTesting.Server.GameObjects
   components:
   - type: ThrowsInAdd
 - type: entity
-  id: throwInExposeData
-  components:
-  - type: ThrowsInExposeData
-- type: entity
   id: throwsInInitialize
   components:
   - type: ThrowsInInitialize
@@ -45,20 +39,15 @@ namespace Robust.UnitTesting.Server.GameObjects
             _componentFactory = IoCManager.Resolve<IComponentFactory>();
 
             _componentFactory.Register<ThrowsInAddComponent>();
-            _componentFactory.Register<ThrowsInExposeDataComponent>();
             _componentFactory.Register<ThrowsInInitializeComponent>();
             _componentFactory.Register<ThrowsInStartupComponent>();
-
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
-
+            
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
-            MapManager.Initialize();
-            MapManager.Startup();
 
             MapManager.CreateNewMapEntity(MapId.Nullspace);
 
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();
@@ -67,7 +56,7 @@ namespace Robust.UnitTesting.Server.GameObjects
         }
 
         [Test]
-        public void Test([Values("throwInAdd", "throwInExposeData", "throwsInInitialize", "throwsInStartup")]
+        public void Test([Values("throwInAdd", "throwsInInitialize", "throwsInStartup")]
             string prototypeName)
         {
             Assert.That(() => EntityManager.SpawnEntity(prototypeName, MapCoordinates.Nullspace),
@@ -81,13 +70,6 @@ namespace Robust.UnitTesting.Server.GameObjects
             public override string Name => "ThrowsInAdd";
 
             public override void OnAdd() => throw new NotSupportedException();
-        }
-
-        private sealed class ThrowsInExposeDataComponent : Component
-        {
-            public override string Name => "ThrowsInExposeData";
-
-            public override void ExposeData(ObjectSerializer serializer) => throw new NotSupportedException();
         }
 
         private sealed class ThrowsInInitializeComponent : Component

@@ -1,7 +1,7 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
-using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Animations
 {

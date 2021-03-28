@@ -1,34 +1,38 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.GameObjects.Components.Transform;
+using System.Collections.Generic;
 
-namespace Robust.Shared.GameObjects.Systems
+namespace Robust.Shared.GameObjects
 {
     internal class SharedTransformSystem : EntitySystem
     {
-        private readonly List<MoveEvent> _deferredMoveEvents = new();
+        private readonly Queue<MoveEvent> _gridMoves = new();
+        private readonly Queue<MoveEvent> _otherMoves = new();
 
         public void DeferMoveEvent(MoveEvent moveEvent)
         {
-            _deferredMoveEvents.Add(moveEvent);
+            if (moveEvent.Sender.HasComponent<IMapGridComponent>())
+                _gridMoves.Enqueue(moveEvent);
+            else
+                _otherMoves.Enqueue(moveEvent);
         }
 
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
 
-            var events = _deferredMoveEvents
-                .OrderBy(e => e.Sender.HasComponent<IMapGridComponent>())
-                .ToArray();
+            // Process grid moves first.
+            Process(_gridMoves);
+            Process(_otherMoves);
 
-            foreach (var ev in events)
+            void Process(Queue<MoveEvent> queue)
             {
-                ev.Sender.EntityManager.EventBus.RaiseEvent(EventSource.Local, ev);
-                ev.Handled = true;
-            }
+                while (queue.TryDequeue(out var ev))
+                {
+                    if (ev.Sender.Deleted)
+                        continue;
 
-            _deferredMoveEvents.RemoveAll(e => e.Handled);
+                    RaiseLocalEvent(ev);
+                }
+            }
         }
     }
 }

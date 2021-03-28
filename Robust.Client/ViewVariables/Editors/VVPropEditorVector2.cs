@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -19,13 +18,13 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBoxContainer = new HBoxContainer
             {
-                CustomMinimumSize = new Vector2(240, 0),
+                MinSize = new Vector2(240, 0),
             };
 
             var x = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "X",
                 ToolTip = "X"
             };
@@ -35,7 +34,7 @@ namespace Robust.Client.ViewVariables.Editors
             var y = new LineEdit
             {
                 Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+                HorizontalExpand = true,
                 PlaceHolder = "Y",
                 ToolTip = "Y"
             };

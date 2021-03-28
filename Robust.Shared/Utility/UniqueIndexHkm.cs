@@ -6,7 +6,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
-using Robust.Shared.Utility.Internal;
 
 namespace Robust.Shared.Utility
 {

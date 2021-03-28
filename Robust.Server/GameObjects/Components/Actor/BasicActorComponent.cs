@@ -1,9 +1,6 @@
-﻿using System;
-using Robust.Server.Interfaces.GameObjects;
-using Robust.Server.Interfaces.Player;
+using System;
+using Robust.Server.Player;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
@@ -54,7 +51,7 @@ namespace Robust.Server.GameObjects
         }
     }
 
-    public class PlayerAttachSystemMessage : EntitySystemMessage
+    public class PlayerAttachSystemMessage : EntityEventArgs
     {
         public PlayerAttachSystemMessage(IEntity entity, IPlayerSession newPlayer)
         {
@@ -66,7 +63,7 @@ namespace Robust.Server.GameObjects
         public IPlayerSession NewPlayer { get; }
     }
 
-    public class PlayerDetachedSystemMessage : EntitySystemMessage
+    public class PlayerDetachedSystemMessage : EntityEventArgs
     {
         public PlayerDetachedSystemMessage(IEntity entity)
         {

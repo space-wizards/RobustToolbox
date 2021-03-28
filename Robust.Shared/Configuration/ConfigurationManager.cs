@@ -1,5 +1,4 @@
 using Nett;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
@@ -82,14 +81,6 @@ namespace Robust.Shared.Configuration
                 var tomlValue = TypeConvert(obj);
                 if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
-                    if ((cfgVar.Flags & CVar.SECURE) != 0)
-                    {
-                        // DO NOT read SECURE CVars.
-                        // client config is in a location content can access via the user data API.
-                        // Basically all secure CVars are something
-                        // the launcher should be passing in via env vars anyways.
-                        return;
-                    }
                     // overwrite the value with the saved one
                     cfgVar.Value = tomlValue;
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);
@@ -260,7 +251,7 @@ namespace Robust.Shared.Configuration
 
             if (invokeImmediately)
             {
-                onValueChanged((T) (reg.Value ?? reg.DefaultValue)!);
+                onValueChanged(GetCVar<T>(name));
             }
         }
 
@@ -298,15 +289,13 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public bool IsCVarRegistered(string name)
         {
-            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0;
+            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered;
         }
 
         /// <inheritdoc />
         public IEnumerable<string> GetRegisteredCVars()
         {
-            return _configVars
-                .Where(p => (p.Value.Flags & CVar.SECURE) == 0)
-                .Select(p => p.Key);
+            return _configVars.Select(p => p.Key);
         }
 
         /// <inheritdoc />
@@ -315,10 +304,10 @@ namespace Robust.Shared.Configuration
             SetCVarInternal(name, value);
         }
 
-        private void SetCVarInternal(string name, object value, bool allowSecure = false)
+        private void SetCVarInternal(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (allowSecure || (cVar.Flags & CVar.SECURE) == 0))
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
             {
                 if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                 {
@@ -342,33 +331,12 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
-                //TODO: Make flags work, required non-derpy net system.
-                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
-
-            throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
-        }
-
-        public T GetSecureCVar<T>(string name)
-        {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
                 return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
-
-        public void SetSecureCVar(string name, object value)
-        {
-            SetCVarInternal(name, value, allowSecure: true);
-        }
-
-
-        public void SetSecureCVar<T>(CVarDef<T> def, T value) where T : notnull
-        {
-            SetSecureCVar(def.Name, value);
-        }
-
 
         public T GetCVar<T>(CVarDef<T> def) where T : notnull
         {
@@ -377,7 +345,7 @@ namespace Robust.Shared.Configuration
 
         public Type GetCVarType(string name)
         {
-            if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered || (cVar.Flags & CVar.SECURE) != 0)
+            if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
             {
                 throw new InvalidConfigurationException($"Trying to get type of unregistered variable '{name}'");
             }
@@ -518,8 +486,8 @@ namespace Robust.Shared.Configuration
         }
     }
 
-    [System.Serializable]
-    public class InvalidConfigurationException : System.Exception
+    [Serializable]
+    public class InvalidConfigurationException : Exception
     {
         public InvalidConfigurationException()
         {
@@ -527,7 +495,7 @@ namespace Robust.Shared.Configuration
         public InvalidConfigurationException(string message) : base(message)
         {
         }
-        public InvalidConfigurationException(string message, System.Exception inner) : base(message, inner)
+        public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
         {
         }
         protected InvalidConfigurationException(

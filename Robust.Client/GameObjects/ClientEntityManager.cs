@@ -1,11 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -213,12 +210,6 @@ namespace Robust.Client.GameObjects
             InitializeAndStartEntity((Entity) entity);
             UpdateEntityTree(entity);
             return entity;
-        }
-
-        /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates)
-        {
-            return SpawnEntity(protoName, coordinates);
         }
 
         protected override EntityUid GenerateEntityUid()

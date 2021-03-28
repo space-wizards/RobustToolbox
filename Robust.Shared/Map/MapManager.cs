@@ -1,16 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.GameObjects.Components.Map;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -89,6 +86,8 @@ namespace Robust.Shared.Map
 
             Logger.DebugS("map", "Starting...");
 
+            _entityManager.ComponentManager.ComponentRemoved += OnComponentRemoved;
+
             if (!_maps.Contains(MapId.Nullspace))
             {
                 CreateMap(MapId.Nullspace);
@@ -107,6 +106,24 @@ namespace Robust.Shared.Map
             DebugTools.Assert(!GridExists(GridId.Invalid));
         }
 
+        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        {
+            if(e.Component is not IMapGridComponent)
+                return;
+
+            var gridComp = (IMapGridComponent)e.Component;
+
+            var gridIndex = gridComp.GridIndex;
+            if (gridIndex != GridId.Invalid)
+            {
+                if (GridExists(gridIndex))
+                {
+                    Logger.DebugS("map", $"Entity {e.OwnerUid} removed grid component, removing bound grid {gridIndex}");
+                    DeleteGrid(gridIndex);
+                }
+            }
+        }
+
         /// <inheritdoc />
         public void Shutdown()
         {
@@ -114,6 +131,8 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardInit);
 #endif
             Logger.DebugS("map", "Stopping...");
+
+            _entityManager.ComponentManager.ComponentRemoved -= OnComponentRemoved;
 
             foreach (var map in _maps.ToArray())
             {
@@ -235,7 +254,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
+                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -423,7 +442,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>())
+                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true))
                 {
                     if (comp.GridIndex != actualID)
                         continue;
@@ -448,10 +467,6 @@ namespace Robust.Shared.Map
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
-
-                    var collideComp = newEnt.AddComponent<PhysicsComponent>();
-                    collideComp.CanCollide = true;
-                    collideComp.PhysicsShapes.Add(new PhysShapeGrid(grid));
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 
@@ -562,7 +577,7 @@ namespace Robust.Shared.Map
 
             var grid = _grids[gridID];
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) && gridEnt.LifeStage <= EntityLifeStage.Initialized)
                 gridEnt.Delete();
 
             grid.Dispose();

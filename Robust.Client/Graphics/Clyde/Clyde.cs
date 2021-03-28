@@ -1,24 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Interfaces.Graphics.Lighting;
-using Robust.Client.Interfaces.Graphics.Overlays;
-using Robust.Client.Interfaces.Map;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Map;
+using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface;
 using Robust.Shared;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -45,8 +38,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
-
-        private RenderTexture EntityPostRenderTarget = default!;
 
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
@@ -93,8 +84,8 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
-            
-            _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+
+            ConfigurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
             {
@@ -131,9 +122,9 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
-            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
-            _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
+            _lightmapDivider = ConfigurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = ConfigurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
+            _enableSoftShadows = ConfigurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
         protected override void ReloadConfig()
@@ -156,6 +147,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {
@@ -243,7 +236,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
+            var overrideGLVersion = ConfigurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;
@@ -319,9 +312,10 @@ namespace Robust.Client.Graphics.Clyde
             ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: nameof(EntityPostRenderTarget));
+            screenBufferHandle = new GLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+            ApplySampleParameters(TextureSampleParameters.Default);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _framebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         [Conditional("DEBUG")]

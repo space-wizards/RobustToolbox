@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
@@ -23,6 +23,8 @@ namespace Robust.Client.UserInterface.Controls
         private StyleBox? _foregroundStyleBoxOverride;
         private StyleBox? _fillStyleBoxOverride;
         private StyleBox? _grabberStyleBoxOverride;
+
+        public bool Grabbed => _grabbed;
 
         public StyleBox? ForegroundStyleBoxOverride
         {
@@ -97,11 +99,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public override void SetValueWithoutEvent(float newValue)
+        {
+            base.SetValueWithoutEvent(newValue);
+            UpdateValue();
+        }
+
         private void UpdateValue()
         {
             var ratio = GetAsRatio();
 
-            var margin = (Width - _grabber.CombinedMinimumSize.X) * ratio + _grabber.CombinedMinimumSize.X / 2;
+            var margin = (Width - _grabber.DesiredSize.X) * ratio + _grabber.DesiredSize.X / 2;
             SetMarginRight(_fillPanel, margin);
             SetMarginLeft(_grabber, margin);
             SetMarginRight(_grabber, margin);
@@ -131,10 +139,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Function == EngineKeyFunctions.UIClick)
-            {
-                _grabbed = false;
-            }
+            if (args.Function != EngineKeyFunctions.UIClick) return;
+
+            _grabbed = false;
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
@@ -149,7 +156,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private void HandlePositionChange(Vector2 position)
         {
-            var grabberWidth = _grabber.CombinedMinimumSize.X;
+            var grabberWidth = _grabber.DesiredSize.X;
             var ratio = (position.X - grabberWidth / 2) / (Width - grabberWidth);
             SetAsRatio(ratio);
         }

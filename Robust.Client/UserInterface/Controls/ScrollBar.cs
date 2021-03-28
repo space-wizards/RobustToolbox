@@ -1,6 +1,5 @@
 ﻿using System;
-using JetBrains.Annotations;
-using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -102,12 +101,12 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var box = _getGrabberBox();
-            if (!box.Contains(args.RelativePosition))
+            if (!box.Contains(args.RelativePixelPosition))
             {
                 return;
             }
 
-            _grabData = (args.RelativePosition, Value);
+            _grabData = (args.RelativePixelPosition, Value);
             _updatePseudoClass();
             args.Handle();
         }
@@ -130,13 +129,13 @@ namespace Robust.Client.UserInterface.Controls
             if (_grabData == null)
             {
                 var box = _getGrabberBox();
-                _isHovered = box.Contains(args.RelativePosition);
+                _isHovered = box.Contains(args.RelativePixelPosition);
                 _updatePseudoClass();
                 return;
             }
 
             var (grabPos, grabValue) = _grabData.Value;
-            var (grabRelX, grabRelY) = args.RelativePosition - grabPos;
+            var (grabRelX, grabRelY) = args.RelativePixelPosition - grabPos;
             float moved;
 
             if (_orientation == OrientationMode.Horizontal)
@@ -220,7 +219,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        protected override Vector2 CalculateMinimumSize()
+        protected override Vector2 MeasureOverride(Vector2 availableSize)
         {
             return _getGrabberStyleBox()?.MinimumSize ?? Vector2.Zero;
         }

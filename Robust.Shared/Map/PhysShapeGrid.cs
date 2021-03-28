@@ -1,9 +1,10 @@
 ﻿using System;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
@@ -12,33 +13,40 @@ namespace Robust.Shared.Map
     /// A physics shape that represents a <see cref="MapGrid"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class PhysShapeGrid : IPhysShape
+    [DataDefinition]
+    public class PhysShapeGrid : IPhysShape, ISerializationHooks
     {
-        private GridId _gridId;
+        public int ChildCount => 1;
+
+        public Box2 LocalBounds => _mapGrid.LocalBounds;
+
+        /// <summary>
+        /// The radius of this AABB
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Radius
+        {
+            get => _radius;
+            set
+            {
+                if (MathHelper.CloseTo(_radius, value)) return;
+                _radius = value;
+            }
+        }
+
+        private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+        public ShapeType ShapeType => ShapeType.Grid;
+
+        [DataField("grid")]
+        private GridId _gridId = GridId.Invalid;
 
         [NonSerialized]
         private IMapGridInternal _mapGrid = default!;
 
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision layer of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
+        void ISerializationHooks.AfterDeserialization()
         {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
-        }
-
-        /// <inheritdoc />
-        /// <remarks>
-        /// The collision mask of a grid physics shape cannot be changed.
-        /// </remarks>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get => MapGridHelpers.CollisionGroup;
-            set { }
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
         }
 
         /// <inheritdoc />
@@ -82,24 +90,19 @@ namespace Robust.Shared.Map
             _gridId = _mapGrid.Index;
         }
 
-        /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _gridId, "grid", GridId.Invalid);
-
-            if (serializer.Reading) // There is no Initialize function
-            {
-                var mapMan = IoCManager.Resolve<IMapManager>();
-                _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
-            }
-        }
-
         public event Action? OnDataChanged { add { } remove { } }
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox();
+            return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox().Scale(1 + Radius);
+        }
+
+        public bool Equals(IPhysShape? other)
+        {
+            if (other is not PhysShapeGrid otherGrid) return false;
+            return MathHelper.CloseTo(_radius, otherGrid._radius) &&
+                   _gridId == otherGrid._gridId;
         }
     }
 }

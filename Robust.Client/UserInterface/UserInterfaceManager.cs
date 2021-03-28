@@ -606,11 +606,6 @@ namespace Robust.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
-            if (!_rendering)
-            {
-                return;
-            }
-
             _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
         }
 
@@ -638,7 +633,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
+        private void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -687,8 +682,11 @@ namespace Robust.Client.UserInterface
                 renderHandle.SetScissor(scissorRegion);
             }
 
-            control.DrawInternal(renderHandle);
-            handle.UseShader(null);
+            if (_rendering || control.AlwaysRender)
+            {
+                control.DrawInternal(renderHandle);
+                handle.UseShader(null);
+            }
 
             foreach (var child in control.Children)
             {

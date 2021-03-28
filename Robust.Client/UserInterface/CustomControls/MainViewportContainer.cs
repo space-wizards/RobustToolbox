@@ -14,6 +14,7 @@ namespace Robust.Client.UserInterface.CustomControls
         public MainViewportContainer(IEyeManager eyeManager)
         {
             _eyeManager = eyeManager;
+            AlwaysRender = true;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

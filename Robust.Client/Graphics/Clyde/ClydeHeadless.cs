@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -36,7 +36,7 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
-        
+
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
         public event Action<KeyEventArgs>? KeyUp;
@@ -88,6 +88,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        {
+            add { }
+            remove { }
+        }
+
+        public event Action OnWindowScaleChanged
         {
             add { }
             remove { }

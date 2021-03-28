@@ -79,6 +79,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
         public event Action<string>? CloseWindow;
+        public event Action? OnWindowScaleChanged;
 
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
@@ -539,6 +540,7 @@ namespace Robust.Client.Graphics.Clyde
             try
             {
                 _windowScale = (xScale, yScale);
+                OnWindowScaleChanged?.Invoke();
             }
             catch (Exception e)
             {

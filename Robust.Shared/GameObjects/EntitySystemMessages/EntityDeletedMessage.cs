@@ -1,6 +1,4 @@
-using Robust.Shared.GameObjects;
-
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects
 {
     public sealed class EntityDeletedMessage : EntityEventArgs
     {

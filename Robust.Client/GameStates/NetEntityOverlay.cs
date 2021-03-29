@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
@@ -9,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -28,7 +30,7 @@ namespace Robust.Client.GameStates
         private const int TrafficHistorySize = 64; // Size of the traffic history bar in game ticks.
 
         /// <inheritdoc />
-        public override OverlaySpace Space => OverlaySpace.ScreenSpace;
+        public override OverlaySpace Space => OverlaySpace.ScreenSpace | OverlaySpace.WorldSpace;
 
         private readonly Font _font;
         private readonly int _lineHeight;
@@ -95,9 +97,9 @@ namespace Robust.Client.GameStates
             }
 
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
-            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            float pvsRange = _configurationManager.GetCVar<float>("net.maxupdaterange");
             var pvsCenter = _eyeManager.CurrentEye.Position;
-            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize*2, pvsSize*2));
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsRange*2, pvsRange*2));
 
             int timeout = _gameTiming.TickRate * 3;
             for (int i = 0; i < _netEnts.Count; i++)
@@ -130,16 +132,52 @@ namespace Robust.Client.GameStates
             if (!_netManager.IsConnected)
                 return;
 
+            switch (currentSpace)
+            {
+                case OverlaySpace.ScreenSpace:
+                    DrawScreen(handle);
+                    break;
+                case OverlaySpace.WorldSpace:
+                    DrawWorld(handle);
+                    break;
+            }
+        }
+
+        private void DrawWorld(DrawingHandleBase handle)
+        {
+            bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
+
+            if(!pvsEnabled)
+                return;
+
+            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            var pvsCenter = _eyeManager.CurrentEye.Position;
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
+
+            var worldHandle = (DrawingHandleWorld)handle;
+
+            worldHandle.DrawRect(pvsBox, Color.Red, false);
+        }
+
+        private void DrawScreen(DrawingHandleBase handle)
+        {
             // remember, 0,0 is top left of ui with +X right and +Y down
-            var screenHandle = (DrawingHandleScreen)handle;
+            var screenHandle = (DrawingHandleScreen) handle;
 
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
 
+                if (!_entityManager.TryGetEntity(netEnt.Id, out var ent))
+                {
+                    _netEnts.RemoveSwap(i);
+                    i--;
+                    continue;
+                }
+
                 var xPos = 100;
                 var yPos = 10 + _lineHeight * i;
-                var name = $"({netEnt.Id}) {_entityManager.GetEntity(netEnt.Id).Prototype?.ID}";
+                var name = $"({netEnt.Id}) {ent.Prototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
                 DrawString(screenHandle, _font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);
@@ -225,7 +263,7 @@ namespace Robust.Client.GameStates
             {
                 if (args.Length != 1)
                 {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    shell.WriteError("Invalid argument amount. Expected 1 arguments.");
                     return;
                 }
 

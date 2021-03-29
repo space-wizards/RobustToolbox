@@ -280,6 +280,7 @@ namespace Robust.Shared.GameObjects
 
             entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
         }
         
         public void DeleteEntity(EntityUid uid)
@@ -459,6 +460,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// Factory for generating a new EntityUid for an entity currently being created.
+        /// </summary>
         protected abstract EntityUid GenerateEntityUid();
 
 #region Spatial Queries
@@ -737,11 +741,6 @@ namespace Robust.Shared.GameObjects
         }
 
     }
-
-    /// <summary>
-    /// The children of this entity are about to be deleted.
-    /// </summary>
-    public class EntityTerminatingEvent : EntityEventArgs { }
 
     public enum EntityMessageType : byte
     {

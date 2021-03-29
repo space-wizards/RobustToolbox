@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
@@ -17,12 +18,16 @@ namespace Robust.Server.GameStates
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
+        
+        private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
+
+        private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
         private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
@@ -63,7 +68,7 @@ namespace Robust.Server.GameStates
             _deletionHistory.RemoveAll(hist => hist.tick < oldestAck);
         }
 
-        private List<EntityUid>? GetDeletedEntities(GameTick fromTick)
+        private List<EntityUid> GetDeletedEntities(GameTick fromTick)
         {
             var list = new List<EntityUid>();
             foreach (var (tick, id) in _deletionHistory)
@@ -71,8 +76,7 @@ namespace Robust.Server.GameStates
                 if (tick >= fromTick) list.Add(id);
             }
 
-            // no point sending an empty collection
-            return list.Count == 0 ? default : list;
+            return list;
         }
 
         // Not thread safe
@@ -85,6 +89,7 @@ namespace Robust.Server.GameStates
         public void RemovePlayer(ICommonSession session)
         {
             _playerVisibleSets.Remove(session);
+            _playerLastFullMap.Remove(session, out _);
         }
 
         // thread safe
@@ -136,7 +141,7 @@ namespace Robust.Server.GameStates
         }
 
         // thread safe
-        public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session, GameTick fromTick)
+        public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session, GameTick fromTick, GameTick toTick)
         {
             DebugTools.Assert(session.Status == SessionStatus.InGame);
 
@@ -144,16 +149,20 @@ namespace Robust.Server.GameStates
             List<EntityUid>? deletions;
             if (!CullingEnabled || fromTick == GameTick.Zero)
             {
-                var allStates = _entMan.GetEntityStates(session, fromTick);
+                var allStates = ServerGameStateManager.GetAllEntityStates(_entMan, session, fromTick);
                 deletions = GetDeletedEntities(fromTick);
+                _playerLastFullMap.AddOrUpdate(session, toTick, (_, _) => toTick);
                 return (allStates, deletions);
             }
 
+            var lastMapUpdate = _playerLastFullMap.GetValueOrDefault(session);
             var currentSet = CalcCurrentViewSet(session);
 
             // If they don't have a usable eye, nothing to send, and map remove will deal with ent removal
             if (currentSet is null)
                 return (null, null);
+
+            deletions = GetDeletedEntities(fromTick);
 
             // pretty big allocations :(
             List<EntityState> entityStates = new(currentSet.Count);
@@ -162,9 +171,25 @@ namespace Robust.Server.GameStates
             // complement set
             foreach (var entityUid in previousSet)
             {
-                if (!currentSet.Contains(entityUid))
+                if (!currentSet.Contains(entityUid) && !deletions.Contains(entityUid))
                 {
-                    //TODO: PVS Leave Message
+                    if(_compMan.HasComponent<SnapGridComponent>(entityUid))
+                        continue;
+
+                    // PVS leave message
+                    //TODO: Remove NaN as the signal to leave PVS
+                    var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
+                    var oldState = (TransformComponent.TransformComponentState)xform.GetComponentState(session);
+                    entityStates.Add(new EntityState(entityUid,
+                        new ComponentChanged[]
+                        {
+                            new(false, NetIDs.TRANSFORM, "Transform")
+                        },
+                        new ComponentState[]
+                        {
+                            new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
+                                oldState.ParentID, oldState.NoLocalRotation)
+                        }));
                 }
             }
 
@@ -174,7 +199,7 @@ namespace Robust.Server.GameStates
                 {
                     //Still Visible
                     // only send new changes
-                    var newState = _entMan.GetEntityState(entityUid, fromTick, session);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, fromTick);
 
                     if (!newState.Empty)
                         entityStates.Add(newState);
@@ -182,8 +207,13 @@ namespace Robust.Server.GameStates
                 else
                 {
                     // PVS enter message
+
+                    // skip sending anchored entities (walls)
+                    if (_compMan.HasComponent<SnapGridComponent>(entityUid) && _entMan.GetEntity(entityUid).LastModifiedTick <= lastMapUpdate)
+                        continue;
+
                     // don't assume the client knows anything about us
-                    var newState = _entMan.GetEntityState(entityUid, GameTick.Zero, session);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);
                     entityStates.Add(newState);
                 }
             }
@@ -193,7 +223,8 @@ namespace Robust.Server.GameStates
             previousSet.Clear();
             _visSetPool.Return(previousSet);
 
-            deletions = GetDeletedEntities(fromTick);
+            // no point sending an empty collection
+            deletions = deletions?.Count == 0 ? default : deletions;
 
             return (entityStates, deletions);
         }

@@ -10,16 +10,16 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="IServerGameStateManager"/>
     public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
@@ -87,13 +87,6 @@ namespace Robust.Server.GameStates
         private void HandleClientDisconnect(object? sender, NetChannelArgs e)
         {
             _ackedStates.Remove(e.Channel.ConnectionId);
-
-            if (!_playerManager.TryGetSessionByChannel(e.Channel, out var session))
-            {
-                return;
-            }
-
-            _entityManager.DropPlayerState(session);
         }
 
         private void HandleStateAck(MsgStateAck msg)
@@ -137,9 +130,6 @@ namespace Robust.Server.GameStates
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
-#if OLD_PVS
-                _entityManager.CullDeletionHistory(GameTick.MaxValue);
-#endif
                 _entityView.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 return;
@@ -168,17 +158,10 @@ namespace Robust.Server.GameStates
                 {
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
-#if OLD_PVS
-                var entStates = lastAck == GameTick.Zero || !PvsEnabled
-                    ? _entityManager.GetEntityStates(lastAck, session)
-                    : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
-                var deletions = _entityManager.GetDeletedEntities(lastAck);
-#else
-                var (entStates, deletions) = _entityView.CalculateEntityStates(session, lastAck);
-#endif
+
+                var (entStates, deletions) = _entityView.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
-
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
@@ -219,12 +202,78 @@ namespace Robust.Server.GameStates
             if (oldestAck > _lastOldestAck)
             {
                 _lastOldestAck = oldestAck;
-#if OLD_PVS
-                _entityManager.CullDeletionHistory(oldestAck);
-#endif
                 _entityView.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }
+        }
+
+        /// <summary>
+        /// Generates a network entity state for the given entity.
+        /// </summary>
+        /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
+        /// <param name="player">The player to generate this state for.</param>
+        /// <param name="entityUid">Uid of the entity to generate the state from.</param>
+        /// <param name="fromTick">Only provide delta changes from this tick.</param>
+        /// <returns>New entity State for the given entity.</returns>
+        internal static EntityState GetEntityState(IComponentManager compMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
+        {
+            var compStates = new List<ComponentState>();
+            var changed = new List<ComponentChanged>();
+
+            foreach (var comp in compMan.GetNetComponents(entityUid))
+            {
+                DebugTools.Assert(comp.Initialized);
+
+                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+                // "not different from entity creation".
+                // i.e. when the client spawns the entity and loads the entity prototype,
+                // the data it deserializes from the prototype SHOULD be equal
+                // to what the component state / ComponentChanged would send.
+                // As such, we can avoid sending this data in this case since the client "already has it".
+
+                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                    compStates.Add(comp.GetComponentState(player));
+
+                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
+                }
+                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
+                }
+            }
+
+            return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
+        }
+
+        /// <summary>
+        ///     Gets all entity states that have been modified after and including the provided tick.
+        /// </summary>
+        internal static List<EntityState>? GetAllEntityStates(IEntityManager entityMan, ICommonSession player, GameTick fromTick)
+        {
+            var stateEntities = new List<EntityState>();
+            foreach (var entity in entityMan.GetEntities())
+            {
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
+                DebugTools.Assert(entity.Initialized);
+
+                if (entity.LastModifiedTick <= fromTick)
+                    continue;
+
+                stateEntities.Add(GetEntityState(entityMan.ComponentManager, player, entity.Uid, fromTick));
+            }
+
+            // no point sending an empty collection
+            return stateEntities.Count == 0 ? default : stateEntities;
         }
     }
 }

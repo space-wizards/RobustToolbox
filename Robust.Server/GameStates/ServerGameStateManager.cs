@@ -123,8 +123,7 @@ namespace Robust.Server.GameStates
 
             _entityManager.Update();
 
-            //TODO: Make these cvars
-            _entityView.ViewSize = PvsRange;
+            _entityView.ViewSize = PvsRange * 2;
             _entityView.CullingEnabled = PvsEnabled;
 
             if (!_networkManager.IsConnected)

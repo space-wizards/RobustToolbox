@@ -97,9 +97,9 @@ namespace Robust.Client.GameStates
             }
 
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
-            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            float pvsRange = _configurationManager.GetCVar<float>("net.maxupdaterange");
             var pvsCenter = _eyeManager.CurrentEye.Position;
-            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsRange*2, pvsRange*2));
 
             int timeout = _gameTiming.TickRate * 3;
             for (int i = 0; i < _netEnts.Count; i++)

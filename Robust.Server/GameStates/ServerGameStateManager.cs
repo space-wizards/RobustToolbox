@@ -121,8 +121,6 @@ namespace Robust.Server.GameStates
         {
             DebugTools.Assert(_networkManager.IsServer);
 
-            _entityManager.Update();
-
             _entityView.ViewSize = PvsRange * 2;
             _entityView.CullingEnabled = PvsEnabled;
 
@@ -188,6 +186,7 @@ namespace Robust.Server.GameStates
             }
 
             var mailBag = _playerManager.GetAllPlayers()
+                .AsParallel()
                 .Where(s=>s.Status == SessionStatus.InGame).Select(GenerateMail);
             
             foreach (var (msg, chan) in mailBag)

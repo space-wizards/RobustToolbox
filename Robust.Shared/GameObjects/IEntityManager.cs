@@ -218,7 +218,5 @@ namespace Robust.Shared.GameObjects
         bool RemoveFromEntityTree(IEntity entity, MapId mapId);
 
         #endregion
-
-        void Update();
     }
 }

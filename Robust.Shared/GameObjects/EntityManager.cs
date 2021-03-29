@@ -735,11 +735,6 @@ namespace Robust.Shared.GameObjects
         }
 
 #endregion
-
-        public virtual void Update()
-        {
-        }
-
     }
 
     public enum EntityMessageType : byte

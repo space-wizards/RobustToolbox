@@ -23,6 +23,22 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private HashSet<EntityUid> _handledThisTick = new();
 
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Enqueue(ev));
+            SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Enqueue(ev));
+            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Enqueue(ev));
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<RotateEvent>();
+            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+        }
+
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

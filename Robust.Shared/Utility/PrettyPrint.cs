@@ -18,7 +18,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="value">The object to represent.</param>
         /// <returns>A readable representation of the object.</returns>
-        public static string? PrintUserFacing(object value)
+        public static string? PrintUserFacing(object? value)
         {
            return PrintUserFacingWithType(value, out _);
         }

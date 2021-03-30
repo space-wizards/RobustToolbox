@@ -1,4 +1,5 @@
-﻿using YamlDotNet.RepresentationModel;
+﻿using Robust.Shared.ViewVariables;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
 {
@@ -15,7 +16,7 @@ namespace Robust.Shared.Prototypes
         /// An ID for this prototype instance.
         /// If this is a duplicate, an error will be thrown.
         /// </summary>
-        string ID { get; }
+        [ViewVariables(VVAccess.ReadOnly)] string ID { get; }
     }
 
     public interface IInheritingPrototype

@@ -21,5 +21,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         void Render();
         Vector2 WorldToLocal(Vector2 point);
+
+        void RenderScreenOverlaysBelow(DrawingHandleScreen handle);
+        void RenderScreenOverlaysAbove(DrawingHandleScreen handle);
     }
 }

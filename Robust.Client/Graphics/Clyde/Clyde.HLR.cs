@@ -67,17 +67,13 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
-
             foreach (var weak in _viewports.Values)
             {
-                if(weak.TryGetTarget(out var viewport))
+                if (weak.TryGetTarget(out var viewport))
                     RenderViewport(viewport);
             }
 
             TakeScreenshot(ScreenshotType.BeforeUI);
-
-            RenderOverlays(OverlaySpace.ScreenSpace);
 
             using (DebugGroup("UI"))
             {
@@ -91,70 +87,99 @@ namespace Robust.Client.Graphics.Clyde
             SwapBuffers();
         }
 
-        private void RenderOverlays(OverlaySpace space)
+        private void RenderOverlays(Viewport vp, OverlaySpace space)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
-                var list = new List<Overlay>();
-
-                foreach (var overlay in _overlayManager.AllOverlays)
+                var list = GetOverlaysForSpace(space);
+                foreach (var overlay in list)
                 {
-                    if ((overlay.Space & space) != 0)
+                    if (overlay.RequestScreenTexture)
                     {
-                        list.Add(overlay);
-                    }
-                }
-                FlushRenderQueue();
-                list.Sort(OverlayComparer.Instance);
-                foreach (var overlay in list) {
-                    if (overlay.RequestScreenTexture) {
                         FlushRenderQueue();
-                        // TODO: FIX THIS
-                        // UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
+                        UpdateOverlayScreenTexture(space, vp.RenderTarget);
                     }
-                    if (overlay.OverwriteTargetFrameBuffer()) {
+
+                    if (overlay.OverwriteTargetFrameBuffer())
+                    {
                         ClearFramebuffer(default);
                     }
+
                     overlay.ClydeRender(_renderHandle, space);
-                    FlushRenderQueue();
                 }
             }
+        }
+
+        private void RenderOverlaysDirect(DrawingHandleBase handle, OverlaySpace space)
+        {
+            var list = GetOverlaysForSpace(space);
+
+            foreach (var overlay in list)
+            {
+                overlay.Draw(handle, space);
+            }
+        }
+
+        private List<Overlay> GetOverlaysForSpace(OverlaySpace space)
+        {
+            var list = new List<Overlay>();
+
+            foreach (var overlay in _overlayManager.AllOverlays)
+            {
+                if ((overlay.Space & space) != 0)
+                {
+                    list.Add(overlay);
+                }
+            }
+
+            list.Sort(OverlayComparer.Instance);
+
+            return list;
         }
 
         private ClydeTexture? ScreenBufferTexture;
         private GLHandle screenBufferHandle;
         private Vector2 lastFrameSize;
+
         /// <summary>
         ///    Sends SCREEN_TEXTURE to all overlays in the given OverlaySpace that request it.
         /// </summary>
-        private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
+        private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture)
+        {
             //This currently does NOT consider viewports and just grabs the current screen framebuffer. This will need to be improved upon in the future.
             List<Overlay> oTargets = new List<Overlay>();
-            foreach (var overlay in _overlayManager.AllOverlays) {
-                if (overlay.RequestScreenTexture && overlay.Space == space) {
+            foreach (var overlay in _overlayManager.AllOverlays)
+            {
+                if (overlay.RequestScreenTexture && overlay.Space == space)
+                {
                     oTargets.Add(overlay);
                 }
             }
-            if (oTargets.Count > 0 && ScreenBufferTexture != null) {
-                if (lastFrameSize != _framebufferSize) {
+
+            if (oTargets.Count > 0 && ScreenBufferTexture != null)
+            {
+                if (lastFrameSize != _framebufferSize)
+                {
                     GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, _framebufferSize.X, _framebufferSize.Y, 0,
+                    GL.TexImage2D(TextureTarget.Texture2D, 0,
+                        _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, _framebufferSize.X,
+                        _framebufferSize.Y, 0,
                         PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
                 }
+
                 lastFrameSize = _framebufferSize;
                 CopyRenderTextureToTexture(texture, ScreenBufferTexture);
-                foreach (Overlay overlay in oTargets) {
+                foreach (Overlay overlay in oTargets)
+                {
                     overlay.ScreenTexture = ScreenBufferTexture;
                 }
+
                 oTargets.Clear();
                 return true;
             }
+
             return false;
         }
-
-
-
-
 
 
         private void DrawEntities(Viewport viewport, Box2 worldBounds)
@@ -164,7 +189,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(OverlaySpace.WorldSpaceBelowEntities);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities);
 
             var screenSize = viewport.Size;
 
@@ -240,7 +265,7 @@ namespace Robust.Client.Graphics.Clyde
                     // we need to scale RT a for effects like emission or highlight
                     // scale can be passed with PostShader as variable in future
                     var postShadeScale = 1.25f;
-                    var screenSpriteSize = (Vector2i)((screenRT - screenLB) * postShadeScale).Rounded();
+                    var screenSpriteSize = (Vector2i) ((screenRT - screenLB) * postShadeScale).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 
                     // I'm not 100% sure why it works, but without it post-shader
@@ -266,7 +291,7 @@ namespace Robust.Client.Graphics.Clyde
                         // but it's ACTUALLY drawing into the center of the render target.
                         var spritePos = spriteBB.Center;
                         var screenPos = _eyeManager.WorldToScreen(spritePos);
-                        var (roundedX, roundedY) = roundedPos = (Vector2i)screenPos;
+                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
                         var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
                         flippedPos -= entityPostRenderTarget.Size / 2;
                         _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
@@ -336,7 +361,6 @@ namespace Robust.Client.Graphics.Clyde
                 var worldPos = entry.matrix.Transform(transform.LocalPosition);
                 entry.yWorldPos = worldPos.Y;
                 return true;
-
             }), worldBounds, approx: true);
         }
 
@@ -403,18 +427,11 @@ namespace Robust.Client.Graphics.Clyde
                         DrawEntities(viewport, worldBounds);
                     }
 
-                    RenderOverlays(OverlaySpace.WorldSpaceBelowFOV);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
-                        GL.Clear(ClearBufferMask.StencilBufferBit);
-                        GL.Enable(EnableCap.StencilTest);
-                        GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
-                        GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-                        GL.StencilMask(0xFF);
                         ApplyFovToBuffer(viewport, eye);
-                        GL.StencilMask(0x00);
-                        GL.Disable(EnableCap.StencilTest);
                     }
                 }
 
@@ -443,13 +460,8 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
 
-
-                RenderOverlays(OverlaySpace.WorldSpace);
-
-                GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
-                GL.Disable(EnableCap.DepthTest);
-                RenderOverlays(OverlaySpace.WorldSpaceFOVStencil);
-                GL.Disable(EnableCap.StencilTest);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace);
+                FlushRenderQueue();
             }
 
             PopRenderStateFull(state);

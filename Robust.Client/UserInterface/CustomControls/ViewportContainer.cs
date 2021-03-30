@@ -45,7 +45,11 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
+                Viewport.RenderScreenOverlaysBelow(handle);
+
                 handle.DrawTextureRect(Viewport.RenderTarget.Texture, UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
+
+                Viewport.RenderScreenOverlaysAbove(handle);
             }
         }
 

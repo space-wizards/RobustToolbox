@@ -125,7 +125,7 @@ namespace Robust.Client.Debugging
             _physics = system;
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             if (_physics.Flags == PhysicsDebugFlags.None) return;
 

@@ -497,6 +497,16 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return point;
             }
+
+            public void RenderScreenOverlaysBelow(DrawingHandleScreen handle)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void RenderScreenOverlaysAbove(DrawingHandleScreen handle)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

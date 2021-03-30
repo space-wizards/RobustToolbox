@@ -125,7 +125,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             if (!_netManager.IsConnected)
                 return;

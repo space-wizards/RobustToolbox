@@ -75,7 +75,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 

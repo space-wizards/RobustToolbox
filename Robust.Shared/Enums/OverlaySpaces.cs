@@ -19,12 +19,6 @@ namespace Robust.Shared.Enums {
         ScreenSpace = 0b000001,
 
         /// <summary>
-        ///     This overlay will be drawn directly above normal worldspace, but a stencil equivalent to the FOV will be applied.
-        ///     You likely want to use <see cref="WorldSpaceBelowFOV"/>. This space should only be used if you fully understand why you need this.
-        /// </summary>
-        WorldSpaceFOVStencil = 0b000010,
-
-        /// <summary>
         ///     This overlay will be drawn above entities, lighting, and FOV.
         /// </summary>
         WorldSpace = 0b000100,
@@ -40,7 +34,7 @@ namespace Robust.Shared.Enums {
         WorldSpaceBelowEntities = 0b010000,
 
         /// <summary>
-        ///     This overlay will be drawn in screen coordinates behind the world. 
+        ///     This overlay will be drawn in screen coordinates behind the world.
         /// </summary>
         ScreenSpaceBelowWorld = 0b100000,
     }

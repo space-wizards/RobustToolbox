@@ -106,7 +106,7 @@ namespace Robust.Client.Debugging
             }
 
             /// <inheritdoc />
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 switch (currentSpace)
                 {
@@ -271,7 +271,7 @@ namespace Robust.Client.Debugging
                 _eyeManager = eyeManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 const float stubLength = 0.25f;
 

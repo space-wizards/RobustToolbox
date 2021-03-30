@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Enums;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -128,6 +129,16 @@ namespace Robust.Client.Graphics.Clyde
                 newPoint += Size / 2f;
 
                 return newPoint;
+            }
+
+            public void RenderScreenOverlaysBelow(DrawingHandleScreen handle)
+            {
+                _clyde.RenderOverlaysDirect(handle, OverlaySpace.ScreenSpaceBelowWorld);
+            }
+
+            public void RenderScreenOverlaysAbove(DrawingHandleScreen handle)
+            {
+                _clyde.RenderOverlaysDirect(handle, OverlaySpace.ScreenSpace);
             }
 
             public void Dispose()

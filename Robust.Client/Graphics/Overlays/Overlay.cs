@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <param name="handle">Current drawing handle that the overlay should be drawing with. Do not hold a reference to this in the overlay.</param>
         /// <param name="currentSpace">Current space that is being drawn. This function is called for every space that was set up in initialization.</param>
-        protected abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
+        protected internal abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
 
         protected internal virtual void FrameUpdate(FrameEventArgs args) { }
 
@@ -65,7 +65,7 @@ namespace Robust.Client.Graphics
         }
 
         public void Dispose() {
-            if (Disposed) 
+            if (Disposed)
                 return;
             else
                 DisposeBehavior();

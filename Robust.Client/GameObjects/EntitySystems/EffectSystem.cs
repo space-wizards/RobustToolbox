@@ -346,7 +346,7 @@ namespace Robust.Client.GameObjects
                 _entityManager = entityManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 var map = _owner.eyeManager.CurrentMap;
 

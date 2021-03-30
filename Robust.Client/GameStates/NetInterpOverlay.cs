@@ -26,7 +26,7 @@ namespace Robust.Client.GameStates
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;

@@ -29,6 +29,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Enqueue(ev));
             SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Enqueue(ev));
             SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Enqueue(ev));
+            _mapManager.MapCreated += HandleMapCreated;
+            _mapManager.MapDestroyed += HandleMapDestroyed;
         }
 
         public override void Shutdown()
@@ -37,6 +39,22 @@ namespace Robust.Shared.GameObjects
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<RotateEvent>();
             UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+            _mapManager.MapCreated -= HandleMapCreated;
+            _mapManager.MapDestroyed -= HandleMapDestroyed;
+        }
+
+        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            _entityTreesPerMap[eventArgs.Map] = new DynamicTree<IEntity>(
+                GetWorldAabbFromEntity,
+                capacity: 16,
+                growthFunc: x => x == 16 ? 3840 : x + 256
+            );
+        }
+
+        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
+        {
+            _entityTreesPerMap.Remove(eventArgs.Map);
         }
 
         public override void Update(float frameTime)
@@ -283,11 +301,10 @@ namespace Robust.Shared.GameObjects
             return list;
         }
 
-#endregion
+        #endregion
 
-
-#region Entity DynamicTree
-public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
+        #region Entity DynamicTree
+        public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
             if (entity.Deleted)
             {
@@ -368,6 +385,6 @@ public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
             return new Box2(pos, pos);
         }
 
-#endregion
+        #endregion
     }
 }

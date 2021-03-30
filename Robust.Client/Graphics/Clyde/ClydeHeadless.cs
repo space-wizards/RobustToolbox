@@ -488,6 +488,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public bool AutomaticRender { get; set; }
 
             public void Render()
             {

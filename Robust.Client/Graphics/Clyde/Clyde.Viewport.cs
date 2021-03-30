@@ -107,6 +107,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; set; }
+            public bool AutomaticRender { get; set; }
 
             void IClydeViewport.Render()
             {

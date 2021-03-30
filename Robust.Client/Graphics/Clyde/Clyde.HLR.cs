@@ -69,7 +69,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var weak in _viewports.Values)
             {
-                if (weak.TryGetTarget(out var viewport))
+                if (weak.TryGetTarget(out var viewport) && viewport.AutomaticRender)
                     RenderViewport(viewport);
             }
 
@@ -377,6 +377,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return;
             }
+
+            using var _ = DebugGroup($"Viewport: {viewport.Name}");
 
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 

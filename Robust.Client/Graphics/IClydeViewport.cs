@@ -17,6 +17,11 @@ namespace Robust.Client.Graphics
         Vector2i Size { get; }
 
         /// <summary>
+        ///     If true, <see cref="Render"/> will be automatically called at the start of the frame.
+        /// </summary>
+        bool AutomaticRender { get; set; }
+
+        /// <summary>
         ///     Render the state of the world in this viewport, updating the texture inside the render target.
         /// </summary>
         void Render();

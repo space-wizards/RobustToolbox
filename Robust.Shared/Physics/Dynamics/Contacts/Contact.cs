@@ -28,8 +28,6 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -43,9 +41,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     public class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly ICollisionManager _collisionManager = default!;
-#if DEBUG
-        private SharedDebugPhysicsSystem _debugPhysics = default!;
-#endif
+
+        internal ContactStatus Status = ContactStatus.None;
 
         public ContactEdge NodeA = new();
         public ContactEdge NodeB = new();
@@ -192,9 +189,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public Contact(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
             IoCManager.InjectDependencies(this);
-#if DEBUG
-            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
-#endif
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 
@@ -314,7 +308,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
         /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
+        internal void Update(ContactManager contactManager)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -379,6 +373,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
 
             IsTouching = touching;
+            Status = ContactStatus.None;
 
             if (!wasTouching)
             {
@@ -408,7 +403,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     if (enabledA && enabledB && contactManager.BeginContact != null)
                         Enabled = contactManager.BeginContact(this);
                     */
-                    startCollisions.Add(this);
+                    Status = ContactStatus.Start;
                 }
             }
             else
@@ -429,16 +424,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         contactManager.EndContact(this);
                     */
 
-                    endCollisions.Add(this);
+                    Status = ContactStatus.End;
                 }
             }
 
             if (sensor)
                 return;
-
-#if DEBUG
-            _debugPhysics.HandlePreSolve(this, oldManifold);
-#endif
         }
 
         /// <summary>
@@ -543,6 +534,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             RectAndCircle,
             RectAndPolygon,
             Grids,
+        }
+
+        internal enum ContactStatus : byte
+        {
+            None = 0,
+            Start,
+            End,
         }
 
         public bool Equals(Contact? other)

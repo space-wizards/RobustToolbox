@@ -27,9 +27,12 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -44,12 +47,14 @@ namespace Robust.Shared.Physics.Dynamics
         internal MapId MapId { get; set; }
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+#if DEBUG
+        private SharedDebugPhysicsSystem _debugPhysics = default!;
+#endif
 
         /// <summary>
         ///     Called when the broadphase finds two fixtures close to each other.
         /// </summary>
         public BroadPhaseDelegate OnBroadPhaseCollision;
-
 
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
@@ -63,9 +68,10 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
-        // TODO: CollideMultiCore
         private List<Contact> _startCollisions = new();
         private List<Contact> _endCollisions = new();
+
+        private List<Contact> _updates = new();
 
         public ContactManager()
         {
@@ -79,6 +85,9 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+#if DEBUG
+            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+#endif
         }
 
         public void FindNewContacts(MapId mapId)
@@ -266,6 +275,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal void Collide()
         {
+            _updates.Clear();
+
             // Can be changed while enumerating
             // TODO: check for null instead?
             for (var contact = ContactList.Next; contact != ContactList;)
@@ -356,9 +367,58 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // The contact persists.
-                contact.Update(this, _startCollisions, _endCollisions);
+                _updates.Add(contact);
 
                 contact = contact.Next;
+            }
+
+            var parallel = _updates.Count >= 128;
+
+            if (parallel)
+            {
+                var batchSize = (int) Math.Ceiling((float) _updates.Count / Environment.ProcessorCount - 1);
+                var batches = (int) Math.Ceiling((float) _updates.Count / batchSize);
+
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _updates.Count);
+                    for (var j = start; j < end; j++)
+                    {
+                        _updates[j].Update(this);
+                    }
+                });
+            }
+            else
+            {
+                foreach (var contact in _updates)
+                {
+                    contact.Update(this);
+                }
+            }
+
+#if DEBUG
+            foreach (var contact in _updates)
+            {
+                _debugPhysics.HandlePreSolve(contact, contact.Manifold);
+            }
+#endif
+
+            foreach (var contact in _updates)
+            {
+                switch (contact.Status)
+                {
+                    case Contact.ContactStatus.None:
+                        break;
+                    case Contact.ContactStatus.Start:
+                        _startCollisions.Add(contact);
+                        break;
+                    case Contact.ContactStatus.End:
+                        _endCollisions.Add(contact);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
 
             foreach (var contact in _startCollisions)

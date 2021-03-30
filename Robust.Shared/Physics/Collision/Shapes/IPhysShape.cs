@@ -1,7 +1,7 @@
 ﻿using System;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     public enum ShapeType : sbyte
     {
@@ -26,7 +26,14 @@ namespace Robust.Shared.Physics
         /// </summary>
         int ChildCount { get; }
 
+        /// <summary>
+        /// Radius of the Shape
+        /// Changing the radius causes a recalculation of shape properties.
+        /// </summary>
         float Radius { get; set; }
+
+        // Sloth: I removed density because mass is way easier to work with.
+        // If you really want it back then code it yaself (and also probably put it on the fixture).
 
         ShapeType ShapeType { get; }
 

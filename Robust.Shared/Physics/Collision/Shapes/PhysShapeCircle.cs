@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     /// <summary>
     /// A physics shape that represents a circle. The circle cannot be rotated,
@@ -15,12 +15,29 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
     public class PhysShapeCircle : IPhysShape
     {
         public int ChildCount => 1;
+
         public ShapeType ShapeType => ShapeType.Circle;
 
         private const float DefaultRadius = 0.5f;
 
         [DataField("radius")]
         private float _radius = DefaultRadius;
+
+        /// <summary>
+        /// Get or set the position of the circle
+        /// </summary>
+        public Vector2 Position
+        {
+            get => _position;
+            set
+            {
+                _position = value;
+                //ComputeProperties(); //TODO: Optimize here
+            }
+        }
+
+        [DataField("position")]
+        private Vector2 _position;
 
         /// <inheritdoc />
         [field: NonSerialized]
@@ -45,6 +62,11 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return new(-_radius, -_radius, _radius, _radius);
+        }
+
+        public float CalculateArea()
+        {
+            return MathF.PI * _radius * _radius;
         }
 
         /// <inheritdoc />

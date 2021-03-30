@@ -33,7 +33,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
-                ComputeProperties();
             }
         }
 

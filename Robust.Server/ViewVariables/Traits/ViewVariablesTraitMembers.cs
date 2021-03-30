@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Shared.ViewVariables.ViewVariablesBlobMembers;
@@ -19,79 +22,95 @@ namespace Robust.Server.ViewVariables.Traits
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest messageRequestMeta)
         {
-            if (!(messageRequestMeta is ViewVariablesRequestMembers))
+            if (messageRequestMeta is ViewVariablesRequestMembers)
             {
-                return null;
-            }
+                var members = new List<(MemberData mData, MemberInfo mInfo)>();
 
-            var members = new List<(MemberData mData, MemberInfo mInfo)>();
-
-            foreach (var property in Session.ObjectType.GetAllProperties())
-            {
-                var attr = property.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
+                foreach (var property in Session.ObjectType.GetAllProperties())
                 {
-                    continue;
+                    var attr = property.GetCustomAttribute<ViewVariablesAttribute>();
+                    if (attr == null)
+                    {
+                        continue;
+                    }
+
+                    if (!property.IsBasePropertyDefinition())
+                    {
+                        continue;
+                    }
+
+                    members.Add((new MemberData
+                    {
+                        Editable = attr.Access == VVAccess.ReadWrite,
+                        Name = property.Name,
+                        Type = property.PropertyType.AssemblyQualifiedName,
+                        TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
+                        Value = property.GetValue(Session.Object),
+                        PropertyIndex = _members.Count
+                    }, property));
+                    _members.Add(property);
                 }
 
-                if (!property.IsBasePropertyDefinition())
+                foreach (var field in Session.ObjectType.GetAllFields())
                 {
-                    continue;
+                    var attr = field.GetCustomAttribute<ViewVariablesAttribute>();
+                    if (attr == null)
+                    {
+                        continue;
+                    }
+
+                    members.Add((new MemberData
+                    {
+                        Editable = attr.Access == VVAccess.ReadWrite,
+                        Name = field.Name,
+                        Type = field.FieldType.AssemblyQualifiedName,
+                        TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
+                        Value = field.GetValue(Session.Object),
+                        PropertyIndex = _members.Count
+                    }, field));
+
+                    _members.Add(field);
                 }
 
-                members.Add((new MemberData
+                foreach (var (mData, mInfo) in members)
                 {
-                    Editable = attr.Access == VVAccess.ReadWrite,
-                    Name = property.Name,
-                    Type = property.PropertyType.AssemblyQualifiedName,
-                    TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
-                    Value = property.GetValue(Session.Object),
-                    PropertyIndex = _members.Count
-                }, property));
-                _members.Add(property);
-            }
-
-            foreach (var field in Session.ObjectType.GetAllFields())
-            {
-                var attr = field.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
-                {
-                    continue;
+                    mData.Value = MakeValueNetSafe(mData.Value) ?? MakeNullValueNetSafe(mInfo.GetUnderlyingType());
                 }
 
-                members.Add((new MemberData
+                var dataList = members
+                    .OrderBy(p => p.mData.Name)
+                    .GroupBy(p => p.mInfo.DeclaringType!)
+                    .OrderByDescending(g => g.Key, TypeHelpers.TypeInheritanceComparer)
+                    .Select(g =>
+                    (
+                        TypeAbbreviation.Abbreviate(g.Key),
+                        g.Select(d => d.mData).ToList()
+                    ))
+                    .ToList();
+
+                return new ViewVariablesBlobMembers
                 {
-                    Editable = attr.Access == VVAccess.ReadWrite,
-                    Name = field.Name,
-                    Type = field.FieldType.AssemblyQualifiedName,
-                    TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
-                    Value = field.GetValue(Session.Object),
-                    PropertyIndex = _members.Count
-                }, field));
-
-                _members.Add(field);
+                    MemberGroups = dataList
+                };
             }
 
-            foreach (var (mData, _) in members)
+            if (messageRequestMeta is ViewVariablesRequestAllPrototypes protoReq)
             {
-                mData.Value = MakeValueNetSafe(mData.Value);
+                var list = new List<string>();
+
+                foreach (var prototype in IoCManager.Resolve<IPrototypeManager>().EnumeratePrototypes(protoReq.Variant))
+                {
+                    list.Add(prototype.ID);
+                }
+
+                return new ViewVariablesBlobAllPrototypes()
+                {
+                    Variant = protoReq.Variant,
+                    Prototypes = list,
+                };
             }
 
-            var dataList = members
-                .OrderBy(p => p.mData.Name)
-                .GroupBy(p => p.mInfo.DeclaringType!)
-                .OrderByDescending(g => g.Key, TypeHelpers.TypeInheritanceComparer)
-                .Select(g =>
-                (
-                    TypeAbbreviation.Abbreviate(g.Key),
-                    g.Select(d => d.mData).ToList()
-                ))
-                .ToList();
-
-            return new ViewVariablesBlobMembers
-            {
-                MemberGroups = dataList
-            };
+            return null;
         }
 
         public override bool TryGetRelativeObject(object property, out object? value)
@@ -156,6 +175,7 @@ namespace Robust.Server.ViewVariables.Traits
             }
 
             var member = _members[selector.Index];
+
             switch (member)
             {
                 case PropertyInfo propertyInfo:

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -8,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -67,7 +69,15 @@ namespace Robust.Server.ViewVariables
 
             try
             {
-                session.Modify(message.PropertyIndex, message.Value);
+                var value = message.Value;
+
+                if (message.ReinterpretValue && !TryReinterpretValue(value, out value))
+                {
+                    Logger.WarningS("vv", $"Couldn't reinterpret value \"{message.Value}\" sent by {session.PlayerUser}!");
+                    return;
+                }
+
+                session.Modify(message.PropertyIndex, value);
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -226,6 +236,29 @@ namespace Robust.Server.ViewVariables
             var closeMsg = _netManager.CreateNetMessage<MsgViewVariablesCloseSession>();
             closeMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(closeMsg, player.ConnectedClient);
+        }
+
+        private bool TryReinterpretValue(object? input, [NotNullWhen(true)] out object? output)
+        {
+            output = null;
+
+            switch (input)
+            {
+                case ViewVariablesBlobMembers.PrototypeReferenceToken token:
+                    var protoMan = IoCManager.Resolve<IPrototypeManager>();
+
+                    if (!protoMan.TryGetVariantType(token.Variant, out var variantType))
+                        return false;
+
+                    if (!protoMan.TryIndex(variantType, token.ID, out var prototype))
+                        return false;
+
+                    output = prototype;
+                    return true;
+
+                default:
+                    return false;
+            }
         }
     }
 }

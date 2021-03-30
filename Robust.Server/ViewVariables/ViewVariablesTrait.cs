@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -93,6 +96,18 @@ namespace Robust.Server.ViewVariables
             if (!valType.IsValueType)
             {
                 // TODO: More flexibility in which types can be sent here.
+
+                // We don't blindly send any prototypes, we ONLY send prototypes for valid, registered variants.
+                if (typeof(IPrototype).IsAssignableFrom(valType)
+                    && IoCManager.Resolve<IPrototypeManager>().TryGetVariantFrom(valType, out var variant))
+                {
+                    return new ViewVariablesBlobMembers.PrototypeReferenceToken()
+                    {
+                        Stringified = PrettyPrint.PrintUserFacing(value),
+                        ID = ((IPrototype) value).ID, Variant = variant
+                    };
+                }
+
                 if (valType != typeof(string))
                 {
                     return new ViewVariablesBlobMembers.ReferenceToken
@@ -127,5 +142,26 @@ namespace Robust.Server.ViewVariables
 
             return value;
         }
+
+        /// <summary>
+        ///     Swaps null values for net safe equivalents depending on type.
+        ///     Will return null for types where null is considered net safe.
+        /// </summary>
+        protected object? MakeNullValueNetSafe(Type type)
+        {
+            if (typeof(IPrototype).IsAssignableFrom(type))
+            {
+                var protoMan = IoCManager.Resolve<IPrototypeManager>();
+
+                if (protoMan.TryGetVariantFrom(type, out var variant))
+                    return new ViewVariablesBlobMembers.PrototypeReferenceToken()
+                    {
+                        ID = null, Variant = variant, Stringified = PrettyPrint.PrintUserFacing(null),
+                    };
+            }
+
+            return null;
+        }
+
     }
 }

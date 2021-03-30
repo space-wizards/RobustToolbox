@@ -193,7 +193,7 @@ namespace Robust.Shared.GameObjects
             _gridTrees[e.Map] = new Dictionary<GridId, DynamicTree<OccluderComponent>>();
         }
 
-        private void OnGridRemoved(GridId gridId)
+        private void OnGridRemoved(MapId mapId, GridId gridId)
         {
             foreach (var (_, gridIds) in _gridTrees)
             {
@@ -202,10 +202,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void OnGridCreated(GridId gridId)
+        private void OnGridCreated(MapId mapId, GridId gridId)
         {
-            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
-
             if (!_gridTrees.TryGetValue(mapId, out var gridTree))
                 return;
 

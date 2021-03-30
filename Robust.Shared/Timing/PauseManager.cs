@@ -92,6 +92,11 @@ namespace Robust.Shared.Timing
 
         public bool IsGridPaused(GridId gridId)
         {
+            if (!gridId.IsValid())
+            {
+                return false;
+            }
+
             if (_mapManager.TryGetGrid(gridId, out var grid))
             {
                 return IsGridPaused(grid);

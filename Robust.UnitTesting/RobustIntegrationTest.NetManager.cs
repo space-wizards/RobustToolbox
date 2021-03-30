@@ -113,8 +113,10 @@ namespace Robust.UnitTesting
                                     HWId = ImmutableArray<byte>.Empty
                                 };
 
-                                var args = await OnConnecting(new IPEndPoint(IPAddress.IPv6Loopback, 0),
-                                    userData, LoginType.GuestAssigned);
+                                var args = await OnConnecting(
+                                    new IPEndPoint(IPAddress.IPv6Loopback, 0),
+                                    userData,
+                                    LoginType.GuestAssigned);
                                 if (args.IsDenied)
                                 {
                                     writer.TryWrite(new DeniedConnectMessage());

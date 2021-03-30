@@ -42,21 +42,18 @@ namespace Robust.Shared.Network
 
         public IPEndPoint IP { get; }
         public LoginType AuthType { get; }
-        
+
         public void Deny(string reason)
         {
             DenyReason = reason;
         }
 
         /// <summary>
-        /// Constructs a new instance.
+        ///     Constructs a new instance.
         /// </summary>
-        /// <param name="userId">The session ID of the incoming connection.</param>
-        public NetConnectingArgs(NetUserId userId, IPEndPoint ip, string userName, LoginType authType)
-            : this(new NetUserData(userId, userName), ip, authType)
-        {
-        }
-
+        /// <param name="data">The user data of the incoming connection.</param>
+        /// <param name="ip"></param>
+        /// <param name="authType">The type of authentication to use when connecting.</param>
         public NetConnectingArgs(NetUserData data, IPEndPoint ip, LoginType authType)
         {
             UserData = data;

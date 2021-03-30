@@ -18,12 +18,13 @@ namespace Robust.Server.GameStates
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
-        
+
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
+        private SharedEntityLookupSystem _lookupSystem = default!;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -53,6 +54,11 @@ namespace Robust.Server.GameStates
             _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
+        }
+
+        public void Initialize()
+        {
+            _lookupSystem = EntitySystem.Get<SharedEntityLookupSystem>();
         }
 
         // Not thread safe
@@ -257,7 +263,7 @@ namespace Robust.Server.GameStates
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent)entity.Transform, visibleEnts, visMask));
+                _lookupSystem.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
             }
 
             viewers.Clear();
@@ -285,7 +291,7 @@ namespace Robust.Server.GameStates
             }
 
             var xformParentUid = xform.ParentUid;
-            
+
             // this is the world entity, it is always visible
             if (!xformParentUid.IsValid())
             {

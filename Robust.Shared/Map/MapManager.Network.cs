@@ -209,8 +209,13 @@ namespace Robust.Shared.Map
                     var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
                     foreach (var mapComp in mapComps)
                     {
-                        if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
+                        if (mapComp.WorldMap == mapId)
                         {
+                            if (mapComp.Owner.Uid.IsClientSide())
+                            {
+                                return;
+                            }
+
                             sharedMapEntity = mapComp.Owner;
                             _mapEntities[mapId] = mapComp.Owner.Uid;
                             Logger.DebugS("map", $"Map {mapId} pivoted bound entity from {cEntity.Uid} to {mapComp.Owner.Uid}.");

@@ -284,6 +284,16 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private void FlushRenderQueue()
         {
+            FlushBatchQueue();
+
+            // Reset renderer state.
+            _currentMatrixModel = Matrix3.Identity;
+            _queuedShader = _defaultShader.Handle;
+            SetScissorFull(null);
+        }
+
+        private void FlushBatchQueue()
+        {
             // Finish any batches that may have been WiP.
             BreakBatch();
 
@@ -308,11 +318,6 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessRenderCommands();
             _queuedRenderCommands.Clear();
-
-            // Reset renderer state.
-            _currentMatrixModel = Matrix3.Identity;
-            _queuedShader = _defaultShader.Handle;
-            SetScissorFull(null);
         }
 
         private void SetScissorFull(UIBox2i? state)
@@ -500,6 +505,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
             in Box2 texCoords)
         {
+            EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
             EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
@@ -524,6 +530,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             FinishBatch();
             _batchMetaData = null;
+
+            EnsureBatchSpaceAvailable(vertices.Length, indices.Length);
 
             vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
 
@@ -566,6 +574,8 @@ namespace Robust.Client.Graphics.Clyde
             FinishBatch();
             _batchMetaData = null;
 
+            EnsureBatchSpaceAvailable(vertices.Length, 0);
+
             vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
 
             ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
@@ -601,6 +611,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
+            EnsureBatchSpaceAvailable(2, 0);
             EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentMatrixModel.Transform(a);
@@ -613,6 +624,14 @@ namespace Robust.Client.Graphics.Clyde
             BatchVertexIndex += 2;
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void EnsureBatchSpaceAvailable(int vtx, int idx)
+        {
+            if (BatchVertexIndex + vtx >= BatchVertexData.Length || BatchIndexIndex + idx > BatchIndexData.Length)
+            {
+                FlushBatchQueue();
+            }
         }
 
         private void DrawSetScissor(UIBox2i? scissorBox)

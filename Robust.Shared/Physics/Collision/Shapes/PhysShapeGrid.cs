@@ -31,7 +31,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             {
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
-                ComputeProperties();
             }
         }
 
@@ -48,11 +47,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
             _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
-        }
-
-        public void ComputeProperties()
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

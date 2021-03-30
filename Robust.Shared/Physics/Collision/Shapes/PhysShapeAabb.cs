@@ -71,16 +71,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
-        public float CalculateArea()
-        {
-            return _localBounds.Width * _localBounds.Height;
-        }
-
-        public void ComputeProperties()
-        {
-            var area = CalculateArea();
-        }
-
         /// <inheritdoc />
         public void ApplyState() { }
 

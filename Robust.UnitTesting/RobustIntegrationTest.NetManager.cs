@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Threading.Channels;
@@ -119,7 +120,10 @@ namespace Robust.UnitTesting
                                     return;
                                 }
 
-                                var userData = new NetUserData(sessionId, userName);
+                                var userData = new NetUserData(sessionId, userName)
+                                {
+                                    HWId = ImmutableArray<byte>.Empty
+                                };
 
                                 writer.TryWrite(new ConfirmConnectMessage(uid, userData));
                                 var channel = new IntegrationNetChannel(

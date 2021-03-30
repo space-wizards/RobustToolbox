@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Dynamics.Shapes;
+using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.UnitTesting.Shared.Physics
 {

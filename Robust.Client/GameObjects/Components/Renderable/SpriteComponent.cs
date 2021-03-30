@@ -2150,11 +2150,6 @@ namespace Robust.Client.GameObjects
                 return null!;
             }
 
-            public IComponent GetComponent(uint netID)
-            {
-                return null!;
-            }
-
             public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
@@ -2181,17 +2176,6 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
-            {
-                component = null;
-                return false;
-            }
-
-            public IComponent? GetComponentOrNull(uint netId)
-            {
-                return null;
-            }
-            
             public void Delete()
             {
             }

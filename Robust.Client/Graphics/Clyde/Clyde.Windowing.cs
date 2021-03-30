@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;
@@ -14,6 +15,7 @@ using Robust.Shared;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using static Robust.Client.Utility.LiterallyJustMessageBox;
@@ -46,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         // Keep delegates around to prevent GC issues.
         private GLFWCallbacks.ErrorCallback _errorCallback = default!;
+        private GLFWCallbacks.MonitorCallback _monitorCallback = default!;
         private GLFWCallbacks.CharCallback _charCallback = default!;
         private GLFWCallbacks.CursorPosCallback _cursorPosCallback = default!;
         private GLFWCallbacks.KeyCallback _keyCallback = default!;
@@ -72,6 +75,10 @@ namespace Robust.Client.Graphics.Clyde
         private Thread? _mainThread;
 
         private Vector2 _lastMousePos;
+
+        // Can't use ClydeHandle because it's 64 bit.
+        private int _nextWindowId = 1;
+        private readonly Dictionary<int, MonitorReg> _monitors = new();
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
@@ -156,9 +163,54 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
+            InitMonitors();
             InitCursors();
 
             return InitWindow();
+        }
+
+        private void InitMonitors()
+        {
+            var monitors = GLFW.GetMonitorsRaw(out var count);
+
+            for (var i = 0; i < count; i++)
+            {
+                SetupMonitor(monitors[i]);
+            }
+        }
+
+        private void SetupMonitor(Monitor* monitor)
+        {
+            var handle = _nextWindowId++;
+
+            DebugTools.Assert(GLFW.GetMonitorUserPointer(monitor) == null, "GLFW window already has user pointer??");
+
+            var name = GLFW.GetMonitorName(monitor);
+            var videoMode = GLFW.GetVideoMode(monitor);
+            var impl = new ClydeMonitorImpl(handle, name, (videoMode->Width, videoMode->Height), videoMode->RefreshRate);
+
+            GLFW.SetMonitorUserPointer(monitor, (void*) handle);
+            _monitors[handle] = new MonitorReg
+            {
+                Id = handle,
+                Impl = impl,
+                Monitor = monitor
+            };
+        }
+
+        private void DestroyMonitor(Monitor* monitor)
+        {
+            var ptr = GLFW.GetMonitorUserPointer(monitor);
+
+            if (ptr == null)
+            {
+                var name = GLFW.GetMonitorName(monitor);
+                Logger.WarningS("clyde.win", $"Monitor '{name}' had no user pointer set??");
+                return;
+            }
+
+            _monitors.Remove((int) ptr);
+            GLFW.SetMonitorUserPointer(monitor, null);
         }
 
         private bool InitWindow()
@@ -170,10 +222,12 @@ namespace Robust.Client.Graphics.Clyde
 
             if (WindowMode == WindowMode.Fullscreen)
             {
-                monitor = GLFW.GetPrimaryMonitor();
+                monitor = GLFW.GetMonitors()[1];
                 var mode = GLFW.GetVideoMode(monitor);
                 width = mode->Width;
                 height = mode->Height;
+
+                GLFW.WindowHint(WindowHintInt.RefreshRate, mode->RefreshRate);
             }
 
 #if DEBUG
@@ -184,11 +238,14 @@ namespace Robust.Client.Graphics.Clyde
 
             var renderer = (Renderer) ConfigurationManager.GetCVar<int>(CVars.DisplayRenderer);
 
-            Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
-                Renderer.OpenGL33,
-                Renderer.OpenGL31,
-                Renderer.OpenGLES2
-            } : stackalloc Renderer[] {renderer};
+            Span<Renderer> renderers = (renderer == Renderer.Default)
+                ? stackalloc Renderer[]
+                {
+                    Renderer.OpenGL33,
+                    Renderer.OpenGL31,
+                    Renderer.OpenGLES2
+                }
+                : stackalloc Renderer[] {renderer};
 
             foreach (Renderer r in renderers)
             {
@@ -201,6 +258,7 @@ namespace Robust.Client.Graphics.Clyde
                     _isCore = renderer == Renderer.OpenGL33;
                     break;
                 }
+
                 // Window failed to init due to error.
                 // Try not to treat the error code seriously.
                 var code = GLFW.GetError(out string desc);
@@ -214,9 +272,9 @@ namespace Robust.Client.Graphics.Clyde
                     var code = GLFW.GetError(out string desc);
 
                     var errorContent = "Failed to create the game window. " +
-                        "This probably means your GPU is too old to play the game. " +
-                        "That or update your graphic drivers\n" +
-                        $"The exact error is: [{code}]\n {desc}";
+                                       "This probably means your GPU is too old to play the game. " +
+                                       "That or update your graphic drivers\n" +
+                                       $"The exact error is: [{code}]\n {desc}";
 
                     MessageBoxW(null,
                         errorContent,
@@ -309,6 +367,7 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
                     GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
                 }
+
                 _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
             }
         }
@@ -399,6 +458,25 @@ namespace Robust.Client.Graphics.Clyde
         private static void OnGlfwError(ErrorCode code, string description)
         {
             Logger.ErrorS("clyde.win.glfw", "GLFW Error: [{0}] {1}", code, description);
+        }
+
+        private void OnGlfwMonitor(Monitor* monitor, ConnectedState state)
+        {
+            try
+            {
+                if (state == ConnectedState.Connected)
+                {
+                    SetupMonitor(monitor);
+                }
+                else
+                {
+                    DestroyMonitor(monitor);
+                }
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwChar(Window* window, uint codepoint)
@@ -576,6 +654,7 @@ namespace Robust.Client.Graphics.Clyde
         private void StoreCallbacks()
         {
             _errorCallback = OnGlfwError;
+            _monitorCallback = OnGlfwMonitor;
             _charCallback = OnGlfwChar;
             _cursorPosCallback = OnGlfwCursorPos;
             _keyCallback = OnGlfwKey;
@@ -596,6 +675,19 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GLFW.SetWindowTitle(_glfwWindow, title);
+        }
+
+        public void SetWindowMonitor(IClydeMonitor monitor)
+        {
+            var monitorImpl = (ClydeMonitorImpl) monitor;
+            var reg = _monitors[monitorImpl.Id];
+
+            GLFW.SetWindowMonitor(
+                _glfwWindow,
+                reg.Monitor,
+                0, 0,
+                monitorImpl.Size.X, monitorImpl.Size.Y,
+                monitorImpl.RefreshRate);
         }
 
         public void RequestWindowAttention()
@@ -662,16 +754,38 @@ namespace Robust.Client.Graphics.Clyde
 
                 GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
                 _prevWindowPos = (x, y);
-                var monitor = GLFW.GetPrimaryMonitor();
+                var monitor = MonitorForWindow(_glfwWindow);
                 var mode = GLFW.GetVideoMode(monitor);
 
-                GLFW.SetWindowMonitor(_glfwWindow, GLFW.GetPrimaryMonitor(), 0, 0, mode->Width, mode->Height,
+                GLFW.SetWindowMonitor(_glfwWindow, monitor, 0, 0, mode->Width, mode->Height,
                     mode->RefreshRate);
             }
             else
             {
-                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X, _prevWindowSize.Y, 0);
+                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X,
+                    _prevWindowSize.Y, 0);
             }
+        }
+
+        // glfwGetWindowMonitor only works for fullscreen windows.
+        // Picks the monitor with the top-left corner of the window.
+        private Monitor* MonitorForWindow(Window* window)
+        {
+            GLFW.GetWindowPos(window, out var winPosX, out var winPosY);
+            var monitors = GLFW.GetMonitorsRaw(out var count);
+            for (var i = 0; i < count; i++)
+            {
+                var monitor = monitors[i];
+                GLFW.GetMonitorPos(monitor, out var monPosX, out var monPosY);
+                var videoMode = GLFW.GetVideoMode(monitor);
+
+                var box = Box2i.FromDimensions(monPosX, monPosY, videoMode->Width, videoMode->Height);
+                if (box.Contains(winPosX, winPosY))
+                    return monitor;
+            }
+
+            // Fallback
+            return GLFW.GetPrimaryMonitor();
         }
 
         string IClipboardManager.GetText()
@@ -682,6 +796,11 @@ namespace Robust.Client.Graphics.Clyde
         void IClipboardManager.SetText(string text)
         {
             GLFW.SetClipboardString(_glfwWindow, text);
+        }
+
+        public IEnumerable<IClydeMonitor> EnumerateMonitors()
+        {
+            return _monitors.Values.Select(c => c.Impl);
         }
 
         // We can't let exceptions unwind into GLFW, as that can cause the CLR to crash.
@@ -696,6 +815,29 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _glfwExceptionList.Add(e);
+        }
+
+        private sealed class MonitorReg
+        {
+            public int Id;
+            public Monitor* Monitor;
+            public ClydeMonitorImpl Impl = default!;
+        }
+
+        private sealed class ClydeMonitorImpl : IClydeMonitor
+        {
+            public ClydeMonitorImpl(int id, string name, Vector2i size, int refreshRate)
+            {
+                Id = id;
+                Name = name;
+                Size = size;
+                RefreshRate = refreshRate;
+            }
+
+            public int Id { get; }
+            public string Name { get; }
+            public Vector2i Size { get; }
+            public int RefreshRate { get; }
         }
     }
 }

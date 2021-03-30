@@ -128,17 +128,6 @@ namespace Robust.Shared.GameObjects
         IComponent GetComponent(Type type);
 
         /// <summary>
-        ///     Retrieves the component with the specified network ID.
-        /// </summary>
-        /// <param name="netID">The net ID of the component to retrieve.</param>
-        /// <returns>The component with the provided net ID.</returns>
-        /// <seealso cref="IComponent.NetID" />
-        /// <exception cref="Shared.GameObjects.UnknownComponentException">
-        ///     Thrown if there is no component with the specified net ID.
-        /// </exception>
-        IComponent GetComponent(uint netID);
-
-        /// <summary>
         ///     Attempt to retrieve the component with specified type,
         ///     writing it to the <paramref name="component" /> out parameter if it was found.
         /// </summary>
@@ -173,23 +162,6 @@ namespace Robust.Shared.GameObjects
         IComponent? GetComponentOrNull(Type type);
 
         /// <summary>
-        ///     Attempt to retrieve the component with specified network ID,
-        ///     writing it to the <paramref name="component" /> out parameter if it was found.
-        /// </summary>
-        /// <param name="netId">The component net ID to attempt to fetch.</param>
-        /// <param name="component">The component, if it was found. Null otherwise.</param>
-        /// <returns>True if a component with specified net ID was found.</returns>
-        bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component);
-
-        /// <summary>
-        ///     Attempt to retrieve the component with specified network ID,
-        ///     returning it if it was found.
-        /// </summary>
-        /// <param name="netId">The component net ID to attempt to fetch.</param>
-        /// <returns>The component, if it was found. Null otherwise.</returns>
-        IComponent? GetComponentOrNull(uint netId);
-
-        /// <summary>
         ///     Deletes this entity.
         /// </summary>
         void Delete();
@@ -222,6 +194,9 @@ namespace Robust.Shared.GameObjects
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null);
 
+        /// <summary>
+        /// Marks this entity as dirty so that it will be updated over the network.
+        /// </summary>
         void Dirty();
     }
 }

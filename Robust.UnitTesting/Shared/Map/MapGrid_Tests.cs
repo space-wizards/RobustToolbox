@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -8,7 +8,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Timing;
 using MapGrid = Robust.Shared.Map.MapGrid;
 
 namespace Robust.UnitTesting.Shared.Map
@@ -159,7 +158,6 @@ namespace Robust.UnitTesting.Shared.Map
         private static IMapGridInternal MapGridFactory(GridId id)
         {
             var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();
-            entMan.CullDeletionHistory(GameTick.MaxValue);
 
             var mapId = new MapId(5);
             var mapMan = IoCManager.Resolve<IMapManager>();

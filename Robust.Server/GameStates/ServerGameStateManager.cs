@@ -10,6 +10,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -37,11 +38,14 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
+        private ISawmill _logger = default!;
+
         public bool PvsEnabled => _configurationManager.GetCVar(CVars.NetPVS);
         public float PvsRange => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
 
         public void PostInject()
         {
+            _logger = Logger.GetSawmill("PVS");
             _entityView = new EntityViewCulling(_entityManager, _mapManager);
         }
 
@@ -185,9 +189,24 @@ namespace Robust.Server.GameStates
                 return (stateUpdateMessage, channel);
             }
 
+            (MsgState, INetChannel?) SafeGenerateMail(IPlayerSession session)
+            {
+                try
+                {
+                    return GenerateMail(session);
+                }
+                catch (Exception e) // Catch EVERY exception
+                {
+                    _logger.Log(LogLevel.Error, e, string.Empty);
+                }
+
+                return (new MsgState(session.ConnectedClient), null);
+            }
+
             var mailBag = _playerManager.GetAllPlayers()
+                .Where(s => s.Status == SessionStatus.InGame)
                 .AsParallel()
-                .Where(s=>s.Status == SessionStatus.InGame).Select(GenerateMail);
+                .Select(SafeGenerateMail);
             
             foreach (var (msg, chan) in mailBag)
             {

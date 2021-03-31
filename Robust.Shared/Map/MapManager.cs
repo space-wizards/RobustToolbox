@@ -145,9 +145,13 @@ namespace Robust.Shared.Map
             if (_mapEntities.TryGetValue(MapId.Nullspace, out var entId))
             {
                 if (_entityManager.TryGetEntity(entId, out var entity))
+                {
+                    Logger.InfoS("map", $"Deleting map entity {entId}");
                     entity.Delete();
+                }
 
-                _mapEntities.Remove(MapId.Nullspace);
+                if(_mapEntities.Remove(MapId.Nullspace));
+                    Logger.InfoS("map", "Removing nullspace map entity.");
             }
 
 #if DEBUG
@@ -220,6 +224,7 @@ namespace Robust.Shared.Map
                 return;
 
             _mapDeletionHistory.Add((_gameTiming.CurTick, mapID));
+            Logger.InfoS("map", $"Deleting map {mapID}");
         }
 
         public MapId CreateMap(MapId? mapID = null)
@@ -424,6 +429,8 @@ namespace Robust.Shared.Map
                 actualID = new GridId(HighestGridID.Value + 1);
             }
 
+            DebugTools.Assert(actualID != GridId.Invalid);
+
             if (GridExists(actualID))
             {
                 throw new InvalidOperationException($"A grid with ID {actualID} already exists");
@@ -436,7 +443,7 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, _entityManager, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
-            Logger.DebugS("map", $"Creating new grid {actualID}");
+            Logger.InfoS("map", $"Creating new grid {actualID}");
 
             if (actualID != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
             {
@@ -473,6 +480,10 @@ namespace Robust.Shared.Map
                     newEnt.InitializeComponents();
                     newEnt.StartAllComponents();
                 }
+            }
+            else
+            {
+                Logger.DebugS("map", $"Skipping entity binding for gridId {actualID}");
             }
 
             OnGridCreated?.Invoke(actualID);

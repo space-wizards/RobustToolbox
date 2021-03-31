@@ -42,6 +42,8 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
+        private bool _currentlyFindingViewport;
+
         private readonly List<KeyBindingRegistration> _defaultRegistrations = new();
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
@@ -65,10 +67,10 @@ namespace Robust.Client.Input
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Func<BoundKeyEventArgs, bool>? UIKeyBindStateChanged;
+        public event Action<BoundKeyEventArgs>? UIKeyBindStateChanged;
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs>? KeyBindStateChanged;
+        public event Action<ViewportBoundKeyEventArgs>? KeyBindStateChanged;
 
         public IEnumerable<BoundKeyFunction> DownKeyFunctions => _bindings
             .Where(x => x.State == BoundKeyState.Down)
@@ -329,36 +331,65 @@ namespace Robust.Client.Input
 
         private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly = false)
         {
-            binding.State = state;
+            // christ this crap *is* re-entrant thanks to PlacementManager and
+            // I honestly have no idea what the best solution here is.
+            DebugTools.Assert(!_currentlyFindingViewport, "Re-entrant key events??");
 
-            var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
-                new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
-
-            var handled = UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (state == BoundKeyState.Up
-                || !(handled == true || eventArgs.Handled)
-                && !uiOnly)
+            try
             {
-                var cmd = GetInputCommand(binding.Function);
-                // TODO: Allow input commands to still get forwarded to server if necessary.
-                if (cmd != null)
+                // This is terrible but anyways.
+                // This flag keeps track of "did a viewport fire the key up for us" so we know we don't do it again.
+                _currentlyFindingViewport = true;
+
+                binding.State = state;
+
+                var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
+                    new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+
+                UIKeyBindStateChanged?.Invoke(eventArgs);
+                if ((state == BoundKeyState.Up || (!eventArgs.Handled && !uiOnly))
+                    && _currentlyFindingViewport)
                 {
-                    if (state == BoundKeyState.Up)
-                    {
-                        cmd.Disabled(null);
-                    }
-                    else
-                    {
-                        cmd.Enabled(null);
-                    }
+                    ViewportKeyEvent(null, eventArgs);
+                }
+
+                return eventArgs.Handled;
+            }
+            finally
+            {
+                _currentlyFindingViewport = false;
+            }
+        }
+
+        public void ViewportKeyEvent(Control? viewport, BoundKeyEventArgs eventArgs)
+        {
+            _currentlyFindingViewport = false;
+
+            var cmd = GetInputCommand(eventArgs.Function);
+            // TODO: Allow input commands to still get forwarded to server if necessary.
+            if (cmd != null)
+            {
+                // Out-of-simulation input event
+                if (eventArgs.State == BoundKeyState.Up)
+                {
+                    cmd.Disabled(null);
                 }
                 else
                 {
-                    KeyBindStateChanged?.Invoke(eventArgs);
+                    cmd.Enabled(null);
                 }
             }
+            else
+            {
+                var viewportEventArgs = new ViewportBoundKeyEventArgs(eventArgs, viewport);
+                // In-simulation input event (through content to InputSystem)
+                KeyBindStateChanged?.Invoke(viewportEventArgs);
 
-            return eventArgs.Handled;
+                if (viewportEventArgs.KeyEventArgs.Handled)
+                {
+                    eventArgs.Handle();
+                }
+            }
         }
 
         private bool PackedMatchesPressedState(PackedKeyCombo packed)

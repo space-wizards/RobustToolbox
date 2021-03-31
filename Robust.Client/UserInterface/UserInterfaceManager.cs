@@ -138,8 +138,7 @@ namespace Robust.Client.UserInterface
 
             MainViewport = new MainViewportContainer(_eyeManager)
             {
-                Name = "MainViewport",
-                MouseFilter = Control.MouseFilterMode.Ignore
+                Name = "MainViewport"
             };
             RootControl.AddChild(MainViewport);
 
@@ -872,7 +871,7 @@ namespace Robust.Client.UserInterface
         ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
-        private bool OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
             if (args.State == BoundKeyState.Down)
             {
@@ -885,10 +884,8 @@ namespace Robust.Client.UserInterface
 
             if (!args.CanFocus && KeyboardFocused != null)
             {
-                return true;
+                args.Handle();
             }
-
-            return false;
         }
     }
 }

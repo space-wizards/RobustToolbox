@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Client.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Maths;
@@ -13,6 +14,16 @@ namespace Robust.Client.Input
     public interface IInputManager
     {
         bool Enabled { get; set; }
+
+        /// <summary>
+        ///     Relay a key event that hit a viewport further down the input stack.
+        /// </summary>
+        /// <remarks>
+        ///     This is ONLY intended to be used in key handler from viewport controls.
+        /// </remarks>
+        /// <param name="control">The viewport control that relayed the input.</param>
+        /// <param name="eventArgs">The key event args triggering the input.</param>
+        void ViewportKeyEvent(Control? control, BoundKeyEventArgs eventArgs);
 
         Vector2 MouseScreenPosition { get; }
 
@@ -60,12 +71,12 @@ namespace Robust.Client.Input
         /// <summary>
         ///     UIKeyBindStateChanged is called when a keybind is found.
         /// </summary>
-        event Func<BoundKeyEventArgs, bool> UIKeyBindStateChanged;
+        event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
 
         /// <summary>
         ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.
         /// </summary>
-        event Action<BoundKeyEventArgs> KeyBindStateChanged;
+        event Action<ViewportBoundKeyEventArgs>? KeyBindStateChanged;
 
         IEnumerable<BoundKeyFunction> DownKeyFunctions { get; }
 

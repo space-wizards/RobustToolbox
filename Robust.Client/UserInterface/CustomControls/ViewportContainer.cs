@@ -1,4 +1,5 @@
 ﻿using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -8,10 +9,12 @@ namespace Robust.Client.UserInterface.CustomControls
     /// <summary>
     ///     A viewport container shows a viewport.
     /// </summary>
-    public class ViewportContainer : Control
+    public class ViewportContainer : Control, IViewportControl
     {
         private readonly IClyde _displayManager;
-        public IClydeViewport? Viewport;
+        private readonly IInputManager _inputManager;
+
+        public IClydeViewport? Viewport { get; set; }
 
         private Vector2 _viewportResolution = (1f, 1f);
 
@@ -19,9 +22,11 @@ namespace Robust.Client.UserInterface.CustomControls
         ///     This controls the render target size, *as a fraction of the control size.*
         ///     Combined with controlling the Eye, this allows downscaling the game.
         /// </summary>
-        public Vector2 ViewportResolution {
+        public Vector2 ViewportResolution
+        {
             get => _viewportResolution;
-            set {
+            set
+            {
                 _viewportResolution = value;
                 Resized();
             }
@@ -30,7 +35,29 @@ namespace Robust.Client.UserInterface.CustomControls
         public ViewportContainer()
         {
             _displayManager = IoCManager.Resolve<IClyde>();
+            _inputManager = IoCManager.Resolve<IInputManager>();
+            MouseFilter = MouseFilterMode.Stop;
             Resized();
+        }
+
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindDown(args);
+
+            if (args.Handled)
+                return;
+
+            _inputManager.ViewportKeyEvent(this, args);
+        }
+
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindUp(args);
+
+            if (args.Handled)
+                return;
+
+            _inputManager.ViewportKeyEvent(this, args);
         }
 
         // -- Handlers: Out --
@@ -48,7 +75,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 Viewport.RenderScreenOverlaysBelow(handle);
 
                 Viewport.Render();
-                handle.DrawTextureRect(Viewport.RenderTarget.Texture, UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
+                handle.DrawTextureRect(Viewport.RenderTarget.Texture,
+                    UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
 
                 Viewport.RenderScreenOverlaysAbove(handle);
             }
@@ -57,7 +85,9 @@ namespace Robust.Client.UserInterface.CustomControls
         protected sealed override void Resized()
         {
             Viewport?.Dispose();
-            Viewport = _displayManager.CreateViewport(Vector2i.ComponentMax((1, 1), (Vector2i) (PixelSize * _viewportResolution)), "ViewportContainerViewport");
+            Viewport = _displayManager.CreateViewport(
+                Vector2i.ComponentMax((1, 1), (Vector2i) (PixelSize * _viewportResolution)),
+                "ViewportContainerViewport");
         }
 
         // -- Handlers: In --

@@ -1,4 +1,5 @@
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -34,9 +35,16 @@ namespace Robust.Client.Graphics
             set => _currentEye = value;
         }
 
+        public IViewportControl MainViewport { get; set; } = default!;
+
         public void ClearCurrentEye()
         {
             _currentEye = _defaultEye;
+        }
+
+        void IEyeManager.Initialize()
+        {
+            MainViewport = _uiManager.MainViewport;
         }
 
         /// <inheritdoc />
@@ -63,7 +71,7 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public Vector2 WorldToScreen(Vector2 point)
         {
-            return _uiManager.MainViewport.WorldToScreen(point);
+            return MainViewport.WorldToScreen(point);
         }
 
         /// <inheritdoc />
@@ -108,7 +116,7 @@ namespace Robust.Client.Graphics
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
-            return _uiManager.MainViewport.ScreenToMap(point);
+            return MainViewport.ScreenToMap(point);
         }
     }
 }

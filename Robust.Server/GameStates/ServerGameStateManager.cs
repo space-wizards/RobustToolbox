@@ -40,8 +40,17 @@ namespace Robust.Server.GameStates
 
         private ISawmill _logger = default!;
 
-        public bool PvsEnabled => _configurationManager.GetCVar(CVars.NetPVS);
-        public float PvsRange => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
+        public bool PvsEnabled
+        {
+            get => _configurationManager.GetCVar(CVars.NetPVS);
+            set => _configurationManager.SetCVar(CVars.NetPVS, value);
+        }
+
+        public float PvsRange
+        {
+            get => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
+            set => _configurationManager.SetCVar(CVars.NetMaxUpdateRange, value);
+        }
 
         public void PostInject()
         {

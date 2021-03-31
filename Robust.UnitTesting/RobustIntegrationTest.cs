@@ -355,7 +355,8 @@ namespace Robust.UnitTesting
 
                     cfg.OverrideConVars(new []{("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
 
-                    if (server.Start(() => new TestLogHandler("SERVER", _options?.FailureLogLevel ?? LogLevel.Warning)))
+                    var failureLevel = _options == null ? LogLevel.Warning : _options.FailureLogLevel;
+                    if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
                     {
                         throw new Exception("Server failed to start.");
                     }
@@ -447,7 +448,8 @@ namespace Robust.UnitTesting
 
                     cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
 
-                    client.Startup(() => new TestLogHandler("CLIENT", _options?.FailureLogLevel ?? LogLevel.Warning));
+                    var failureLevel = _options == null ? LogLevel.Warning : _options.FailureLogLevel;
+                    client.Startup(() => new TestLogHandler("CLIENT", failureLevel));
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);
@@ -563,7 +565,7 @@ namespace Robust.UnitTesting
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
-            public LogLevel? FailureLogLevel { get; set; }
+            public LogLevel? FailureLogLevel { get; set; } = LogLevel.Warning;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
         }

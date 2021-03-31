@@ -15,9 +15,9 @@ namespace Robust.UnitTesting
 
         private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-        private readonly LogLevel _failureLevel;
+        private readonly LogLevel? _failureLevel;
 
-        public TestLogHandler(string? prefix = null, LogLevel failureLevel = LogLevel.Warning)
+        public TestLogHandler(string? prefix = null, LogLevel? failureLevel = null)
         {
             _prefix = prefix;
             _failureLevel = failureLevel;
@@ -39,7 +39,7 @@ namespace Robust.UnitTesting
             var line = $"{GetPrefix()}{seconds:F3}s [{name}] {sawmillName}: {rendered}";
             _writer.WriteLine(line);
 
-            if (level < _failureLevel)
+            if (_failureLevel == null || level < _failureLevel)
                 return;
 
             _writer.Flush();

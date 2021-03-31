@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 {
     public partial class PrototypeIdListSerializer<T> :
         ITypeSerializer<IReadOnlyCollection<string>, SequenceDataNode>
-        where T : IPrototype
+        where T : class, IPrototype
     {
         ValidationNode ITypeValidator<IReadOnlyCollection<string>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,

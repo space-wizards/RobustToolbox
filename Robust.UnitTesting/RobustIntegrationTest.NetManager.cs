@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Net;
 using System.Threading.Channels;
@@ -107,19 +108,20 @@ namespace Robust.UnitTesting
                                 var uid = _genConnectionUid();
                                 var sessionId = new NetUserId(Guid.NewGuid());
                                 var userName = $"integration_{uid}";
+                                var userData = new NetUserData(sessionId, userName)
+                                {
+                                    HWId = ImmutableArray<byte>.Empty
+                                };
 
                                 var args = await OnConnecting(
                                     new IPEndPoint(IPAddress.IPv6Loopback, 0),
-                                    sessionId,
-                                    userName,
+                                    userData,
                                     LoginType.GuestAssigned);
                                 if (args.IsDenied)
                                 {
                                     writer.TryWrite(new DeniedConnectMessage());
                                     return;
                                 }
-
-                                var userData = new NetUserData(sessionId, userName);
 
                                 writer.TryWrite(new ConfirmConnectMessage(uid, userData));
                                 var channel = new IntegrationNetChannel(
@@ -218,13 +220,9 @@ namespace Robust.UnitTesting
                 }
             }
 
-            private async Task<NetConnectingArgs> OnConnecting(
-                IPEndPoint ip,
-                NetUserId userId,
-                string userName,
-                LoginType loginType)
+            private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserData userData, LoginType loginType)
             {
-                var args = new NetConnectingArgs(userId, ip, userName, loginType);
+                var args = new NetConnectingArgs(userData, ip, loginType);
                 foreach (var conn in _connectingEvent)
                 {
                     await conn(args);

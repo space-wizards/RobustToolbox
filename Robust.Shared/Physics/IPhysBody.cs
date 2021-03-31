@@ -106,8 +106,9 @@ namespace Robust.Shared.Physics
 
         /// <summary>
         /// Mass of the entity in kilograms
+        /// Set this via fixtures.
         /// </summary>
-        float Mass { get; set; }
+        float Mass { get; }
 
         /// <summary>
         ///     Inverse inertia

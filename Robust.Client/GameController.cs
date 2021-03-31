@@ -292,14 +292,11 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
-            _userInterfaceManager.Update(frameEventArgs);
 
+            // GameStateManager is in full control of the simulation update.
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
-                _componentManager.CullRemovedComponents();
                 _gameStateManager.ApplyGameState();
-                _entityManager.Update(frameEventArgs.DeltaSeconds);
-                _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);

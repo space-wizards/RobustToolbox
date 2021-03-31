@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.Maths;
@@ -21,6 +22,7 @@ namespace Robust.Client.Graphics
         Vector2 DefaultWindowScale { get; }
 
         void SetWindowTitle(string title);
+        void SetWindowMonitor(IClydeMonitor monitor);
 
         /// <summary>
         ///     This is the magic method to make the game window ping you in the task bar.
@@ -30,6 +32,8 @@ namespace Robust.Client.Graphics
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
+
+        event Action OnWindowScaleChanged;
 
         OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
@@ -104,6 +108,8 @@ namespace Robust.Client.Graphics
         }
 
         IClydeViewport CreateViewport(Vector2i size, string? name = null);
+
+        IEnumerable<IClydeMonitor> EnumerateMonitors();
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

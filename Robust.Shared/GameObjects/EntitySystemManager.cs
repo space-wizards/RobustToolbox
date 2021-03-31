@@ -251,7 +251,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void Update(float frameTime)
+        public void TickUpdate(float frameTime)
         {
             foreach (var updReg in _updateOrder)
             {

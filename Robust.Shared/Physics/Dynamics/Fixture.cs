@@ -27,7 +27,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Dynamics.Shapes;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -118,6 +118,36 @@ namespace Robust.Shared.Physics.Dynamics
 
         [DataField("hard")]
         private bool _hard = true;
+
+        // MassData
+        // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
+        // Plus now it's WAYYY easier to share shapes even among different prototypes.
+        public Vector2 Centroid => _centroid;
+
+        private Vector2 _centroid = Vector2.Zero;
+
+        public float Inertia => _inertia;
+
+        private float _inertia;
+
+        // Should be calculated by density or whatever but eh.
+        /// <summary>
+        ///     Mass of the fixture. The sum of these is the mass of the body.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float Mass
+        {
+            get => _mass;
+            set
+            {
+                if (MathHelper.CloseTo(value, _mass)) return;
+                _mass = value;
+                Body.FixtureChanged(this);
+            }
+        }
+
+        [DataField("mass")]
+        private float _mass = 1.0f;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -361,6 +391,194 @@ namespace Robust.Shared.Physics.Dynamics
 
             broadPhaseSystem.AddBroadPhase(Body, broadPhase);
         }
+
+        // Moved from Shape because no MassData on Shape anymore (due to serv3 and physics ease-of-use etc etc.)
+        internal void ComputeProperties()
+        {
+            switch (Shape)
+            {
+                case EdgeShape edge:
+                    ComputeEdge(edge);
+                    break;
+                case PhysShapeAabb aabb:
+                    ComputeAABB(aabb);
+                    break;
+                case PhysShapeCircle circle:
+                    ComputeCircle(circle);
+                    break;
+                case PhysShapeGrid grid:
+                    ComputeGrid(grid);
+                    break;
+                case PhysShapeRect rect:
+                    ComputeRect(rect);
+                    break;
+                case PolygonShape poly:
+                    ComputePoly(poly);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        #region ComputeProperties
+        private void ComputeAABB(PhysShapeAabb aabb)
+        {
+            var area = aabb.LocalBounds.Width * aabb.LocalBounds.Height;
+            float I = 0.0f;
+
+            //The area is too small for the engine to handle.
+            DebugTools.Assert(area > float.Epsilon);
+
+            // Total mass
+            // TODO: Do we need this?
+            var density = area > 0.0f ? Mass / area : 0.0f;
+
+            // Center of mass
+            _centroid = Vector2.Zero;
+
+            // Inertia tensor relative to the local origin (point s).
+            _inertia = density * I;
+        }
+
+        private void ComputeRect(PhysShapeRect rect)
+        {
+            var area = rect.Rectangle.Width * rect.Rectangle.Height;
+            float I = 0.0f;
+
+            //The area is too small for the engine to handle.
+            DebugTools.Assert(area > float.Epsilon);
+
+            // Total mass
+            // TODO: Do we need this?
+            var density = area > 0.0f ? Mass / area : 0.0f;
+
+            // Center of mass
+            _centroid = Vector2.Zero;
+
+            // Inertia tensor relative to the local origin (point s).
+            _inertia = density * I;
+        }
+
+        private void ComputePoly(PolygonShape poly)
+        {
+            // Polygon mass, centroid, and inertia.
+            // Let rho be the polygon density in mass per unit area.
+            // Then:
+            // mass = rho * int(dA)
+            // centroid.X = (1/mass) * rho * int(x * dA)
+            // centroid.Y = (1/mass) * rho * int(y * dA)
+            // I = rho * int((x*x + y*y) * dA)
+            //
+            // We can compute these integrals by summing all the integrals
+            // for each triangle of the polygon. To evaluate the integral
+            // for a single triangle, we make a change of variables to
+            // the (u,v) coordinates of the triangle:
+            // x = x0 + e1x * u + e2x * v
+            // y = y0 + e1y * u + e2y * v
+            // where 0 <= u && 0 <= v && u + v <= 1.
+            //
+            // We integrate u from [0,1-v] and then v from [0,1].
+            // We also need to use the Jacobian of the transformation:
+            // D = cross(e1, e2)
+            //
+            // Simplification: triangle centroid = (1/3) * (p1 + p2 + p3)
+            //
+            // The rest of the derivation is handled by computer algebra.
+
+            DebugTools.Assert(poly.Vertices.Count >= 3);
+
+            //FPE optimization: Consolidated the calculate centroid and mass code to a single method.
+            Vector2 center = Vector2.Zero;
+            var area = 0.0f;
+            float I = 0.0f;
+
+            // pRef is the reference point for forming triangles.
+            // Its location doesn't change the result (except for rounding error).
+            Vector2 s = Vector2.Zero;
+
+            // This code would put the reference point inside the polygon.
+            for (int i = 0; i < poly.Vertices.Count; ++i)
+            {
+                s += poly.Vertices[i];
+            }
+            s *= 1.0f / poly.Vertices.Count;
+
+            const float k_inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < poly.Vertices.Count; ++i)
+            {
+                // Triangle vertices.
+                Vector2 e1 = poly.Vertices[i] - s;
+                Vector2 e2 = i + 1 < poly.Vertices.Count ? poly.Vertices[i + 1] - s : poly.Vertices[0] - s;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                center += (e1 + e2) * k_inv3 * triangleArea;
+
+                float ex1 = e1.X, ey1 = e1.Y;
+                float ex2 = e2.X, ey2 = e2.Y;
+
+                float intx2 = ex1 * ex1 + ex2 * ex1 + ex2 * ex2;
+                float inty2 = ey1 * ey1 + ey2 * ey1 + ey2 * ey2;
+
+                I += (0.25f * k_inv3 * D) * (intx2 + inty2);
+            }
+
+            //The area is too small for the engine to handle.
+            DebugTools.Assert(area > float.Epsilon);
+
+            // Total mass
+            // TODO: Do we need this?
+            var density = area > 0.0f ? Mass / area : 0.0f;
+
+            // Center of mass
+            center *= 1.0f / area;
+            _centroid = center + s;
+
+            // Inertia tensor relative to the local origin (point s).
+            _inertia = density * I;
+
+            // Shift to center of mass then to original body origin.
+            _inertia += Mass * (Vector2.Dot(_centroid, _centroid) - Vector2.Dot(center, center));
+        }
+
+        private void ComputeCircle(PhysShapeCircle circle)
+        {
+            var radSquared = MathF.Pow(circle.Radius, 2);
+            _centroid = circle.Position;
+
+            // inertia about the local origin
+            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(_centroid, _centroid));
+        }
+
+        private void ComputeEdge(EdgeShape edge)
+        {
+            _centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
+        }
+
+        private void ComputeGrid(PhysShapeGrid grid)
+        {
+            var area = grid.LocalBounds.Width * grid.LocalBounds.Height;
+            float I = 0.0f;
+
+            //The area is too small for the engine to handle.
+            DebugTools.Assert(area > float.Epsilon);
+
+            // Total mass
+            // TODO: Do we need this?
+            var density = area > 0.0f ? Mass / area : 0.0f;
+
+            // Center of mass
+            _centroid = Vector2.Zero;
+
+            // Inertia tensor relative to the local origin (point s).
+            _inertia = density * I;
+        }
+        #endregion
 
         // This is a crude equals mainly to avoid having to re-create the fixtures every time a state comes in.
         public bool Equals(Fixture? other)

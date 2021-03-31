@@ -97,7 +97,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             systems.GetEntitySystem<TestSystemC>().Counter = counter;
             systems.GetEntitySystem<TestSystemD>().Counter = counter;
 
-            systems.Update(1);
+            systems.TickUpdate(1);
 
             Assert.That(counter.X, Is.EqualTo(4));
 

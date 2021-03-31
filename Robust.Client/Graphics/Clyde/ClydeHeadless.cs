@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
@@ -36,7 +37,7 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
-        
+
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
         public event Action<KeyEventArgs>? KeyUp;
@@ -70,6 +71,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetWindowMonitor(IClydeMonitor monitor)
+        {
+            // Nada.
+        }
+
         public void RequestWindowAttention()
         {
             // Nada.
@@ -88,6 +94,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        {
+            add { }
+            remove { }
+        }
+
+        public event Action OnWindowScaleChanged
         {
             add { }
             remove { }
@@ -161,6 +173,12 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeViewport CreateViewport(Vector2i size, string? name = null)
         {
             return new Viewport();
+        }
+
+        public IEnumerable<IClydeMonitor> EnumerateMonitors()
+        {
+            // TODO: Actually return something.
+            yield break;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)

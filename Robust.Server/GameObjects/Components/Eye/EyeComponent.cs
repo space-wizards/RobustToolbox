@@ -16,6 +16,7 @@ namespace Robust.Server.GameObjects
         private Vector2 _zoom = Vector2.One/2f;
         private Vector2 _offset;
         private Angle _rotation;
+        private uint _visibilityMask;
 
         public override bool DrawFov
         {
@@ -69,9 +70,22 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        public override uint VisibilityMask
+        {
+            get => _visibilityMask;
+            set
+            {
+                if(_visibilityMask == value)
+                    return;
+
+                _visibilityMask = value;
+                Dirty();
+            }
+        }
+
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new EyeComponentState(DrawFov, Zoom, Offset, Rotation);
+            return new EyeComponentState(DrawFov, Zoom, Offset, Rotation, VisibilityMask);
         }
     }
 }

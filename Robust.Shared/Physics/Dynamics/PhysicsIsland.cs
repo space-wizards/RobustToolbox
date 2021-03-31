@@ -470,25 +470,38 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var bodyPos = _positions[i];
                 var angle = _angles[i];
 
-                // body.Sweep.Center = bodyPos;
-                // body.Sweep.Angle = angle;
-
-                // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
-                var transform = body.Owner.Transform;
-
-                // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
-                transform.DeferUpdates = true;
-                transform.WorldPosition = bodyPos;
-                transform.WorldRotation = angle;
-                transform.DeferUpdates = false;
-
-                if (transform.UpdatesDeferred)
+                // Temporary NaN guards until PVS is fixed.
+                if (!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y))
                 {
-                    deferredUpdates.Add((transform, body));
+                    // body.Sweep.Center = bodyPos;
+                    // body.Sweep.Angle = angle;
+
+                    // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
+                    var transform = body.Owner.Transform;
+
+                    // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
+                    transform.DeferUpdates = true;
+                    transform.WorldPosition = bodyPos;
+                    transform.WorldRotation = angle;
+                    transform.DeferUpdates = false;
+
+                    if (transform.UpdatesDeferred)
+                    {
+                        deferredUpdates.Add((transform, body));
+                    }
                 }
 
-                body.LinearVelocity = _linearVelocities[i];
-                body.AngularVelocity = _angularVelocities[i];
+                var linVelocity = _linearVelocities[i];
+
+                if (!float.IsNaN(linVelocity.X) && !float.IsNaN(linVelocity.Y))
+                {
+                    body.LinearVelocity = linVelocity;
+                }
+
+                if (!float.IsNaN(_angularVelocities[i]))
+                {
+                    body.AngularVelocity = _angularVelocities[i];
+                }
             }
 
             // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.

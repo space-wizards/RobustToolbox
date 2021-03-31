@@ -7,6 +7,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
@@ -260,6 +261,8 @@ namespace Robust.Shared.GameObjects
 
             var mapId = message.Container.Owner.Transform.MapID;
 
+            physicsComponent.LinearVelocity = Vector2.Zero;
+            physicsComponent.AngularVelocity = 0.0f;
             physicsComponent.ClearJoints();
             _maps[mapId].RemoveBody(physicsComponent);
         }

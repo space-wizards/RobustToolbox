@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -14,18 +15,20 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    public delegate void EntityQueryCallback(IEntity entity);
+
     /// <inheritdoc />
     public abstract class EntityManager : IEntityManager
     {
         #region Dependencies
 
-        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
-        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
+        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [IoC.Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
+        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
 
         #endregion Dependencies
 
@@ -91,21 +94,26 @@ namespace Robust.Shared.GameObjects
             _componentManager.Clear();
         }
 
-        public virtual void Update(float frameTime, Histogram? histogram)
+        public virtual void TickUpdate(float frameTime, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                EntityNetworkManager.Update();
+                EntityNetworkManager.TickUpdate();
             }
 
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.Update(frameTime);
+                EntitySystemManager.TickUpdate(frameTime);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             {
                 _eventBus.ProcessEventQueue();
+            }
+
+            using (histogram?.WithLabels("ComponentCull").NewTimer())
+            {
+                _componentManager.CullRemovedComponents();
             }
 
             using (histogram?.WithLabels("EntityCull").NewTimer())
@@ -272,6 +280,7 @@ namespace Robust.Shared.GameObjects
 
             entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
         }
         
         public void DeleteEntity(EntityUid uid)
@@ -451,6 +460,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// Factory for generating a new EntityUid for an entity currently being created.
+        /// </summary>
         protected abstract EntityUid GenerateEntityUid();
 
 #region Spatial Queries
@@ -470,6 +482,17 @@ namespace Robust.Shared.GameObjects
                 return true;
             }, box, approximate);
             return found;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback)
+        {
+            if (mapId == MapId.Nullspace)
+                return;
+
+            _entityTreesPerMap[mapId]._b2Tree
+                .FastQuery(ref position, (ref IEntity data) => callback(data));
         }
 
         /// <inheritdoc />
@@ -712,17 +735,7 @@ namespace Robust.Shared.GameObjects
         }
 
 #endregion
-
-        public virtual void Update()
-        {
-        }
-
     }
-
-    /// <summary>
-    /// The children of this entity are about to be deleted.
-    /// </summary>
-    public class EntityTerminatingEvent : EntityEventArgs { }
 
     public enum EntityMessageType : byte
     {

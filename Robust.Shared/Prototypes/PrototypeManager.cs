@@ -49,6 +49,14 @@ namespace Robust.Shared.Prototypes
         IEnumerable<IPrototype> EnumeratePrototypes(Type type);
 
         /// <summary>
+        /// Return an IEnumerable to iterate all prototypes of a certain variant.
+        /// </summary>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if the variant of prototype is not registered.
+        /// </exception>
+        IEnumerable<IPrototype> EnumeratePrototypes(string variant);
+
+        /// <summary>
         /// Index for a <see cref="IPrototype"/> by ID.
         /// </summary>
         /// <exception cref="KeyNotFoundException">
@@ -64,8 +72,61 @@ namespace Robust.Shared.Prototypes
         /// </exception>
         IPrototype Index(Type type, string id);
 
-        bool HasIndex<T>(string id) where T : IPrototype;
-        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype;
+        /// <summary>
+        ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
+        /// </summary>
+        bool HasIndex<T>(string id) where T : class, IPrototype;
+        bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
+        bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
+
+        /// <summary>
+        ///     Returns whether a prototype variant <param name="variant"/> exists.
+        /// </summary>
+        /// <param name="variant">Identifier for the prototype variant.</param>
+        /// <returns>Whether the prototype variant exists.</returns>
+        bool HasVariant(string variant);
+
+        /// <summary>
+        ///     Returns the Type for a prototype variant.
+        /// </summary>
+        /// <param name="variant">Identifier for the prototype variant.</param>
+        /// <returns>The specified prototype Type.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown when the specified prototype variant isn't registered or doesn't exist.
+        /// </exception>
+        Type GetVariantType(string variant);
+
+        /// <summary>
+        ///     Attempts to get the Type for a prototype variant.
+        /// </summary>
+        /// <param name="variant">Identifier for the prototype variant.</param>
+        /// <param name="prototype">The specified prototype Type, or null.</param>
+        /// <returns>Whether the prototype type was found and <see cref="prototype"/> isn't null.</returns>
+        bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype);
+
+        /// <summary>
+        ///     Attempts to get a prototype's variant.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="variant"></param>
+        /// <returns></returns>
+        bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant);
+
+        /// <summary>
+        ///     Attempts to get a prototype's variant.
+        /// </summary>
+        /// <param name="prototype">The prototype in question.</param>
+        /// <param name="variant">Identifier for the prototype variant, or null.</param>
+        /// <returns>Whether the prototype variant was successfully retrieved.</returns>
+        bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant);
+
+        /// <summary>
+        ///     Attempts to get a prototype's variant.
+        /// </summary>
+        /// <param name="variant">Identifier for the prototype variant, or null.</param>
+        /// <typeparam name="T">The prototype in question.</typeparam>
+        /// <returns>Whether the prototype variant was successfully retrieved.</returns>
+        bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype;
 
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
@@ -185,6 +246,11 @@ namespace Robust.Shared.Prototypes
             }
 
             return prototypes[type].Values;
+        }
+
+        public IEnumerable<IPrototype> EnumeratePrototypes(string variant)
+        {
+            return EnumeratePrototypes(GetVariantType(variant));
         }
 
         public T Index<T>(string id) where T : class, IPrototype
@@ -586,7 +652,7 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public bool HasIndex<T>(string id) where T : IPrototype
+        public bool HasIndex<T>(string id) where T : class, IPrototype
         {
             if (!prototypes.TryGetValue(typeof(T), out var index))
             {
@@ -596,16 +662,74 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : IPrototype
+        public bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype
         {
-            if (!prototypes.TryGetValue(typeof(T), out var index))
+            var returned = TryIndex(typeof(T), id, out var proto);
+            prototype = (proto ?? null) as T;
+            return returned;
+        }
+
+        public bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype)
+        {
+            if (!prototypes.TryGetValue(type, out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
 
-            var returned = index.TryGetValue(id, out var uncast);
-            prototype = (T) uncast!;
-            return returned;
+            return index.TryGetValue(id, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool HasVariant(string variant)
+        {
+            return prototypeTypes.ContainsKey(variant);
+        }
+
+        /// <inheritdoc />
+        public Type GetVariantType(string variant)
+        {
+            return prototypeTypes[variant];
+        }
+
+        /// <inheritdoc />
+        public bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype)
+        {
+            return prototypeTypes.TryGetValue(variant, out prototype);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetVariantFrom(Type type, [NotNullWhen(true)] out string? variant)
+        {
+            variant = null;
+
+            // If the type doesn't implement IPrototype, this fails.
+            if (!(typeof(IPrototype).IsAssignableFrom(type)))
+                return false;
+
+            var attribute = (PrototypeAttribute?) Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+
+            // If the prototype type doesn't have the attribute, this fails.
+            if (attribute == null)
+                return false;
+
+            // If the variant isn't registered, this fails.
+            if (!HasVariant(attribute.Type))
+                return false;
+
+            variant = attribute.Type;
+            return true;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetVariantFrom<T>([NotNullWhen(true)] out string? variant) where T : class, IPrototype
+        {
+            return TryGetVariantFrom(typeof(T), out variant);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetVariantFrom(IPrototype prototype, [NotNullWhen(true)] out string? variant)
+        {
+            return TryGetVariantFrom(prototype.GetType(), out variant);
         }
 
         public void RegisterIgnore(string name)

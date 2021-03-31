@@ -9,12 +9,6 @@ namespace Robust.Server.Player
     {
         DateTime ConnectedTime { get; }
 
-        /// <summary>
-        ///     The visibility mask for this player.
-        ///     The player will be able to get updates for entities whose layers match the mask.
-        /// </summary>
-        int VisibilityMask { get; set; }
-
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         void JoinGame();

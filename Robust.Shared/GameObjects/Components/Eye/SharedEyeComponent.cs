@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -21,6 +21,13 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Angle Rotation { get; set; }
+        
+        /// <summary>
+        ///     The visibility mask for this eye.
+        ///     The player will be able to get updates for entities whose layers match the mask.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public virtual uint VisibilityMask { get; set; }
     }
 
     [NetSerializable, Serializable]
@@ -30,13 +37,15 @@ namespace Robust.Shared.GameObjects
         public Vector2 Zoom { get; }
         public Vector2 Offset { get; }
         public Angle Rotation { get; }
+        public uint VisibilityMask { get; }
 
-        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, Angle rotation) : base(NetIDs.EYE)
+        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, Angle rotation, uint visibilityMask) : base(NetIDs.EYE)
         {
             DrawFov = drawFov;
             Zoom = zoom;
             Offset = offset;
             Rotation = rotation;
+            VisibilityMask = visibilityMask;
         }
     }
 }

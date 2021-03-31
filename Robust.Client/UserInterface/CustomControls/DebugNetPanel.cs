@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -51,9 +51,9 @@ namespace Robust.Client.UserInterface.CustomControls
             MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
-            base.Update(args);
+            base.FrameUpdate(args);
 
             if ((GameTiming.RealTime - LastUpdate).Seconds < 1 || !VisibleInTree)
             {

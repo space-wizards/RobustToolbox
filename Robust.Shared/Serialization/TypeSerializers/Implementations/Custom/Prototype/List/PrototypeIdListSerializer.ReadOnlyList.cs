@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
     public partial class PrototypeIdListSerializer<T> : ITypeSerializer<IReadOnlyList<string>, SequenceDataNode>
-        where T : IPrototype
+        where T : class, IPrototype
     {
         DataNode ITypeWriter<IReadOnlyList<string>>.Write(
             ISerializationManager serializationManager,

@@ -22,14 +22,13 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
+        [IoC.Dependency] protected readonly IEntityLookup EntityLookup = default!;
         [IoC.Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [IoC.Dependency] private readonly IComponentFactory ComponentFactory = default!;
         [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-
-        private SharedEntityLookupSystem _lookupSystem = default!;
 
         #endregion Dependencies
 
@@ -79,13 +78,11 @@ namespace Robust.Shared.GameObjects
             EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             ComponentManager.Initialize();
+            EntityLookup.Initialize();
             _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
-        public virtual void Startup()
-        {
-            _lookupSystem = EntitySystemManager.GetEntitySystem<SharedEntityLookupSystem>();
-        }
+        public virtual void Startup() {}
 
         public virtual void Shutdown()
         {
@@ -94,6 +91,7 @@ namespace Robust.Shared.GameObjects
             EntitySystemManager.Shutdown();
             Started = false;
             _componentManager.Clear();
+            EntityLookup.Shutdown();
         }
 
         public virtual void TickUpdate(float frameTime, Histogram? histogram)
@@ -106,6 +104,11 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
                 EntitySystemManager.TickUpdate(frameTime);
+            }
+
+            using (histogram?.WithLabels("EntityLookup").NewTimer())
+            {
+                EntityLookup.Update(frameTime);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
@@ -376,10 +379,10 @@ namespace Robust.Shared.GameObjects
             entity.InitializeComponents();
         }
 
-        private protected static void StartEntity(Entity entity)
+        protected void StartEntity(Entity entity)
         {
             entity.StartAllComponents();
-            EntitySystem.Get<SharedEntityLookupSystem>().UpdateEntityTree(entity);
+            EntityLookup.UpdateEntityTree(entity);
         }
 
         private void CullDeletedEntities()
@@ -397,7 +400,7 @@ namespace Robust.Shared.GameObjects
 
                 AllEntities.RemoveSwap(i);
                 Entities.Remove(entity.Uid);
-                _lookupSystem.RemoveFromEntityTrees(entity);
+                EntityLookup.RemoveFromEntityTrees(entity);
 
                 // Process the one we just swapped next.
                 i--;

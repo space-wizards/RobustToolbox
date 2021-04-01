@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -8,8 +9,21 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public class SharedEntityLookupSystem : EntitySystem
+    public interface IEntityLookup
     {
+        // Not an EntitySystem given EntityManager has a dependency on it which means it's just easier to IoC it for tests.
+
+        void Initialize();
+
+        void Shutdown();
+
+        void Update(float frameTime);
+        bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
+    }
+
+    public class SharedEntityLookupSystem : IEntityLookup, IEntityEventSubscriber
+    {
+        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new();
@@ -24,22 +38,19 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private HashSet<EntityUid> _handledThisTick = new();
 
-        public override void Initialize()
+        public void Initialize()
         {
-            base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Push(ev));
-            SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Push(ev));
-            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Enqueue(ev));
+            var eventBus = IoCManager.Resolve<IEntityManager>().EventBus;
+            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
+            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
+            eventBus.SubscribeEvent<EntMapIdChangedMessage>(EventSource.Local, this, ev => _mapChangeQueue.Enqueue(ev));
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
         }
 
-        public override void Shutdown()
+        public void Shutdown()
         {
-            base.Shutdown();
-            UnsubscribeLocalEvent<MoveEvent>();
-            UnsubscribeLocalEvent<RotateEvent>();
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
+            IoCManager.Resolve<IEntityManager>().EventBus.UnsubscribeEvents(this);
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
         }
@@ -58,10 +69,8 @@ namespace Robust.Shared.GameObjects
             _entityTreesPerMap.Remove(eventArgs.Map);
         }
 
-        public override void Update(float frameTime)
+        public void Update(float frameTime)
         {
-            base.Update(frameTime);
-
             _handledThisTick.Clear();
 
             while (_mapChangeQueue.TryDequeue(out var mapChangeEvent))
@@ -175,7 +184,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false)
         {
-            var mapPos = position.ToMap(EntityManager);
+            var mapPos = position.ToMap(_entityManager);
             return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, approximate);
         }
 
@@ -221,7 +230,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false)
         {
-            var mapCoordinates = position.ToMap(EntityManager);
+            var mapCoordinates = position.ToMap(_entityManager);
             var mapPosition = mapCoordinates.Position;
             var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
                 mapPosition + new Vector2(range / 2, range / 2));
@@ -257,7 +266,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
             float arcWidth, bool approximate = false)
         {
-            var position = coordinates.ToMap(EntityManager).Position;
+            var position = coordinates.ToMap(_entityManager).Position;
 
             foreach (var entity in GetEntitiesInRange(coordinates, range * 2, approximate))
             {
@@ -313,7 +322,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (!entity.Initialized || !EntityManager.EntityExists(entity.Uid))
+            if (!entity.Initialized || !_entityManager.EntityExists(entity.Uid))
             {
                 return false;
             }
@@ -344,7 +353,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var childTx in entity.Transform.ChildEntityUids)
             {
-                if (UpdateEntityTree(EntityManager.GetEntity(childTx)))
+                if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
                 {
                     ++necessary;
                 }

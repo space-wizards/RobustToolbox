@@ -90,6 +90,11 @@ namespace Robust.UnitTesting
                 compFactory.Register<MetaDataComponent>();
                 compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
             }
+
+            if(entMan.EventBus == null)
+            {
+                entMan.Startup();
+            }
         }
 
         [OneTimeTearDown]

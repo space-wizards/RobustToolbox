@@ -58,7 +58,7 @@ namespace Robust.Server.GameStates
 
         public void Initialize()
         {
-            _lookupSystem = EntitySystem.Get<SharedEntityLookupSystem>();
+            _lookupSystem = IoCManager.Resolve<IEntityLookup>();
         }
 
         // Not thread safe
@@ -254,7 +254,7 @@ namespace Robust.Server.GameStates
         private HashSet<EntityUid> CalcCurrentViewSet(ICommonSession session)
         {
             var visibleEnts = _visSetPool.Get();
-            
+
             //TODO: Refactor map system to not require every map and grid entity to function.
             IncludeMapCriticalEntities(visibleEnts);
 

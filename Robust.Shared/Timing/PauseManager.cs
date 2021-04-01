@@ -21,7 +21,7 @@ namespace Robust.Shared.Timing
 
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            var lookupSystem = EntitySystem.Get<SharedEntityLookupSystem>();
+            var lookupSystem = IoCManager.Resolve<IEntityLookup>();
 
             if (paused)
             {
@@ -50,7 +50,7 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 entity.RunMapInit();
                 entity.Paused = false;
@@ -66,7 +66,7 @@ namespace Robust.Shared.Timing
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
 
-            foreach (var entity in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)
                     continue;

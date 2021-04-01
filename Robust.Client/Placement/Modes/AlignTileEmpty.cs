@@ -52,7 +52,7 @@ namespace Robust.Client.Placement.Modes
             var topRight = new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f);
             var box = new Box2(bottomLeft, topRight);
 
-            return !EntitySystem.Get<SharedEntityLookupSystem>().AnyEntitiesIntersecting(map, box);
+            return !IoCManager.Resolve<IEntityLookup>().AnyEntitiesIntersecting(map, box);
         }
     }
 }

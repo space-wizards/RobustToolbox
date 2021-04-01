@@ -38,8 +38,8 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         private HashSet<IEntity> _handledThisTick = new();
 
-        private Queue<MoveEvent> _queuedMoveEvents = new();
-        private Queue<RotateEvent> _queuedRotateEvent = new();
+        private Stack<MoveEvent> _queuedMoveEvents = new();
+        private Stack<RotateEvent> _queuedRotateEvent = new();
         private Queue<EntMapIdChangedMessage> _queuedMapChanges = new();
         private Queue<FixtureUpdateMessage> _queuedFixtureUpdates = new();
         private Queue<PhysicsUpdateMessage> _queuedCollisionChanges = new();
@@ -148,24 +148,29 @@ namespace Robust.Shared.Physics.Broadphase
         {
             base.Update(frameTime);
 
-            while (_queuedMoveEvents.Count > 0)
+            while (_queuedMapChanges.TryDequeue(out var mapChange))
             {
-                var moveEvent = _queuedMoveEvents.Dequeue();
+                HandleMapChange(mapChange);
+                _handledThisTick.Add(mapChange.Entity);
+            }
 
+            while (_queuedMoveEvents.TryPop(out var moveEvent))
+            {
                 // Doing this seems to fuck with tp so leave off for now I guess, it's mainly to avoid the rotate duplication
-                if (_handledThisTick.Contains(moveEvent.Sender)) continue;
+                // Also check if HandleMapChange has already obsoleted the move
+                var newPos = moveEvent.NewPosition.ToMap(EntityManager);
+
+                if (_handledThisTick.Contains(moveEvent.Sender) || newPos.MapId != moveEvent.Sender.Transform.MapID) continue;
 
                 _handledThisTick.Add(moveEvent.Sender);
 
                 if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
-                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager), moveEvent.WorldAABB);
+                SynchronizeFixtures(physicsComponent, newPos.Position - moveEvent.OldPosition.ToMapPos(EntityManager), moveEvent.WorldAABB);
             }
 
-            while (_queuedRotateEvent.Count > 0)
+            while (_queuedRotateEvent.TryPop(out var rotateEvent))
             {
-                var rotateEvent = _queuedRotateEvent.Dequeue();
-
                 if (_handledThisTick.Contains(rotateEvent.Sender)) continue;
 
                 _handledThisTick.Add(rotateEvent.Sender);
@@ -180,24 +185,19 @@ namespace Robust.Shared.Physics.Broadphase
 
             // TODO: Just call ProcessEventQueue directly?
             // Manually manage queued stuff ourself given EventBus.QueueEvent happens at the same time every time
-            while (_queuedMapChanges.Count > 0)
+
+            while (_queuedContainerInsert.TryDequeue(out var insert))
             {
-                HandleMapChange(_queuedMapChanges.Dequeue());
+                HandleContainerInsert(insert);
             }
 
-            while (_queuedContainerInsert.Count > 0)
+            while (_queuedContainerRemove.TryDequeue(out var remove))
             {
-                HandleContainerInsert(_queuedContainerInsert.Dequeue());
+                HandleContainerRemove(remove);
             }
 
-            while (_queuedContainerRemove.Count > 0)
+            while (_queuedCollisionChanges.TryDequeue(out var message))
             {
-                HandleContainerRemove(_queuedContainerRemove.Dequeue());
-            }
-
-            while (_queuedCollisionChanges.Count > 0)
-            {
-                var message = _queuedCollisionChanges.Dequeue();
                 if (message.Component.CanCollide && !message.Component.Deleted)
                 {
                     AddBody(message.Component);
@@ -208,9 +208,8 @@ namespace Robust.Shared.Physics.Broadphase
                 }
             }
 
-            while (_queuedFixtureUpdates.Count > 0)
+            while (_queuedFixtureUpdates.TryDequeue(out var message))
             {
-                var message = _queuedFixtureUpdates.Dequeue();
                 RefreshFixture(message.Body, message.Fixture);
             }
         }
@@ -232,15 +231,12 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void QueuePhysicsMove(MoveEvent moveEvent)
         {
-            _queuedMoveEvents.Enqueue(moveEvent);
+            _queuedMoveEvents.Push(moveEvent);
         }
 
         private void QueuePhysicsRotate(RotateEvent rotateEvent)
         {
-            if (!rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
-                return;
-
-            SynchronizeFixtures(physicsComponent, Vector2.Zero);
+            _queuedRotateEvent.Push(rotateEvent);
         }
 
         private void QueueCollisionChange(PhysicsUpdateMessage message)

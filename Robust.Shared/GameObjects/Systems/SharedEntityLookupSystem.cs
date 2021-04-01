@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         // Using stacks so we always use latest data (given we only run it once per entity).
         private Stack<MoveEvent> _moveQueue = new();
         private Stack<RotateEvent> _rotateQueue = new();
-        private Stack<EntMapIdChangedMessage> _mapChangeQueue = new();
+        private Queue<EntMapIdChangedMessage> _mapChangeQueue = new();
 
         /// <summary>
         /// Move and rotate events generate the same update so no point duplicating work in the same tick.
@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
             SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Push(ev));
             SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Push(ev));
-            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Push(ev));
+            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Enqueue(ev));
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
         }
@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
 
             _handledThisTick.Clear();
 
-            while (_mapChangeQueue.TryPop(out var mapChangeEvent))
+            while (_mapChangeQueue.TryDequeue(out var mapChangeEvent))
             {
                 if (mapChangeEvent.Entity.Deleted) continue;
                 RemoveFromEntityTree(mapChangeEvent.Entity, mapChangeEvent.OldMapId);

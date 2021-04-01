@@ -370,16 +370,18 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
+                // TODO: When we move this interface onto compbus then just have CollideWith called once with BodyA and BodyB prolly?
+
                 foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
                 }
 
                 foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
             }
 

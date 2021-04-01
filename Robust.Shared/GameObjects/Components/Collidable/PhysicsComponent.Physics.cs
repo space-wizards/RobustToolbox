@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(IPhysBody))]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
-        [DataField("status")]
+        [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
 
         /// <inheritdoc />
@@ -260,6 +260,10 @@ namespace Robust.Shared.GameObjects
             {
                 fixture.Body = this;
                 fixture.ComputeProperties();
+                if (string.IsNullOrEmpty(fixture.Name))
+                {
+                    fixture.Name = GetFixtureName(fixture);
+                }
             }
 
             ResetMassData();
@@ -296,7 +300,6 @@ namespace Robust.Shared.GameObjects
 
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-            // PJB, please forgive me and come up with something better.
 
             // We will pray that this deferred joint is handled properly.
 
@@ -356,32 +359,60 @@ namespace Robust.Shared.GameObjects
             var toRemove = new List<Fixture>();
             var computeProperties = false;
 
-            // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
-            for (var i = 0; i < newState.Fixtures.Count; i++)
+            // Given a bunch of data isn't serialized need to sort of re-initialise it
+            var newFixtures = new List<Fixture>(newState.Fixtures.Count);
+            foreach (var fixture in newState.Fixtures)
             {
                 var newFixture = new Fixture();
-                newState.Fixtures[i].CopyTo(newFixture);
-
+                fixture.CopyTo(newFixture);
                 newFixture.Body = this;
+                newFixtures.Add(newFixture);
+            }
 
-                // Existing fixture
-                if (_fixtures.Count > i)
+            // Add / update new fixtures
+            foreach (var fixture in newFixtures)
+            {
+                var found = false;
+
+                foreach (var existing in _fixtures)
                 {
-                    var existingFixture = _fixtures[i];
+                    if (!fixture.Name.Equals(existing.Name)) continue;
 
-                    if (!existingFixture.Equals(newFixture))
+                    if (!fixture.Equals(existing))
                     {
-                        toRemove.Add(existingFixture);
-                        toAdd.Add(newFixture);
+                        toAdd.Add(fixture);
+                        toRemove.Add(existing);
                     }
+
+                    found = true;
+                    break;
                 }
-                else
+
+                if (!found)
                 {
-                    toAdd.Add(newFixture);
+                    toAdd.Add(fixture);
                 }
             }
 
-            // When we get actual diffing and shit will need to check computeproperties more carefully.
+            // Remove old fixtures
+            foreach (var existing in _fixtures)
+            {
+                var found = false;
+
+                foreach (var fixture in newFixtures)
+                {
+                    if (fixture.Name.Equals(existing.Name))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    toRemove.Add(existing);
+                }
+            }
 
             foreach (var fixture in toRemove)
             {
@@ -389,6 +420,7 @@ namespace Robust.Shared.GameObjects
                 RemoveFixture(fixture);
             }
 
+            // TODO: We also still need event listeners for shapes (Probably need C# events)
             foreach (var fixture in toAdd)
             {
                 computeProperties = true;
@@ -411,6 +443,24 @@ namespace Robust.Shared.GameObjects
             AngularVelocity = newState.AngularVelocity;
             BodyType = newState.BodyType;
             Predict = false;
+        }
+
+        public Fixture? GetFixture(string name)
+        {
+            // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
+            // temporary value on deserialization so we can store it as a dictionary of <name, fixture>
+            // given 100% of bodies have 1-2 fixtures this isn't really a performance problem right now but
+            // should probably be done at some stage
+            // If we really need it then you just deserialize onto a dummy field that then just never gets used again.
+            foreach (var fixture in _fixtures)
+            {
+                if (fixture.Name.Equals(name))
+                {
+                    return fixture;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -934,6 +984,12 @@ namespace Robust.Shared.GameObjects
             // TODO: Optimise this a LOT
             Dirty();
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
+        }
+
+        internal string GetFixtureName(Fixture fixture)
+        {
+            // For any fixtures that aren't named in the code we will assign one.
+            return $"fixture-{_fixtures.IndexOf(fixture)}";
         }
 
         internal Transform GetTransform()

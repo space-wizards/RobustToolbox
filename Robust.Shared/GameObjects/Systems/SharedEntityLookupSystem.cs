@@ -14,9 +14,10 @@ namespace Robust.Shared.GameObjects
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new();
 
-        private Queue<MoveEvent> _moveQueue = new();
-        private Queue<RotateEvent> _rotateQueue = new();
-        private Queue<EntMapIdChangedMessage> _mapChangeQueue = new();
+        // Using stacks so we always use latest data (given we only run it once per entity).
+        private Stack<MoveEvent> _moveQueue = new();
+        private Stack<RotateEvent> _rotateQueue = new();
+        private Stack<EntMapIdChangedMessage> _mapChangeQueue = new();
 
         /// <summary>
         /// Move and rotate events generate the same update so no point duplicating work in the same tick.
@@ -26,9 +27,9 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Enqueue(ev));
-            SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Enqueue(ev));
-            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Enqueue(ev));
+            SubscribeLocalEvent<MoveEvent>(ev => _moveQueue.Push(ev));
+            SubscribeLocalEvent<RotateEvent>(ev => _rotateQueue.Push(ev));
+            SubscribeLocalEvent<EntMapIdChangedMessage>(ev => _mapChangeQueue.Push(ev));
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
         }
@@ -63,7 +64,7 @@ namespace Robust.Shared.GameObjects
 
             _handledThisTick.Clear();
 
-            while (_mapChangeQueue.TryDequeue(out var mapChangeEvent))
+            while (_mapChangeQueue.TryPop(out var mapChangeEvent))
             {
                 if (mapChangeEvent.Entity.Deleted) continue;
                 RemoveFromEntityTree(mapChangeEvent.Entity, mapChangeEvent.OldMapId);
@@ -71,7 +72,7 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
             }
 
-            while (_moveQueue.TryDequeue(out var moveEvent))
+            while (_moveQueue.TryPop(out var moveEvent))
             {
                 if (moveEvent.Sender.Deleted || _handledThisTick.Contains(moveEvent.Sender.Uid)) continue;
 
@@ -79,7 +80,7 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(moveEvent.Sender.Uid);
             }
 
-            while (_rotateQueue.TryDequeue(out var rotateEvent))
+            while (_rotateQueue.TryPop(out var rotateEvent))
             {
                 if (rotateEvent.Sender.Deleted || _handledThisTick.Contains(rotateEvent.Sender.Uid)) continue;
 

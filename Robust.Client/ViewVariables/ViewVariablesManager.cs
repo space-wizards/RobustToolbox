@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -12,6 +13,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
@@ -122,9 +124,14 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorString();
             }
 
+            if (typeof(IPrototype).IsAssignableFrom(type) || typeof(ViewVariablesBlobMembers.PrototypeReferenceToken).IsAssignableFrom(type))
+            {
+                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorIPrototype<>).MakeGenericType(type))!;
+            }
+
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerialzable<>).MakeGenericType(type))!;
+                return (VVPropEditor)Activator.CreateInstance(typeof(VVPropEditorISelfSerializable<>).MakeGenericType(type))!;
             }
 
             if (type.IsEnum)
@@ -317,7 +324,12 @@ namespace Robust.Client.ViewVariables
             _netManager.ClientSendMessage(closeMsg);
         }
 
-        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object? value)
+        public bool TryGetSession(uint sessionId, [NotNullWhen(true)] out ViewVariablesRemoteSession? session)
+        {
+            return _sessions.TryGetValue(sessionId, out session);
+        }
+
+        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object? value, bool reinterpretValue = false)
         {
             if (!_sessions.ContainsKey(session.SessionId))
             {
@@ -326,6 +338,7 @@ namespace Robust.Client.ViewVariables
 
             var msg = _netManager.CreateNetMessage<MsgViewVariablesModifyRemote>();
             msg.SessionId = session.SessionId;
+            msg.ReinterpretValue = reinterpretValue;
             msg.PropertyIndex = propertyIndex;
             msg.Value = value;
             _netManager.ClientSendMessage(msg);

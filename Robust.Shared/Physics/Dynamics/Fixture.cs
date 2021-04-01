@@ -565,11 +565,9 @@ namespace Robust.Shared.Physics.Dynamics
             var area = grid.LocalBounds.Width * grid.LocalBounds.Height;
             float I = 0.0f;
 
-            //The area is too small for the engine to handle.
-            DebugTools.Assert(area > float.Epsilon);
+            // Probably nothing bad happening if the area is 0?
 
             // Total mass
-            // TODO: Do we need this?
             var density = area > 0.0f ? Mass / area : 0.0f;
 
             // Center of mass

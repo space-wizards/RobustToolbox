@@ -10,9 +10,9 @@ using Robust.Shared.Serialization.Manager;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture]
-    public class ComponentDependencies_Tests : RobustUnitTest
+    public class ComponentDependenciesTests : RobustUnitTest
     {
-        private const string PROTOTYPES = @"
+        private const string Prototypes = @"
 - type: entity
   name: dummy
   id: dummy
@@ -132,7 +132,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public override string Name => "TestFive";
 
 #pragma warning disable 649
-            [ComponentDependency] public bool? thing;
+            [ComponentDependency] public bool? Thing;
 #pragma warning restore 649
         }
 
@@ -140,14 +140,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             public override string Name => "TestSix";
 
-            [ComponentDependency] public TestFiveComponent thing = null!;
+            [ComponentDependency] public TestFiveComponent Thing = null!;
         }
 
         private class TestSevenComponent : Component
         {
             public override string Name => "TestSeven";
 
-            [ComponentDependency("ABCDEF")] public TestFiveComponent? thing = null!;
+            [ComponentDependency("ABCDEF")] public TestFiveComponent? Thing = null!;
         }
 
         [OneTimeSetUp]
@@ -163,10 +163,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestFiveComponent>();
             componentFactory.Register<TestSixComponent>();
             componentFactory.Register<TestSevenComponent>();
-            
+
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
+            prototypeManager.LoadFromStream(new StringReader(Prototypes));
             prototypeManager.Resync();
         }
 
@@ -452,16 +452,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             // An entity with TestFive.
-            try
-            {
-                entityManager.CreateEntityUninitialized("dummyFive");
-            }
-            catch (ComponentDependencyValueTypeException e)
-            {
-                Assert.NotNull(e);
-                return;
-            }
-            Assert.Fail("No exception thrown");
+            var except = Assert.Throws<EntityCreationException>(() => entityManager.CreateEntityUninitialized("dummyFive"));
+            Assert.That(except, Is.Not.Null);
+            Assert.That(except!.InnerException, Is.TypeOf<ComponentDependencyValueTypeException>());
         }
 
         [Test]
@@ -470,16 +463,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             // An entity with TestSix.
-            try
-            {
-                entityManager.CreateEntityUninitialized("dummySix");
-            }
-            catch (ComponentDependencyNotNullableException e)
-            {
-                Assert.That(e, Is.Not.Null);
-                return;
-            }
-            Assert.Fail("No exception thrown");
+            var except = Assert.Throws<EntityCreationException>(() => entityManager.CreateEntityUninitialized("dummySix"));
+            Assert.That(except, Is.Not.Null);
+            Assert.That(except!.InnerException, Is.TypeOf<ComponentDependencyNotNullableException>());
         }
 
         [Test]
@@ -487,17 +473,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var entity = entityManager.CreateEntityUninitialized("dummy");
-            var t1comp = entity.AddComponent<TestOneComponent>();
+            var t1Comp = entity.AddComponent<TestOneComponent>();
 
-            Assert.That(t1comp.TestTwoIsAdded, Is.False);
+            Assert.That(t1Comp.TestTwoIsAdded, Is.False);
 
             entity.AddComponent<TestTwoComponent>();
 
-            Assert.That(t1comp.TestTwoIsAdded, Is.True);
+            Assert.That(t1Comp.TestTwoIsAdded, Is.True);
 
             entity.RemoveComponent<TestTwoComponent>();
 
-            Assert.That(t1comp.TestTwoIsAdded, Is.False);
+            Assert.That(t1Comp.TestTwoIsAdded, Is.False);
         }
 
         [Test]
@@ -507,7 +493,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entity = entityManager.CreateEntityUninitialized("dummy");
             try
             {
-                var t7comp = entity.AddComponent<TestSevenComponent>();
+                var t7Comp = entity.AddComponent<TestSevenComponent>();
             }
             catch (ComponentDependencyInvalidMethodNameException invEx)
             {

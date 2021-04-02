@@ -848,8 +848,8 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
-                        Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
+                        actualRsi.Path, Environment.StackTrace);
                     theLayer.Texture = null;
                 }
             }

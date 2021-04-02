@@ -23,7 +23,8 @@ namespace Robust.Benchmarks.Serialization
             var assemblies = new[]
             {
                 AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
-                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server")
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Benchmarks")
             };
 
             foreach (var assembly in assemblies)
@@ -36,17 +37,34 @@ namespace Robust.Benchmarks.Serialization
             SerializationManager = IoCManager.Resolve<ISerializationManager>();
             SerializationManager.Initialize();
 
-            Node = new ValueDataNode("ABC");
+            StringDataDefNode = new MappingDataNode();
+            StringDataDefNode.AddNode(new ValueDataNode("string"), new ValueDataNode("ABC"));
         }
 
         private ISerializationManager SerializationManager { get; }
 
-        private ValueDataNode Node { get; }
+        private ValueDataNode StringNode { get; } = new("ABC");
 
-        [Benchmark]
+        private ValueDataNode IntNode { get; } = new("1");
+
+        private MappingDataNode StringDataDefNode { get; }
+
+        // [Benchmark]
         public void ReadString()
         {
-            SerializationManager.ReadValue<string>(Node);
+            SerializationManager.ReadValue<string>(StringNode);
+        }
+
+        // [Benchmark]
+        public void ReadInteger()
+        {
+            SerializationManager.ReadValue<int>(IntNode);
+        }
+
+        [Benchmark]
+        public void ReadDataDefinition()
+        {
+            SerializationManager.ReadValue<DataDefinitionWithString>(StringDataDefNode);
         }
     }
 }

@@ -310,7 +310,7 @@ namespace Robust.Shared.Serialization.Manager
                 underlyingType = ResolveConcreteType(underlyingType, typeString);
             }
 
-            if (TryReadWithTypeSerializers(underlyingType, node, DependencyCollection, out var serializedObj, skipHook, context))
+            if (TryReadRaw(underlyingType, node, DependencyCollection, out var serializedObj, skipHook, context))
             {
                 return serializedObj;
             }

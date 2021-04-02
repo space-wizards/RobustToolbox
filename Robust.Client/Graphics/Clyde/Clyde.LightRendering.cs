@@ -497,40 +497,55 @@ namespace Robust.Client.Graphics.Clyde
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-            var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
-
             var state = (this, worldBounds, count: 0);
 
-            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
             {
-                var transform = light.Owner.Transform;
+                Box2 gridBounds;
 
-                if (state.count >= LightsToRenderListSize)
+                if (gridId == GridId.Invalid)
                 {
-                    // There are too many lights to fit in the static memory.
-                    return false;
+                    gridBounds = worldBounds;
+                }
+                else
+                {
+                    gridBounds = worldBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
                 }
 
-                if (!light.Enabled || light.ContainerOccluded)
+                var lightTree = renderingTreeSystem.GetLightTreeForMap(map, gridId);
+
+                lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
                 {
+                    var transform = light.Owner.Transform;
+
+                    if (state.count >= LightsToRenderListSize)
+                    {
+                        // There are too many lights to fit in the static memory.
+                        return false;
+                    }
+
+                    // TODO: Don't insert into trees for these, same as sprites.
+                    if (!light.Enabled || light.ContainerOccluded)
+                    {
+                        return true;
+                    }
+
+                    var lightPos = transform.WorldMatrix.Transform(light.Offset);
+
+                    var circle = new Circle(lightPos, light.Radius);
+
+                    // If the light doesn't touch anywhere the camera can see, it doesn't matter.
+                    if (!circle.Intersects(state.worldBounds))
+                    {
+                        return true;
+                    }
+
+                    float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
+                    state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
+
                     return true;
-                }
-
-                var lightPos = transform.WorldMatrix.Transform(light.Offset);
-
-                var circle = new Circle(lightPos, light.Radius);
-
-                // If the light doesn't touch anywhere the camera can see, it doesn't matter.
-                if (!circle.Intersects(state.worldBounds))
-                {
-                    return true;
-                }
-
-                float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
-                state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
-
-                return true;
-            }, worldBounds);
+                }, gridBounds);
+            }
 
             if (state.count > _maxLightsPerScene)
             {

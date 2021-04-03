@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
 
         public void Initialize()
         {
-            var eventBus = IoCManager.Resolve<IEntityManager>().EventBus;
+            var eventBus = _entityManager.EventBus;
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent<EntMapIdChangedMessage>(EventSource.Local, this, ev => _mapChangeQueue.Enqueue(ev));
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
 
         public void Shutdown()
         {
-            IoCManager.Resolve<IEntityManager>().EventBus.UnsubscribeEvents(this);
+            _entityManager.EventBus.UnsubscribeEvents(this);
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
         }

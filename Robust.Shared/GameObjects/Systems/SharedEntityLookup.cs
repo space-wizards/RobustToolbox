@@ -58,6 +58,8 @@ namespace Robust.Shared.GameObjects
         bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null);
 
         void RemoveFromEntityTrees(IEntity entity);
+
+        Box2 GetWorldAabbFromEntity(in IEntity ent);
     }
 
     public class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
@@ -425,7 +427,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected Box2 GetWorldAabbFromEntity(in IEntity ent)
+        public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);

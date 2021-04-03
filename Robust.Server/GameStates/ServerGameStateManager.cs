@@ -61,7 +61,6 @@ namespace Robust.Server.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _entityView.Initialize();
             _networkManager.RegisterNetMessage<MsgState>(MsgState.NAME);
             _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, HandleStateAck);
 
@@ -217,7 +216,7 @@ namespace Robust.Server.GameStates
                 .Where(s => s.Status == SessionStatus.InGame)
                 .AsParallel()
                 .Select(SafeGenerateMail);
-            
+
             foreach (var (msg, chan) in mailBag)
             {
                 // see session.Status != SessionStatus.InGame above

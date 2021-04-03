@@ -25,7 +25,7 @@ namespace Robust.Server.GameStates
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
-        private IEntityLookup _lookup = default!;
+        private IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -55,11 +55,7 @@ namespace Robust.Server.GameStates
             _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
-        }
-
-        public void Initialize()
-        {
-            _lookup = IoCManager.Resolve<IEntityLookup>();
+            _lookup = _entMan.EntityLookup;
         }
 
         // Not thread safe

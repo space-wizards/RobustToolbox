@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Benchmarks.Serialization
 {
     [Prototype("seed")]
-    internal class SeedDataDefinition : IPrototype
+    public class SeedDataDefinition : IPrototype
     {
         public const string Prototype = @"
 - type: seed
@@ -16,7 +16,6 @@ namespace Robust.Benchmarks.Serialization
   name: tobacco
   seedName: tobacco
   displayName: tobacco plant
-  plantRsi: Objects/Specific/Hydroponics/tobacco.rsi
   productPrototypes:
     - LeavesTobacco
   harvestRepeat: Repeat
@@ -164,12 +163,22 @@ namespace Robust.Benchmarks.Serialization
         #endregion
     }
 
-    internal enum HarvestType
+    public enum HarvestType
     {
-        NoRepeat
+        NoRepeat,
+        Repeat
     }
 
-    internal enum SeedChemQuantity {}
+    public enum Gas {}
 
-    internal enum Gas {}
+    [DataDefinition]
+    public struct SeedChemQuantity
+    {
+        [DataField("Min")]
+        public int Min;
+        [DataField("Max")]
+        public int Max;
+        [DataField("PotencyDivisor")]
+        public int PotencyDivisor;
+    }
 }

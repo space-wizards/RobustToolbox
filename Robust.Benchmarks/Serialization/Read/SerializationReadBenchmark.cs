@@ -10,12 +10,10 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Benchmarks.Serialization
+namespace Robust.Benchmarks.Serialization.Read
 {
-    internal class SerializationReadBenchmark
+    public class SerializationReadBenchmark
     {
-        private const int N = 1000;
-
         public SerializationReadBenchmark()
         {
             IoCManager.InitThread();
@@ -45,7 +43,7 @@ namespace Robust.Benchmarks.Serialization
             var yamlStream = new YamlStream();
             yamlStream.Load(new StringReader(SeedDataDefinition.Prototype));
 
-            SeedNode = yamlStream.Documents[0].RootNode.ToDataNodeCast<MappingDataNode>();
+            SeedNode = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
         }
 
         private ISerializationManager SerializationManager { get; }
@@ -58,28 +56,28 @@ namespace Robust.Benchmarks.Serialization
 
         private MappingDataNode SeedNode { get; }
 
-        // [Benchmark]
-        public void ReadString()
+        [Benchmark]
+        public string? ReadString()
         {
-            SerializationManager.ReadValue<string>(StringNode);
-        }
-
-        // [Benchmark]
-        public void ReadInteger()
-        {
-            SerializationManager.ReadValue<int>(IntNode);
-        }
-
-        // [Benchmark]
-        public void ReadDataDefinitionWithString()
-        {
-            SerializationManager.ReadValue<DataDefinitionWithString>(StringDataDefNode);
+            return SerializationManager.ReadValue<string>(StringNode);
         }
 
         [Benchmark]
-        public void ReadSeedDataDefinition()
+        public int? ReadInteger()
         {
-            SerializationManager.ReadValue<SeedDataDefinition>(SeedNode);
+            return SerializationManager.ReadValue<int>(IntNode);
+        }
+
+        [Benchmark]
+        public DataDefinitionWithString? ReadDataDefinitionWithString()
+        {
+            return SerializationManager.ReadValue<DataDefinitionWithString>(StringDataDefNode);
+        }
+
+        [Benchmark]
+        public SeedDataDefinition? ReadSeedDataDefinition()
+        {
+            return SerializationManager.ReadValue<SeedDataDefinition>(SeedNode);
         }
     }
 }

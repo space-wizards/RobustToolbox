@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -124,9 +123,6 @@ namespace Robust.Shared.Serialization.Manager
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
         {
             var underlyingType = type.EnsureNotNullableType();
-
-            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
-                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for primitive/decimal.", true);
 
             if (underlyingType.IsArray)
             {
@@ -268,14 +264,6 @@ namespace Robust.Shared.Serialization.Manager
         {
             var underlyingType = type.EnsureNotNullableType();
 
-            // val primitives
-            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
-            {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-                var foo = TypeDescriptor.GetConverter(type);
-                return DeserializationResult.Value(foo.ConvertFromInvariantString(valueDataNode.Value));
-            }
-
             // array
             if (underlyingType.IsArray)
             {
@@ -296,7 +284,7 @@ namespace Robust.Shared.Serialization.Manager
 
             if (underlyingType.IsEnum)
             {
-                return DeserializationResult.Value(node switch
+                return new DeserializedValue(node switch
                 {
                     ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
                     SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
@@ -322,7 +310,7 @@ namespace Robust.Shared.Serialization.Manager
                 var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
                 selfSerObj.Deserialize(valueDataNode.Value);
 
-                return DeserializationResult.Value(selfSerObj);
+                return new DeserializedValue(selfSerObj);
             }
 
             //if (node is not MappingDataNode mappingDataNode) throw new InvalidNodeTypeException();
@@ -404,11 +392,9 @@ namespace Robust.Shared.Serialization.Manager
 
             if (value == null) return new MappingDataNode();
 
-            if (underlyingType.IsPrimitive ||
-                underlyingType.IsEnum ||
-                underlyingType == typeof(decimal))
+            if (underlyingType.IsEnum)
             {
-                // All primitives and enums implement IConvertible.
+                // Enums implement IConvertible.
                 // Need it for the culture overload.
                 var convertible = (IConvertible) value;
                 return new ValueDataNode(convertible.ToString(CultureInfo.InvariantCulture));
@@ -486,20 +472,6 @@ namespace Robust.Shared.Serialization.Manager
 
             var sourceType = source.GetType();
             var targetType = target.GetType();
-
-            if (sourceType.IsPrimitive && targetType.IsPrimitive)
-            {
-                //todo does this work
-                //i think it does
-                //todo validate we can assign source
-                return source;
-            }
-
-            if (source.GetType().IsPrimitive != target.GetType().IsPrimitive)
-            {
-                throw new InvalidOperationException(
-                    $"Source and target do not match. Source ({sourceType}) is primitive type? {sourceType.IsPrimitive}. Target ({targetType}) is primitive type? {targetType.IsPrimitive}");
-            }
 
             if (sourceType.IsValueType && targetType.IsValueType)
             {
@@ -611,7 +583,11 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (source == null) return source;
 
-            if (type.IsPrimitive || type.IsEnum || source is string || _copyByRefRegistrations.Contains(type))
+
+            if (type.IsPrimitive ||
+                type.IsEnum ||
+                source is string ||
+                _copyByRefRegistrations.Contains(type))
             {
                 return source;
             }

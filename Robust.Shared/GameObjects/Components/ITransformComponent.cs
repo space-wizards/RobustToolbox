@@ -107,9 +107,6 @@ namespace Robust.Shared.GameObjects
         /// <returns>Whether or not a GridId can be calculated e.g. if we have specific parents we may be using theirs instead.</returns>
         bool TryGetGridIndex([NotNullWhen(true)] out GridId? gridId);
 
-        /// <summary>
-        ///
-        /// </summary>
         Vector2? LerpDestination { get; }
 
         /// <summary>

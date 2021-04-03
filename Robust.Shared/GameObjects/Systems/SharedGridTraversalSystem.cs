@@ -57,17 +57,6 @@ namespace Robust.Shared.GameObjects
                 {
                     transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
                 }
-
-                // Finally we'll handle any GridId changes for parent or children
-                var newGridId = grid?.Index ?? GridId.Invalid;
-                if (newGridId.Equals(transform.GridID)) continue;
-
-                // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
-                if (!transform.HasGridIndex()) continue;
-
-                DebugTools.Assert(transform.TryGetGridIndex(out var calcedGridId));
-                DebugTools.Assert(calcedGridId!.Value.Equals(newGridId));
-                transform.GridID = newGridId;
             }
         }
 

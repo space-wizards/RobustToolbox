@@ -263,6 +263,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 var oldPosition = Coordinates;
+                _localPosition = value.Position;
 
                 if (value.EntityId != _parent)
                 {
@@ -270,7 +271,6 @@ namespace Robust.Shared.GameObjects
                     AttachParent(newEntity);
                 }
 
-                _localPosition = value.Position;
                 Dirty();
 
                 if (!DeferUpdates)
@@ -442,6 +442,12 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
+            if (_parent.IsValid() && Parent!.Owner.TryGetComponent(out IMapGridComponent? mapGrid))
+            {
+                gridId = mapGrid.GridIndex;
+                return true;
+            }
+
             gridId = _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
             return true;
         }
@@ -600,10 +606,12 @@ namespace Robust.Shared.GameObjects
             Owner.SendMessage(this, compMessage);
 
             // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
+            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
             RebuildMatrices();
             Dirty();
             UpdateEntityTree();
+
+            GridID = TryGetGridIndex(out var gridId) ? gridId.Value : Parent!.GridID;
         }
 
         internal void ChangeMapId(MapId newMapId)

@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
 
         void Shutdown();
 
-        void Update(float frameTime);
+        void Update();
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
 
         IEnumerable<IEntity> GetEntitiesInMap(MapId mapId);
@@ -79,12 +79,16 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private HashSet<EntityUid> _handledThisTick = new();
 
+        // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
+
         public void Initialize()
         {
             var eventBus = _entityManager.EventBus;
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent<EntMapIdChangedMessage>(EventSource.Local, this, ev => _mapChangeQueue.Enqueue(ev));
+            _entityManager.EntityDeleted += HandleEntityDeleted;
+            _entityManager.EntityStarted += HandleEntityStarted;
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
         }
@@ -92,8 +96,20 @@ namespace Robust.Shared.GameObjects
         public void Shutdown()
         {
             _entityManager.EventBus.UnsubscribeEvents(this);
+            _entityManager.EntityDeleted -= HandleEntityDeleted;
+            _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
+        }
+
+        private void HandleEntityDeleted(object? sender, EntityUid uid)
+        {
+            RemoveFromEntityTrees(_entityManager.GetEntity(uid));
+        }
+
+        private void HandleEntityStarted(object? sender, EntityUid uid)
+        {
+            UpdateEntityTree(_entityManager.GetEntity(uid));
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -110,8 +126,9 @@ namespace Robust.Shared.GameObjects
             _entityTreesPerMap.Remove(eventArgs.Map);
         }
 
-        public void Update(float frameTime)
+        public void Update()
         {
+            // Acruid said he'd deal with Update being called around IEntityManager later.
             _handledThisTick.Clear();
 
             while (_mapChangeQueue.TryDequeue(out var mapChangeEvent))
@@ -234,7 +251,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(_mapManager), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -247,11 +264,11 @@ namespace Robust.Shared.GameObjects
             return Intersecting(entityTwo, position);
         }
 
-        private static bool Intersecting(IEntity entity, Vector2 mapPosition)
+        private bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
             if (entity.TryGetComponent(out IPhysBody? component))
             {
-                if (component.GetWorldAABB().Contains(mapPosition))
+                if (component.GetWorldAABB(_mapManager).Contains(mapPosition))
                     return true;
             }
             else
@@ -297,7 +314,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(_mapManager), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);

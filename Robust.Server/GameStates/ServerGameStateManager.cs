@@ -55,7 +55,7 @@ namespace Robust.Server.GameStates
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");
-            _entityView = new EntityViewCulling(_entityManager, _mapManager);
+            _entityView = new EntityViewCulling(_entityManager, _mapManager, IoCManager.Resolve<IEntityLookup>());
         }
 
         /// <inheritdoc />

@@ -49,13 +49,13 @@ namespace Robust.Server.GameStates
         /// </summary>
         public float ViewSize { get; set; }
 
-        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager)
+        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
         {
             _entMan = entMan;
             _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
-            _lookup = _entMan.EntityLookup;
+            _lookup = lookup;
         }
 
         // Not thread safe

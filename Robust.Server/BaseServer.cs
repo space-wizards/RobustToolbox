@@ -68,6 +68,7 @@ namespace Robust.Server
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IGameTiming _time = default!;
@@ -302,6 +303,7 @@ namespace Robust.Server
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
+            IoCManager.Resolve<IEntityLookup>().Initialize();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
@@ -491,6 +493,7 @@ namespace Robust.Server
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
+            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
 
             if (_config.GetCVar(CVars.LogRuntimeLog))
@@ -572,6 +575,8 @@ namespace Robust.Server
 
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
             _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, TickUsage);
+
+            _lookup.Update();
 
             using (TickUsage.WithLabels("PostEngine").NewTimer())
             {

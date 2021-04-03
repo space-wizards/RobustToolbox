@@ -220,6 +220,7 @@ namespace Robust.UnitTesting.Server
 
             var entityMan = container.Resolve<IEntityManager>();
             entityMan.Initialize();
+            IoCManager.Resolve<IEntityLookup>().Initialize();
             _systemDelegate?.Invoke(container.Resolve<IEntitySystemManager>());
             entityMan.Startup();
 

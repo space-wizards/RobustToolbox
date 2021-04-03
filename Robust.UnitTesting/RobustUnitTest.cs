@@ -73,6 +73,7 @@ namespace Robust.UnitTesting
                 entMan.Startup();
             }
 
+            IoCManager.Resolve<IEntityLookup>().Initialize();
             var mapMan = IoCManager.Resolve<IMapManager>();
             mapMan.Initialize();
             mapMan.Startup();

@@ -26,7 +26,6 @@ namespace Robust.Shared.GameObjects
         void FrameUpdate(float frameTime);
 
         IComponentManager ComponentManager { get; }
-        IEntityLookup EntityLookup { get; }
         IEntityNetworkManager EntityNetManager { get; }
         IEntitySystemManager EntitySysManager { get; }
         IEventBus EventBus { get; }
@@ -35,6 +34,7 @@ namespace Robust.Shared.GameObjects
 
         event EventHandler<EntityUid>? EntityAdded;
         event EventHandler<EntityUid>? EntityInitialized;
+        event EventHandler<EntityUid>? EntityStarted;
         event EventHandler<EntityUid>? EntityDeleted;
 
         IEntity CreateEntityUninitialized(string? prototypeName);

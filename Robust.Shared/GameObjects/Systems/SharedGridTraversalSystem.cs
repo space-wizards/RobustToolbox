@@ -39,11 +39,8 @@ namespace Robust.Shared.GameObjects
 
                 var transform = entity.Transform;
                 // Change parent if necessary
-                // Given islands will probably have a bunch of static bodies in them then we'll verify velocities first as it's way cheaper
-
-                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager),
-                        out var grid) &&
+                // TODO: AttachParent will also duplicate some of this calculation so remove that.
+                if (_mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
                     grid.GridEntityId.IsValid() &&
                     grid.GridEntityId != entity.Uid)
                 {

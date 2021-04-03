@@ -35,6 +35,7 @@ namespace Robust.Shared.GameObjects
             {
                 var entity = moveEvent.Sender;
 
+                // TODO: Move the IMapComponent / IMapGridComponent checks up here instead of IsInContainer()
                 if (entity.Deleted || entity.IsInContainer()) continue;
 
                 var transform = entity.Transform;

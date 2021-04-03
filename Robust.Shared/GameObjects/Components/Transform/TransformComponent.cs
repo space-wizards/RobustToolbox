@@ -599,7 +599,7 @@ namespace Robust.Shared.GameObjects
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
 
             // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
+            SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
             _parent = newParentEnt.Uid;
             ChangeMapId(newConcrete.MapID);
 

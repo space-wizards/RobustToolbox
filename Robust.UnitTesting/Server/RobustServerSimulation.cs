@@ -177,6 +177,7 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.Register<IServerEntityManager, ServerEntityManager>();
             container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IEntityLookup, SharedEntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IComponentManager, ComponentManager>();
             container.Register<IMapManager, MapManager>();

@@ -26,6 +26,7 @@ namespace Robust.Shared.GameObjects
         void FrameUpdate(float frameTime);
 
         IComponentManager ComponentManager { get; }
+        IEntityLookup EntityLookup { get; }
         IEntityNetworkManager EntityNetManager { get; }
         IEntitySystemManager EntitySysManager { get; }
         IEventBus EventBus { get; }

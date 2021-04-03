@@ -5,6 +5,7 @@ using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -24,7 +25,7 @@ namespace Robust.Server.GameStates
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
-        private SharedEntityLookupSystem _lookupSystem = default!;
+        private IEntityLookup _lookup = default!;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -58,7 +59,7 @@ namespace Robust.Server.GameStates
 
         public void Initialize()
         {
-            _lookupSystem = IoCManager.Resolve<IEntityLookup>();
+            _lookup = IoCManager.Resolve<IEntityLookup>();
         }
 
         // Not thread safe
@@ -280,7 +281,7 @@ namespace Robust.Server.GameStates
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _lookupSystem.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
+                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
             }
 
             viewers.Clear();

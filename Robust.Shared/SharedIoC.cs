@@ -50,6 +50,7 @@ namespace Robust.Shared
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
         }
     }
 }

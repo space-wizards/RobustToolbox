@@ -19,9 +19,48 @@ namespace Robust.Shared.GameObjects
 
         void Update(float frameTime);
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId);
+
+        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
+            float arcWidth, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false);
+
+        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback);
+
+        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approximate = false);
+
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approximate = false);
+
+        bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
+
+        /// <summary>
+        /// Updates the lookup for this entity.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="worldAABB">Pass in to avoid it being re-calculated</param>
+        /// <returns></returns>
+        bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null);
+
+        void RemoveFromEntityTrees(IEntity entity);
     }
 
-    public class SharedEntityLookupSystem : IEntityLookup, IEntityEventSubscriber
+    public class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
     {
         [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
@@ -277,6 +316,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
         {
             if (!_entityTreesPerMap.TryGetValue(mapId, out var trees))
@@ -314,6 +354,7 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         #region Entity DynamicTree
+        /// <inheritdoc />
         public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
             if (entity.Deleted)
@@ -372,7 +413,8 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        internal void RemoveFromEntityTrees(IEntity entity)
+        /// <inheritdoc />
+        public void RemoveFromEntityTrees(IEntity entity)
         {
             foreach (var mapId in _mapManager.GetAllMapIds())
             {

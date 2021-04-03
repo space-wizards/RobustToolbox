@@ -2,7 +2,7 @@
 
 namespace Robust.Benchmarks
 {
-    public class Program
+    internal class Program
     {
         public static void Main(string[] args)
         {

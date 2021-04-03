@@ -3,7 +3,7 @@
 namespace Robust.Benchmarks.Serialization
 {
     [DataDefinition]
-    public class DataDefinitionWithString
+    internal class DataDefinitionWithString
     {
         [field: DataField("string")]
         private string StringField { get; } = default!;

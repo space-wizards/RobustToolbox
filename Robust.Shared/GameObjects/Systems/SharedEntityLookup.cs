@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -64,8 +63,8 @@ namespace Robust.Shared.GameObjects
 
     public class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
     {
-        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        private readonly IEntityManager _entityManager;
+        private readonly IMapManager _mapManager;
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new();
 
@@ -80,6 +79,12 @@ namespace Robust.Shared.GameObjects
         private HashSet<EntityUid> _handledThisTick = new();
 
         // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
+
+        public SharedEntityLookup(IEntityManager entityManager, IMapManager mapManager)
+        {
+            _entityManager = entityManager;
+            _mapManager = mapManager;
+        }
 
         public void Initialize()
         {

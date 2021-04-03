@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects
             {
                 var entity = moveEvent.Sender;
 
-                if (entity.Deleted || !entity.HasComponent<PhysicsComponent>() || entity.IsInContainer()) continue;
+                if (entity.Deleted || entity.IsInContainer()) continue;
 
                 var transform = entity.Transform;
                 // Change parent if necessary
@@ -58,19 +58,15 @@ namespace Robust.Shared.GameObjects
                 }
 
                 // Finally we'll handle any GridId changes for parent or children
+                var newGridId = grid?.Index ?? GridId.Invalid;
+                if (newGridId.Equals(transform.GridID)) continue;
+
                 // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
                 if (entity.HasComponent<IMapComponent>() ||
                     entity.HasComponent<IMapGridComponent>() ||
-                    entity.Transform.ParentUid.IsValid() &&
-                    (!entity.Transform.Parent!.Owner.HasComponent<IMapComponent>() && !entity.Transform.Parent!.Owner.HasComponent<IMapGridComponent>())) continue;
+                    entity.Transform.ParentUid.IsValid() && !entity.Transform.Parent!.Owner.HasComponent<IMapComponent>() && !entity.Transform.Parent!.Owner.HasComponent<IMapGridComponent>()) continue;
 
-                if (grid == null)
-                {
-                    transform.GridID = GridId.Invalid;
-                    return;
-                }
-
-                transform.GridID = grid.Index;
+                transform.GridID = newGridId;
             }
         }
 

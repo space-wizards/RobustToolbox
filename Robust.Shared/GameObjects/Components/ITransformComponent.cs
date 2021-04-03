@@ -116,7 +116,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Returns the index of the grid which this object is on
         /// </summary>
-        GridId GridID { get; }
+        GridId GridID { get; set; }
 
         bool UpdateEntityTree(Box2? worldAABB = null);
 

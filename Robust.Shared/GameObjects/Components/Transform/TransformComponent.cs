@@ -67,24 +67,19 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public GridId GridID
         {
-            get
+            get => _gridId;
+            set
             {
-                // root node, grid id is undefined
-                if (Owner.HasComponent<IMapComponent>())
-                    return GridId.Invalid;
-
-                // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapGridComponent? gridComp))
-                    return gridComp.GridIndex;
-
-                // branch or leaf node
-                if (_parent.IsValid())
-                    return Parent!.GridID;
-
-                // Not on a grid
-                return GridId.Invalid;
+                if (_gridId.Equals(value)) return;
+                _gridId = value;
+                foreach (var child in Children)
+                {
+                    child.GridID = value;
+                }
             }
         }
+
+        private GridId _gridId = GridId.Invalid;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -417,6 +412,13 @@ namespace Robust.Shared.GameObjects
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
+            }
+
+            if (!Owner.HasComponent<IMapComponent>() &&
+                !Owner.HasComponent<IMapGridComponent>() &&
+                IoCManager.Resolve<IMapManager>().TryFindGridAt(MapID, WorldPosition, out var mapGrid))
+            {
+                GridID = mapGrid.Index;
             }
 
             UpdateEntityTree();

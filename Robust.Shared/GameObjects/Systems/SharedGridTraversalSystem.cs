@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects
 {
@@ -29,9 +30,8 @@ namespace Robust.Shared.GameObjects
         public override void Update(float frameTime)
         {
             base.Update(frameTime);
-            while (_queuedMoveEvents.Count > 0)
+            while (_queuedMoveEvents.TryDequeue(out var moveEvent))
             {
-                var moveEvent = _queuedMoveEvents.Dequeue();
                 var entity = moveEvent.Sender;
 
                 if (entity.Deleted || !entity.HasComponent<PhysicsComponent>() || entity.IsInContainer()) continue;
@@ -41,7 +41,8 @@ namespace Robust.Shared.GameObjects
                 // Given islands will probably have a bunch of static bodies in them then we'll verify velocities first as it's way cheaper
 
                 // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
+                if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager),
+                        out var grid) &&
                     grid.GridEntityId.IsValid() &&
                     grid.GridEntityId != entity.Uid)
                 {
@@ -55,6 +56,21 @@ namespace Robust.Shared.GameObjects
                 {
                     transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
                 }
+
+                // Finally we'll handle any GridId changes for parent or children
+                // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
+                if (entity.HasComponent<IMapComponent>() ||
+                    entity.HasComponent<IMapGridComponent>() ||
+                    entity.Transform.ParentUid.IsValid() &&
+                    (!entity.Transform.Parent!.Owner.HasComponent<IMapComponent>() && !entity.Transform.Parent!.Owner.HasComponent<IMapGridComponent>())) continue;
+
+                if (grid == null)
+                {
+                    transform.GridID = GridId.Invalid;
+                    return;
+                }
+
+                transform.GridID = grid.Index;
             }
         }
 

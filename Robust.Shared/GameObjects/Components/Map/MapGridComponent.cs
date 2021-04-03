@@ -51,6 +51,13 @@ namespace Robust.Shared.GameObjects
             _gridIndex = GridId.Invalid;
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+            // If the component is removed (god help us all) it should be handled elsewhere already I think?
+            Owner.Transform.GridID = GridIndex;
+        }
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)

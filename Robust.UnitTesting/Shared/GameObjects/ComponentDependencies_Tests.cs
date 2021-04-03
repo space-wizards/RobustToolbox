@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -452,9 +453,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             // An entity with TestFive.
-            var except = Assert.Throws<EntityCreationException>(() => entityManager.CreateEntityUninitialized("dummyFive"));
-            Assert.That(except, Is.Not.Null);
-            Assert.That(except!.InnerException, Is.TypeOf<ComponentDependencyValueTypeException>());
+            var except = Assert.Throws(Is.Not.Null, () => entityManager.CreateEntityUninitialized("dummyFive"));
+
+            // I absolutely hate this. On RELEASE, the exception thrown is EntityCreationException with an inner exception.
+            // On DEBUG, however, the exception is simply the ComponentDependencyValueTypeException. This is awful.
+            Assert.That(except is ComponentDependencyValueTypeException || except is EntityCreationException {InnerException: ComponentDependencyValueTypeException},
+                $"Expected a different exception type! Exception: {except}");
         }
 
         [Test]
@@ -463,9 +467,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             // An entity with TestSix.
-            var except = Assert.Throws<EntityCreationException>(() => entityManager.CreateEntityUninitialized("dummySix"));
-            Assert.That(except, Is.Not.Null);
-            Assert.That(except!.InnerException, Is.TypeOf<ComponentDependencyNotNullableException>());
+            var except = Assert.Throws(Is.Not.Null, () => entityManager.CreateEntityUninitialized("dummySix"));
+
+            // I absolutely hate this. On RELEASE, the exception thrown is EntityCreationException with an inner exception.
+            // On DEBUG, however, the exception is simply the ComponentDependencyNotNullableException. This is awful.
+            Assert.That(except is ComponentDependencyNotNullableException || except is EntityCreationException {InnerException: ComponentDependencyNotNullableException},
+                $"Expected a different exception type! Exception: {except}");
         }
 
         [Test]

@@ -3,6 +3,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -62,10 +63,10 @@ namespace Robust.Shared.GameObjects
                 if (newGridId.Equals(transform.GridID)) continue;
 
                 // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
-                if (entity.HasComponent<IMapComponent>() ||
-                    entity.HasComponent<IMapGridComponent>() ||
-                    entity.Transform.ParentUid.IsValid() && !entity.Transform.Parent!.Owner.HasComponent<IMapComponent>() && !entity.Transform.Parent!.Owner.HasComponent<IMapGridComponent>()) continue;
+                if (!transform.HasGridIndex()) continue;
 
+                DebugTools.Assert(transform.TryGetGridIndex(out var calcedGridId));
+                DebugTools.Assert(calcedGridId!.Value.Equals(newGridId));
                 transform.GridID = newGridId;
             }
         }

@@ -54,8 +54,13 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            // If the component is removed (god help us all) it should be handled elsewhere already I think?
             Owner.Transform.GridID = GridIndex;
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+            Owner.Transform.GridID = GridId.Invalid;
         }
 
         /// <param name="player"></param>

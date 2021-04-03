@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
@@ -414,14 +415,35 @@ namespace Robust.Shared.GameObjects
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
             }
 
-            if (!Owner.HasComponent<IMapComponent>() &&
-                !Owner.HasComponent<IMapGridComponent>() &&
-                IoCManager.Resolve<IMapManager>().TryFindGridAt(MapID, WorldPosition, out var mapGrid))
+            if (TryGetGridIndex(out var gridId))
             {
-                GridID = mapGrid.Index;
+                GridID = gridId.Value;
             }
 
             UpdateEntityTree();
+        }
+
+        public bool HasGridIndex()
+        {
+            return !Owner.HasComponent<IMapComponent>() &&
+                   !Owner.HasComponent<IMapGridComponent>() &&
+                   (!Owner.Transform.ParentUid.IsValid() ||
+                   Owner.Transform.Parent!.Owner.HasComponent<IMapComponent>() ||
+                   Owner.Transform.Parent!.Owner.HasComponent<IMapGridComponent>());
+        }
+
+        /// <inheritdoc />
+        public bool TryGetGridIndex([NotNullWhen(true)] out GridId? gridId)
+        {
+            // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
+            if (!HasGridIndex())
+            {
+                gridId = null;
+                return false;
+            }
+
+            gridId = _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
+            return true;
         }
 
         /// <inheritdoc />

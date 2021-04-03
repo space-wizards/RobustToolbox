@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Map;
@@ -92,6 +93,19 @@ namespace Robust.Shared.GameObjects
         /// Whether or not this entity is on the map, AKA it has no parent.
         /// </summary>
         bool IsMapTransform { get; }
+
+        /// <summary>
+        /// Whether we are able to calculate a GridId for ourselves (rather than use our parent's).
+        /// </summary>
+        /// <returns></returns>
+        bool HasGridIndex();
+
+        /// <summary>
+        /// Tries to find whether we can calculate our GridId, and then returns what it is.
+        /// </summary>
+        /// <param name="gridId"></param>
+        /// <returns>Whether or not a GridId can be calculated e.g. if we have specific parents we may be using theirs instead.</returns>
+        bool TryGetGridIndex([NotNullWhen(true)] out GridId? gridId);
 
         /// <summary>
         ///

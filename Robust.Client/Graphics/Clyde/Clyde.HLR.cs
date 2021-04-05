@@ -318,29 +318,44 @@ namespace Robust.Client.Graphics.Clyde
         {
             var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
 
-            var tree = spriteSystem.GetSpriteTreeForMap(map);
-
-            tree.QueryAabb(ref list, ((
-                ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
-                in SpriteComponent value) =>
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
             {
-                if (value.ContainerOccluded || !value.Visible)
+                Box2 gridBounds;
+
+                if (gridId == GridId.Invalid)
                 {
-                    return true;
+                    gridBounds = worldBounds;
+                }
+                else
+                {
+                    gridBounds = worldBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
                 }
 
-                var entity = value.Owner;
-                var transform = entity.Transform;
+                var tree = spriteSystem.GetSpriteTreeForMap(map, gridId);
 
-                ref var entry = ref state.AllocAdd();
-                entry.sprite = value;
-                entry.worldRot = transform.WorldRotation;
-                entry.matrix = transform.WorldMatrix;
-                var worldPos = entry.matrix.Transform(transform.LocalPosition);
-                entry.yWorldPos = worldPos.Y;
-                return true;
+                tree.QueryAabb(ref list, ((
+                    ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
+                    in SpriteComponent value) =>
+                {
+                    // TODO: Probably value in storing this as its own DynamicTree
+                    if (value.ContainerOccluded || !value.Visible)
+                    {
+                        return true;
+                    }
 
-            }), worldBounds, approx: true);
+                    var entity = value.Owner;
+                    var transform = entity.Transform;
+
+                    ref var entry = ref state.AllocAdd();
+                    entry.sprite = value;
+                    entry.worldRot = transform.WorldRotation;
+                    entry.matrix = transform.WorldMatrix;
+                    var worldPos = entry.matrix.Transform(transform.LocalPosition);
+                    entry.yWorldPos = worldPos.Y;
+                    return true;
+
+                }), gridBounds, approx: true);
+            }
         }
 
         private void DrawSplash(IRenderHandle handle)

@@ -486,7 +486,7 @@ namespace Robust.Shared.Map
                 Logger.DebugS("map", $"Skipping entity binding for gridId {actualID}");
             }
 
-            OnGridCreated?.Invoke(actualID);
+            OnGridCreated?.Invoke(currentMapID, actualID);
             return grid;
         }
 
@@ -587,6 +587,7 @@ namespace Robust.Shared.Map
                 return;
 
             var grid = _grids[gridID];
+            var mapId = grid.ParentMapId;
 
             if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) && gridEnt.LifeStage <= EntityLifeStage.Initialized)
                 gridEnt.Delete();
@@ -594,7 +595,7 @@ namespace Robust.Shared.Map
             grid.Dispose();
             _grids.Remove(grid.Index);
 
-            OnGridRemoved?.Invoke(gridID);
+            OnGridRemoved?.Invoke(mapId, gridID);
 
             if (_netManager.IsServer)
                 _gridDeletionHistory.Add((_gameTiming.CurTick, gridID));

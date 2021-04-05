@@ -239,12 +239,12 @@ namespace Robust.Server.GameObjects
             GetOrCreateNode(eventArgs.NewTile.GridIndex, eventArgs.NewTile.GridIndices);
         }
 
-        private void HandleGridCreated(GridId gridId)
+        private void HandleGridCreated(MapId mapId, GridId gridId)
         {
             _graph[gridId] = new Dictionary<Vector2i, GridTileLookupChunk>();
         }
 
-        private void HandleGridRemoval(GridId gridId)
+        private void HandleGridRemoval(MapId mapId, GridId gridId)
         {
             var toRemove = new List<IEntity>();
 

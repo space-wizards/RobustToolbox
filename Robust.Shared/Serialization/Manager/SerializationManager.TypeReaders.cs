@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -20,46 +19,42 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null);
 
-        private readonly Dictionary<Type, Dictionary<Type, ReadDelegate>> _readDelegates = new();
+        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ReadDelegate>> _readDelegates = new();
 
         private ReadDelegate GetOrCreateDelegate(Type type, Type nodeType)
         {
-            var delegates = _readDelegates.GetOrNew(type);
+            return _readDelegates
+                .GetOrAdd(type, _ => new ConcurrentDictionary<Type, ReadDelegate>())
+                .GetOrAdd(nodeType, (nT, t) =>
+                {
+                    var instanceParam = Expression.Constant(this);
+                    var typeParam = Expression.Parameter(typeof(Type), "type");
+                    var nodeParam = Expression.Parameter(typeof(DataNode), "node");
+                    var dependenciesParam = Expression.Parameter(typeof(IDependencyCollection), "dependencies");
+                    var objParam = Expression.Parameter(typeof(DeserializationResult).MakeByRefType(), "obj");
+                    var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                    var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
-            if (!delegates.TryGetValue(nodeType, out var @delegate))
-            {
-                var instanceParam = Expression.Constant(this);
-                var typeParam = Expression.Parameter(typeof(Type), "type");
-                var nodeParam = Expression.Parameter(typeof(DataNode), "node");
-                var dependenciesParam = Expression.Parameter(typeof(IDependencyCollection), "dependencies");
-                var objParam = Expression.Parameter(typeof(DeserializationResult).MakeByRefType(), "obj");
-                var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+                    var call = Expression.Call(
+                        instanceParam,
+                        nameof(TryRead),
+                        new[] {t, nT},
+                        typeParam,
+                        Expression.Convert(nodeParam, nT),
+                        dependenciesParam,
+                        objParam,
+                        skipHookParam,
+                        contextParam);
 
-                var call = Expression.Call(
-                    instanceParam,
-                    nameof(TryRead),
-                    new[] {type, nodeType},
-                    typeParam,
-                    Expression.Convert(nodeParam, nodeType),
-                    dependenciesParam,
-                    objParam,
-                    skipHookParam,
-                    contextParam);
-
-                @delegate = Expression.Lambda<ReadDelegate>(
-                    call,
-                    typeParam,
-                    nodeParam,
-                    dependenciesParam,
-                    objParam,
-                    skipHookParam,
-                    contextParam).Compile();
-
-                delegates[nodeType] = @delegate;
-            }
-
-            return @delegate;
+                    return Expression.Lambda<ReadDelegate>(
+                        call,
+                        typeParam,
+                        nodeParam,
+                        dependenciesParam,
+                        objParam,
+                        skipHookParam,
+                        contextParam).Compile();
+                }, type);
         }
 
         private bool TryGetReader<T, TNode>(

@@ -132,15 +132,15 @@ namespace Robust.Shared.Physics
                 return false;
             }
 
-            var box = _extractAabb(item);
+            aabb ??= _extractAabb(item);
 
-            if (CheckNaNs(box))
+            if (CheckNaNs(aabb.Value))
             {
                 _nodeLookup[item] = Proxy.Free;
                 return true;
             }
 
-            proxy = _b2Tree.CreateProxy(box, item);
+            proxy = _b2Tree.CreateProxy(aabb.Value, item);
             _nodeLookup[item] = proxy;
 
             return true;

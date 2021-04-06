@@ -41,6 +41,7 @@ namespace Robust.Server
             IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
+            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<IMapLoader, MapLoader>();

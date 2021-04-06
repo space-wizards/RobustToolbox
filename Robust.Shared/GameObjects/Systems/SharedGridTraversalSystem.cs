@@ -36,21 +36,23 @@ namespace Robust.Shared.GameObjects
             {
                 var entity = moveEvent.Sender;
 
+                if (_handledThisTick.Contains(entity.Uid)) continue;
+
+                _handledThisTick.Add(entity.Uid);
+
                 if (entity.Deleted ||
-                    _handledThisTick.Contains(entity.Uid) ||
                     entity.HasComponent<MapComponent>() ||
                     entity.HasComponent<MapGridComponent>() ||
                     entity.IsInContainer())
                 {
-                    _handledThisTick.Add(entity.Uid);
                     continue;
                 }
 
-                _handledThisTick.Add(entity.Uid);
                 var transform = entity.Transform;
+
                 // Change parent if necessary
                 // TODO: AttachParent will also duplicate some of this calculation so remove that.
-                if (_mapManager.TryFindGridAt(transform.MapID, transform.WorldPosition, out var grid) &&
+                if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
                     grid.GridEntityId.IsValid() &&
                     grid.GridEntityId != entity.Uid)
                 {
@@ -58,18 +60,42 @@ namespace Robust.Shared.GameObjects
                     if (grid.Index != transform.GridID)
                     {
                         transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
+                        RaiseLocalEvent(new ChangedGridMessage(entity, transform.GridID, grid.Index));
                     }
                 }
                 else
                 {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                    var oldGridId = transform.GridID;
+
+                    // Attach them to map / they are on an invalid grid
+                    if (oldGridId != GridId.Invalid)
+                    {
+                        transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                        RaiseLocalEvent(new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
+                    }
                 }
             }
+
+            _handledThisTick.Clear();
         }
 
         private void QueueMoveEvent(MoveEvent moveEvent)
         {
             _queuedMoveEvents.Enqueue(moveEvent);
+        }
+    }
+
+    public sealed class ChangedGridMessage : EntityEventArgs
+    {
+        public IEntity Entity;
+        public GridId OldGrid;
+        public GridId NewGrid;
+
+        public ChangedGridMessage(IEntity entity, GridId oldGrid, GridId newGrid)
+        {
+            Entity = entity;
+            OldGrid = oldGrid;
+            NewGrid = newGrid;
         }
     }
 }

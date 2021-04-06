@@ -50,10 +50,11 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public BroadPhaseDelegate OnBroadPhaseCollision;
 
-
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
-        internal readonly ContactHead ContactPoolList;
+        private const int ContactPoolInitialSize = 64;
+
+        internal Stack<Contact> ContactPoolList = new Stack<Contact>(ContactPoolInitialSize);
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -71,7 +72,6 @@ namespace Robust.Shared.Physics.Dynamics
         {
             ContactList = new ContactHead();
             ContactCount = 0;
-            ContactPoolList = new ContactHead();
             OnBroadPhaseCollision = AddPair;
         }
 
@@ -79,6 +79,15 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            InitializePool();
+        }
+
+        private void InitializePool()
+        {
+            for (var i = 0; i < ContactPoolInitialSize; i++)
+            {
+                ContactPoolList.Push(new Contact(null, 0, null, 0));
+            }
         }
 
         public void FindNewContacts(MapId mapId)
@@ -155,7 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
             */
 
             // Call the factory.
-            Contact c = Contact.Create(gridId, fixtureA, indexA, fixtureB, indexB);
+            Contact c = Contact.Create(this, gridId, fixtureA, indexA, fixtureB, indexB);
 
             // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
             if (c == null) return;
@@ -260,8 +269,7 @@ namespace Robust.Shared.Physics.Dynamics
             contact.Destroy();
 
             // Insert into the pool.
-            contact.Next = ContactPoolList.Next;
-            ContactPoolList.Next = contact;
+            ContactPoolList.Push(contact);
         }
 
         internal void Collide()

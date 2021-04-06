@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Robust.Shared.Serialization.Markdown;
-using Robust.Shared.Serialization.Markdown.Validation;
 
 namespace Robust.Shared.Serialization.Manager
 {

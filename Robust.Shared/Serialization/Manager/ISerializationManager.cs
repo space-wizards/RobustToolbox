@@ -90,7 +90,6 @@ namespace Robust.Shared.Serialization.Manager
         #endregion
 
         #region Read
-
         /// <summary>
         ///     Deserializes a node into an object, populating it.
         /// </summary>

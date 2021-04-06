@@ -103,6 +103,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 var oldAnchored = _bodyType == BodyType.Static;
+                var oldType = _bodyType;
                 _bodyType = value;
 
                 ResetMassData();
@@ -126,9 +127,10 @@ namespace Robust.Shared.GameObjects
 
                 var anchored = value == BodyType.Static;
 
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+
                 if (oldAnchored != anchored)
                 {
-                    AnchoredChanged?.Invoke();
                     SendMessage(new AnchoredChangedMessage(Anchored));
                 }
             }
@@ -851,14 +853,10 @@ namespace Robust.Shared.GameObjects
                     _bodyType = BodyType.Dynamic;
                 }
 
-                AnchoredChanged?.Invoke();
                 SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
             }
         }
-
-        [Obsolete("Use AnchoredChangedMessage instead")]
-        public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict
@@ -1294,6 +1292,33 @@ namespace Robust.Shared.GameObjects
         public AnchoredChangedMessage(bool anchored)
         {
             Anchored = anchored;
+        }
+    }
+
+    /// <summary>
+    ///     Directed event raised when an entity's physics BodyType changes.
+    /// </summary>
+    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    {
+        /// <summary>
+        ///     New BodyType of the entity.
+        /// </summary>
+        public BodyType New { get; }
+
+        /// <summary>
+        ///     Old BodyType of the entity.
+        /// </summary>
+        public BodyType Old { get; }
+
+        /// <summary>
+        ///     Whether the body is "anchored".
+        /// </summary>
+        public bool Anchored => New == BodyType.Static;
+
+        public PhysicsBodyTypeChangedEvent(BodyType newType, BodyType oldType)
+        {
+            New = newType;
+            Old = oldType;
         }
     }
 }

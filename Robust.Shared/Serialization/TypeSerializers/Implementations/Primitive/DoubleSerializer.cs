@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return bool.TryParse(node.Value, out _)
+            return double.TryParse(node.Value, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing double value: {node.Value}");
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -15,16 +16,33 @@ namespace Robust.Shared.Serialization.Manager
 {
     public class SerializationDataDefinition
     {
-        private delegate DeserializedFieldEntry[] DeserializeDelegate(MappingDataNode mappingDataNode,
-            ISerializationManager serializationManager, ISerializationContext? context, bool skipHook);
+        private delegate DeserializedFieldEntry[] DeserializeDelegate(
+            MappingDataNode mappingDataNode,
+            ISerializationManager serializationManager,
+            ISerializationContext? context,
+            bool skipHook);
 
-        private delegate DeserializationResult PopulateDelegateSignature(object target, DeserializedFieldEntry[] deserializationResults, object?[] defaultValues);
+        private delegate DeserializationResult PopulateDelegateSignature(
+            object target,
+            DeserializedFieldEntry[] deserializationResults,
+            object?[] defaultValues);
 
-        private delegate MappingDataNode SerializeDelegateSignature(object obj, ISerializationManager serializationManager,
-            ISerializationContext? context, bool alwaysWrite, object?[] defaultValues);
+        private delegate MappingDataNode SerializeDelegateSignature(
+            object obj,
+            ISerializationManager serializationManager,
+            ISerializationContext? context,
+            bool alwaysWrite,
+            object?[] defaultValues);
 
-        private delegate object CopyDelegateSignature(object source, object target,
-            ISerializationManager serializationManager, ISerializationContext? context);
+        private delegate object CopyDelegateSignature(
+            object source,
+            object target,
+            ISerializationManager serializationManager,
+            ISerializationContext? context);
+
+        private delegate DeserializationResult CreateDefinitionDelegate(
+            object value,
+            DeserializedFieldEntry[] mappings);
 
         public readonly Type Type;
 
@@ -212,6 +230,19 @@ namespace Robust.Shared.Serialization.Manager
         // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
+            //todo validate mappings array count
+            var constructor =
+                typeof(DeserializedDefinition<>).MakeGenericType(Type).GetConstructor(new[] {Type, typeof(DeserializedFieldEntry[])}) ??
+                throw new NullReferenceException();
+
+            var valueParam = Expression.Parameter(typeof(object), "value");
+            var valueParamCast = Expression.Convert(valueParam, Type);
+
+            var mappingParam = Expression.Parameter(typeof(DeserializedFieldEntry[]), "mapping");
+
+            var newExp = Expression.New(constructor, valueParamCast, mappingParam);
+            var createDefinitionDelegate = Expression.Lambda<CreateDefinitionDelegate>(newExp, valueParam, mappingParam).Compile();
+
             DeserializationResult PopulateDelegate(
                 object target,
                 DeserializedFieldEntry[] deserializedFields,
@@ -234,7 +265,7 @@ namespace Robust.Shared.Serialization.Manager
                     fieldDefinition.FieldInfo.SetValue(target, res.Result?.RawValue);
                 }
 
-                return DeserializationResult.Definition(target, deserializedFields);
+                return createDefinitionDelegate(target, deserializedFields);
             }
 
             return PopulateDelegate;

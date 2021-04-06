@@ -15,6 +15,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private Queue<MoveEvent> _queuedMoveEvents = new();
+        private HashSet<EntityUid> _handledThisTick = new(32);
 
         public override void Initialize()
         {
@@ -35,9 +36,17 @@ namespace Robust.Shared.GameObjects
             {
                 var entity = moveEvent.Sender;
 
-                // TODO: Move the IMapComponent / IMapGridComponent checks up here instead of IsInContainer()
-                if (entity.Deleted || entity.IsInContainer()) continue;
+                if (entity.Deleted ||
+                    _handledThisTick.Contains(entity.Uid) ||
+                    entity.HasComponent<MapComponent>() ||
+                    entity.HasComponent<MapGridComponent>() ||
+                    entity.IsInContainer())
+                {
+                    _handledThisTick.Add(entity.Uid);
+                    continue;
+                }
 
+                _handledThisTick.Add(entity.Uid);
                 var transform = entity.Transform;
                 // Change parent if necessary
                 // TODO: AttachParent will also duplicate some of this calculation so remove that.

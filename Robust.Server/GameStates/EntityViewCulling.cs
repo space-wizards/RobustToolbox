@@ -5,6 +5,7 @@ using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -18,12 +19,13 @@ namespace Robust.Server.GameStates
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
-        
+
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
+        private IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -47,12 +49,13 @@ namespace Robust.Server.GameStates
         /// </summary>
         public float ViewSize { get; set; }
 
-        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager)
+        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
         {
             _entMan = entMan;
             _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
+            _lookup = lookup;
         }
 
         // Not thread safe
@@ -248,7 +251,7 @@ namespace Robust.Server.GameStates
         private HashSet<EntityUid> CalcCurrentViewSet(ICommonSession session)
         {
             var visibleEnts = _visSetPool.Get();
-            
+
             //TODO: Refactor map system to not require every map and grid entity to function.
             IncludeMapCriticalEntities(visibleEnts);
 
@@ -274,7 +277,7 @@ namespace Robust.Server.GameStates
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent)entity.Transform, visibleEnts, visMask));
+                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
             }
 
             viewers.Clear();
@@ -321,7 +324,7 @@ namespace Robust.Server.GameStates
             }
 
             var xformParentUid = xform.ParentUid;
-            
+
             // this is the world entity, it is always visible
             if (!xformParentUid.IsValid())
             {

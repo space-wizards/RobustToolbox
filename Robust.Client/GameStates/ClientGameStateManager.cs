@@ -32,6 +32,7 @@ namespace Robust.Client.GameStates
                 = new();
 
         [Dependency] private readonly IClientEntityManager _entities = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
@@ -303,6 +304,8 @@ namespace Robust.Client.GameStates
             }
 
             _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
+
+            _lookup.Update();
         }
 
         private void ResetPredictedEntities(GameTick curTick)

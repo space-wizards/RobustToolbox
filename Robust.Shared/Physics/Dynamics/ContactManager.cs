@@ -39,6 +39,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -72,6 +73,11 @@ namespace Robust.Shared.Physics.Dynamics
         private List<Contact> _endCollisions = new();
 
         private List<Contact> _updates = new();
+
+        /// <summary>
+        /// How many contacts an individual thread needs to have as a minimum
+        /// </summary>
+        private const int MultithreadThreshold = 32;
 
         public ContactManager()
         {
@@ -372,17 +378,41 @@ namespace Robust.Shared.Physics.Dynamics
                 contact = contact.Next;
             }
 
-            var parallel = _updates.Count >= 128;
+            var updateCount = _updates.Count;
+            // Aether recommends either 128 or 256 minimum.
+            // I slightly changed the aether multithreading around so each parallel task has a minimum threshold
+            // hence I'm more comfortable with making the minimum 128 as it will only utilise 4 tasks.
+            // This means we won't get a task that may only have 1 contact update in it.
+            var parallel = updateCount >= MultithreadThreshold * 4;
 
             if (parallel)
             {
-                var batchSize = (int) Math.Ceiling((float) _updates.Count / Environment.ProcessorCount - 1);
-                var batches = (int) Math.Ceiling((float) _updates.Count / batchSize);
+                // Deduct 1 for networking thread I guess?
+                var processors = Math.Max(1, Environment.ProcessorCount - 1);
+                // Batch size is either: MultithreadThreshold per processor OR divided equally between all processors.
+                var batchSize = (int) Math.Max(MultithreadThreshold, MathF.Ceiling(updateCount / (float) processors));
+                var remainder = 0;
+
+                // If we're at the minimum batch size we'll just add the remainder on to the last task.
+                if (batchSize == MultithreadThreshold)
+                {
+                    remainder = updateCount % batchSize;
+                }
+
+                var batches = (int) Math.Ceiling((float) (updateCount - remainder) / batchSize);
 
                 Parallel.For(0, batches, i =>
                 {
                     var start = i * batchSize;
-                    var end = Math.Min(start + batchSize, _updates.Count);
+                    var end = Math.Min(start + batchSize, updateCount);
+
+                    // If we're the last task then add in the remainder.
+                    if (i == batches - 1)
+                    {
+                        end += remainder;
+                        DebugTools.Assert(end == updateCount);
+                    }
+
                     for (var j = start; j < end; j++)
                     {
                         _updates[j].Update(this);

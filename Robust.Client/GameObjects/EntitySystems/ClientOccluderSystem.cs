@@ -79,10 +79,10 @@ namespace Robust.Client.GameObjects
             {
                 var pos = ev.LastPosition.Value.pos;
 
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(1, 0), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(-1, 0), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, 1), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, -1), ev.Offset));
+                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(1, 0)));
+                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(-1, 0)));
+                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, 1)));
+                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, -1)));
             }
         }
 
@@ -108,15 +108,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition, SnapGridOffset offset)
+        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
-            Offset = offset;
             Sender = sender;
         }
 
         public (GridId grid, Vector2i pos)? LastPosition { get; }
-        public SnapGridOffset Offset { get; }
         public IEntity Sender { get; }
     }
 }

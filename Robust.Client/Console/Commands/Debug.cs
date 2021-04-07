@@ -280,12 +280,12 @@ namespace Robust.Client.Console.Commands
     internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <vector2i> [offset]\nThat vector2i param is in the form x<int>,y<int>.";
+        public string Help => "sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length != 2 && args.Length != 3)
+            if (args.Length != 2)
             {
                 shell.WriteLine(Help);
                 return;
@@ -293,7 +293,6 @@ namespace Robust.Client.Console.Commands
 
             string gridId = args[0];
             string indices = args[1];
-            string offset = args.Length == 3 ? args[2] : "Center";
 
             if (!int.TryParse(args[0], out var id))
             {
@@ -307,17 +306,6 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            SnapGridOffset selectedOffset;
-            if (Enum.IsDefined(typeof(SnapGridOffset), offset))
-            {
-                    selectedOffset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), offset);
-            }
-            else
-            {
-                shell.WriteError("given offset type is not defined");
-                return;
-            }
-
             var mapMan = IoCManager.Resolve<IMapManager>();
 
             if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
@@ -326,8 +314,7 @@ namespace Robust.Client.Console.Commands
                     mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
                         new Vector2i(
                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
-                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
-                        selectedOffset))
+                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
                     shell.WriteLine(entity.Owner.Uid.ToString());
                 }

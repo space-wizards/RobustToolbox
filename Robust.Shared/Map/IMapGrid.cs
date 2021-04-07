@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -115,17 +115,17 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset);
-        IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos, SnapGridOffset offset);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos);
 
-        Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset);
-        Vector2i SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
-        Vector2i SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
+        Vector2i SnapGridCellFor(EntityCoordinates coords);
+        Vector2i SnapGridCellFor(MapCoordinates worldPos);
+        Vector2i SnapGridCellFor(Vector2 localPos);
 
-        void AddToSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
-        void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(Vector2i pos, SnapGridComponent snap);
+        void AddToSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(Vector2i pos, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);
 
         #endregion SnapGridAccess
 

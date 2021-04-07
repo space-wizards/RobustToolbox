@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -62,6 +62,7 @@ namespace Robust.Shared.Map
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
         /// </summary>
         /// <param name="mapManager">Reference to the <see cref="MapManager"/> that will manage this grid.</param>
+        /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
         /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
@@ -349,72 +350,68 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset)
+        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords)
         {
-            return GetSnapGridCell(SnapGridCellFor(coords, offset), offset);
+            return GetSnapGridCell(SnapGridCellFor(coords));
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos, SnapGridOffset offset)
+        public IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset);
+            return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
+        public Vector2i SnapGridCellFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
-            return SnapGridCellFor(local, offset);
+            return SnapGridCellFor(local);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset)
+        public Vector2i SnapGridCellFor(MapCoordinates worldPos)
         {
             DebugTools.Assert(ParentMapId == worldPos.MapId);
 
             var localPos = WorldToLocal(worldPos.Position);
-            return SnapGridCellFor(localPos, offset);
+            return SnapGridCellFor(localPos);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(Vector2 localPos, SnapGridOffset offset)
+        public Vector2i SnapGridCellFor(Vector2 localPos)
         {
-            if (offset == SnapGridOffset.Edge)
-            {
-                localPos += new Vector2(TileSize / 2f, TileSize / 2f);
-            }
             var x = (int)Math.Floor(localPos.X / TileSize);
             var y = (int)Math.Floor(localPos.Y / TileSize);
             return new Vector2i(x, y);
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(Vector2i pos, SnapGridComponent snap)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, snap);
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridComponent snap)
         {
-            AddToSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
+            AddToSnapGridCell(SnapGridCellFor(coords), snap);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(Vector2i pos, SnapGridComponent snap)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, snap);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridComponent snap)
         {
-            RemoveFromSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
+            RemoveFromSnapGridCell(SnapGridCellFor(coords), snap);
         }
 
         private (IMapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)

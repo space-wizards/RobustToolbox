@@ -289,8 +289,8 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var chunk = MapChunkFactory(7, 9);
 
-            Assert.That(chunk.GetSnapGridCell(0,0, SnapGridOffset.Center).ToList().Count, Is.EqualTo(0));
-            Assert.That(chunk.GetSnapGridCell(0, 0, SnapGridOffset.Edge).ToList().Count, Is.EqualTo(0));
+            Assert.That(chunk.GetSnapGridCell(0,0).ToList().Count, Is.EqualTo(0));
+            Assert.That(chunk.GetSnapGridCell(0, 0).ToList().Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -298,10 +298,10 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var chunk = MapChunkFactory(7, 9);
 
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0, SnapGridOffset.Center).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8, SnapGridOffset.Center).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0,SnapGridOffset.Edge).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8, SnapGridOffset.Edge).ToList()));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0).ToList()));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8).ToList()));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0).ToList()));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8).ToList()));
         }
 
         [Test]
@@ -310,11 +310,11 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
 
             var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Center, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Edge, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, SnapGridOffset.Center, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
+            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
 
-            var result = chunk.GetSnapGridCell(3, 5, SnapGridOffset.Center).ToList();
+            var result = chunk.GetSnapGridCell(3, 5).ToList();
 
             Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result[0], Is.EqualTo(snapGridComponent));
@@ -326,11 +326,11 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
 
             var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Edge, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Center, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, SnapGridOffset.Edge, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
+            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
 
-            var result = chunk.GetSnapGridCell(3, 5, SnapGridOffset.Edge).ToList();
+            var result = chunk.GetSnapGridCell(3, 5).ToList();
 
             Assert.That(result.Count, Is.EqualTo(1));
             Assert.That(result[0], Is.EqualTo(snapGridComponent));
@@ -341,10 +341,10 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var chunk = MapChunkFactory(7, 9);
 
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, SnapGridOffset.Center, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, SnapGridOffset.Center, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, SnapGridOffset.Edge, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, SnapGridOffset.Edge, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, new SnapGridComponent())));
         }
 
         [Test]
@@ -353,13 +353,13 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
 
             var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Center, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Edge, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, SnapGridOffset.Center, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
+            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
 
-            chunk.RemoveFromSnapGridCell(3, 5, SnapGridOffset.Center, snapGridComponent);
+            chunk.RemoveFromSnapGridCell(3, 5, snapGridComponent);
 
-            var result = chunk.GetSnapGridCell(3, 5, SnapGridOffset.Center).ToList();
+            var result = chunk.GetSnapGridCell(3, 5).ToList();
             Assert.That(result.Count, Is.EqualTo(0));
         }
 
@@ -369,13 +369,13 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
 
             var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Edge, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, SnapGridOffset.Center, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, SnapGridOffset.Edge, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
+            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
+            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
 
-            chunk.RemoveFromSnapGridCell(3, 5, SnapGridOffset.Edge, snapGridComponent);
+            chunk.RemoveFromSnapGridCell(3, 5, snapGridComponent);
 
-            var result = chunk.GetSnapGridCell(3, 5, SnapGridOffset.Edge).ToList();
+            var result = chunk.GetSnapGridCell(3, 5).ToList();
             Assert.That(result.Count, Is.EqualTo(0));
         }
 
@@ -384,10 +384,10 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var chunk = MapChunkFactory(7, 9);
 
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, SnapGridOffset.Center, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, SnapGridOffset.Center, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, SnapGridOffset.Edge, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, SnapGridOffset.Edge, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, new SnapGridComponent())));
+            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, new SnapGridComponent())));
         }
 
         [Test]

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
@@ -76,10 +76,10 @@ namespace Robust.Shared.Map
         /// <returns>The indices relative to the grid origin.</returns>
         Vector2i ChunkTileToGridTile(Vector2i chunkTile);
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell);
 
-        void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridComponent snap);
 
         Box2i CalcLocalBounds();
 

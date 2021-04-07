@@ -6,9 +6,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects
 {
@@ -17,12 +14,10 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public class SnapGridComponent : Component, IComponentDebug
     {
-        public const string LogCategory = "go.comp.snapgrid";
+        private const string LogCategory = "go.comp.snapgrid";
         public sealed override string Name => "SnapGrid";
 
         private bool IsSet;
-        [DataField("offset")]
-        private SnapGridOffset _offset = SnapGridOffset.Center;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         [Obsolete]
@@ -30,7 +25,6 @@ namespace Robust.Shared.GameObjects
 
         private GridId _lastGrid;
         public Vector2i Position { get; private set; }
-        public SnapGridOffset Offset => _offset;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -49,7 +43,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_mapManager.TryGetGrid(_lastGrid, out var grid))
                 {
-                    grid.RemoveFromSnapGridCell(Position, Offset, this);
+                    grid.RemoveFromSnapGridCell(Position, this);
                     return;
                 }
 
@@ -66,7 +60,7 @@ namespace Robust.Shared.GameObjects
                 return Enumerable.Empty<IEntity>();
             var pos = SnapGridPosAt(dir);
 
-            return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
+            return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
         [Pure]
@@ -76,7 +70,7 @@ namespace Robust.Shared.GameObjects
                 return Enumerable.Empty<IEntity>();
             var pos = Position + offset;
 
-            return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
+            return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
         public IEnumerable<IEntity> GetLocal()
@@ -84,13 +78,13 @@ namespace Robust.Shared.GameObjects
             if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
                 return Enumerable.Empty<IEntity>();
 
-            return grid.GetSnapGridCell(Position, Offset).Select(s => s.Owner);
+            return grid.GetSnapGridCell(Position).Select(s => s.Owner);
         }
 
 
         public string GetDebugString()
         {
-            return $"ofs/pos: {Offset}/{Position}";
+            return $"pos: {Position}";
         }
 
         public EntityCoordinates DirectionToGrid(Direction direction)
@@ -103,7 +97,7 @@ namespace Robust.Shared.GameObjects
             return coords;
         }
 
-        Vector2i SnapGridPosAt(Direction dir, int dist = 1)
+        private Vector2i SnapGridPosAt(Direction dir, int dist = 1)
         {
             switch (dir)
             {
@@ -133,15 +127,15 @@ namespace Robust.Shared.GameObjects
             if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
                 yield break;
 
-            foreach (var cell in grid.GetSnapGridCell(Position, Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, 1), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, 1)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, -1), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, -1)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(1, 0), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(1, 0)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(-1, 0), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(-1, 0)))
                 yield return cell;
         }
 
@@ -152,10 +146,8 @@ namespace Robust.Shared.GameObjects
 
             for (var y = -n; y <= n; ++y)
             for (var x = -n; x <= n; ++x)
-            {
-                foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(x, y), Offset))
+                foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(x, y)))
                     yield return cell;
-            }
         }
 
         internal void UpdatePosition()
@@ -168,7 +160,7 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                lastGrid.RemoveFromSnapGridCell(Position, Offset, this);
+                lastGrid.RemoveFromSnapGridCell(Position, this);
             }
 
             if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
@@ -180,10 +172,10 @@ namespace Robust.Shared.GameObjects
             IsSet = true;
 
             var oldPos = Position;
-            Position = grid.SnapGridCellFor(Owner.Transform.Coordinates, Offset);
+            Position = grid.SnapGridCellFor(Owner.Transform.Coordinates);
             var oldGrid = _lastGrid;
             _lastGrid = Owner.Transform.GridID;
-            grid.AddToSnapGridCell(Position, Offset, this);
+            grid.AddToSnapGridCell(Position, this);
 
             if (oldPos != Position)
             {
@@ -192,19 +184,6 @@ namespace Robust.Shared.GameObjects
                     new SnapGridPositionChangedEvent(Position, oldPos, _lastGrid, oldGrid));
             }
         }
-    }
-
-    public enum SnapGridOffset: byte
-    {
-        /// <summary>
-        ///     Center snap grid (wires, pipes, ...).
-        /// </summary>
-        Center,
-
-        /// <summary>
-        ///     Edge snap grid (walls, ...).
-        /// </summary>
-        Edge,
     }
 
     public class SnapGridPositionChangedEvent : EntityEventArgs

@@ -222,7 +222,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (WindowMode == WindowMode.Fullscreen)
             {
-                monitor = GLFW.GetMonitors()[1];
+                monitor = GLFW.GetPrimaryMonitor();
                 var mode = GLFW.GetVideoMode(monitor);
                 width = mode->Width;
                 height = mode->Height;

@@ -346,10 +346,8 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        private void HandleGridCreated(GridId gridId)
+        private void HandleGridCreated(MapId mapId, GridId gridId)
         {
-            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
-
             if (!_graph.TryGetValue(mapId, out var grids))
             {
                 grids = new Dictionary<GridId, IBroadPhase>();
@@ -371,7 +369,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         }
 
-        private void HandleGridRemoval(GridId gridId)
+        private void HandleGridRemoval(MapId mapId, GridId gridId)
         {
             foreach (var (_, grids) in _graph)
             {

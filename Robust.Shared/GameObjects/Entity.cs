@@ -30,16 +30,7 @@ namespace Robust.Shared.GameObjects
         internal EntityLifeStage LifeStage
         {
             get => _lifeStage;
-            set
-            {
-                _lifeStage = value;
-                switch (value)
-                {
-                    case EntityLifeStage.Initializing:
-                        EntityManager.UpdateEntityTree(this);
-                        break;
-                }
-            }
+            set => _lifeStage = value;
         }
 
         /// <inheritdoc />
@@ -189,8 +180,6 @@ namespace Robust.Shared.GameObjects
                     comp.Running = true;
                 }
             }
-
-            EntityManager.UpdateEntityTree(this);
         }
 
         #endregion Initialization

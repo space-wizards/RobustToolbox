@@ -8,7 +8,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     /// <summary>
     /// A physics shape that represents an Axis-Aligned Bounding Box.

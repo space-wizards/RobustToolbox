@@ -27,7 +27,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
-namespace Robust.Shared.Physics.Dynamics.Shapes
+namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
@@ -74,7 +74,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             {
                 if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
-
+                //ComputeProperties();
             }
         }
 
@@ -105,7 +105,7 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
             HasVertex0 = false;
             HasVertex3 = false;
 
-            // TODO ComputeProperties();
+            //ComputeProperties();
         }
 
         public bool Equals(IPhysShape? other)
@@ -131,6 +131,12 @@ namespace Robust.Shared.Physics.Dynamics.Shapes
                 TopRight = upper + r
             };
             return aabb;
+        }
+
+        public float CalculateArea()
+        {
+            // It's a line
+            return 0f;
         }
 
         public void ApplyState()

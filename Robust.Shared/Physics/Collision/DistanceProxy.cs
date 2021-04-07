@@ -25,7 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Dynamics.Shapes;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision

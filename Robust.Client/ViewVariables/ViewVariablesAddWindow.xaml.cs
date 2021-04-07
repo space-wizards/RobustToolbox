@@ -6,59 +6,58 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables
 {
     [GenerateTypedNameReferences]
-    public partial class ViewVariablesAddComponentWindow : SS14Window
+    public partial class ViewVariablesAddWindow : SS14Window
     {
         private string? _lastSearch;
-        private string[] _components = Array.Empty<string>();
+        private string[] _entries = Array.Empty<string>();
 
-        public event Action<AddComponentButtonPressedEventArgs>? AddComponentButtonPressed;
+        public event Action<AddButtonPressedEventArgs>? AddButtonPressed;
 
-        public ViewVariablesAddComponentWindow(IEnumerable<string> components, bool serverside)
+        public ViewVariablesAddWindow(IEnumerable<string> entries, string title)
         {
             RobustXamlLoader.Load(this);
 
-            Title = Loc.GetString(serverside ? "Add Component [S]" : "Add Component [C]");
+            Title = Loc.GetString(title);
 
-            ComponentItemList.OnItemSelected += _ => RefreshAddButton();
-            ComponentItemList.OnItemDeselected += _ => RefreshAddButton();
+            EntryItemList.OnItemSelected += _ => RefreshAddButton();
+            EntryItemList.OnItemDeselected += _ => RefreshAddButton();
             SearchLineEdit.OnTextChanged += OnSearchTextChanged;
             AddButton.OnPressed += OnAddButtonPressed;
 
-            Populate(components);
+            Populate(entries);
 
             SetSize = (200, 300);
         }
 
         private void RefreshAddButton()
         {
-            AddButton.Disabled = !ComponentItemList.GetSelected().Any();
+            AddButton.Disabled = !EntryItemList.GetSelected().Any();
         }
 
         public void Populate(IEnumerable<string> components)
         {
-            _components = components.ToArray();
-            Array.Sort(_components);
+            _entries = components.ToArray();
+            Array.Sort(_entries);
             Populate(_lastSearch);
         }
 
         private void Populate(string? search = null)
         {
             _lastSearch = search;
-            ComponentItemList.ClearSelected();
-            ComponentItemList.Clear();
+            EntryItemList.ClearSelected();
+            EntryItemList.Clear();
             AddButton.Disabled = true;
 
-            foreach (var component in _components)
+            foreach (var component in _entries)
             {
                 if(!string.IsNullOrEmpty(search) && !component.Contains(search, StringComparison.InvariantCultureIgnoreCase))
                     continue;
 
-                ComponentItemList.AddItem(component);
+                EntryItemList.AddItem(component);
             }
         }
 
@@ -69,7 +68,7 @@ namespace Robust.Client.ViewVariables
 
         private void OnAddButtonPressed(BaseButton.ButtonEventArgs obj)
         {
-            var selected = ComponentItemList.GetSelected().ToArray();
+            var selected = EntryItemList.GetSelected().ToArray();
 
             // Nothing to do here!
             if (selected.Length == 0)
@@ -81,16 +80,16 @@ namespace Robust.Client.ViewVariables
             if (comp.Text == null)
                 return;
 
-            AddComponentButtonPressed?.Invoke(new AddComponentButtonPressedEventArgs(comp.Text));
+            AddButtonPressed?.Invoke(new AddButtonPressedEventArgs(comp.Text));
         }
 
-        public class AddComponentButtonPressedEventArgs : EventArgs
+        public class AddButtonPressedEventArgs : EventArgs
         {
-            public string Component { get; }
+            public string Entry { get; }
 
-            public AddComponentButtonPressedEventArgs(string component)
+            public AddButtonPressedEventArgs(string entry)
             {
-                Component = component;
+                Entry = entry;
             }
         }
     }

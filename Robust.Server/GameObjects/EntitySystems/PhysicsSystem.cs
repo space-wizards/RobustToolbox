@@ -4,6 +4,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Server.GameObjects
@@ -33,7 +34,7 @@ namespace Robust.Server.GameObjects
             _mapManager.OnGridCreated -= HandleGridCreated;
         }
 
-        private void HandleGridCreated(GridId gridId)
+        private void HandleGridCreated(MapId mapId, GridId gridId)
         {
             if (!EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEntity)) return;
             var grid = _mapManager.GetGrid(gridId);

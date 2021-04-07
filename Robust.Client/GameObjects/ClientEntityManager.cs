@@ -25,14 +25,13 @@ namespace Robust.Client.GameObjects
 
         public override void Startup()
         {
-            base.Startup();
-
             if (Started)
             {
                 throw new InvalidOperationException("Startup() called multiple times");
             }
 
             EntitySystemManager.Initialize();
+            base.Startup();
             Started = true;
         }
 
@@ -96,11 +95,6 @@ namespace Robust.Client.GameObjects
                     kvStates.Value.Item2);
             }
 
-            foreach (var kvp in toApply)
-            {
-                UpdateEntityTree(kvp.Key);
-            }
-
             foreach (var id in deletions)
             {
                 DeleteEntity(id);
@@ -130,7 +124,7 @@ namespace Robust.Client.GameObjects
             foreach (var entity in toInitialize)
             {
 #if EXCEPTION_TOLERANCE
-                if(brokenEnts.Contains(entity))
+                if (brokenEnts.Contains(entity))
                     continue;
 
                 try
@@ -150,10 +144,9 @@ namespace Robust.Client.GameObjects
             foreach (var entity in toInitialize)
             {
 #if EXCEPTION_TOLERANCE
-                if(brokenEnts.Contains(entity))
+                if (brokenEnts.Contains(entity))
                     continue;
 #endif
-                UpdateEntityTree(entity);
             }
 #if EXCEPTION_TOLERANCE
             foreach (var entity in brokenEnts)
@@ -199,7 +192,6 @@ namespace Robust.Client.GameObjects
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
-            UpdateEntityTree(newEnt);
             return newEnt;
         }
 
@@ -208,7 +200,6 @@ namespace Robust.Client.GameObjects
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
-            UpdateEntityTree(entity);
             return entity;
         }
 

@@ -1,4 +1,4 @@
-﻿namespace Robust.Server.GameStates
+namespace Robust.Server.GameStates
 {
     /// <summary>
     /// Engine service that provides creating and dispatching of game states.
@@ -15,7 +15,7 @@
         /// </summary>
         void SendGameStateUpdate();
 
-        bool PvsEnabled { get; }
-        float PvsRange { get; }
+        bool PvsEnabled { get; set; }
+        float PvsRange { get; set; }
     }
 }

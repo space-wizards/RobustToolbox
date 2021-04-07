@@ -5,6 +5,7 @@ using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -18,12 +19,13 @@ namespace Robust.Server.GameStates
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
-        
+
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
+        private IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -47,12 +49,13 @@ namespace Robust.Server.GameStates
         /// </summary>
         public float ViewSize { get; set; }
 
-        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager)
+        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
         {
             _entMan = entMan;
             _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
+            _lookup = lookup;
         }
 
         // Not thread safe
@@ -156,14 +159,20 @@ namespace Robust.Server.GameStates
             }
 
             var lastMapUpdate = _playerLastFullMap.GetValueOrDefault(session);
-            var currentSet = CalcCurrentViewSet(session);
-
-            // If they don't have a usable eye, nothing to send, and map remove will deal with ent removal
-            if (currentSet is null)
-                return (null, null);
+            var currentViewSet = CalcCurrentViewSet(session);
 
             deletions = GetDeletedEntities(fromTick);
+            var entityStates = GenerateEntityStates(session, fromTick, currentViewSet, deletions, lastMapUpdate);
 
+            // no point sending an empty collection
+            entityStates = entityStates.Count == 0 ? default : entityStates;
+            deletions = deletions.Count == 0 ? default : deletions;
+
+            return (entityStates, deletions);
+        }
+
+        private List<EntityState> GenerateEntityStates(ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions, GameTick lastMapUpdate)
+        {
             // pretty big allocations :(
             List<EntityState> entityStates = new(currentSet.Count);
             var previousSet = _playerVisibleSets[session];
@@ -171,26 +180,40 @@ namespace Robust.Server.GameStates
             // complement set
             foreach (var entityUid in previousSet)
             {
-                if (!currentSet.Contains(entityUid) && !deletions.Contains(entityUid))
-                {
-                    if(_compMan.HasComponent<SnapGridComponent>(entityUid))
-                        continue;
+                // Still inside PVS
+                if (currentSet.Contains(entityUid))
+                    continue;
 
-                    // PVS leave message
-                    //TODO: Remove NaN as the signal to leave PVS
-                    var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
-                    var oldState = (TransformComponent.TransformComponentState)xform.GetComponentState(session);
-                    entityStates.Add(new EntityState(entityUid,
-                        new ComponentChanged[]
-                        {
-                            new(false, NetIDs.TRANSFORM, "Transform")
-                        },
-                        new ComponentState[]
-                        {
-                            new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                                oldState.ParentID, oldState.NoLocalRotation)
-                        }));
-                }
+                // it was deleted, so we don't need to exit PVS
+                if (deletions.Contains(entityUid))
+                    continue;
+
+                //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
+                // deleted list. This seems to happen with the map entity on round restart.
+                if (!_entMan.EntityExists(entityUid))
+                    continue;
+
+                // Anchored entities don't ever leave
+                if (_compMan.HasComponent<SnapGridComponent>(entityUid))
+                    continue;
+
+                // PVS leave message
+                //TODO: Remove NaN as the signal to leave PVS
+                var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
+                var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
+
+                entityStates.Add(new EntityState(entityUid,
+                    new ComponentChanged[]
+                    {
+                        new(false, NetIDs.TRANSFORM, "Transform")
+                    },
+                    new ComponentState[]
+                    {
+                        new TransformComponent.TransformComponentState(Vector2NaN,
+                            oldState.Rotation,
+                            oldState.ParentID,
+                            oldState.NoLocalRotation)
+                    }));
             }
 
             foreach (var entityUid in currentSet)
@@ -222,23 +245,20 @@ namespace Robust.Server.GameStates
             _playerVisibleSets[session] = currentSet;
             previousSet.Clear();
             _visSetPool.Return(previousSet);
-
-            // no point sending an empty collection
-            deletions = deletions?.Count == 0 ? default : deletions;
-
-            return (entityStates, deletions);
+            return entityStates;
         }
 
-        private HashSet<EntityUid>? CalcCurrentViewSet(ICommonSession session)
+        private HashSet<EntityUid> CalcCurrentViewSet(ICommonSession session)
         {
-            if (!CullingEnabled)
-                return null;
+            var visibleEnts = _visSetPool.Get();
+
+            //TODO: Refactor map system to not require every map and grid entity to function.
+            IncludeMapCriticalEntities(visibleEnts);
 
             // if you don't have an attached entity, you don't see the world.
             if (session.AttachedEntityUid is null)
-                return null;
+                return visibleEnts;
 
-            var visibleEnts = _visSetPool.Get();
             var viewers = GetSessionViewers(session);
 
             foreach (var eyeEuid in viewers)
@@ -249,21 +269,40 @@ namespace Robust.Server.GameStates
                 if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                //Always include the map entity
-                visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
+                //Always include the map entity of the eye
+                //TODO: Add Map entity here
 
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _entMan.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent)entity.Transform, visibleEnts, visMask));
+                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
             }
 
             viewers.Clear();
             _viewerEntsPool.Return(viewers);
 
             return visibleEnts;
+        }
+
+        private void IncludeMapCriticalEntities(ISet<EntityUid> set)
+        {
+            foreach (var mapId in _mapManager.GetAllMapIds())
+            {
+                if (_mapManager.HasMapEntity(mapId))
+                {
+                    set.Add(_mapManager.GetMapEntityId(mapId));
+                }
+            }
+
+            foreach (var grid in _mapManager.GetAllGrids())
+            {
+                if (grid.GridEntityId != EntityUid.Invalid)
+                {
+                    set.Add(grid.GridEntityId);
+                }
+            }
         }
 
         // Read Safe
@@ -285,7 +324,7 @@ namespace Robust.Server.GameStates
             }
 
             var xformParentUid = xform.ParentUid;
-            
+
             // this is the world entity, it is always visible
             if (!xformParentUid.IsValid())
             {

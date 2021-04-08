@@ -380,38 +380,21 @@ namespace Robust.Shared.Physics.Dynamics
 
             var updateCount = _updates.Count;
             // Aether recommends either 128 or 256 minimum.
-            // I slightly changed the aether multithreading around so each parallel task has a minimum threshold
-            // hence I'm more comfortable with making the minimum 128 as it will only utilise 4 tasks.
-            // This means we won't get a task that may only have 1 contact update in it.
+            // Changed it around slightly so we always run the minimum MultithreadThreshold per task
+            // even if we aren't using every processor.
+            // This is because there's overhead to running in parallel so we don't want a task that's just a single update.
             var parallel = updateCount >= MultithreadThreshold * 4;
 
             if (parallel)
             {
                 // Deduct 1 for networking thread I guess?
-                var processors = Math.Max(1, Environment.ProcessorCount - 1);
-                // Batch size is either: MultithreadThreshold per processor OR divided equally between all processors.
-                var batchSize = (int) Math.Max(MultithreadThreshold, MathF.Ceiling(updateCount / (float) processors));
-                var remainder = 0;
-
-                // If we're at the minimum batch size we'll just add the remainder on to the last task.
-                if (batchSize == MultithreadThreshold)
-                {
-                    remainder = updateCount % batchSize;
-                }
-
-                var batches = (int) Math.Ceiling((float) (updateCount - remainder) / batchSize);
+                var batches = Math.Min((int) MathF.Floor((float) updateCount / MultithreadThreshold), Math.Max(1, Environment.ProcessorCount - 1));
+                var batchSize = (int) MathF.Ceiling((float) updateCount / batches);
 
                 Parallel.For(0, batches, i =>
                 {
                     var start = i * batchSize;
                     var end = Math.Min(start + batchSize, updateCount);
-
-                    // If we're the last task then add in the remainder.
-                    if (i == batches - 1)
-                    {
-                        end += remainder;
-                        DebugTools.Assert(end == updateCount);
-                    }
 
                     for (var j = start; j < end; j++)
                     {

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -125,7 +123,6 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    UpdateEntityTree();
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, oldRotation, _localRotation));
                 }
                 else
@@ -284,8 +281,6 @@ namespace Robust.Shared.GameObjects
                         RebuildMatrices();
                         Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
-
-                    UpdateEntityTree();
                 }
                 else
                 {
@@ -317,7 +312,6 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    UpdateEntityTree();
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldGridPos, Coordinates));
                 }
                 else
@@ -415,8 +409,6 @@ namespace Robust.Shared.GameObjects
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
             }
-
-            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -427,7 +419,6 @@ namespace Robust.Shared.GameObjects
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
             Dirty();
-            UpdateEntityTree();
         }
 
         public void RunDeferred(Box2 worldAABB)
@@ -440,7 +431,6 @@ namespace Robust.Shared.GameObjects
             }
 
             RebuildMatrices();
-            UpdateEntityTree(worldAABB);
 
             if (_oldCoords != null)
             {
@@ -574,7 +564,6 @@ namespace Robust.Shared.GameObjects
             SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
             RebuildMatrices();
             Dirty();
-            UpdateEntityTree();
         }
 
         internal void ChangeMapId(MapId newMapId)
@@ -608,11 +597,6 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            if (oldId != MapId.Nullspace)
-            {
-                Owner.EntityManager.RemoveFromEntityTree(Owner, oldId);
-            }
-
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
         }
 
@@ -718,7 +702,6 @@ namespace Robust.Shared.GameObjects
                 }
 
                 Dirty();
-                UpdateEntityTree();
             }
 
             if (nextState is TransformComponentState nextTransform)
@@ -782,8 +765,6 @@ namespace Robust.Shared.GameObjects
 
             _invLocalMatrix = itransMat;
         }
-
-        public bool UpdateEntityTree(Box2? worldAABB = null) => Owner.EntityManager.UpdateEntityTree(Owner, worldAABB);
 
         public string GetDebugString()
         {

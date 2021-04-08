@@ -30,6 +30,7 @@ namespace Robust.Server.GameStates
         private EntityViewCulling _entityView = null!;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -55,7 +56,7 @@ namespace Robust.Server.GameStates
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");
-            _entityView = new EntityViewCulling(_entityManager, _mapManager);
+            _entityView = new EntityViewCulling(_entityManager, _mapManager, _lookup);
         }
 
         /// <inheritdoc />
@@ -216,7 +217,7 @@ namespace Robust.Server.GameStates
                 .Where(s => s.Status == SessionStatus.InGame)
                 .AsParallel()
                 .Select(SafeGenerateMail);
-            
+
             foreach (var (msg, chan) in mailBag)
             {
                 // see session.Status != SessionStatus.InGame above

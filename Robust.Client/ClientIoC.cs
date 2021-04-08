@@ -38,6 +38,7 @@ namespace Robust.Client
 
             IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
+            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();

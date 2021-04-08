@@ -428,7 +428,7 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        public Box2 GetWorldAABB(IMapManager? mapManager)
+        public Box2 GetWorldAABB(IMapManager? mapManager = null)
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
             var bounds = new Box2();
@@ -961,28 +961,6 @@ namespace Robust.Shared.GameObjects
 
             Awake = true;
             Force += force;
-        }
-
-        /// <summary>
-        ///     Calculate our AABB without using proxies.
-        /// </summary>
-        /// <returns></returns>
-        public Box2 GetWorldAABB()
-        {
-            var mapId = Owner.Transform.MapID;
-            if (mapId == MapId.Nullspace)
-                return new Box2();
-
-            var worldRotation = Owner.Transform.WorldRotation;
-            var bounds = new Box2();
-
-            foreach (var fixture in Fixtures)
-            {
-                var aabb = fixture.Shape.CalculateLocalBounds(worldRotation);
-                bounds = bounds.Union(aabb);
-            }
-
-            return bounds.Translated(Owner.Transform.WorldPosition);
         }
 
         /// <summary>

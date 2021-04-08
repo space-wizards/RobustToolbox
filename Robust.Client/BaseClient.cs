@@ -8,6 +8,7 @@ using Robust.Client.Utility;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -193,6 +194,7 @@ namespace Robust.Client
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
+            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
             _discord.ClearPresence();

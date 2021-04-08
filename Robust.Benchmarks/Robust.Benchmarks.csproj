@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <Import Project="..\MSBuild\Robust.Properties.targets" />
+    <Import Project="..\MSBuild\Robust.Engine.props" />
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <OutputPath>../bin/Benchmarks</OutputPath>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+      <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    </ItemGroup>
+    <Import Project="..\MSBuild\Robust.Engine.targets" />
+</Project>

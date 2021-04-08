@@ -79,8 +79,8 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void Startup()
         {
-            base.Startup();
             EntitySystemManager.Initialize();
+            base.Startup();
             Started = true;
         }
 

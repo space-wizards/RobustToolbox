@@ -132,7 +132,7 @@ namespace Robust.Client.Debugging
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -165,7 +165,7 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
                     // all entities have a TransformComponent
-                    var transform = physBody.Entity.Transform;
+                    var transform = physBody.Owner.Transform;
 
                     var worldBox = physBody.GetWorldAABB(_mapManager);
                     if (worldBox.IsEmpty()) continue;

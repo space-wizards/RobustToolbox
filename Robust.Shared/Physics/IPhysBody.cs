@@ -28,11 +28,6 @@ namespace Robust.Shared.Physics
         bool IgnorePaused { get; set; }
 
         /// <summary>
-        ///     Entity that this physBody represents.
-        /// </summary>
-        IEntity Entity { get; }
-
-        /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
         Box2 GetWorldAABB(IMapManager? mapManager = null);
@@ -152,24 +147,6 @@ namespace Robust.Shared.Physics
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         float AngularVelocity { get; set; }
-
-        /// <summary>
-        /// Current position of the body in the world, in meters.
-        /// </summary>
-        Vector2 WorldPosition
-        {
-            get => Entity.Transform.WorldPosition;
-            set => Entity.Transform.WorldPosition = value;
-        }
-
-        /// <summary>
-        /// Current rotation of the body in the world, in radians.
-        /// </summary>
-        float WorldRotation
-        {
-            get => (float) Entity.Transform.WorldRotation.Theta;
-            set => Entity.Transform.WorldRotation = new Angle(value);
-        }
 
         void WakeBody();
 

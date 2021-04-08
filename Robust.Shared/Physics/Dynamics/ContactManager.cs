@@ -59,7 +59,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicController
         /// </summary>
-        internal event Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
+        internal event Action<Fixture, Fixture, float, Manifold>? KinematicControllerCollision;
 
         // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
@@ -372,13 +372,13 @@ namespace Robust.Shared.Physics.Dynamics
 
                 // TODO: When we move this interface onto compbus then just have CollideWith called once with BodyA and BodyB prolly?
 
-                foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
+                foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
                     comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
                 }
 
-                foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
+                foreach (var comp in bodyB.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
                     comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
@@ -390,16 +390,16 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
+                foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
                 }
 
-                foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
+                foreach (var comp in bodyB.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
             }
 
@@ -424,11 +424,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
                 if (bodyA.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(bodyA, bodyB, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureA!, contact.FixtureB!, frameTime, contact.Manifold);
                 }
                 else if (bodyB.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(bodyB, bodyA, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureB!, contact.FixtureA!, frameTime, contact.Manifold);
                 }
             }
         }

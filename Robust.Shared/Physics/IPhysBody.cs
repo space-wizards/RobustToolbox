@@ -61,11 +61,6 @@ namespace Robust.Shared.Physics
         IReadOnlyList<Fixture> Fixtures { get; }
 
         /// <summary>
-        ///     The map index this physBody is located upon
-        /// </summary>
-        MapId MapID { get; }
-
-        /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }

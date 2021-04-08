@@ -86,9 +86,6 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnorePaused { get; set; }
 
-        /// <inheritdoc />
-        public MapId MapID => base.Owner.Transform.MapID;
-
         internal PhysicsMap PhysicsMap { get; set; } = default!;
 
         /// <inheritdoc />
@@ -126,7 +123,7 @@ namespace Robust.Shared.GameObjects
 
                 var anchored = value == BodyType.Static;
 
-                base.Owner.EntityManager.EventBus.RaiseLocalEvent(base.Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
 
                 if (oldAnchored != anchored)
                 {
@@ -163,11 +160,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
             }
             else
             {
-                base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -245,7 +242,7 @@ namespace Robust.Shared.GameObjects
                 var proxyCount = fixture.ProxyCount;
                 foreach (var (gridId, proxies) in fixture.Proxies)
                 {
-                    var broadPhase = broadphaseSystem.GetBroadPhase(base.Owner.Transform.MapID, gridId);
+                    var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
                     if (broadPhase == null) continue;
                     for (var i = 0; i < proxyCount; i++)
                     {
@@ -505,7 +502,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(base.Owner.Transform.WorldPosition) : bounds;
+            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
         }
 
         /// <inheritdoc />
@@ -533,8 +530,8 @@ namespace Robust.Shared.GameObjects
 
                 _canCollide = value;
 
-                base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, base.Owner.Uid, _canCollide));
-                base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
         }
@@ -931,7 +928,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(base.Owner.Transform.MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -980,7 +977,7 @@ namespace Robust.Shared.GameObjects
         {
             // TODO: Optimise this a LOT
             Dirty();
-            base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
         internal string GetFixtureName(Fixture fixture)
@@ -991,7 +988,7 @@ namespace Robust.Shared.GameObjects
 
         internal Transform GetTransform()
         {
-            return new(base.Owner.Transform.WorldPosition, (float) base.Owner.Transform.WorldRotation.Theta);
+            return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
         public void ApplyLinearImpulse(in Vector2 impulse)
@@ -1027,7 +1024,7 @@ namespace Robust.Shared.GameObjects
         {
             if (HasProxies) return;
 
-            BroadphaseMapId = base.Owner.Transform.MapID;
+            BroadphaseMapId = Owner.Transform.MapID;
 
             if (BroadphaseMapId == MapId.Nullspace)
             {
@@ -1037,10 +1034,10 @@ namespace Robust.Shared.GameObjects
 
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
             mapManager ??= IoCManager.Resolve<IMapManager>();
-            var worldPosition = base.Owner.Transform.WorldPosition;
-            var mapId = base.Owner.Transform.MapID;
+            var worldPosition = Owner.Transform.WorldPosition;
+            var mapId = Owner.Transform.MapID;
             var worldAABB = GetWorldAABB();
-            var worldRotation = base.Owner.Transform.WorldRotation.Theta;
+            var worldRotation = Owner.Transform.WorldRotation.Theta;
 
             // TODO: For singularity and shuttles: Any fixtures that have a MapGrid layer / mask needs to be added to the default broadphase (so it can collide with grids).
 
@@ -1058,7 +1055,7 @@ namespace Robust.Shared.GameObjects
                     var grid = mapManager.GetGrid(gridId);
                     offset -= grid.WorldPosition;
                     // TODO: Should probably have a helper for this
-                    gridRotation = worldRotation - base.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                    gridRotation = worldRotation - Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                 }
 
                 foreach (var fixture in Fixtures)
@@ -1122,26 +1119,26 @@ namespace Robust.Shared.GameObjects
             {
                 if (!Awake)
                 {
-                    base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
                 else
                 {
-                    base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
 
-                if (base.Owner.IsInContainer())
+                if (Owner.IsInContainer())
                 {
                     _canCollide = false;
                 }
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, base.Owner.Uid, _canCollide));
-                    base.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 }
             }
 
-            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(base.Owner.Transform.MapID, out var map))
+            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
             {
                 PhysicsMap = map;
             }
@@ -1168,7 +1165,7 @@ namespace Robust.Shared.GameObjects
         {
             if (!_fixtures.Contains(fixture))
             {
-                Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {base.Owner.Uid}");
+                Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
                 return;
             }
 
@@ -1304,7 +1301,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            foreach (var comp in base.Owner.GetAllComponents<ICollideSpecial>())
+            foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
             {
                 if (comp.PreventCollide(other)) return false;
             }

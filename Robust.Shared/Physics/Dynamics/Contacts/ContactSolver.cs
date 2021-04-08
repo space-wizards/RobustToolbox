@@ -22,6 +22,8 @@
 
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -33,6 +35,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
     internal sealed class ContactSolver
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
+
+        const int VelocityMultithreadThreshold = 32;
+        private const int PositionMultithreadThreshold = 32;
 
         private bool _warmStarting;
         private float _velocityThreshold;
@@ -375,8 +380,30 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void SolveVelocityConstraints()
         {
+            if (_contactCount > VelocityMultithreadThreshold * 4)
+            {
+                // Deduct 1 for networking thread I guess?
+                var batches = Math.Min((int) MathF.Floor((float) _contactCount / VelocityMultithreadThreshold), Math.Max(1, Environment.ProcessorCount - 1));
+                var batchSize = (int) MathF.Ceiling((float) _contactCount / batches);
+
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    SolveVelocityConstraints(start, end);
+                });
+
+            }
+            else
+            {
+                SolveVelocityConstraints(0, _contactCount);
+            }
+        }
+
+        private void SolveVelocityConstraints(int start, int end)
+        {
             // Here be dragons
-            for (var i = 0; i < _contactCount; ++i)
+            for (var i = start; i < end; i++)
             {
                 var velocityConstraint = _velocityConstraints[i];
 
@@ -675,15 +702,41 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
         }
 
+        public bool SolvePositionConstraints()
+        {
+            if (_contactCount >= PositionMultithreadThreshold * 4)
+            {
+                // Deduct 1 for networking thread I guess?
+                var batches = Math.Min((int) MathF.Floor((float) _contactCount / PositionMultithreadThreshold), Math.Max(1, Environment.ProcessorCount - 1));
+                var batchSize = (int) MathF.Ceiling((float) _contactCount / batches);
+
+                var contactsOkay = 0;
+
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    if (!SolvePositionConstraints(start, end))
+                    {
+                        Interlocked.Increment(ref contactsOkay);
+                    }
+                });
+
+                return contactsOkay == 0;
+            }
+
+            return SolvePositionConstraints(0, _contactCount);
+        }
+
         /// <summary>
         ///     Tries to solve positions for all contacts specified.
         /// </summary>
         /// <returns>true if all positions solved</returns>
-        public bool SolvePositionConstraints()
+        private bool SolvePositionConstraints(int start, int end)
         {
             float minSeparation = 0.0f;
 
-            for (int i = 0; i < _contactCount; ++i)
+            for (int i = start; i < end; i++)
             {
                 ContactPositionConstraint pc = _positionConstraints[i];
 
@@ -750,7 +803,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 _angles[indexB] = angleB;
             }
 
-            // We can't expect minSpeparation >= -b2_linearSlop because we don't
+            // We can't expect minSeparation >= -b2_linearSlop because we don't
             // push the separation above -b2_linearSlop.
             return minSeparation >= -3.0f * _linearSlop;
         }

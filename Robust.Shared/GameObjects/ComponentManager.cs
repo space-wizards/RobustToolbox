@@ -156,9 +156,9 @@ namespace Robust.Shared.GameObjects
 
                 // mark the component as dirty for networking
                 component.Dirty();
-
-                ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
             }
+
+            ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
             _componentDependencyManager.OnComponentAdd(entity.Uid, component);
 

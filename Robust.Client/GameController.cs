@@ -119,6 +119,7 @@ namespace Robust.Client
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
+            IoCManager.Resolve<IEntityLookup>().Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
@@ -400,6 +401,7 @@ namespace Robust.Client
         {
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
+            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
         }

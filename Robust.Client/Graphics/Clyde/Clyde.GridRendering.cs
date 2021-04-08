@@ -208,12 +208,12 @@ namespace Robust.Client.Graphics.Clyde
             _setChunkDirty(grid, chunk);
         }
 
-        private void _updateOnGridCreated(GridId gridId)
+        private void _updateOnGridCreated(MapId mapId, GridId gridId)
         {
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
-        private void _updateOnGridRemoved(GridId gridId)
+        private void _updateOnGridRemoved(MapId mapId, GridId gridId)
         {
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)

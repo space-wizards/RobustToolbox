@@ -219,6 +219,9 @@ namespace Robust.Server.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+            UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<EntityInitializedMessage>();
+            UnsubscribeLocalEvent<EntityDeletedMessage>();
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.TileChanged -= HandleTileChanged;

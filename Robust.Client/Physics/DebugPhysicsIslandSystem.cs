@@ -49,6 +49,13 @@ namespace Robust.Client.Physics
             IoCManager.Resolve<IOverlayManager>().AddOverlay(new PhysicsIslandOverlay());
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            UnsubscribeLocalEvent<IslandSolveMessage>();
+            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
+        }
+
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
@@ -63,12 +70,6 @@ namespace Robust.Client.Physics
                     break;
                 }
             }
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
         }
 
         private void HandleIslandSolveMessage(IslandSolveMessage message)

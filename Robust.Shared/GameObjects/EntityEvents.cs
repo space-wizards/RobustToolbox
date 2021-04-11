@@ -36,7 +36,7 @@ namespace Robust.Shared.GameObjects
         public void Cancel() => Cancelled = true;
 
         /// <summary>
-        ///     Uncancels the event. Don't call this if you don't know what you're doing.
+        ///     Uncancels the event. Don't call this unless you know what you're doing.
         /// </summary>
         public void Uncancel() => Cancelled = false;
     }

@@ -199,11 +199,15 @@ namespace Robust.Server.GameObjects
 
         private Box2 GetEntityBox(IEntity entity)
         {
-            return _lookup.GetWorldAabbFromEntity(entity);
+            return _lookup.GetWorldAabbFromEntity(entity).Enlarged(-0.1f);
         }
 
         public override void Initialize()
         {
+            base.Initialize();
+#if DEBUG
+            SubscribeNetworkEvent<RequestGridTileLookupMessage>(HandleRequest);
+#endif
             SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
@@ -222,6 +226,14 @@ namespace Robust.Server.GameObjects
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.TileChanged -= HandleTileChanged;
         }
+
+#if DEBUG
+        private void HandleRequest(RequestGridTileLookupMessage message, EntitySessionEventArgs args)
+        {
+            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => e.Uid).ToList();
+            RaiseNetworkEvent(new SendGridTileLookupMessage(message.GridId, message.Indices, entities), args.SenderSession.ConnectedClient);
+        }
+#endif
 
         private void HandleEntityInitialized(EntityInitializedMessage message)
         {

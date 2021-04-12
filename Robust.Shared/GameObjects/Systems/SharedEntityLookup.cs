@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -452,7 +453,7 @@ namespace Robust.Shared.GameObjects
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
-                return new Box2(0, 0, 0, 0);
+                throw new InvalidOperationException($"Can't get WorldAABB from deleted entity {ent}");
 
             var worldPosition = ent.Transform.WorldPosition;
 

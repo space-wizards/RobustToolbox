@@ -583,17 +583,18 @@ namespace Robust.Shared.Physics.Broadphase
 
                     foreach (var proxy in proxies)
                     {
+                        var gridPosition = worldPosition;
                         double gridRotation = worldRotation;
 
                         if (gridId != GridId.Invalid)
                         {
                             var grid = _mapManager.GetGrid(gridId);
-                            worldPosition -= grid.WorldPosition;
+                            gridPosition -= grid.WorldPosition;
                             // TODO: Should probably have a helper for this
                             gridRotation = worldRotation - body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                         }
 
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(worldPosition);
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPosition);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);

@@ -125,7 +125,7 @@ namespace Robust.Shared.Physics.Broadphase
         public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
             // TODO: Use actual shapes and not just the AABB?
-            return bodyA.GetWorldAABB(_mapManager).IntersectPercentage(bodyB.GetWorldAABB(_mapManager));
+            return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
         }
 
         public override void Initialize()
@@ -531,7 +531,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         /// <param name="body"></param>
         /// <param name="displacement"></param>
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
+        internal void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -540,7 +540,10 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             var mapId = body.Owner.Transform.MapID;
-            worldAABB ??= body.GetWorldAABB(_mapManager);
+            var worldPosition = body.Owner.Transform.WorldPosition;
+            var worldRotation = body.Owner.Transform.WorldRotation;
+
+            worldAABB ??= body.GetWorldAABB(worldPosition, worldRotation);
 
             // 99% of the time this is going to be 1, maybe 2, so HashSet probably slower?
 
@@ -568,9 +571,6 @@ namespace Robust.Shared.Physics.Broadphase
 
             // Update retained broadphases
             // TODO: These will need swept broadPhases
-            var offset = body.Owner.Transform.WorldPosition;
-            var worldRotation = body.Owner.Transform.WorldRotation;
-
             foreach (var broadPhase in oldBroadPhases)
             {
                 if (!newBroadPhases.Contains(broadPhase)) continue;
@@ -588,12 +588,12 @@ namespace Robust.Shared.Physics.Broadphase
                         if (gridId != GridId.Invalid)
                         {
                             var grid = _mapManager.GetGrid(gridId);
-                            offset -= grid.WorldPosition;
+                            worldPosition -= grid.WorldPosition;
                             // TODO: Should probably have a helper for this
                             gridRotation = worldRotation - body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                         }
 
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(worldPosition);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);

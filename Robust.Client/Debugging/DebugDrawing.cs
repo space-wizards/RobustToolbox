@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
@@ -167,7 +167,7 @@ namespace Robust.Client.Debugging
                     // all entities have a TransformComponent
                     var transform = physBody.Entity.Transform;
 
-                    var worldBox = physBody.GetWorldAABB(_mapManager);
+                    var worldBox = physBody.GetWorldAABB();
                     if (worldBox.IsEmpty()) continue;
 
                     foreach (var fixture in physBody.Fixtures)

@@ -16,6 +16,7 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public sealed class GridTileLookupSystem : EntitySystem
     {
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>> _graph =
@@ -198,12 +199,7 @@ namespace Robust.Server.GameObjects
 
         private Box2 GetEntityBox(IEntity entity)
         {
-            // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out IPhysBody? physics))
-                return new Box2(physics.GetWorldAABB().BottomLeft + 0.01f, physics.GetWorldAABB().TopRight - 0.01f);
-
-            // Don't want to accidentally get neighboring tiles unless we're near an edge
-            return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
+            return _lookup.GetWorldAabbFromEntity(entity);
         }
 
         public override void Initialize()

@@ -51,9 +51,8 @@ namespace Robust.Server.Console.Commands
             else
             {
                 var mapEnt = mapMgr.GetMapEntity(mapId);
-
-                transform.AttachParent(mapEnt);
                 transform.WorldPosition = position;
+                transform.AttachParent(mapEnt);
             }
 
             shell.WriteLine($"Teleported {player} to {mapId}:{posX},{posY}.");

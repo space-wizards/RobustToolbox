@@ -671,8 +671,6 @@ namespace Robust.Client.UserInterface
         /// <returns>True if this control does have the point and should be counted as a hit.</returns>
         protected internal virtual bool HasPoint(Vector2 point)
         {
-            // This is effectively the same implementation as the default Godot one in Control.cpp.
-            // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
             var size = Size;
             return point.X >= 0 && point.X <= size.X && point.Y >= 0 && point.Y <= size.Y;
         }

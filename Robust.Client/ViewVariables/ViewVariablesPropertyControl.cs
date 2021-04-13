@@ -79,7 +79,7 @@ namespace Robust.Client.ViewVariables
                 {
                     // Has to be a reference type at this point.
                     DebugTools.Assert(member.Value is ViewVariablesBlobMembers.ReferenceToken || member.Value == null || type?.IsClass == true || type?.IsInterface == true);
-                    editor = _viewVariablesManager.PropertyFor(type);
+                    editor = _viewVariablesManager.PropertyFor(type ?? typeof(object));
                 }
             }
             else

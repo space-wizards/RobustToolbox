@@ -8,6 +8,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
@@ -19,11 +20,10 @@ namespace Robust.Client.Debugging
     public class DebugDrawing : IDebugDrawing
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
         private bool _debugColliders;
@@ -44,8 +44,8 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<PhysicsOverlay>())
                 {
-                    _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
-                        _prototypeManager, _inputManager, _physicsManager));
+                    _overlayManager.AddOverlay(new PhysicsOverlay(_eyeManager,
+                        _prototypeManager, _inputManager, _mapManager));
                 }
                 else
                 {
@@ -80,10 +80,9 @@ namespace Robust.Client.Debugging
 
         private class PhysicsOverlay : Overlay
         {
-            private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
+            private readonly IMapManager _mapManager;
             private readonly IInputManager _inputManager;
-            private readonly IPhysicsManager _physicsManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
             private readonly ShaderInstance _shader;
@@ -93,12 +92,11 @@ namespace Robust.Client.Debugging
             private List<IPhysBody> _hoverBodies = new();
 
 
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
+            public PhysicsOverlay(IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IMapManager mapManager)
             {
-                _componentManager = compMan;
                 _eyeManager = eyeMan;
                 _inputManager = inputManager;
-                _physicsManager = physicsManager;
+                _mapManager = mapManager;
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
@@ -134,7 +132,7 @@ namespace Robust.Client.Debugging
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -167,16 +165,16 @@ namespace Robust.Client.Debugging
                 foreach (var physBody in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
                     // all entities have a TransformComponent
-                    var transform = physBody.Entity.Transform;
+                    var transform = physBody.Owner.Transform;
 
-                    var worldBox = physBody.GetWorldAABB();
+                    var worldBox = physBody.GetWorldAABB(_mapManager);
                     if (worldBox.IsEmpty()) continue;
 
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
                         var sleepPercent = physBody.Awake ? physBody.SleepTime / sleepThreshold : 1.0f;
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport,  sleepPercent);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

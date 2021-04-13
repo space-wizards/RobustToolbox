@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyList<VirtualController> Controllers => _controllers;
         private List<VirtualController> _controllers = new();
 
-        public Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
+        public Action<Fixture, Fixture, float, Manifold>? KinematicControllerCollision;
 
         public bool MetricsEnabled;
         private readonly Stopwatch _stopwatch = new();

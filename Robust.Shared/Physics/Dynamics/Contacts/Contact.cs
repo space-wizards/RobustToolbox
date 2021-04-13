@@ -201,7 +201,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        internal static Contact Create(GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;
@@ -209,20 +209,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             DebugTools.Assert(ShapeType.Unknown < type1 && type1 < ShapeType.TypeCount);
             DebugTools.Assert(ShapeType.Unknown < type2 && type2 < ShapeType.TypeCount);
 
-            // Pull out a spare contact object and then add it into the world's linked-list.
-            Contact? contact = null;
-            // TODO: Just pass in ContactManager directly.
-            var contactPoolList = fixtureA.Body.PhysicsMap.ContactManager.ContactPoolList;
+            // Pull out a spare contact object
+            contactManager.ContactPoolList.TryPop(out var contact);
 
-            // ReSharper disable once PossibleUnintendedReferenceComparison
-            if (contactPoolList.Next != contactPoolList)
-            {
-                // get first item in the pool.
-                contact = contactPoolList.Next;
-                // Remove from the pool.
-                contactPoolList.Next = contact?.Next;
-                contact!.Next = null;
-            }
             // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {

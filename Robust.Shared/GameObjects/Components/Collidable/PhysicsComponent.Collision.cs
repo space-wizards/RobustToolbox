@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     We'll pass in both our body and the other body to save the behaviors having to get these components themselves.
         /// </summary>
-        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
+        void CollideWith(Fixture ourFixture, Fixture otherFixture, in Manifold manifold);
     }
 
     /// <summary>
@@ -44,10 +44,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Run behaviour after all other collision behaviors have run.
         /// </summary>
-        /// <param name="ourBody"></param>
-        /// <param name="otherBody"></param>
-        /// <param name="manifold"></param>
-        void CollideWith(IPhysBody ourBody, IPhysBody otherBody, in Manifold manifold);
+        void CollideWith(Fixture ourFixture, Fixture otherFixture, in Manifold manifold);
     }
 
     public interface ICollideSpecial

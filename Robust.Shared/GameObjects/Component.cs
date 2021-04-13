@@ -4,13 +4,14 @@ using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
-    [ImplicitDataDefinitionForInheritorsAttribute]
+    [ImplicitDataDefinitionForInheritors]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
@@ -25,15 +26,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
-        [DataField("netsync")]
-        private bool _netSyncEnabled = true;
         /// <inheritdoc />
         [ViewVariables]
-        public bool NetSyncEnabled
-        {
-            get => _netSyncEnabled;
-            set => _netSyncEnabled = value;
-        }
+        [field: DataField("netsync")]
+        public bool NetSyncEnabled { get; set; } = true;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -43,13 +39,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused => Owner.Paused;
 
-        /// <summary>
-        ///     True if this entity is a client-only entity.
-        ///     That is, it does not exist on the server, only THIS client.
-        /// </summary>
-        [ViewVariables]
-        public bool IsClientSide => Owner.Uid.IsClientSide();
-
+        /// <inheritdoc />
         [ViewVariables]
         public bool Initialized { get; private set; }
 
@@ -77,9 +67,11 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Deleted { get; private set; }
 
+        /// <inheritdoc />
         [ViewVariables]
         public GameTick CreationTick { get; private set; }
 
+        /// <inheritdoc />
         [ViewVariables]
         public GameTick LastModifiedTick { get; private set; }
 
@@ -91,6 +83,11 @@ namespace Robust.Shared.GameObjects
 
         private EntityEventBus GetBus()
         {
+            // Apparently components are being created outside of the ComponentManager,
+            // and the Owner is not being set correctly.
+            // ReSharper disable once RedundantAssertionStatement
+            DebugTools.AssertNotNull(Owner);
+
             return (EntityEventBus) Owner.EntityManager.EventBus;
         }
 
@@ -181,6 +178,7 @@ namespace Robust.Shared.GameObjects
         public void Dirty()
         {
             // Deserialization will cause this to be true.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if(Owner is null)
                 return;
 

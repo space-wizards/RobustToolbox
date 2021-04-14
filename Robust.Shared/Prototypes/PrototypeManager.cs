@@ -200,7 +200,6 @@ namespace Robust.Shared.Prototypes
         [Dependency] public readonly IResourceManager Resources = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] public readonly ITaskManager TaskManager = default!;
-        [Dependency] public readonly INetManager NetManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new();

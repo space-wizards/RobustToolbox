@@ -364,6 +364,7 @@ namespace Robust.Shared.Physics.Collision
         private class EPCollider
         {
             private float _polygonRadius;
+            private float _angularSlop;
 
             private TempPolygon _polygonB;
 
@@ -379,6 +380,7 @@ namespace Robust.Shared.Physics.Collision
             internal EPCollider(IConfigurationManager configManager)
             {
                 _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
 
@@ -615,7 +617,7 @@ namespace Robust.Shared.Physics.Collision
                     return;
                 }
 
-                EPAxis polygonAxis = ComputePolygonSeparation();
+                EPAxis polygonAxis = ComputePolygonSeparation(_angularSlop);
                 if (polygonAxis.Type != EPAxisType.Unknown && polygonAxis.Separation > _radius)
                 {
                     return;
@@ -811,7 +813,7 @@ namespace Robust.Shared.Physics.Collision
                 return axis;
             }
 
-            private EPAxis ComputePolygonSeparation()
+            private EPAxis ComputePolygonSeparation(float angularSlop)
             {
                 EPAxis axis;
                 axis.Type = EPAxisType.Unknown;
@@ -836,8 +838,6 @@ namespace Robust.Shared.Physics.Collision
                         axis.Separation = s;
                         return axis;
                     }
-
-                    var angularSlop = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
 
                     // Adjacency
                     if (Vector2.Dot(n, perp) >= 0.0f)
@@ -1265,84 +1265,41 @@ namespace Robust.Shared.Physics.Collision
         private static float FindMaxSeparation(out int edgeIndex, PolygonShape poly1, in Transform xf1,
             PolygonShape poly2, in Transform xf2)
         {
-            int count1 = poly1.Vertices.Count;
-            List<Vector2> normals1 = poly1.Normals;
+            var count1 = poly1.Vertices.Count;
+            var count2 = poly2.Vertices.Count;
+            var n1s = poly1.Normals;
+            var v1s = poly1.Vertices;
+            var v2s = poly2.Vertices;
+            var xf = Transform.MulT(xf2, xf1);
 
-            // Vector pointing from the centroid of poly1 to the centroid of poly2.
-            // TODO: Center of mass
-            // Vector2 d = Transform.Mul(xf2, poly2.MassData.Centroid) - Transform.Mul(xf1, poly1.MassData.Centroid);
-            Vector2 d = Transform.Mul(xf2, Vector2.Zero) - Transform.Mul(xf1, Vector2.Zero);
-            Vector2 dLocal1 = Transform.MulT(xf1.Quaternion2D, d);
-
-            // Find edge normal on poly1 that has the largest projection onto d.
-            int edge = 0;
-            float maxDot = float.MinValue;
-            for (int i = 0; i < count1; ++i)
+            var bestIndex = 0;
+            float maxSeparation = float.MinValue;
+            for (var i = 0; i < count1; ++i)
             {
-                float dot = Vector2.Dot(normals1[i], dLocal1);
-                if (dot > maxDot)
+                // Get poly1 normal in frame2.
+                var n = Transform.Mul(xf.Quaternion2D, n1s[i]);
+                var v1 = Transform.Mul(xf, v1s[i]);
+
+                // Find deepest point for normal i.
+                float si = float.MaxValue;
+                for (var j = 0; j < count2; ++j)
                 {
-                    maxDot = dot;
-                    edge = i;
+                    float sij = Vector2.Dot(n, v2s[j] - v1);
+                    if (sij < si)
+                    {
+                        si = sij;
+                    }
+                }
+
+                if (si > maxSeparation)
+                {
+                    maxSeparation = si;
+                    bestIndex = i;
                 }
             }
 
-            // Get the separation for the edge normal.
-            float s = EdgeSeparation(poly1, xf1, edge, poly2, xf2);
-
-            // Check the separation for the previous edge normal.
-            int prevEdge = edge - 1 >= 0 ? edge - 1 : count1 - 1;
-            float sPrev = EdgeSeparation(poly1, xf1, prevEdge, poly2, xf2);
-
-            // Check the separation for the next edge normal.
-            int nextEdge = edge + 1 < count1 ? edge + 1 : 0;
-            float sNext = EdgeSeparation(poly1, xf1, nextEdge, poly2, xf2);
-
-            // Find the best edge and the search direction.
-            int bestEdge;
-            float bestSeparation;
-            int increment;
-            if (sPrev > s && sPrev > sNext)
-            {
-                increment = -1;
-                bestEdge = prevEdge;
-                bestSeparation = sPrev;
-            }
-            else if (sNext > s)
-            {
-                increment = 1;
-                bestEdge = nextEdge;
-                bestSeparation = sNext;
-            }
-            else
-            {
-                edgeIndex = edge;
-                return s;
-            }
-
-            // Perform a local search for the best edge normal.
-            for (;;)
-            {
-                if (increment == -1)
-                    edge = bestEdge - 1 >= 0 ? bestEdge - 1 : count1 - 1;
-                else
-                    edge = bestEdge + 1 < count1 ? bestEdge + 1 : 0;
-
-                s = EdgeSeparation(poly1, xf1, edge, poly2, xf2);
-
-                if (s > bestSeparation)
-                {
-                    bestEdge = edge;
-                    bestSeparation = s;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            edgeIndex = bestEdge;
-            return bestSeparation;
+            edgeIndex = bestIndex;
+            return maxSeparation;
         }
 
         private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1,

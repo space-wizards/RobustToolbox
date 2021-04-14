@@ -3,6 +3,7 @@ using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
+using Robust.Server.Map;
 using Robust.Server.Maps;
 using Robust.Server.Placement;
 using Robust.Server.Player;
@@ -41,6 +42,9 @@ namespace Robust.Server
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IConsoleHost, ServerConsoleHost>();
+            IoCManager.Register<IMapManager, ServerMapManager>();
+            IoCManager.Register<IMapManagerInternal, ServerMapManager>();
+            IoCManager.Register<IServerMapManager, ServerMapManager>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();

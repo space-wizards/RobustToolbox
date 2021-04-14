@@ -41,6 +41,9 @@ namespace Robust.Client
             IoCManager.Register<IGameTiming, ClientGameTiming>();
             IoCManager.Register<IClientGameTiming, ClientGameTiming>();
             IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
+            IoCManager.Register<IMapManager, ClientMapManager>();
+            IoCManager.Register<IMapManagerInternal, ClientMapManager>();
+            IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();

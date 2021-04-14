@@ -882,6 +882,8 @@ namespace Robust.Client.UserInterface
                 KeyBindUp(args);
             }
 
+            // If we are in a focused control or doing a CanFocus, return true
+            // So that InputManager doesn't propagate events to simulation.
             if (!args.CanFocus && KeyboardFocused != null)
             {
                 return true;

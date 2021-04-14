@@ -36,7 +36,7 @@ namespace Robust.Shared.Map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
         /// <inheritdoc />
-        public virtual event EventHandler<GridChangedEventArgs>? GridChanged;
+        public event EventHandler<GridChangedEventArgs>? GridChanged;
 
         /// <inheritdoc />
         public event EventHandler<MapEventArgs>? MapCreated;
@@ -597,6 +597,11 @@ namespace Robust.Shared.Map
         public GridId NextGridId()
         {
             return HighestGridID = new GridId(HighestGridID.Value + 1);
+        }
+
+        protected void InvokeGridChanged(object? sender, GridChangedEventArgs ev)
+        {
+            GridChanged?.Invoke(sender, ev);
         }
     }
 

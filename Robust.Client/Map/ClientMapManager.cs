@@ -16,8 +16,6 @@ namespace Robust.Client.Map
     {
         [Dependency] private readonly INetManager _netManager = default!;
 
-        public override event EventHandler<GridChangedEventArgs>? GridChanged;
-
         public void ApplyGameStatePre(GameStateMapData? data)
         {
             // There was no map data this tick, so nothing to do.
@@ -105,7 +103,7 @@ namespace Robust.Client.Map
 
                     if (modified.Count != 0)
                     {
-                        GridChanged?.Invoke(this, new GridChangedEventArgs(grid, modified));
+                        InvokeGridChanged(this, new GridChangedEventArgs(grid, modified));
                     }
                 }
 

@@ -187,10 +187,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IPhysicsManager, PhysicsManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
-            //Tier 3: Networking
-            //TODO: Try to remove these
-            container.RegisterInstance<INetManager>(new Mock<INetManager>().Object);
-
             _diFactory?.Invoke(container);
             container.BuildGraph();
 

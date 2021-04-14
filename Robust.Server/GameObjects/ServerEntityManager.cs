@@ -90,7 +90,7 @@ namespace Robust.Server.GameObjects
 
         #region IEntityNetworkManager impl
 
-        public override IEntityNetworkManager EntityNetworkManager => this;
+        public override IEntityNetworkManager EntityNetManager => this;
 
         /// <inheritdoc />
         public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;

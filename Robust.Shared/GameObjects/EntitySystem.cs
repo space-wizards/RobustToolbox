@@ -102,12 +102,12 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseNetworkEvent(EntityEventArgs message)
         {
-            EntityManager.EntityNetworkManager?.SendSystemNetworkMessage(message);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
-            EntityManager.EntityNetworkManager?.SendSystemNetworkMessage(message, channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)

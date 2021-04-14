@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects
             DebugTools.AssertNotNull(localPlayer);
 
             var sequence = IoCManager.Resolve<IClientGameStateManager>().SystemMessageDispatched(msg);
-            entityManager.EntityNetworkManager?.SendSystemNetworkMessage(msg, sequence);
+            entityManager.EntityNetManager?.SendSystemNetworkMessage(msg, sequence);
 
             var eventArgs = new EntitySessionEventArgs(localPlayer!.Session);
 

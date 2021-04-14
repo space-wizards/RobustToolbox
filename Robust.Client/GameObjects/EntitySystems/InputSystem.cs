@@ -97,7 +97,7 @@ namespace Robust.Client.GameObjects
         private void DispatchInputCommand(FullInputCmdMessage message)
         {
             _stateManager.InputCommandDispatched(message);
-            EntityManager.EntityNetworkManager?.SendSystemNetworkMessage(message, message.InputSequence);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()

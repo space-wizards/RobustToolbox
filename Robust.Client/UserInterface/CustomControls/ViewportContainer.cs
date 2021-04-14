@@ -96,30 +96,19 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public MapCoordinates LocalPixelToMap(Vector2 point)
         {
-            if (Viewport?.Eye == null)
-                return MapCoordinates.Nullspace;
-
-            var eye = Viewport.Eye;
-            var newPoint = point;
+            if (Viewport == null)
+                return default;
 
             // pre-scaler
-            newPoint *= _viewportResolution;
+            point *= _viewportResolution;
 
-            // (inlined version of UiProjMatrix^-1)
-            newPoint -= Viewport.Size / 2f;
-            newPoint *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
-
-            // view matrix
-            eye.GetViewMatrixInv(out var viewMatrixInv);
-            newPoint = viewMatrixInv * newPoint;
-
-            return new MapCoordinates(newPoint, eye.Position.MapId);
+            return Viewport.LocalToWorld(point);
         }
 
         public Vector2 WorldToLocalPixel(Vector2 point)
         {
             if (Viewport?.Eye == null)
-                return Vector2.Zero;
+                return default;
 
             var newPoint = Viewport.WorldToLocal(point);
 

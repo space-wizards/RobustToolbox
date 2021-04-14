@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -17,6 +18,11 @@ namespace Robust.Client.Graphics
         Vector2i Size { get; }
 
         /// <summary>
+        ///     This is, effectively, a multiplier to the eye's zoom.
+        /// </summary>
+        Vector2 RenderScale { get; set; }
+
+        /// <summary>
         ///     If true, <see cref="Render"/> will be automatically called at the start of the frame.
         /// </summary>
         bool AutomaticRender { get; set; }
@@ -25,6 +31,15 @@ namespace Robust.Client.Graphics
         ///     Render the state of the world in this viewport, updating the texture inside the render target.
         /// </summary>
         void Render();
+
+        /// <summary>
+        ///     Converts a point in the viewport's screen to world coordinates.
+        /// </summary>
+        MapCoordinates LocalToWorld(Vector2 point);
+
+        /// <summary>
+        ///     Converts a point in world-space to the viewport's screen coordinates.
+        /// </summary>
         Vector2 WorldToLocal(Vector2 point);
 
         void RenderScreenOverlaysBelow(DrawingHandleScreen handle);

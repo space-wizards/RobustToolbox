@@ -120,9 +120,9 @@ namespace Robust.Client.Graphics.Clyde
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, IEye eye, out Matrix3 proj, out Matrix3 view)
+        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye, out Matrix3 proj, out Matrix3 view)
         {
-            eye.GetViewMatrix(out view);
+            eye.GetViewMatrix(out view, renderScale);
 
             CalcWorldProjMatrix(screenSize, out proj);
         }

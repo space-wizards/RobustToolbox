@@ -4,6 +4,7 @@ using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -170,7 +171,7 @@ namespace Robust.Client.Graphics.Clyde
             callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
         }
 
-        public IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name = null)
         {
             return new Viewport();
         }
@@ -488,25 +489,32 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 
             public void Render()
             {
+                // Nada
+            }
+
+            public MapCoordinates LocalToWorld(Vector2 point)
+            {
+                return default;
             }
 
             public Vector2 WorldToLocal(Vector2 point)
             {
-                return point;
+                return default;
             }
 
             public void RenderScreenOverlaysBelow(DrawingHandleScreen handle)
             {
-                throw new NotImplementedException();
+                // Nada
             }
 
             public void RenderScreenOverlaysAbove(DrawingHandleScreen handle)
             {
-                throw new NotImplementedException();
+                // Nada
             }
         }
     }

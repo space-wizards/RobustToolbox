@@ -404,7 +404,7 @@ namespace Robust.Client.Graphics.Clyde
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);
 
-                CalcWorldMatrices(rt.Size, eye, out var proj, out var view);
+                CalcWorldMatrices(rt.Size, viewport.RenderScale, eye, out var proj, out var view);
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.

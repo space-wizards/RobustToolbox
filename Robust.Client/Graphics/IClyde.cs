@@ -107,7 +107,12 @@ namespace Robust.Client.Graphics
             return tcs.Task;
         }
 
-        IClydeViewport CreateViewport(Vector2i size, string? name = null);
+        IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        {
+            return CreateViewport(size, default, name);
+        }
+
+        IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name = null);
 
         IEnumerable<IClydeMonitor> EnumerateMonitors();
     }

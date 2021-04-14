@@ -13,9 +13,20 @@ namespace Robust.Client.UserInterface.CustomControls
     /// </remarks>
     public interface IViewportControl
     {
-        IClydeViewport? Viewport { get; set; }
-
+        /// <summary>
+        ///     Converts a point on the screen to map coordinates.
+        /// </summary>
+        /// <param name="coords">
+        ///     The coordinates, in ABSOLUTE SCREEN PIXEL COORDINATES. NOT CONTROL-RELATIVE COORDINATES.
+        /// </param>
         MapCoordinates ScreenToMap(Vector2 coords);
+
+        /// <summary>
+        ///     Converts a point on the map to screen coordinates.
+        /// </summary>
+        /// <returns>
+        ///     The coordinates, in ABSOLUTE SCREEN PIXEL COORDINATES. NOT CONTROL-RELATIVE COORDINATES.
+        /// </returns>
         Vector2 WorldToScreen(Vector2 map);
     }
 }

@@ -9,19 +9,33 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<SnapGridComponent, MoveEvent>(OnMoveEvent);
+            SubscribeLocalEvent<SnapGridComponent, ComponentInit>(HandleComponentInit);
+            SubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
+            SubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
-
+        
         public override void Shutdown()
         {
             base.Shutdown();
 
-            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>(OnMoveEvent);
+            UnsubscribeLocalEvent<SnapGridComponent, ComponentInit>(HandleComponentInit);
+            UnsubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
+            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
 
-        private void OnMoveEvent(EntityUid uid, SnapGridComponent snapGrid, MoveEvent args)
+        private void HandleComponentInit(EntityUid uid, SnapGridComponent component, ComponentInit args)
         {
-            snapGrid.UpdatePosition();
+            SnapGridComponent.UpdatePosition(component);
+        }
+
+        private void HandleComponentShutdown(EntityUid uid, SnapGridComponent component, ComponentShutdown args)
+        {
+            SnapGridComponent.CompShutdown(component);
+        }
+
+        private void HandleMoveEvent(EntityUid uid, SnapGridComponent snapGrid, MoveEvent args)
+        {
+            SnapGridComponent.UpdatePosition(snapGrid);
         }
     }
 }

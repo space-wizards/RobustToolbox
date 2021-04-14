@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            UpdatePosition();
+            UpdatePosition(this);
         }
 
         /// <inheritdoc />
@@ -39,149 +39,153 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            if (IsSet)
-            {
-                if (_mapManager.TryGetGrid(_lastGrid, out var grid))
-                {
-                    grid.RemoveFromSnapGridCell(Position, this);
-                    return;
-                }
+            CompShutdown(this);
+        }
 
-                IsSet = false;
+        public static void CompShutdown(SnapGridComponent snapComp)
+        {
+            if (!snapComp.IsSet)
+                return;
+
+            if (snapComp._mapManager.TryGetGrid(snapComp._lastGrid, out var grid))
+            {
+                grid.RemoveFromSnapGridCell(snapComp.Position, snapComp);
+                return;
             }
+
+            snapComp.IsSet = false;
         }
 
         /// <summary>
         ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
         /// </summary>
-        public IEnumerable<IEntity> GetInDir(Direction dir)
+        public static IEnumerable<IEntity> GetInDir(SnapGridComponent snapComp, Direction dir)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
                 return Enumerable.Empty<IEntity>();
-            var pos = SnapGridPosAt(dir);
+            var pos = SnapGridPosAt(snapComp.Position, dir);
 
             return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
         [Pure]
-        public IEnumerable<IEntity> GetOffset(Vector2i offset)
+        public static IEnumerable<IEntity> GetOffset(SnapGridComponent snapComp, Vector2i offset)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
                 return Enumerable.Empty<IEntity>();
-            var pos = Position + offset;
+            var pos = snapComp.Position + offset;
 
             return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
-        public IEnumerable<IEntity> GetLocal()
+        public static IEnumerable<IEntity> GetLocal(SnapGridComponent snapComp)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
                 return Enumerable.Empty<IEntity>();
 
-            return grid.GetSnapGridCell(Position).Select(s => s.Owner);
+            return grid.GetSnapGridCell(snapComp.Position).Select(s => s.Owner);
         }
-
 
         public string GetDebugString()
         {
             return $"pos: {Position}";
         }
 
-        public EntityCoordinates DirectionToGrid(Direction direction)
+        public static EntityCoordinates DirectionToGrid(SnapGridComponent snapComp, Direction direction)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
-                return Owner.Transform.Coordinates.Offset(direction.ToVec());
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
+                return snapComp.Owner.Transform.Coordinates.Offset(direction.ToVec());
 
-            var coords = grid.GridTileToLocal(SnapGridPosAt(direction));
+            var coords = grid.GridTileToLocal(SnapGridPosAt(snapComp.Position, direction));
 
             return coords;
         }
 
-        private Vector2i SnapGridPosAt(Direction dir, int dist = 1)
+        private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
         {
             switch (dir)
             {
                 case Direction.East:
-                    return Position + new Vector2i(dist, 0);
+                    return position + new Vector2i(dist, 0);
                 case Direction.SouthEast:
-                    return Position + new Vector2i(dist, -dist);
+                    return position + new Vector2i(dist, -dist);
                 case Direction.South:
-                    return Position + new Vector2i(0, -dist);
+                    return position + new Vector2i(0, -dist);
                 case Direction.SouthWest:
-                    return Position + new Vector2i(-dist, -dist);
+                    return position + new Vector2i(-dist, -dist);
                 case Direction.West:
-                    return Position + new Vector2i(-dist, 0);
+                    return position + new Vector2i(-dist, 0);
                 case Direction.NorthWest:
-                    return Position + new Vector2i(-dist, dist);
+                    return position + new Vector2i(-dist, dist);
                 case Direction.North:
-                    return Position + new Vector2i(0, dist);
+                    return position + new Vector2i(0, dist);
                 case Direction.NorthEast:
-                    return Position + new Vector2i(dist, dist);
+                    return position + new Vector2i(dist, dist);
                 default:
                     throw new NotImplementedException();
             }
         }
 
-        public IEnumerable<SnapGridComponent> GetCardinalNeighborCells()
+        public static IEnumerable<SnapGridComponent> GetCardinalNeighborCells(SnapGridComponent snapComp)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
                 yield break;
 
-            foreach (var cell in grid.GetSnapGridCell(Position))
+            foreach (var cell in grid.GetSnapGridCell(snapComp.Position))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, 1)))
+            foreach (var cell in grid.GetSnapGridCell(snapComp.Position + new Vector2i(0, 1)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, -1)))
+            foreach (var cell in grid.GetSnapGridCell(snapComp.Position + new Vector2i(0, -1)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(1, 0)))
+            foreach (var cell in grid.GetSnapGridCell(snapComp.Position + new Vector2i(1, 0)))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(-1, 0)))
+            foreach (var cell in grid.GetSnapGridCell(snapComp.Position + new Vector2i(-1, 0)))
                 yield return cell;
         }
 
-        public IEnumerable<SnapGridComponent> GetCellsInSquareArea(int n = 1)
+        public static IEnumerable<SnapGridComponent> GetCellsInSquareArea(SnapGridComponent snapComp, int n = 1)
         {
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
                 yield break;
 
             for (var y = -n; y <= n; ++y)
             for (var x = -n; x <= n; ++x)
-                foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(x, y)))
+                foreach (var cell in grid.GetSnapGridCell(snapComp.Position + new Vector2i(x, y)))
                     yield return cell;
         }
 
-        internal void UpdatePosition()
+        internal static void UpdatePosition(SnapGridComponent snapComp)
         {
-            if (IsSet)
+            if (snapComp.IsSet)
             {
-                if (!_mapManager.TryGetGrid(_lastGrid, out var lastGrid))
+                if (!snapComp._mapManager.TryGetGrid(snapComp._lastGrid, out var lastGrid))
                 {
-                    Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
+                    Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", snapComp.Owner.Uid, snapComp.Owner.Transform.GridID);
                     return;
                 }
 
-                lastGrid.RemoveFromSnapGridCell(Position, this);
+                lastGrid.RemoveFromSnapGridCell(snapComp.Position, snapComp);
             }
 
-            if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
+            if (!snapComp._mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
             {
                 // Either a race condition, or we're not on any grids.
                 return;
             }
 
-            IsSet = true;
+            snapComp.IsSet = true;
 
-            var oldPos = Position;
-            Position = grid.SnapGridCellFor(Owner.Transform.Coordinates);
-            var oldGrid = _lastGrid;
-            _lastGrid = Owner.Transform.GridID;
-            grid.AddToSnapGridCell(Position, this);
+            var oldPos = snapComp.Position;
+            snapComp.Position = grid.SnapGridCellFor(snapComp.Owner.Transform.Coordinates);
+            var oldGrid = snapComp._lastGrid;
+            snapComp._lastGrid = snapComp.Owner.Transform.GridID;
+            grid.AddToSnapGridCell(snapComp.Position, snapComp);
 
-            if (oldPos != Position)
+            if (oldPos != snapComp.Position)
             {
-                OnPositionChanged?.Invoke();
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid,
-                    new SnapGridPositionChangedEvent(Position, oldPos, _lastGrid, oldGrid));
+                snapComp.OnPositionChanged?.Invoke();
+                snapComp.Owner.EntityManager.EventBus.RaiseLocalEvent(snapComp.Owner.Uid,
+                    new SnapGridPositionChangedEvent(snapComp.Position, oldPos, snapComp._lastGrid, oldGrid));
             }
         }
     }

@@ -139,13 +139,6 @@ namespace Robust.Shared.Map
         /// </summary>
         event EventHandler<MapEventArgs> MapDestroyed;
 
-        GameStateMapData? GetStateData(GameTick fromTick);
-        void CullDeletionHistory(GameTick uptoTick);
-
-        // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
-        // but old ones can be deleted after.
-        void ApplyGameStatePre(GameStateMapData? data);
-        void ApplyGameStatePost(GameStateMapData? data);
         bool HasMapEntity(MapId mapId);
 
         MapId NextMapId();

@@ -36,9 +36,25 @@ namespace Robust.Shared.GameObjects
             _eventTables = new EventTables(_entMan);
         }
 
+        /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+            where TEvent : EntityEventArgs
+        {
+            _eventTables.DispatchComponent(component.Owner.Uid, component.GetType(), typeof(TEvent), args);
+        }
+
         /// <inheritdoc />
         public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent:EntityEventArgs
+            where TEvent : EntityEventArgs
         {
             _eventTables.Dispatch(uid, typeof(TEvent), args);
 
@@ -213,6 +229,18 @@ namespace Robust.Shared.GameObjects
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
                     handler(euid, component, args);
                 }
+            }
+
+            public void DispatchComponent(EntityUid euid, Type compType, Type eventType, EntityEventArgs args)
+            {
+                if (!_subscriptions.TryGetValue(compType, out var compSubs))
+                    return;
+
+                if (!compSubs.TryGetValue(eventType, out var handler))
+                    return;
+
+                var component = _entMan.ComponentManager.GetComponent(euid, compType);
+                handler(euid, component, args);
             }
 
             public void ClearEntities()

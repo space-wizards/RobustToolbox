@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Map
 {
-    internal sealed class ClientMapManager : MapManager, IClientMapManager
+    internal class ClientMapManager : MapManager, IClientMapManager
     {
         [Dependency] private readonly INetManager _netManager = default!;
 

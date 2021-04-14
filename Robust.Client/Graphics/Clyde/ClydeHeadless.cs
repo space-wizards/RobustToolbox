@@ -173,7 +173,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name = null)
         {
-            return new Viewport();
+            return new Viewport(size);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
@@ -480,6 +480,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
+            public Viewport(Vector2i size)
+            {
+                Size = size;
+            }
+
             public void Dispose()
             {
             }

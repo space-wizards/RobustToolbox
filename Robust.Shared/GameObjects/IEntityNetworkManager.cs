@@ -61,10 +61,5 @@ namespace Robust.Shared.GameObjects
         ///    Thrown if called on the client.
         /// </exception>
         void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel);
-
-        /// <summary>
-        ///     Sends out queued messages based on current tick.
-        /// </summary>
-        void TickUpdate();
     }
 }

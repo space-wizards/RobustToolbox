@@ -26,8 +26,8 @@ namespace Robust.Shared.GameObjects
         void FrameUpdate(float frameTime);
 
         IComponentManager ComponentManager { get; }
-        IEntityNetworkManager EntityNetManager { get; }
         IEntitySystemManager EntitySysManager { get; }
+        IEntityNetworkManager? EntityNetworkManager { get; }
         IEventBus EventBus { get; }
 
         #region Entity Management

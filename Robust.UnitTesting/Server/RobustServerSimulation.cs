@@ -175,8 +175,7 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             //Tier 2: Simulation
-            container.Register<IServerEntityManager, ServerEntityManager>();
-            container.Register<IEntityManager, ServerEntityManager>();
+            container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<IEntityLookup, SharedEntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
@@ -187,10 +186,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
-
-            //Tier 3: Networking
-            //TODO: Try to remove these
-            container.RegisterInstance<IEntityNetworkManager>(new Mock<IEntityNetworkManager>().Object);
 
             _diFactory?.Invoke(container);
             container.BuildGraph();

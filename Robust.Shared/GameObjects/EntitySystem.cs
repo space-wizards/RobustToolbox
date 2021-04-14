@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IEntityManager EntityManager = default!;
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
         [Obsolete("You need to create and store the query yourself in a field.")]
         protected IEntityQuery? EntityQuery;
@@ -103,12 +102,12 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseNetworkEvent(EntityEventArgs message)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message, channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
@@ -136,7 +135,7 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
-        
+
         #endregion
 
         #region Static Helpers

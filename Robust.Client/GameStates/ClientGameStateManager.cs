@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -10,6 +11,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Log;
@@ -32,7 +34,8 @@ namespace Robust.Client.GameStates
             _pendingSystemMessages
                 = new();
 
-        [Dependency] private readonly IClientEntityManager _entities = default!;
+        [Dependency] private readonly IComponentFactory _compFactory = default!;
+        [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
         [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
@@ -43,6 +46,9 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
+#if EXCEPTION_TOLERANCE
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+#endif
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
@@ -387,13 +393,225 @@ namespace Robust.Client.GameStates
         {
             _config.TickProcessMessages();
             _mapManager.ApplyGameStatePre(curState.MapData);
-            var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
+            var createdEntities = ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
                 nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);
             _mapManager.ApplyGameStatePost(curState.MapData);
 
             GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
             return createdEntities;
+        }
+
+        private List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
+            EntityState[]? nextEntStates)
+        {
+            var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
+            var toInitialize = new List<Entity>();
+            var created = new List<EntityUid>();
+            deletions ??= new EntityUid[0];
+
+            if (curEntStates != null && curEntStates.Length != 0)
+            {
+                foreach (var es in curEntStates)
+                {
+                    //Known entities
+                    if (_entities.TryGetEntity(es.Uid, out var entity))
+                    {
+                        toApply.Add(entity, (es, null));
+                    }
+                    else //Unknown entities
+                    {
+                        var metaState = (MetaDataComponentState?) es.ComponentStates
+                            ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        if (metaState == null)
+                        {
+                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
+                        }
+                        var newEntity = (Entity)_entities.CreateEntity(metaState.PrototypeId, es.Uid);
+                        toApply.Add(newEntity, (es, null));
+                        toInitialize.Add(newEntity);
+                        created.Add(newEntity.Uid);
+                    }
+                }
+            }
+
+            if (nextEntStates != null && nextEntStates.Length != 0)
+            {
+                foreach (var es in nextEntStates)
+                {
+                    if (_entities.TryGetEntity(es.Uid, out var entity))
+                    {
+                        if (toApply.TryGetValue(entity, out var state))
+                        {
+                            toApply[entity] = (state.Item1, es);
+                        }
+                        else
+                        {
+                            toApply[entity] = (null, es);
+                        }
+                    }
+                }
+            }
+
+            // Make sure this is done after all entities have been instantiated.
+            foreach (var kvStates in toApply)
+            {
+                var ent = kvStates.Key;
+                var entity = (Entity) ent;
+                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1,
+                    kvStates.Value.Item2);
+            }
+
+            foreach (var id in deletions)
+            {
+                _entities.DeleteEntity(id);
+            }
+
+#if EXCEPTION_TOLERANCE
+            HashSet<Entity> brokenEnts = new HashSet<Entity>();
+#endif
+
+            foreach (var entity in toInitialize)
+            {
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
+                    _entities.InitializeEntity(entity);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
+#endif
+            }
+
+            foreach (var entity in toInitialize)
+            {
+#if EXCEPTION_TOLERANCE
+                if (brokenEnts.Contains(entity))
+                    continue;
+
+                try
+                {
+#endif
+                    _entities.StartEntity(entity);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
+#endif
+            }
+
+            foreach (var entity in toInitialize)
+            {
+#if EXCEPTION_TOLERANCE
+                if (brokenEnts.Contains(entity))
+                    continue;
+#endif
+            }
+#if EXCEPTION_TOLERANCE
+            foreach (var entity in brokenEnts)
+            {
+                entity.Delete();
+            }
+#endif
+
+            return created;
+        }
+
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,
+            EntityState? nextState)
+        {
+            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
+            var entityUid = entity.Uid;
+
+            if (curState?.ComponentChanges != null)
+            {
+                foreach (var compChange in curState.ComponentChanges)
+                {
+                    if (compChange.Deleted)
+                    {
+                        if (compMan.TryGetComponent(entityUid, compChange.NetID, out var comp))
+                        {
+                            compMan.RemoveComponent(entityUid, comp);
+                        }
+                    }
+                    else
+                    {
+                        if (compMan.HasComponent(entityUid, compChange.NetID))
+                            continue;
+
+                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
+                        newComp.Owner = entity;
+                        compMan.AddComponent(entity, newComp, true);
+                    }
+                }
+            }
+
+            if (curState?.ComponentStates != null)
+            {
+                foreach (var compState in curState.ComponentStates)
+                {
+                    compStateWork[compState.NetID] = (compState, null);
+                }
+            }
+
+            if (nextState?.ComponentStates != null)
+            {
+                foreach (var compState in nextState.ComponentStates)
+                {
+                    if (compStateWork.TryGetValue(compState.NetID, out var state))
+                    {
+                        compStateWork[compState.NetID] = (state.curState, compState);
+                    }
+                    else
+                    {
+                        compStateWork[compState.NetID] = (null, compState);
+                    }
+                }
+            }
+
+            foreach (var (netId, (cur, next)) in compStateWork)
+            {
+                if (compMan.TryGetComponent(entityUid, netId, out var component))
+                {
+                    try
+                    {
+                        component.HandleComponentState(cur, next);
+                    }
+                    catch (Exception e)
+                    {
+                        var wrapper = new ComponentStateApplyException(
+                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+#if EXCEPTION_TOLERANCE
+                    _runtimeLog.LogException(wrapper, "Component state apply");
+#else
+                        throw wrapper;
+#endif
+                    }
+                }
+                else
+                {
+                    // The component can be null here due to interp.
+                    // Because the NEXT state will have a new component, but this one doesn't yet.
+                    // That's fine though.
+                    if (cur == null)
+                    {
+                        continue;
+                    }
+
+                    var eUid = entityUid;
+                    var eRegisteredNetUidName = _compFactory.GetRegistration(netId).Name;
+                    DebugTools.Assert(
+                        $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
+                }
+            }
         }
     }
 

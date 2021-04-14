@@ -191,6 +191,7 @@ namespace Robust.Shared.GameObjects
         ///     This is an alias of 'Owner.SendMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendMessage(ComponentMessage message)
         {
             Owner.SendMessage(this, message);
@@ -202,6 +203,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message to send.</param>
         /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);

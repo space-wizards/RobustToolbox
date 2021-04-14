@@ -871,7 +871,7 @@ namespace Robust.Client.UserInterface
         ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
-        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        private bool OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
             if (args.State == BoundKeyState.Down)
             {
@@ -884,8 +884,10 @@ namespace Robust.Client.UserInterface
 
             if (!args.CanFocus && KeyboardFocused != null)
             {
-                args.Handle();
+                return true;
             }
+
+            return false;
         }
     }
 }

@@ -67,7 +67,7 @@ namespace Robust.Client.Input
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs>? UIKeyBindStateChanged;
+        public event Func<BoundKeyEventArgs, bool>? UIKeyBindStateChanged;
 
         /// <inheritdoc />
         public event Action<ViewportBoundKeyEventArgs>? KeyBindStateChanged;
@@ -346,8 +346,10 @@ namespace Robust.Client.Input
                 var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
                     new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
-                UIKeyBindStateChanged?.Invoke(eventArgs);
-                if ((state == BoundKeyState.Up || (!eventArgs.Handled && !uiOnly))
+                // UI returns true here into blockPass if it wants to prevent us from giving input events
+                // to the viewport, but doesn't want it hard-handled so we keep processing possible key actions.
+                var blockPass = UIKeyBindStateChanged?.Invoke(eventArgs);
+                if ((state == BoundKeyState.Up || (!(blockPass == true || eventArgs.Handled) && !uiOnly))
                     && _currentlyFindingViewport)
                 {
                     ViewportKeyEvent(null, eventArgs);

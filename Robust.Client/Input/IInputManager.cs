@@ -71,7 +71,7 @@ namespace Robust.Client.Input
         /// <summary>
         ///     UIKeyBindStateChanged is called when a keybind is found.
         /// </summary>
-        event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
+        event Func<BoundKeyEventArgs, bool>? UIKeyBindStateChanged;
 
         /// <summary>
         ///     If UIKeyBindStateChanged did not handle the BoundKeyEvent, KeyBindStateChanged is called.

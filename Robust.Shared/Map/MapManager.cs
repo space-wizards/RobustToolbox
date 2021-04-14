@@ -145,7 +145,7 @@ namespace Robust.Shared.Map
                     entity.Delete();
                 }
 
-                if(_mapEntities.Remove(MapId.Nullspace));
+                if(_mapEntities.Remove(MapId.Nullspace))
                     Logger.InfoS("map", "Removing nullspace map entity.");
             }
 

@@ -5,88 +5,21 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Map
+namespace Robust.Client.Map
 {
-    internal partial class MapManager
+    internal sealed class ClientMapManager : MapManager, IClientMapManager
     {
         [Dependency] private readonly INetManager _netManager = default!;
 
-        public GameStateMapData? GetStateData(GameTick fromTick)
-        {
-            var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
-            foreach (var grid in _grids.Values)
-            {
-                if (grid.LastModifiedTick < fromTick)
-                {
-                    continue;
-                }
-
-                var chunkData = new List<GameStateMapData.ChunkDatum>();
-                foreach (var (index, chunk) in grid.GetMapChunks())
-                {
-                    if (chunk.LastModifiedTick < fromTick)
-                    {
-                        continue;
-                    }
-
-                    var tileBuffer = new Tile[grid.ChunkSize * (uint) grid.ChunkSize];
-
-                    // Flatten the tile array.
-                    // NetSerializer doesn't do multi-dimensional arrays.
-                    // This is probably really expensive.
-                    for (var x = 0; x < grid.ChunkSize; x++)
-                    {
-                        for (var y = 0; y < grid.ChunkSize; y++)
-                        {
-                            tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
-                        }
-                    }
-
-                    chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
-                }
-
-                var gridDatum =
-                    new GameStateMapData.GridDatum(chunkData.ToArray(), new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
-
-                gridDatums.Add(grid.Index, gridDatum);
-            }
-
-            var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
-            var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .Select(kv => kv.Key).ToArray();
-            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
-
-            // no point sending empty collections
-            if (gridDatums.Count        == 0)  gridDatums        = default;
-            if (gridDeletionsData.Count == 0)  gridDeletionsData = default;
-            if (mapDeletionsData.Count  == 0)  mapDeletionsData  = default;
-            if (mapCreations.Length     == 0)  mapCreations      = default;
-            if (gridCreations.Count     == 0)  gridCreations     = default;
-
-            // no point even creating an empty map state if no data
-            if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
-                return default;
-
-            return new GameStateMapData(gridDatums?.ToArray(), gridDeletionsData?.ToArray(), mapDeletionsData?.ToArray(), mapCreations?.ToArray(), gridCreations?.ToArray());
-        }
-
-        public void CullDeletionHistory(GameTick uptoTick)
-        {
-            _mapDeletionHistory.RemoveAll(t => t.tick < uptoTick);
-            _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
-        }
+        public override event EventHandler<GridChangedEventArgs>? GridChanged;
 
         public void ApplyGameStatePre(GameStateMapData? data)
         {
-            DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
-
             // There was no map data this tick, so nothing to do.
             if(data == null)
                 return;
@@ -202,11 +135,11 @@ namespace Robust.Shared.Map
                         continue;
 
                     // get the existing client entity for the map.
-                    var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
+                    var cEntity = EntityManager.GetEntity(_mapEntities[mapId]);
 
                     // locate the entity that represents this map that was just sent to us
                     IEntity? sharedMapEntity = null;
-                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
+                    var mapComps = EntityManager.ComponentManager.EntityQuery<IMapComponent>(true);
                     foreach (var mapComp in mapComps)
                     {
                         if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
@@ -251,7 +184,7 @@ namespace Robust.Shared.Map
                         continue;
 
                     // remove the existing client entity.
-                    var cEntity = _entityManager.GetEntity(grid.GridEntityId);
+                    var cEntity = EntityManager.GetEntity(grid.GridEntityId);
                     var cGridComp = cEntity.GetComponent<IMapGridComponent>();
 
                     // prevents us from deleting the grid when deleting the grid entity
@@ -260,7 +193,7 @@ namespace Robust.Shared.Map
 
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
-                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true);
+                    var gridComps = EntityManager.ComponentManager.EntityQuery<IMapGridComponent>(true);
                     foreach (var gridComp in gridComps)
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)

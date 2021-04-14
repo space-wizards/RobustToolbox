@@ -36,6 +36,7 @@ namespace Robust.Server
 
             IoCManager.Register<IBaseServer, BaseServer>();
             IoCManager.Register<IBaseServerInternal, BaseServer>();
+            IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
             IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();

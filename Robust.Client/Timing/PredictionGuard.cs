@@ -1,12 +1,12 @@
 using System;
 
-namespace Robust.Shared.Timing
+namespace Robust.Client.Timing
 {
     public readonly struct PredictionGuard : IDisposable
     {
-        private readonly IGameTiming _gameTiming;
+        private readonly IClientGameTiming _gameTiming;
 
-        public PredictionGuard(IGameTiming gameTiming)
+        public PredictionGuard(IClientGameTiming gameTiming)
         {
             _gameTiming = gameTiming;
         }

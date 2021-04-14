@@ -138,17 +138,6 @@ namespace Robust.Shared.Timing
         /// </summary>
         GameTick LastRealTick { get; set; }
 
-        void StartPastPrediction();
-        void EndPastPrediction();
-
-        [MustUseReturnValue]
-        PredictionGuard StartPastPredictionArea()
-        {
-            StartPastPrediction();
-
-            return new PredictionGuard(this);
-        }
-
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 
         static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;

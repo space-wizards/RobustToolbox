@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -153,14 +154,20 @@ namespace Robust.Client.Graphics.Clyde
                 return newPoint;
             }
 
-            public void RenderScreenOverlaysBelow(DrawingHandleScreen handle)
+            public void RenderScreenOverlaysBelow(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(handle, OverlaySpace.ScreenSpaceBelowWorld);
+                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
             }
 
-            public void RenderScreenOverlaysAbove(DrawingHandleScreen handle)
+            public void RenderScreenOverlaysAbove(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
             {
-                _clyde.RenderOverlaysDirect(handle, OverlaySpace.ScreenSpace);
+                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
             }
 
             public void Dispose()

@@ -75,13 +75,14 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 
             var leftMargin = 300;
             var width = HistorySize;
             var height = 500;
+            var handle = args.DrawingHandle;
 
             // bottom payload line
             handle.DrawLine(new Vector2(leftMargin, height), new Vector2(leftMargin + width, height), Color.DarkGray.WithAlpha(0.8f));

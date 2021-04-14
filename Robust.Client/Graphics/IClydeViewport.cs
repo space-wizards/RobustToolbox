@@ -1,4 +1,5 @@
 using System;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -42,7 +43,32 @@ namespace Robust.Client.Graphics
         /// </summary>
         Vector2 WorldToLocal(Vector2 point);
 
-        void RenderScreenOverlaysBelow(DrawingHandleScreen handle);
-        void RenderScreenOverlaysAbove(DrawingHandleScreen handle);
+        /// <summary>
+        ///     Draw below screen-space overlays for this viewport in UI space.
+        /// </summary>
+        /// <param name="handle">The drawing handle to draw with.</param>
+        /// <param name="control">The control rendering.</param>
+        /// <param name="viewportBounds">
+        ///     Absolute screen-space bounds to draw the control at.
+        ///     Not relative to the current transform of <see cref="handle"/>.
+        /// </param>
+        public void RenderScreenOverlaysBelow(
+            DrawingHandleScreen handle,
+            IViewportControl control,
+            in UIBox2i viewportBounds);
+
+        /// <summary>
+        ///     Draw above screen-space overlays for this viewport in UI space.
+        /// </summary>
+        /// <param name="handle">The drawing handle to draw with.</param>
+        /// <param name="control">The control rendering.</param>
+        /// <param name="viewportBounds">
+        ///     Absolute screen-space bounds to draw the control at.
+        ///     Not relative to the current transform of <see cref="handle"/>.
+        /// </param>
+        public void RenderScreenOverlaysAbove(
+            DrawingHandleScreen handle,
+            IViewportControl control,
+            in UIBox2i viewportBounds);
     }
 }

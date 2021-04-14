@@ -87,8 +87,9 @@ namespace Robust.Client.Debugging
                 _owner = owner;
             }
 
-            protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
+                var handle = args.WorldHandle;
                 foreach (var ray in _owner.raysWithLifeTime)
                 {
                     handle.DrawLine(

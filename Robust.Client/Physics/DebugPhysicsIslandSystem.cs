@@ -102,9 +102,9 @@ namespace Robust.Client.Physics
             _gameTiming = IoCManager.Resolve<IGameTiming>();
         }
 
-        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
-            var worldHandle = (DrawingHandleWorld) handle;
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
 
             DrawIslandSolve(worldHandle);
         }

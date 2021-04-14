@@ -4,6 +4,7 @@ using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -512,12 +513,18 @@ namespace Robust.Client.Graphics.Clyde
                 return default;
             }
 
-            public void RenderScreenOverlaysBelow(DrawingHandleScreen handle)
+            public void RenderScreenOverlaysBelow(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
             {
                 // Nada
             }
 
-            public void RenderScreenOverlaysAbove(DrawingHandleScreen handle)
+            public void RenderScreenOverlaysAbove(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
             {
                 // Nada
             }

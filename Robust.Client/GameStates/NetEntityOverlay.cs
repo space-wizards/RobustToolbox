@@ -125,13 +125,13 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
             if (!_netManager.IsConnected)
                 return;
 
             // remember, 0,0 is top left of ui with +X right and +Y down
-            var screenHandle = (DrawingHandleScreen)handle;
+            var screenHandle = args.ScreenHandle;
 
             for (int i = 0; i < _netEnts.Count; i++)
             {

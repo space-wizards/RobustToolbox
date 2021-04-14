@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde
@@ -105,18 +106,25 @@ namespace Robust.Client.Graphics.Clyde
                         ClearFramebuffer(default);
                     }
 
-                    overlay.ClydeRender(_renderHandle, space);
+                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size));
                 }
             }
         }
 
-        private void RenderOverlaysDirect(DrawingHandleBase handle, OverlaySpace space)
+        private void RenderOverlaysDirect(
+            Viewport vp,
+            IViewportControl vpControl,
+            DrawingHandleBase handle,
+            OverlaySpace space,
+            in UIBox2i bounds)
         {
             var list = GetOverlaysForSpace(space);
 
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds);
+
             foreach (var overlay in list)
             {
-                overlay.Draw(handle, space);
+                overlay.Draw(args);
             }
         }
 
@@ -240,7 +248,12 @@ namespace Robust.Client.Graphics.Clyde
                             flushed = true;
                         }
 
-                        overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+                        overlay.ClydeRender(
+                            _renderHandle,
+                            OverlaySpace.WorldSpace,
+                            null,
+                            viewport,
+                            new UIBox2i((0, 0), viewport.Size));
                         overlayIndex = j;
                         continue;
                     }

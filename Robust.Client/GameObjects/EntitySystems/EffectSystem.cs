@@ -346,11 +346,11 @@ namespace Robust.Client.GameObjects
                 _entityManager = entityManager;
             }
 
-            protected internal override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
                 var map = _owner.eyeManager.CurrentMap;
 
-                var worldHandle = (DrawingHandleWorld) handle;
+                var worldHandle = args.WorldHandle;
                 ShaderInstance? currentShader = null;
                 var player = _playerManager.LocalPlayer?.ControlledEntity;
 

@@ -65,6 +65,7 @@ namespace Robust.Client
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<ISharedPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();
+            IoCManager.Register<IDebugControlsFactory, ClientDebugControlsFactory>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
             IoCManager.Register<IDebugDrawing, DebugDrawing>();

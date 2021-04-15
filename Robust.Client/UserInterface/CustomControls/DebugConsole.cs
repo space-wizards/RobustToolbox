@@ -27,6 +27,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         void AddFormattedLine(FormattedMessage message);
 
+        void Toggle();
+
         void Clear();
     }
 

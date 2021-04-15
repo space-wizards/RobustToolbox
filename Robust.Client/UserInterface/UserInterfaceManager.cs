@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Console;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
-using Robust.Client.Player;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -15,7 +13,6 @@ using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -25,15 +22,13 @@ namespace Robust.Client.UserInterface
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IStateManager _stateManager = default!;
-        [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IDebugControlsFactory _debugControlsFactory = default!;
 
         [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
@@ -63,9 +58,8 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public Control RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
-        [ViewVariables] public DebugConsole DebugConsole { get; private set; } = default!;
-        [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
-        private DebugMonitors _debugMonitors = default!;
+        [ViewVariables] public IDebugConsoleView DebugConsole { get; private set; } = default!;
+        [ViewVariables] public IDebugMonitors DebugMonitors { get; private set; } = default!;
 
         private readonly List<Control> _modalStack = new();
 
@@ -96,12 +90,11 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
-            RootControl.AddChild(DebugConsole);
+            DebugConsole = _debugControlsFactory.CreateConsole();
+            RootControl.AddChild((Control)DebugConsole);
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _displayManager, _netManager, _mapManager);
-            RootControl.AddChild(_debugMonitors);
+            DebugMonitors = _debugControlsFactory.CreateMonitors();
+            RootControl.AddChild((Control)DebugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
                 InputCmdHandler.FromDelegate(session => DebugConsole.Toggle()));

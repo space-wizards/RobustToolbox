@@ -45,13 +45,6 @@ namespace Robust.Shared.Audio
         [DataField("attenuation")]
         public float Attenuation { get; set; }
 
-        /// <summary>
-        ///     Only applies to global (non-positional) audio.
-        ///     Target channels if the audio configuration has more than 2 speakers.
-        /// </summary>
-        [DataField("mixtarget")]
-        public AudioMixTarget MixTarget { get; set; }
-
         [DataField("loop")]
         public bool Loop { get; set; }
 
@@ -63,17 +56,15 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, AudioMixTarget.Stereo, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, false, 0f);
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation,
-            AudioMixTarget mixTarget, bool loop, float playOffsetSeconds) : this()
+        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, bool loop, float playOffsetSeconds) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;
             BusName = busName;
             MaxDistance = maxDistance;
             Attenuation = attenuation;
-            MixTarget = mixTarget;
             Loop = loop;
             PlayOffsetSeconds = playOffsetSeconds;
         }
@@ -137,17 +128,6 @@ namespace Robust.Shared.Audio
             me.MaxDistance = dist;
             return me;
         }
-        /// <summary>
-        ///     Returns a copy of this instance with a new mix target set, for easy chaining.
-        /// </summary>
-        /// <param name="mixTarget">The new mix target.</param>
-        [Pure]
-        public AudioParams WithMixTarget(AudioMixTarget mixTarget)
-        {
-            var me = this;
-            me.MixTarget = mixTarget;
-            return me;
-        }
 
         /// <summary>
         ///     Returns a copy of this instance with a loop set, for easy chaining.
@@ -175,30 +155,6 @@ namespace Robust.Shared.Audio
             BusName = "Master";
             MaxDistance = 62.5f;
             Attenuation = 1f;
-            MixTarget = AudioMixTarget.Stereo;
         }
-    }
-
-    /// <summary>
-    ///     Controls target channels for non-positional audio if the audio configuration has more than 2 speakers.
-    /// </summary>
-    public enum AudioMixTarget : byte
-    {
-        // These match the values in the Godot enum,
-        // but this is shared so we can't reference it.
-        /// <summary>
-        ///     The audio will only be played on the first channel.
-        /// </summary>
-        Stereo = 0,
-
-        /// <summary>
-        ///     The audio will be played on all surround channels.
-        /// </summary>
-        Surround = 1,
-
-        /// <summary>
-        ///     The audio will be played on the second channel, which is usually the center.
-        /// </summary>
-        Center = 2,
     }
 }

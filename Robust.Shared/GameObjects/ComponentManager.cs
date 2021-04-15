@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
             _deleteSet.Clear();
             FillComponentDict();
         }
-        
+
         public void Dispose()
         {
             _componentFactory.ComponentAdded -= OnComponentAdded;
@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
                 if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
 
-                RemoveComponentImmediate((Component) duplicate);
+                RemoveComponentImmediate(duplicate);
             }
 
             // add the component to the grid

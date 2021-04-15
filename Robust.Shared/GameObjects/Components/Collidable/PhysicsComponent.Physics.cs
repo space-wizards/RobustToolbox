@@ -136,6 +136,17 @@ namespace Robust.Shared.GameObjects
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
 
+        /// <summary>
+        /// Set awake without the sleeptimer being reset.
+        /// </summary>
+        internal void ForceAwake()
+        {
+            if (_awake || _bodyType == BodyType.Static) return;
+
+            _awake = true;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+        }
+
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

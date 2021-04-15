@@ -310,8 +310,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             base.DebugDraw(handle, in worldViewport);
 
             var matrixB = BodyB.Owner.Transform.WorldMatrix;
-            var worldAnchorB = WorldAnchorB;
-            var vector = WorldAnchorA - worldAnchorB;
+            var vector = WorldAnchorA - WorldAnchorB;
             var distance = vector.Length;
 
             if (distance <= 0.0f) return;

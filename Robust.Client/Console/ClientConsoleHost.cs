@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Log;
 using Robust.Shared.Console;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -11,22 +12,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Console
 {
-    public class AddStringArgs : EventArgs
-    {
-        public string Text { get; }
-
-        public bool Local { get; }
-
-        public bool Error { get; }
-
-        public AddStringArgs(string text, bool local, bool error)
-        {
-            Text = text;
-            Local = local;
-            Error = error;
-        }
-    }
-
     public class AddFormattedMessageArgs : EventArgs
     {
         public readonly FormattedMessage Message;
@@ -36,18 +21,22 @@ namespace Robust.Client.Console
             Message = message;
         }
     }
-    
+
     /// <inheritdoc cref="IClientConsoleHost" />
     internal class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
+        [Dependency] private readonly INetManager _netManager = default!;
+
         private bool _requestedCommands;
+
+        public override bool IsServer => false;
 
         /// <inheritdoc />
         public void Initialize()
         {
-            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
-            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
+            _netManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
+            _netManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
+            _netManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
 
             Reset();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
@@ -66,14 +55,11 @@ namespace Robust.Client.Console
         {
             AvailableCommands.Clear();
             _requestedCommands = false;
-            NetManager.Connected += OnNetworkConnected;
+            _netManager.Connected += OnNetworkConnected;
 
             LoadConsoleCommands();
             SendServerCommandRequest();
         }
-
-        /// <inheritdoc />
-        public event EventHandler<AddStringArgs>? AddString;
 
         /// <inheritdoc />
         public event EventHandler<AddFormattedMessageArgs>? AddFormatted;
@@ -82,12 +68,6 @@ namespace Robust.Client.Console
         public void AddFormattedLine(FormattedMessage message)
         {
             AddFormatted?.Invoke(this, new AddFormattedMessageArgs(message));
-        }
-
-        /// <inheritdoc />
-        public override void WriteError(ICommonSession? session, string text)
-        {
-            OutputText(text, true, true);
         }
 
         /// <inheritdoc />
@@ -119,29 +99,18 @@ namespace Robust.Client.Console
         /// <inheritdoc />
         public override void RemoteExecuteCommand(ICommonSession? session, string command)
         {
-            if (!NetManager.IsConnected) // we don't care about session on client
+            if (!_netManager.IsConnected) // we don't care about session on client
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            var msg = _netManager.CreateNetMessage<MsgConCmd>();
             msg.Text = command;
-            NetManager.ClientSendMessage(msg);
-        }
-
-        /// <inheritdoc />
-        public override void WriteLine(ICommonSession? session, string text)
-        {
-            OutputText(text, true, false);
+            _netManager.ClientSendMessage(msg);
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
             // We don't have anything to dispose.
-        }
-
-        private void OutputText(string text, bool local, bool error)
-        {
-            AddString?.Invoke(this, new AddStringArgs(text, local, error));
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
@@ -180,11 +149,11 @@ namespace Robust.Client.Console
             if (_requestedCommands)
                 return;
 
-            if (!NetManager.IsConnected)
+            if (!_netManager.IsConnected)
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmdReg>();
-            NetManager.ClientSendMessage(msg);
+            var msg = _netManager.CreateNetMessage<MsgConCmdReg>();
+            _netManager.ClientSendMessage(msg);
 
             _requestedCommands = true;
         }

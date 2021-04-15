@@ -7,22 +7,38 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Console
 {
+    public class AddStringArgs : EventArgs
+    {
+        public string Text { get; }
+
+        public bool Local { get; }
+
+        public bool Error { get; }
+
+        public AddStringArgs(string text, bool local, bool error)
+        {
+            Text = text;
+            Local = local;
+            Error = error;
+        }
+    }
+
     /// <inheritdoc />
-    public abstract class ConsoleHost : IConsoleHost
+    public class ConsoleHost : IConsoleHost
     {
         protected const string SawmillName = "con";
 
         [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] protected readonly INetManager NetManager = default!;
 
         protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
 
         /// <inheritdoc />
-        public bool IsServer => NetManager.IsServer;
+        public virtual bool IsServer => false;
 
         /// <inheritdoc />
         public IConsoleShell LocalShell { get; }
@@ -34,6 +50,9 @@ namespace Robust.Shared.Console
         {
             LocalShell = new ConsoleShell(this, null);
         }
+
+        /// <inheritdoc />
+        public event EventHandler<AddStringArgs>? AddString;
 
         /// <inheritdoc />
         public event EventHandler? ClearText;
@@ -65,15 +84,53 @@ namespace Robust.Shared.Console
             AvailableCommands.Add(command, newCmd);
         }
 
-        //TODO: Pull up
-        public abstract void ExecuteCommand(ICommonSession? session, string command);
+        /// <inheritdoc />
+        public virtual void ExecuteCommand(ICommonSession? session, string command)
+        {
+            var shell = new ConsoleShell(this, session);
 
-        //TODO: server -> client forwarding, making the system asymmetrical
-        public abstract void RemoteExecuteCommand(ICommonSession? session, string command);
+            try
+            {
+                var args = new List<string>();
+                CommandParsing.ParseArguments(command, args);
+
+                // missing cmdName
+                if (args.Count == 0)
+                    return;
+
+                var cmdName = args[0];
+
+                if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
+                {
+                    args.RemoveAt(0);
+                    conCmd.Execute(shell, command, args.ToArray());
+                }
+                else
+                {
+                    shell.WriteError($"Unknown command: '{cmdName}'");
+                }
+            }
+            catch (Exception e)
+            {
+                LogManager.GetSawmill(SawmillName).Warning($"ExecuteError - {command}:\n{e}");
+                shell.WriteError($"There was an error while executing the command: {e}");
+            }
+        }
+
+        public virtual void RemoteExecuteCommand(ICommonSession? session, string command)
+        {
+        }
 
         //TODO: IConsoleOutput for [e#1225]
-        public abstract void WriteLine(ICommonSession? session, string text);
-        public abstract void WriteError(ICommonSession? session, string text);
+        public virtual void WriteLine(ICommonSession? session, string text)
+        {
+            OutputText(text, true, false);
+        }
+
+        public virtual void WriteError(ICommonSession? session, string text)
+        {
+            OutputText(text, true, true);
+        }
 
         /// <inheritdoc />
         public void ClearLocalConsole()
@@ -81,16 +138,15 @@ namespace Robust.Shared.Console
             ClearText?.Invoke(this, EventArgs.Empty);
         }
 
-        /// <inheritdoc />
-        public IConsoleShell GetSessionShell(ICommonSession session)
+        private protected void OutputText(string text, bool local, bool error)
         {
-            if (!IsServer)
-                return LocalShell;
+            AddString?.Invoke(this, new AddStringArgs(text, local, error));
+        }
 
-            if (session.Status >= SessionStatus.Disconnected)
-                throw new InvalidOperationException("Tried to get the session shell of a disconnected peer.");
-
-            return new ConsoleShell(this, session);
+        /// <inheritdoc />
+        public virtual IConsoleShell GetSessionShell(ICommonSession session)
+        {
+            return LocalShell;
         }
 
         /// <inheritdoc />

@@ -16,7 +16,6 @@ namespace Robust.Client.Console
         /// </summary>
         void Reset();
 
-        event EventHandler<AddStringArgs> AddString;
         event EventHandler<AddFormattedMessageArgs> AddFormatted;
 
         void AddFormattedLine(FormattedMessage message);

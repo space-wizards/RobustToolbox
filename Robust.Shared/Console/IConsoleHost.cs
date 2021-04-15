@@ -39,6 +39,7 @@ namespace Robust.Shared.Console
         IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
 
 
+        event EventHandler<AddStringArgs> AddString;
         event EventHandler ClearText;
 
         /// <summary>

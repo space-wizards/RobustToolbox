@@ -23,7 +23,6 @@ namespace Robust.Client.Player
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <summary>
@@ -86,9 +85,9 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public void Startup(INetChannel channel)
+        public void Startup()
         {
-            LocalPlayer = new LocalPlayer(_network, _config);
+            LocalPlayer = new LocalPlayer();
 
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty

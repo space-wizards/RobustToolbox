@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -74,6 +74,18 @@ namespace Robust.Client.ResourceManagement
             var rsi = new RSI(frameSize, data.Path);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
+
+            // Check for duplicate states
+            for (var i = 0; i < metadata.States.Length; i++)
+            {
+                var stateId = metadata.States[i].StateId;
+
+                for (int j = i + 1; j < metadata.States.Length; j++)
+                {
+                    if (stateId == metadata.States[j].StateId)
+                        throw new RSILoadException($"RSI '{data.Path}' has a duplicate stateId '{stateId}'.");
+                }
+            }
 
             // Do every state.
             for (var index = 0; index < metadata.States.Length; index++)

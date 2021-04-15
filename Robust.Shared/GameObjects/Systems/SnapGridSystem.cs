@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
             SubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
-        
+
         public override void Shutdown()
         {
             base.Shutdown();

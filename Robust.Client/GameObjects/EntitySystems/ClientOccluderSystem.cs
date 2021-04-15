@@ -24,6 +24,7 @@ namespace Robust.Client.GameObjects
 
         private uint _updateGeneration;
 
+        /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
@@ -32,6 +33,18 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
+
+            SubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>(HandleSnapGridMove);
+        }
+
+        /// <inheritdoc />
+        public override void Shutdown()
+        {
+            UnsubscribeLocalEvent<OccluderDirtyEvent>();
+
+            UnsubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>(HandleSnapGridMove);
+
+            base.Shutdown();
         }
 
         public override void FrameUpdate(float frameTime)
@@ -56,6 +69,11 @@ namespace Robust.Client.GameObjects
                     occluder.UpdateGeneration = _updateGeneration;
                 }
             }
+        }
+
+        private static void HandleSnapGridMove(EntityUid uid, ClientOccluderComponent component, SnapGridPositionChangedEvent args)
+        {
+            component.SnapGridOnPositionChanged();
         }
 
         private void HandleDirtyEvent(OccluderDirtyEvent ev)

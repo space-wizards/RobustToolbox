@@ -32,26 +32,24 @@ namespace Robust.Client.GameObjects
             if (Owner.TryGetComponent(out SnapGridComponent? snap))
             {
                 SnapGrid = snap;
-                SnapGrid.OnPositionChanged += SnapGridOnPositionChanged;
 
                 SnapGridOnPositionChanged();
             }
         }
 
-        private void SnapGridOnPositionChanged()
+        public void SnapGridOnPositionChanged()
         {
             SendDirty();
+
+            if(SnapGrid is null)
+                return;
+
             _lastPosition = (Owner.Transform.GridID, SnapGrid!.Position);
         }
 
         protected override void Shutdown()
         {
             base.Shutdown();
-
-            if (SnapGrid != null)
-            {
-                SnapGrid.OnPositionChanged -= SnapGridOnPositionChanged;
-            }
 
             SendDirty();
         }

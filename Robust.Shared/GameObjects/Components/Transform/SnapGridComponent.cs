@@ -20,27 +20,8 @@ namespace Robust.Shared.GameObjects
         private bool IsSet;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        [Obsolete]
-        public event Action? OnPositionChanged;
-
         private GridId _lastGrid;
         public Vector2i Position { get; private set; }
-
-        /// <inheritdoc />
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            UpdatePosition(this);
-        }
-
-        /// <inheritdoc />
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-
-            CompShutdown(this);
-        }
 
         public static void CompShutdown(SnapGridComponent snapComp)
         {
@@ -183,7 +164,6 @@ namespace Robust.Shared.GameObjects
 
             if (oldPos != snapComp.Position)
             {
-                snapComp.OnPositionChanged?.Invoke();
                 snapComp.Owner.EntityManager.EventBus.RaiseLocalEvent(snapComp.Owner.Uid,
                     new SnapGridPositionChangedEvent(snapComp.Position, oldPos, snapComp._lastGrid, oldGrid));
             }

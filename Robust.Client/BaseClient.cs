@@ -98,6 +98,24 @@ namespace Robust.Client
         }
 
         /// <inheritdoc />
+        public void StartSinglePlayer()
+        {
+            DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
+            DebugTools.Assert(!_net.IsConnected);
+            _playMan.Startup();
+            _playMan.LocalPlayer!.Name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
+            OnRunLevelChanged(ClientRunLevel.SinglePlayerGame);
+        }
+
+        /// <inheritdoc />
+        public void StopSinglePlayer()
+        {
+            DebugTools.Assert(RunLevel == ClientRunLevel.SinglePlayerGame);
+            DebugTools.Assert(!_net.IsConnected);
+            GameStoppedReset();
+        }
+
+        /// <inheritdoc />
         public event EventHandler<RunLevelChangedEventArgs>? RunLevelChanged;
 
         public event EventHandler<PlayerEventArgs>? PlayerJoinedServer;
@@ -133,7 +151,7 @@ namespace Robust.Client
             var userId = _net.ServerChannel.UserId;
             _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString());
             // start up player management
-            _playMan.Startup(_net.ServerChannel!);
+            _playMan.Startup();
 
             _playMan.LocalPlayer!.UserId = userId;
             _playMan.LocalPlayer.Name = userName;
@@ -190,7 +208,11 @@ namespace Robust.Client
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
             LastDisconnectReason = args.Reason;
+            GameStoppedReset();
+        }
 
+        private void GameStoppedReset()
+        {
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
@@ -251,6 +273,11 @@ namespace Robust.Client
         ///     The client is now in the game, moving around.
         /// </summary>
         InGame,
+
+        /// <summary>
+        ///     The client is now in singleplayer mode, in-game.
+        /// </summary>
+        SinglePlayerGame,
     }
 
     /// <summary>

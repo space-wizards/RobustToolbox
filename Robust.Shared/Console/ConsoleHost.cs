@@ -46,7 +46,7 @@ namespace Robust.Shared.Console
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
 
-        protected ConsoleHost()
+        public ConsoleHost()
         {
             LocalShell = new ConsoleShell(this, null);
         }

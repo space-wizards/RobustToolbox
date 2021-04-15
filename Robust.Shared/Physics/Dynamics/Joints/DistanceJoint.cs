@@ -305,6 +305,23 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             Damping = 2.0f * mass * dampingRatio * omega;
         }
 
+        public override void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport)
+        {
+            base.DebugDraw(handle, in worldViewport);
+
+            var matrixB = BodyB.Owner.Transform.WorldMatrix;
+            var worldAnchorB = WorldAnchorB;
+            var vector = WorldAnchorA - worldAnchorB;
+            var distance = vector.Length;
+
+            if (distance <= 0.0f) return;
+
+            var line = new Box2Rotated(new Box2(-0.08f, 0, 0.08f, distance), vector.ToWorldAngle().Opposite());
+
+            handle.SetTransform(matrixB);
+            handle.DrawRect(line, Color.Blue.WithAlpha(0.7f));
+        }
+
         /// <summary>
         /// Get the reaction torque given the inverse time step.
         /// Unit is N*m. This is always zero for a distance joint.

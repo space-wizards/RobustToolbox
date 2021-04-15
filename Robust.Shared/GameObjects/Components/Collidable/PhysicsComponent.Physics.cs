@@ -520,6 +520,20 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
 
+        public IEnumerable<Joint> Joints
+        {
+            get
+            {
+                JointEdge? edge = JointEdges;
+
+                while (edge != null)
+                {
+                    yield return edge.Joint;
+                    edge = edge.Next;
+                }
+            }
+        }
+
         [DataField("fixtures")]
         [NeverPushInheritance]
         private List<Fixture> _fixtures = new();

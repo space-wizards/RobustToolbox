@@ -105,6 +105,7 @@ namespace Robust.Client
             _playMan.Startup();
             _playMan.LocalPlayer!.Name = PlayerNameOverride ?? _configManager.GetCVar(CVars.PlayerName);
             OnRunLevelChanged(ClientRunLevel.SinglePlayerGame);
+            GameStartedSetup();
         }
 
         /// <inheritdoc />
@@ -169,12 +170,18 @@ namespace Robust.Client
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
 
+            GameStartedSetup();
+
+            PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
+        }
+
+        private void GameStartedSetup()
+        {
             _entityManager.Startup();
             _mapManager.Startup();
 
             _timing.ResetSimTime();
             _timing.Paused = false;
-            PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
         }
 
         /// <summary>

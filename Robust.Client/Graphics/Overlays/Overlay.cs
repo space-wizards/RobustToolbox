@@ -83,7 +83,8 @@ namespace Robust.Client.Graphics
             OverlaySpace currentSpace,
             IViewportControl? vpControl,
             IClydeViewport vp,
-            in UIBox2i screenBox)
+            in UIBox2i screenBox,
+            in Box2 worldBox)
         {
             DrawingHandleBase handle;
             if (currentSpace == OverlaySpace.ScreenSpace || currentSpace == OverlaySpace.ScreenSpaceBelowWorld)
@@ -96,7 +97,7 @@ namespace Robust.Client.Graphics
                 handle = renderHandle.DrawingHandleWorld;
             }
 
-            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox);
+            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox, worldBox);
 
             Draw(args);
         }

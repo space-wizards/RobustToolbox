@@ -88,7 +88,7 @@ namespace Robust.Client.Graphics.Clyde
             SwapBuffers();
         }
 
-        private void RenderOverlays(Viewport vp, OverlaySpace space)
+        private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
                         ClearFramebuffer(default);
                     }
 
-                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size));
+                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox);
                 }
             }
         }
@@ -120,7 +120,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             var list = GetOverlaysForSpace(space);
 
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds);
+            var worldBounds = CalcWorldBounds(vp);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldBounds);
 
             foreach (var overlay in list)
             {
@@ -197,7 +198,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldBounds);
 
             var screenSize = viewport.Size;
 
@@ -253,7 +254,8 @@ namespace Robust.Client.Graphics.Clyde
                             OverlaySpace.WorldSpace,
                             null,
                             viewport,
-                            new UIBox2i((0, 0), viewport.Size));
+                            new UIBox2i((0, 0), viewport.Size),
+                            worldBounds);
                         overlayIndex = j;
                         continue;
                     }
@@ -421,8 +423,7 @@ namespace Robust.Client.Graphics.Clyde
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
-                var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+                var worldBounds = CalcWorldBounds(viewport);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
@@ -430,6 +431,9 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         DrawLightsAndFov(viewport, worldBounds, eye);
                     }
+
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldBounds);
+                    FlushRenderQueue();
 
                     using (DebugGroup("Grids"))
                     {
@@ -442,7 +446,7 @@ namespace Robust.Client.Graphics.Clyde
                         DrawEntities(viewport, worldBounds);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -475,7 +479,7 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldBounds);
                 FlushRenderQueue();
             }
 
@@ -485,6 +489,17 @@ namespace Robust.Client.Graphics.Clyde
             SetScissorFull(oldScissor);
             _currentMatrixModel = oldTransform;
             _currentViewport = oldVp;
+        }
+
+        private static Box2 CalcWorldBounds(Viewport viewport)
+        {
+            var eye = viewport.Eye;
+            if (eye == null)
+                return default;
+
+            // TODO: This seems completely unfit by lacking things like rotation handling.
+            return Box2.CenteredAround(eye.Position.Position,
+                viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

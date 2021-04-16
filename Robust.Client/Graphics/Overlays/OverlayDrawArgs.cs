@@ -38,6 +38,11 @@ namespace Robust.Client.Graphics
         /// </summary>
         public readonly UIBox2i ViewportBounds;
 
+        /// <summary>
+        ///     AABB enclosing the area visible in the viewport.
+        /// </summary>
+        public readonly Box2 WorldBounds;
+
         public DrawingHandleScreen ScreenHandle => (DrawingHandleScreen) DrawingHandle;
         public DrawingHandleWorld WorldHandle => (DrawingHandleWorld) DrawingHandle;
 
@@ -46,13 +51,15 @@ namespace Robust.Client.Graphics
             IViewportControl? viewportControl,
             IClydeViewport viewport,
             DrawingHandleBase drawingHandle,
-            in UIBox2i viewportBounds)
+            in UIBox2i viewportBounds,
+            in Box2 worldBounds)
         {
             Space = space;
             ViewportControl = viewportControl;
             Viewport = viewport;
             DrawingHandle = drawingHandle;
             ViewportBounds = viewportBounds;
+            WorldBounds = worldBounds;
         }
     }
 }

@@ -70,5 +70,15 @@ namespace Robust.Client
         ///     Disconnects the connected BaseClient from a remote server.
         /// </summary>
         void DisconnectFromServer(string reason);
+
+        /// <summary>
+        ///     Starts the single player mode.
+        /// </summary>
+        void StartSinglePlayer();
+
+        /// <summary>
+        ///     Stops the single player mode.
+        /// </summary>
+        void StopSinglePlayer();
     }
 }

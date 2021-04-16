@@ -80,6 +80,8 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
+            _client.RunLevelChanged += OnRunLevelChanged;
+
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
         }
@@ -222,6 +224,35 @@ namespace Robust.Client.Player
             {
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs e)
+        {
+            if (e.NewLevel != ClientRunLevel.SinglePlayerGame)
+                return;
+
+            DebugTools.AssertNotNull(LocalPlayer);
+
+            // We do some further setup steps for singleplayer here...
+
+            // The local player's GUID in singleplayer will always be the default.
+            var guid = default(NetUserId);
+
+            var session = new PlayerSession(guid)
+            {
+                Name = LocalPlayer!.Name,
+                Ping = 0,
+            };
+
+            LocalPlayer.UserId = guid;
+            LocalPlayer.InternalSession = session;
+
+            // Add the local session to the list.
+            _sessions.Add(guid, session);
+
+            LocalPlayer.SwitchState(SessionStatus.InGame);
+
+            PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
     }
 }

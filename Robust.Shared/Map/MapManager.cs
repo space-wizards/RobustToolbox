@@ -398,13 +398,12 @@ namespace Robust.Shared.Map
             return _grids.Values;
         }
 
-        public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
+        public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, true);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, true);
         }
 
-        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, float snapSize,
-            bool createEntity)
+        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, bool createEntity)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
@@ -432,7 +431,7 @@ namespace Robust.Shared.Map
                 HighestGridID = actualID;
             }
 
-            var grid = new MapGrid(this, _entityManager, actualID, chunkSize, snapSize, currentMapID);
+            var grid = new MapGrid(this, _entityManager, actualID, chunkSize, currentMapID);
             _grids.Add(actualID, grid);
             Logger.InfoS("map", $"Creating new grid {actualID}");
 
@@ -481,10 +480,9 @@ namespace Robust.Shared.Map
             return grid;
         }
 
-        public IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16,
-            float snapSize = 1)
+        public IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, false);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, false);
         }
 
         public IMapGrid GetGrid(GridId gridID)

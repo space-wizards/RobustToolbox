@@ -25,7 +25,6 @@ namespace Robust.Server.Maps
 
             info.Add("chunksize", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
             info.Add("tilesize", grid.TileSize.ToString(CultureInfo.InvariantCulture));
-            info.Add("snapsize", grid.SnapSize.ToString(CultureInfo.InvariantCulture));
 
             var chunks = grid.GetMapChunks();
             foreach (var chunk in chunks)

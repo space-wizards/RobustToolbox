@@ -68,14 +68,12 @@ namespace Robust.Shared.Map
         /// <param name="chunkSize">The dimension of this square chunk.</param>
         /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
         /// <param name="parentMapId">Parent map identifier.</param>
-        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, float snapSize,
-            MapId parentMapId)
+        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, MapId parentMapId)
         {
             _mapManager = mapManager;
             _entityManager = entityManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
-            SnapSize = snapSize;
             ParentMapId = parentMapId;
             LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
             HasGravity = false;
@@ -102,10 +100,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public ushort ChunkSize { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public float SnapSize { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -173,18 +167,6 @@ namespace Robust.Shared.Map
         public void NotifyChunkCollisionRegenerated()
         {
             UpdateAABB();
-        }
-
-        /// <inheritdoc />
-        public bool OnSnapCenter(Vector2 position)
-        {
-            return (MathHelper.CloseTo(position.X % SnapSize, 0) && MathHelper.CloseTo(position.Y % SnapSize, 0));
-        }
-
-        /// <inheritdoc />
-        public bool OnSnapBorder(Vector2 position)
-        {
-            return (MathHelper.CloseTo(position.X % SnapSize, SnapSize / 2) && MathHelper.CloseTo(position.Y % SnapSize, SnapSize / 2));
         }
 
         #region TileAccess

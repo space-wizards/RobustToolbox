@@ -11,13 +11,13 @@ namespace Robust.Shared.GameObjects
     {
         public sealed override string Name => "SnapGrid";
 
-        internal bool IsSet;
-        internal IMapManager _mapManager => IoCManager.Resolve<IMapManager>();
+        private IMapManager _mapManager => IoCManager.Resolve<IMapManager>();
 
+        internal bool IsSet;
         internal GridId _lastGrid;
         internal Vector2i Position => GetTilePosition(_mapManager, Owner.Transform);
 
-        public static Vector2i GetTilePosition(IMapManager mapManager, ITransformComponent transform)
+        private static Vector2i GetTilePosition(IMapManager mapManager, ITransformComponent transform)
         {
             var grid = mapManager.GetGrid(transform.GridID);
             return grid.SnapGridCellFor(transform.Coordinates);

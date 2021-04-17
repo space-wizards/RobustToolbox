@@ -321,6 +321,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Anchored => Owner.EntityManager.ComponentManager.HasComponent<SnapGridComponent>(Owner.Uid);
+
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);

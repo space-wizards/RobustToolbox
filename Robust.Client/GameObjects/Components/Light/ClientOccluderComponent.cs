@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -67,14 +68,16 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || !Owner.TryGetComponent<SnapGridComponent>(out var snapGrid))
+            if (Deleted || !Owner.Transform.Anchored)
             {
                 return;
             }
 
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                foreach (var neighbor in MapGrid.GetInDir(snapGrid, dir))
+                var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+                var position = Owner.Transform.Coordinates;
+                foreach (var neighbor in MapGrid.GetInDir(grid, position, dir))
                 {
                     if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
                     {

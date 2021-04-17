@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -553,45 +552,26 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
         /// </summary>
-        public static IEnumerable<IEntity> GetInDir(SnapGridComponent snapComp, Direction dir)
+        public static IEnumerable<IEntity> GetInDir(IMapGrid grid, EntityCoordinates position, Direction dir)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                return Enumerable.Empty<IEntity>();
-
-            var pos = SnapGridPosAt(grid.SnapGridCellFor(transform.Coordinates), dir);
-
+            var pos = SnapGridPosAt(grid.SnapGridCellFor(position), dir);
             return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
-        [Pure]
-        public static IEnumerable<IEntity> GetOffset(SnapGridComponent snapComp, Vector2i offset)
+        public static IEnumerable<IEntity> GetOffset(IMapGrid grid, EntityCoordinates coords, Vector2i offset)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                return Enumerable.Empty<IEntity>();
-
-            var pos = grid.SnapGridCellFor(transform.Coordinates) + offset;
-
+            var pos = grid.SnapGridCellFor(coords) + offset;
             return grid.GetSnapGridCell(pos).Select(s => s.Owner);
         }
 
-        public static IEnumerable<IEntity> GetLocal(SnapGridComponent snapComp)
+        public static IEnumerable<IEntity> GetLocal(IMapGrid grid, EntityCoordinates coords)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                return Enumerable.Empty<IEntity>();
-
-            return grid.GetSnapGridCell(grid.SnapGridCellFor(transform.Coordinates)).Select(s => s.Owner);
+            return grid.GetSnapGridCell(grid.SnapGridCellFor(coords)).Select(s => s.Owner);
         }
 
-        public static EntityCoordinates DirectionToGrid(SnapGridComponent snapComp, Direction direction)
+        public static EntityCoordinates DirectionToGrid(IMapGrid grid, EntityCoordinates coords, Direction direction)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                return transform.Coordinates.Offset(direction.ToVec());
-
-            return grid.GridTileToLocal(SnapGridPosAt(grid.SnapGridCellFor(transform.Coordinates), direction));
+            return grid.GridTileToLocal(SnapGridPosAt(grid.SnapGridCellFor(coords), direction));
         }
 
         private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
@@ -619,13 +599,9 @@ namespace Robust.Shared.Map
             }
         }
 
-        public static IEnumerable<SnapGridComponent> GetCardinalNeighborCells(SnapGridComponent snapComp)
+        public static IEnumerable<SnapGridComponent> GetCardinalNeighborCells(IMapGrid grid, EntityCoordinates coords)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                yield break;
-
-            var position = grid.SnapGridCellFor(transform.Coordinates);
+            var position = grid.SnapGridCellFor(coords);
             foreach (var cell in grid.GetSnapGridCell(position))
                 yield return cell;
             foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(0, 1)))
@@ -638,13 +614,9 @@ namespace Robust.Shared.Map
                 yield return cell;
         }
 
-        public static IEnumerable<SnapGridComponent> GetCellsInSquareArea(SnapGridComponent snapComp, int n = 1)
+        public static IEnumerable<SnapGridComponent> GetCellsInSquareArea(IMapGrid grid, EntityCoordinates coords, int n)
         {
-            var transform = snapComp.Owner.Transform;
-            if (!snapComp._mapManager.TryGetGrid(transform.GridID, out var grid))
-                yield break;
-
-            var position = grid.SnapGridCellFor(transform.Coordinates);
+            var position = grid.SnapGridCellFor(coords);
 
             for (var y = -n; y <= n; ++y)
             for (var x = -n; x <= n; ++x)

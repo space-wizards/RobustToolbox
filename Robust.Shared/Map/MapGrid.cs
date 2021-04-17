@@ -10,7 +10,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
-    public class MapGrid : IMapGridInternal
+    internal class MapGrid : IMapGridInternal
     {
         /// <summary>
         ///     Game tick that the map was created.
@@ -423,6 +423,88 @@ namespace Robust.Shared.Map
             return (chunk, chunkTile);
         }
 
+        private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
+        {
+            switch (dir)
+            {
+                case Direction.East:
+                    return position + new Vector2i(dist, 0);
+                case Direction.SouthEast:
+                    return position + new Vector2i(dist, -dist);
+                case Direction.South:
+                    return position + new Vector2i(0, -dist);
+                case Direction.SouthWest:
+                    return position + new Vector2i(-dist, -dist);
+                case Direction.West:
+                    return position + new Vector2i(-dist, 0);
+                case Direction.NorthWest:
+                    return position + new Vector2i(-dist, dist);
+                case Direction.North:
+                    return position + new Vector2i(0, dist);
+                case Direction.NorthEast:
+                    return position + new Vector2i(dist, dist);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetInDir(EntityCoordinates position, Direction dir)
+        {
+            var pos = SnapGridPosAt(SnapGridCellFor(position), dir);
+            return GetSnapGridCell(pos).Select(s => s.Owner);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetOffset(EntityCoordinates coords, Vector2i offset)
+        {
+            var pos = SnapGridCellFor(coords) + offset;
+            return GetSnapGridCell(pos).Select(s => s.Owner);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetLocal(EntityCoordinates coords)
+        {
+            return GetSnapGridCell(SnapGridCellFor(coords)).Select(s => s.Owner);
+        }
+
+        /// <inheritdoc />
+        public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
+        {
+            return GridTileToLocal(SnapGridPosAt(SnapGridCellFor(coords), direction));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<SnapGridComponent> GetCardinalNeighborCells(EntityCoordinates coords)
+        {
+            var position = SnapGridCellFor(coords);
+            foreach (var cell in GetSnapGridCell(position))
+                yield return cell;
+            foreach (var cell in GetSnapGridCell(position + new Vector2i(0, 1)))
+                yield return cell;
+            foreach (var cell in GetSnapGridCell(position + new Vector2i(0, -1)))
+                yield return cell;
+            foreach (var cell in GetSnapGridCell(position + new Vector2i(1, 0)))
+                yield return cell;
+            foreach (var cell in GetSnapGridCell(position + new Vector2i(-1, 0)))
+                yield return cell;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<SnapGridComponent> GetCellsInSquareArea(EntityCoordinates coords, int n)
+        {
+            var position = SnapGridCellFor(coords);
+
+            for (var y = -n; y <= n; ++y)
+                for (var x = -n; x <= n; ++x)
+                {
+                    foreach (var cell in GetSnapGridCell(position + new Vector2i(x, y)))
+                    {
+                        yield return cell;
+                    }
+                }
+        }
+
         #endregion
 
         #region Transforms
@@ -548,84 +630,5 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
-
-        /// <summary>
-        ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
-        /// </summary>
-        public static IEnumerable<IEntity> GetInDir(IMapGrid grid, EntityCoordinates position, Direction dir)
-        {
-            var pos = SnapGridPosAt(grid.SnapGridCellFor(position), dir);
-            return grid.GetSnapGridCell(pos).Select(s => s.Owner);
-        }
-
-        public static IEnumerable<IEntity> GetOffset(IMapGrid grid, EntityCoordinates coords, Vector2i offset)
-        {
-            var pos = grid.SnapGridCellFor(coords) + offset;
-            return grid.GetSnapGridCell(pos).Select(s => s.Owner);
-        }
-
-        public static IEnumerable<IEntity> GetLocal(IMapGrid grid, EntityCoordinates coords)
-        {
-            return grid.GetSnapGridCell(grid.SnapGridCellFor(coords)).Select(s => s.Owner);
-        }
-
-        public static EntityCoordinates DirectionToGrid(IMapGrid grid, EntityCoordinates coords, Direction direction)
-        {
-            return grid.GridTileToLocal(SnapGridPosAt(grid.SnapGridCellFor(coords), direction));
-        }
-
-        private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
-        {
-            switch (dir)
-            {
-                case Direction.East:
-                    return position + new Vector2i(dist, 0);
-                case Direction.SouthEast:
-                    return position + new Vector2i(dist, -dist);
-                case Direction.South:
-                    return position + new Vector2i(0, -dist);
-                case Direction.SouthWest:
-                    return position + new Vector2i(-dist, -dist);
-                case Direction.West:
-                    return position + new Vector2i(-dist, 0);
-                case Direction.NorthWest:
-                    return position + new Vector2i(-dist, dist);
-                case Direction.North:
-                    return position + new Vector2i(0, dist);
-                case Direction.NorthEast:
-                    return position + new Vector2i(dist, dist);
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
-        public static IEnumerable<SnapGridComponent> GetCardinalNeighborCells(IMapGrid grid, EntityCoordinates coords)
-        {
-            var position = grid.SnapGridCellFor(coords);
-            foreach (var cell in grid.GetSnapGridCell(position))
-                yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(0, 1)))
-                yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(0, -1)))
-                yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(1, 0)))
-                yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(-1, 0)))
-                yield return cell;
-        }
-
-        public static IEnumerable<SnapGridComponent> GetCellsInSquareArea(IMapGrid grid, EntityCoordinates coords, int n)
-        {
-            var position = grid.SnapGridCellFor(coords);
-
-            for (var y = -n; y <= n; ++y)
-            for (var x = -n; x <= n; ++x)
-            {
-                foreach (var cell in grid.GetSnapGridCell(position + new Vector2i(x, y)))
-                {
-                    yield return cell;
-                }
-            }
-        }
     }
 }

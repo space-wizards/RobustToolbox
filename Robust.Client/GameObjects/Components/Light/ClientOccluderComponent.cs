@@ -77,7 +77,7 @@ namespace Robust.Client.GameObjects
             {
                 var grid = _mapManager.GetGrid(Owner.Transform.GridID);
                 var position = Owner.Transform.Coordinates;
-                foreach (var neighbor in MapGrid.GetInDir(grid, position, dir))
+                foreach (var neighbor in grid.GetInDir(position, dir))
                 {
                     if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
                     {

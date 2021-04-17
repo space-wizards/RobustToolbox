@@ -87,10 +87,10 @@ namespace Robust.Client.GameObjects
                 var coords = sender.Transform.Coordinates;
 
                 _dirtyEntities.Enqueue(sender);
-                AddValidEntities(MapGrid.GetInDir(grid1, coords, Direction.North));
-                AddValidEntities(MapGrid.GetInDir(grid1, coords, Direction.South));
-                AddValidEntities(MapGrid.GetInDir(grid1, coords, Direction.East));
-                AddValidEntities(MapGrid.GetInDir(grid1, coords, Direction.West));
+                AddValidEntities(grid1.GetInDir(coords, Direction.North));
+                AddValidEntities(grid1.GetInDir(coords, Direction.South));
+                AddValidEntities(grid1.GetInDir(coords, Direction.East));
+                AddValidEntities(grid1.GetInDir(coords, Direction.West));
             }
 
             // Entity is no longer valid, update around the last position it was at.

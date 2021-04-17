@@ -127,6 +127,16 @@ namespace Robust.Shared.Map
         void RemoveFromSnapGridCell(Vector2i pos, SnapGridComponent snap);
         void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);
 
+        /// <summary>
+        ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
+        /// </summary>
+        IEnumerable<IEntity> GetInDir(EntityCoordinates position, Direction dir);
+        IEnumerable<IEntity> GetOffset(EntityCoordinates coords, Vector2i offset);
+        IEnumerable<IEntity> GetLocal(EntityCoordinates coords);
+        EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction);
+        IEnumerable<SnapGridComponent> GetCardinalNeighborCells(EntityCoordinates coords);
+        IEnumerable<SnapGridComponent> GetCellsInSquareArea(EntityCoordinates coords, int n);
+
         #endregion SnapGridAccess
 
         #region Transforms

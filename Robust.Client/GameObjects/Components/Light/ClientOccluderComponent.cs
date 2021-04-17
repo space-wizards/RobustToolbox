@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
@@ -8,8 +9,8 @@ namespace Robust.Client.GameObjects
 {
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
-        internal SnapGridComponent? SnapGrid { get; private set; }
-
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        
         [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
@@ -29,10 +30,8 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.TryGetComponent(out SnapGridComponent? snap))
+            if (Owner.HasComponent<SnapGridComponent>())
             {
-                SnapGrid = snap;
-
                 SnapGridOnPositionChanged();
             }
         }
@@ -41,10 +40,11 @@ namespace Robust.Client.GameObjects
         {
             SendDirty();
 
-            if(SnapGrid is null)
+            if(!Owner.HasComponent<SnapGridComponent>())
                 return;
 
-            _lastPosition = (Owner.Transform.GridID, SnapGrid!.Position);
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+            _lastPosition = (Owner.Transform.GridID, grid.SnapGridCellFor(Owner.Transform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -56,7 +56,7 @@ namespace Robust.Client.GameObjects
 
         private void SendDirty()
         {
-            if (SnapGrid != null)
+            if (Owner.HasComponent<SnapGridComponent>())
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));
@@ -67,14 +67,14 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || SnapGrid == null)
+            if (Deleted || !Owner.TryGetComponent<SnapGridComponent>(out var snapGrid))
             {
                 return;
             }
 
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                foreach (var neighbor in SnapGridComponent.GetInDir(SnapGrid, dir))
+                foreach (var neighbor in MapGrid.GetInDir(snapGrid, dir))
                 {
                     if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
                     {

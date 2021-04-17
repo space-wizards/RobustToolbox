@@ -86,10 +86,10 @@ namespace Robust.Client.GameObjects
                 var snapGrid = sender.GetComponent<SnapGridComponent>();
 
                 _dirtyEntities.Enqueue(sender);
-                AddValidEntities(SnapGridComponent.GetInDir(snapGrid, Direction.North));
-                AddValidEntities(SnapGridComponent.GetInDir(snapGrid, Direction.South));
-                AddValidEntities(SnapGridComponent.GetInDir(snapGrid, Direction.East));
-                AddValidEntities(SnapGridComponent.GetInDir(snapGrid, Direction.West));
+                AddValidEntities(MapGrid.GetInDir(snapGrid, Direction.North));
+                AddValidEntities(MapGrid.GetInDir(snapGrid, Direction.South));
+                AddValidEntities(MapGrid.GetInDir(snapGrid, Direction.East));
+                AddValidEntities(MapGrid.GetInDir(snapGrid, Direction.West));
             }
 
             // Entity is no longer valid, update around the last position it was at.

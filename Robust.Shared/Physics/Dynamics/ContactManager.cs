@@ -381,8 +381,6 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                // TODO: When we move this interface onto compbus then just have CollideWith called once with BodyA and BodyB prolly?
-
                 _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
 

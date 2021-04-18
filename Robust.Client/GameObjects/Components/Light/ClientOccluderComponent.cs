@@ -31,7 +31,7 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.HasComponent<SnapGridComponent>())
+            if (Owner.Transform.Anchored)
             {
                 SnapGridOnPositionChanged();
             }
@@ -41,7 +41,7 @@ namespace Robust.Client.GameObjects
         {
             SendDirty();
 
-            if(!Owner.HasComponent<SnapGridComponent>())
+            if(!Owner.Transform.Anchored)
                 return;
 
             var grid = _mapManager.GetGrid(Owner.Transform.GridID);
@@ -57,7 +57,7 @@ namespace Robust.Client.GameObjects
 
         private void SendDirty()
         {
-            if (Owner.HasComponent<SnapGridComponent>())
+            if (Owner.Transform.Anchored)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));

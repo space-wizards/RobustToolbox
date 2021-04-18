@@ -7,7 +7,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A square section of a <see cref="IMapGrid"/>.
     /// </summary>
-    public interface IMapChunk : IEnumerable<TileRef>
+    internal interface IMapChunk : IEnumerable<TileRef>
     {
         /// <summary>
         ///     The number of tiles per side of the square chunk.

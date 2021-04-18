@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    public class SnapGridSystem : EntitySystem
+    internal class SnapGridSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 

@@ -323,7 +323,18 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Anchored => Owner.EntityManager.ComponentManager.HasComponent<SnapGridComponent>(Owner.Uid);
+        public bool Anchored
+        {
+            get => Owner.HasComponent<SnapGridComponent>();
+            set
+            {
+                if(value && !Owner.HasComponent<SnapGridComponent>())
+                    Owner.AddComponent<SnapGridComponent>();
+
+                else if(!value && Owner.HasComponent<SnapGridComponent>())
+                    Owner.RemoveComponent<SnapGridComponent>();
+            }
+        }
 
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>

@@ -106,9 +106,9 @@ namespace Robust.Shared.Map
         IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords);
         IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos);
 
-        Vector2i SnapGridCellFor(EntityCoordinates coords);
-        Vector2i SnapGridCellFor(MapCoordinates worldPos);
-        Vector2i SnapGridCellFor(Vector2 localPos);
+        Vector2i SnapGridCellFor(EntityCoordinates coords) => CoordinatesToTile(coords);
+        Vector2i SnapGridCellFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
+        Vector2i SnapGridCellFor(Vector2 worldPos) => WorldToTile(worldPos);
 
         void AddToSnapGridCell(Vector2i pos, SnapGridComponent snap);
         void AddToSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);

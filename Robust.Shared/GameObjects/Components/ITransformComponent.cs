@@ -129,7 +129,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Is this transform anchored to a grid tile?
         /// </summary>
-        bool Anchored { get; }
+        bool Anchored { get; set; }
+
         Matrix3 GetLocalMatrix();
         Matrix3 GetLocalMatrixInv();
         void DetachParentToNull();

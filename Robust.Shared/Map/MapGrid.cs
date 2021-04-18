@@ -351,7 +351,7 @@ namespace Robust.Shared.Map
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
-            return SnapGridCellFor(local);
+            return SnapGridLocalCellFor(local);
         }
 
         /// <inheritdoc />
@@ -360,11 +360,10 @@ namespace Robust.Shared.Map
             DebugTools.Assert(ParentMapId == worldPos.MapId);
 
             var localPos = WorldToLocal(worldPos.Position);
-            return SnapGridCellFor(localPos);
+            return SnapGridLocalCellFor(localPos);
         }
 
-        /// <inheritdoc />
-        public Vector2i SnapGridCellFor(Vector2 localPos)
+        public Vector2i SnapGridLocalCellFor(Vector2 localPos)
         {
             var x = (int)Math.Floor(localPos.X / TileSize);
             var y = (int)Math.Floor(localPos.Y / TileSize);
@@ -530,6 +529,8 @@ namespace Robust.Shared.Map
         /// </summary>
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);

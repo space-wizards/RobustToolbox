@@ -10,6 +10,7 @@ namespace Robust.UnitTesting
     {
         public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
         public GameControllerOptions Options { get; } = new();
+        public bool ContentStart { get; set; }
 
         public void Shutdown(string? reason = null)
         {

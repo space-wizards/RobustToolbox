@@ -66,13 +66,12 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
-        private bool _contentStart;
 
         // Arguments for loader-load. Not used otherwise.
         private IMainArgs? _loaderArgs;
 
+        public bool ContentStart { get; set; } = false;
         public GameControllerOptions Options { get; private set; } = new();
-
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
         public bool LoadConfigAndUserData { get; set; } = true;
@@ -89,7 +88,7 @@ namespace Robust.Client
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
-            _modLoader.SetUseLoadContext(!_contentStart);
+            _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
             if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), Options.ContentModulePrefix))
@@ -200,7 +199,7 @@ namespace Robust.Client
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
             ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
-                _loaderArgs != null && !Options.ResourceMountDisabled, _contentStart);
+                _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
             if (_loaderArgs != null)
             {

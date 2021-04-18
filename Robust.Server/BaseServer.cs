@@ -434,7 +434,7 @@ namespace Robust.Server
             _shutdownEvent.Set();
         }
 
-        public bool ContentStart { private get; set; }
+        public bool ContentStart { get; set; }
         public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)

@@ -8,6 +8,7 @@ namespace Robust.Client
     internal interface IGameControllerInternal : IGameController
     {
         GameControllerOptions Options { get; }
+        bool ContentStart { get; set; }
         void SetCommandLineArgs(CommandLineArgs args);
         bool LoadConfigAndUserData { get; set; }
         bool Startup(Func<ILogHandler>? logHandlerFactory = null);

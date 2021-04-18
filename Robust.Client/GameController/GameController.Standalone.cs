@@ -51,7 +51,7 @@ namespace Robust.Client
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.
             // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
-            gc._contentStart = contentStart;
+            gc.ContentStart = contentStart;
             if (!gc.Startup())
             {
                 Logger.Fatal("Failed to start game controller!");

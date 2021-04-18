@@ -497,7 +497,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: This seems completely unfit by lacking things like rotation handling.
             return Box2.CenteredAround(eye.Position.Position,
-                viewport.Size / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+                viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

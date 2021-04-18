@@ -74,15 +74,13 @@ namespace Robust.Client.Graphics.Clyde
                     RenderViewport(viewport);
             }
 
-            TakeScreenshot(ScreenshotType.BeforeUI);
-
             using (DebugGroup("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);
                 FlushRenderQueue();
             }
 
-            TakeScreenshot(ScreenshotType.AfterUI);
+            TakeScreenshot(ScreenshotType.Final);
 
             // And finally, swap those buffers!
             SwapBuffers();

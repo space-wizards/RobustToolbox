@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -12,10 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -56,13 +52,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
-
-        private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
-            = new();
-
-        private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
-            _transferringScreenshots
-                = new();
 
         public Clyde()
         {
@@ -149,11 +138,6 @@ namespace Robust.Client.Graphics.Clyde
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
 
         public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
-
-        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
-        {
-            _queuedScreenshots.Add((type, callback));
-        }
 
         private void InitOpenGL()
         {

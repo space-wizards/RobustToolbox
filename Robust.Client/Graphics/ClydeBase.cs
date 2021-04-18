@@ -85,5 +85,12 @@ namespace Robust.Client.Graphics
         protected virtual void SoftShadowsChanged(bool newValue)
         {
         }
+
+        protected static Vector2i ClampSubRegion(Vector2i size, UIBox2i? subRegionSpecified)
+        {
+            return subRegionSpecified == null
+                ? size
+                : UIBox2i.FromDimensions(Vector2i.Zero, size).Intersection(subRegionSpecified.Value)?.Size ?? default;
+        }
     }
 }

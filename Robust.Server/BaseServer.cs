@@ -254,9 +254,12 @@ namespace Robust.Server
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server");
+            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server", contentStart:ContentStart);
 
-            _modLoader.SetUseLoadContext(!DisableLoadContext);
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
+            _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(false);
 
             if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
@@ -431,7 +434,7 @@ namespace Robust.Server
             _shutdownEvent.Set();
         }
 
-        public bool DisableLoadContext { private get; set; }
+        public bool ContentStart { private get; set; }
         public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)

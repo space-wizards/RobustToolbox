@@ -357,6 +357,7 @@ namespace Robust.UnitTesting
 
                     var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                     server.ContentStart = _options?.ContentStart ?? false;
+                    Logger.Info($"Options: {_options} ContentStart: {server.ContentStart}");
                     if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
                     {
                         throw new Exception("Server failed to start.");

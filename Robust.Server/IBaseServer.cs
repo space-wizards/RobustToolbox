@@ -44,7 +44,7 @@ namespace Robust.Server
 
     internal interface IBaseServerInternal : IBaseServer
     {
-        bool ContentStart { set; }
+        bool ContentStart { get; set; }
         bool LoadConfigAndUserData { set; }
 
         void OverrideMainLoop(IGameLoop gameLoop);

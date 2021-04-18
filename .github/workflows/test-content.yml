@@ -31,6 +31,7 @@ jobs:
         git fetch origin ${{ github.sha }}
         git checkout FETCH_HEAD
         git submodule update --init --recursive
+        cd ..
     - name: Install dependencies
       run: dotnet restore
     - name: Build

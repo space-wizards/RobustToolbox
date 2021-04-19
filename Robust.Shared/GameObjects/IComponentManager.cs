@@ -112,7 +112,8 @@ namespace Robust.Shared.GameObjects
         bool HasComponent(EntityUid uid, Type type);
 
         /// <summary>
-        ///     Checks if the entity has a component with a given network ID.
+        ///     Checks if the entity has a component with a given network ID. This does not check
+        ///     if the component is deleted.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="netId">Network ID to check for.</param>
@@ -136,7 +137,8 @@ namespace Robust.Shared.GameObjects
         IComponent GetComponent(EntityUid uid, Type type);
 
         /// <summary>
-        ///     Returns the component with a specific network ID.
+        ///     Returns the component with a specific network ID. This does not check
+        ///     if the component is deleted.
         /// </summary>
         /// <param name="uid">Entity UID to look on.</param>
         /// <param name="netId">Network ID of the component to retrieve.</param>
@@ -162,7 +164,8 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
-        ///     Returns the component with a specified network ID.
+        ///     Returns the component with a specified network ID. This does not check
+        ///     if the component is deleted.
         /// </summary>
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="netId">Component Network ID to check for.</param>

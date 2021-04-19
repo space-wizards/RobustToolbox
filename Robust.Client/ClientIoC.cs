@@ -14,6 +14,7 @@ using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -27,6 +28,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 
 namespace Robust.Client
 {
@@ -36,8 +38,14 @@ namespace Robust.Client
         {
             SharedIoC.RegisterIoC();
 
+            IoCManager.Register<IGameTiming, ClientGameTiming>();
+            IoCManager.Register<IClientGameTiming, ClientGameTiming>();
             IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
+            IoCManager.Register<IMapManager, ClientMapManager>();
+            IoCManager.Register<IMapManagerInternal, ClientMapManager>();
+            IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
+            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
@@ -50,7 +58,8 @@ namespace Robust.Client
             IoCManager.Register<IResourceCacheInternal, ResourceCache>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+            IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
+            IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();
             IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
             IoCManager.Register<IBaseClient, BaseClient>();
             IoCManager.Register<IPlayerManager, PlayerManager>();

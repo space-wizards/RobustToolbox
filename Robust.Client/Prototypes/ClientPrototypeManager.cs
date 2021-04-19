@@ -19,6 +19,7 @@ namespace Robust.Client.Prototypes
     public sealed class ClientPrototypeManager : PrototypeManager
     {
         [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly INetManager _netManager = default!;
 
         private readonly List<FileSystemWatcher> _watchers = new();
         private readonly TimeSpan _reloadDelay = TimeSpan.FromMilliseconds(10);
@@ -29,7 +30,7 @@ namespace Robust.Client.Prototypes
         {
             base.Initialize();
 
-            NetManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, accept: NetMessageAccept.Server);
+            _netManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, accept: NetMessageAccept.Server);
 
             _clyde.OnWindowFocused += WindowFocusedChanged;
 
@@ -56,9 +57,9 @@ namespace Robust.Client.Prototypes
 #if !FULL_RELEASE
             var sw = Stopwatch.StartNew();
 
-            var msg = NetManager.CreateNetMessage<MsgReloadPrototypes>();
+            var msg = _netManager.CreateNetMessage<MsgReloadPrototypes>();
             msg.Paths = _reloadQueue.ToArray();
-            NetManager.ClientSendMessage(msg);
+            _netManager.ClientSendMessage(msg);
 
             ReloadPrototypes(_reloadQueue);
 

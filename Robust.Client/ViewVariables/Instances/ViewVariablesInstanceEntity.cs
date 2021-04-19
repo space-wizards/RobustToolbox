@@ -41,7 +41,7 @@ namespace Robust.Client.ViewVariables.Instances
         private TabContainer _tabs = default!;
         private IEntity _entity = default!;
 
-        private ViewVariablesAddComponentWindow? _addComponentWindow;
+        private ViewVariablesAddWindow? _addComponentWindow;
         private bool _addComponentServer;
 
         private ViewVariablesRemoteSession? _entitySession;
@@ -336,8 +336,8 @@ namespace Robust.Client.ViewVariables.Instances
         {
             _addComponentWindow?.Dispose();
 
-            _addComponentWindow = new ViewVariablesAddComponentWindow(GetValidComponentsForAdding(), false);
-            _addComponentWindow.AddComponentButtonPressed += OnTryAddComponent;
+            _addComponentWindow = new ViewVariablesAddWindow(GetValidComponentsForAdding(), "Add Component [C]");
+            _addComponentWindow.AddButtonPressed += TryAdd;
             _addComponentServer = false;
 
             _addComponentWindow.OpenCentered();
@@ -349,8 +349,8 @@ namespace Robust.Client.ViewVariables.Instances
 
             if (_entitySession == null) return;
 
-            _addComponentWindow = new ViewVariablesAddComponentWindow(await GetValidServerComponentsForAdding(), true);
-            _addComponentWindow.AddComponentButtonPressed += OnTryAddComponent;
+            _addComponentWindow = new ViewVariablesAddWindow(await GetValidServerComponentsForAdding(), "Add Component [S]");
+            _addComponentWindow.AddButtonPressed += TryAdd;
             _addComponentServer = true;
 
             _addComponentWindow.OpenCentered();
@@ -383,12 +383,12 @@ namespace Robust.Client.ViewVariables.Instances
             return blob.ComponentTypes;
         }
 
-        private async void OnTryAddComponent(ViewVariablesAddComponentWindow.AddComponentButtonPressedEventArgs eventArgs)
+        private async void TryAdd(ViewVariablesAddWindow.AddButtonPressedEventArgs eventArgs)
         {
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity.Uid} {eventArgs.Component}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity.Uid} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;
@@ -396,7 +396,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
 
-            if(!componentFactory.TryGetRegistration(eventArgs.Component, out var registration)) return;
+            if(!componentFactory.TryGetRegistration(eventArgs.Entry, out var registration)) return;
 
             try
             {
@@ -501,7 +501,7 @@ namespace Robust.Client.ViewVariables.Instances
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
                     var editor = propertyEdit.SetProperty(propertyData);
                     var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
-                    editor.OnValueChanged += o => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o);
+                    editor.OnValueChanged += (o, r) => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o, r);
                     editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);
 
                     _serverVariables.AddChild(propertyEdit);

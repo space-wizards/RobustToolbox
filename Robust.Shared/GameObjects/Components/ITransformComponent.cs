@@ -118,8 +118,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         GridId GridID { get; }
 
-        bool UpdateEntityTree(Box2? worldAABB = null);
-
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);

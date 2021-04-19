@@ -1,20 +1,27 @@
+using JetBrains.Annotations;
+
 namespace Robust.Shared.GameObjects
 {
+    [UsedImplicitly]
     public class SnapGridSystem : EntitySystem
     {
         public override void Initialize()
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MoveEvent>(OnMoveEvent);
+            SubscribeLocalEvent<SnapGridComponent, MoveEvent>(OnMoveEvent);
         }
 
-        private void OnMoveEvent(MoveEvent @event)
+        public override void Shutdown()
         {
-            if (@event.Sender.TryGetComponent(out SnapGridComponent? snapGrid))
-            {
-                snapGrid.UpdatePosition();
-            }
+            base.Shutdown();
+
+            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>(OnMoveEvent);
+        }
+
+        private void OnMoveEvent(EntityUid uid, SnapGridComponent snapGrid, MoveEvent args)
+        {
+            snapGrid.UpdatePosition();
         }
     }
 }

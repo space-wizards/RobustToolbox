@@ -219,6 +219,9 @@ namespace Robust.Server.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+            UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<EntityInitializedMessage>();
+            UnsubscribeLocalEvent<EntityDeletedMessage>();
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.TileChanged -= HandleTileChanged;
@@ -239,12 +242,12 @@ namespace Robust.Server.GameObjects
             GetOrCreateNode(eventArgs.NewTile.GridIndex, eventArgs.NewTile.GridIndices);
         }
 
-        private void HandleGridCreated(GridId gridId)
+        private void HandleGridCreated(MapId mapId, GridId gridId)
         {
             _graph[gridId] = new Dictionary<Vector2i, GridTileLookupChunk>();
         }
 
-        private void HandleGridRemoval(GridId gridId)
+        private void HandleGridRemoval(MapId mapId, GridId gridId)
         {
             var toRemove = new List<IEntity>();
 

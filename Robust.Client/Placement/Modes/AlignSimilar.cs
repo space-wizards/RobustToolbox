@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -28,7 +30,7 @@ namespace Robust.Client.Placement.Modes
 
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
 
-            var snapToEntities = pManager.EntityManager.GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = IoCManager.Resolve<IEntityLookup>().GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapId)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();

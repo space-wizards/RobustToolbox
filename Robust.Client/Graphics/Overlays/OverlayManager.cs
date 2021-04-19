@@ -87,11 +87,11 @@ namespace Robust.Client.Graphics
         public bool HasOverlay(Type overlayClass) {
             if (!overlayClass.IsSubclassOf(typeof(Overlay)))
                 Logger.Error("HasOverlay was called with arg: " + overlayClass.ToString() + ", which is not a subclass of Overlay!");
-            return _overlays.Remove(overlayClass);
+            return _overlays.ContainsKey(overlayClass);
         }
 
         public bool HasOverlay<T>() where T : Overlay  {
-            return _overlays.Remove(typeof(T));
+            return _overlays.ContainsKey(typeof(T));
         }
 
     }

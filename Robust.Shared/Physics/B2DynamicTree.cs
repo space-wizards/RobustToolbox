@@ -915,6 +915,41 @@ namespace Robust.Shared.Physics
             }
         }
 
+        public delegate void FastQueryCallback(ref T userData);
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        public void FastQuery(ref Box2 aabb, FastQueryCallback callback)
+        {
+            var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+            stack.Push(_root);
+
+            ref var baseRef = ref _nodes[0];
+            while (stack.GetCount() != 0)
+            {
+                var nodeId = stack.Pop();
+                if (nodeId == Proxy.Free)
+                {
+                    continue;
+                }
+
+                // Skip bounds check with Unsafe.Add().
+                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
+                ref var nodeAabb = ref node.Aabb;
+                if (nodeAabb.Intersects(aabb))
+                {
+                    if (node.IsLeaf)
+                    {
+                        callback(ref node.UserData);
+                    }
+                    else
+                    {
+                        stack.Push(node.Child1);
+                        stack.Push(node.Child2);
+                    }
+                }
+            }
+        }
+
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
             (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Initially based on Box2D by Erin Catto, license follows;
  *
  * Copyright (c) 2009 Erin Catto http://www.box2d.org
@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics
 
         // avoids "Collection was modified; enumeration operation may not execute."
         private Dictionary<T, Proxy> _nodeLookup;
-        private readonly B2DynamicTree<T> _b2Tree;
+        public readonly B2DynamicTree<T> _b2Tree;
 
         public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null)
         {
@@ -132,15 +132,15 @@ namespace Robust.Shared.Physics
                 return false;
             }
 
-            var box = _extractAabb(item);
+            aabb ??= _extractAabb(item);
 
-            if (CheckNaNs(box))
+            if (CheckNaNs(aabb.Value))
             {
                 _nodeLookup[item] = Proxy.Free;
                 return true;
             }
 
-            proxy = _b2Tree.CreateProxy(box, item);
+            proxy = _b2Tree.CreateProxy(aabb.Value, item);
             _nodeLookup[item] = proxy;
 
             return true;

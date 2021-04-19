@@ -49,6 +49,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientConsoleHost _console = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
@@ -121,6 +122,7 @@ namespace Robust.Client
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
+            IoCManager.Resolve<IEntityLookup>().Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
@@ -295,10 +297,17 @@ namespace Robust.Client
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 
-            // GameStateManager is in full control of the simulation update.
-            if (_client.RunLevel >= ClientRunLevel.Connected)
+            // GameStateManager is in full control of the simulation update in multiplayer.
+            if (_client.RunLevel == ClientRunLevel.InGame || _client.RunLevel == ClientRunLevel.Connected)
             {
                 _gameStateManager.ApplyGameState();
+            }
+
+            // In singleplayer, however, we're in full control instead.
+            else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
+            {
+                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds);
+                _lookup.Update();
             }
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
@@ -319,11 +328,6 @@ namespace Robust.Client
             _overlayManager.FrameUpdate(frameEventArgs);
             _userInterfaceManager.FrameUpdate(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
-        }
-
-        private void Render()
-        {
-
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
@@ -402,6 +406,7 @@ namespace Robust.Client
         {
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
+            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
         }

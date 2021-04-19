@@ -297,7 +297,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLHandle MakeQuadVao()
         {
             var vao = new GLHandle(GenVertexArray());
-            BindVertexArray(QuadVAO.Handle);
+            BindVertexArray(vao.Handle);
             ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, nameof(QuadVAO));
             GL.BindBuffer(BufferTarget.ArrayBuffer, QuadVBO.ObjectHandle);
             // Vertex Coords

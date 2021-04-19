@@ -3,6 +3,9 @@ using JetBrains.Annotations;
 using Robust.Shared.Timing;
 using Robust.Shared.Enums;
 using System;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics
 {
@@ -54,9 +57,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         /// Draws this overlay to the current space.
         /// </summary>
-        /// <param name="handle">Current drawing handle that the overlay should be drawing with. Do not hold a reference to this in the overlay.</param>
-        /// <param name="currentSpace">Current space that is being drawn. This function is called for every space that was set up in initialization.</param>
-        protected abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
+        protected internal abstract void Draw(in OverlayDrawArgs args);
 
         protected internal virtual void FrameUpdate(FrameEventArgs args) { }
 
@@ -65,7 +66,7 @@ namespace Robust.Client.Graphics
         }
 
         public void Dispose() {
-            if (Disposed) 
+            if (Disposed)
                 return;
             else
                 DisposeBehavior();
@@ -77,15 +78,28 @@ namespace Robust.Client.Graphics
         }
 
 
-        internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
+        internal void ClydeRender(
+            IRenderHandle renderHandle,
+            OverlaySpace currentSpace,
+            IViewportControl? vpControl,
+            IClydeViewport vp,
+            in UIBox2i screenBox,
+            in Box2 worldBox)
         {
             DrawingHandleBase handle;
             if (currentSpace == OverlaySpace.ScreenSpace || currentSpace == OverlaySpace.ScreenSpaceBelowWorld)
+            {
+                DebugTools.AssertNotNull(vpControl);
                 handle = renderHandle.DrawingHandleScreen;
+            }
             else
+            {
                 handle = renderHandle.DrawingHandleWorld;
+            }
 
-            Draw(handle, currentSpace);
+            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox, worldBox);
+
+            Draw(args);
         }
     }
 }

@@ -452,24 +452,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private static void FlipCopyScreenshot(ReadOnlySpan<Rgba32> srcSpan, Span<Rgb24> dstSpan, int w, int h)
-        {
-            var dr = h - 1;
-            for (var r = 0; r < h; r++, dr--)
-            {
-                var si = r * w;
-                var di = dr * w;
-                var srcRow = srcSpan[si..(si + w)];
-                var dstRow = dstSpan[di..(di + w)];
-
-                for (var x = 0; x < w; x++)
-                {
-                    var src = srcRow[x];
-                    dstRow[x] = new Rgb24(src.R, src.G, src.B);
-                }
-            }
-        }
-
         private static Image<Rgba32> ApplyA8Swizzle(Image<A8> source)
         {
             var newImage = new Image<Rgba32>(source.Width, source.Height);

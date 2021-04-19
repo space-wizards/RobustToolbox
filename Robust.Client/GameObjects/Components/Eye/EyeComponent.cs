@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
         [DataField("drawFov")]
         private bool _setDrawFovOnInitialize = true;
         [DataField("zoom")]
-        private Vector2 _setZoomOnInitialize = Vector2.One/2f;
+        private Vector2 _setZoomOnInitialize = Vector2.One;
         private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;

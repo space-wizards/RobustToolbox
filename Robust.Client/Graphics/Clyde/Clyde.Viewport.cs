@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Enums;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -10,7 +13,7 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<ClydeHandle, WeakReference<Viewport>> _viewports =
             new();
 
-        private Viewport CreateViewport(Vector2i size, string? name = null)
+        private Viewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters = default, string? name = null)
         {
             var handle = AllocRid();
             var viewport = new Viewport(handle, name, this)
@@ -18,6 +21,7 @@ namespace Robust.Client.Graphics.Clyde
                 Size = size,
                 RenderTarget = CreateRenderTarget(size,
                     new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                    sampleParameters: sampleParameters,
                     name: $"{name}-MainRenderTarget")
             };
 
@@ -28,9 +32,9 @@ namespace Robust.Client.Graphics.Clyde
             return viewport;
         }
 
-        IClydeViewport IClyde.CreateViewport(Vector2i size, string? name)
+        IClydeViewport IClyde.CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name)
         {
-            return CreateViewport(size, name);
+            return CreateViewport(size, sampleParameters, name);
         }
 
         private static Vector2 ScreenToMap(Vector2 point, Viewport vp)
@@ -45,7 +49,7 @@ namespace Robust.Client.Graphics.Clyde
             point *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
 
             // view matrix
-            vp.Eye.GetViewMatrixInv(out var viewMatrixInv);
+            vp.Eye.GetViewMatrixInv(out var viewMatrixInv, vp.RenderScale);
             point = viewMatrixInv * point;
 
             return point;
@@ -106,10 +110,64 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; set; }
+            public Vector2 RenderScale { get; set; } = Vector2.One;
+            public bool AutomaticRender { get; set; }
 
             void IClydeViewport.Render()
             {
                 _clyde.RenderViewport(this);
+            }
+
+            public MapCoordinates LocalToWorld(Vector2 point)
+            {
+                if (Eye == null)
+                    return default;
+
+                var newPoint = point;
+
+                // (inlined version of UiProjMatrix^-1)
+                newPoint -= Size / 2f;
+                newPoint *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
+
+                // view matrix
+                Eye.GetViewMatrixInv(out var viewMatrixInv, RenderScale);
+                newPoint = viewMatrixInv * newPoint;
+
+                return new MapCoordinates(newPoint, Eye.Position.MapId);
+            }
+
+            public Vector2 WorldToLocal(Vector2 point)
+            {
+                if (Eye == null)
+                    return default;
+
+                var eye = (IEye) Eye;
+                var newPoint = point;
+
+                eye.GetViewMatrix(out var viewMatrix, RenderScale);
+                newPoint = viewMatrix * newPoint;
+
+                // (inlined version of UiProjMatrix)
+                newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+                newPoint += Size / 2f;
+
+                return newPoint;
+            }
+
+            public void RenderScreenOverlaysBelow(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpaceBelowWorld, viewportBounds);
+            }
+
+            public void RenderScreenOverlaysAbove(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                _clyde.RenderOverlaysDirect(this, control, handle, OverlaySpace.ScreenSpace, viewportBounds);
             }
 
             public void Dispose()

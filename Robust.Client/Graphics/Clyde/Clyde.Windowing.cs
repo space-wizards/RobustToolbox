@@ -975,37 +975,51 @@ namespace Robust.Client.Graphics.Clyde
             public Action<WindowClosedEventArgs>? Closed;
         }
 
-        private sealed record WindowHandle(Clyde Clyde, WindowReg Reg) : IClydeWindow
+        private sealed class WindowHandle : IClydeWindow
         {
+            // So funny story
+            // When this class was a record, the C# compiler on .NET 5 stack overflowed
+            // while compiling the Closed event.
+            // VERY funny.
+
+            private readonly Clyde _clyde;
+            private readonly WindowReg _reg;
+
             public bool IsDisposed { get; set; }
+
+            public WindowHandle(Clyde clyde, WindowReg reg)
+            {
+                _clyde = clyde;
+                _reg = reg;
+            }
 
             public void Dispose()
             {
             }
 
-            public Vector2i Size => Reg.FramebufferSize;
+            public Vector2i Size => _reg.FramebufferSize;
             public IRenderTarget RenderTarget
             {
                 get
                 {
-                    if (Reg.IsMainWindow)
+                    if (_reg.IsMainWindow)
                     {
-                        return Clyde._mainMainWindowRenderMainTarget;
+                        return _clyde._mainMainWindowRenderMainTarget;
                     }
 
-                    return Reg.RenderTexture!;
+                    return _reg.RenderTexture!;
                 }
             }
 
-            public string Title { get => Reg.Title; set => Clyde.SetWindowTitle(Reg, value); }
-            public bool IsFocused => Reg.IsFocused;
-            public bool IsMinimized => Reg.IsMinimized;
-            public bool IsVisible { get => Reg.IsVisible; set => SetWindowVisible(Reg, value); }
+            public string Title { get => _reg.Title; set => _clyde.SetWindowTitle(_reg, value); }
+            public bool IsFocused => _reg.IsFocused;
+            public bool IsMinimized => _reg.IsMinimized;
+            public bool IsVisible { get => _reg.IsVisible; set => SetWindowVisible(_reg, value); }
 
             public event Action<WindowClosedEventArgs> Closed
             {
-                add => Reg.Closed += value;
-                remove => Reg.Closed -= value;
+                add => _reg.Closed += value;
+                remove => _reg.Closed -= value;
             }
         }
 

@@ -563,6 +563,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderTarget = renderTarget;
             }
 
+            public Vector2i Size { get; } = default;
             public bool IsDisposed { get; private set; }
             public IRenderTarget RenderTarget { get; }
             public string Title { get; set; } = "";

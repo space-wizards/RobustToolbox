@@ -333,20 +333,20 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords)
+        public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
         {
-            return GetSnapGridCell(SnapGridCellFor(coords));
+            return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos)
+        public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
             return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(EntityCoordinates coords)
+        public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
@@ -355,7 +355,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(MapCoordinates worldPos)
+        public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
             DebugTools.Assert(ParentMapId == worldPos.MapId);
 
@@ -363,7 +363,7 @@ namespace Robust.Shared.Map
             return SnapGridLocalCellFor(localPos);
         }
 
-        public Vector2i SnapGridLocalCellFor(Vector2 localPos)
+        private Vector2i SnapGridLocalCellFor(Vector2 localPos)
         {
             var x = (int)Math.Floor(localPos.X / TileSize);
             var y = (int)Math.Floor(localPos.Y / TileSize);
@@ -371,29 +371,29 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(Vector2i pos, SnapGridComponent snap)
+        public void AddToSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, snap);
+            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridComponent snap)
+        public void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
-            AddToSnapGridCell(SnapGridCellFor(coords), snap);
+            AddToSnapGridCell(TileIndicesFor(coords), euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(Vector2i pos, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, snap);
+            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort) chunkTile.Y, euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
-            RemoveFromSnapGridCell(SnapGridCellFor(coords), snap);
+            RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
         private (IMapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
@@ -430,56 +430,56 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetInDir(EntityCoordinates position, Direction dir)
+        public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
         {
-            var pos = SnapGridPosAt(SnapGridCellFor(position), dir);
-            return GetSnapGridCell(pos).Select(s => s.Owner);
+            var pos = SnapGridPosAt(TileIndicesFor(position), dir);
+            return GetAnchoredEntities(pos);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetOffset(EntityCoordinates coords, Vector2i offset)
+        public IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset)
         {
-            var pos = SnapGridCellFor(coords) + offset;
-            return GetSnapGridCell(pos).Select(s => s.Owner);
+            var pos = TileIndicesFor(coords) + offset;
+            return GetAnchoredEntities(pos);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetLocal(EntityCoordinates coords)
+        public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
         {
-            return GetSnapGridCell(SnapGridCellFor(coords)).Select(s => s.Owner);
+            return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
         /// <inheritdoc />
         public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
         {
-            return GridTileToLocal(SnapGridPosAt(SnapGridCellFor(coords), direction));
+            return GridTileToLocal(SnapGridPosAt(TileIndicesFor(coords), direction));
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetCardinalNeighborCells(EntityCoordinates coords)
+        public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
         {
-            var position = SnapGridCellFor(coords);
-            foreach (var cell in GetSnapGridCell(position))
+            var position = TileIndicesFor(coords);
+            foreach (var cell in GetAnchoredEntities(position))
                 yield return cell;
-            foreach (var cell in GetSnapGridCell(position + new Vector2i(0, 1)))
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(0, 1)))
                 yield return cell;
-            foreach (var cell in GetSnapGridCell(position + new Vector2i(0, -1)))
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(0, -1)))
                 yield return cell;
-            foreach (var cell in GetSnapGridCell(position + new Vector2i(1, 0)))
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(1, 0)))
                 yield return cell;
-            foreach (var cell in GetSnapGridCell(position + new Vector2i(-1, 0)))
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(-1, 0)))
                 yield return cell;
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetCellsInSquareArea(EntityCoordinates coords, int n)
+        public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
         {
-            var position = SnapGridCellFor(coords);
+            var position = TileIndicesFor(coords);
 
             for (var y = -n; y <= n; ++y)
                 for (var x = -n; x <= n; ++x)
                 {
-                    foreach (var cell in GetSnapGridCell(position + new Vector2i(x, y)))
+                    foreach (var cell in GetAnchoredEntities(position + new Vector2i(x, y)))
                     {
                         yield return cell;
                     }

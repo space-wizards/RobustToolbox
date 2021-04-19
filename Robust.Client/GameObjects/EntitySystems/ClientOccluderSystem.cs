@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -20,7 +21,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Queue<IEntity> _dirtyEntities = new();
+        private readonly Queue<EntityUid> _dirtyEntities = new();
 
         private uint _updateGeneration;
 
@@ -60,8 +61,8 @@ namespace Robust.Client.GameObjects
 
             while (_dirtyEntities.TryDequeue(out var entity))
             {
-                if (!entity.Deleted
-                    && entity.TryGetComponent(out ClientOccluderComponent? occluder)
+                if (EntityManager.EntityExists(entity)
+                    && ComponentManager.TryGetComponent(entity, out ClientOccluderComponent? occluder)
                     && occluder.UpdateGeneration != _updateGeneration)
                 {
                     occluder.Update();
@@ -86,7 +87,7 @@ namespace Robust.Client.GameObjects
                 var grid1 = _mapManager.GetGrid(sender.Transform.GridID);
                 var coords = sender.Transform.Coordinates;
 
-                _dirtyEntities.Enqueue(sender);
+                _dirtyEntities.Enqueue(sender.Uid);
                 AddValidEntities(grid1.GetInDir(coords, Direction.North));
                 AddValidEntities(grid1.GetInDir(coords, Direction.South));
                 AddValidEntities(grid1.GetInDir(coords, Direction.East));
@@ -98,27 +99,22 @@ namespace Robust.Client.GameObjects
             {
                 var pos = ev.LastPosition.Value.pos;
 
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(1, 0)));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(-1, 0)));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, 1)));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, -1)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(1, 0)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(-1, 0)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, 1)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, -1)));
             }
         }
 
-        private void AddValidEntities(IEnumerable<IEntity> candidates)
+        private void AddValidEntities(IEnumerable<EntityUid> candidates)
         {
             foreach (var entity in candidates)
             {
-                if (entity.HasComponent<ClientOccluderComponent>())
+                if (ComponentManager.HasComponent<ClientOccluderComponent>(entity))
                 {
                     _dirtyEntities.Enqueue(entity);
                 }
             }
-        }
-
-        private void AddValidEntities(IEnumerable<IComponent> candidates)
-        {
-            AddValidEntities(candidates.Select(c => c.Owner));
         }
     }
 

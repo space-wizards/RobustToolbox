@@ -103,27 +103,27 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords);
-        IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos);
+        IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
 
-        Vector2i SnapGridCellFor(EntityCoordinates coords) => CoordinatesToTile(coords);
-        Vector2i SnapGridCellFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
-        Vector2i SnapGridCellFor(Vector2 worldPos) => WorldToTile(worldPos);
+        Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
+        Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
+        Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);
 
-        void AddToSnapGridCell(Vector2i pos, SnapGridComponent snap);
-        void AddToSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(Vector2i pos, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridComponent snap);
+        void AddToSnapGridCell(Vector2i pos, EntityUid euid);
+        void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
+        void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid);
+        void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid);
 
         /// <summary>
         ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
         /// </summary>
-        IEnumerable<IEntity> GetInDir(EntityCoordinates position, Direction dir);
-        IEnumerable<IEntity> GetOffset(EntityCoordinates coords, Vector2i offset);
-        IEnumerable<IEntity> GetLocal(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir);
+        IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset);
+        IEnumerable<EntityUid> GetLocal(EntityCoordinates coords);
         EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction);
-        IEnumerable<SnapGridComponent> GetCardinalNeighborCells(EntityCoordinates coords);
-        IEnumerable<SnapGridComponent> GetCellsInSquareArea(EntityCoordinates coords, int n);
+        IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n);
 
         #endregion SnapGridAccess
 

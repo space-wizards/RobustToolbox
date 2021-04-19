@@ -33,62 +33,67 @@ namespace Robust.Shared.GameObjects
 
         private void HandleComponentInit(EntityUid uid, SnapGridComponent component, ComponentInit args)
         {
-            UpdatePosition(component);
+            var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
+            UpdatePosition(uid, transform, component);
         }
 
         private void HandleComponentShutdown(EntityUid uid, SnapGridComponent component, ComponentShutdown args)
         {
-            if (!component.IsSet)
+            if (component.LastGrid == GridId.Invalid)
                 return;
 
             var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
 
-            if (_mapManager.TryGetGrid(component._lastGrid, out var grid))
+            if (_mapManager.TryGetGrid(component.LastGrid, out var grid))
             {
-                grid.RemoveFromSnapGridCell(grid.SnapGridCellFor(transform.Coordinates), component);
+                var indices = grid.TileIndicesFor(transform.WorldPosition);
+                grid.RemoveFromSnapGridCell(indices, uid);
                 return;
             }
 
-            component.IsSet = false;
+            component.LastGrid = GridId.Invalid;
         }
 
-        private void HandleMoveEvent(EntityUid uid, SnapGridComponent snapGrid, MoveEvent args)
+        private void HandleMoveEvent(EntityUid uid, SnapGridComponent component, MoveEvent args)
         {
-            UpdatePosition(snapGrid);
+            var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
+            UpdatePosition(uid, transform, component);
         }
 
-        //TODO: The event is broken
-        private void UpdatePosition(SnapGridComponent snapComp)
+        private void UpdatePosition(EntityUid euid, ITransformComponent transform, SnapGridComponent snapComp)
         {
-            if (snapComp.IsSet)
+            if (snapComp.LastGrid != GridId.Invalid)
             {
-                if (!_mapManager.TryGetGrid(snapComp._lastGrid, out var lastGrid))
+                if (!_mapManager.TryGetGrid(snapComp.LastGrid, out var lastGrid))
                 {
-                    Logger.WarningS("go.comp.snapgrid", "Entity {0} snapgrid didn't find grid {1}. Race condition?", snapComp.Owner.Uid, snapComp.Owner.Transform.GridID);
+                    Logger.WarningS("go.comp.snapgrid", "Entity {0} snapgrid didn't find grid {1}. Race condition?", euid, transform.GridID);
                     return;
                 }
 
-                lastGrid.RemoveFromSnapGridCell(snapComp.Position, snapComp);
+                lastGrid.RemoveFromSnapGridCell(snapComp.LastTileIndices, euid);
             }
 
-            if (!_mapManager.TryGetGrid(snapComp.Owner.Transform.GridID, out var grid))
+            if (!_mapManager.TryGetGrid(transform.GridID, out var grid))
             {
                 // Either a race condition, or we're not on any grids.
                 return;
             }
 
-            snapComp.IsSet = true;
+            var oldPos = snapComp.LastTileIndices;
+            var oldGrid = snapComp.LastGrid;
 
-            var oldPos = snapComp.Position;
-            var oldGrid = snapComp._lastGrid;
-            snapComp._lastGrid = snapComp.Owner.Transform.GridID;
-            grid.AddToSnapGridCell(snapComp.Position, snapComp);
+            var newPos = grid.TileIndicesFor(transform.MapPosition);
+            var newGrid = transform.GridID;
 
-            if (oldPos != snapComp.Position)
+            grid.AddToSnapGridCell(newPos, euid);
+
+            if (oldPos != newPos || oldGrid != newGrid)
             {
-                snapComp.Owner.EntityManager.EventBus.RaiseLocalEvent(snapComp.Owner.Uid,
-                    new SnapGridPositionChangedEvent(snapComp.Position, oldPos, snapComp._lastGrid, oldGrid));
+                RaiseLocalEvent(euid, new SnapGridPositionChangedEvent(newPos, oldPos, newGrid, oldGrid));
             }
+
+            snapComp.LastTileIndices = newPos;
+            snapComp.LastGrid = newGrid;
         }
     }
 

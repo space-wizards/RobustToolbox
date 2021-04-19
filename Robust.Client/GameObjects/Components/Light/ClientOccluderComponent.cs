@@ -45,7 +45,7 @@ namespace Robust.Client.GameObjects
                 return;
 
             var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-            _lastPosition = (Owner.Transform.GridID, grid.SnapGridCellFor(Owner.Transform.Coordinates));
+            _lastPosition = (Owner.Transform.GridID, grid.TileIndicesFor(Owner.Transform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -79,7 +79,7 @@ namespace Robust.Client.GameObjects
                 var position = Owner.Transform.Coordinates;
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
-                    if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
+                    if (Owner.EntityManager.ComponentManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;

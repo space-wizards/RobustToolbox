@@ -1,31 +1,24 @@
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    ///     Makes it possible to look this entity up with the snap grid.
+    /// Makes it possible to look this entity up with the snap grid.
     /// </summary>
-    public class SnapGridComponent : Component, IComponentDebug
+    internal class SnapGridComponent : Component
     {
+        /// <inheritdoc />
         public sealed override string Name => "SnapGrid";
 
-        private IMapManager _mapManager => IoCManager.Resolve<IMapManager>();
+        /// <summary>
+        /// GridId the last time this component was moved.
+        /// </summary>
+        internal GridId LastGrid = GridId.Invalid;
 
-        internal bool IsSet;
-        internal GridId _lastGrid;
-        internal Vector2i Position => GetTilePosition(_mapManager, Owner.Transform);
-
-        private static Vector2i GetTilePosition(IMapManager mapManager, ITransformComponent transform)
-        {
-            var grid = mapManager.GetGrid(transform.GridID);
-            return grid.SnapGridCellFor(transform.Coordinates);
-        }
-
-        public string GetDebugString()
-        {
-            return $"pos: {GetTilePosition(_mapManager, Owner.Transform)}";
-        }
+        /// <summary>
+        /// TileIndices the last time this component was moved.
+        /// </summary>
+        internal Vector2i LastTileIndices;
     }
 }

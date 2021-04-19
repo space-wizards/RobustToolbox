@@ -179,7 +179,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell)
+        public IEnumerable<EntityUid> GetSnapGridCell(ushort xCell, ushort yCell)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -192,14 +192,14 @@ namespace Robust.Shared.Map
 
             if (list == null)
             {
-                return Array.Empty<SnapGridComponent>();
+                return Array.Empty<EntityUid>();
             }
 
             return list;
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridComponent snap)
+        public void AddToSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -208,12 +208,12 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
 
             ref var cell = ref _snapGrid[xCell, yCell];
-            cell.Center ??= new List<SnapGridComponent>(SnapCellStartingCapacity);
-            cell.Center.Add(snap);
+            cell.Center ??= new List<EntityUid>(SnapCellStartingCapacity);
+            cell.Center.Add(euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -222,7 +222,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
 
             ref var cell = ref _snapGrid[xCell, yCell];
-            cell.Center?.Remove(snap);
+            cell.Center?.Remove(euid);
         }
 
         public bool SuppressCollisionRegeneration { get; set; }
@@ -275,7 +275,7 @@ namespace Robust.Shared.Map
 
         private struct SnapGridCell
         {
-            public List<SnapGridComponent>? Center;
+            public List<EntityUid>? Center;
         }
     }
 }

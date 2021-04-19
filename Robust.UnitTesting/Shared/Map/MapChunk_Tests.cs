@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
@@ -282,112 +282,6 @@ namespace Robust.UnitTesting.Shared.Map
             var result = chunk.ToString();
 
             Assert.That(result, Is.EqualTo("Chunk (7, 9)"));
-        }
-
-        [Test]
-        public void GetEmptySnapGrid()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            Assert.That(chunk.GetSnapGridCell(0,0).ToList().Count, Is.EqualTo(0));
-            Assert.That(chunk.GetSnapGridCell(0, 0).ToList().Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void GetSnapGridThrowsOutOfRange()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0).ToList()));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8).ToList()));
-        }
-
-        [Test]
-        public void AddSnapGridCellCenter()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
-
-            var result = chunk.GetSnapGridCell(3, 5).ToList();
-
-            Assert.That(result.Count, Is.EqualTo(1));
-            Assert.That(result[0], Is.EqualTo(snapGridComponent));
-        }
-
-        [Test]
-        public void AddSnapGridCellEdge()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
-
-            var result = chunk.GetSnapGridCell(3, 5).ToList();
-
-            Assert.That(result.Count, Is.EqualTo(1));
-            Assert.That(result[0], Is.EqualTo(snapGridComponent));
-        }
-
-        [Test]
-        public void AddSnapGridThrowsOutOfRange()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(8, 0, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.AddToSnapGridCell(0, 8, new SnapGridComponent())));
-        }
-
-        [Test]
-        public void RemoveSnapGridCellCenter()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
-
-            chunk.RemoveFromSnapGridCell(3, 5, snapGridComponent);
-
-            var result = chunk.GetSnapGridCell(3, 5).ToList();
-            Assert.That(result.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void RemoveSnapGridCellEdge()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            var snapGridComponent = new SnapGridComponent();
-            chunk.AddToSnapGridCell(3, 5, snapGridComponent);
-            chunk.AddToSnapGridCell(3, 5, new SnapGridComponent());
-            chunk.AddToSnapGridCell(3, 6, new SnapGridComponent());
-
-            chunk.RemoveFromSnapGridCell(3, 5, snapGridComponent);
-
-            var result = chunk.GetSnapGridCell(3, 5).ToList();
-            Assert.That(result.Count, Is.EqualTo(0));
-        }
-
-        [Test]
-        public void RemoveSnapGridThrowsOutOfRange()
-        {
-            var chunk = MapChunkFactory(7, 9);
-
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(8, 0, new SnapGridComponent())));
-            Assert.Throws<ArgumentOutOfRangeException>((() => chunk.RemoveFromSnapGridCell(0, 8, new SnapGridComponent())));
         }
 
         [Test]

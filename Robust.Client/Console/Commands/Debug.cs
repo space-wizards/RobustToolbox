@@ -311,12 +311,12 @@ namespace Robust.Client.Console.Commands
             if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
             {
                 foreach (var entity in
-                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
+                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetAnchoredEntities(
                         new Vector2i(
                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture))))
                 {
-                    shell.WriteLine(entity.Owner.Uid.ToString());
+                    shell.WriteLine(entity.ToString());
                 }
             }
             else

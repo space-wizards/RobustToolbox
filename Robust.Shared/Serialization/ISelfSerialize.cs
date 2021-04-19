@@ -1,4 +1,4 @@
-﻿namespace Robust.Shared.Serialization
+namespace Robust.Shared.Serialization
 {
     public interface ISelfSerialize
     {

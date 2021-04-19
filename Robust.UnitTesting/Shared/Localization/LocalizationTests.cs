@@ -5,8 +5,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Shared.Localization
@@ -18,15 +18,14 @@ namespace Robust.UnitTesting.Shared.Localization
         [OneTimeSetUp]
         public void Setup()
         {
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             IoCManager.Resolve<IComponentFactory>().Register<GrammarComponent>();
-            IoCManager.Resolve<IComponentManager>().Initialize();
 
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);
             res.MountString("/Prototypes/a.yml", YAMLCode);
 
             IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
-            IoCManager.Resolve<IPrototypeManager>().ReloadPrototypes(new ResourcePath("/Prototypes/a.yml"));
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);
@@ -55,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Localization
   id: GenderTestEntityWithComp
   components:
   - type: Grammar
-    gender: enum.Gender.Female
+    gender: Female
 ";
 
         private const string FluentCode = @"

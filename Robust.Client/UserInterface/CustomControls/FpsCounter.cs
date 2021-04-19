@@ -1,4 +1,4 @@
-﻿using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface.CustomControls
             ShadowOffsetYOverride = 1;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             if (!VisibleInTree)
             {

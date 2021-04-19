@@ -6,7 +6,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class EffectSystemMessage : EntitySystemMessage
+    public class EffectSystemMessage : EntityEventArgs
     {
         /// <summary>
         ///     Path to the texture used for the effect.

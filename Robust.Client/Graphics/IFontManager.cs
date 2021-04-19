@@ -12,7 +12,7 @@ namespace Robust.Client.Graphics
     {
         IFontFaceHandle Load(Stream stream);
         IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size);
-        void Initialize();
+        void SetFontDpi(uint fontDpi);
     }
 
     internal interface IFontFaceHandle

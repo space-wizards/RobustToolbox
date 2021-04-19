@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using Prometheus;
+using Robust.Client.GameStates;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -13,303 +19,152 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManager
+    public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IComponentFactory _compFactory = default!;
-#if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-#endif
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        private int _nextClientEntityUid = EntityUid.ClientUid + 1;
+        protected override int NextEntityUid { get; set; } = EntityUid.ClientUid + 1;
 
-        public override void Startup()
+        public override void Initialize()
         {
-            base.Startup();
+            SetupNetworking();
+            ReceivedComponentMessage += (_, compMsg) => DispatchComponentMessage(compMsg);
+            ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
-            if (Started)
-            {
-                throw new InvalidOperationException("Startup() called multiple times");
-            }
-
-            EntitySystemManager.Initialize();
-            Started = true;
+            base.Initialize();
         }
 
-        public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
-            EntityState[]? nextEntStates)
+        IEntity IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid? uid)
         {
-            var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
-            var toInitialize = new List<Entity>();
-            var created = new List<EntityUid>();
-            deletions ??= new EntityUid[0];
+            return base.CreateEntity(prototypeName, uid);
+        }
 
-            if (curEntStates != null && curEntStates.Length != 0)
+        void IClientEntityManagerInternal.InitializeEntity(IEntity entity)
+        {
+            EntityManager.InitializeEntity((Entity)entity);
+        }
+
+        void IClientEntityManagerInternal.StartEntity(IEntity entity)
+        {
+            base.StartEntity((Entity)entity);
+        }
+
+        #region IEntityNetworkManager impl
+
+        public override IEntityNetworkManager EntityNetManager => this;
+
+        /// <inheritdoc />
+        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
+
+        /// <inheritdoc />
+        public event EventHandler<object>? ReceivedSystemMessage;
+
+        private readonly PriorityQueue<(uint seq, MsgEntity msg)> _queue = new(new MessageTickComparer());
+        private uint _incomingMsgSequence = 0;
+
+        /// <inheritdoc />
+        public void SetupNetworking()
+        {
+            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+        }
+
+        public override void TickUpdate(float frameTime, Histogram? histogram)
+        {
+            using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                foreach (var es in curEntStates)
+                while (_queue.Count != 0 && _queue.Peek().msg.SourceTick <= _gameStateManager.CurServerTick)
                 {
-                    //Known entities
-                    if (Entities.TryGetValue(es.Uid, out var entity))
-                    {
-                        toApply.Add(entity, (es, null));
-                    }
-                    else //Unknown entities
-                    {
-                        var metaState = (MetaDataComponentState?) es.ComponentStates
-                            ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
-                        if (metaState == null)
-                        {
-                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
-                        }
-                        var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
-                        toApply.Add(newEntity, (es, null));
-                        toInitialize.Add(newEntity);
-                        created.Add(newEntity.Uid);
-                    }
+                    var (_, msg) = _queue.Take();
+                    // Logger.DebugS("net.ent", "Dispatching: {0}: {1}", seq, msg);
+                    DispatchMsgEntity(msg);
                 }
             }
 
-            if (nextEntStates != null && nextEntStates.Length != 0)
-            {
-                foreach (var es in nextEntStates)
-                {
-                    if (Entities.TryGetValue(es.Uid, out var entity))
-                    {
-                        if (toApply.TryGetValue(entity, out var state))
-                        {
-                            toApply[entity] = (state.Item1, es);
-                        }
-                        else
-                        {
-                            toApply[entity] = (null, es);
-                        }
-                    }
-                }
-            }
-
-            // Make sure this is done after all entities have been instantiated.
-            foreach (var kvStates in toApply)
-            {
-                var ent = kvStates.Key;
-                var entity = (Entity) ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1,
-                    kvStates.Value.Item2);
-            }
-
-            foreach (var kvp in toApply)
-            {
-                UpdateEntityTree(kvp.Key);
-            }
-
-            foreach (var id in deletions)
-            {
-                DeleteEntity(id);
-            }
-
-#if EXCEPTION_TOLERANCE
-            HashSet<Entity> brokenEnts = new HashSet<Entity>();
-#endif
-
-            foreach (var entity in toInitialize)
-            {
-#if EXCEPTION_TOLERANCE
-                try
-                {
-#endif
-                    InitializeEntity(entity);
-#if EXCEPTION_TOLERANCE
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
-                    brokenEnts.Add(entity);
-                }
-#endif
-            }
-
-            foreach (var entity in toInitialize)
-            {
-#if EXCEPTION_TOLERANCE
-                if(brokenEnts.Contains(entity))
-                    continue;
-
-                try
-                {
-#endif
-                    StartEntity(entity);
-#if EXCEPTION_TOLERANCE
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
-                    brokenEnts.Add(entity);
-                }
-#endif
-            }
-
-            foreach (var entity in toInitialize)
-            {
-#if EXCEPTION_TOLERANCE
-                if(brokenEnts.Contains(entity))
-                    continue;
-#endif
-                UpdateEntityTree(entity);
-            }
-#if EXCEPTION_TOLERANCE
-            foreach (var entity in brokenEnts)
-            {
-                entity.Delete();
-            }
-#endif
-
-            return created;
+            base.TickUpdate(frameTime, histogram);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName)
+        public void SendSystemNetworkMessage(EntityEventArgs message)
         {
-            return CreateEntity(prototypeName);
+            SendSystemNetworkMessage(message, default(uint));
+        }
+
+        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
+        {
+            var msg = _networkManager.CreateNetMessage<MsgEntity>();
+            msg.Type = EntityMessageType.SystemMessage;
+            msg.SystemMessage = message;
+            msg.SourceTick = _gameTiming.CurTick;
+            msg.Sequence = sequence;
+
+            _networkManager.ClientSendMessage(msg);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel channel)
         {
-            var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
-
-            if (TryGetEntity(coordinates.EntityId, out var entity))
-            {
-                newEntity.Transform.AttachParent(entity);
-                newEntity.Transform.Coordinates = coordinates;
-            }
-
-            return newEntity;
+            throw new NotSupportedException();
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
-            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
-            newEntity.Transform.WorldPosition = coordinates.Position;
-            return newEntity;
+            if (!component.NetID.HasValue)
+                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
+
+            var msg = _networkManager.CreateNetMessage<MsgEntity>();
+            msg.Type = EntityMessageType.ComponentMessage;
+            msg.EntityUid = entity.Uid;
+            msg.NetId = component.NetID.Value;
+            msg.ComponentMessage = message;
+            msg.SourceTick = _gameTiming.CurTick;
+
+            _networkManager.ClientSendMessage(msg);
         }
 
-        /// <inheritdoc />
-        public override IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates)
+        private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            var newEnt = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) newEnt);
-            UpdateEntityTree(newEnt);
-            return newEnt;
-        }
-
-        /// <inheritdoc />
-        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
-        {
-            var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity);
-            UpdateEntityTree(entity);
-            return entity;
-        }
-
-        /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates)
-        {
-            return SpawnEntity(protoName, coordinates);
-        }
-
-        protected override EntityUid GenerateEntityUid()
-        {
-            return new(_nextClientEntityUid++);
-        }
-
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,
-            EntityState? nextState)
-        {
-            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
-            var entityUid = entity.Uid;
-
-            if (curState?.ComponentChanges != null)
+            if (message.SourceTick <= _gameStateManager.CurServerTick)
             {
-                foreach (var compChange in curState.ComponentChanges)
-                {
-                    if (compChange.Deleted)
-                    {
-                        if (compMan.TryGetComponent(entityUid, compChange.NetID, out var comp))
-                        {
-                            compMan.RemoveComponent(entityUid, comp);
-                        }
-                    }
-                    else
-                    {
-                        if (compMan.HasComponent(entityUid, compChange.NetID))
-                            continue;
-
-                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
-                        newComp.Owner = entity;
-                        compMan.AddComponent(entity, newComp, true);
-                    }
-                }
+                DispatchMsgEntity(message);
+                return;
             }
 
-            if (curState?.ComponentStates != null)
-            {
-                foreach (var compState in curState.ComponentStates)
-                {
-                    compStateWork[compState.NetID] = (compState, null);
-                }
-            }
+            // MsgEntity is sent with ReliableOrdered so Lidgren guarantees ordering of incoming messages.
+            // We still need to store a sequence input number to ensure ordering remains consistent in
+            // the priority queue.
+            _queue.Add((++_incomingMsgSequence, message));
+        }
 
-            if (nextState?.ComponentStates != null)
+        private void DispatchMsgEntity(MsgEntity message)
+        {
+            switch (message.Type)
             {
-                foreach (var compState in nextState.ComponentStates)
-                {
-                    if (compStateWork.TryGetValue(compState.NetID, out var state))
-                    {
-                        compStateWork[compState.NetID] = (state.curState, compState);
-                    }
-                    else
-                    {
-                        compStateWork[compState.NetID] = (null, compState);
-                    }
-                }
-            }
+                case EntityMessageType.ComponentMessage:
+                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message));
+                    return;
 
-            foreach (var (netId, (cur, next)) in compStateWork)
-            {
-                if (compMan.TryGetComponent(entityUid, netId, out var component))
-                {
-                    try
-                    {
-                        component.HandleComponentState(cur, next);
-                    }
-                    catch (Exception e)
-                    {
-                        var wrapper = new ComponentStateApplyException(
-                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
-#if EXCEPTION_TOLERANCE
-                    _runtimeLog.LogException(wrapper, "Component state apply");
-#else
-                        throw wrapper;
-#endif
-                    }
-                }
-                else
-                {
-                    // The component can be null here due to interp.
-                    // Because the NEXT state will have a new component, but this one doesn't yet.
-                    // That's fine though.
-                    if (cur == null)
-                    {
-                        continue;
-                    }
-
-                    var eUid = entityUid;
-                    var eRegisteredNetUidName = _compFactory.GetRegistration(netId).Name;
-                    DebugTools.Assert(
-                        $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
-                }
+                case EntityMessageType.SystemMessage:
+                    ReceivedSystemMessage?.Invoke(this, message.SystemMessage);
+                    return;
             }
         }
+
+        private sealed class MessageTickComparer : IComparer<(uint seq, MsgEntity msg)>
+        {
+            public int Compare((uint seq, MsgEntity msg) x, (uint seq, MsgEntity msg) y)
+            {
+                var cmp = y.msg.SourceTick.CompareTo(x.msg.SourceTick);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                return y.seq.CompareTo(x.seq);
+            }
+        }
+        #endregion
     }
 }

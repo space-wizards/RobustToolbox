@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
-using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
+    [ImplicitDataDefinitionForInheritors]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
@@ -24,14 +26,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public virtual bool NetworkSynchronizeExistence => false;
 
-        private bool _netSyncEnabled = true;
         /// <inheritdoc />
         [ViewVariables]
-        public bool NetSyncEnabled
-        {
-            get => _netSyncEnabled;
-            set => _netSyncEnabled = value;
-        }
+        [field: DataField("netsync")]
+        public bool NetSyncEnabled { get; set; } = true;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -41,13 +39,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused => Owner.Paused;
 
-        /// <summary>
-        ///     True if this entity is a client-only entity.
-        ///     That is, it does not exist on the server, only THIS client.
-        /// </summary>
-        [ViewVariables]
-        public bool IsClientSide => Owner.Uid.IsClientSide();
-
+        /// <inheritdoc />
         [ViewVariables]
         public bool Initialized { get; private set; }
 
@@ -75,11 +67,29 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Deleted { get; private set; }
 
+        /// <inheritdoc />
         [ViewVariables]
         public GameTick CreationTick { get; private set; }
 
+        /// <inheritdoc />
         [ViewVariables]
         public GameTick LastModifiedTick { get; private set; }
+
+        private static readonly ComponentAdd CompAddInstance = new();
+        private static readonly ComponentInit CompInitInstance = new();
+        private static readonly ComponentStartup CompStartupInstance = new();
+        private static readonly ComponentShutdown CompShutdownInstance = new();
+        private static readonly ComponentRemove CompRemoveInstance = new();
+
+        private EntityEventBus GetBus()
+        {
+            // Apparently components are being created outside of the ComponentManager,
+            // and the Owner is not being set correctly.
+            // ReSharper disable once RedundantAssertionStatement
+            DebugTools.AssertNotNull(Owner);
+
+            return (EntityEventBus) Owner.EntityManager.EventBus;
+        }
 
         /// <inheritdoc />
         public virtual void OnRemove()
@@ -89,6 +99,7 @@ namespace Robust.Shared.GameObjects
 
             // We have been marked for deletion by the Component Manager.
             Deleted = true;
+            GetBus().RaiseComponentEvent(this, CompRemoveInstance);
         }
 
         /// <summary>
@@ -106,6 +117,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Add a Deleted component!");
 
             CreationTick = Owner.EntityManager.CurrentTick;
+            GetBus().RaiseComponentEvent(this, CompAddInstance);
         }
 
         /// <inheritdoc />
@@ -121,6 +133,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Initialize a Deleted component!");
 
             Initialized = true;
+            GetBus().RaiseComponentEvent(this, CompInitInstance);
         }
 
         /// <summary>
@@ -139,6 +152,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Start a Deleted component!");
 
             _running = true;
+            GetBus().RaiseComponentEvent(this, CompStartupInstance);
         }
 
         /// <summary>
@@ -157,22 +171,19 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
 
             _running = false;
-        }
-
-        /// <inheritdoc />
-        public virtual void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(ref _netSyncEnabled, "netsync", true);
+            GetBus().RaiseComponentEvent(this, CompShutdownInstance);
         }
 
         /// <inheritdoc />
         public void Dirty()
         {
-            if (Owner != null)
-            {
-                Owner.Dirty();
-                LastModifiedTick = Owner.EntityManager.CurrentTick;
-            }
+            // Deserialization will cause this to be true.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if(Owner is null)
+                return;
+
+            Owner.Dirty();
+            LastModifiedTick = Owner.EntityManager.CurrentTick;
         }
 
         /// <summary>
@@ -180,6 +191,7 @@ namespace Robust.Shared.GameObjects
         ///     This is an alias of 'Owner.SendMessage(this, message);'
         /// </summary>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendMessage(ComponentMessage message)
         {
             Owner.SendMessage(this, message);
@@ -191,6 +203,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message to send.</param>
         /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);
@@ -228,4 +241,34 @@ namespace Robust.Shared.GameObjects
             CreationTick = GameTick.Zero;
         }
     }
+
+    /// <summary>
+    /// The component has been added to the entity. This is the first function
+    /// to be called after the component has been allocated and (optionally) deserialized.
+    /// </summary>
+    public class ComponentAdd : EntityEventArgs { }
+
+    /// <summary>
+    /// Raised when all of the entity's other components have been added and are available,
+    /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
+    /// </summary>
+    public class ComponentInit : EntityEventArgs { }
+
+    /// <summary>
+    /// Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
+    /// This can be called multiple times during the component's life, and at any time.
+    /// </summary>
+    public class ComponentStartup : EntityEventArgs { }
+
+    /// <summary>
+    /// Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
+    /// the component's life, and at any time.
+    /// </summary>
+    public class ComponentShutdown : EntityEventArgs { }
+
+    /// <summary>
+    /// The component has been removed from the entity. This is the last function
+    /// that is called before the component is freed.
+    /// </summary>
+    public class ComponentRemove : EntityEventArgs { }
 }

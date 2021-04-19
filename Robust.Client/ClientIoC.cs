@@ -14,6 +14,7 @@ using Robust.Client.Prototypes;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
+using Robust.Client.Timing;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -24,8 +25,10 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 
 namespace Robust.Client
 {
@@ -35,8 +38,14 @@ namespace Robust.Client
         {
             SharedIoC.RegisterIoC();
 
+            IoCManager.Register<IGameTiming, ClientGameTiming>();
+            IoCManager.Register<IClientGameTiming, ClientGameTiming>();
             IoCManager.Register<IPrototypeManager, ClientPrototypeManager>();
+            IoCManager.Register<IMapManager, ClientMapManager>();
+            IoCManager.Register<IMapManagerInternal, ClientMapManager>();
+            IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
+            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
@@ -49,10 +58,12 @@ namespace Robust.Client
             IoCManager.Register<IResourceCacheInternal, ResourceCache>();
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
-            IoCManager.Register<IEntityNetworkManager, ClientEntityNetworkManager>();
+            IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
+            IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();
             IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
             IoCManager.Register<IBaseClient, BaseClient>();
             IoCManager.Register<IPlayerManager, PlayerManager>();
+            IoCManager.Register<ISharedPlayerManager, PlayerManager>();
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
@@ -62,8 +73,6 @@ namespace Robust.Client
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IConsoleHost, ClientConsoleHost>();
-            IoCManager.Register<IFontManager, FontManager>();
-            IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
             switch (mode)
@@ -90,8 +99,9 @@ namespace Robust.Client
                     throw new ArgumentOutOfRangeException();
             }
 
+            IoCManager.Register<IFontManager, FontManager>();
+            IoCManager.Register<IFontManagerInternal, FontManager>();
             IoCManager.Register<IEyeManager, EyeManager>();
-
             IoCManager.Register<IPlacementManager, PlacementManager>();
             IoCManager.Register<IOverlayManager, OverlayManager>();
             IoCManager.Register<IOverlayManagerInternal, OverlayManager>();
@@ -99,7 +109,6 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
-            //IoCManager.Register<IXamlCompiler, XamlCompiler>();
         }
     }
 }

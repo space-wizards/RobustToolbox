@@ -2,30 +2,35 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Shared.Physics
 {
     /// <summary>
     ///
     /// </summary>
-    public interface IPhysBody
+    public interface IPhysBody : IComponent
     {
+        bool IgnoreGravity { get; set; }
+
+        int IslandIndex { get; set; }
+
         /// <summary>
-        ///     Entity that this physBody represents.
+        ///     Has this body already been added to a physics island
         /// </summary>
-        IEntity Entity { get; }
+        bool Island { get; set; }
+
+        /// <summary>
+        ///     Should the body still have physics updates applied even if paused
+        /// </summary>
+        bool IgnorePaused { get; set; }
 
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        Box2 WorldAABB { get; }
-
-        /// <summary>
-        ///     AABB of this entity in local space.
-        /// </summary>
-        Box2 AABB { get; }
-
-        IList<IPhysShape> PhysicsShapes { get; }
+        Box2 GetWorldAABB(IMapManager? mapManager = null);
 
         /// <summary>
         /// Whether or not this body can collide.
@@ -44,29 +49,39 @@ namespace Robust.Shared.Physics
         /// </summary>
         int CollisionMask { get; }
 
-        /// <summary>
-        ///     The map index this physBody is located upon
-        /// </summary>
-        MapId MapID { get; }
+        void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null);
+
+        void ClearProxies();
 
         /// <summary>
-        /// Broad Phase proxy ID.
+        ///     Removes all of the currently active contacts for this body.
         /// </summary>
-        int ProxyId { get; set; }
+        void DestroyContacts();
+
+        IReadOnlyList<Fixture> Fixtures { get; }
 
         /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }
 
-        int SleepAccumulator { get; set; }
+        /// <summary>
+        ///     Whether the body is affected by tile friction or not.
+        /// </summary>
+        BodyStatus BodyStatus { get; set; }
 
-        int SleepThreshold { get; set; }
+        bool Awake { get; set; }
 
-        bool Awake { get; }
+        bool SleepingAllowed { get; set; }
+
+        float SleepTime { get; set; }
+
+        float LinearDamping { get; set; }
+
+        float AngularDamping { get; set; }
 
         /// <summary>
-        ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="IPhysBody"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
@@ -75,14 +90,20 @@ namespace Robust.Shared.Physics
         bool Hard { get; set; }
 
         /// <summary>
-        /// Inverse mass of the entity in kilograms (1 / Mass).
+        ///     Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
 
         /// <summary>
-        /// Inverse moment of inertia, in 
+        /// Mass of the entity in kilograms
+        /// Set this via fixtures.
         /// </summary>
-        float InvI { get; }
+        float Mass { get; }
+
+        /// <summary>
+        ///     Inverse inertia
+        /// </summary>
+        float InvI { get; set; }
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
@@ -122,30 +143,12 @@ namespace Robust.Shared.Physics
         /// </summary>
         float AngularVelocity { get; set; }
 
-        /// <summary>
-        /// Current position of the body in the world, in meters.
-        /// </summary>
-        Vector2 WorldPosition
-        {
-            get => Entity.Transform.WorldPosition;
-            set => Entity.Transform.WorldPosition = value;
-        }
-
-        /// <summary>
-        /// Current rotation of the body in the world, in radians.
-        /// </summary>
-        float WorldRotation
-        {
-            get => (float) Entity.Transform.WorldRotation.Theta;
-            set => Entity.Transform.WorldRotation = new Angle(value);
-        }
-
         void WakeBody();
 
-        /// <summary>
-        /// Derived value determining if this body can move or not.
-        /// </summary>
-        /// <returns>True if this body can move, false if it is static.</returns>
-        bool CanMove();
+        void ApplyLinearImpulse(in Vector2 impulse);
+
+        void ApplyAngularImpulse(float impulse);
+
+        IEnumerable<IPhysBody> GetCollidingEntities(Vector2 offset, bool approx = true);
     }
 }

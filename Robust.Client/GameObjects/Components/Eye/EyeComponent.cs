@@ -1,9 +1,11 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -20,8 +22,10 @@ namespace Robust.Client.GameObjects
 
         // Horrible hack to get around ordering issues.
         private bool _setCurrentOnInitialize;
-        private bool _setDrawFovOnInitialize;
-        private Vector2 _setZoomOnInitialize = Vector2.One/2f;
+        [DataField("drawFov")]
+        private bool _setDrawFovOnInitialize = true;
+        [DataField("zoom")]
+        private Vector2 _setZoomOnInitialize = Vector2.One;
         private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
@@ -148,6 +152,7 @@ namespace Robust.Client.GameObjects
             Zoom = state.Zoom;
             Offset = state.Offset;
             Rotation = state.Rotation;
+            VisibilityMask = state.VisibilityMask;
         }
 
         public override void OnRemove()
@@ -155,15 +160,6 @@ namespace Robust.Client.GameObjects
             base.OnRemove();
 
             Current = false;
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataFieldCached(ref _setZoomOnInitialize, "zoom", Vector2.One/2f);
-            serializer.DataFieldCached(ref _setDrawFovOnInitialize, "drawFov", true);
         }
 
         /// <summary>

@@ -4,6 +4,8 @@ using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -44,6 +46,13 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
+        public event Action<TextEventArgs>? TextEntered;
+        public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<KeyEventArgs>? KeyUp;
+        public event Action<KeyEventArgs>? KeyDown;
+        public event Action<MouseWheelEventArgs>? MouseWheel;
+        public event Action<WindowClosedEventArgs>? CloseWindow;
+
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
             return new DummyTexture((1, 1));
@@ -66,6 +75,11 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override void SetWindowTitle(string title)
+        {
+            // Nada.
+        }
+
+        public void SetWindowMonitor(IClydeMonitor monitor)
         {
             // Nada.
         }
@@ -93,6 +107,12 @@ namespace Robust.Client.Graphics.Clyde
             remove { }
         }
 
+        public event Action OnWindowScaleChanged
+        {
+            add { }
+            remove { }
+        }
+
         public void Render()
         {
             // Nada.
@@ -108,7 +128,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
+        public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             using (var image = Image.Load<Rgba32>(stream))
@@ -117,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
+        public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
@@ -153,14 +173,23 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
+        public void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null)
         {
-            callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
+            // Immediately call callback with an empty buffer.
+            var (x, y) = ClampSubRegion(ScreenSize, subRegion);
+            callback(new Image<Rgb24>(x, y));
         }
 
-        public IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters,
+            string? name = null)
         {
-            return new Viewport();
+            return new Viewport(size);
+        }
+
+        public IEnumerable<IClydeMonitor> EnumerateMonitors()
+        {
+            // TODO: Actually return something.
+            yield break;
         }
 
         public IClydeWindow CreateWindow()
@@ -279,6 +308,11 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetPlaybackPosition(float seconds)
+            {
+                // Nada.
+            }
+
+            public void SetVelocity(Vector2 velocity)
             {
                 // Nada.
             }
@@ -417,11 +451,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; }
-            public Texture Texture { get; }
 
-            public void Delete()
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
             {
+                var (x, y) = ClampSubRegion(Size, subRegion);
+                callback(new Image<T>(x, y));
             }
+
+            public Texture Texture { get; }
 
             public void Dispose()
             {
@@ -438,6 +475,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size => _clyde.ScreenSize;
+
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
+            {
+                var (x, y) = ClampSubRegion(Size, subRegion);
+                callback(new Image<T>(x, y));
+            }
 
             public void Dispose()
             {
@@ -464,6 +507,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
+            public Viewport(Vector2i size)
+            {
+                Size = size;
+            }
+
             public void Dispose()
             {
             }
@@ -473,9 +521,38 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Vector2 RenderScale { get; set; }
+            public bool AutomaticRender { get; set; }
 
             public void Render()
             {
+                // Nada
+            }
+
+            public MapCoordinates LocalToWorld(Vector2 point)
+            {
+                return default;
+            }
+
+            public Vector2 WorldToLocal(Vector2 point)
+            {
+                return default;
+            }
+
+            public void RenderScreenOverlaysBelow(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                // Nada
+            }
+
+            public void RenderScreenOverlaysAbove(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                // Nada
             }
         }
 

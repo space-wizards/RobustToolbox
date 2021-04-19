@@ -135,7 +135,7 @@ namespace Robust.Shared.ContentPack
                 throw new DirectoryNotFoundException("Specified directory does not exist: " + pathInfo.FullName);
             }
 
-            var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"));
+            var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"), _config.GetCVar(CVars.ResCheckPathCasing));
             AddRoot(prefix, loader);
         }
 

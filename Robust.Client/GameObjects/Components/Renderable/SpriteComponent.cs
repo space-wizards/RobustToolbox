@@ -17,6 +17,9 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -25,17 +28,22 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 namespace Robust.Client.GameObjects
 {
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
-        IComponentDebug
+        IComponentDebug, ISerializationHooks
     {
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IPrototypeManager prototypes = default!;
+
+        [DataField("visible")]
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Visible
+        public override bool Visible
         {
             get => _visible;
             set => _visible = value;
         }
 
+        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -48,6 +56,7 @@ namespace Robust.Client.GameObjects
             set => drawDepth = value;
         }
 
+        [DataField("scale")]
         private Vector2 scale = Vector2.One;
 
         /// <summary>
@@ -61,7 +70,8 @@ namespace Robust.Client.GameObjects
             set => scale = value;
         }
 
-        private Angle rotation;
+        [DataField("rotation")]
+        private Angle rotation = Angle.Zero;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -71,6 +81,7 @@ namespace Robust.Client.GameObjects
             set => rotation = value;
         }
 
+        [DataField("offset")]
         private Vector2 offset = Vector2.Zero;
 
         /// <summary>
@@ -84,6 +95,7 @@ namespace Robust.Client.GameObjects
             set => offset = value;
         }
 
+        [DataField("color")]
         private Color color = Color.White;
 
         [Animatable]
@@ -108,18 +120,152 @@ namespace Robust.Client.GameObjects
             set => _directional = value;
         }
 
+        [DataField("directional")]
         private bool _directional = true;
+
+        [DataField("layerDatums")]
+        private List<PrototypeLayerData> LayerDatums
+        {
+            get
+            {
+                var layerDatums = new List<PrototypeLayerData>();
+                foreach (var layer in Layers)
+                {
+                    layerDatums.Add(layer.ToPrototypeData());
+                }
+
+                return layerDatums;
+            }
+            set
+            {
+                if(value == null) return;
+
+                Layers.Clear();
+                foreach (var layerDatum in value)
+                {
+                    var anyTextureAttempted = false;
+                    var layer = new Layer(this);
+                    if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
+                    {
+                        var path = TextureRoot / layerDatum.RsiPath;
+                        try
+                        {
+                            layer.RSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(path).RSI;
+                        }
+                        catch
+                        {
+                            Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.State))
+                    {
+                        anyTextureAttempted = true;
+                        var theRsi = layer.RSI ?? BaseRSI;
+                        if (theRsi == null)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                "Layer has no RSI to load states from. Cannot use 'state' property. ({0})",
+                                layerDatum.State);
+                        }
+                        else
+                        {
+                            var stateid = new RSI.StateId(layerDatum.State);
+                            layer.State = stateid;
+                            if (theRsi.TryGetState(stateid, out var state))
+                            {
+                                // Always use south because this layer will be cached in the serializer.
+                                layer.AnimationTimeLeft = state.GetDelay(0);
+                            }
+                            else
+                            {
+                                Logger.ErrorS(LogCategory,
+                                    $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
+                                    stateid);
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
+                    {
+                        anyTextureAttempted = true;
+                        if (layer.State.IsValid)
+                        {
+                            Logger.ErrorS(LogCategory,
+                                "Cannot specify 'texture' on a layer if it has an RSI state specified."
+                            );
+                        }
+                        else
+                        {
+                            layer.Texture =
+                                IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
+                        }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
+                    {
+                        if (IoCManager.Resolve<IPrototypeManager>().TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
+                        {
+                            layer.Shader = prototype.Instance();
+                        }
+                        else
+                        {
+                            Logger.ErrorS(LogCategory,
+                                "Shader prototype '{0}' does not exist.",
+                                layerDatum.Shader);
+                        }
+                    }
+
+                    layer.Color = layerDatum.Color;
+                    layer.Rotation = layerDatum.Rotation;
+                    // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
+                    layer.Visible = anyTextureAttempted && layerDatum.Visible;
+                    layer.Scale = layerDatum.Scale;
+
+                    Layers.Add(layer);
+
+                    if (layerDatum.MapKeys != null)
+                    {
+                        var index = Layers.Count - 1;
+                        foreach (var keyString in layerDatum.MapKeys)
+                        {
+                            object key;
+                            if (IoCManager.Resolve<IReflectionManager>().TryParseEnumReference(keyString, out var @enum))
+                            {
+                                key = @enum;
+                            }
+                            else
+                            {
+                                key = keyString;
+                            }
+
+                            if (LayerMap.ContainsKey(key))
+                            {
+                                Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                                continue;
+                            }
+
+                            LayerMap.Add(key, index);
+                        }
+                    }
+                }
+
+                _layerMapShared = true;
+                UpdateIsInert();
+            }
+        }
 
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("rsi", priority: 2)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
             set
             {
                 _baseRsi = value;
-                if (Layers == null || value == null)
+                if (value == null)
                 {
                     return;
                 }
@@ -147,6 +293,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [DataField("sprite", readOnly: true)] private string? rsi;
+        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new ();
+
+        [DataField("state", readOnly: true)] private string? state;
+        [DataField("texture", readOnly: true)] private string? texture;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded { get; set; }
 
@@ -158,11 +310,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
-        [ViewVariables] private List<Layer> Layers = default!;
-
-        [Dependency] private readonly IResourceCache resourceCache = default!;
-        [Dependency] private readonly IPrototypeManager prototypes = default!;
-        [Dependency] private readonly IReflectionManager reflectionManager = default!;
+        [ViewVariables] private List<Layer> Layers = new();
 
         [ViewVariables(VVAccess.ReadWrite)] public uint RenderOrder { get; set; }
 
@@ -170,16 +318,55 @@ namespace Robust.Client.GameObjects
         private static ShaderInstance? _defaultShader;
 
         [ViewVariables]
-        private ShaderInstance? DefaultShader => _defaultShader ??
-                                                 (_defaultShader = prototypes
-                                                     .Index<ShaderPrototype>("shaded")
-                                                     .Instance());
+        private ShaderInstance? DefaultShader => _defaultShader ??= prototypes
+            .Index<ShaderPrototype>("shaded")
+            .Instance();
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
         const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            {
+                if (!string.IsNullOrWhiteSpace(rsi))
+                {
+                    var rsiPath = TextureRoot / rsi;
+                    try
+                    {
+                        BaseRSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(rsiPath).RSI;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.ErrorS(SpriteComponent.LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
+                    }
+                }
+            }
+
+            if (layerDatums.Count == 0)
+            {
+                if (state != null || texture != null)
+                {
+                    layerDatums.Insert(0, new PrototypeLayerData
+                    {
+                        TexturePath = string.IsNullOrWhiteSpace(texture) ? null : texture,
+                        State = string.IsNullOrWhiteSpace(state) ? null : state,
+                        Color = Color.White,
+                        Scale = Vector2.One,
+                        Visible = true,
+                    });
+                    state = null;
+                    texture = null;
+                }
+            }
+
+            if (layerDatums.Count != 0)
+            {
+                LayerDatums = layerDatums;
+            }
+        }
 
         /// <summary>
         /// Update this sprite component to visibly match the current state of other at the time
@@ -661,8 +848,8 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
-                        Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
+                        actualRsi.Path, Environment.StackTrace);
                     theLayer.Texture = null;
                 }
             }
@@ -1005,9 +1192,14 @@ namespace Robust.Client.GameObjects
             RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
         }
 
-        private bool _screenLock = false;
-        private Direction _overrideDirection = Direction.South;
-        private bool _enableOverrideDirection = false;
+        [DataField("noRot")]
+        private bool _screenLock = true;
+
+        [DataField("overrideDir")]
+        private Direction _overrideDirection = Direction.East;
+
+        [DataField("enableOverrideDir")]
+        private bool _enableOverrideDirection;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1151,205 +1343,6 @@ namespace Robust.Client.GameObjects
 
             texture ??= resourceCache.GetFallback<TextureResource>().Texture;
             return texture;
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataFieldCached(ref scale, "scale", Vector2.One);
-            serializer.DataFieldCached(ref rotation, "rotation", Angle.Zero);
-            serializer.DataFieldCached(ref offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepthTag.Default,
-                WithFormat.Constants<DrawDepthTag>());
-            serializer.DataFieldCached(ref color, "color", Color.White);
-            serializer.DataFieldCached(ref _visible, "visible", true);
-            serializer.DataFieldCached(ref _directional, "directional", true); //TODO: Kill ME
-            serializer.DataFieldCached(ref _screenLock, "noRot", true);
-            serializer.DataFieldCached(ref _enableOverrideDirection, "enableOverrideDir", false);
-            serializer.DataFieldCached(ref _overrideDirection, "overrideDir", Direction.East);
-
-            // TODO: Writing?
-            if (!serializer.Reading)
-            {
-                return;
-            }
-
-            {
-                var rsi = serializer.ReadDataField<string?>("sprite", null);
-                if (!string.IsNullOrWhiteSpace(rsi))
-                {
-                    var rsiPath = TextureRoot / rsi;
-                    try
-                    {
-                        BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
-                    }
-                }
-            }
-
-            List<Layer> CloneLayers(List<Layer> source)
-            {
-                var clone = new List<Layer>(source.Count);
-                foreach (var layer in source)
-                {
-                    clone.Add(new Layer(layer, this));
-                }
-
-                return clone;
-            }
-
-            if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
-            {
-                LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
-                _layerMapShared = true;
-                Layers = CloneLayers(layers);
-                UpdateIsInert();
-                return;
-            }
-
-            layers = new List<Layer>();
-
-            var layerMap = new Dictionary<object, int>();
-
-            var layerData =
-                serializer.ReadDataField("layers", new List<PrototypeLayerData>());
-
-            if(layerData.Count == 0){
-                var baseState = serializer.ReadDataField<string?>("state", null);
-                var texturePath = serializer.ReadDataField<string?>("texture", null);
-
-                if (baseState != null || texturePath != null)
-                {
-                    layerData.Insert(0, new PrototypeLayerData
-                    {
-                        TexturePath = string.IsNullOrWhiteSpace(texturePath) ? null : texturePath,
-                        State = string.IsNullOrWhiteSpace(baseState) ? null : baseState,
-                        Color = Color.White,
-                        Scale = Vector2.One,
-                        Visible = true,
-                    });
-                }
-            }
-
-            foreach (var layerDatum in layerData)
-            {
-                var anyTextureAttempted = false;
-                var layer = new Layer(this);
-                if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
-                {
-                    var path = TextureRoot / layerDatum.RsiPath;
-                    try
-                    {
-                        layer.RSI = resourceCache.GetResource<RSIResource>(path).RSI;
-                    }
-                    catch
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(layerDatum.State))
-                {
-                    anyTextureAttempted = true;
-                    var theRsi = layer.RSI ?? BaseRSI;
-                    if (theRsi == null)
-                    {
-                        Logger.ErrorS(LogCategory,
-                            "Layer has no RSI to load states from."
-                            + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype?.ID);
-                    }
-                    else
-                    {
-                        var stateid = new RSI.StateId(layerDatum.State);
-                        layer.State = stateid;
-                        if (theRsi.TryGetState(stateid, out var state))
-                        {
-                            // Always use south because this layer will be cached in the serializer.
-                            layer.AnimationTimeLeft = state.GetDelay(0);
-                        }
-                        else
-                        {
-                            Logger.ErrorS(LogCategory,
-                                $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
-                                stateid);
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(layerDatum.TexturePath))
-                {
-                    anyTextureAttempted = true;
-                    if (layer.State.IsValid)
-                    {
-                        Logger.ErrorS(LogCategory,
-                            "Cannot specify 'texture' on a layer if it has an RSI state specified."
-                        );
-                    }
-                    else
-                    {
-                        layer.Texture =
-                            resourceCache.GetResource<TextureResource>(TextureRoot / layerDatum.TexturePath);
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(layerDatum.Shader))
-                {
-                    if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
-                    {
-                        layer.Shader = prototype.Instance();
-                    }
-                    else
-                    {
-                        Logger.ErrorS(LogCategory,
-                            "Shader prototype '{0}' does not exist. Prototype: '{1}'",
-                            layerDatum.Shader, Owner.Prototype?.ID);
-                    }
-                }
-
-                layer.Color = layerDatum.Color;
-                layer.Rotation = layerDatum.Rotation;
-                // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
-                layer.Visible = anyTextureAttempted && layerDatum.Visible;
-                layer.Scale = layerDatum.Scale;
-
-                layers.Add(layer);
-
-                if (layerDatum.MapKeys != null)
-                {
-                    var index = layers.Count - 1;
-                    foreach (var keyString in layerDatum.MapKeys)
-                    {
-                        object key;
-                        if (reflectionManager.TryParseEnumReference(keyString, out var @enum))
-                        {
-                            key = @enum;
-                        }
-                        else
-                        {
-                            key = keyString;
-                        }
-
-                        if (layerMap.ContainsKey(key))
-                        {
-                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
-                            continue;
-                        }
-
-                        layerMap.Add(key, index);
-                    }
-                }
-            }
-
-            Layers = layers;
-            LayerMap = layerMap;
-            _layerMapShared = true;
-            serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
-            serializer.SetCacheData(LayerMapSerializationCache, layerMap);
-            UpdateIsInert();
         }
 
         public override void OnRemove()
@@ -1663,7 +1656,7 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        private class Layer : ISpriteLayer
+        public class Layer : ISpriteLayer
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 
@@ -1729,6 +1722,22 @@ namespace Robust.Client.GameObjects
             RSI? ISpriteLayer.Rsi { get => RSI; set => SetRsi(value); }
             RSI.StateId ISpriteLayer.RsiState { get => State; set => SetState(value); }
             Texture? ISpriteLayer.Texture { get => Texture; set => SetTexture(value); }
+
+            public PrototypeLayerData ToPrototypeData()
+            {
+                return new PrototypeLayerData
+                {
+                    Color = Color,
+                    Rotation = Rotation,
+                    Scale = Scale,
+                    //todo Shader = Shader,
+                    State = State.Name,
+                    Visible = Visible,
+                    RsiPath = RSI?.Path?.ToString(),
+                    //todo TexturePath = Textur
+                    //todo MapKeys
+                };
+            }
 
             bool ISpriteLayer.Visible
             {
@@ -2000,7 +2009,6 @@ namespace Robust.Client.GameObjects
                 }
 
                 return state;
-
             }
         }
 
@@ -2051,7 +2059,6 @@ namespace Robust.Client.GameObjects
 
             if (!anyTexture)
                 yield return resourceCache.GetFallback<TextureResource>().Texture;
-
         }
 
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
@@ -2078,6 +2085,7 @@ namespace Robust.Client.GameObjects
             public IEntityManager EntityManager { get; } = null!;
             public string Name { get; set; } = string.Empty;
             public EntityUid Uid { get; } = EntityUid.Invalid;
+            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
             public bool Initialized { get; } = false;
             public bool Initializing { get; } = false;
             public bool Deleted { get; } = true;
@@ -2094,10 +2102,12 @@ namespace Robust.Client.GameObjects
             public IMetaDataComponent MetaData { get; } = null!;
 
             private Dictionary<Type, IComponent> _components = new();
+            private EntityLifeStage _lifeStage;
 
             public T AddComponent<T>() where T : Component, new()
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
+                var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
@@ -2107,9 +2117,9 @@ namespace Robust.Client.GameObjects
                     _components[typeof(ISpriteComponent)] = comp;
                 }
 
-                if (Prototype != null && Prototype.Components.TryGetValue(comp.Name, out var node))
+                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
                 {
-                    comp.ExposeData(YamlObjectSerializer.NewReader(node));
+                    comp = serializationManager.Copy(node, comp)!;
                 }
 
                 return comp;
@@ -2140,11 +2150,6 @@ namespace Robust.Client.GameObjects
                 return null!;
             }
 
-            public IComponent GetComponent(uint netID)
-            {
-                return null!;
-            }
-
             public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
@@ -2169,21 +2174,6 @@ namespace Robust.Client.GameObjects
             public IComponent? GetComponentOrNull(Type type)
             {
                 return null;
-            }
-
-            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
-            {
-                component = null;
-                return false;
-            }
-
-            public IComponent? GetComponentOrNull(uint netId)
-            {
-                return null;
-            }
-
-            public void Shutdown()
-            {
             }
 
             public void Delete()

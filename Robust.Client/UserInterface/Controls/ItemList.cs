@@ -385,16 +385,16 @@ namespace Robust.Client.UserInterface.Controls
             var offsetY = (int) (box.Height - font.GetHeight(UIScale)) / 2;
             var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + box.TopLeft;
 
-            foreach (var chr in text)
+            foreach (var rune in text.EnumerateRunes())
             {
-                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                 {
                     continue;
                 }
 
                 if (!(baseLine.X < box.Left || baseLine.X + metrics.Advance > box.Right))
                 {
-                    font.DrawChar(handle, chr, baseLine, UIScale, color);
+                    font.DrawChar(handle, rune, baseLine, UIScale, color);
                 }
 
                 baseLine += (metrics.Advance, 0);

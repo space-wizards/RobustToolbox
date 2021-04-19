@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Log;
@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var prev = cap;
                 var cVarName = $"display.ogl_block_{capName}";
-                var block = _configurationManager.GetCVar<bool>(cVarName);
+                var block = ConfigurationManager.GetCVar<bool>(cVarName);
 
                 if (block)
                 {
@@ -146,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var cvar in cvars)
             {
-                _configurationManager.RegisterCVar($"display.ogl_block_{cvar}", false);
+                ConfigurationManager.RegisterCVar($"display.ogl_block_{cvar}", false);
             }
         }
 

@@ -101,13 +101,6 @@ namespace Robust.Shared.GameObjects
         void Initialize();
 
         /// <summary>
-        ///     This allows setting of the component's parameters from YAML once it is instantiated.
-        ///     This should basically be overridden by every inheriting component, as parameters will be different
-        ///     across the board.
-        /// </summary>
-        void ExposeData(ObjectSerializer serializer);
-
-        /// <summary>
         ///     Handles a local incoming component message.
         /// </summary>
         /// <param name="message">Incoming event message.</param>

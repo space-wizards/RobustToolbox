@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IEntityManager EntityManager = default!;
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
         [Obsolete("You need to create and store the query yourself in a field.")]
         protected IEntityQuery? EntityQuery;
@@ -96,25 +95,45 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
-        protected void QueueLocalEvent(EntitySystemMessage message)
+        protected void QueueLocalEvent(EntityEventArgs message)
         {
             EntityManager.EventBus.QueueEvent(EventSource.Local, message);
         }
 
-        protected void RaiseNetworkEvent(EntitySystemMessage message)
+        protected void RaiseNetworkEvent(EntityEventArgs message)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
         }
 
-        protected void RaiseNetworkEvent(EntitySystemMessage message, INetChannel channel)
+        protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message, channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
-            where T : EntitySystemMessage
+            where T : EntityEventArgs
         {
             return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
+        }
+
+        protected void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.SubscribeLocalEvent(handler);
+        }
+
+        protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.UnsubscribeLocalEvent(handler);
+        }
+
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
+            where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
         #endregion

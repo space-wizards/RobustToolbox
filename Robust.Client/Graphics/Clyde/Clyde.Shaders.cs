@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using StencilOp = Robust.Client.Graphics.StencilOp;
@@ -428,7 +428,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private protected override void SetParameterImpl(string name, Texture value)
             {
-                throw new NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
             private protected override void SetStencilOpImpl(StencilOp op)

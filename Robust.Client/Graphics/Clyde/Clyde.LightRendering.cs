@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
+using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -195,7 +196,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-
             _lightSoftShaderHandle = LoadShaderHandle("/Shaders/Internal/light-soft.swsl");
             _lightHardShaderHandle = LoadShaderHandle("/Shaders/Internal/light-hard.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
@@ -361,15 +361,22 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
-            CheckGlError();
-            GLClearColor(_lightManager.AmbientLightColor);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            CheckGlError();
+            GL.Enable(EnableCap.StencilTest);
+            _isStencilling = true;
 
             var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
             CheckGlError();
+
+            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
+            CheckGlError();
+            GLClearColor(_lightManager.AmbientLightColor);
+            GL.ClearStencil(0xFF);
+            GL.StencilMask(0xFF);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            CheckGlError();
+
+            ApplyLightingFovToBuffer(viewport, eye);
 
             var lightShader = _loadedShaders[_enableSoftShadows ? _lightSoftShaderHandle : _lightHardShaderHandle].Program;
             lightShader.Use();
@@ -380,6 +387,11 @@ namespace Robust.Client.Graphics.Clyde
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+            CheckGlError();
+
+            GL.StencilFunc(StencilFunction.Equal, 0xFF, 0xFF);
+            CheckGlError();
+            GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Keep);
             CheckGlError();
 
             var lastRange = float.NaN;
@@ -463,10 +475,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             ResetBlendFunc();
+            GL.Disable(EnableCap.StencilTest);
+            _isStencilling = false;
 
             CheckGlError();
-
-            ApplyLightingFovToBuffer(viewport, eye);
 
             BlurOntoWalls(viewport, eye);
 
@@ -485,40 +497,55 @@ namespace Robust.Client.Graphics.Clyde
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-            var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
-
             var state = (this, worldBounds, count: 0);
 
-            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
             {
-                var transform = light.Owner.Transform;
+                Box2 gridBounds;
 
-                if (state.count >= LightsToRenderListSize)
+                if (gridId == GridId.Invalid)
                 {
-                    // There are too many lights to fit in the static memory.
-                    return false;
+                    gridBounds = worldBounds;
+                }
+                else
+                {
+                    gridBounds = worldBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
                 }
 
-                if (!light.Enabled || light.ContainerOccluded)
+                var lightTree = renderingTreeSystem.GetLightTreeForMap(map, gridId);
+
+                lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
                 {
+                    var transform = light.Owner.Transform;
+
+                    if (state.count >= LightsToRenderListSize)
+                    {
+                        // There are too many lights to fit in the static memory.
+                        return false;
+                    }
+
+                    // TODO: Don't insert into trees for these, same as sprites.
+                    if (!light.Enabled || light.ContainerOccluded)
+                    {
+                        return true;
+                    }
+
+                    var lightPos = transform.WorldMatrix.Transform(light.Offset);
+
+                    var circle = new Circle(lightPos, light.Radius);
+
+                    // If the light doesn't touch anywhere the camera can see, it doesn't matter.
+                    if (!circle.Intersects(state.worldBounds))
+                    {
+                        return true;
+                    }
+
+                    float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
+                    state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
+
                     return true;
-                }
-
-                var lightPos = transform.WorldMatrix.Transform(light.Offset);
-
-                var circle = new Circle(lightPos, light.Radius);
-
-                // If the light doesn't touch anywhere the camera can see, it doesn't matter.
-                if (!circle.Intersects(state.worldBounds))
-                {
-                    return true;
-                }
-
-                float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
-                state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
-
-                return true;
-            }, worldBounds);
+                }, gridBounds);
+            }
 
             if (state.count > _maxLightsPerScene)
             {
@@ -577,7 +604,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * viewport.Size.Y / EyeManager.PixelsPerMeter;
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y * (1 / viewport.RenderScale.Y) / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -645,6 +672,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)
         {
+            GL.Clear(ClearBufferMask.StencilBufferBit);
+            GL.Enable(EnableCap.StencilTest);
+            GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
+            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+            GL.StencilMask(0xFF);
+
             // Applies FOV to the final framebuffer.
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
@@ -658,6 +691,10 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             DrawBlit(viewport, fovShader);
+
+            GL.StencilMask(0x00);
+            GL.Disable(EnableCap.StencilTest);
+            _isStencilling = false;
         }
 
         private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)
@@ -689,6 +726,13 @@ namespace Robust.Client.Graphics.Clyde
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
+
+            GL.StencilMask(0xFF);
+            CheckGlError();
+            GL.StencilFunc(StencilFunction.Always, 0, 0);
+            CheckGlError();
+            GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Replace);
+            CheckGlError();
 
             DrawBlit(viewport, fovShader);
 
@@ -939,7 +983,8 @@ namespace Robust.Client.Graphics.Clyde
             viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
                 name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
 
-            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
+            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize,
+                new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 

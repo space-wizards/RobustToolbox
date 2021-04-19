@@ -219,9 +219,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var offset = itemSelected.GetContentOffset(Vector2.Zero);
                 var baseLine = offset + (hOffset, vOffset + font.GetAscent(UIScale));
-                foreach (var chr in item.Text)
+                foreach (var rune in item.Text.EnumerateRunes())
                 {
-                    baseLine += (font.DrawChar(handle, chr, baseLine, UIScale, Color.White), 0);
+                    baseLine += (font.DrawChar(handle, rune, baseLine, UIScale, Color.White), 0);
                 }
             }
 

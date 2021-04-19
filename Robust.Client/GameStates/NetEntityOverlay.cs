@@ -1,13 +1,16 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
+using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -27,13 +30,13 @@ namespace Robust.Client.GameStates
         private const int TrafficHistorySize = 64; // Size of the traffic history bar in game ticks.
 
         /// <inheritdoc />
-        public override OverlaySpace Space => OverlaySpace.ScreenSpace;
-        
+        public override OverlaySpace Space => OverlaySpace.ScreenSpace | OverlaySpace.WorldSpace;
+
         private readonly Font _font;
         private readonly int _lineHeight;
         private readonly List<NetEntity> _netEnts = new();
 
-        public NetEntityOverlay() : base(nameof(NetEntityOverlay))
+        public NetEntityOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -42,12 +45,12 @@ namespace Robust.Client.GameStates
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
-        
+
         private void HandleGameStateApplied(GameStateAppliedArgs args)
         {
             if(_gameTiming.InPrediction) // we only care about real server states.
                 return;
-            
+
             // Shift traffic history down one
             for (var i = 0; i < _netEnts.Count; i++)
             {
@@ -74,7 +77,7 @@ namespace Robust.Client.GameStates
 
                         if (netEnt.Id != entityState.Uid)
                             continue;
-                    
+
                         //TODO: calculate size of state and record it here.
                         netEnt.Traffic[^1] = 1;
                         netEnt.LastUpdate = gameState.ToSequence;
@@ -94,15 +97,15 @@ namespace Robust.Client.GameStates
             }
 
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
-            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            float pvsRange = _configurationManager.GetCVar<float>("net.maxupdaterange");
             var pvsCenter = _eyeManager.CurrentEye.Position;
-            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize*2, pvsSize*2));
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsRange*2, pvsRange*2));
 
             int timeout = _gameTiming.TickRate * 3;
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
-                
+
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
@@ -123,22 +126,58 @@ namespace Robust.Client.GameStates
                 _netEnts[i] = netEnt; // copy struct back
             }
         }
-        
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
             if (!_netManager.IsConnected)
                 return;
 
+            switch (args.Space)
+            {
+                case OverlaySpace.ScreenSpace:
+                    DrawScreen(args);
+                    break;
+                case OverlaySpace.WorldSpace:
+                    DrawWorld(args);
+                    break;
+            }
+        }
+
+        private void DrawWorld(in OverlayDrawArgs args)
+        {
+            bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
+
+            if(!pvsEnabled)
+                return;
+
+            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            var pvsCenter = _eyeManager.CurrentEye.Position;
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
+
+            var worldHandle = args.WorldHandle;
+
+            worldHandle.DrawRect(pvsBox, Color.Red, false);
+        }
+
+        private void DrawScreen(in OverlayDrawArgs args)
+        {
             // remember, 0,0 is top left of ui with +X right and +Y down
-            var screenHandle = (DrawingHandleScreen)handle;
-            
+            var screenHandle = args.ScreenHandle;
+
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
 
+                if (!_entityManager.TryGetEntity(netEnt.Id, out var ent))
+                {
+                    _netEnts.RemoveSwap(i);
+                    i--;
+                    continue;
+                }
+
                 var xPos = 100;
                 var yPos = 10 + _lineHeight * i;
-                var name = $"({netEnt.Id}) {_entityManager.GetEntity(netEnt.Id).Prototype?.ID}";
+                var name = $"({netEnt.Id}) {ent.Prototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
                 DrawString(screenHandle, _font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);
@@ -179,20 +218,19 @@ namespace Robust.Client.GameStates
             return Color.Green; // Entity in PVS, but not updated recently.
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeBehavior()
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
-
-            base.Dispose(disposing);
+            base.DisposeBehavior();
         }
 
         private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str, Color textColor)
         {
             var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
 
-            foreach (var chr in str)
+            foreach (var rune in str.EnumerateRunes())
             {
-                var advance = font.DrawChar(handle, chr, baseLine, 1, textColor);
+                var advance = font.DrawChar(handle, rune, baseLine, 1, textColor);
                 baseLine += new Vector2(advance, 0);
             }
         }
@@ -225,7 +263,7 @@ namespace Robust.Client.GameStates
             {
                 if (args.Length != 1)
                 {
-                    shell.WriteError("Invalid argument amount. Expected 2 arguments.");
+                    shell.WriteError("Invalid argument amount. Expected 1 arguments.");
                     return;
                 }
 
@@ -238,14 +276,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                if(bValue && !overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
                     overlayMan.AddOverlay(new NetEntityOverlay());
                     shell.WriteLine("Enabled network entity report overlay.");
                 }
-                else if(!bValue && overlayMan.HasOverlay(nameof(NetEntityOverlay)))
+                else if(!bValue && overlayMan.HasOverlay(typeof(NetEntityOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetEntityOverlay));
+                    overlayMan.RemoveOverlay(typeof(NetEntityOverlay));
                     shell.WriteLine("Disabled network entity report overlay.");
                 }
             }

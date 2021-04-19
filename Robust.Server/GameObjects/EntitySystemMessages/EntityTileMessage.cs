@@ -12,7 +12,7 @@ namespace Robust.Server.GameObjects
     /// <remarks>
     ///    List is empty if it's no longer intersecting any.
     /// </remarks>
-    public sealed class TileLookupUpdateMessage : EntitySystemMessage
+    public sealed class TileLookupUpdateMessage : EntityEventArgs
     {
         public Dictionary<GridId, List<Vector2i>>? NewIndices { get; }
 

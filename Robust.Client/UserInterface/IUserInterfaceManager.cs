@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -32,6 +33,8 @@ namespace Robust.Client.UserInterface
         /// happens. When focus is lost on a control, it always fires Control.ControlFocusExited.
         /// </summary>
         Control? ControlFocused { get; }
+
+        ViewportContainer MainViewport { get; }
 
         LayoutContainer StateRoot { get; }
 

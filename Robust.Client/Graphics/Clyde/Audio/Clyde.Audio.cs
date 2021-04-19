@@ -53,7 +53,7 @@ namespace Robust.Client.Graphics.Clyde
 
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
-            _configurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
+            ConfigurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
         }
 
         private void _audioCreateContext()
@@ -81,7 +81,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _audioOpenDevice()
         {
-            var preferredDevice = _configurationManager.GetCVar(CVars.AudioDevice);
+            var preferredDevice = ConfigurationManager.GetCVar(CVars.AudioDevice);
 
             // Open device.
             if (!string.IsNullOrEmpty(preferredDevice))
@@ -482,7 +482,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var (x, y) = position;
 
-                if (!ValidatePosition(x, y))
+                if (!AreFinite(x, y))
                 {
                     return false;
                 }
@@ -503,7 +503,7 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            private static bool ValidatePosition(float x, float y)
+            private static bool AreFinite(float x, float y)
             {
                 if (float.IsFinite(x) && float.IsFinite(y))
                 {
@@ -511,6 +511,22 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return false;
+            }
+
+            public void SetVelocity(Vector2 velocity)
+            {
+                _checkDisposed();
+
+                var (x, y) = velocity;
+
+                if (!AreFinite(x, y))
+                {
+                    return;
+                }
+
+                AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
+
+                _checkAlError();
             }
 
             public void SetPitch(float pitch)
@@ -667,7 +683,6 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
-
             private void SetOcclusionEfx(float gain, float cutoff)
             {
                 if (FilterHandle == 0)
@@ -694,7 +709,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var (x, y) = position;
 
-                if (!ValidatePosition(x, y))
+                if (!AreFinite(x, y))
                 {
                     return false;
                 }
@@ -706,7 +721,7 @@ namespace Robust.Client.Graphics.Clyde
                 return true;
             }
 
-            private static bool ValidatePosition(float x, float y)
+            private static bool AreFinite(float x, float y)
             {
                 if (float.IsFinite(x) && float.IsFinite(y))
                 {
@@ -714,6 +729,22 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return false;
+            }
+
+            public void SetVelocity(Vector2 velocity)
+            {
+                _checkDisposed();
+
+                var (x, y) = velocity;
+
+                if (!AreFinite(x, y))
+                {
+                    return;
+                }
+
+                AL.Source(SourceHandle!.Value, ALSource3f.Velocity, x, y, 0);
+
+                _checkAlError();
             }
 
             public void SetPitch(float pitch)

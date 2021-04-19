@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -21,6 +22,19 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public EntityUid Uid { get; }
+
+        private EntityLifeStage _lifeStage;
+
+        /// <inheritdoc cref="IEntity.LifeStage" />
+        [ViewVariables]
+        internal EntityLifeStage LifeStage
+        {
+            get => _lifeStage;
+            set => _lifeStage = value;
+        }
+
+        /// <inheritdoc />
+        EntityLifeStage IEntity.LifeStage { get => LifeStage; set => LifeStage = value; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -52,26 +66,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [ViewVariables]
-        public bool Initialized { get; private set; }
-
-        [ViewVariables]
-        public bool Initializing
-        {
-            get => _initializing;
-            private set
-            {
-                _initializing = value;
-                if (value)
-                {
-                    EntityManager.UpdateEntityTree(this);
-                }
-            }
-        }
+        public bool Initialized => LifeStage >= EntityLifeStage.Initialized;
 
         /// <inheritdoc />
-        [ViewVariables]
-        public bool Deleted { get; private set; }
+        public bool Initializing => LifeStage == EntityLifeStage.Initializing;
+
+        /// <inheritdoc />
+        public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
         public bool Paused
@@ -95,8 +96,6 @@ namespace Robust.Shared.GameObjects
         public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
 
         private IMetaDataComponent? _metaData;
-
-        private bool _initializing;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -123,13 +122,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void InitializeComponents()
         {
-            Initializing = true;
+            DebugTools.Assert(LifeStage == EntityLifeStage.PreInit);
+            LifeStage = EntityLifeStage.Initializing;
+
             // Initialize() can modify the collection of components.
             var components = EntityManager.ComponentManager.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -150,8 +151,8 @@ namespace Robust.Shared.GameObjects
             }
 
 #endif
-            Initialized = true;
-            Initializing = false;
+            DebugTools.Assert(LifeStage == EntityLifeStage.Initializing);
+            LifeStage = EntityLifeStage.Initialized;
             EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
         }
 
@@ -168,7 +169,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -179,8 +180,6 @@ namespace Robust.Shared.GameObjects
                     comp.Running = true;
                 }
             }
-
-            EntityManager.UpdateEntityTree(this);
         }
 
         #endregion Initialization
@@ -188,6 +187,7 @@ namespace Robust.Shared.GameObjects
         #region Component Messaging
 
         /// <inheritdoc />
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendMessage(IComponent? owner, ComponentMessage message)
         {
             var components = EntityManager.ComponentManager.GetComponents(Uid);
@@ -199,9 +199,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
         {
-            EntityManager.EntityNetManager.SendComponentNetworkMessage(channel, this, owner, message);
+            EntityManager.EntityNetManager?.SendComponentNetworkMessage(channel, this, owner, message);
         }
 
         #endregion Component Messaging
@@ -260,14 +261,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponent GetComponent(uint netId)
-        {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
-
-            return EntityManager.ComponentManager.GetComponent(Uid, netId);
-        }
-
-        /// <inheritdoc />
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
@@ -291,28 +284,6 @@ namespace Robust.Shared.GameObjects
         public IComponent? GetComponentOrNull(Type type)
         {
             return TryGetComponent(type, out var component) ? component : null;
-        }
-
-        /// <inheritdoc />
-        public bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component)
-        {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
-
-            return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
-        }
-
-        public IComponent? GetComponentOrNull(uint netId)
-        {
-            return TryGetComponent(netId, out var component) ? component : null;
-        }
-
-        /// <inheritdoc />
-        public void Shutdown()
-        {
-            EntityManager.ComponentManager.DisposeComponents(Uid);
-
-            // Entity manager culls us because we're set to Deleted.
-            Deleted = true;
         }
 
         /// <inheritdoc />

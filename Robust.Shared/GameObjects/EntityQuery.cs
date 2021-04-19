@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -120,9 +121,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool Match(IEntity entity)
         {
-            if(Entity.TryGetComponent<IPhysicsComponent>(out var physics))
+            if(Entity.TryGetComponent<IPhysBody>(out var physics))
             {
-                return physics.MapID == entity.Transform.MapID && physics.WorldAABB.Contains(entity.Transform.WorldPosition);
+                return physics.Owner.Transform.MapID == entity.Transform.MapID && physics.GetWorldAABB().Contains(entity.Transform.WorldPosition);
             }
             return false;
         }

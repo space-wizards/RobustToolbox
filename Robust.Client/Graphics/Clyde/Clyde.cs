@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -12,10 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -47,8 +43,6 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
-        private Viewport _mainViewport = default!;
-
         private bool _drawingSplash = true;
 
         private GLShaderProgram? _currentProgram;
@@ -58,13 +52,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
-
-        private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
-            = new();
-
-        private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
-            _transferringScreenshots
-                = new();
 
         public Clyde()
         {
@@ -87,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.Initialize();
 
-            _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+            ConfigurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
             {
@@ -124,9 +111,9 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
-            _maxLightsPerScene = _configurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
-            _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
+            _lightmapDivider = ConfigurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _maxLightsPerScene = ConfigurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
+            _enableSoftShadows = ConfigurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
         protected override void ReloadConfig()
@@ -151,11 +138,6 @@ namespace Robust.Client.Graphics.Clyde
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
 
         public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
-
-        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
-        {
-            _queuedScreenshots.Add((type, callback));
-        }
 
         private void InitOpenGL()
         {
@@ -238,7 +220,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
+            var overrideGLVersion = ConfigurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;
@@ -306,7 +288,10 @@ namespace Robust.Client.Graphics.Clyde
             ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
             UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
-            CreateMainViewport();
+            screenBufferHandle = new GLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
+            ApplySampleParameters(TextureSampleParameters.Default);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _mainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()
@@ -323,17 +308,6 @@ namespace Robust.Client.Graphics.Clyde
             GL.EnableVertexAttribArray(1);
 
             return vao;
-        }
-
-        private void CreateMainViewport()
-        {
-            var (w, h) = _mainWindow!.FramebufferSize;
-
-            // Ensure viewport size is always even to avoid artifacts.
-            if (w % 2 == 1) w += 1;
-            if (h % 2 == 1) h += 1;
-
-            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         [Conditional("DEBUG")]

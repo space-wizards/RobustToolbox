@@ -91,7 +91,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         // Prevent window headers from getting off screen due to game window resizes.
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
             var (spaceX, spaceY) = Parent!.Size;
             if (Position.Y > spaceY)

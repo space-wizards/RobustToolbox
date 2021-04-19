@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables
         /// <summary>
         ///     Invoked when the value was changed.
         /// </summary>
-        internal event Action<object?>? OnValueChanged;
+        internal event Action<object?, bool>? OnValueChanged;
 
         protected bool ReadOnly { get; private set; }
 
@@ -23,9 +23,9 @@ namespace Robust.Client.ViewVariables
 
         protected abstract Control MakeUI(object? value);
 
-        protected void ValueChanged(object? newValue)
+        protected void ValueChanged(object? newValue, bool reinterpretValue = false)
         {
-            OnValueChanged?.Invoke(newValue);
+            OnValueChanged?.Invoke(newValue, reinterpretValue);
         }
 
         public virtual void WireNetworkSelector(uint sessionId, object[] selectorChain)

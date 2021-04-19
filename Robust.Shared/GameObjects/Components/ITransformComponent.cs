@@ -13,7 +13,22 @@ namespace Robust.Shared.GameObjects
     public interface ITransformComponent : IComponent
     {
         /// <summary>
-        /// Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
+        ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
+        /// </summary>
+        bool DeferUpdates { get; set; }
+
+        /// <summary>
+        ///     While updating did we actually defer anything?
+        /// </summary>
+        bool UpdatesDeferred { get; }
+
+        /// <summary>
+        ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
+        /// </summary>
+        void RunDeferred(Box2 worldAABB);
+
+        /// <summary>
+        ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
         /// </summary>
         bool NoLocalRotation { get; set; }
 
@@ -103,29 +118,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         GridId GridID { get; }
 
-        /// <summary>
-        ///     Whether external system updates should run or not (e.g. EntityTree, Matrices, PhysicsTree).
-        ///     These should be manually run later.
-        /// </summary>
-        bool DeferUpdates { get; set; }
-
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
-
-        /// <summary>
-        ///     Run the updates marked as deferred (UpdateEntityTree and movement events).
-        ///     Don't call this unless you REALLY need to.
-        /// </summary>
-        /// <remarks>
-        ///    Physics optimisation so these aren't spammed during physics updates.
-        /// </remarks>
-        void RunPhysicsDeferred();
 
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }
         IEnumerable<EntityUid> ChildEntityUids { get; }
         Matrix3 GetLocalMatrix();
         Matrix3 GetLocalMatrixInv();
+        void DetachParentToNull();
     }
 }

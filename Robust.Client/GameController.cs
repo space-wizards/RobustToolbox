@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Management;
 using System.Net;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
@@ -27,6 +28,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -44,9 +46,10 @@ namespace Robust.Client
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
+        [Dependency] private readonly IClientConsoleHost _console = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
@@ -63,6 +66,7 @@ namespace Robust.Client
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -79,6 +83,76 @@ namespace Robust.Client
         }
 
         public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
+        {
+            if (!StartupSystemSplash(logHandlerFactory))
+                return false;
+
+            // Disable load context usage on content start.
+            // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
+            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
+            _modLoader.SetEnableSandboxing(true);
+
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
+            {
+                Logger.Fatal("Errors while loading content assemblies.");
+                return false;
+            }
+
+            foreach (var loadedModule in _modLoader.LoadedModules)
+            {
+                _configurationManager.LoadCVarsFromAssembly(loadedModule);
+            }
+
+            IoCManager.Resolve<ISerializationManager>().Initialize();
+
+            // Call Init in game assemblies.
+            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
+            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            _resourceCache.PreloadTextures();
+            _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
+            _networkManager.Initialize(false);
+            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
+            _serializer.Initialize();
+            _inputManager.Initialize();
+            _console.Initialize();
+            _prototypeManager.Initialize();
+            _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
+            _prototypeManager.Resync();
+            _mapManager.Initialize();
+            _entityManager.Initialize();
+            IoCManager.Resolve<IEntityLookup>().Initialize();
+            _gameStateManager.Initialize();
+            _placementManager.Initialize();
+            _viewVariablesManager.Initialize();
+            _scriptClient.Initialize();
+
+            _client.Initialize();
+            _discord.Initialize();
+            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
+
+            if (_commandLineArgs?.Username != null)
+            {
+                _client.PlayerNameOverride = _commandLineArgs.Username;
+            }
+
+            _authManager.LoadFromEnv();
+
+            GC.Collect();
+
+            _clyde.Ready();
+
+            if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+                && LaunchState.ConnectEndpoint != null)
+            {
+                _client.ConnectToServer(LaunchState.ConnectEndpoint);
+            }
+
+            return true;
+        }
+
+        private bool StartupSystemSplash(Func<ILogHandler>? logHandlerFactory)
         {
             ReadInitialLaunchState();
 
@@ -118,6 +192,8 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
+            ProfileOptSetup.Setup(_configurationManager);
+
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
             ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
@@ -128,6 +204,19 @@ namespace Robust.Client
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }
 
+            _clyde.TextEntered += TextEntered;
+            _clyde.MouseMove += MouseMove;
+            _clyde.KeyUp += KeyUp;
+            _clyde.KeyDown += KeyDown;
+            _clyde.MouseWheel += MouseWheel;
+            _clyde.CloseWindow += args =>
+            {
+                if (args.Window == _clyde.MainWindow)
+                {
+                    Shutdown("Main window closed");
+                }
+            };
+
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())
             {
@@ -136,63 +225,7 @@ namespace Robust.Client
 
             _clyde.SetWindowTitle("Space Station 14");
 
-            _fontManager.Initialize();
-
-            // Disable load context usage on content start.
-            // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
-            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
-            _modLoader.SetEnableSandboxing(true);
-
-            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
-            {
-                Logger.Fatal("Errors while loading content assemblies.");
-                return false;
-            }
-
-            foreach (var loadedModule in _modLoader.LoadedModules)
-            {
-                _configurationManager.LoadCVarsFromAssembly(loadedModule);
-            }
-
-            // Call Init in game assemblies.
-            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
-            _modLoader.BroadcastRunLevel(ModRunLevel.Init);
-
-            _userInterfaceManager.Initialize();
-            _networkManager.Initialize(false);
-            IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
-            _serializer.Initialize();
-            _inputManager.Initialize();
-            _consoleHost.Initialize();
-            _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
-            _prototypeManager.Resync();
-            _mapManager.Initialize();
-            _entityManager.Initialize();
-            _gameStateManager.Initialize();
-            _placementManager.Initialize();
-            _viewVariablesManager.Initialize();
-            _scriptClient.Initialize();
-
-            _client.Initialize();
-            _discord.Initialize();
-            _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
-
-            if (_commandLineArgs?.Username != null)
-            {
-                _client.PlayerNameOverride = _commandLineArgs.Username;
-            }
-
-            _authManager.LoadFromEnv();
-
-            _clyde.Ready();
-
-            if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
-                && LaunchState.ConnectEndpoint != null)
-            {
-                _client.ConnectToServer(LaunchState.ConnectEndpoint);
-            }
-
+            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
             return true;
         }
 
@@ -269,17 +302,20 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
-            _userInterfaceManager.Update(frameEventArgs);
 
-            if (_client.RunLevel >= ClientRunLevel.Connected)
+            // GameStateManager is in full control of the simulation update in multiplayer.
+            if (_client.RunLevel == ClientRunLevel.InGame || _client.RunLevel == ClientRunLevel.Connected)
             {
-                _componentManager.CullRemovedComponents();
                 _gameStateManager.ApplyGameState();
-                _entityManager.Update(frameEventArgs.DeltaSeconds);
-                _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
-            _stateManager.Update(frameEventArgs);
+            // In singleplayer, however, we're in full control instead.
+            else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
+            {
+                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds);
+                _lookup.Update();
+            }
+
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 
@@ -300,11 +336,6 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
 
-        private void Render()
-        {
-
-        }
-
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
         {
             logManager.RootSawmill.AddHandler(logHandlerFactory());
@@ -320,7 +351,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
-            // logManager.GetSawmill("loc").Level = LogLevel.Error;
+            logManager.GetSawmill("loc").Level = LogLevel.Error;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG
@@ -381,6 +412,7 @@ namespace Robust.Client
         {
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
+            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
         }

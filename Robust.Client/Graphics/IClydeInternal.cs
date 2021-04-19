@@ -1,3 +1,4 @@
+using System;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.Maths;
@@ -15,6 +16,13 @@ namespace Robust.Client.Graphics
         // Init.
         bool Initialize();
         void Ready();
+
+        event Action<TextEventArgs> TextEntered;
+        event Action<MouseMoveEventArgs> MouseMove;
+        event Action<KeyEventArgs> KeyUp;
+        event Action<KeyEventArgs> KeyDown;
+        event Action<MouseWheelEventArgs> MouseWheel;
+        event Action<WindowClosedEventArgs>? CloseWindow;
 
         ClydeHandle LoadShader(ParsedShader shader, string? name = null);
 

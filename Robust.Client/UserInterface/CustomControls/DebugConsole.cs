@@ -2,12 +2,14 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Robust.Client.Console;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -301,43 +303,95 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private async void _loadHistoryFromDisk()
         {
-            CommandBar.ClearHistory();
-            Stream stream;
-            try
+            var sawmill = Logger.GetSawmill("dbgconsole");
+            var data = await Task.Run(async () =>
             {
-                stream = _resourceManager.UserData.OpenRead(HistoryPath);
-            }
-            catch (FileNotFoundException)
-            {
-                // Nada, nothing to load in that case.
-                return;
-            }
-
-            try
-            {
-                using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
+                Stream? stream = null;
+                for (var i = 0; i < 3; i++)
                 {
-                    var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
-                    CommandBar.ClearHistory();
-                    CommandBar.History.AddRange(data);
-                    CommandBar.HistoryIndex = CommandBar.History.Count;
+                    try
+                    {
+                        stream = _resourceManager.UserData.OpenRead(HistoryPath);
+                        break;
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        // Nada, nothing to load in that case.
+                        return null;
+                    }
+                    catch (IOException)
+                    {
+                        // File locked probably??
+                        await Task.Delay(10);
+                    }
                 }
-            }
-            finally
-            {
-                stream?.Dispose();
-            }
+
+                if (stream == null)
+                {
+                    sawmill.Warning("Failed to load debug console history!");
+                    return null;
+                }
+
+                try
+                {
+                    return await JsonSerializer.DeserializeAsync<string[]>(stream);
+                }
+                catch (Exception e)
+                {
+                    sawmill.Warning("Failed to load debug console history due to exception!\n{e}");
+                    return null;
+                }
+                finally
+                {
+                    // ReSharper disable once MethodHasAsyncOverload
+                    stream.Dispose();
+                }
+            });
+
+            if (data == null)
+                return;
+
+            CommandBar.ClearHistory();
+            CommandBar.History.AddRange(data);
+            CommandBar.HistoryIndex = CommandBar.History.Count;
         }
 
-        private void _flushHistoryToDisk()
+        private async void _flushHistoryToDisk()
         {
-            using (var stream = _resourceManager.UserData.Create(HistoryPath))
-            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
+            CommandBar.HistoryIndex = CommandBar.History.Count;
+
+            var sawmill = Logger.GetSawmill("dbgconsole");
+            var newHistory = JsonSerializer.Serialize(CommandBar.History);
+
+            await Task.Run(async () =>
             {
-                var data = JsonConvert.SerializeObject(CommandBar.History);
-                CommandBar.HistoryIndex = CommandBar.History.Count;
-                writer.Write(data);
-            }
+                Stream? stream = null;
+
+                for (var i = 0; i < 3; i++)
+                {
+                    try
+                    {
+                        stream = _resourceManager.UserData.Create(HistoryPath);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        // Probably locking.
+                        await Task.Delay(10);
+                    }
+                }
+
+                if (stream == null)
+                {
+                    sawmill.Warning("Failed to save debug console history!");
+                    return;
+                }
+
+                // ReSharper disable once UseAwaitUsing
+                using var writer = new StreamWriter(stream, EncodingHelpers.UTF8);
+                // ReSharper disable once MethodHasAsyncOverload
+                writer.Write(newHistory);
+            });
         }
     }
 }

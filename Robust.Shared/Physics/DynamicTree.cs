@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Initially based on Box2D by Erin Catto, license follows;
  *
  * Copyright (c) 2009 Erin Catto http://www.box2d.org
@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics
 
         // avoids "Collection was modified; enumeration operation may not execute."
         private Dictionary<T, Proxy> _nodeLookup;
-        private readonly B2DynamicTree<T> _b2Tree;
+        public readonly B2DynamicTree<T> _b2Tree;
 
         public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null)
         {
@@ -125,22 +125,22 @@ namespace Robust.Shared.Physics
             => Add(item);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Add(in T item)
+        public bool Add(in T item, Box2? aabb = null)
         {
             if (TryGetProxy(item, out var proxy))
             {
                 return false;
             }
 
-            var box = _extractAabb(item);
+            aabb ??= _extractAabb(item);
 
-            if (CheckNaNs(box))
+            if (CheckNaNs(aabb.Value))
             {
                 _nodeLookup[item] = Proxy.Free;
                 return true;
             }
 
-            proxy = _b2Tree.CreateProxy(box, item);
+            proxy = _b2Tree.CreateProxy(aabb.Value, item);
             _nodeLookup[item] = proxy;
 
             return true;
@@ -180,16 +180,16 @@ namespace Robust.Shared.Physics
             => Remove(item);
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public bool Update(in T item)
+        public bool Update(in T item, Box2? newBox = null)
         {
             if (!TryGetProxy(item, out var proxy))
             {
                 return false;
             }
 
-            var newBox = _extractAabb(item);
+            newBox ??= _extractAabb(item);
 
-            if (CheckNaNs(newBox))
+            if (CheckNaNs(newBox.Value))
             {
                 if (proxy == Proxy.Free)
                 {
@@ -203,11 +203,11 @@ namespace Robust.Shared.Physics
 
             if (proxy == Proxy.Free)
             {
-                _nodeLookup[item] = _b2Tree.CreateProxy(newBox, item);
+                _nodeLookup[item] = _b2Tree.CreateProxy(newBox.Value, item);
                 return true;
             }
 
-            return _b2Tree.MoveProxy(proxy, newBox, Vector2.Zero);
+            return _b2Tree.MoveProxy(proxy, newBox.Value, Vector2.Zero);
         }
 
         public void QueryAabb(QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
@@ -331,7 +331,7 @@ namespace Robust.Shared.Physics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AddOrUpdate(T item) => Update(item) || Add(item);
+        public bool AddOrUpdate(T item, Box2? newAABB = null) => Update(item, newAABB) || Add(item, newAABB);
 
         private static bool CheckNaNs(in Box2 box)
         {

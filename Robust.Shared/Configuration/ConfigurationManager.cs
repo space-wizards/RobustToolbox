@@ -251,7 +251,7 @@ namespace Robust.Shared.Configuration
 
             if (invokeImmediately)
             {
-                onValueChanged((T) (reg.Value ?? reg.DefaultValue)!);
+                onValueChanged(GetCVar<T>(name));
             }
         }
 

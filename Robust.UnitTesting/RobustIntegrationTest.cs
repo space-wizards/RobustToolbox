@@ -17,9 +17,9 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Timing;
-using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerProgram = Robust.Server.Program;
 
 namespace Robust.UnitTesting
@@ -355,7 +355,8 @@ namespace Robust.UnitTesting
 
                     cfg.OverrideConVars(new []{("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
 
-                    if (server.Start(() => new TestLogHandler("SERVER")))
+                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
+                    if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
                     {
                         throw new Exception("Server failed to start.");
                     }
@@ -447,7 +448,8 @@ namespace Robust.UnitTesting
 
                     cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
 
-                    client.Startup(() => new TestLogHandler("CLIENT"));
+                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
+                    client.Startup(() => new TestLogHandler("CLIENT", failureLevel));
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);
@@ -500,8 +502,6 @@ namespace Robust.UnitTesting
                 // Ack tick message 1 is implied as "init done"
                 _channelWriter.TryWrite(new AckTicksMessage(1));
                 Running = true;
-
-                Tick += (a, b) => Console.WriteLine("tick: {0}", _gameTiming.CurTick);
 
                 _gameTiming.InSimulation = true;
 
@@ -565,6 +565,7 @@ namespace Robust.UnitTesting
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
+            public LogLevel? FailureLogLevel { get; set; } = LogLevel.Error;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
         }

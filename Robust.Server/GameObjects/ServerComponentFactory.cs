@@ -1,4 +1,7 @@
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+
+using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {
@@ -27,16 +30,19 @@ namespace Robust.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
+
+            Register<CollisionWakeComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
+
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
@@ -52,7 +58,6 @@ namespace Robust.Server.GameObjects
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();
-            Register<DebugExceptionExposeDataComponent>();
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif

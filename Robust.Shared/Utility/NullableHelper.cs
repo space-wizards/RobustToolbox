@@ -8,10 +8,26 @@ namespace Robust.Shared.Utility
     {
         private const int NotAnnotatedNullableFlag = 1;
 
+        private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?>
+            _nullableAttributeTypeCache = new();
 
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?> _nullableAttributeTypeCache = new();
+        private static readonly Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?>
+            _nullableContextAttributeTypeCache = new();
 
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?> _nullableContextAttributeTypeCache = new();
+        public static Type EnsureNullableType(this Type type)
+        {
+            if (type.IsValueType)
+            {
+                return typeof(Nullable<>).MakeGenericType(type);
+            }
+
+            return type;
+        }
+
+        public static Type EnsureNotNullableType(this Type type)
+        {
+            return Nullable.GetUnderlyingType(type) ?? type;
+        }
 
         /// <summary>
         /// Checks if the field has a nullable annotation [?]
@@ -29,6 +45,11 @@ namespace Robust.Shared.Utility
 
             var cflag = GetNullableContextFlag(field.DeclaringType);
             return cflag != NotAnnotatedNullableFlag;
+        }
+
+        public static bool IsNullable(this Type type)
+        {
+            return Nullable.GetUnderlyingType(type) != type;
         }
 
         private static byte[] GetNullableFlags(FieldInfo field)

@@ -163,9 +163,9 @@ namespace Robust.Client.UserInterface.Controls
 
                 var titleLength = 0;
                 // Get string length.
-                foreach (var chr in title)
+                foreach (var rune in title.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                     {
                         continue;
                     }
@@ -196,14 +196,14 @@ namespace Robust.Client.UserInterface.Controls
 
                 var baseLine = new Vector2(0, font.GetAscent(UIScale)) + contentBox.TopLeft;
 
-                foreach (var chr in title)
+                foreach (var rune in title.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                     {
                         continue;
                     }
 
-                    font.DrawChar(handle, chr, baseLine, UIScale, active ? fontColorActive : fontColorInactive);
+                    font.DrawChar(handle, rune, baseLine, UIScale, active ? fontColorActive : fontColorInactive);
                     baseLine += new Vector2(metrics.Advance, 0);
                 }
 
@@ -295,9 +295,9 @@ namespace Robust.Client.UserInterface.Controls
 
                 var titleLength = 0;
                 // Get string length.
-                foreach (var chr in title)
+                foreach (var rune in title.EnumerateRunes())
                 {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    if (!font.TryGetCharMetrics(rune, UIScale, out var metrics))
                     {
                         continue;
                     }

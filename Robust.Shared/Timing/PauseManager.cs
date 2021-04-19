@@ -5,6 +5,7 @@ using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
 
@@ -13,7 +14,6 @@ namespace Robust.Shared.Timing
     internal sealed class PauseManager : IPauseManager, IPostInjectInit
     {
         [Dependency] private readonly IConsoleHost _conhost = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
@@ -21,11 +21,13 @@ namespace Robust.Shared.Timing
 
         public void SetMapPaused(MapId mapId, bool paused)
         {
+            var lookupSystem = IoCManager.Resolve<IEntityLookup>();
+
             if (paused)
             {
                 _pausedMaps.Add(mapId);
 
-                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
                     entity.Paused = true;
                 }
@@ -34,7 +36,7 @@ namespace Robust.Shared.Timing
             {
                 _pausedMaps.Remove(mapId);
 
-                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
                     entity.Paused = false;
                 }
@@ -48,7 +50,7 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 entity.RunMapInit();
                 entity.Paused = false;
@@ -64,7 +66,7 @@ namespace Robust.Shared.Timing
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
 
-            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)
                     continue;
@@ -91,8 +93,13 @@ namespace Robust.Shared.Timing
 
         public bool IsGridPaused(GridId gridId)
         {
-            var grid = _mapManager.GetGrid(gridId);
-            return IsGridPaused(grid);
+            if (_mapManager.TryGetGrid(gridId, out var grid))
+            {
+                return IsGridPaused(grid);
+            }
+
+            Logger.ErrorS("map", $"Tried to check if unknown grid {gridId} was paused.");
+            return true;
         }
 
         public bool IsMapInitialized(MapId mapId)

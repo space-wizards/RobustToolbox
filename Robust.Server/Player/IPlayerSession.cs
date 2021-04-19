@@ -7,14 +7,7 @@ namespace Robust.Server.Player
 {
     public interface IPlayerSession : ICommonSession
     {
-        INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }
-
-        /// <summary>
-        ///     The visibility mask for this player.
-        ///     The player will be able to get updates for entities whose layers match the mask.
-        /// </summary>
-        int VisibilityMask { get; set; }
 
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
@@ -28,7 +21,7 @@ namespace Robust.Server.Player
         ///     Do not call this directly for most content code.
         /// </summary>
         /// <param name="a">The entity to attach to.</param>
-        void AttachToEntity(IEntity a);
+        void AttachToEntity(IEntity? a);
 
         /// <summary>
         ///     Detaches this player from an entity.

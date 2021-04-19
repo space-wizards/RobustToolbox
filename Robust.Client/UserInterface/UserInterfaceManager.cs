@@ -63,6 +63,7 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public Control? ControlFocused { get; private set; }
 
+        [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
         [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
@@ -133,7 +134,17 @@ namespace Robust.Client.UserInterface
         {
             RootControl = CreateWindowRoot(_displayManager.MainWindow);
 
+            RootControl.InvalidateMeasure();
+            QueueMeasureUpdate(RootControl);
+
             _displayManager.OnWindowResized += WindowSizeChanged;
+            _displayManager.OnWindowScaleChanged += UpdateUIScale;
+
+            MainViewport = new MainViewportContainer(_eyeManager)
+            {
+                Name = "MainViewport"
+            };
+            RootControl.AddChild(MainViewport);
 
             StateRoot = new LayoutContainer
             {
@@ -199,21 +210,8 @@ namespace Robust.Client.UserInterface
             return newRoot;
         }
 
-        public void Update(FrameEventArgs args)
-        {
-            foreach (var root in _roots)
-            {
-                root.DoUpdate(args);
-            }
-        }
-
         public void FrameUpdate(FrameEventArgs args)
         {
-            foreach (var root in _roots)
-            {
-                root.DoFrameUpdate(args);
-            }
-
             // Process queued style & layout updates.
             while (_styleUpdateQueue.Count != 0)
             {
@@ -249,6 +247,11 @@ namespace Robust.Client.UserInterface
                 }
 
                 RunArrange(control);
+            }
+
+            foreach (var root in _roots)
+            {
+                root.DoFrameUpdate(args);
             }
 
             // count down tooltip delay if we're not showing one yet and
@@ -627,11 +630,6 @@ namespace Robust.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
-            if (!_rendering)
-            {
-                return;
-            }
-
             foreach (var root in _roots)
             {
                 if (root.Window == _displayManager.MainWindow)
@@ -674,7 +672,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
+        private void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -723,8 +721,11 @@ namespace Robust.Client.UserInterface
                 renderHandle.SetScissor(scissorRegion);
             }
 
-            control.DrawInternal(renderHandle);
-            handle.UseShader(null);
+            if (_rendering || control.AlwaysRender)
+            {
+                control.DrawInternal(renderHandle);
+                handle.UseShader(null);
+            }
 
             foreach (var child in control.Children)
             {
@@ -874,7 +875,13 @@ namespace Robust.Client.UserInterface
 
         private void _uiScaleChanged(float newValue)
         {
-            UIScale = newValue == 0f ? DefaultUIScale : newValue;
+            UpdateUIScale();
+        }
+
+        private void UpdateUIScale()
+        {
+            var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
+            UIScale = newVal == 0f ? DefaultUIScale : newVal;
 
             foreach (var root in _roots)
             {
@@ -916,6 +923,8 @@ namespace Robust.Client.UserInterface
                 KeyBindUp(args);
             }
 
+            // If we are in a focused control or doing a CanFocus, return true
+            // So that InputManager doesn't propagate events to simulation.
             if (!args.CanFocus && KeyboardFocused != null)
             {
                 return true;

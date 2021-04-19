@@ -11,8 +11,6 @@ namespace Robust.Client.UserInterface
         void Initialize();
         void InitializeTesting();
 
-        void Update(FrameEventArgs args);
-
         void FrameUpdate(FrameEventArgs args);
 
         /// <returns>True if a UI control was hit and the key event should not pass through past UI.</returns>

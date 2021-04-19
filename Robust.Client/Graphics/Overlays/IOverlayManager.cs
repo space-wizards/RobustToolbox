@@ -1,22 +1,29 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics
 {
+
     [PublicAPI]
     public interface IOverlayManager
     {
-        void AddOverlay(Overlay overlay);
-        void RemoveOverlay(string id);
-        bool HasOverlay(string id);
+        bool AddOverlay(Overlay overlay);
 
-        Overlay GetOverlay(string id);
-        T GetOverlay<T>(string id) where T : Overlay;
+        bool RemoveOverlay(Overlay overlay);
+        bool RemoveOverlay(Type overlayClass);
+        bool RemoveOverlay<T>() where T : Overlay;
 
-        bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay);
-        bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay;
+        bool TryGetOverlay(Type overlayClass, out Overlay? overlay);
+        bool TryGetOverlay<T>(out T? overlay) where T : Overlay;
+
+        Overlay GetOverlay(Type overlayClass);
+        T GetOverlay<T>() where T : Overlay;
+
+        bool HasOverlay(Type overlayClass);
+        bool HasOverlay<T>() where T : Overlay;
 
         IEnumerable<Overlay> AllOverlays { get; }
     }

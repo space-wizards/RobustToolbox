@@ -49,6 +49,10 @@ namespace Robust.Shared.GameObjects
     /// <seealso cref="IComponent" />
     public interface IComponentFactory
     {
+        event Action<IComponentRegistration> ComponentAdded;
+        event Action<(IComponentRegistration, Type)> ComponentReferenceAdded;
+        event Action<string> ComponentIgnoreAdded;
+
         /// <summary>
         ///     All IComponent types that are currently registered to this factory.
         /// </summary>

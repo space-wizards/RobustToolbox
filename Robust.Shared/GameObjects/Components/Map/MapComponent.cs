@@ -1,7 +1,9 @@
 ﻿using System;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -19,7 +21,8 @@ namespace Robust.Shared.GameObjects
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]
-        private MapId _mapIndex;
+        [DataField("index")]
+        private MapId _mapIndex = MapId.Nullspace;
 
         /// <inheritdoc />
         public override string Name => "Map";
@@ -58,14 +61,6 @@ namespace Robust.Shared.GameObjects
             _mapIndex = state.MapId;
 
             ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _mapIndex, "index", MapId.Nullspace);
         }
     }
 

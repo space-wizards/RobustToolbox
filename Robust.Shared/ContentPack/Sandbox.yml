@@ -1,14 +1,13 @@
 ﻿# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
 # Yes, I typed most of this out by hand.
 
-
-SystemAssemblyName: System.Runtime
-
 # ILVerify errors that are allowed.
 AllowedVerifierErrors:
 # InitOnly happens a lot when calling e.g. ToString() on a readonly field.
 # It's fine and doesn't break anything runtime related so...
 - InitOnly
+# ILVerify has problems with Default Interface Methods so...
+- InterfaceMethodNotImplemented
 
 # EVERYTHING in these namespaces is allowed.
 WhitelistedNamespaces:
@@ -568,6 +567,7 @@ Types:
       - "System.Text.Encoding get_UTF8()"
       - "System.Text.Encoding get_UTF32()"
     NormalizationForm: { } # Enum
+    Rune: { All: True }
     StringBuilder:
       Methods:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
@@ -824,7 +824,7 @@ Types:
     Converter`2: { All: True } # Delegate
     DateTime: { All: True }
     DateTimeKind: { } # Enum
-    DateTimeOffse: { All: True }
+    DateTimeOffset: { All: True }
     Delegate:
       Methods:
       - "System.Delegate Combine(System.Delegate, System.Delegate)"
@@ -1132,7 +1132,7 @@ Types:
       - "string[] Split(string, System.StringSplitOptions)"
       - "string[] Split(string[], int, System.StringSplitOptions)"
       - "string[] Split(string[], System.StringSplitOptions)"
-      - "StringRuneEnumerator EnumerateRunes()"
+      - "System.Text.StringRuneEnumerator EnumerateRunes()"
       - "System.CharEnumerator GetEnumerator()"
       - "System.ReadOnlySpan`1<char> op_Implicit(string)"
       - "System.TypeCode GetTypeCode()"

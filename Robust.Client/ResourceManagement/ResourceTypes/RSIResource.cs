@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Text.Json;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Utility;
-using Robust.Shared.Log;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-
-using Newtonsoft.Json.Linq;
-#if DEBUG
-using NJsonSchema;
-#endif
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -24,6 +20,14 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     public sealed class RSIResource : BaseResource
     {
+        private static readonly float[] OneArray = {1};
+
+        private static readonly JsonSerializerOptions SerializerOptions =
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            {
+                AllowTrailingCommas = true
+            };
+
         public RSI RSI { get; private set; } = default!;
 
         /// <summary>
@@ -38,64 +42,59 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            var manifestPath = path / "meta.json";
-            string manifestContents;
+            var clyde = IoCManager.Resolve<IClyde>();
 
-            using (var manifestFile = cache.ContentFileRead(manifestPath))
-            using (var reader = new StreamReader(manifestFile))
-            {
-                manifestContents = reader.ReadToEnd();
-            }
+            var loadStepData = new LoadStepData {Path = path};
+            LoadPreTexture(cache, loadStepData);
 
-#if DEBUG
-            if (RSISchema != null)
-            {
-                var errors = RSISchema.Validate(manifestContents);
-                if (errors.Count != 0)
-                {
-                    Logger.Error($"Unable to load RSI from '{path}', {errors.Count} errors:");
+            // Load atlas.
+            LoadTexture(clyde, loadStepData);
 
-                    foreach (var error in errors)
-                    {
-                        Logger.Error("{0}", error.ToString());
-                    }
+            LoadPostTexture(loadStepData);
+            LoadFinish(cache, loadStepData);
 
-                    throw new RSILoadException($"{errors.Count} errors while loading RSI. See console.");
-                }
-            }
-#endif
+            loadStepData.AtlasSheet.Dispose();
+        }
 
-            // Ok schema validated just fine.
-            var manifestJson = JObject.Parse(manifestContents);
+        internal static void LoadTexture(IClyde clyde, LoadStepData loadStepData)
+        {
+            loadStepData.AtlasTexture = clyde.LoadTextureFromImage(
+                loadStepData.AtlasSheet,
+                loadStepData.Path.ToString());
+        }
 
-            var toAtlas = new List<(Image<Rgba32> src, Texture[][] output, int[][] indices, Vector2i[][] offsets, int totalFrameCount)>();
+        internal static void LoadPreTexture(IResourceCache cache, LoadStepData data)
+        {
+            var metadata = LoadRsiMetadata(cache, data.Path);
 
-            var metaData = ParseMetaData(manifestJson);
-            var frameSize = metaData.Size;
-            var rsi = new RSI(frameSize, path);
+            var stateCount = metadata.States.Length;
+            var toAtlas = new StateReg[stateCount];
 
-            var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>();
+            var frameSize = metadata.Size;
+            var rsi = new RSI(frameSize, data.Path);
+
+            var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
 
             // Do every state.
-            foreach (var stateObject in metaData.States)
+            for (var index = 0; index < metadata.States.Length; index++)
             {
-                // Load image from disk.
-                var texPath = path / (stateObject.StateId + ".png");
-                var stream = cache.ContentFileRead(texPath);
-                Image<Rgba32> image;
-                using (stream)
-                {
-                    image = Image.Load<Rgba32>(stream);
-                }
-                var sheetSize = new Vector2i(image.Width, image.Height);
+                ref var reg = ref toAtlas[index];
 
-                if (sheetSize.X % frameSize.X != 0 || sheetSize.Y % frameSize.Y != 0)
+                var stateObject = metadata.States[index];
+                // Load image from disk.
+                var texPath = data.Path / (stateObject.StateId + ".png");
+                using (var stream = cache.ContentFileRead(texPath))
+                {
+                    reg.Src = Image.Load<Rgba32>(stream);
+                }
+
+                if (reg.Src.Width % frameSize.X != 0 || reg.Src.Height % frameSize.Y != 0)
                 {
                     throw new RSILoadException("State image size is not a multiple of the icon size.");
                 }
 
                 // Load all frames into a list so we can operate on it more sanely.
-                var frameCount = stateObject.Delays.Sum(delayList => delayList.Length);
+                reg.TotalFrameCount = stateObject.Delays.Sum(delayList => delayList.Length);
 
                 var (foldedDelays, foldedIndices) = FoldDelays(stateObject.Delays);
 
@@ -108,29 +107,34 @@ namespace Robust.Client.ResourceManagement
                     callbackOffset[i] = new Vector2i[foldedIndices[0].Length];
                 }
 
-                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays, textures);
+                reg.Output = textures;
+                reg.Indices = foldedIndices;
+                reg.Offsets = callbackOffset;
+
+                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays,
+                    textures);
                 rsi.AddState(state);
 
-                toAtlas.Add((image, textures, foldedIndices, callbackOffset, frameCount));
                 callbackOffsets[stateObject.StateId] = callbackOffset;
             }
 
             // Poorly hacked in texture atlas support here.
-            var totalFrameCount = toAtlas.Sum(p => p.totalFrameCount);
+            var totalFrameCount = toAtlas.Sum(p => p.TotalFrameCount);
 
             // Generate atlas.
             var dimensionX = (int) MathF.Ceiling(MathF.Sqrt(totalFrameCount));
             var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
 
-            using var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
+            var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
 
             var sheetIndex = 0;
-            foreach (var (src, _, _, _, frameCount) in toAtlas)
+            for (var index = 0; index < toAtlas.Length; index++)
             {
+                ref var reg = ref toAtlas[index];
                 // Blit all the frames over.
-                for (var i = 0; i < frameCount; i++)
+                for (var i = 0; i < reg.TotalFrameCount; i++)
                 {
-                    var srcWidth = (src.Width / frameSize.X);
+                    var srcWidth = (reg.Src.Width / frameSize.X);
                     var srcColumn = i % srcWidth;
                     var srcRow = i / srcWidth;
                     var srcPos = (srcColumn * frameSize.X, srcRow * frameSize.Y);
@@ -141,30 +145,49 @@ namespace Robust.Client.ResourceManagement
 
                     var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
 
-                    src.Blit(srcBox, sheet, sheetPos);
+                    reg.Src.Blit(srcBox, sheet, sheetPos);
                 }
 
-                sheetIndex += frameCount;
+                sheetIndex += reg.TotalFrameCount;
             }
 
-            // Load atlas.
-            var texture = Texture.LoadFromImage(sheet, path.ToString());
+            for (var i = 0; i < toAtlas.Length; i++)
+            {
+                ref var reg = ref toAtlas[i];
+                reg.Src.Dispose();
+            }
+
+            data.Rsi = rsi;
+            data.AtlasSheet = sheet;
+            data.AtlasList = toAtlas;
+            data.FrameSize = frameSize;
+            data.DimX = dimensionX;
+            data.CallbackOffsets = callbackOffsets;
+        }
+
+        internal static void LoadPostTexture(LoadStepData data)
+        {
+            var dimX = data.DimX;
+            var toAtlas = data.AtlasList;
+            var frameSize = data.FrameSize;
+            var texture = data.AtlasTexture;
 
             var sheetOffset = 0;
-            foreach (var (_, output, indices, offsets, frameCount) in toAtlas)
+            for (var toAtlasIndex = 0; toAtlasIndex < toAtlas.Length; toAtlasIndex++)
             {
-                for (var i = 0; i < indices.Length; i++)
+                ref var reg = ref toAtlas[toAtlasIndex];
+                for (var i = 0; i < reg.Indices.Length; i++)
                 {
-                    var dirIndices = indices[i];
-                    var dirOutput = output[i];
-                    var dirOffsets = offsets[i];
+                    var dirIndices = reg.Indices[i];
+                    var dirOutput = reg.Output[i];
+                    var dirOffsets = reg.Offsets[i];
 
                     for (var j = 0; j < dirIndices.Length; j++)
                     {
                         var index = sheetOffset + dirIndices[j];
 
-                        var sheetColumn = index % dimensionX;
-                        var sheetRow = index / dimensionX;
+                        var sheetColumn = index % dimX;
+                        var sheetRow = index / dimX;
                         var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
 
                         dirOffsets[j] = sheetPos;
@@ -172,20 +195,102 @@ namespace Robust.Client.ResourceManagement
                     }
                 }
 
-                sheetOffset += frameCount;
+                sheetOffset += reg.TotalFrameCount;
             }
+        }
 
-            foreach (var (image, _, _, _, _) in toAtlas)
-            {
-                image.Dispose();
-            }
-
-            RSI = rsi;
+        internal void LoadFinish(IResourceCache cache, LoadStepData data)
+        {
+            RSI = data.Rsi;
 
             if (cache is IResourceCacheInternal cacheInternal)
             {
-                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(path, this, sheet, callbackOffsets));
+                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(data.Path, this, data.AtlasSheet, data.CallbackOffsets));
             }
+        }
+
+        private static RsiMetadata LoadRsiMetadata(IResourceCache cache, ResourcePath path)
+        {
+            var manifestPath = path / "meta.json";
+            string manifestContents;
+
+            using (var manifestFile = cache.ContentFileRead(manifestPath))
+            using (var reader = new StreamReader(manifestFile))
+            {
+                manifestContents = reader.ReadToEnd();
+            }
+
+            // Ok schema validated just fine.
+            var manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
+
+            if (manifestJson == null)
+                throw new RSILoadException("Manifest JSON was null!");
+
+            var size = manifestJson.Size;
+            var states = new StateMetadata[manifestJson.States.Length];
+
+            for (var stateI = 0; stateI < manifestJson.States.Length; stateI++)
+            {
+                var stateObject = manifestJson.States[stateI];
+                var stateName = stateObject.Name;
+                RSI.State.DirectionType directions;
+                int dirValue;
+
+                if (stateObject.Directions is { } dirVal)
+                {
+                    dirValue = dirVal;
+                    directions = dirVal switch
+                    {
+                        1 => RSI.State.DirectionType.Dir1,
+                        4 => RSI.State.DirectionType.Dir4,
+                        8 => RSI.State.DirectionType.Dir8,
+                        _ => throw new RSILoadException($"Invalid direction: {dirValue} expected 1, 4 or 8")
+                    };
+                }
+                else
+                {
+                    dirValue = 1;
+                    directions = RSI.State.DirectionType.Dir1;
+                }
+
+                // We can ignore selectors and flags for now,
+                // because they're not used yet!
+
+                // Get the lists of delays.
+                float[][] delays;
+                if (stateObject.Delays != null)
+                {
+                    delays = stateObject.Delays;
+
+                    if (delays.Length != dirValue)
+                    {
+                        throw new RSILoadException(
+                            "DirectionsdirectionFramesList count does not match amount of delays specified.");
+                    }
+
+                    for (var i = 0; i < delays.Length; i++)
+                    {
+                        var delayList = delays[i];
+                        if (delayList.Length == 0)
+                        {
+                            delays[i] = OneArray;
+                        }
+                    }
+                }
+                else
+                {
+                    delays = new float[dirValue][];
+                    // No delays specified, default to 1 frame per dir.
+                    for (var i = 0; i < dirValue; i++)
+                    {
+                        delays[i] = OneArray;
+                    }
+                }
+
+                states[stateI] = new StateMetadata(new RSI.StateId(stateName), directions, delays);
+            }
+
+            return new RsiMetadata(size, states);
         }
 
         /// <summary>
@@ -336,109 +441,38 @@ namespace Robust.Client.ResourceManagement
             return (floatDelays, arrayIndices);
         }
 
-        internal static RsiMetadata ParseMetaData(JObject manifestJson)
+        internal sealed class LoadStepData
         {
-            var size = manifestJson["size"]!.ToObject<Vector2i>();
-            var states = new List<StateMetadata>();
-
-            foreach (var stateObject in manifestJson["states"]!.Cast<JObject>())
-            {
-                var stateName = stateObject["name"]!.ToObject<string>()!;
-                RSI.State.DirectionType directions;
-                int dirValue;
-
-                if (stateObject.TryGetValue("directions", out var dirJToken))
-                {
-                    dirValue= dirJToken.ToObject<int>();
-                    directions = dirValue switch
-                    {
-                        1 => RSI.State.DirectionType.Dir1,
-                        4 => RSI.State.DirectionType.Dir4,
-                        8 => RSI.State.DirectionType.Dir8,
-                        _ => throw new RSILoadException($"Invalid direction: {dirValue} expected 1, 4 or 8")
-                    };
-                }
-                else
-                {
-                    dirValue = 1;
-                    directions = RSI.State.DirectionType.Dir1;
-                }
-
-                // We can ignore selectors and flags for now,
-                // because they're not used yet!
-
-                // Get the lists of delays.
-                float[][] delays;
-                if (stateObject.TryGetValue("delays", out var delayToken))
-                {
-                    delays = delayToken.ToObject<float[][]>()!;
-
-                    if (delays.Length != dirValue)
-                    {
-                        throw new RSILoadException(
-                            "DirectionsdirectionFramesList count does not match amount of delays specified.");
-                    }
-
-                    for (var i = 0; i < delays.Length; i++)
-                    {
-                        var delayList = delays[i];
-                        if (delayList.Length == 0)
-                        {
-                            delays[i] = new float[] {1};
-                        }
-                    }
-                }
-                else
-                {
-                    delays = new float[dirValue][];
-                    // No delays specified, default to 1 frame per dir.
-                    for (var i = 0; i < dirValue; i++)
-                    {
-                        delays[i] = new float[] {1};
-                    }
-                }
-
-                states.Add(new StateMetadata(new RSI.StateId(stateName), directions, delays));
-            }
-
-            return new RsiMetadata(size, states);
+            public bool Bad;
+            public ResourcePath Path = default!;
+            public Image<Rgba32> AtlasSheet = default!;
+            public int DimX;
+            public StateReg[] AtlasList = default!;
+            public Vector2i FrameSize;
+            public Dictionary<RSI.StateId, Vector2i[][]> CallbackOffsets = default!;
+            public Texture AtlasTexture = default!;
+            public RSI Rsi = default!;
         }
 
-#if DEBUG
-        private static readonly JsonSchema? RSISchema = GetSchema();
-
-        private static JsonSchema? GetSchema()
+        internal struct StateReg
         {
-            try
-            {
-                string schema;
-                using (var schemaStream = Assembly.GetExecutingAssembly()
-                    .GetManifestResourceStream("Robust.Client.Graphics.RSI.RSISchema.json")!)
-                using (var schemaReader = new StreamReader(schemaStream))
-                {
-                    schema = schemaReader.ReadToEnd();
-                }
-
-                return JsonSchema.FromJsonAsync(schema).Result;
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine("Failed to load RSI JSON Schema!\n{0}", e);
-                return null;
-            }
+            public Image<Rgba32> Src;
+            public Texture[][] Output;
+            public int[][] Indices;
+            public Vector2i[][] Offsets;
+            public int TotalFrameCount;
         }
-#endif
 
         internal sealed class RsiMetadata
         {
-            public RsiMetadata(Vector2i size, List<StateMetadata> states)
+            public RsiMetadata(Vector2i size, StateMetadata[] states)
             {
                 Size = size;
                 States = states;
             }
 
             public Vector2i Size { get; }
-            public List<StateMetadata> States { get; }
+            public StateMetadata[] States { get; }
         }
 
         internal sealed class StateMetadata
@@ -465,6 +499,17 @@ namespace Robust.Client.ResourceManagement
             };
 
             public float[][] Delays { get; }
+        }
+
+        // To be directly deserialized.
+        [UsedImplicitly]
+        private sealed record RsiJsonMetadata(Vector2i Size, StateJsonMetadata[] States)
+        {
+        }
+
+        [UsedImplicitly]
+        private sealed record StateJsonMetadata(string Name, int? Directions, float[][]? Delays)
+        {
         }
     }
 

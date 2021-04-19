@@ -957,26 +957,4 @@ namespace Robust.Client.UserInterface
             root.AddChild(new Label { Text = "AAAAAAAA"});
         }
     }
-
-    internal sealed class ViewportControl : Control
-    {
-        private readonly IClydeViewport _vp;
-
-        public ViewportControl(IClydeViewport vp)
-        {
-            _vp = vp;
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            _vp.Render();
-
-            handle.DrawTexture(_vp.RenderTarget.Texture, Vector2.Zero);
-        }
-
-        protected override Vector2 MeasureOverride(Vector2 availableSize)
-        {
-            return _vp.Size;
-        }
-    }
 }

@@ -101,6 +101,8 @@ namespace Robust.Shared.Utility
 
         public int Count => _size;
         public bool IsReadOnly => false;
+        public int Capacity => _array.Length;
+
         public int IndexOf(T item)
         {
             return Array.IndexOf(_array, item, 0, _size);
@@ -117,6 +119,17 @@ namespace Robust.Shared.Utility
 
             _array[index] = item;
             _size++;
+        }
+
+        public void TrimCapacity(int capacity)
+        {
+            if (Count > capacity)
+                throw new ArgumentException("Cannot trim past list contents");
+
+            var oldArr = _array;
+            _array = new T[capacity];
+
+            oldArr.AsSpan(0, _size).CopyTo(_array);
         }
 
         public void RemoveAt(int index)

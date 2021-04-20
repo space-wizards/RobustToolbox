@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -47,6 +46,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal unsafe partial class Clyde
     {
+        private const int EventQueueSize = 20;
         private bool _glfwInitialized;
 
         // Keep delegates around to prevent GC issues.
@@ -76,6 +76,8 @@ namespace Robust.Client.Graphics.Clyde
         // TODO: this should be MONITOR ID.
         private int _nextWindowId = 1;
         private readonly Dictionary<int, MonitorReg> _monitors = new();
+
+        private readonly RefList<GlfwEvent> _glfwEventQueue = new();
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
@@ -133,8 +135,6 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private List<Exception>? _glfwExceptionList;
-
         private bool InitGlfw()
         {
             StoreCallbacks();
@@ -185,7 +185,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var name = GLFW.GetMonitorName(monitor);
             var videoMode = GLFW.GetVideoMode(monitor);
-            var impl = new ClydeMonitorImpl(handle, name, (videoMode->Width, videoMode->Height), videoMode->RefreshRate);
+            var impl = new ClydeMonitorImpl(handle, name, (videoMode->Width, videoMode->Height),
+                videoMode->RefreshRate);
 
             GLFW.SetMonitorUserPointer(monitor, (void*) handle);
             _monitors[handle] = new MonitorReg
@@ -414,6 +415,9 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.MakeContextCurrent(window);
 
+            // VSync always off for non-primary windows.
+            GLFW.SwapInterval(0);
+
             reg.QuadVao = MakeQuadVao();
 
             UniformConstantsUBO.Rebind();
@@ -536,74 +540,89 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwMonitor(Monitor* monitor, ConnectedState state)
         {
-            try
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.Monitor;
+
+            ev.Monitor.Monitor = monitor;
+            ev.Monitor.State = state;
+        }
+
+        private void ProcessGlfwEventMonitor(in GlfwEventMonitor ev)
+        {
+            if (ev.State == ConnectedState.Connected)
             {
-                if (state == ConnectedState.Connected)
-                {
-                    SetupMonitor(monitor);
-                }
-                else
-                {
-                    DestroyMonitor(monitor);
-                }
+                SetupMonitor(ev.Monitor);
             }
-            catch (Exception e)
+            else
             {
-                CatchCallbackException(e);
+                DestroyMonitor(ev.Monitor);
             }
         }
 
         private void OnGlfwChar(Window* window, uint codepoint)
         {
-            try
-            {
-                TextEntered?.Invoke(new TextEventArgs(codepoint));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.Char;
+
+            ev.Char.CodePoint = codepoint;
+        }
+
+        private void ProcessGlfwEventChar(in GlfwEventChar ev)
+        {
+            TextEntered?.Invoke(new TextEventArgs(ev.CodePoint));
         }
 
         private void OnGlfwCursorPos(Window* window, double x, double y)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                var newPos = ((float) x, (float) y) * windowReg.PixelRatio;
-                var delta = newPos - windowReg.LastMousePos;
-                windowReg.LastMousePos = newPos;
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.CursorPos;
 
-                MouseMove?.Invoke(new MouseMoveEventArgs(delta, newPos));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ev.CursorPos.Window = window;
+            ev.CursorPos.XPos = x;
+            ev.CursorPos.YPos = y;
+        }
+
+        private void ProcessGlfwEventCursorPos(in GlfwEventCursorPos ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            var newPos = ((float) ev.XPos, (float) ev.YPos) * windowReg.PixelRatio;
+            var delta = newPos - windowReg.LastMousePos;
+            windowReg.LastMousePos = newPos;
+
+            MouseMove?.Invoke(new MouseMoveEventArgs(delta, newPos));
         }
 
         private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
         {
-            try
-            {
-                EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.Key;
+
+            ev.Key.Window = window;
+            ev.Key.Key = key;
+            ev.Key.ScanCode = scanCode;
+            ev.Key.Action = action;
+            ev.Key.Mods = mods;
+        }
+
+        private void ProcessGlfwEventKey(in GlfwEventKey ev)
+        {
+            EmitKeyEvent(Keyboard.ConvertGlfwKey(ev.Key), ev.Action, ev.Mods);
         }
 
         private void OnGlfwMouseButton(Window* window, MouseButton button, InputAction action, KeyModifiers mods)
         {
-            try
-            {
-                EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.MouseButton;
+
+            ev.MouseButton.Window = window;
+            ev.MouseButton.Button = button;
+            ev.MouseButton.Action = action;
+            ev.MouseButton.Mods = mods;
+        }
+
+        private void ProcessGlfwEventMouseButton(in GlfwEventMouseButton ev)
+        {
+            EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(ev.Button)), ev.Action, ev.Mods);
         }
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
@@ -634,110 +653,128 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwScroll(Window* window, double offsetX, double offsetY)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), windowReg.LastMousePos);
-                MouseWheel?.Invoke(ev);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.Scroll;
+
+            ev.Scroll.Window = window;
+            ev.Scroll.XOffset = offsetX;
+            ev.Scroll.YOffset = offsetY;
+        }
+
+        private void ProcessGlfwEventScroll(in GlfwEventScroll ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            var eventArgs = new MouseWheelEventArgs(((float) ev.XOffset, (float) ev.YOffset), windowReg.LastMousePos);
+            MouseWheel?.Invoke(eventArgs);
         }
 
         private void OnGlfwWindowClose(Window* window)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                CloseWindow?.Invoke(new WindowClosedEventArgs(windowReg.Handle));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.WindowClose;
+
+            ev.WindowClose.Window = window;
+        }
+
+        private void ProcessGlfwEventWindowClose(in GlfwEventWindowClose ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            CloseWindow?.Invoke(new WindowClosedEventArgs(windowReg.Handle));
         }
 
         private void OnGlfwWindowSize(Window* window, int width, int height)
         {
-            try
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.WindowSize;
+
+            ev.WindowSize.Window = window;
+            ev.WindowSize.Width = width;
+            ev.WindowSize.Height = height;
+        }
+
+        private void ProcessGlfwEventWindowSize(in GlfwEventWindowSize ev)
+        {
+            var window = ev.Window;
+            var width = ev.Width;
+            var height = ev.Height;
+
+            var windowReg = FindWindow(window);
+            var oldSize = windowReg.FramebufferSize;
+            GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
+            windowReg.FramebufferSize = (fbW, fbH);
+            windowReg.WindowSize = (width, height);
+
+            if (windowReg.IsMainWindow)
             {
-                var windowReg = FindWindow(window);
-                var oldSize = windowReg.FramebufferSize;
-                GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
-                windowReg.FramebufferSize = (fbW, fbH);
-                windowReg.WindowSize = (width, height);
-
-                if (windowReg.IsMainWindow)
-                {
-                    UpdateMainWindowLoadedRtSize();
-                }
-
-                if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
-                    return;
-
-                windowReg.PixelRatio = windowReg.FramebufferSize / windowReg.WindowSize;
-
-                if (windowReg.IsMainWindow)
-                {
-                    GL.Viewport(0, 0, fbW, fbH);
-                    CheckGlError();
-                }
-                else
-                {
-                    windowReg.RenderTexture!.Dispose();
-                    CreateWindowRenderTexture(windowReg);
-                }
-
-                var eventArgs = new WindowResizedEventArgs(oldSize, windowReg.FramebufferSize, windowReg.Handle);
-                OnWindowResized?.Invoke(eventArgs);
+                UpdateMainWindowLoadedRtSize();
             }
-            catch (Exception e)
+
+            if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
+                return;
+
+            windowReg.PixelRatio = windowReg.FramebufferSize / windowReg.WindowSize;
+
+            if (windowReg.IsMainWindow)
             {
-                CatchCallbackException(e);
+                GL.Viewport(0, 0, fbW, fbH);
+                CheckGlError();
             }
+            else
+            {
+                windowReg.RenderTexture!.Dispose();
+                CreateWindowRenderTexture(windowReg);
+            }
+
+            var eventArgs = new WindowResizedEventArgs(oldSize, windowReg.FramebufferSize, windowReg.Handle);
+            OnWindowResized?.Invoke(eventArgs);
         }
 
         private void OnGlfwWindowContentScale(Window* window, float xScale, float yScale)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                windowReg.WindowScale = (xScale, yScale);
-                OnWindowScaleChanged?.Invoke();
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.WindowContentScale;
+
+            ev.WindowContentScale.Window = window;
+            ev.WindowContentScale.XScale = xScale;
+            ev.WindowContentScale.YScale = yScale;
+        }
+
+        private void ProcessGlfwEventWindowContentScale(in GlfwEventWindowContentScale ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            windowReg.WindowScale = (ev.XScale, ev.YScale);
+            OnWindowScaleChanged?.Invoke();
         }
 
         private void OnGlfwWindowIconify(Window* window, bool iconified)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                windowReg.IsMinimized = iconified;
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.WindowIconified;
+
+            ev.WindowIconify.Window = window;
+            ev.WindowIconify.Iconified = iconified;
+        }
+
+        private void ProcessGlfwEventWindowIconify(in GlfwEventWindowIconify ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            windowReg.IsMinimized = ev.Iconified;
         }
 
         private void OnGlfwWindowFocus(Window* window, bool focused)
         {
-            try
-            {
-                var windowReg = FindWindow(window);
-                windowReg.IsFocused = focused;
-                OnWindowFocused?.Invoke(new WindowFocusedEventArgs(focused, windowReg.Handle));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
+            ref var ev = ref _glfwEventQueue.AllocAdd();
+            ev.Type = GlfwEventType.WindowFocus;
+
+            ev.WindowFocus.Window = window;
+            ev.WindowFocus.Focused = focused;
+        }
+
+        private void ProcessGlfwEventWindowFocus(in GlfwEventWindowFocus ev)
+        {
+            var windowReg = FindWindow(ev.Window);
+            windowReg.IsFocused = ev.Focused;
+            OnWindowFocused?.Invoke(new WindowFocusedEventArgs(ev.Focused, windowReg.Handle));
         }
 
         private void StoreCallbacks()
@@ -797,29 +834,72 @@ namespace Robust.Client.Graphics.Clyde
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
+            // GLFW's callback-based event architecture sucks.
+            // And there are ridiculous edge-cases like glfwCreateWindow flushing the event queue (wtf???).
+            // So we make our own event buffer and process it manually to work around this madness.
+            // This is more similar to how SDL2's event queue works.
+
             GLFW.PollEvents();
 
-            if (_glfwExceptionList == null || _glfwExceptionList.Count == 0)
+            for (var i = 0; i < _glfwEventQueue.Count; i++)
             {
-                return;
+                ref var ev = ref _glfwEventQueue[i];
+
+                try
+                {
+                    switch (ev.Type)
+                    {
+                        case GlfwEventType.MouseButton:
+                            ProcessGlfwEventMouseButton(ev.MouseButton);
+                            break;
+                        case GlfwEventType.CursorPos:
+                            ProcessGlfwEventCursorPos(ev.CursorPos);
+                            break;
+                        case GlfwEventType.Scroll:
+                            ProcessGlfwEventScroll(ev.Scroll);
+                            break;
+                        case GlfwEventType.Key:
+                            ProcessGlfwEventKey(ev.Key);
+                            break;
+                        case GlfwEventType.Char:
+                            ProcessGlfwEventChar(ev.Char);
+                            break;
+                        case GlfwEventType.Monitor:
+                            ProcessGlfwEventMonitor(ev.Monitor);
+                            break;
+                        case GlfwEventType.WindowClose:
+                            ProcessGlfwEventWindowClose(ev.WindowClose);
+                            break;
+                        case GlfwEventType.WindowFocus:
+                            ProcessGlfwEventWindowFocus(ev.WindowFocus);
+                            break;
+                        case GlfwEventType.WindowSize:
+                            ProcessGlfwEventWindowSize(ev.WindowSize);
+                            break;
+                        case GlfwEventType.WindowIconified:
+                            ProcessGlfwEventWindowIconify(ev.WindowIconify);
+                            break;
+                        case GlfwEventType.WindowContentScale:
+                            ProcessGlfwEventWindowContentScale(ev.WindowContentScale);
+                            break;
+                        default:
+                            Logger.ErrorS("clyde.win", $"Unknown GLFW event type: {ev.Type}");
+                            break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS(
+                        "clyde.win",
+                        $"Caught exception in windowing event ({ev.Type}):\n{e}");
+                }
             }
 
-            // Exception handling.
-            // See CatchCallbackException for details.
-
-            if (_glfwExceptionList.Count == 1)
+            _glfwEventQueue.Clear();
+            if (_glfwEventQueue.Capacity > EventQueueSize)
             {
-                var exception = _glfwExceptionList[0];
-                _glfwExceptionList = null;
-
-                // Rethrow without losing stack trace.
-                ExceptionDispatchInfo.Capture(exception).Throw();
-                throw exception; // Unreachable.
+                _glfwEventQueue.TrimCapacity(EventQueueSize);
             }
-
-            var list = _glfwExceptionList;
-            _glfwExceptionList = null;
-            throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
         }
 
         // Disabling inlining so that I can easily exclude it from profiles.
@@ -925,20 +1005,6 @@ namespace Robust.Client.Graphics.Clyde
             return _monitors.Values.Select(c => c.Impl);
         }
 
-        // We can't let exceptions unwind into GLFW, as that can cause the CLR to crash.
-        // And it probably messes up GLFW too.
-        // So all the callbacks are passed to this method.
-        // So they can be queued for re-throw at the end of ProcessInputs().
-        private void CatchCallbackException(Exception e)
-        {
-            if (_glfwExceptionList == null)
-            {
-                _glfwExceptionList = new List<Exception>();
-            }
-
-            _glfwExceptionList.Add(e);
-        }
-
         private static void SetWindowVisible(WindowReg reg, bool visible)
         {
             reg.IsVisible = visible;
@@ -998,6 +1064,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size => _reg.FramebufferSize;
+
             public IRenderTarget RenderTarget
             {
                 get
@@ -1011,10 +1078,20 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public string Title { get => _reg.Title; set => _clyde.SetWindowTitle(_reg, value); }
+            public string Title
+            {
+                get => _reg.Title;
+                set => _clyde.SetWindowTitle(_reg, value);
+            }
+
             public bool IsFocused => _reg.IsFocused;
             public bool IsMinimized => _reg.IsMinimized;
-            public bool IsVisible { get => _reg.IsVisible; set => SetWindowVisible(_reg, value); }
+
+            public bool IsVisible
+            {
+                get => _reg.IsVisible;
+                set => SetWindowVisible(_reg, value);
+            }
 
             public event Action<WindowClosedEventArgs> Closed
             {
@@ -1022,6 +1099,140 @@ namespace Robust.Client.Graphics.Clyde
                 remove => _reg.Closed -= value;
             }
         }
+
+        private enum GlfwEventType
+        {
+            Invalid = 0,
+            MouseButton,
+            CursorPos,
+            Scroll,
+            Key,
+            Char,
+            Monitor,
+            WindowClose,
+            WindowFocus,
+            WindowSize,
+            WindowIconified,
+            WindowContentScale,
+        }
+
+#pragma warning disable 649
+        // ReSharper disable NotAccessedField.Local
+        [StructLayout(LayoutKind.Explicit)]
+        private struct GlfwEvent
+        {
+            [FieldOffset(0)] public GlfwEventType Type;
+
+            [FieldOffset(0)] public GlfwEventMouseButton MouseButton;
+            [FieldOffset(0)] public GlfwEventCursorPos CursorPos;
+            [FieldOffset(0)] public GlfwEventScroll Scroll;
+            [FieldOffset(0)] public GlfwEventKey Key;
+            [FieldOffset(0)] public GlfwEventChar Char;
+            [FieldOffset(0)] public GlfwEventWindowClose WindowClose;
+            [FieldOffset(0)] public GlfwEventWindowSize WindowSize;
+            [FieldOffset(0)] public GlfwEventWindowContentScale WindowContentScale;
+            [FieldOffset(0)] public GlfwEventWindowIconify WindowIconify;
+            [FieldOffset(0)] public GlfwEventWindowFocus WindowFocus;
+            [FieldOffset(0)] public GlfwEventMonitor Monitor;
+        }
+
+        private struct GlfwEventMouseButton
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public MouseButton Button;
+            public InputAction Action;
+            public KeyModifiers Mods;
+        }
+
+        private struct GlfwEventCursorPos
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public double XPos;
+            public double YPos;
+        }
+
+        private struct GlfwEventScroll
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public double XOffset;
+            public double YOffset;
+        }
+
+        private struct GlfwEventKey
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public Keys Key;
+            public int ScanCode;
+            public InputAction Action;
+            public KeyModifiers Mods;
+        }
+
+        private struct GlfwEventChar
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public uint CodePoint;
+        }
+
+        private struct GlfwEventWindowClose
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+        }
+
+        private struct GlfwEventWindowSize
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public int Width;
+            public int Height;
+        }
+
+        private struct GlfwEventWindowContentScale
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public float XScale;
+            public float YScale;
+        }
+
+        private struct GlfwEventWindowIconify
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public bool Iconified;
+        }
+
+        private struct GlfwEventWindowFocus
+        {
+            public GlfwEventType Type;
+
+            public Window* Window;
+            public bool Focused;
+        }
+
+        private struct GlfwEventMonitor
+        {
+            public GlfwEventType Type;
+
+            public Monitor* Monitor;
+            public ConnectedState State;
+        }
+        // ReSharper restore NotAccessedField.Local
+#pragma warning restore 649
 
         private sealed class MonitorReg
         {

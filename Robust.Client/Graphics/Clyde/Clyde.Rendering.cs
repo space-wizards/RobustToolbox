@@ -883,8 +883,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.Enable(EnableCap.FramebufferSrgb);
 
-                Thread.Sleep(16);
-
                 GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
                 _updateUniformConstants(window.FramebufferSize);
                 blitProgram.ForceUse();

@@ -8,9 +8,11 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Debugging
@@ -19,11 +21,10 @@ namespace Robust.Client.Debugging
     public class DebugDrawing : IDebugDrawing
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
         private bool _debugColliders;
@@ -44,8 +45,8 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<PhysicsOverlay>())
                 {
-                    _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
-                        _prototypeManager, _inputManager, _physicsManager));
+                    _overlayManager.AddOverlay(new PhysicsOverlay(_eyeManager,
+                        _prototypeManager, _inputManager, _mapManager));
                 }
                 else
                 {
@@ -80,10 +81,9 @@ namespace Robust.Client.Debugging
 
         private class PhysicsOverlay : Overlay
         {
-            private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
+            private readonly IMapManager _mapManager;
             private readonly IInputManager _inputManager;
-            private readonly IPhysicsManager _physicsManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
             private readonly ShaderInstance _shader;
@@ -93,12 +93,11 @@ namespace Robust.Client.Debugging
             private List<IPhysBody> _hoverBodies = new();
 
 
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IPhysicsManager physicsManager)
+            public PhysicsOverlay(IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IMapManager mapManager)
             {
-                _componentManager = compMan;
                 _eyeManager = eyeMan;
                 _inputManager = inputManager;
-                _physicsManager = physicsManager;
+                _mapManager = mapManager;
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
@@ -106,22 +105,23 @@ namespace Robust.Client.Debugging
             }
 
             /// <inheritdoc />
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
-                switch (currentSpace)
+                switch (args.Space)
                 {
                     case OverlaySpace.ScreenSpace:
-                        DrawScreen((DrawingHandleScreen) handle);
+                        DrawScreen(args);
                         break;
                     case OverlaySpace.WorldSpace:
-                        DrawWorld((DrawingHandleWorld) handle);
+                        DrawWorld(args);
                         break;
                 }
 
             }
 
-            private void DrawScreen(DrawingHandleScreen screenHandle)
+            private void DrawScreen(in OverlayDrawArgs args)
             {
+                var screenHandle = args.ScreenHandle;
                 var lineHeight = _font.GetLineHeight(1f);
                 Vector2 drawPos = _hoverStartScreen + new Vector2(20, 0) + new Vector2(0, -(_hoverBodies.Count * 4 * lineHeight / 2f));
                 int row = 0;
@@ -134,7 +134,7 @@ namespace Robust.Client.Debugging
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
@@ -146,8 +146,9 @@ namespace Robust.Client.Debugging
 
             }
 
-            private void DrawWorld(DrawingHandleWorld worldHandle)
+            private void DrawWorld(in OverlayDrawArgs args)
             {
+                var worldHandle = args.WorldHandle;
                 worldHandle.UseShader(_shader);
                 var drawing = new PhysDrawingAdapter(worldHandle);
 
@@ -163,20 +164,29 @@ namespace Robust.Client.Debugging
                 var mapId = _eyeManager.CurrentMap;
                 var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
                 var colorEdge = Color.Red.WithAlpha(0.33f);
+                var drawnJoints = new HashSet<Joint>();
 
                 foreach (var physBody in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
                     // all entities have a TransformComponent
-                    var transform = physBody.Entity.Transform;
+                    var transform = physBody.Owner.Transform;
 
-                    var worldBox = physBody.GetWorldAABB();
+                    var worldBox = physBody.GetWorldAABB(_mapManager);
                     if (worldBox.IsEmpty()) continue;
 
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
                         var sleepPercent = physBody.Awake ? physBody.SleepTime / sleepThreshold : 1.0f;
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport,  sleepPercent);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
+                    }
+
+                    foreach (var joint in physBody.Joints)
+                    {
+                        if (drawnJoints.Contains(joint)) continue;
+                        drawnJoints.Add(joint);
+
+                        joint.DebugDraw(drawing, in viewport);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))
@@ -271,11 +281,11 @@ namespace Robust.Client.Debugging
                 _eyeManager = eyeManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
                 const float stubLength = 0.25f;
 
-                var worldHandle = (DrawingHandleWorld) handle;
+                var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
                 foreach (var entity in _entityManager.GetEntities())
                 {
                     var transform = entity.Transform;

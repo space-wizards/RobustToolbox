@@ -24,14 +24,16 @@ namespace Robust.UnitTesting.Server.GameObjects
             var msgE = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 7};
             var msgF = new MsgEntity(channel) {Type = EntityMessageType.SystemMessage, SourceTick = tickB, Sequence = 4};
 
-            var pq = new PriorityQueue<MsgEntity>(new ServerEntityNetworkManager.MessageSequenceComparer());
+            var pq = new PriorityQueue<MsgEntity>(new ServerEntityManager.MessageSequenceComparer())
+            {
+                msgA,
+                msgB,
+                msgC,
+                msgD,
+                msgE,
+                msgF
+            };
 
-            pq.Add(msgA);
-            pq.Add(msgB);
-            pq.Add(msgC);
-            pq.Add(msgD);
-            pq.Add(msgE);
-            pq.Add(msgF);
 
             Assert.That(pq.Take(), Is.EqualTo(msgF));
             Assert.That(pq.Take(), Is.EqualTo(msgE));

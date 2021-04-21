@@ -604,7 +604,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * viewport.Size.Y / EyeManager.PixelsPerMeter;
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y * (1 / viewport.RenderScale.Y) / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -672,6 +672,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)
         {
+            GL.Clear(ClearBufferMask.StencilBufferBit);
+            GL.Enable(EnableCap.StencilTest);
+            GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
+            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+            GL.StencilMask(0xFF);
+
             // Applies FOV to the final framebuffer.
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
@@ -685,6 +691,10 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             DrawBlit(viewport, fovShader);
+
+            GL.StencilMask(0x00);
+            GL.Disable(EnableCap.StencilTest);
+            _isStencilling = false;
         }
 
         private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)

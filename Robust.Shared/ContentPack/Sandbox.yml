@@ -824,7 +824,7 @@ Types:
     Converter`2: { All: True } # Delegate
     DateTime: { All: True }
     DateTimeKind: { } # Enum
-    DateTimeOffse: { All: True }
+    DateTimeOffset: { All: True }
     Delegate:
       Methods:
       - "System.Delegate Combine(System.Delegate, System.Delegate)"

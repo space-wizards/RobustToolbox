@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(IPhysBody))]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
-        [DataField("status")]
+        [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
 
         /// <inheritdoc />
@@ -85,10 +85,6 @@ namespace Robust.Shared.GameObjects
         // Though not sure how to do it well with the linked-list.
 
         public bool IgnorePaused { get; set; }
-        public IEntity Entity => Owner;
-
-        /// <inheritdoc />
-        public MapId MapID => Owner.Transform.MapID;
 
         internal PhysicsMap PhysicsMap { get; set; } = default!;
 
@@ -139,6 +135,17 @@ namespace Robust.Shared.GameObjects
 
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
+
+        /// <summary>
+        /// Set awake without the sleeptimer being reset.
+        /// </summary>
+        internal void ForceAwake()
+        {
+            if (_awake || _bodyType == BodyType.Static) return;
+
+            _awake = true;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+        }
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
@@ -262,6 +269,10 @@ namespace Robust.Shared.GameObjects
             {
                 fixture.Body = this;
                 fixture.ComputeProperties();
+                if (string.IsNullOrEmpty(fixture.Name))
+                {
+                    fixture.Name = GetFixtureName(fixture);
+                }
             }
 
             ResetMassData();
@@ -298,7 +309,6 @@ namespace Robust.Shared.GameObjects
 
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-            // PJB, please forgive me and come up with something better.
 
             // We will pray that this deferred joint is handled properly.
 
@@ -358,32 +368,60 @@ namespace Robust.Shared.GameObjects
             var toRemove = new List<Fixture>();
             var computeProperties = false;
 
-            // TODO: This diffing is crude (muh ordering) but at least it will save the broadphase updates 90% of the time.
-            for (var i = 0; i < newState.Fixtures.Count; i++)
+            // Given a bunch of data isn't serialized need to sort of re-initialise it
+            var newFixtures = new List<Fixture>(newState.Fixtures.Count);
+            foreach (var fixture in newState.Fixtures)
             {
                 var newFixture = new Fixture();
-                newState.Fixtures[i].CopyTo(newFixture);
-
+                fixture.CopyTo(newFixture);
                 newFixture.Body = this;
+                newFixtures.Add(newFixture);
+            }
 
-                // Existing fixture
-                if (_fixtures.Count > i)
+            // Add / update new fixtures
+            foreach (var fixture in newFixtures)
+            {
+                var found = false;
+
+                foreach (var existing in _fixtures)
                 {
-                    var existingFixture = _fixtures[i];
+                    if (!fixture.Name.Equals(existing.Name)) continue;
 
-                    if (!existingFixture.Equals(newFixture))
+                    if (!fixture.Equals(existing))
                     {
-                        toRemove.Add(existingFixture);
-                        toAdd.Add(newFixture);
+                        toAdd.Add(fixture);
+                        toRemove.Add(existing);
                     }
+
+                    found = true;
+                    break;
                 }
-                else
+
+                if (!found)
                 {
-                    toAdd.Add(newFixture);
+                    toAdd.Add(fixture);
                 }
             }
 
-            // When we get actual diffing and shit will need to check computeproperties more carefully.
+            // Remove old fixtures
+            foreach (var existing in _fixtures)
+            {
+                var found = false;
+
+                foreach (var fixture in newFixtures)
+                {
+                    if (fixture.Name.Equals(existing.Name))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    toRemove.Add(existing);
+                }
+            }
 
             foreach (var fixture in toRemove)
             {
@@ -391,6 +429,7 @@ namespace Robust.Shared.GameObjects
                 RemoveFixture(fixture);
             }
 
+            // TODO: We also still need event listeners for shapes (Probably need C# events)
             foreach (var fixture in toAdd)
             {
                 computeProperties = true;
@@ -415,6 +454,24 @@ namespace Robust.Shared.GameObjects
             Predict = false;
         }
 
+        public Fixture? GetFixture(string name)
+        {
+            // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
+            // temporary value on deserialization so we can store it as a dictionary of <name, fixture>
+            // given 100% of bodies have 1-2 fixtures this isn't really a performance problem right now but
+            // should probably be done at some stage
+            // If we really need it then you just deserialize onto a dummy field that then just never gets used again.
+            foreach (var fixture in _fixtures)
+            {
+                if (fixture.Name.Equals(name))
+                {
+                    return fixture;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Resets the dynamics of this body.
         /// Sets torque, force and linear/angular velocity to 0
@@ -428,7 +485,7 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        public Box2 GetWorldAABB(IMapManager? mapManager)
+        public Box2 GetWorldAABB(IMapManager? mapManager = null)
         {
             mapManager ??= IoCManager.Resolve<IMapManager>();
             var bounds = new Box2();
@@ -462,6 +519,20 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
+
+        public IEnumerable<Joint> Joints
+        {
+            get
+            {
+                JointEdge? edge = JointEdges;
+
+                while (edge != null)
+                {
+                    yield return edge.Joint;
+                    edge = edge.Next;
+                }
+            }
+        }
 
         [DataField("fixtures")]
         [NeverPushInheritance]
@@ -934,6 +1005,12 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
+        internal string GetFixtureName(Fixture fixture)
+        {
+            // For any fixtures that aren't named in the code we will assign one.
+            return $"fixture-{_fixtures.IndexOf(fixture)}";
+        }
+
         internal Transform GetTransform()
         {
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
@@ -961,28 +1038,6 @@ namespace Robust.Shared.GameObjects
 
             Awake = true;
             Force += force;
-        }
-
-        /// <summary>
-        ///     Calculate our AABB without using proxies.
-        /// </summary>
-        /// <returns></returns>
-        public Box2 GetWorldAABB()
-        {
-            var mapId = Owner.Transform.MapID;
-            if (mapId == MapId.Nullspace)
-                return new Box2();
-
-            var worldRotation = Owner.Transform.WorldRotation;
-            var bounds = new Box2();
-
-            foreach (var fixture in Fixtures)
-            {
-                var aabb = fixture.Shape.CalculateLocalBounds(worldRotation);
-                bounds = bounds.Union(aabb);
-            }
-
-            return bounds.Translated(Owner.Transform.WorldPosition);
         }
 
         /// <summary>

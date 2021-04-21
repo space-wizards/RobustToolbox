@@ -40,7 +40,11 @@ namespace Robust.Client.UserInterface
         public Thickness Margin
         {
             get => _margin;
-            set => _margin = value;
+            set
+            {
+                _margin = value;
+                InvalidateMeasure();
+            }
         }
 
         /// <summary>

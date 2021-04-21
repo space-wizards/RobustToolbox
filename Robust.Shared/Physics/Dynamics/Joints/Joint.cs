@@ -169,6 +169,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             BodyB.Dirty();
         }
 
+        public virtual void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport) {}
+
         protected Joint(PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
             //Can't connect a joint to the same body twice.

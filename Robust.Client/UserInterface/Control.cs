@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +38,14 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public string? Name { get; set; }
+
+        /// <summary>
+        ///     If true, this control will always be rendered, even if other UI rendering is disabled.
+        /// </summary>
+        /// <remarks>
+        ///     Useful for e.g. primary viewports.
+        /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)] public bool AlwaysRender { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.
@@ -671,8 +679,6 @@ namespace Robust.Client.UserInterface
         /// <returns>True if this control does have the point and should be counted as a hit.</returns>
         protected internal virtual bool HasPoint(Vector2 point)
         {
-            // This is effectively the same implementation as the default Godot one in Control.cpp.
-            // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
             var size = Size;
             return point.X >= 0 && point.X <= size.X && point.Y >= 0 && point.Y <= size.Y;
         }

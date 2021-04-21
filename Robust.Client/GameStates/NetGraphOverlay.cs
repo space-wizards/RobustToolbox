@@ -153,7 +153,7 @@ namespace Robust.Client.GameStates
             _history.RemoveRange(0, over);
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 
@@ -161,6 +161,7 @@ namespace Robust.Client.GameStates
             var width = HistorySize;
             var height = 500;
             var drawSizeThreshold = Math.Min(_totalHistoryPayload / HistorySize, 300);
+            var handle = args.ScreenHandle;
 
             // bottom payload line
             handle.DrawLine(new Vector2(leftMargin, height), new Vector2(leftMargin + width, height), Color.DarkGray.WithAlpha(0.8f));
@@ -183,7 +184,7 @@ namespace Robust.Client.GameStates
                 // Draw size if above average
                 if (drawSizeThreshold * 1.5 < state.Payload)
                 {
-                    DrawString((DrawingHandleScreen) handle, _font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
+                    DrawString(handle, _font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
                 }
 
                 // second tick marks
@@ -223,14 +224,14 @@ namespace Robust.Client.GameStates
             handle.DrawLine(new Vector2(leftMargin, midYoff), new Vector2(leftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
 
             // payload text
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
+            DrawString(handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
+            DrawString(handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
 
             // interp text info
             if(lastLagY != -1)
-                DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
+                DrawString(handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
+            DrawString(handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
         protected override void DisposeBehavior()
@@ -306,9 +307,9 @@ namespace Robust.Client.GameStates
                     shell.WriteError("Invalid argument: Needs to be 0 or an entityId.");
                     return;
                 }
-                
+
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
-                
+
                 if (overlayMan.HasOverlay(typeof(NetGraphOverlay)))
                 {
                     var netOverlay = overlayMan.GetOverlay<NetGraphOverlay>();

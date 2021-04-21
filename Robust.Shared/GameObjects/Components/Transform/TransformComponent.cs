@@ -123,8 +123,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, oldRotation, _localRotation));
                 }
                 else
                 {
@@ -280,8 +279,7 @@ namespace Robust.Shared.GameObjects
                     if (Running)
                     {
                         RebuildMatrices();
-                        Owner.EntityManager.EventBus.RaiseEvent(
-                            EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
+                        Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
                 }
                 else
@@ -314,8 +312,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldGridPos, Coordinates));
                 }
                 else
                 {
@@ -437,15 +434,13 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
                 _oldLocalRotation = null;
             }
         }
@@ -514,7 +509,7 @@ namespace Robust.Shared.GameObjects
             var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
             var compMessage = new ParentChangedMessage(null, oldParentOwner);
             _parent = EntityUid.Invalid;
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
@@ -562,7 +557,7 @@ namespace Robust.Shared.GameObjects
 
             ChangeMapId(newConcrete.MapID);
 
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
 
             // offset position from world to parent
@@ -725,7 +720,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // Hooks for GodotTransformComponent go here.
         protected virtual void SetPosition(Vector2 position)
         {
             // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
@@ -784,7 +778,7 @@ namespace Robust.Shared.GameObjects
             }
 
             ActivelyLerping = true;
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new TransformStartLerpMessage(this));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new TransformStartLerpMessage(this));
         }
 
         /// <summary>

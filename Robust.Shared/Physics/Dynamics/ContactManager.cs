@@ -32,7 +32,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -45,6 +45,8 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         internal MapId MapId { get; set; }
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
@@ -59,13 +61,15 @@ namespace Robust.Shared.Physics.Dynamics
 
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
-        internal readonly ContactHead ContactPoolList;
+        private const int ContactPoolInitialSize = 64;
+
+        internal Stack<Contact> ContactPoolList = new Stack<Contact>(ContactPoolInitialSize);
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
         ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicController
         /// </summary>
-        internal event Action<IPhysBody, IPhysBody, float, Manifold>? KinematicControllerCollision;
+        internal event Action<Fixture, Fixture, float, Manifold>? KinematicControllerCollision;
 
         // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
@@ -83,7 +87,6 @@ namespace Robust.Shared.Physics.Dynamics
         {
             ContactList = new ContactHead();
             ContactCount = 0;
-            ContactPoolList = new ContactHead();
             OnBroadPhaseCollision = AddPair;
         }
 
@@ -91,9 +94,15 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-#if DEBUG
-            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
-#endif
+            InitializePool();
+        }
+
+        private void InitializePool()
+        {
+            for (var i = 0; i < ContactPoolInitialSize; i++)
+            {
+                ContactPoolList.Push(new Contact(null, 0, null, 0));
+            }
         }
 
         public void FindNewContacts(MapId mapId)
@@ -170,7 +179,7 @@ namespace Robust.Shared.Physics.Dynamics
             */
 
             // Call the factory.
-            Contact c = Contact.Create(gridId, fixtureA, indexA, fixtureB, indexB);
+            Contact c = Contact.Create(this, gridId, fixtureA, indexA, fixtureB, indexB);
 
             // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
             if (c == null) return;
@@ -275,8 +284,7 @@ namespace Robust.Shared.Physics.Dynamics
             contact.Destroy();
 
             // Insert into the pool.
-            contact.Next = ContactPoolList.Next;
-            ContactPoolList.Next = contact;
+            ContactPoolList.Push(contact);
         }
 
         internal void Collide()
@@ -443,16 +451,19 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                foreach (var comp in bodyA.Entity.GetAllComponents<IStartCollide>().ToArray())
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
+
+                foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
                 }
 
-                foreach (var comp in bodyB.Entity.GetAllComponents<IStartCollide>().ToArray())
+                foreach (var comp in bodyB.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
             }
 
@@ -461,16 +472,19 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                foreach (var comp in bodyA.Entity.GetAllComponents<IEndCollide>().ToArray())
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
+
+                foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(bodyA, bodyB, contact.Manifold);
+                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
                 }
 
-                foreach (var comp in bodyB.Entity.GetAllComponents<IEndCollide>().ToArray())
+                foreach (var comp in bodyB.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(bodyB, bodyA, contact.Manifold);
+                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
             }
 
@@ -495,11 +509,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
                 if (bodyA.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(bodyA, bodyB, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureA!, contact.FixtureB!, frameTime, contact.Manifold);
                 }
                 else if (bodyB.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(bodyB, bodyA, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureB!, contact.FixtureA!, frameTime, contact.Manifold);
                 }
             }
         }
@@ -511,4 +525,38 @@ namespace Robust.Shared.Physics.Dynamics
     }
 
     public delegate void BroadPhaseDelegate(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB);
+
+    #region Collide Events Classes
+
+    public abstract class CollideEvent : EntityEventArgs
+    {
+        public Fixture OurFixture { get; }
+        public Fixture OtherFixture { get; }
+        public Manifold Manifold { get; }
+
+        public CollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        {
+            OurFixture = ourFixture;
+            OtherFixture = otherFixture;
+            Manifold = manifold;
+        }
+    }
+
+    public sealed class StartCollideEvent : CollideEvent
+    {
+        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+            : base(ourFixture, otherFixture, manifold)
+        {
+        }
+    }
+
+    public sealed class EndCollideEvent : CollideEvent
+    {
+        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+            : base(ourFixture, otherFixture, manifold)
+        {
+        }
+    }
+
+    #endregion
 }

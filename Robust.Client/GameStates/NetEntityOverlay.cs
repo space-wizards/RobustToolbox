@@ -127,23 +127,23 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
             if (!_netManager.IsConnected)
                 return;
 
-            switch (currentSpace)
+            switch (args.Space)
             {
                 case OverlaySpace.ScreenSpace:
-                    DrawScreen(handle);
+                    DrawScreen(args);
                     break;
                 case OverlaySpace.WorldSpace:
-                    DrawWorld(handle);
+                    DrawWorld(args);
                     break;
             }
         }
 
-        private void DrawWorld(DrawingHandleBase handle)
+        private void DrawWorld(in OverlayDrawArgs args)
         {
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
 
@@ -154,15 +154,15 @@ namespace Robust.Client.GameStates
             var pvsCenter = _eyeManager.CurrentEye.Position;
             Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
 
-            var worldHandle = (DrawingHandleWorld)handle;
+            var worldHandle = args.WorldHandle;
 
             worldHandle.DrawRect(pvsBox, Color.Red, false);
         }
 
-        private void DrawScreen(DrawingHandleBase handle)
+        private void DrawScreen(in OverlayDrawArgs args)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
-            var screenHandle = (DrawingHandleScreen) handle;
+            var screenHandle = args.ScreenHandle;
 
             for (int i = 0; i < _netEnts.Count; i++)
             {

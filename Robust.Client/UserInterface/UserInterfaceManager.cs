@@ -55,6 +55,7 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public Control? ControlFocused { get; private set; }
 
+        [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
         [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
@@ -134,6 +135,12 @@ namespace Robust.Client.UserInterface
 
             _displayManager.OnWindowResized += args => _updateRootSize();
             _displayManager.OnWindowScaleChanged += UpdateUIScale;
+
+            MainViewport = new MainViewportContainer(_eyeManager)
+            {
+                Name = "MainViewport"
+            };
+            RootControl.AddChild(MainViewport);
 
             StateRoot = new LayoutContainer
             {
@@ -598,11 +605,6 @@ namespace Robust.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
-            if (!_rendering)
-            {
-                return;
-            }
-
             _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
         }
 
@@ -630,7 +632,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
+        private void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
             UIBox2i? scissorBox)
         {
             if (!control.Visible)
@@ -679,8 +681,11 @@ namespace Robust.Client.UserInterface
                 renderHandle.SetScissor(scissorRegion);
             }
 
-            control.DrawInternal(renderHandle);
-            handle.UseShader(null);
+            if (_rendering || control.AlwaysRender)
+            {
+                control.DrawInternal(renderHandle);
+                handle.UseShader(null);
+            }
 
             foreach (var child in control.Children)
             {
@@ -877,6 +882,8 @@ namespace Robust.Client.UserInterface
                 KeyBindUp(args);
             }
 
+            // If we are in a focused control or doing a CanFocus, return true
+            // So that InputManager doesn't propagate events to simulation.
             if (!args.CanFocus && KeyboardFocused != null)
             {
                 return true;

@@ -19,8 +19,6 @@ namespace Robust.Shared.Timing
         private readonly List<long> _realFrameTimes = new(NumFrames);
         private TimeSpan _lastRealTime;
 
-        [Dependency] private readonly INetManager _netManager = default!;
-
         /// <summary>
         ///     Default constructor.
         /// </summary>
@@ -88,19 +86,7 @@ namespace Robust.Shared.Timing
         /// </summary>
         public TimeSpan RealTime => _realTimer.Elapsed;
 
-        public TimeSpan ServerTime
-        {
-            get
-            {
-                var offset = GetServerOffset();
-                if (offset == null)
-                {
-                    return TimeSpan.Zero;
-                }
-
-                return RealTime + offset.Value;
-            }
-        }
+        public virtual TimeSpan ServerTime => TimeSpan.Zero;
 
         /// <summary>
         ///     The simulated time it took to render the last frame.
@@ -242,58 +228,28 @@ namespace Robust.Shared.Timing
             Paused = true;
         }
 
-        public TimeSpan RealLocalToServer(TimeSpan local)
+        public virtual TimeSpan RealLocalToServer(TimeSpan local)
         {
-            var offset = GetServerOffset();
-            if (offset == null)
-                return TimeSpan.Zero;
-
-            return local + offset.Value;
+            return TimeSpan.Zero;
         }
 
-        public TimeSpan RealServerToLocal(TimeSpan server)
+        public virtual TimeSpan RealServerToLocal(TimeSpan server)
         {
-            var offset = GetServerOffset();
-            if (offset == null)
-                return TimeSpan.Zero;
-
-            return server - offset.Value;
+            return TimeSpan.Zero;
         }
 
-        private TimeSpan? GetServerOffset()
+        protected virtual TimeSpan? GetServerOffset()
         {
-            if (_netManager.IsServer)
-            {
-                return TimeSpan.Zero;
-            }
-
-            var clientNetManager = (IClientNetManager) _netManager;
-            return clientNetManager.ServerChannel?.RemoteTimeOffset;
+            return null;
         }
 
-        public bool IsFirstTimePredicted { get; private set; } = true;
+        public bool IsFirstTimePredicted { get; protected set; } = true;
 
         /// <inheritdoc />
         public bool InPrediction => CurTick > LastRealTick;
 
         /// <inheritdoc />
         public GameTick LastRealTick { get; set; }
-
-        public void StartPastPrediction()
-        {
-            // Don't allow recursive predictions.
-            // Not sure if it's necessary yet and if not, great!
-            DebugTools.Assert(IsFirstTimePredicted);
-
-            IsFirstTimePredicted = false;
-        }
-
-        public void EndPastPrediction()
-        {
-            DebugTools.Assert(!IsFirstTimePredicted);
-
-            IsFirstTimePredicted = true;
-        }
 
         /// <summary>
         ///     Calculates the average FPS of the last 50 real frame times.

@@ -45,6 +45,19 @@ namespace Robust.Shared.Physics.Dynamics
     [DataDefinition]
     public sealed class Fixture : IFixture, IEquatable<Fixture>, ISerializationHooks
     {
+        /// <summary>
+        /// Allows us to reference a specific fixture when we contain multiple
+        /// This is useful for stuff like slippery objects that might have a non-hard layer for mob collisions and
+        /// a hard layer for wall collisions.
+        /// <remarks>
+        /// We can also use this for networking to make cross-referencing fixtures easier.
+        /// Won't call Dirty() by default
+        /// </remarks>
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("name", true)]
+        public string Name { get; set; } = string.Empty;
+
         public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
 
         [NonSerialized]
@@ -62,6 +75,9 @@ namespace Robust.Shared.Physics.Dynamics
         [field:NonSerialized]
         public PhysicsComponent Body { get; internal set; } = default!;
 
+        /// <summary>
+        /// Contact friction between 2 bodies. Not tile-friction for top-down.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float Friction
         {
@@ -78,6 +94,10 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("friction")]
         private float _friction = 0.4f;
 
+        /// <summary>
+        /// AKA how much bounce there is on a collision.
+        /// 0.0 for inelastic collision and 1.0 for elastic.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float Restitution
         {
@@ -232,6 +252,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="fixture"></param>
         internal void CopyTo(Fixture fixture)
         {
+            fixture.Name = Name;
             fixture.Shape = Shape;
             fixture._friction = _friction;
             fixture._restitution = _restitution;
@@ -587,7 +608,8 @@ namespace Robust.Shared.Physics.Dynamics
                    _collisionLayer == other.CollisionLayer &&
                    _collisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
-                   Body == other.Body;
+                   Body == other.Body &&
+                   Name.Equals(other.Name);
         }
     }
 

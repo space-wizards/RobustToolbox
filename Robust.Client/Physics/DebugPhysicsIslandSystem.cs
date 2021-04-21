@@ -49,6 +49,13 @@ namespace Robust.Client.Physics
             IoCManager.Resolve<IOverlayManager>().AddOverlay(new PhysicsIslandOverlay());
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            UnsubscribeLocalEvent<IslandSolveMessage>();
+            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
+        }
+
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
@@ -63,12 +70,6 @@ namespace Robust.Client.Physics
                     break;
                 }
             }
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
         }
 
         private void HandleIslandSolveMessage(IslandSolveMessage message)
@@ -102,9 +103,9 @@ namespace Robust.Client.Physics
             _gameTiming = IoCManager.Resolve<IGameTiming>();
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
-            var worldHandle = (DrawingHandleWorld) handle;
+            var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
 
             DrawIslandSolve(worldHandle);
         }

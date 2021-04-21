@@ -5,5 +5,5 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// Server side version of the <see cref="IEntityManager"/>.
     /// </summary>
-    public interface IServerEntityManager : IEntityManager { }
+    public interface IServerEntityManager : IEntityManager, IServerEntityNetworkManager { }
 }

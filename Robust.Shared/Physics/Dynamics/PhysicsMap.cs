@@ -556,7 +556,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (body.BodyType == BodyType.Static) continue;
 
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
-                    body.Awake = true;
+                    body.ForceAwake();
 
                     for (var contactEdge = body.ContactEdges; contactEdge != null; contactEdge = contactEdge.Next)
                     {

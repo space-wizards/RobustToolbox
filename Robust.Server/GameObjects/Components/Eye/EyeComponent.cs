@@ -13,7 +13,7 @@ namespace Robust.Server.GameObjects
         [DataField("drawFov")]
         private bool _drawFov = true;
         [DataField("zoom")]
-        private Vector2 _zoom = Vector2.One/2f;
+        private Vector2 _zoom = Vector2.One;
         private Vector2 _offset;
         private Angle _rotation;
         private uint _visibilityMask;

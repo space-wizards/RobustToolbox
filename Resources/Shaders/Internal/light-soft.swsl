@@ -1,5 +1,11 @@
 #include "/Shaders/Internal/light_shared.swsl"
 
+highp vec4 calcGaussianWeights(highp float sigma, highp vec4 offset)
+{
+    highp vec4 eExp = offset * offset / (2.0 * sigma * sigma);
+    return exp(-eExp) / (sigma * sqrt(2.0 * PI));
+}
+
 highp float createOcclusion(highp vec2 diff)
 {
     // Calculate vector perpendicular to light vector.
@@ -8,23 +14,57 @@ highp float createOcclusion(highp vec2 diff)
 
     highp float ourDist = length(diff);
 
-    highp vec2 occlDist = occludeDepth(diff, shadowMap, lightIndex);
+    // Sample 7 points on a line perpendicular to the light source.
+    // Depending on the closest point, we change the gaussian weights down below
+    // to change the "narrowness" of the samples.
+    perpendicular *= lightSoftness * 1.5;
+
+    // Get all the samples we need.
+    highp vec2 sample1 = occludeDepth(diff, shadowMap, lightIndex);
+    highp vec2 sample2 = occludeDepth(diff + perpendicular, shadowMap, lightIndex);
+    highp vec2 sample3 = occludeDepth(diff - perpendicular, shadowMap, lightIndex);
+    highp vec2 sample4 = occludeDepth(diff + perpendicular * 2.0, shadowMap, lightIndex);
+    highp vec2 sample5 = occludeDepth(diff - perpendicular * 2.0, shadowMap, lightIndex);
+    highp vec2 sample6 = occludeDepth(diff + perpendicular * 3.0, shadowMap, lightIndex);
+    highp vec2 sample7 = occludeDepth(diff - perpendicular * 3.0, shadowMap, lightIndex);
+
+    highp float mindist =
+        min(sample1.x,
+        min(sample2.x,
+        min(sample3.x,
+        min(sample4.x,
+        min(sample5.x,
+        min(sample6.x,
+            sample7.x))))));
+
+    mindist = max(0.001, mindist);
 
     // Change soft shadow size based on distance from primary occluder.
-    highp float distRatio = (ourDist - occlDist.x) / occlDist.x / 2.0;
+    highp float distRatio = (ourDist - mindist);
 
-    perpendicular *= distRatio * lightSoftness;
+    // Sigma can never be zero so make sure to clamp.
+    // TODO: Scaling the dist ratio here in a more sane way might make shadows look better buuuut I'm lazy.
+    // Shadows look pretty nice already.
+    highp float sigma = max(0.001, distRatio * 0.75);
+    highp vec4 weights = calcGaussianWeights(sigma, vec4(0.0, 1.0, 2.0, 3.0));
 
-    // Totally not hacky PCF on top of VSM.
-    highp float occlusion = smoothstep(0.1, 1.0, ChebyshevUpperBound(occlDist, ourDist));
+    // Calculation of gaussian weights here is broken because it doesn't add up to 1.
+    // Fixing this is hard and if I had to guess too expensive for GPU shaders.
+    // So instead we add up the total weights and scale the result with that,
+    // so that we still end up with 0-1.
+    highp float totalWeigths = weights.x + weights.y * 2.0 + weights.z * 2.0 + weights.w * 2.0;
 
-    occlusion += shadowContrib(diff + perpendicular);
-    occlusion += shadowContrib(diff - perpendicular);
-    occlusion += shadowContrib(diff + perpendicular * 2.0);
-    occlusion += shadowContrib(diff - perpendicular * 2.0);
-    occlusion += shadowContrib(diff + perpendicular * 3.0);
-    occlusion += shadowContrib(diff - perpendicular * 3.0);
+    highp float occlusion = 0.0;
 
-    return occlusion / 7.0;
+    // Calculate actual occlusion with new weights.
+    occlusion += ChebyshevUpperBound(sample1, ourDist) * weights.x;
+    occlusion += ChebyshevUpperBound(sample2, ourDist) * weights.y;
+    occlusion += ChebyshevUpperBound(sample3, ourDist) * weights.y;
+    occlusion += ChebyshevUpperBound(sample4, ourDist) * weights.z;
+    occlusion += ChebyshevUpperBound(sample5, ourDist) * weights.z;
+    occlusion += ChebyshevUpperBound(sample6, ourDist) * weights.w;
+    occlusion += ChebyshevUpperBound(sample7, ourDist) * weights.w;
+
+    return occlusion / totalWeigths;
 }
 

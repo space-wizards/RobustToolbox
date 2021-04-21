@@ -11,37 +11,36 @@ namespace Robust.Shared.Enums {
         /// <summary>
         ///     Used for matching bit flags.
         /// </summary>
-        None = 0b000000,
+        None = 0,
 
         /// <summary>
         ///     This overlay will be drawn in screen coordinates in the UI space above the world.
         /// </summary>
-        ScreenSpace = 0b000001,
-
-        /// <summary>
-        ///     This overlay will be drawn directly above normal worldspace, but a stencil equivalent to the FOV will be applied.
-        ///     You likely want to use <see cref="WorldSpaceBelowFOV"/>. This space should only be used if you fully understand why you need this.
-        /// </summary>
-        WorldSpaceFOVStencil = 0b000010,
+        ScreenSpace = 1 << 1,
 
         /// <summary>
         ///     This overlay will be drawn above entities, lighting, and FOV.
         /// </summary>
-        WorldSpace = 0b000100,
+        WorldSpace = 1 << 2,
 
         /// <summary>
         ///     This overlay will be drawn beneath FOV; above lighting and entities.
         /// </summary>
-        WorldSpaceBelowFOV = 0b001000,
+        WorldSpaceBelowFOV = 1 << 3,
 
         /// <summary>
         ///     This overlay will be drawn beneath entities, lighting, and FOV; above grids.
         /// </summary>
-        WorldSpaceBelowEntities = 0b010000,
+        WorldSpaceBelowEntities = 1 << 4,
 
         /// <summary>
-        ///     This overlay will be drawn in screen coordinates behind the world. 
+        ///     This overlay will be drawn in screen coordinates behind the world.
         /// </summary>
-        ScreenSpaceBelowWorld = 0b100000,
+        ScreenSpaceBelowWorld = 1 << 5,
+
+        /// <summary>
+        ///     Overlay will be rendered below grids, entities, and everything else. In world space.
+        /// </summary>
+        WorldSpaceBelowWorld = 1 << 6
     }
 }

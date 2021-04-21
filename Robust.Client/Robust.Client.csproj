@@ -30,6 +30,7 @@
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Avalonia.Base\Avalonia.Base.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />

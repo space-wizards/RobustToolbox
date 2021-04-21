@@ -105,22 +105,23 @@ namespace Robust.Client.Debugging
             }
 
             /// <inheritdoc />
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
-                switch (currentSpace)
+                switch (args.Space)
                 {
                     case OverlaySpace.ScreenSpace:
-                        DrawScreen((DrawingHandleScreen) handle);
+                        DrawScreen(args);
                         break;
                     case OverlaySpace.WorldSpace:
-                        DrawWorld((DrawingHandleWorld) handle);
+                        DrawWorld(args);
                         break;
                 }
 
             }
 
-            private void DrawScreen(DrawingHandleScreen screenHandle)
+            private void DrawScreen(in OverlayDrawArgs args)
             {
+                var screenHandle = args.ScreenHandle;
                 var lineHeight = _font.GetLineHeight(1f);
                 Vector2 drawPos = _hoverStartScreen + new Vector2(20, 0) + new Vector2(0, -(_hoverBodies.Count * 4 * lineHeight / 2f));
                 int row = 0;
@@ -145,8 +146,9 @@ namespace Robust.Client.Debugging
 
             }
 
-            private void DrawWorld(DrawingHandleWorld worldHandle)
+            private void DrawWorld(in OverlayDrawArgs args)
             {
+                var worldHandle = args.WorldHandle;
                 worldHandle.UseShader(_shader);
                 var drawing = new PhysDrawingAdapter(worldHandle);
 
@@ -279,11 +281,11 @@ namespace Robust.Client.Debugging
                 _eyeManager = eyeManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
                 const float stubLength = 0.25f;
 
-                var worldHandle = (DrawingHandleWorld) handle;
+                var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
                 foreach (var entity in _entityManager.GetEntities())
                 {
                     var transform = entity.Transform;

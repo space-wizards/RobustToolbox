@@ -64,6 +64,7 @@ namespace Robust.Client
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
 
@@ -110,6 +111,7 @@ namespace Robust.Client
 
             _resourceCache.PreloadTextures();
             _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();

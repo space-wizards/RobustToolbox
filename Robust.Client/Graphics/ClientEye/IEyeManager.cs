@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Map;
+﻿using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -16,6 +17,8 @@ namespace Robust.Client.Graphics
         /// Setting this property to null will use the default eye.
         /// </remarks>
         IEye CurrentEye { get; set; }
+
+        IViewportControl MainViewport { get; set; }
 
         /// <summary>
         /// The ID of the map on which the current eye is "placed".
@@ -72,5 +75,6 @@ namespace Robust.Client.Graphics
         MapCoordinates ScreenToMap(Vector2 point);
 
         void ClearCurrentEye();
+        void Initialize();
     }
 }

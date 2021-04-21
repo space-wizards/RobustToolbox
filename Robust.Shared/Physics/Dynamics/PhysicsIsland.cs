@@ -23,14 +23,11 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -138,7 +135,7 @@ constraint structures. The body velocities/positions are held in compact, tempor
 arrays to increase the number of cache hits. Linear and angular velocity are
 stored in a single array since multiple arrays lead to multiple misses.
 */
-    internal sealed class PhysicsIsland
+public sealed class PhysicsIsland
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 #if DEBUG
@@ -157,6 +154,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private int _positionIterations;
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
+        private bool _positionSolved;
 
         public IPhysBody[] Bodies = Array.Empty<IPhysBody>();
         private Contact[] _contacts = Array.Empty<Contact>();
@@ -170,6 +168,15 @@ stored in a single array since multiple arrays lead to multiple misses.
         private float[] _angles = Array.Empty<float>();
 
         internal SolverData SolverData = new();
+
+        private const int BodyIncrease = 32;
+        private const int ContactIncrease = 32;
+        private const int JointIncrease = 8;
+
+        /// <summary>
+        /// Do we apply special sleeping for this island given it has no contacts and joints?
+        /// </summary>
+        public bool LoneIsland { get; set; } = false;
 
         /// <summary>
         ///     How many bodies we can fit in the island before needing to re-size.
@@ -236,6 +243,25 @@ stored in a single array since multiple arrays lead to multiple misses.
             _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
         }
 
+        public void Append(List<IPhysBody> bodies, List<Contact> contacts, List<Joint> joints)
+        {
+            Resize(BodyCount + bodies.Count, ContactCount + contacts.Count, JointCount + joints.Count);
+            foreach (var body in bodies)
+            {
+                Add(body);
+            }
+
+            foreach (var contact in contacts)
+            {
+                Add(contact);
+            }
+
+            foreach (var joint in joints)
+            {
+                Add(joint);
+            }
+        }
+
         public void Add(IPhysBody body)
         {
             body.IslandIndex = BodyCount;
@@ -263,35 +289,37 @@ stored in a single array since multiple arrays lead to multiple misses.
          * Look there's a whole lot of stuff going on around here but all you need to know is it's trying to avoid
          * allocations where possible so it does a whole lot of passing data around and using arrays.
          */
-
-        public void Reset(int bodyCapacity, int contactCapacity, int jointCapacity)
+        public void Resize(int bodyCount, int contactCount, int jointCount)
         {
-            BodyCapacity = bodyCapacity;
-            BodyCount = 0;
+            BodyCapacity = Math.Max(bodyCount, Bodies.Length);
+            BodyCount = bodyCount;
 
-            ContactCapacity = contactCapacity;
-            ContactCount = 0;
+            ContactCapacity = Math.Max(contactCount, _contacts.Length);
+            ContactCount = contactCount;
 
-            JointCapacity = jointCapacity;
-            JointCount = 0;
+            JointCapacity = Math.Max(jointCount, _joints.Length);
+            JointCount = jointCount;
 
-            if (Bodies.Length < bodyCapacity)
+            if (Bodies.Length < BodyCapacity)
             {
-                Array.Resize(ref Bodies, bodyCapacity);
-                Array.Resize(ref _linearVelocities, bodyCapacity);
-                Array.Resize(ref _angularVelocities, bodyCapacity);
-                Array.Resize(ref _positions, bodyCapacity);
-                Array.Resize(ref _angles, bodyCapacity);
+                BodyCapacity = BodyIncrease * (int) MathF.Round(BodyCapacity / (float) BodyIncrease);
+                Array.Resize(ref Bodies, BodyCapacity);
+                Array.Resize(ref _linearVelocities, BodyCapacity);
+                Array.Resize(ref _angularVelocities, BodyCapacity);
+                Array.Resize(ref _positions, BodyCapacity);
+                Array.Resize(ref _angles, BodyCapacity);
             }
 
-            if (_contacts.Length < contactCapacity)
+            if (_contacts.Length < ContactCapacity)
             {
-                Array.Resize(ref _contacts, contactCapacity * 2);
+                ContactCapacity = ContactIncrease * (int) MathF.Round(ContactCapacity / (float) ContactIncrease);
+                Array.Resize(ref _contacts, ContactCapacity * 2);
             }
 
-            if (_joints.Length < jointCapacity)
+            if (_joints.Length < JointCapacity)
             {
-                Array.Resize(ref _joints, jointCapacity * 2);
+                JointCapacity = JointIncrease * (int) MathF.Round(JointCapacity / (float) JointIncrease);
+                Array.Resize(ref _joints, JointCapacity * 2);
             }
         }
 
@@ -304,7 +332,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// <param name="invDt"></param>
         /// <param name="prediction"></param>
         /// <param name="deferredUpdates">Add any transform updates to a deferred list</param>
-        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt)
         {
 #if DEBUG
             _debugBodies.Clear();
@@ -315,6 +343,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             _entityManager.EventBus.RaiseEvent(EventSource.Local, new IslandSolveMessage(_debugBodies));
 #endif
+
+            _positionSolved = false;
 
             for (var i = 0; i < BodyCount; i++)
             {
@@ -429,8 +459,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                 _angles[i] = angle;
             }
 
-            var positionSolved = false;
-
             for (var i = 0; i < _positionIterations; i++)
             {
                 var contactsOkay = _contactSolver.SolvePositionConstraints();
@@ -450,11 +478,14 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 if (contactsOkay && jointsOkay)
                 {
-                    positionSolved = true;
+                    _positionSolved = true;
                     break;
                 }
             }
+        }
 
+        internal void UpdateBodies(List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        {
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -503,39 +534,72 @@ stored in a single array since multiple arrays lead to multiple misses.
                     body.AngularVelocity = _angularVelocities[i];
                 }
             }
+        }
 
-            // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (!prediction && _sleepAllowed)
+        internal void SleepBodies(bool prediction, float frameTime)
+        {
+            if (LoneIsland)
             {
-                var minSleepTime = float.MaxValue;
-
-                for (var i = 0; i < BodyCount; i++)
-                {
-                    var body = Bodies[i];
-
-                    if (body.BodyType == BodyType.Static)
-                        continue;
-
-                    if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
-                    {
-                        body.SleepTime = 0.0f;
-                        minSleepTime = 0.0f;
-                    }
-                    else
-                    {
-                        body.SleepTime += frameTime;
-                        minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
-                    }
-                }
-
-                if (minSleepTime >= _timeToSleep && positionSolved)
+                if (!prediction && _sleepAllowed)
                 {
                     for (var i = 0; i < BodyCount; i++)
                     {
                         var body = Bodies[i];
-                        body.Awake = false;
+
+                        if (body.BodyType == BodyType.Static) continue;
+
+                        if (!body.SleepingAllowed ||
+                            body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
+                            Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        {
+                            body.SleepTime = 0.0f;
+                        }
+                        else
+                        {
+                            body.SleepTime += frameTime;
+                        }
+
+                        if (body.SleepTime >= _timeToSleep && _positionSolved)
+                        {
+                            body.Awake = false;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
+                if (!prediction && _sleepAllowed)
+                {
+                    var minSleepTime = float.MaxValue;
+
+                    for (var i = 0; i < BodyCount; i++)
+                    {
+                        var body = Bodies[i];
+
+                        if (body.BodyType == BodyType.Static) continue;
+
+                        if (!body.SleepingAllowed ||
+                            body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
+                            Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        {
+                            body.SleepTime = 0.0f;
+                            minSleepTime = 0.0f;
+                        }
+                        else
+                        {
+                            body.SleepTime += frameTime;
+                            minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
+                        }
+                    }
+
+                    if (minSleepTime >= _timeToSleep && _positionSolved)
+                    {
+                        for (var i = 0; i < BodyCount; i++)
+                        {
+                            var body = Bodies[i];
+                            body.Awake = false;
+                        }
                     }
                 }
             }

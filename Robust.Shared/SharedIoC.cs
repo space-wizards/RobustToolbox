@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Random;
 using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization;
@@ -50,6 +51,7 @@ namespace Robust.Shared
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IIslandManager, IslandManager>();
         }
     }
 }

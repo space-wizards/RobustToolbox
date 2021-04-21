@@ -33,7 +33,7 @@ namespace Robust.Shared.Physics.Collision
 {
     internal interface ICollisionManager
     {
-        bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
+        bool TestOverlap(DistanceInput dInput, IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
 
         void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
@@ -87,8 +87,6 @@ namespace Robust.Shared.Physics.Collision
          * should also profile just using FixedArray2 / FixedArray3
          */
 
-        private DistanceInput _input = new();
-
         /// <summary>
         /// Test overlap between the two shapes.
         /// </summary>
@@ -99,18 +97,18 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform for the first shape.</param>
         /// <param name="xfB">The transform for the seconds shape.</param>
         /// <returns></returns>
-        bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
+        bool ICollisionManager.TestOverlap(DistanceInput dInput, IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
-            _input.ProxyA.Set(shapeA, indexA);
-            _input.ProxyB.Set(shapeB, indexB);
-            _input.TransformA = xfA;
-            _input.TransformB = xfB;
-            _input.UseRadii = true;
+            dInput.ProxyA.Set(shapeA, indexA);
+            dInput.ProxyB.Set(shapeB, indexB);
+            dInput.TransformA = xfA;
+            dInput.TransformB = xfB;
+            dInput.UseRadii = true;
 
             SimplexCache cache;
             DistanceOutput output;
-            DistanceManager.ComputeDistance(out output, out cache, _input);
+            DistanceManager.ComputeDistance(out output, out cache, dInput);
 
             return output.Distance < 10.0f * float.Epsilon;
         }

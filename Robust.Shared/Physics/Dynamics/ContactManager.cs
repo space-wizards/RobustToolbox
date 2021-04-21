@@ -403,21 +403,29 @@ namespace Robust.Shared.Physics.Dynamics
 
                 Parallel.For(0, batches, i =>
                 {
+                    var input = new DistanceInput();
                     var start = i * batchSize;
                     var end = Math.Min(start + batchSize, updateCount);
 
                     for (var j = start; j < end; j++)
                     {
-                        _updates[j].Update(this);
+                        _updates[j].Update(input);
                     }
                 });
             }
             else
             {
+                var input = new DistanceInput();
+
                 foreach (var contact in _updates)
                 {
-                    contact.Update(this);
+                    contact.Update(input);
                 }
+            }
+
+            foreach (var contact in _updates)
+            {
+                contact.UpdateSerial();
             }
 
 #if DEBUG

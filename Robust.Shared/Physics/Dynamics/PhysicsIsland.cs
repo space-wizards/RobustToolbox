@@ -266,6 +266,7 @@ public sealed class PhysicsIsland
 
         public void Add(IPhysBody body)
         {
+            throw new Exception("Parallel islands issue here");
             body.IslandIndex = BodyCount;
             Bodies[BodyCount++] = body;
         }

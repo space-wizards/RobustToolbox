@@ -292,35 +292,32 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             ContactSolver.InitializeManifold(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
+        private bool _touching;
+        private bool _wasTouching;
+
         /// <summary>
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
-        /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager)
+        internal void Update(DistanceInput dInput)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
-
-            if (FixtureA == null || FixtureB == null)
-                return;
-
             Manifold oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
+            _wasTouching = IsTouching;
 
-            bool touching;
-            bool wasTouching = IsTouching;
-
-            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
+            var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
             // Is this contact a sensor?
             if (sensor)
             {
                 IPhysShape shapeA = FixtureA.Shape;
                 IPhysShape shapeB = FixtureB.Shape;
-                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+                _touching = _collisionManager.TestOverlap(dInput, shapeA, ChildIndexA, shapeB, ChildIndexB,
+                    bodyA.GetTransform(), bodyB.GetTransform());
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
@@ -328,7 +325,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             else
             {
                 Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
-                touching = Manifold.PointCount > 0;
+                _touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the
                 // stored impulses to warm start the solver.
@@ -353,20 +350,28 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     Manifold.Points[i] = mp2;
                 }
+            }
+        }
 
-                if (touching != wasTouching)
-                {
-                    bodyA.Awake = true;
-                    bodyB.Awake = true;
-                }
+        internal void UpdateSerial()
+        {
+            PhysicsComponent bodyA = FixtureA!.Body;
+            PhysicsComponent bodyB = FixtureB!.Body;
+
+            bool sensor = !(FixtureA!.Hard && FixtureB!.Hard);
+
+            if (_touching != _wasTouching)
+            {
+                bodyA.Awake = true;
+                bodyB.Awake = true;
             }
 
-            IsTouching = touching;
+            IsTouching = _touching;
             Status = ContactStatus.None;
 
-            if (!wasTouching)
+            if (!_wasTouching)
             {
-                if (touching)
+                if (_touching)
                 {
                     var enabledA = true;
                     var enabledB = true;
@@ -397,7 +402,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
             else
             {
-                if (!touching)
+                if (!_touching)
                 {
                     /*
                     //Report the separation to both participants:

@@ -15,6 +15,7 @@ namespace Robust.Shared.Physics
     {
         bool IgnoreGravity { get; set; }
 
+        // TODO: Look at making it an array maybe? Or something?
         int IslandIndex { get; set; }
 
         /// <summary>

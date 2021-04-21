@@ -95,6 +95,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             IoCManager.InjectDependencies(this);
             _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
             InitializePool();
         }
 

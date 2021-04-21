@@ -543,7 +543,6 @@ namespace Robust.Shared.Physics.Dynamics
                 _stack[stackCount++] = seed;
 
                 // TODO: Probably don't need _islandSet anymore.
-                _islandSet.Add(seed);
                 seed.Island = true;
 
                 while (stackCount > 0)
@@ -582,9 +581,6 @@ namespace Robust.Shared.Physics.Dynamics
                         DebugTools.Assert(stackCount < stackSize);
                         _stack[stackCount++] = other;
 
-                        if (!_islandSet.Contains(body))
-                            _islandSet.Add(body);
-
                         other.Island = true;
                     }
 
@@ -607,9 +603,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                         DebugTools.Assert(stackCount < stackSize);
                         _stack[stackCount++] = other;
-
-                        if (!_islandSet.Contains(body))
-                            _islandSet.Add(body);
 
                         other.Island = true;
                     }

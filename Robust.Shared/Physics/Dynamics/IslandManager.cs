@@ -75,6 +75,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void InitializePools()
         {
+            _loneIsland.Clear();
             _activeIslands.Clear();
             _freeIslands.Clear();
 
@@ -100,9 +101,11 @@ namespace Robust.Shared.Physics.Dynamics
                 _allocatedIslands.Sort(_capacitySort);
             }
 
+            // TODO: Look at removing islands occasionally just to avoid memory bloat over time.
             // Free up islands
             foreach (var island in _allocatedIslands)
             {
+                island.Clear();
                 _freeIslands.Add(island);
             }
         }

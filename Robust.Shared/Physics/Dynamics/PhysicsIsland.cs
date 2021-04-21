@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -169,9 +170,10 @@ public sealed class PhysicsIsland
 
         internal SolverData SolverData = new();
 
-        private const int BodyIncrease = 32;
-        private const int ContactIncrease = 32;
-        private const int JointIncrease = 8;
+        private const int BodyIncrease = 8;
+        private const int ContactIncrease = 4;
+        private const int JointIncrease = 4;
+        private const int ReadMultithreadThreshold = 32;
 
         /// <summary>
         /// Do we apply special sleeping for this island given it has no contacts and joints?
@@ -292,17 +294,12 @@ public sealed class PhysicsIsland
         public void Resize(int bodyCount, int contactCount, int jointCount)
         {
             BodyCapacity = Math.Max(bodyCount, Bodies.Length);
-            BodyCount = bodyCount;
-
             ContactCapacity = Math.Max(contactCount, _contacts.Length);
-            ContactCount = contactCount;
-
             JointCapacity = Math.Max(jointCount, _joints.Length);
-            JointCount = jointCount;
 
             if (Bodies.Length < BodyCapacity)
             {
-                BodyCapacity = BodyIncrease * (int) MathF.Round(BodyCapacity / (float) BodyIncrease);
+                BodyCapacity = BodyIncrease * (int) MathF.Ceiling(BodyCapacity / (float) BodyIncrease);
                 Array.Resize(ref Bodies, BodyCapacity);
                 Array.Resize(ref _linearVelocities, BodyCapacity);
                 Array.Resize(ref _angularVelocities, BodyCapacity);
@@ -312,13 +309,13 @@ public sealed class PhysicsIsland
 
             if (_contacts.Length < ContactCapacity)
             {
-                ContactCapacity = ContactIncrease * (int) MathF.Round(ContactCapacity / (float) ContactIncrease);
+                ContactCapacity = ContactIncrease * (int) MathF.Ceiling(ContactCapacity / (float) ContactIncrease);
                 Array.Resize(ref _contacts, ContactCapacity * 2);
             }
 
             if (_joints.Length < JointCapacity)
             {
-                JointCapacity = JointIncrease * (int) MathF.Round(JointCapacity / (float) JointIncrease);
+                JointCapacity = JointIncrease * (int) MathF.Ceiling(JointCapacity / (float) JointIncrease);
                 Array.Resize(ref _joints, JointCapacity * 2);
             }
         }
@@ -346,36 +343,22 @@ public sealed class PhysicsIsland
 
             _positionSolved = false;
 
-            for (var i = 0; i < BodyCount; i++)
+            if (BodyCount > ReadMultithreadThreshold * 4)
             {
-                var body = Bodies[i];
+                // Deduct 1 for networking thread I guess?
+                var batches = Math.Min((int) MathF.Floor((float) BodyCount / ReadMultithreadThreshold), Math.Max(1, Environment.ProcessorCount - 1));
+                var batchSize = (int) MathF.Ceiling((float) BodyCount / batches);
 
-                // In future we'll set these to existing
-                // Didn't use the old variable names because they're hard to read
-                var position = body.Owner.Transform.WorldPosition;
-                // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
-                var angle = (float) body.Owner.Transform.WorldRotation.Theta;
-                var linearVelocity = body.LinearVelocity;
-                var angularVelocity = body.AngularVelocity;
-
-                // if the body cannot move, nothing to do here
-                if (body.BodyType == BodyType.Dynamic)
+                Parallel.For(0, batches, i =>
                 {
-                    if (body.IgnoreGravity)
-                        linearVelocity += body.Force * frameTime * body.InvMass;
-                    else
-                        linearVelocity += (gravity + body.Force * body.InvMass) * frameTime;
-
-                    angularVelocity += frameTime * body.InvI * body.Torque;
-
-                    linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);
-                    angularVelocity *= Math.Clamp(1.0f - frameTime * body.AngularDamping, 0.0f, 1.0f);
-                }
-
-                _positions[i] = position;
-                _angles[i] = angle;
-                _linearVelocities[i] = linearVelocity;
-                _angularVelocities[i] = angularVelocity;
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, BodyCount);
+                    ReadBodies(start, end, frameTime, gravity);
+                });
+            }
+            else
+            {
+                ReadBodies(0, BodyCount, frameTime, gravity);
             }
 
             // TODO: Do these up front of the world step.
@@ -481,6 +464,41 @@ public sealed class PhysicsIsland
                     _positionSolved = true;
                     break;
                 }
+            }
+        }
+
+        private void ReadBodies(int start, int end, float frameTime, Vector2 gravity)
+        {
+            for (var i = start; i < end; i++)
+            {
+                var body = Bodies[i];
+
+                // In future we'll set these to existing
+                // Didn't use the old variable names because they're hard to read
+                var position = body.Owner.Transform.WorldPosition;
+                // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
+                var angle = (float) body.Owner.Transform.WorldRotation.Theta;
+                var linearVelocity = body.LinearVelocity;
+                var angularVelocity = body.AngularVelocity;
+
+                // if the body cannot move, nothing to do here
+                if (body.BodyType == BodyType.Dynamic)
+                {
+                    if (body.IgnoreGravity)
+                        linearVelocity += body.Force * frameTime * body.InvMass;
+                    else
+                        linearVelocity += (gravity + body.Force * body.InvMass) * frameTime;
+
+                    angularVelocity += frameTime * body.InvI * body.Torque;
+
+                    linearVelocity *= Math.Clamp(1.0f - frameTime * body.LinearDamping, 0.0f, 1.0f);
+                    angularVelocity *= Math.Clamp(1.0f - frameTime * body.AngularDamping, 0.0f, 1.0f);
+                }
+
+                _positions[i] = position;
+                _angles[i] = angle;
+                _linearVelocities[i] = linearVelocity;
+                _angularVelocities[i] = angularVelocity;
             }
         }
 

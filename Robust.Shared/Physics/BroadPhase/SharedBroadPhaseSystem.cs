@@ -144,9 +144,9 @@ namespace Robust.Shared.Physics.Broadphase
             _mapManager.MapCreated += HandleMapCreated;
         }
 
-        public override void Update(float frameTime)
+        public override void FrameUpdate(float frameTime)
         {
-            base.Update(frameTime);
+            base.FrameUpdate(frameTime);
 
             while (_queuedMoveEvents.Count > 0)
             {
@@ -529,9 +529,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// <summary>
         ///     Move all of the fixtures on this body.
         /// </summary>
-        /// <param name="body"></param>
-        /// <param name="displacement"></param>
-        internal void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -539,10 +537,12 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
-            var mapId = body.Owner.Transform.MapID;
+            // TODO: These will need swept broadPhases
             var worldPosition = body.Owner.Transform.WorldPosition;
             var worldRotation = body.Owner.Transform.WorldRotation;
 
+
+            var mapId = body.Owner.Transform.MapID;
             worldAABB ??= body.GetWorldAABB(worldPosition, worldRotation);
 
             // 99% of the time this is going to be 1, maybe 2, so HashSet probably slower?
@@ -570,7 +570,7 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             // Update retained broadphases
-            // TODO: These will need swept broadPhases
+
             foreach (var broadPhase in oldBroadPhases)
             {
                 if (!newBroadPhases.Contains(broadPhase)) continue;
@@ -583,18 +583,17 @@ namespace Robust.Shared.Physics.Broadphase
 
                     foreach (var proxy in proxies)
                     {
-                        var gridPosition = worldPosition;
                         double gridRotation = worldRotation;
 
                         if (gridId != GridId.Invalid)
                         {
                             var grid = _mapManager.GetGrid(gridId);
-                            gridPosition -= grid.WorldPosition;
+                            worldPosition -= grid.WorldPosition;
                             // TODO: Should probably have a helper for this
                             gridRotation = worldRotation - body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                         }
 
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPosition);
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(worldPosition);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);

@@ -199,7 +199,8 @@ namespace Robust.Server.GameObjects
 
         private Box2 GetEntityBox(IEntity entity)
         {
-            return _lookup.GetWorldAabbFromEntity(entity).Enlarged(-0.1f);
+            var aabb = _lookup.GetWorldAabbFromEntity(entity);
+            return aabb.IsEmpty() ? aabb : aabb.Enlarged(-0.1f);
         }
 
         public override void Initialize()

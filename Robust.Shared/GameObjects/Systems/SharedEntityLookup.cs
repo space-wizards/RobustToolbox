@@ -453,7 +453,7 @@ namespace Robust.Shared.GameObjects
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
-                throw new InvalidOperationException($"Can't get WorldAABB from deleted entity {ent}");
+                return new Box2(); // TODO: God this disgusts me but it's a bandaid for now, see tuple.extract
 
             var worldPosition = ent.Transform.WorldPosition;
 

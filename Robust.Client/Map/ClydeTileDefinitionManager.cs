@@ -16,7 +16,9 @@ namespace Robust.Client.Map
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public Texture TileTextureAtlas { get; private set; } = default!;
+        private Texture? _tileTextureAtlas;
+        
+        public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new();
 
@@ -40,6 +42,11 @@ namespace Robust.Client.Map
         private void _genTextureAtlas()
         {
             var defList = TileDefs.Where(t => !string.IsNullOrEmpty(t.SpriteName)).ToList();
+
+            // If there are no tile definitions, we do nothing.
+            if (defList.Count <= 0)
+                return;
+
             const int tileSize = EyeManager.PixelsPerMeter;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(defList.Count));
@@ -77,7 +84,7 @@ namespace Robust.Client.Map
                         tileSize / w, tileSize / h));
             }
 
-            TileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+            _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
         }
     }
 }

@@ -6,6 +6,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.Log;
+using SixLabors.ImageSharp.PixelFormats;
 
 // ReSharper disable once IdentifierTypo
 using RTCF = Robust.Client.Graphics.RenderTargetColorFormat;
@@ -191,7 +192,8 @@ namespace Robust.Client.Graphics.Clyde
                 FramebufferHandle = fbo,
                 Size = size,
                 TextureHandle = textureObject.TextureId,
-                MemoryPressure = pressure
+                MemoryPressure = pressure,
+                ColorFormat = format.ColorFormat
             };
 
             //GC.AddMemoryPressure(pressure);
@@ -278,6 +280,8 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size;
             public bool IsSrgb;
 
+            public RTCF ColorFormat;
+
             // Remaining properties only apply if the render target is NOT a window.
             // Handle to the framebuffer object.
             public GLHandle FramebufferHandle;
@@ -302,6 +306,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public abstract Vector2i Size { get; }
+
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion = null) where T : unmanaged, IPixel<T>
+            {
+                Clyde.CopyRenderTargetPixels(Handle, subRegion, callback);
+            }
+
             public ClydeHandle Handle { get; }
 
             protected virtual void Dispose(bool disposing)

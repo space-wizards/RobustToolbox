@@ -47,6 +47,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.Runtime", "XamlX\src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzers", "Robust.Analyzers\Robust.Analyzers.csproj", "{3173712A-9E75-4685-B657-9AF9B7D54EFB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Base", "Avalonia.Base\Avalonia.Base.csproj", "{C60905B4-072F-4376-BCEC-C91186644127}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -199,6 +201,14 @@ Global
 		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.ActiveCfg = Release|Any CPU
 		{3173712A-9E75-4685-B657-9AF9B7D54EFB}.Release|x64.Build.0 = Release|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Debug|x64.Build.0 = Debug|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Release|x64.ActiveCfg = Release|Any CPU
+		{C60905B4-072F-4376-BCEC-C91186644127}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

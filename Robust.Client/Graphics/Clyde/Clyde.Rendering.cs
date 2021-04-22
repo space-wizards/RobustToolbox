@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
@@ -120,9 +116,9 @@ namespace Robust.Client.Graphics.Clyde
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, IEye eye, out Matrix3 proj, out Matrix3 view)
+        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye, out Matrix3 proj, out Matrix3 view)
         {
-            eye.GetViewMatrix(out view);
+            eye.GetViewMatrix(out view, renderScale);
 
             CalcWorldProjMatrix(screenSize, out proj);
         }
@@ -284,6 +280,16 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private void FlushRenderQueue()
         {
+            FlushBatchQueue();
+
+            // Reset renderer state.
+            _currentMatrixModel = Matrix3.Identity;
+            _queuedShader = _defaultShader.Handle;
+            SetScissorFull(null);
+        }
+
+        private void FlushBatchQueue()
+        {
             // Finish any batches that may have been WiP.
             BreakBatch();
 
@@ -308,11 +314,6 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessRenderCommands();
             _queuedRenderCommands.Clear();
-
-            // Reset renderer state.
-            _currentMatrixModel = Matrix3.Identity;
-            _queuedShader = _defaultShader.Handle;
-            SetScissorFull(null);
         }
 
         private void SetScissorFull(UIBox2i? state)
@@ -500,6 +501,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
             in Box2 texCoords)
         {
+            EnsureBatchSpaceAvailable(4, GetQuadBatchIndexCount());
             EnsureBatchState(texture, in modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
@@ -524,6 +526,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             FinishBatch();
             _batchMetaData = null;
+
+            EnsureBatchSpaceAvailable(vertices.Length, indices.Length);
 
             vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
 
@@ -566,6 +570,8 @@ namespace Robust.Client.Graphics.Clyde
             FinishBatch();
             _batchMetaData = null;
 
+            EnsureBatchSpaceAvailable(vertices.Length, 0);
+
             vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
 
             ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
@@ -601,6 +607,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
+            EnsureBatchSpaceAvailable(2, 0);
             EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentMatrixModel.Transform(a);
@@ -613,6 +620,14 @@ namespace Robust.Client.Graphics.Clyde
             BatchVertexIndex += 2;
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void EnsureBatchSpaceAvailable(int vtx, int idx)
+        {
+            if (BatchVertexIndex + vtx >= BatchVertexData.Length || BatchIndexIndex + idx > BatchIndexData.Length)
+            {
+                FlushBatchQueue();
+            }
         }
 
         private void DrawSetScissor(UIBox2i? scissorBox)
@@ -771,116 +786,6 @@ namespace Robust.Client.Graphics.Clyde
             FinishBatch();
 
             _batchMetaData = null;
-        }
-
-        private unsafe void TakeScreenshot(ScreenshotType type)
-        {
-            if (_queuedScreenshots.Count == 0 || _queuedScreenshots.All(p => p.type != type))
-            {
-                return;
-            }
-
-            var delegates = _queuedScreenshots.Where(p => p.type == type).ToList();
-
-            _queuedScreenshots.RemoveAll(p => p.type == type);
-
-            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
-            CheckGlError();
-
-            var bufferLength = ScreenSize.X * ScreenSize.Y;
-            if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
-            {
-                Logger.DebugS("clyde.ogl", "Necessary features for async screenshots not available, falling back to blocking path.");
-
-                // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,
-                // we'll have to fall back to a crappy synchronous stalling method of glReadPixels().
-
-                var buffer = new Rgba32[bufferLength];
-                fixed (Rgba32* ptr = buffer)
-                {
-                    var bufSize = sizeof(Rgba32) * bufferLength;
-                    GL.ReadnPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, bufSize,
-                        (IntPtr) ptr);
-                    CheckGlError();
-                }
-
-                var (w, h) = ScreenSize;
-
-                var image = new Image<Rgb24>(w, h);
-                var imageSpan = image.GetPixelSpan();
-
-                FlipCopyScreenshot(buffer, imageSpan, w, h);
-
-                RunCallback(image);
-                return;
-            }
-
-            GL.GenBuffers(1, out uint pbo);
-            CheckGlError();
-            GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
-            CheckGlError();
-            GL.BufferData(BufferTarget.PixelPackBuffer, bufferLength * sizeof(Rgba32), IntPtr.Zero,
-                BufferUsageHint.StreamRead);
-            CheckGlError();
-            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            CheckGlError();
-            var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
-            CheckGlError();
-
-            GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
-            CheckGlError();
-
-            _transferringScreenshots.Add((pbo, fence, ScreenSize, RunCallback));
-
-            void RunCallback(Image<Rgb24> image) => delegates.ForEach(p => p.callback(image));
-        }
-
-        private unsafe void CheckTransferringScreenshots()
-        {
-            if (_transferringScreenshots.Count == 0)
-            {
-                return;
-            }
-
-            foreach (var screenshot in _transferringScreenshots.ToList())
-            {
-                var (pbo, fence, (width, height), callback) = screenshot;
-
-                int status;
-                GL.GetSync(fence, SyncParameterName.SyncStatus, sizeof(int), null, &status);
-                CheckGlError();
-
-                if (status == (int) All.Signaled)
-                {
-                    var bufLen = width * height;
-                    var bufSize = sizeof(Rgba32) * bufLen;
-
-                    GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
-                    CheckGlError();
-                    var ptr = MapFullBuffer(BufferTarget.PixelPackBuffer, bufSize, BufferAccess.ReadOnly,
-                        BufferAccessMask.MapReadBit);
-
-                    var packSpan = new ReadOnlySpan<Rgba32>((void*) ptr, width * height);
-
-                    var image = new Image<Rgb24>(width, height);
-                    var imageSpan = image.GetPixelSpan();
-
-                    FlipCopyScreenshot(packSpan, imageSpan, width, height);
-
-                    UnmapBuffer(BufferTarget.PixelPackBuffer);
-                    GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
-                    CheckGlError();
-                    GL.DeleteBuffer(pbo);
-                    CheckGlError();
-                    GL.DeleteSync(fence);
-                    CheckGlError();
-
-                    _transferringScreenshots.Remove(screenshot);
-
-                    // TODO: Don't do unnecessary copy here.
-                    callback(image);
-                }
-            }
         }
 
         private FullStoredRendererState PushRenderStateFull()

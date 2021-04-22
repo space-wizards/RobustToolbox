@@ -79,6 +79,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)
         {
+            // TODO: Look at pipelining a bit more. Currently we dump everything into an island but alternatively
+            // we could have one contact solver with all the data dumped onto it and do all the solving
+            // at the same time which should be better for cache I think.
+            var islandIndex = data.IslandIndex;
+
             _linearVelocities = data.LinearVelocities;
             _angularVelocities = data.AngularVelocities;
 
@@ -122,12 +127,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 int pointCount = manifold.PointCount;
                 DebugTools.Assert(pointCount > 0);
 
+                var aIndex = bodyA.IslandIndex[islandIndex];
+                var bIndex = bodyB.IslandIndex[islandIndex];
+
                 var velocityConstraint = _velocityConstraints[i];
                 velocityConstraint.Friction = contact.Friction;
                 velocityConstraint.Restitution = contact.Restitution;
                 velocityConstraint.TangentSpeed = contact.TangentSpeed;
-                velocityConstraint.IndexA = bodyA.IslandIndex;
-                velocityConstraint.IndexB = bodyB.IslandIndex;
+                velocityConstraint.IndexA = aIndex;
+                velocityConstraint.IndexB = bIndex;
 
                 (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
                 velocityConstraint.InvIA = bodyA.InvI;
@@ -142,8 +150,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 }
 
                 var positionConstraint = _positionConstraints[i];
-                positionConstraint.IndexA = bodyA.IslandIndex;
-                positionConstraint.IndexB = bodyB.IslandIndex;
+                positionConstraint.IndexA = aIndex;
+                positionConstraint.IndexB = bIndex;
                 (positionConstraint.InvMassA, positionConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
                 // TODO: Dis
                 // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;

@@ -54,15 +54,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
 
-        /// <summary>
-        ///     Has this body been added to an island previously in this tick.
-        /// </summary>
+        /// <inheritdoc />
         public bool Island { get; set; }
 
-        /// <summary>
-        ///     Store the body's index within the island so we can lookup its data.
-        /// </summary>
-        public int IslandIndex { get; set; }
+        /// <inheritdoc />
+        public Dictionary<int, int> IslandIndex { get; set; } = new();
 
         // TODO: Actually implement after the initial pr dummy
         /// <summary>

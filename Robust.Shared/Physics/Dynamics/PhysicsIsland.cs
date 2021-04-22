@@ -175,6 +175,8 @@ public sealed class PhysicsIsland
         private const int JointIncrease = 4;
         private const int ReadMultithreadThreshold = 32;
 
+        internal int ID { get; set; } = -1;
+
         /// <summary>
         /// Do we apply special sleeping for this island given it has no contacts and joints?
         /// </summary>
@@ -266,8 +268,7 @@ public sealed class PhysicsIsland
 
         public void Add(IPhysBody body)
         {
-            throw new Exception("Parallel islands issue here");
-            body.IslandIndex = BodyCount;
+            body.IslandIndex[ID] = BodyCount;
             Bodies[BodyCount++] = body;
         }
 
@@ -363,6 +364,7 @@ public sealed class PhysicsIsland
             }
 
             // TODO: Do these up front of the world step.
+            SolverData.IslandIndex = ID;
             SolverData.FrameTime = frameTime;
             SolverData.DtRatio = dtRatio;
             SolverData.InvDt = invDt;
@@ -630,6 +632,8 @@ public sealed class PhysicsIsland
     /// </summary>
     internal sealed class SolverData
     {
+        public int IslandIndex { get; set; } = -1;
+
         public float FrameTime { get; set; }
         public float DtRatio { get; set; }
         public float InvDt { get; set; }

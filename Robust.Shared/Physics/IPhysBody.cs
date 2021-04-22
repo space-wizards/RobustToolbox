@@ -15,8 +15,10 @@ namespace Robust.Shared.Physics
     {
         bool IgnoreGravity { get; set; }
 
-        // TODO: Look at making it an array maybe? Or something?
-        int IslandIndex { get; set; }
+        /// <summary>
+        ///     Island id is the key and index is the value
+        /// </summary>
+        Dictionary<int, int> IslandIndex { get; set; }
 
         /// <summary>
         ///     Has this body already been added to a physics island

@@ -43,6 +43,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public Vector2 Normal;
 
+        // TODO: Mat22
         public Vector2[] NormalMass = new Vector2[2];
 
         public Vector2[] K = new Vector2[2];

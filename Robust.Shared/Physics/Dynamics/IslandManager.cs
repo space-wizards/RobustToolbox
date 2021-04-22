@@ -39,7 +39,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// The island all non-contact non-joint bodies are added to to batch together. This needs its own custom sleeping
         /// given we cant wait for every body to be ready to sleep.
         /// </summary>
-        private PhysicsIsland _loneIsland = new() {LoneIsland = true};
+        private PhysicsIsland _loneIsland = new() {LoneIsland = true, ID = 0};
 
         /// <summary>
         /// Contains islands currently in use.
@@ -105,6 +105,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Free up islands
             foreach (var island in _allocatedIslands)
             {
+                // No need to reset ID here right...
                 island.Clear();
                 _freeIslands.Add(island);
             }
@@ -162,6 +163,8 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             island.Resize(bodyCount, contactCount, jointCount);
+            // 0 ID taken up by LoneIsland
+            island.ID = _activeIslands.Count + 1;
             _activeIslands.Add(island);
             return island;
         }

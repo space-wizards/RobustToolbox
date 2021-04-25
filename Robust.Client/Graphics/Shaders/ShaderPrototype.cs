@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         [ViewVariables]
-        [field: DataField("id", required: true)]
+        [DataField("id", required: true)]
         public string ID { get; } = default!;
 
         private ShaderKind Kind;

@@ -247,14 +247,14 @@ namespace Robust.Shared.Serialization.Manager
             return res;
         }
 
-        private SerializationDataDefinition? GetDataDefinition(Type type)
+        internal SerializationDataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
             return null;
         }
 
-        private bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
+        internal bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
         {
             dataDefinition = GetDataDefinition(type);
             return dataDefinition != null;

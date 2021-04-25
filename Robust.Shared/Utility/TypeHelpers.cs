@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Utility
 {
@@ -281,10 +282,56 @@ namespace Robust.Shared.Utility
 
             return commonType;
         }
+
+        public static SpecificFieldInfo? GetBackingField(this Type type, string propertyName)
+        {
+            foreach (var parent in type.GetClassHierarchy())
+            {
+                var field = parent.GetField($"<{propertyName}>k__BackingField",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+
+                if (field != null)
+                {
+                    return new SpecificFieldInfo(field);
+                }
+            }
+
+            return null;
+        }
+
+        public static bool HasBackingField(this Type type, string propertyName)
+        {
+            return type.GetBackingField(propertyName) != null;
+        }
+
+        public static bool TryGetBackingField(this Type type, string propertyName,
+            [NotNullWhen(true)] out SpecificFieldInfo? field)
+        {
+            return (field = type.GetBackingField(propertyName)) != null;
+        }
+
+        public static bool IsBackingField(this MemberInfo memberInfo)
+        {
+            return memberInfo.HasCustomAttribute<CompilerGeneratedAttribute>() &&
+                   memberInfo.Name.StartsWith("<") &&
+                   memberInfo.Name.EndsWith(">k__BackingField");
+        }
+
+        public static bool HasCustomAttribute<T>(this MemberInfo memberInfo) where T : Attribute
+        {
+            return memberInfo.GetCustomAttribute<T>() != null;
+        }
+
+        public static bool TryGetCustomAttribute<T>(this MemberInfo memberInfo, [NotNullWhen(true)] out T? attribute)
+            where T : Attribute
+        {
+            return (attribute = memberInfo.GetCustomAttribute<T>()) != null;
+        }
     }
 
     public abstract class AbstractFieldInfo
     {
+        public abstract string Name { get; }
         public abstract Type FieldType { get; }
         public abstract Type? DeclaringType { get; }
 
@@ -293,16 +340,25 @@ namespace Robust.Shared.Utility
 
         public abstract T? GetCustomAttribute<T>() where T : Attribute;
         public abstract IEnumerable<T> GetCustomAttributes<T>() where T : Attribute;
+        public abstract bool HasCustomAttribute<T>() where T : Attribute;
+        public abstract bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : Attribute;
+        public abstract bool IsBackingField();
+        public abstract bool HasBackingField();
+        public abstract SpecificFieldInfo? GetBackingField();
+        public abstract bool TryGetBackingField([NotNullWhen(true)] out SpecificFieldInfo? field);
     }
 
     public class SpecificFieldInfo : AbstractFieldInfo
     {
         public readonly FieldInfo FieldInfo;
+
+        public override string Name { get; }
         public override Type FieldType => FieldInfo.FieldType;
         public override Type? DeclaringType => FieldInfo.DeclaringType;
 
         public SpecificFieldInfo(FieldInfo fieldInfo)
         {
+            Name = fieldInfo.Name;
             FieldInfo = fieldInfo;
         }
 
@@ -311,12 +367,43 @@ namespace Robust.Shared.Utility
 
         public override T? GetCustomAttribute<T>() where T : class
         {
-            return (T?)Attribute.GetCustomAttribute(FieldInfo, typeof(T));
+            return FieldInfo.GetCustomAttribute<T>();
         }
 
         public override IEnumerable<T> GetCustomAttributes<T>()
         {
             return FieldInfo.GetCustomAttributes<T>();
+        }
+
+        public override bool HasCustomAttribute<T>()
+        {
+            return FieldInfo.HasCustomAttribute<T>();
+        }
+
+        public override bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : class
+        {
+            return FieldInfo.TryGetCustomAttribute(out attribute);
+        }
+
+        public override bool IsBackingField()
+        {
+            return FieldInfo.IsBackingField();
+        }
+
+        public override bool HasBackingField()
+        {
+            return false;
+        }
+
+        public override SpecificFieldInfo? GetBackingField()
+        {
+            return null;
+        }
+
+        public override bool TryGetBackingField([NotNullWhen(true)] out SpecificFieldInfo? field)
+        {
+            field = null;
+            return false;
         }
 
         public static implicit operator FieldInfo(SpecificFieldInfo f) => f.FieldInfo;
@@ -331,11 +418,14 @@ namespace Robust.Shared.Utility
     public class SpecificPropertyInfo : AbstractFieldInfo
     {
         public readonly PropertyInfo PropertyInfo;
+
+        public override string Name { get; }
         public override Type FieldType => PropertyInfo.PropertyType;
         public override Type? DeclaringType => PropertyInfo.DeclaringType;
 
         public SpecificPropertyInfo(PropertyInfo propertyInfo)
         {
+            Name = propertyInfo.Name;
             PropertyInfo = propertyInfo;
         }
 
@@ -344,18 +434,49 @@ namespace Robust.Shared.Utility
 
         public override T? GetCustomAttribute<T>() where T : class
         {
-            return (T?)Attribute.GetCustomAttribute(PropertyInfo, typeof(T));
+            if (PropertyInfo.TryGetCustomAttribute(out T? attribute))
+            {
+                return attribute;
+            }
+
+            return GetBackingField()?.GetCustomAttribute<T>();
         }
 
         public override IEnumerable<T> GetCustomAttributes<T>()
         {
-            return PropertyInfo.GetCustomAttributes<T>();
+            return PropertyInfo.GetCustomAttributes<T>()
+                .Concat(GetBackingField()?.GetCustomAttributes<T>() ?? Enumerable.Empty<T>());
         }
 
-        public bool IsVirtual()
+        public override bool HasCustomAttribute<T>()
         {
-            return (PropertyInfo.GetGetMethod()?.IsVirtual ?? false) ||
-                   (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
+            return PropertyInfo.HasCustomAttribute<T>() ||
+                   (GetBackingField()?.HasCustomAttribute<T>() ?? false);
+        }
+
+        public override bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : class
+        {
+            return (attribute = GetCustomAttribute<T>()) != null;
+        }
+
+        public override bool IsBackingField()
+        {
+            return false;
+        }
+
+        public override bool HasBackingField()
+        {
+            return DeclaringType?.HasBackingField(Name) ?? false;
+        }
+
+        public override SpecificFieldInfo? GetBackingField()
+        {
+            return DeclaringType?.GetBackingField(Name);
+        }
+
+        public override bool TryGetBackingField([NotNullWhen(true)] out SpecificFieldInfo? field)
+        {
+            return (field = GetBackingField()) != null;
         }
 
         public bool IsMostOverridden(Type type)

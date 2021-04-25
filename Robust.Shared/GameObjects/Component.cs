@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        [field: DataField("netsync")]
+        [DataField("netsync")]
         public bool NetSyncEnabled { get; set; } = true;
 
         /// <inheritdoc />

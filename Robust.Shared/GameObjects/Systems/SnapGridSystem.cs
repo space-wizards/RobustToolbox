@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<SnapGridComponent, ComponentInit>(HandleComponentInit);
+            SubscribeLocalEvent<SnapGridComponent, ComponentStartup>(HandleComponentStartup);
             SubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
             SubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
@@ -26,12 +26,12 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            UnsubscribeLocalEvent<SnapGridComponent, ComponentInit>(HandleComponentInit);
+            UnsubscribeLocalEvent<SnapGridComponent, ComponentStartup>(HandleComponentStartup);
             UnsubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
             UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
 
-        private void HandleComponentInit(EntityUid uid, SnapGridComponent component, ComponentInit args)
+        private void HandleComponentStartup(EntityUid uid, SnapGridComponent component, ComponentStartup args)
         {
             var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
             UpdatePosition(uid, transform, component);

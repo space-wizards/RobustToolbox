@@ -114,6 +114,30 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = false;
         }
 
+        public void Shutdown()
+        {
+            DependencyCollection = null!;
+
+            _constantsMapping.Clear();
+            _flagsMapping.Clear();
+
+            _genericWriterTypes.Clear();
+            _genericReaderTypes.Clear();
+            _genericCopierTypes.Clear();
+            _genericValidatorTypes.Clear();
+
+            _typeWriters.Clear();
+            _typeReaders.Clear();
+            _typeCopiers.Clear();
+            _typeValidators.Clear();
+
+            _dataDefinitions.Clear();
+
+            _copyByRefRegistrations.Clear();
+
+            _initialized = false;
+        }
+
         public bool HasDataDefinition(Type type)
         {
             if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");

@@ -542,10 +542,6 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-
-            // offset position from world to parent
-            SetPosition(WorldPosition - newParent.WorldPosition);
-
             var oldParent = Parent;
             var oldConcrete = (TransformComponent?) oldParent;
             var uid = Owner.Uid;
@@ -557,13 +553,14 @@ namespace Robust.Shared.GameObjects
             var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
 
+            // offset position from world to parent
+            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
             _parent = newParentEnt.Uid;
 
             ChangeMapId(newConcrete.MapID);
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
-
             
             RebuildMatrices();
             Dirty();

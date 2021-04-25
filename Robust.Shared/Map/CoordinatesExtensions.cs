@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -53,7 +53,7 @@ namespace Robust.Shared.Map
                 if (closest != null) // stick to existing grid
                 {
                     // round to nearest cardinal dir
-                    var normal = new Angle(coords.Position - intersect.Center).GetCardinalDir().ToVec();
+                    var normal = coords.Position - intersect.Center;
 
                     // round coords to center of tile
                     var tileIndices = closest.WorldToTile(intersect.Center);

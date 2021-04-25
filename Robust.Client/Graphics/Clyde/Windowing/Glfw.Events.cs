@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessGlfwEventKey(in GlfwEventKey ev)
             {
-                EmitKeyEvent(Keyboard.ConvertGlfwKey(ev.Key), ev.Action, ev.Mods);
+                EmitKeyEvent(ConvertGlfwKey(ev.Key), ev.Action, ev.Mods);
             }
 
             private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
@@ -126,7 +126,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessGlfwEventMouseButton(in GlfwEventMouseButton ev)
             {
-                EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(ev.Button)), ev.Action, ev.Mods);
+                EmitKeyEvent(Mouse.MouseButtonToKey(ConvertGlfwButton(ev.Button)), ev.Action, ev.Mods);
             }
 
             private void ProcessGlfwEventScroll(in GlfwEventScroll ev)

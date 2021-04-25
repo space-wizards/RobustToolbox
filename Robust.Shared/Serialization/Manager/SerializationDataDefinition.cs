@@ -142,8 +142,7 @@ namespace Robust.Shared.Serialization.Manager
 
             _duplicates = fieldDefs
                 .Where(f =>
-                    fieldDefs
-                        .Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
+                    fieldDefs.Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
                 .Select(f => f.Attribute.Tag)
                 .Distinct()
                 .ToArray();

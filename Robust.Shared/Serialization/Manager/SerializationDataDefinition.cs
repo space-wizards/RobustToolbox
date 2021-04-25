@@ -82,7 +82,7 @@ namespace Robust.Shared.Serialization.Manager
             Type = type;
             var dummyObj = Activator.CreateInstance(type)!;
 
-            var fieldDefs = new Dictionary<AbstractFieldInfo, FieldDefinition>();
+            var fieldDefs = new List<FieldDefinition>();
 
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
@@ -137,27 +137,23 @@ namespace Robust.Shared.Serialization.Manager
                     backingField,
                     inheritanceBehaviour);
 
-                fieldDefs.Add(abstractFieldInfo, fieldDefinition);
+                fieldDefs.Add(fieldDefinition);
             }
 
             _duplicates = fieldDefs
-                .Values
                 .Where(f =>
                     fieldDefs
-                        .Values
                         .Count(df => df.Attribute.Tag == f.Attribute.Tag) > 1)
                 .Select(f => f.Attribute.Tag)
                 .Distinct()
                 .ToArray();
 
-            var fields = fieldDefs
-                .Values
-                .ToList();
+            var fields = fieldDefs;
 
             fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
 
             _baseFieldDefinitions = fields.ToArray();
-            _defaultValues = fieldDefs.Values.Select(f => f.DefaultValue).ToArray();
+            _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
             _deserializeDelegate = EmitDeserializationDelegate();
             _populateDelegate = EmitPopulateDelegate();

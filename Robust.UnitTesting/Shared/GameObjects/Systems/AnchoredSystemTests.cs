@@ -14,6 +14,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
     [TestFixture, Parallelizable]
     public class AnchoredSystemTests
     {
+        private static readonly MapId TestMapId = new(1);
+        private static readonly GridId TestGridId = new(1);
+
         private class Subscriber : IEntityEventSubscriber { }
 
         private static ISimulation SimulationFactory()
@@ -22,8 +25,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 .NewSimulation()
                 .InitializeInstance();
 
+            var mapManager = sim.Resolve<IMapManager>();
+
             // Adds the map with id 1, and spawns entity 1 as the map entity.
-            sim.AddMap(1);
+            mapManager.CreateMap(TestMapId);
+
+            // Add grid 1, as the default grid to anchor things to.
+            mapManager.CreateGrid(TestMapId, TestGridId);
 
             return sim;
         }
@@ -36,13 +44,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
+            var grid = mapMan.GetGrid(TestGridId);
 
             var subscriber = new Subscriber();
             int calledCount = 0;
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
+            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, TestMapId));
 
-            throw new NotImplementedException();
+            // Act
+            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
+            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
 
             Assert.That(calledCount, Is.EqualTo(0));
             void MoveEventHandler(MoveEvent ev)

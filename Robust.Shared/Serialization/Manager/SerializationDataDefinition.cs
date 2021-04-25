@@ -150,13 +150,13 @@ namespace Robust.Shared.Serialization.Manager
                 .Distinct()
                 .ToArray();
 
-            var fields = fieldDefs;
-            fields
+            var fields = fieldDefs
                 .Values
-                .ToList()
-                .Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
+                .ToList();
 
-            _baseFieldDefinitions = fields.Values.ToArray();
+            fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
+
+            _baseFieldDefinitions = fields.ToArray();
             _defaultValues = fieldDefs.Values.Select(f => f.DefaultValue).ToArray();
 
             _deserializeDelegate = EmitDeserializationDelegate();

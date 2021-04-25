@@ -1326,6 +1326,11 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
+            var preventCollideMessage = new PreventCollideEvent(this, other);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
+
+            if (preventCollideMessage.Cancelled) return false;
+
             foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
             {
                 if (comp.PreventCollide(other)) return false;

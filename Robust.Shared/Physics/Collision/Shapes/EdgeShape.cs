@@ -151,7 +151,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             m.R1C2 = modelMatrix.R1C2;
             handle.SetTransform(m);
             handle.DrawLine(Vertex1, Vertex2, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(Matrix3.Identity);
+            handle.SetTransform(in Matrix3.Identity);
         }
     }
 }

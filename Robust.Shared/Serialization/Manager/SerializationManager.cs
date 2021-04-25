@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initialized;
 
         private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
-        private readonly List<Type> _copyByRefRegistrations = new();
+        private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
 
@@ -525,7 +525,7 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            if (TryCopyWithTypeCopier(commonType, source, ref target, skipHook, context))
+            if (TryCopyRaw(commonType, source, ref target, skipHook, context))
             {
                 return target;
             }
@@ -581,10 +581,8 @@ namespace Robust.Shared.Serialization.Manager
 
         private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null) return source;
-
-
-            if (type.IsPrimitive ||
+            if (source == null ||
+                type.IsPrimitive ||
                 type.IsEnum ||
                 source is string ||
                 _copyByRefRegistrations.Contains(type))

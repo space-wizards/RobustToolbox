@@ -356,7 +356,7 @@ namespace Robust.Client.Graphics.Clyde
                     return Loc.GetString(name);
                 }
 
-                name = GLFW.GetKeyName(Keyboard.ConvertGlfwKeyReverse(key), 0);
+                name = GLFW.GetKeyName(ConvertGlfwKeyReverse(key), 0);
                 if (name != null)
                 {
                     return name.ToUpper();
@@ -367,7 +367,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public int KeyGetScanCode(Keyboard.Key key)
             {
-                return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
+                return GLFW.GetKeyScancode(ConvertGlfwKeyReverse(key));
             }
 
             public string KeyGetNameScanCode(int scanCode)

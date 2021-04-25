@@ -20,7 +20,7 @@ namespace Robust.Client.Player
         event EventHandler PlayerListUpdated;
 
         void Initialize();
-        void Startup(INetChannel channel);
+        void Startup();
         void Shutdown();
 
         void ApplyPlayerStates(IEnumerable<PlayerState>? list);

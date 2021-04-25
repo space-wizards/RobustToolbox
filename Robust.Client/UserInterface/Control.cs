@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +38,14 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public string? Name { get; set; }
+
+        /// <summary>
+        ///     If true, this control will always be rendered, even if other UI rendering is disabled.
+        /// </summary>
+        /// <remarks>
+        ///     Useful for e.g. primary viewports.
+        /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)] public bool AlwaysRender { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.

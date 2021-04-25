@@ -247,6 +247,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 : stackalloc Renderer[] {renderer};
 
+            ErrorCode lastGlfwError = default;
+            string? lastGlfwErrorDesc = default;
+
             foreach (Renderer r in renderers)
             {
                 CreateWindowForRenderer(r);
@@ -261,20 +264,19 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Window failed to init due to error.
                 // Try not to treat the error code seriously.
-                var code = GLFW.GetError(out string desc);
-                Logger.DebugS("clyde.win", $"{r} unsupported: [${code}] ${desc}");
+                lastGlfwError = GLFW.GetError(out lastGlfwErrorDesc);
+                Logger.DebugS("clyde.win", $"{r} unsupported: [{lastGlfwError}] ${lastGlfwErrorDesc}");
             }
 
             if (_glfwWindow == null)
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    var code = GLFW.GetError(out string desc);
-
                     var errorContent = "Failed to create the game window. " +
                                        "This probably means your GPU is too old to play the game. " +
-                                       "That or update your graphic drivers\n" +
-                                       $"The exact error is: [{code}]\n {desc}";
+                                       "Try to update your graphics drivers, " +
+                                       "or enable compatibility mode in the launcher if that fails.\n" +
+                                       $"The exact error is: {lastGlfwError}\n{lastGlfwErrorDesc}";
 
                     MessageBoxW(null,
                         errorContent,
@@ -599,11 +601,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.Viewport(0, 0, fbW, fbH);
                 CheckGlError();
-                if (fbW != 0 && fbH != 0)
-                {
-                    _mainViewport.Dispose();
-                    CreateMainViewport();
-                }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
             }

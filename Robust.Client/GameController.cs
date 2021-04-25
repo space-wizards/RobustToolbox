@@ -49,6 +49,7 @@ namespace Robust.Client
         [Dependency] private readonly IClientConsoleHost _console = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
@@ -60,17 +61,18 @@ namespace Robust.Client
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
-        private bool _disableAssemblyLoadContext;
+
         // Arguments for loader-load. Not used otherwise.
         private IMainArgs? _loaderArgs;
 
+        public bool ContentStart { get; set; } = false;
+        public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
         public bool LoadConfigAndUserData { get; set; } = true;
@@ -87,10 +89,10 @@ namespace Robust.Client
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
-            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
-            _modLoader.SetEnableSandboxing(true);
+            _modLoader.SetUseLoadContext(!ContentStart);
+            _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), Options.ContentModulePrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return false;
@@ -109,13 +111,14 @@ namespace Robust.Client
 
             _resourceCache.PreloadTextures();
             _userInterfaceManager.Initialize();
+            _eyeManager.Initialize();
             _networkManager.Initialize(false);
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
+            _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
@@ -140,7 +143,8 @@ namespace Robust.Client
 
             _clyde.Ready();
 
-            if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+            if (!Options.DisableCommandLineConnect &&
+                (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
                 && LaunchState.ConnectEndpoint != null)
             {
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
@@ -169,7 +173,7 @@ namespace Robust.Client
 
             if (LoadConfigAndUserData)
             {
-                var configFile = Path.Combine(userDataDir, "client_config.toml");
+                var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
                 if (File.Exists(configFile))
                 {
                     // Load config from user data if available.
@@ -193,7 +197,12 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
+            var mountOptions = _commandLineArgs != null
+                ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
+
+            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+                _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
+
             if (_loaderArgs != null)
             {
                 _stringSerializer.EnableCaching = false;
@@ -214,7 +223,7 @@ namespace Robust.Client
                 return false;
             }
 
-            _clyde.SetWindowTitle("Space Station 14");
+            _clyde.SetWindowTitle(Options.DefaultWindowTitle);
 
             _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
             return true;
@@ -294,10 +303,17 @@ namespace Robust.Client
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 
-            // GameStateManager is in full control of the simulation update.
-            if (_client.RunLevel >= ClientRunLevel.Connected)
+            // GameStateManager is in full control of the simulation update in multiplayer.
+            if (_client.RunLevel == ClientRunLevel.InGame || _client.RunLevel == ClientRunLevel.Connected)
             {
                 _gameStateManager.ApplyGameState();
+            }
+
+            // In singleplayer, however, we're in full control instead.
+            else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
+            {
+                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds);
+                _lookup.Update();
             }
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
@@ -318,11 +334,6 @@ namespace Robust.Client
             _overlayManager.FrameUpdate(frameEventArgs);
             _userInterfaceManager.FrameUpdate(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
-        }
-
-        private void Render()
-        {
-
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)

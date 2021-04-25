@@ -4,6 +4,8 @@ using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
+using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -165,14 +167,17 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
+        public void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null)
         {
-            callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
+            // Immediately call callback with an empty buffer.
+            var (x, y) = ClampSubRegion(ScreenSize, subRegion);
+            callback(new Image<Rgb24>(x, y));
         }
 
-        public IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        public IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters,
+            string? name = null)
         {
-            return new Viewport();
+            return new Viewport(size);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
@@ -432,11 +437,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; }
-            public Texture Texture { get; }
 
-            public void Delete()
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
             {
+                var (x, y) = ClampSubRegion(Size, subRegion);
+                callback(new Image<T>(x, y));
             }
+
+            public Texture Texture { get; }
 
             public void Dispose()
             {
@@ -453,6 +461,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size => _clyde.ScreenSize;
+
+            public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
+            {
+                var (x, y) = ClampSubRegion(Size, subRegion);
+                callback(new Image<T>(x, y));
+            }
 
             public void Dispose()
             {
@@ -479,6 +493,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class Viewport : IClydeViewport
         {
+            public Viewport(Vector2i size)
+            {
+                Size = size;
+            }
+
             public void Dispose()
             {
             }
@@ -488,9 +507,38 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Vector2 RenderScale { get; set; }
+            public bool AutomaticRender { get; set; }
 
             public void Render()
             {
+                // Nada
+            }
+
+            public MapCoordinates LocalToWorld(Vector2 point)
+            {
+                return default;
+            }
+
+            public Vector2 WorldToLocal(Vector2 point)
+            {
+                return default;
+            }
+
+            public void RenderScreenOverlaysBelow(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                // Nada
+            }
+
+            public void RenderScreenOverlaysAbove(
+                DrawingHandleScreen handle,
+                IViewportControl control,
+                in UIBox2i viewportBounds)
+            {
+                // Nada
             }
         }
     }

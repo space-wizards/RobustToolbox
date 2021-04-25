@@ -278,6 +278,22 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayForceSyncWindows =
             CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     If true, use a separate thread for windowing (interacting with the OS).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        ///     Look, it can take 15 *milliseconds* for Windows to <c>SetCursor</c>.
+        ///     I am not accepting that stutter in my frame graph.
+        ///     Also nice things like smooth resizing of the window.
+        /// </para>
+        /// <para>
+        ///     Requires client restart to take effect.
+        /// </para>
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayWindowThread =
+            CVarDef.Create("display.window_thread", true, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

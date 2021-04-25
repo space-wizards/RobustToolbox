@@ -13,66 +13,84 @@ namespace Robust.UnitTesting.Shared.Physics
     {
         private ICollisionManager _collisionManager = default!;
 
+        private PhysShapeCircle _circleA = default!;
+        private PhysShapeCircle _circleB = default!;
+
+        private PolygonShape _polyA = default!;
+        private PolygonShape _polyB = default!;
+
         [OneTimeSetUp]
         public void Setup()
         {
             _collisionManager = IoCManager.Resolve<ICollisionManager>();
+            _circleA = new PhysShapeCircle {Radius = 0.5f};
+            _circleB = new PhysShapeCircle {Radius = 0.5f};
+            _polyA = new PolygonShape();
+            _polyB = new PolygonShape();
+            _polyA.SetAsBox(-0.5f, 0.5f);
+            _polyB.SetAsBox(-0.5f, 0.5f);
         }
-
-        // I dumped the manifold tests under whatever's listed first in the method name.
 
         [Test]
         public void TestCircleCollision()
         {
-            var circleOne = new PhysShapeCircle {Radius = 0.5f};
-            var circleTwo = new PhysShapeCircle {Radius = 0.5f};
             var transformA = new Transform(new Vector2(-1, -1), 0f);
             var transformB = new Transform(Vector2.One, 0f);
 
             // No overlap
-            Assert.That(_collisionManager.TestOverlap(circleOne, 0, circleTwo, 0, transformA, transformB), Is.EqualTo(false));
+            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(false));
 
             // Overlap directly
             transformA = new Transform(transformB.Position, 0f);
-            Assert.That(_collisionManager.TestOverlap(circleOne, 0, circleTwo, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
 
             // Overlap on edge
-            transformA = new Transform(Vector2.One + circleOne.Radius - float.Epsilon, 0f);
-            Assert.That(_collisionManager.TestOverlap(circleOne, 0, circleTwo, 0, transformA, transformB), Is.EqualTo(true));
+            transformA.Position = transformB.Position + new Vector2(0.5f, 0.0f);
+            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
         }
 
         [Test]
         public void TestPolyCollisions()
         {
-            var polyOne = new PolygonShape();
-            var polyTwo = new PolygonShape();
-            polyOne.SetAsBox(-0.5f, 0.5f);
-            polyTwo.SetAsBox(-0.5f, 0.5f);
             var transformA = new Transform(new Vector2(-1, -1), 0f);
             var transformB = new Transform(Vector2.One, 0f);
 
             // No overlap
-            Assert.That(_collisionManager.TestOverlap(polyOne, 0, polyTwo, 0, transformA, transformB), Is.EqualTo(false));
+            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(false));
 
             // Overlap directly
             transformA = new Transform(transformB.Position, 0f);
-            Assert.That(_collisionManager.TestOverlap(polyOne, 0, polyTwo, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
 
             // Overlap on edge
-            transformA = new Transform(Vector2.One + 0.5f - float.Epsilon, 0f);
-            Assert.That(_collisionManager.TestOverlap(polyOne, 0, polyTwo, 0, transformA, transformB), Is.EqualTo(true));
+            transformA.Position = transformB.Position + new Vector2(0.5f, 0.0f);
+            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
 
-            transformA.Position = transformB.Position + 0.5f;
-            var manifold = new Manifold();
-
-            _collisionManager.CollidePolygons(ref manifold, polyOne, transformA, polyTwo, transformB);
-            Assert.That(manifold.LocalNormal, Is.EqualTo(new Vector2(-1, 0)));
-            Assert.That(manifold.LocalPoint, Is.EqualTo(new Vector2(-0.5f, 0.0f)));
-            // TODO: More
-
-            // TODO: 45 degree angle as well
+            transformA.Quaternion2D = transformA.Quaternion2D.Set(45f);
+            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
         }
 
-        // TODO: Need TestOverlap between disparate shape types.
+        [Test]
+        public void TestPolyOnPolyManifolds()
+        {
+            var transformB = new Transform(Vector2.One, 0f);
+            var transformA = new Transform(transformB.Position + new Vector2(0.5f, 0.0f), 0f);
+            var manifold = new Manifold();
+
+            var expectedManifold = new Manifold
+            {
+                Type = ManifoldType.FaceA,
+                LocalNormal = new Vector2(-1, 0),
+                LocalPoint = new Vector2(-0.5f, 0),
+                PointCount = 2,
+                Points = new FixedArray2<ManifoldPoint>
+                {
+                    [0] = new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65538}},
+                    [1] = new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 65794}}
+                }
+            };
+            _collisionManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);
+            Assert.That(manifold, Is.EqualTo(expectedManifold));
+        }
     }
 }

@@ -488,5 +488,17 @@ namespace Robust.Shared.Physics.Dynamics
         }
     }
 
+    public sealed class PreventCollideEvent : CancellableEntityEventArgs
+    {
+        public IPhysBody BodyA;
+        public IPhysBody BodyB;
+
+        public PreventCollideEvent(IPhysBody ourBody, IPhysBody otherBody)
+        {
+            BodyA = ourBody;
+            BodyB = otherBody;
+        }
+    }
+
     #endregion
 }

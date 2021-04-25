@@ -31,6 +31,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -91,7 +92,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _updateAudio();
 
-            FlushCursorDispose();
+            _windowing.FlushDispose();
             FlushShaderInstanceDispose();
             FlushRenderTargetDispose();
             FlushTextureDispose();
@@ -291,7 +292,7 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _mainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _windowing.MainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()

@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
-using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
@@ -846,7 +843,7 @@ namespace Robust.Client.Graphics.Clyde
         private unsafe void BlitSecondaryWindows()
         {
             // Only got main window.
-            if (_windows.Count == 1)
+            if (_windowing.AllWindows.Count == 1)
                 return;
 
             var (blitProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
@@ -867,14 +864,14 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Finish();
             }
 
-            foreach (var window in _windows)
+            foreach (var window in _windowing.AllWindows)
             {
                 if (window.IsMainWindow)
                     continue;
 
                 var rt = window.RenderTexture!;
 
-                GLFW.MakeContextCurrent(window.GlfwWindow);
+                _windowing.GLMakeContextCurrent(window);
 
                 if (_hasGLFenceSync)
                 {
@@ -891,10 +888,11 @@ namespace Robust.Client.Graphics.Clyde
                 SetTexture(TextureUnit.Texture1, _stockTextureWhite);
 
                 DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
-                GLFW.SwapBuffers(window.GlfwWindow);
+
+                _windowing.WindowSwapBuffers(window);
             }
 
-            GLFW.MakeContextCurrent(_mainWindow!.GlfwWindow);
+            _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
         }
 
         [StructLayout(LayoutKind.Explicit)]

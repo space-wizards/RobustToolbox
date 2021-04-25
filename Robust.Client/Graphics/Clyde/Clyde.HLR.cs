@@ -2,7 +2,6 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
@@ -31,7 +30,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckTransferringScreenshots();
 
             var allMinimized = true;
-            foreach (var windowReg in _windows)
+            foreach (var windowReg in _windowing.AllWindows)
             {
                 if (!windowReg.IsMinimized)
                 {
@@ -47,7 +46,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // We have to keep running swapbuffers here
                 // or else the user's PC will turn into a heater!!
-                SwapAllBuffers();
+                SwapMainBuffers();
                 return;
             }
 
@@ -63,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants(_mainWindow!.FramebufferSize);
+            _updateUniformConstants(_windowing.MainWindow!.FramebufferSize);
 
             {
                 CalcScreenMatrices(ScreenSize, out var proj, out var view);
@@ -75,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawSplash(_renderHandle);
                 FlushRenderQueue();
-                SwapAllBuffers();
+                SwapMainBuffers();
                 return;
             }
 

@@ -30,11 +30,11 @@ namespace Robust.Client.Graphics
 
         public virtual bool Initialize()
         {
-            ConfigurationManager.OnValueChanged(CVars.DisplayVSync, _vSyncChanged, true);
-            ConfigurationManager.OnValueChanged(CVars.DisplayWindowMode, _windowModeChanged, true);
-            ConfigurationManager.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
-            ConfigurationManager.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
-            ConfigurationManager.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
+            ConfigurationManager.OnValueChanged(CVars.DisplayVSync, _vSyncChanged);
+            ConfigurationManager.OnValueChanged(CVars.DisplayWindowMode, _windowModeChanged);
+            ConfigurationManager.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged);
+            ConfigurationManager.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged);
+            ConfigurationManager.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged);
 
             return true;
         }

@@ -438,7 +438,7 @@ namespace Robust.Client.Graphics.Clyde
 
 
             PopRenderStateFull(state);
-            _updateUniformConstants(rt.Size);
+            _updateUniformConstants(_currentRenderTarget.Size);
 
             SetScissorFull(oldScissor);
             _currentMatrixModel = oldTransform;

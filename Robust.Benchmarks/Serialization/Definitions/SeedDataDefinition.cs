@@ -32,14 +32,14 @@ namespace Robust.Benchmarks.Serialization.Definitions
       Max: 10
       PotencyDivisor: 10";
 
-        [DataField("id", required: true)] public string ID { get; } = default!;
+        [DataField("id", required: true)] public string ID { get; set; } = default!;
 
         #region Tracking
         [DataField("name")] public string Name { get; set; } = string.Empty;
         [DataField("seedName")] public string SeedName { get; set; } = string.Empty;
         [DataField("seedNoun")] public string SeedNoun { get; set; } = "seeds";
         [DataField("displayName")] public string DisplayName { get; set; } = string.Empty;
-        [DataField("roundStart")] public bool RoundStart { get; } = true;
+        [DataField("roundStart")] public bool RoundStart { get; set; } = true;
         [DataField("mysterious")] public bool Mysterious { get; set; }
         [DataField("immutable")] public bool Immutable { get; set; }
         #endregion
@@ -102,7 +102,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     public struct SeedChemQuantity
     {
         [DataField("Min")]
-        public int Min;
+        public int Min { get; }
 
         [DataField("Max")]
         public int Max;

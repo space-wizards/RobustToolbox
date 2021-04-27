@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -48,7 +48,6 @@ namespace Robust.Shared.Serialization.Manager
         public readonly Type Type;
 
         private readonly string[] _duplicates;
-        private readonly FieldDefinition[] _baseFieldDefinitions;
         private readonly object?[] _defaultValues;
 
         private readonly DeserializeDelegate _deserializeDelegate;
@@ -151,7 +150,7 @@ namespace Robust.Shared.Serialization.Manager
 
             fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
 
-            _baseFieldDefinitions = fields.ToArray();
+            BaseFieldDefinitions = fields.ToImmutableArray();
             _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
             _deserializeDelegate = EmitDeserializationDelegate();
@@ -160,27 +159,7 @@ namespace Robust.Shared.Serialization.Manager
             _copyDelegate = EmitCopyDelegate();
         }
 
-        internal InheritanceBehaviour? GetInheritanceBehaviour(PropertyInfo property)
-        {
-            var info = new SpecificPropertyInfo(property);
-
-            if (!info.TryGetCustomAttribute(out DataFieldAttribute? attribute))
-            {
-                return null;
-            }
-
-            foreach (var definition in _baseFieldDefinitions)
-            {
-                if (!Equals(definition.Attribute, attribute))
-                {
-                    continue;
-                }
-
-                return definition.InheritanceBehaviour;
-            }
-
-            return null;
-        }
+        internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; private set; }
 
         public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
         {
@@ -200,7 +179,7 @@ namespace Robust.Shared.Serialization.Manager
                     continue;
                 }
 
-                var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
                     var error = new ErrorNode(
@@ -229,11 +208,11 @@ namespace Robust.Shared.Serialization.Manager
             DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
                 ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
             {
-                var mappedInfo = new DeserializedFieldEntry[_baseFieldDefinitions.Length];
+                var mappedInfo = new DeserializedFieldEntry[BaseFieldDefinitions.Length];
 
-                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
@@ -288,12 +267,12 @@ namespace Robust.Shared.Serialization.Manager
                 DeserializedFieldEntry[] deserializedFields,
                 object?[] defaultValues)
             {
-                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
                     var res = deserializedFields[i];
                     if (!res.Mapped) continue;
 
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     var defValue = defaultValues[i];
 
@@ -323,9 +302,9 @@ namespace Robust.Shared.Serialization.Manager
             {
                 var mapping = new MappingDataNode();
 
-                for (var i = _baseFieldDefinitions.Length - 1; i >= 0; i--)
+                for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
                 {
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     if (fieldDefinition.Attribute.ReadOnly)
                     {
@@ -377,7 +356,7 @@ namespace Robust.Shared.Serialization.Manager
                 ISerializationManager manager,
                 ISerializationContext? context)
             {
-                foreach (var field in _baseFieldDefinitions)
+                foreach (var field in BaseFieldDefinitions)
                 {
                     var sourceValue = field.GetValue(source);
                     var targetValue = field.GetValue(target);

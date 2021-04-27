@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -75,9 +76,11 @@ namespace Robust.UnitTesting.Shared.Serialization
             var dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(propertyInfo.DeclaringType!);
             Assert.NotNull(dataDefinition);
 
-            var inheritanceBehaviour = dataDefinition!.GetInheritanceBehaviour(propertyInfo);
-            Assert.NotNull(inheritanceBehaviour);
-            Assert.That(inheritanceBehaviour!.Value, Is.EqualTo(InheritanceBehaviour.Always));
+            var alwaysPushDataField = propertyInfo.GetCustomAttribute<DataFieldAttribute>();
+            var propertyDefinition =
+                dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(alwaysPushDataField));
+            var inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
+            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Always));
 
             // Get only property with backing field and another attribute targeted to the property
             Assert.That(definition.GetOnlyPropertyFieldTargetedAndOtherAttribute, Is.EqualTo(30));
@@ -89,11 +92,13 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.NotNull(propertyInfo.GetCustomAttribute<DataFieldAttribute>());
             Assert.NotNull(propertyInfo.GetCustomAttribute<NeverPushInheritanceAttribute>());
 
+            var neverPushDataField = new SpecificPropertyInfo(property).GetCustomAttribute<DataFieldAttribute>();
+            propertyDefinition =
+                dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
+            inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
             dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property.DeclaringType!);
             Assert.NotNull(dataDefinition);
-            inheritanceBehaviour = dataDefinition!.GetInheritanceBehaviour(propertyInfo);
-            Assert.NotNull(inheritanceBehaviour);
-            Assert.That(inheritanceBehaviour!.Value, Is.EqualTo(InheritanceBehaviour.Never));
+            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Never));
         }
 
         [DataDefinition]

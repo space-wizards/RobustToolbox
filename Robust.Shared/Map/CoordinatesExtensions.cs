@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -26,11 +26,13 @@ namespace Robust.Shared.Map
 
             if (!gridId.IsValid() || !mapManager.GridExists(gridId))
             {
+                var mapCoords = coords.ToMap(entityManager);
+
                 // create a box around the cursor
-                var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(coords.Position);
+                var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(mapCoords.Position);
 
                 // find grids in search box
-                var gridsInArea = mapManager.FindGridsIntersecting(coords.GetMapId(entityManager), gridSearchBox);
+                var gridsInArea = mapManager.FindGridsIntersecting(mapCoords.MapId, gridSearchBox);
 
                 // find closest grid intersecting our search box.
                 IMapGrid? closest = null;
@@ -40,7 +42,7 @@ namespace Robust.Shared.Map
                 {
                     // figure out closest intersect
                     var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
-                    var gridDist = (gridIntersect.Center - coords.Position).LengthSquared;
+                    var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;
 
                     if (gridDist >= distance)
                         continue;
@@ -53,7 +55,7 @@ namespace Robust.Shared.Map
                 if (closest != null) // stick to existing grid
                 {
                     // round to nearest cardinal dir
-                    var normal = new Angle(coords.Position - intersect.Center).GetCardinalDir().ToVec();
+                    var normal = mapCoords.Position - intersect.Center;
 
                     // round coords to center of tile
                     var tileIndices = closest.WorldToTile(intersect.Center);

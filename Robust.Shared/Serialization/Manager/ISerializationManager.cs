@@ -15,6 +15,11 @@ namespace Robust.Shared.Serialization.Manager
         void Initialize();
 
         /// <summary>
+        ///     Shuts down the serialization manager.
+        /// </summary>
+        void Shutdown();
+
+        /// <summary>
         ///     Checks if a type has a data definition defined for it.
         /// </summary>
         /// <param name="type">The type to check for.</param>

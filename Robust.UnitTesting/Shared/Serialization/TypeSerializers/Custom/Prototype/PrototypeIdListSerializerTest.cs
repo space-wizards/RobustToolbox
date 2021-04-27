@@ -17,7 +17,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom.Prototy
 {
     [TestFixture]
     [TestOf(typeof(PrototypeIdListSerializer<>))]
-    public class PrototypeIdListSerializerTest : TypeSerializerTest
+    public class PrototypeIdListSerializerTest : SerializationTest
     {
         private static readonly string TestEntityId = $"{nameof(PrototypeIdListSerializerTest)}Dummy";
 
@@ -162,16 +162,16 @@ entitiesImmutableList:
     [DataDefinition]
     public class PrototypeIdListSerializerTestDataDefinition
     {
-        [field: DataField("entitiesList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
+        [DataField("entitiesList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public List<string> EntitiesList = new();
 
-        [field: DataField("entitiesReadOnlyList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
+        [DataField("entitiesReadOnlyList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public IReadOnlyList<string> EntitiesReadOnlyList = new List<string>();
 
-        [field: DataField("entitiesReadOnlyCollection", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
+        [DataField("entitiesReadOnlyCollection", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public IReadOnlyCollection<string> EntitiesReadOnlyCollection = new List<string>();
 
-        [field: DataField("entitiesImmutableList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
+        [DataField("entitiesImmutableList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public ImmutableList<string> EntitiesImmutableList = ImmutableList<string>.Empty;
     }
 }

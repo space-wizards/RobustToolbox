@@ -553,15 +553,15 @@ namespace Robust.Shared.GameObjects
             var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
 
+            // offset position from world to parent
+            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
             _parent = newParentEnt.Uid;
 
             ChangeMapId(newConcrete.MapID);
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
-
-            // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
+            
             RebuildMatrices();
             Dirty();
         }

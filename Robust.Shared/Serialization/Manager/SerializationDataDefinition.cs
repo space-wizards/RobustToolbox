@@ -215,18 +215,17 @@ namespace Robust.Shared.Serialization.Manager
                 dm.DefineParameter(2, ParameterAttributes.None, "value");
 
                 var generator = dm.GetRobustGen();
-                var stronglyTyped = false;
 
-                if (stronglyTyped)
+                if (Type.IsValueType)
                 {
+                    generator.DeclareLocal(Type);
                     generator.Emit(OpCodes.Ldarg_0);
-
-                    if (!Type.IsValueType)
-                    {
-                        generator.Emit(OpCodes.Ldind_Ref);
-                    }
-
+                    generator.Emit(OpCodes.Ldind_Ref);
+                    generator.Emit(OpCodes.Unbox_Any, Type);
+                    generator.Emit(OpCodes.Stloc_0);
+                    generator.Emit(OpCodes.Ldloca, 0);
                     generator.Emit(OpCodes.Ldarg_1);
+                    generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
 
                     EmitSetField(generator, fieldDefinition.BackingField);
 
@@ -234,33 +233,15 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 else
                 {
-                    if (Type.IsValueType)
-                    {
-                        generator.DeclareLocal(Type);
-                        generator.Emit(OpCodes.Ldarg_0);
-                        generator.Emit(OpCodes.Ldind_Ref);
-                        generator.Emit(OpCodes.Unbox_Any, Type);
-                        generator.Emit(OpCodes.Stloc_0);
-                        generator.Emit(OpCodes.Ldloca, 0);
-                        generator.Emit(OpCodes.Ldarg_1);
-                        generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                    generator.Emit(OpCodes.Ldarg_0);
+                    generator.Emit(OpCodes.Ldind_Ref);
+                    generator.Emit(OpCodes.Castclass, Type);
+                    generator.Emit(OpCodes.Ldarg_1);
+                    generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
 
-                        EmitSetField(generator, fieldDefinition.BackingField);
+                    EmitSetField(generator, fieldDefinition.BackingField);
 
-                        generator.Emit(OpCodes.Ret);
-                    }
-                    else
-                    {
-                        generator.Emit(OpCodes.Ldarg_0);
-                        generator.Emit(OpCodes.Ldind_Ref);
-                        generator.Emit(OpCodes.Castclass, Type);
-                        generator.Emit(OpCodes.Ldarg_1);
-                        generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
-
-                        EmitSetField(generator, fieldDefinition.BackingField);
-
-                        generator.Emit(OpCodes.Ret);
-                    }
+                    generator.Emit(OpCodes.Ret);
                 }
 
                 _fieldAssigners[i] = dm.CreateDelegate<AssignField<object, object?>>();

@@ -4,7 +4,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
-namespace Robust.Benchmarks.Serialization
+namespace Robust.Benchmarks.Serialization.Definitions
 {
     [Prototype("seed")]
     public class SeedDataDefinition : IPrototype

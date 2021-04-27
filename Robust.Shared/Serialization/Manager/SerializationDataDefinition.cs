@@ -4,6 +4,8 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -45,36 +47,19 @@ namespace Robust.Shared.Serialization.Manager
             object value,
             DeserializedFieldEntry[] mappings);
 
+        private delegate void AssignField<TTarget, TValue>(ref TTarget target, TValue? value);
+
         public readonly Type Type;
 
         private readonly string[] _duplicates;
         private readonly object?[] _defaultValues;
 
         private readonly DeserializeDelegate _deserializeDelegate;
-
         private readonly PopulateDelegateSignature _populateDelegate;
-
         private readonly SerializeDelegateSignature _serializeDelegate;
-
         private readonly CopyDelegateSignature _copyDelegate;
 
-        public DeserializationResult InvokePopulateDelegate(object target, DeserializedFieldEntry[] fields) =>
-            _populateDelegate(target, fields, _defaultValues);
-
-        public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
-            ISerializationContext? context, bool skipHook)
-        {
-            var fields = _deserializeDelegate(mappingDataNode, serializationManager, context, skipHook);
-            return _populateDelegate(target, fields, _defaultValues);
-        }
-
-        public MappingDataNode InvokeSerializeDelegate(object obj, ISerializationManager serializationManager, ISerializationContext? context, bool alwaysWrite) =>
-            _serializeDelegate(obj, serializationManager, context, alwaysWrite, _defaultValues);
-
-        public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager, ISerializationContext? context) =>
-            _copyDelegate(source, target, serializationManager, context);
-
-        public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
+        private readonly AssignField<object, object?>[] _fieldAssigners;
 
         public SerializationDataDefinition(Type type)
         {
@@ -157,9 +142,108 @@ namespace Robust.Shared.Serialization.Manager
             _populateDelegate = EmitPopulateDelegate();
             _serializeDelegate = EmitSerializeDelegate();
             _copyDelegate = EmitCopyDelegate();
+
+            _fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
+
+            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
+            {
+                var fieldDefinition = BaseFieldDefinitions[i];
+                var dm = new DynamicMethod(
+                    "AssignField",
+                    typeof(void),
+                    new[] {typeof(object).MakeByRefType(), typeof(object)},
+                    true);
+
+                dm.DefineParameter(1, ParameterAttributes.Out, "target");
+                dm.DefineParameter(2, ParameterAttributes.None, "value");
+
+                var generator = dm.GetRobustGen();
+                var stronglyTyped = false;
+
+                if (stronglyTyped)
+                {
+                    generator.Emit(OpCodes.Ldarg_0);
+
+                    if (!Type.IsValueType)
+                    {
+                        generator.Emit(OpCodes.Ldind_Ref);
+                    }
+
+                    generator.Emit(OpCodes.Ldarg_1);
+
+                    EmitSetField(generator, fieldDefinition.BackingField);
+
+                    generator.Emit(OpCodes.Ret);
+                }
+                else
+                {
+                    if (Type.IsValueType)
+                    {
+                        generator.DeclareLocal(Type);
+                        generator.Emit(OpCodes.Ldarg_0);
+                        generator.Emit(OpCodes.Ldind_Ref);
+                        generator.Emit(OpCodes.Unbox_Any, Type);
+                        generator.Emit(OpCodes.Stloc_0);
+                        generator.Emit(OpCodes.Ldloca, 0);
+                        generator.Emit(OpCodes.Ldarg_1);
+                        generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+
+                        EmitSetField(generator, fieldDefinition.BackingField);
+
+                        generator.Emit(OpCodes.Ret);
+                    }
+                    else
+                    {
+                        generator.Emit(OpCodes.Ldarg_0);
+                        generator.Emit(OpCodes.Ldind_Ref);
+                        generator.Emit(OpCodes.Castclass, Type);
+                        generator.Emit(OpCodes.Ldarg_1);
+                        generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+
+                        EmitSetField(generator, fieldDefinition.BackingField);
+
+                        generator.Emit(OpCodes.Ret);
+                    }
+                }
+
+                _fieldAssigners[i] = dm.CreateDelegate<AssignField<object, object?>>();
+            }
         }
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; private set; }
+
+        private void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
+        {
+            switch (info)
+            {
+                case SpecificFieldInfo field:
+                    rGenerator.Emit(OpCodes.Stfld, field.FieldInfo);
+                    break;
+                case SpecificPropertyInfo property:
+                    var setter = property.PropertyInfo.GetSetMethod(true) ?? throw new NullReferenceException();
+
+                    rGenerator.Emit(OpCodes.Callvirt, setter);
+                    break;
+            }
+        }
+
+        public DeserializationResult InvokePopulateDelegate(object target, DeserializedFieldEntry[] fields) =>
+            _populateDelegate(target, fields, _defaultValues);
+
+        public DeserializationResult InvokePopulateDelegate(object target, MappingDataNode mappingDataNode, ISerializationManager serializationManager,
+            ISerializationContext? context, bool skipHook)
+        {
+            var fields = _deserializeDelegate(mappingDataNode, serializationManager, context, skipHook);
+            return _populateDelegate(target, fields, _defaultValues);
+        }
+
+        public MappingDataNode InvokeSerializeDelegate(object obj, ISerializationManager serializationManager, ISerializationContext? context, bool alwaysWrite) =>
+            _serializeDelegate(obj, serializationManager, context, alwaysWrite, _defaultValues);
+
+        public object InvokeCopyDelegate(object source, object target, ISerializationManager serializationManager, ISerializationContext? context) =>
+            _copyDelegate(source, target, serializationManager, context);
+
+        public bool CanCallWith(object obj) => Type.IsInstanceOfType(obj);
 
         public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
         {
@@ -246,7 +330,6 @@ namespace Robust.Shared.Serialization.Manager
             return DeserializationDelegate;
         }
 
-        // TODO PAUL SERV3: Turn this back into IL once it is fixed
         private PopulateDelegateSignature EmitPopulateDelegate()
         {
             //todo validate mappings array count
@@ -273,7 +356,6 @@ namespace Robust.Shared.Serialization.Manager
                     if (!res.Mapped) continue;
 
                     var fieldDefinition = BaseFieldDefinitions[i];
-
                     var defValue = defaultValues[i];
 
                     if (Equals(res.Result?.RawValue, defValue))
@@ -281,7 +363,7 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    fieldDefinition.SetValue(target, res.Result?.RawValue);
+                    _fieldAssigners[i](ref target, res.Result?.RawValue);
                 }
 
                 return createDefinitionDelegate(target, deserializedFields);
@@ -356,24 +438,29 @@ namespace Robust.Shared.Serialization.Manager
                 ISerializationManager manager,
                 ISerializationContext? context)
             {
-                foreach (var field in BaseFieldDefinitions)
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
+                    var field = BaseFieldDefinitions[i];
                     var sourceValue = field.GetValue(source);
                     var targetValue = field.GetValue(target);
 
                     object? copy;
-                    if (sourceValue != null && targetValue != null && TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
+                    if (sourceValue != null &&
+                        targetValue != null &&
+                        TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
                     {
                         copy = manager.CreateCopy(sourceValue, context);
-                    }else
+                    }
+                    else
                     {
                         copy = field.Attribute.CustomTypeSerializer != null
-                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue, targetValue,
+                            ? manager.CopyWithTypeSerializer(field.Attribute.CustomTypeSerializer, sourceValue,
+                                targetValue,
                                 context)
                             : manager.Copy(sourceValue, targetValue, context);
                     }
 
-                    field.SetValue(target, copy);
+                    _fieldAssigners[i](ref target, copy);
                 }
 
                 return target;
@@ -384,9 +471,6 @@ namespace Robust.Shared.Serialization.Manager
 
         public class FieldDefinition
         {
-            private readonly AbstractFieldInfo _backingField;
-            private readonly AbstractFieldInfo _fieldInfo;
-
             public readonly DataFieldAttribute Attribute;
             public readonly object? DefaultValue;
             public readonly InheritanceBehaviour InheritanceBehaviour;
@@ -398,23 +482,27 @@ namespace Robust.Shared.Serialization.Manager
                 AbstractFieldInfo backingField,
                 InheritanceBehaviour inheritanceBehaviour)
             {
-                _backingField = backingField;
+                BackingField = backingField;
                 Attribute = attr;
                 DefaultValue = defaultValue;
-                _fieldInfo = fieldInfo;
+                FieldInfo = fieldInfo;
                 InheritanceBehaviour = inheritanceBehaviour;
             }
 
-            public Type FieldType => _fieldInfo.FieldType;
+            public AbstractFieldInfo BackingField { get; }
+
+            public AbstractFieldInfo FieldInfo { get; }
+
+            public Type FieldType => FieldInfo.FieldType;
 
             public object? GetValue(object? obj)
             {
-                return _backingField.GetValue(obj);
+                return BackingField.GetValue(obj);
             }
 
             public void SetValue(object? obj, object? value)
             {
-                _backingField.SetValue(obj, value);
+                BackingField.SetValue(obj, value);
             }
         }
 

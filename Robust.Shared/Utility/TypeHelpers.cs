@@ -332,6 +332,7 @@ namespace Robust.Shared.Utility
     public abstract class AbstractFieldInfo
     {
         public abstract string Name { get; }
+        internal abstract MemberInfo MemberInfo { get; }
         public abstract Type FieldType { get; }
         public abstract Type? DeclaringType { get; }
 
@@ -350,9 +351,11 @@ namespace Robust.Shared.Utility
 
     public class SpecificFieldInfo : AbstractFieldInfo
     {
-        public readonly FieldInfo FieldInfo;
-
         public override string Name { get; }
+
+        public readonly FieldInfo FieldInfo;
+        internal override MemberInfo MemberInfo => FieldInfo;
+
         public override Type FieldType => FieldInfo.FieldType;
         public override Type? DeclaringType => FieldInfo.DeclaringType;
 
@@ -417,9 +420,11 @@ namespace Robust.Shared.Utility
 
     public class SpecificPropertyInfo : AbstractFieldInfo
     {
-        public readonly PropertyInfo PropertyInfo;
-
         public override string Name { get; }
+
+        public readonly PropertyInfo PropertyInfo;
+        internal override MemberInfo MemberInfo => PropertyInfo;
+
         public override Type FieldType => PropertyInfo.PropertyType;
         public override Type? DeclaringType => PropertyInfo.DeclaringType;
 

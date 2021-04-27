@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using BenchmarkDotNet.Attributes;
+using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Server;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;

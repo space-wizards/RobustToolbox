@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ComponentRegistrySerializer))]
-    public class ComponentRegistrySerializerTest : TypeSerializerTest
+    public class ComponentRegistrySerializerTest : SerializationTest
     {
         [OneTimeSetUp]
         public new void OneTimeSetup()

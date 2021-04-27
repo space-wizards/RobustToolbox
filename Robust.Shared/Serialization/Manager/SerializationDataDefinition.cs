@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -47,7 +48,6 @@ namespace Robust.Shared.Serialization.Manager
         public readonly Type Type;
 
         private readonly string[] _duplicates;
-        private readonly FieldDefinition[] _baseFieldDefinitions;
         private readonly object?[] _defaultValues;
 
         private readonly DeserializeDelegate _deserializeDelegate;
@@ -87,7 +87,12 @@ namespace Robust.Shared.Serialization.Manager
             {
                 var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
 
-                if (attr == null) continue;
+                if (attr == null || abstractFieldInfo.IsBackingField())
+                {
+                    continue;
+                }
+
+                var backingField = abstractFieldInfo;
 
                 if (abstractFieldInfo is SpecificPropertyInfo propertyInfo)
                 {
@@ -102,24 +107,36 @@ namespace Robust.Shared.Serialization.Manager
                         Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }
-                    else if (!attr.ReadOnly && propertyInfo.PropertyInfo.SetMethod == null)
+                    else if (propertyInfo.PropertyInfo.SetMethod == null)
                     {
-                        Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute as non-readonly but has no setter");
-                        continue;
+                        if (!propertyInfo.TryGetBackingField(out var backingFieldInfo))
+                        {
+                            Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                            continue;
+                        }
+
+                        backingField = backingFieldInfo;
                     }
                 }
 
                 var inheritanceBehaviour = InheritanceBehaviour.Default;
-                if (abstractFieldInfo.GetCustomAttribute<AlwaysPushInheritanceAttribute>() != null)
+                if (abstractFieldInfo.HasCustomAttribute<AlwaysPushInheritanceAttribute>())
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Always;
                 }
-                else if (abstractFieldInfo.GetCustomAttribute<NeverPushInheritanceAttribute>() != null)
+                else if (abstractFieldInfo.HasCustomAttribute<NeverPushInheritanceAttribute>())
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Never;
                 }
 
-                fieldDefs.Add(new FieldDefinition(attr, abstractFieldInfo.GetValue(dummyObj), abstractFieldInfo, inheritanceBehaviour));
+                var fieldDefinition = new FieldDefinition(
+                    attr,
+                    abstractFieldInfo.GetValue(dummyObj),
+                    abstractFieldInfo,
+                    backingField,
+                    inheritanceBehaviour);
+
+                fieldDefs.Add(fieldDefinition);
             }
 
             _duplicates = fieldDefs
@@ -130,8 +147,10 @@ namespace Robust.Shared.Serialization.Manager
                 .ToArray();
 
             var fields = fieldDefs;
+
             fields.Sort((a, b) => b.Attribute.Priority.CompareTo(a.Attribute.Priority));
-            _baseFieldDefinitions = fields.ToArray();
+
+            BaseFieldDefinitions = fields.ToImmutableArray();
             _defaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
             _deserializeDelegate = EmitDeserializationDelegate();
@@ -140,7 +159,7 @@ namespace Robust.Shared.Serialization.Manager
             _copyDelegate = EmitCopyDelegate();
         }
 
-        public int DataFieldCount => _baseFieldDefinitions.Length;
+        internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; private set; }
 
         public bool TryGetDuplicates([NotNullWhen(true)] out string[] duplicates)
         {
@@ -160,7 +179,7 @@ namespace Robust.Shared.Serialization.Manager
                     continue;
                 }
 
-                var field = _baseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
+                var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
                 {
                     var error = new ErrorNode(
@@ -189,11 +208,11 @@ namespace Robust.Shared.Serialization.Manager
             DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
                 ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
             {
-                var mappedInfo = new DeserializedFieldEntry[_baseFieldDefinitions.Length];
+                var mappedInfo = new DeserializedFieldEntry[BaseFieldDefinitions.Length];
 
-                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
@@ -248,12 +267,12 @@ namespace Robust.Shared.Serialization.Manager
                 DeserializedFieldEntry[] deserializedFields,
                 object?[] defaultValues)
             {
-                for (var i = 0; i < _baseFieldDefinitions.Length; i++)
+                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
                     var res = deserializedFields[i];
                     if (!res.Mapped) continue;
 
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     var defValue = defaultValues[i];
 
@@ -262,7 +281,7 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    fieldDefinition.FieldInfo.SetValue(target, res.Result?.RawValue);
+                    fieldDefinition.SetValue(target, res.Result?.RawValue);
                 }
 
                 return createDefinitionDelegate(target, deserializedFields);
@@ -283,9 +302,9 @@ namespace Robust.Shared.Serialization.Manager
             {
                 var mapping = new MappingDataNode();
 
-                for (var i = _baseFieldDefinitions.Length - 1; i >= 0; i--)
+                for (var i = BaseFieldDefinitions.Length - 1; i >= 0; i--)
                 {
-                    var fieldDefinition = _baseFieldDefinitions[i];
+                    var fieldDefinition = BaseFieldDefinitions[i];
 
                     if (fieldDefinition.Attribute.ReadOnly)
                     {
@@ -298,8 +317,7 @@ namespace Robust.Shared.Serialization.Manager
                         continue;
                     }
 
-                    var info = fieldDefinition.FieldInfo;
-                    var value = info.GetValue(obj);
+                    var value = fieldDefinition.GetValue(obj);
 
                     if (value == null)
                     {
@@ -338,11 +356,10 @@ namespace Robust.Shared.Serialization.Manager
                 ISerializationManager manager,
                 ISerializationContext? context)
             {
-                foreach (var field in _baseFieldDefinitions)
+                foreach (var field in BaseFieldDefinitions)
                 {
-                    var info = field.FieldInfo;
-                    var sourceValue = info.GetValue(source);
-                    var targetValue = info.GetValue(target);
+                    var sourceValue = field.GetValue(source);
+                    var targetValue = field.GetValue(target);
 
                     object? copy;
                     if (sourceValue != null && targetValue != null && TypeHelpers.SelectCommonType(sourceValue.GetType(), targetValue.GetType()) == null)
@@ -356,7 +373,7 @@ namespace Robust.Shared.Serialization.Manager
                             : manager.Copy(sourceValue, targetValue, context);
                     }
 
-                    info.SetValue(target, copy);
+                    field.SetValue(target, copy);
                 }
 
                 return target;
@@ -367,20 +384,38 @@ namespace Robust.Shared.Serialization.Manager
 
         public class FieldDefinition
         {
+            private readonly AbstractFieldInfo _backingField;
+            private readonly AbstractFieldInfo _fieldInfo;
+
             public readonly DataFieldAttribute Attribute;
             public readonly object? DefaultValue;
-            public readonly AbstractFieldInfo FieldInfo;
             public readonly InheritanceBehaviour InheritanceBehaviour;
 
-            public FieldDefinition(DataFieldAttribute attr, object? defaultValue, AbstractFieldInfo fieldInfo, InheritanceBehaviour inheritanceBehaviour)
+            public FieldDefinition(
+                DataFieldAttribute attr,
+                object? defaultValue,
+                AbstractFieldInfo fieldInfo,
+                AbstractFieldInfo backingField,
+                InheritanceBehaviour inheritanceBehaviour)
             {
+                _backingField = backingField;
                 Attribute = attr;
                 DefaultValue = defaultValue;
-                FieldInfo = fieldInfo;
+                _fieldInfo = fieldInfo;
                 InheritanceBehaviour = inheritanceBehaviour;
             }
 
-            public Type FieldType => FieldInfo.FieldType;
+            public Type FieldType => _fieldInfo.FieldType;
+
+            public object? GetValue(object? obj)
+            {
+                return _backingField.GetValue(obj);
+            }
+
+            public void SetValue(object? obj, object? value)
+            {
+                _backingField.SetValue(obj, value);
+            }
         }
 
         public enum InheritanceBehaviour : byte

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
+using Robust.Shared.Localization;
 using GlfwKey = OpenToolkit.GraphicsLibraryFramework.Keys;
 using GlfwButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
 using static Robust.Client.Input.Mouse;
@@ -11,6 +14,53 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed partial class GlfwWindowingImpl
         {
+            // TODO: to avoid having to ask the windowing thread, key names are cached.
+            // This means they don't update correctly if the user switches keyboard mode. RIP.
+
+            private readonly Dictionary<Key, string> _printableKeyNameMap = new();
+
+            private void InitKeyMap()
+            {
+                // From GLFW's source code: this is the actual list of "printable" keys
+                // that GetKeyName returns something for.
+                CacheKey(Keys.KeyPadEqual);
+                for (var k = Keys.KeyPad0; k <= Keys.KeyPadAdd; k++)
+                {
+                    CacheKey(k);
+                }
+
+                for (var k = Keys.Apostrophe; k <= Keys.World2; k++)
+                {
+                    CacheKey(k);
+                }
+
+                void CacheKey(GlfwKey key)
+                {
+                    var rKey = ConvertGlfwKey(key);
+                    if (rKey == Key.Unknown)
+                        return;
+
+                    var name = GLFW.GetKeyName(key, 0);
+                    _printableKeyNameMap.Add(rKey, name);
+                }
+            }
+
+            public string KeyGetName(Keyboard.Key key)
+            {
+                var name = Keyboard.GetSpecialKeyName(key);
+                if (name != null)
+                {
+                    return Loc.GetString(name);
+                }
+
+                if (_printableKeyNameMap.TryGetValue(key, out name))
+                {
+                    return name;
+                }
+
+                return Loc.GetString("<unknown key>");
+            }
+
             public static Button ConvertGlfwButton(GlfwButton button)
             {
                 return MouseButtonMap[button];

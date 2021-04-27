@@ -1022,13 +1022,13 @@ namespace Robust.Client.Graphics.Clyde
             return (w, h);
         }
 
-        protected override void LightmapDividerChanged(int newValue)
+        private void LightmapDividerChanged(int newValue)
         {
             _lightmapDivider = newValue;
             RegenAllLightRts();
         }
 
-        protected override void MaxLightsPerSceneChanged(int newValue)
+        private void MaxLightsPerSceneChanged(int newValue)
         {
             _maxLightsPerScene = newValue;
 
@@ -1047,7 +1047,7 @@ namespace Robust.Client.Graphics.Clyde
                 nameof(_shadowRenderTarget));
         }
 
-        protected override void SoftShadowsChanged(bool newValue)
+        private void SoftShadowsChanged(bool newValue)
         {
             _enableSoftShadows = newValue;
         }

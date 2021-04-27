@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using System.Threading;
 using OpenToolkit.GraphicsLibraryFramework;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,8 +21,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private readonly ISawmill _sawmill;
 
-            private readonly RefList<GlfwEvent> _glfwEventQueue = new();
             private bool _glfwInitialized;
+            private bool _win32Experience;
 
             public GlfwWindowingImpl(Clyde clyde)
             {
@@ -32,6 +34,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool Init()
             {
+#if DEBUG
+                _cfg.OnValueChanged(CVars.DisplayWin32Experience, b => _win32Experience = b, true);
+#endif
+
+                InitChannels();
+
                 if (!InitGlfw())
                 {
                     return false;
@@ -40,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
                 SetupGlobalCallbacks();
                 InitMonitors();
                 InitCursors();
+                InitKeyMap();
 
                 return true;
             }
@@ -55,7 +64,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void FlushDispose()
             {
-                FlushCursorDispose();
+                // Not currently used
             }
 
             private bool InitGlfw()

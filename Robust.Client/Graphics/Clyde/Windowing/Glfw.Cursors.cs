@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
@@ -14,16 +15,8 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed unsafe partial class GlfwWindowingImpl
         {
-            // These are actually Cursor* but we can't do that because no pointer generic arguments.
-            // Need a queue to dispose cursors since the GLFW methods aren't allowed from non-main thread (finalizers).
-            // And they also aren't re-entrant.
-            private readonly ConcurrentQueue<IntPtr> _cursorDisposeQueue = new();
-
-            private readonly Dictionary<StandardCursorShape, CursorImpl> _standardCursors =
-                new();
-
-            // Keep current active cursor around so it doesn't get garbage collected.
-            private CursorImpl? _currentCursor;
+            private readonly Dictionary<ClydeHandle, WinThreadCursorReg> _winThreadCursors = new();
+            private readonly Dictionary<StandardCursorShape, CursorImpl> _standardCursors = new();
 
             public ICursor CursorGetStandard(StandardCursorShape shape)
             {
@@ -32,14 +25,28 @@ namespace Robust.Client.Graphics.Clyde
 
             public ICursor CursorCreate(Image<Rgba32> image, Vector2i hotSpot)
             {
-                fixed (Rgba32* pixPtr = image.GetPixelSpan())
+                var cloneImg = new Image<Rgba32>(image.Width, image.Height);
+                image.GetPixelSpan().CopyTo(cloneImg.GetPixelSpan());
+
+                var id = _clyde.AllocRid();
+                SendCmd(new CmdCursorCreate(cloneImg, hotSpot, id));
+
+                return new CursorImpl(this, id, false);
+            }
+
+            private void WinThreadCursorCreate(CmdCursorCreate cmd)
+            {
+                var (img, (hotX, hotY), id) = cmd;
+
+                fixed (Rgba32* pixPtr = img.GetPixelSpan())
                 {
-                    var gImg = new GlfwImage(image.Width, image.Height, (byte*) pixPtr);
-                    var (hotX, hotY) = hotSpot;
+                    var gImg = new GlfwImage(img.Width, img.Height, (byte*) pixPtr);
                     var ptr = GLFW.CreateCursor(gImg, hotX, hotY);
 
-                    return new CursorImpl(this, ptr, false);
+                    _winThreadCursors.Add(id, new WinThreadCursorReg {Ptr = ptr});
                 }
+
+                img.Dispose();
             }
 
             public void CursorSet(WindowReg window, ICursor? cursor)
@@ -48,7 +55,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var reg = (GlfwWindowReg) window;
 
-                if (_currentCursor == cursor)
+                if (reg.Cursor == cursor)
                 {
                     // Nothing has to be done!
                     return;
@@ -56,50 +63,61 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (cursor == null)
                 {
-                    _currentCursor = null;
-                    GLFW.SetCursor(reg.GlfwWindow, null);
+                    reg.Cursor = null;
+                    SendCmd(new CmdWinCursorSet((nint) reg.GlfwWindow, default));
                     return;
                 }
 
-                if (!(cursor is CursorImpl impl) || impl.Owner != this)
-                {
-                    throw new ArgumentException("Cursor is not created by this clyde instance.");
-                }
+                var impl = (CursorImpl) cursor;
+                DebugTools.Assert(impl.Owner == this);
 
-                if (impl.Cursor == null)
+                if (impl.Id == null)
                 {
                     throw new ObjectDisposedException(nameof(cursor));
                 }
 
-                _currentCursor = impl;
-                GLFW.SetCursor(reg.GlfwWindow, impl.Cursor);
+                reg.Cursor = impl;
+                SendCmd(new CmdWinCursorSet((nint) reg.GlfwWindow, impl.Id));
             }
 
-            private void FlushCursorDispose()
+            private void WinThreadWinCursorSet(CmdWinCursorSet cmd)
             {
-                while (_cursorDisposeQueue.TryDequeue(out var cursor))
+                var window = (Window*) cmd.Window;
+                Cursor* ptr = null;
+                if (cmd.Cursor != default)
+                    ptr = _winThreadCursors[cmd.Cursor].Ptr;
+
+                if (_win32Experience)
                 {
-                    var ptr = (Cursor*) cursor;
-
-                    if (_currentCursor != null && ptr == _currentCursor.Cursor)
-                    {
-                        // Currently active cursor getting disposed.
-                        _currentCursor = null;
-                    }
-
-                    GLFW.DestroyCursor(ptr);
+                    // Based on a true story.
+                    Thread.Sleep(15);
                 }
+
+                GLFW.SetCursor(window, ptr);
+            }
+
+            private void WinThreadCursorDestroy(CmdCursorDestroy cmd)
+            {
+                var cursorReg = _winThreadCursors[cmd.Cursor];
+
+                GLFW.DestroyCursor(cursorReg.Ptr);
+
+                _winThreadCursors.Remove(cmd.Cursor);
             }
 
             private void InitCursors()
             {
+                // Gets ran on window thread don't worry about it.
+
                 void AddStandardCursor(StandardCursorShape standardShape, CursorShape shape)
                 {
+                    var id = _clyde.AllocRid();
                     var ptr = GLFW.CreateStandardCursor(shape);
 
-                    var impl = new CursorImpl(this, ptr, true);
+                    var impl = new CursorImpl(this, id, true);
 
                     _standardCursors.Add(standardShape, impl);
+                    _winThreadCursors.Add(id, new WinThreadCursorReg {Ptr = ptr});
                 }
 
                 AddStandardCursor(StandardCursorShape.Arrow, CursorShape.Arrow);
@@ -114,13 +132,13 @@ namespace Robust.Client.Graphics.Clyde
             {
                 private readonly bool _standard;
                 public GlfwWindowingImpl Owner { get; }
-                public Cursor* Cursor { get; private set; }
+                public ClydeHandle Id { get; private set; }
 
-                public CursorImpl(GlfwWindowingImpl clyde, Cursor* pointer, bool standard)
+                public CursorImpl(GlfwWindowingImpl clyde, ClydeHandle id, bool standard)
                 {
                     _standard = standard;
                     Owner = clyde;
-                    Cursor = pointer;
+                    Id = id;
                 }
 
                 ~CursorImpl()
@@ -130,8 +148,8 @@ namespace Robust.Client.Graphics.Clyde
 
                 private void DisposeImpl()
                 {
-                    Owner._cursorDisposeQueue.Enqueue((IntPtr) Cursor);
-                    Cursor = null;
+                    Owner.SendCmd(new CmdCursorDestroy(Id));
+                    Id = default;
                 }
 
                 public void Dispose()
@@ -144,6 +162,11 @@ namespace Robust.Client.Graphics.Clyde
                     GC.SuppressFinalize(this);
                     DisposeImpl();
                 }
+            }
+
+            public sealed class WinThreadCursorReg
+            {
+                public Cursor* Ptr;
             }
         }
     }

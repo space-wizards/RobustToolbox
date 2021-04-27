@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using OpenToolkit;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
@@ -22,6 +23,9 @@ namespace Robust.Client.Graphics.Clyde
             bool TryInitMainWindow(Renderer renderer, [NotNullWhen(false)] out string? error);
             void Shutdown();
 
+            void EnterWindowLoop();
+            void TerminateWindowLoop();
+
             void ProcessEvents();
             void FlushDispose();
 
@@ -35,13 +39,11 @@ namespace Robust.Client.Graphics.Clyde
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
-            WindowHandle WindowCreate();
+            Task<WindowHandle> WindowCreate();
 
             string KeyGetName(Keyboard.Key key);
-            int KeyGetScanCode(Keyboard.Key key);
-            string KeyGetNameScanCode(int scanCode);
 
-            string ClipboardGetText();
+            Task<string> ClipboardGetText();
             void ClipboardSetText(string text);
 
             void UpdateVSync();

@@ -31,6 +31,10 @@ namespace Robust.UnitTesting
 
         public string? ContentRootDir { get; set; }
 
+        public void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null)
+        {
+        }
+
         public void KeyDown(KeyEventArgs keyEvent)
         {
         }
@@ -53,7 +57,6 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
-            throw new NotImplementedException();
         }
     }
 }

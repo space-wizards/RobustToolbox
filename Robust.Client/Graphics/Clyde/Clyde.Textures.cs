@@ -29,7 +29,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
-            DebugTools.Assert(_mainThread == Thread.CurrentThread);
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             // Load using Rgba32.
             using var image = Image.Load<Rgba32>(stream);
@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
-            DebugTools.Assert(_mainThread == Thread.CurrentThread);
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);

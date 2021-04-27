@@ -276,7 +276,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadGLProc<T>(string name, out T field) where T : Delegate
         {
-            var proc = _windowing.GraphicsBindingContext.GetProcAddress(name);
+            var proc = _windowing!.GraphicsBindingContext.GetProcAddress(name);
             if (proc == IntPtr.Zero || proc == new IntPtr(1) || proc == new IntPtr(2))
             {
                 throw new InvalidOperationException($"Unable to load GL function '{name}'!");

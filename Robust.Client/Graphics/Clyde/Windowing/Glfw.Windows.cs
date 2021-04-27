@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
 using OpenToolkit.GraphicsLibraryFramework;
@@ -14,12 +15,14 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
+using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private sealed unsafe partial class GlfwWindowingImpl
+        // Wait for it.
+        private sealed partial class GlfwWindowingImpl
         {
             private readonly List<GlfwWindowReg> _windows = new();
 
@@ -30,47 +33,159 @@ namespace Robust.Client.Graphics.Clyde
             private GlfwWindowReg? _mainWindow;
             private GlfwBindingsContext _mainGraphicsContext = default!;
 
+            public async Task<WindowHandle> WindowCreate()
+            {
+                // tfw await not allowed in unsafe contexts
+
+                DebugTools.AssertNotNull(_mainWindow);
+
+                // GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
+
+                Task<GlfwWindowCreateResult> task;
+                unsafe
+                {
+                    task = SharedWindowCreate(
+                        _clyde._chosenRenderer,
+                        1280, 720,
+                        0,
+                        _mainWindow!.GlfwWindow);
+                }
+
+                var (reg, error) = await task;
+
+                if (reg == null)
+                {
+                    var (desc, errCode) = error!.Value;
+                    throw new GlfwException($"{errCode}: {desc}");
+                }
+
+                CreateWindowRenderTexture(reg);
+
+                unsafe
+                {
+                    GLFW.MakeContextCurrent(reg.GlfwWindow);
+                }
+
+                // VSync always off for non-primary windows.
+                GLFW.SwapInterval(0);
+
+                reg.QuadVao = _clyde.MakeQuadVao();
+
+                _clyde.UniformConstantsUBO.Rebind();
+                _clyde.ProjViewUBO.Rebind();
+
+                unsafe
+                {
+                    GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
+                }
+
+                return reg.Handle;
+            }
+        }
+
+        // Yes, you read that right.
+        private sealed unsafe partial class GlfwWindowingImpl
+        {
             public bool TryInitMainWindow(Renderer renderer, [NotNullWhen(false)] out string? error)
             {
                 var width = _cfg.GetCVar(CVars.DisplayWidth);
                 var height = _cfg.GetCVar(CVars.DisplayHeight);
 
-                Monitor* monitor = null;
+                var monitorId = 0;
 
-                if (_clyde.WindowMode == WindowMode.Fullscreen)
+                if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
-                    monitor = GLFW.GetPrimaryMonitor();
-                    var mode = GLFW.GetVideoMode(monitor);
-                    width = mode->Width;
-                    height = mode->Height;
-
-                    GLFW.WindowHint(WindowHintInt.RefreshRate, mode->RefreshRate);
+                    monitorId = _primaryMonitorId;
+                    var monitor = _monitors[monitorId];
+                    width = monitor.Handle.Size.X;
+                    height = monitor.Handle.Size.Y;
                 }
 
-#if DEBUG
-                GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
-                GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-                GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-
-                var window = CreateGlfwWindowForRenderer(renderer, width, height, ref monitor, null);
-
-                if (window == null)
+                var windowTask = SharedWindowCreate(renderer, width, height, monitorId, null);
+                while (!windowTask.IsCompleted)
                 {
-                    var code = GLFW.GetError(out var desc);
+                    // Keep processing events until the window task gives either an error or success.
+                    WaitEvents();
+                    ProcessEvents();
+                }
+
+                var (reg, err) = windowTask.Result;
+                if (reg == null)
+                {
+                    var (desc, code) = err!.Value;
                     error = $"[{code}] {desc}";
 
                     return false;
                 }
 
-                _mainWindow = SetupWindow(window);
-                _mainWindow.IsMainWindow = true;
+                _mainWindow = reg;
+                reg.IsMainWindow = true;
 
-                GLFW.MakeContextCurrent(window);
                 UpdateVSync();
 
                 error = null;
                 return true;
+            }
+
+            private Task<GlfwWindowCreateResult> SharedWindowCreate(
+                Renderer renderer,
+                int width, int height,
+                int monitorId,
+                Window* share)
+            {
+                // Yes we ping-pong this TCS through the window thread and back, deal with it.
+                var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
+                SendCmd(new CmdWinCreate(
+                    renderer,
+                    width, height,
+                    monitorId,
+                    (nint) share,
+                    tcs));
+
+                return tcs.Task;
+            }
+
+            private void FinishWindowCreate(EventWindowCreate ev)
+            {
+                var (res, tcs) = ev;
+                var reg = res.Reg;
+
+                if (reg != null)
+                {
+                    _windows.Add(reg);
+                    _clyde._windowHandles.Add(reg.Handle);
+                }
+
+                tcs.TrySetResult(res);
+            }
+
+            private void WinThreadWinCreate(CmdWinCreate cmd)
+            {
+                var (renderer, width, height, monitorId, share, tcs) = cmd;
+
+                Monitor* monitor = null;
+                if (_winThreadMonitors.TryGetValue(monitorId, out var monitorReg))
+                    monitor = monitorReg.Ptr;
+
+                var window = CreateGlfwWindowForRenderer(renderer, width, height, monitor, (Window*) share);
+
+                if (window == null)
+                {
+                    var err = GLFW.GetError(out var desc);
+
+                    SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(null, (desc, err)), tcs));
+                    return;
+                }
+
+                // We can't invoke the TCS directly from the windowing thread because:
+                // * it'd hit the synchronization context,
+                //   which would make (blocking) main window init more annoying.
+                // * it'd not be synchronized to other incoming window events correctly which might be icky.
+                // So we send the TCS back to the game thread
+                // which processes events in the correct order and has better control of stuff during init.
+                var reg = WinThreadSetupWindow(window);
+
+                SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(reg, null), tcs));
             }
 
             public void WindowSetTitle(WindowReg window, string title)
@@ -84,22 +199,53 @@ namespace Robust.Client.Graphics.Clyde
 
                 var reg = (GlfwWindowReg) window;
 
-                GLFW.SetWindowTitle(reg.GlfwWindow, title);
-                reg.Title = title;
+                SendCmd(new CmdWinSetTitle((nint) reg.GlfwWindow, title));
+            }
+
+            private void WinThreadWinSetTitle(CmdWinSetTitle cmd)
+            {
+                GLFW.SetWindowTitle((Window*) cmd.Window, cmd.Title);
             }
 
             public void WindowSetMonitor(WindowReg window, IClydeMonitor monitor)
             {
                 CheckWindowDisposed(window);
 
+                var winReg = (GlfwWindowReg) window;
+
                 var monitorImpl = (MonitorHandle) monitor;
-                var reg = _monitors[monitorImpl.Id];
+
+                SendCmd(new CmdWinSetMonitor(
+                    (nint) winReg.GlfwWindow,
+                    monitorImpl.Id,
+                    0, 0,
+                    monitorImpl.Size.X, monitorImpl.Size.Y,
+                    monitorImpl.RefreshRate));
+            }
+
+            private void WinThreadWinSetMonitor(CmdWinSetMonitor cmd)
+            {
+                Monitor* monitorPtr;
+                if (cmd.MonitorId == 0)
+                {
+                    monitorPtr = null;
+                }
+                else if (_winThreadMonitors.TryGetValue(cmd.MonitorId, out var monitorReg))
+                {
+                    monitorPtr = monitorReg.Ptr;
+                }
+                else
+                {
+                    return;
+                }
 
                 GLFW.SetWindowMonitor(
-                    _mainWindow!.GlfwWindow,
-                    reg.Monitor,
-                    0, 0, monitorImpl.Size.X, monitorImpl.Size.Y,
-                    monitorImpl.RefreshRate);
+                    (Window*) cmd.Window,
+                    monitorPtr,
+                    cmd.X, cmd.Y,
+                    cmd.W, cmd.W,
+                    cmd.RefreshRate
+                );
             }
 
             public void WindowSetVisible(WindowReg window, bool visible)
@@ -107,13 +253,20 @@ namespace Robust.Client.Graphics.Clyde
                 var reg = (GlfwWindowReg) window;
                 reg.IsVisible = visible;
 
-                if (visible)
+                SendCmd(new CmdWinSetVisible((nint) reg.GlfwWindow, visible));
+            }
+
+            private void WinThreadWinSetVisible(CmdWinSetVisible cmd)
+            {
+                var win = (Window*) cmd.Window;
+
+                if (cmd.Visible)
                 {
-                    GLFW.ShowWindow(reg.GlfwWindow);
+                    GLFW.ShowWindow(win);
                 }
                 else
                 {
-                    GLFW.HideWindow(reg.GlfwWindow);
+                    GLFW.HideWindow(win);
                 }
             }
 
@@ -123,7 +276,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 var reg = (GlfwWindowReg) window;
 
-                GLFW.RequestWindowAttention(reg.GlfwWindow);
+                SendCmd(new CmdWinRequestAttention((nint) reg.GlfwWindow));
+            }
+
+            private void WinThreadWinRequestAttention(CmdWinRequestAttention cmd)
+            {
+                var win = (Window*) cmd.Window;
+
+                GLFW.RequestWindowAttention(win);
             }
 
             public void WindowSwapBuffers(WindowReg window)
@@ -141,7 +301,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 GLFW.MakeContextCurrent(_mainWindow!.GlfwWindow);
-                GLFW.SwapInterval(_clyde.VSync ? 1 : 0);
+                GLFW.SwapInterval(_clyde._vSync ? 1 : 0);
             }
 
             public void UpdateMainWindowMode()
@@ -151,31 +311,41 @@ namespace Robust.Client.Graphics.Clyde
                     return;
                 }
 
-                if (_clyde.WindowMode == WindowMode.Fullscreen)
+                var win = _mainWindow;
+                if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
-                    GLFW.GetWindowSize(_mainWindow.GlfwWindow, out var w, out var h);
-                    _mainWindow.PrevWindowSize = (w, h);
+                    _mainWindow.PrevWindowSize = win.WindowSize;
+                    _mainWindow.PrevWindowPos = win.PrevWindowPos;
 
-                    GLFW.GetWindowPos(_mainWindow.GlfwWindow, out var x, out var y);
-                    _mainWindow.PrevWindowPos = (x, y);
-                    var monitor = MonitorForWindow(_mainWindow.GlfwWindow);
-                    var mode = GLFW.GetVideoMode(monitor);
-
-                    GLFW.SetWindowMonitor(
-                        _mainWindow.GlfwWindow,
-                        monitor,
-                        0, 0,
-                        mode->Width, mode->Height,
-                        mode->RefreshRate);
+                    SendCmd(new CmdWinSetFullscreen((nint) _mainWindow.GlfwWindow));
                 }
                 else
                 {
-                    GLFW.SetWindowMonitor(
-                        _mainWindow.GlfwWindow,
-                        null,
+                    SendCmd(new CmdWinSetMonitor(
+                        (nint) _mainWindow.GlfwWindow,
+                        0,
                         _mainWindow.PrevWindowPos.X, _mainWindow.PrevWindowPos.Y,
-                        _mainWindow.PrevWindowSize.X, _mainWindow.PrevWindowSize.Y, 0);
+                        _mainWindow.PrevWindowSize.X, _mainWindow.PrevWindowSize.Y,
+                        0
+                    ));
                 }
+            }
+
+            private void WinThreadWinSetFullscreen(CmdWinSetFullscreen cmd)
+            {
+                var ptr = (Window*) cmd.Window;
+                GLFW.GetWindowSize(ptr, out var w, out var h);
+                GLFW.GetWindowPos(ptr, out var x, out var y);
+
+                var monitor = MonitorForWindow(ptr);
+                var mode = GLFW.GetVideoMode(monitor);
+
+                GLFW.SetWindowMonitor(
+                    ptr,
+                    monitor,
+                    0, 0,
+                    mode->Width, mode->Height,
+                    mode->RefreshRate);
             }
 
             // glfwGetWindowMonitor only works for fullscreen windows.
@@ -217,9 +387,15 @@ namespace Robust.Client.Graphics.Clyde
             private static Window* CreateGlfwWindowForRenderer(
                 Renderer r,
                 int width, int height,
-                ref Monitor* monitor,
+                Monitor* monitor,
                 Window* contextShare)
             {
+#if DEBUG
+                GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
+#endif
+                GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
+                GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+
                 if (r == Renderer.OpenGL33)
                 {
                     GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
@@ -256,7 +432,7 @@ namespace Robust.Client.Graphics.Clyde
                 return GLFW.CreateWindow(width, height, string.Empty, monitor, contextShare);
             }
 
-            private GlfwWindowReg SetupWindow(Window* window)
+            private GlfwWindowReg WinThreadSetupWindow(Window* window)
             {
                 var reg = new GlfwWindowReg
                 {
@@ -272,6 +448,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.SetWindowCloseCallback(window, _windowCloseCallback);
                 GLFW.SetCursorPosCallback(window, _cursorPosCallback);
                 GLFW.SetWindowSizeCallback(window, _windowSizeCallback);
+                GLFW.SetWindowPosCallback(window, _windowPosCallback);
                 GLFW.SetScrollCallback(window, _scrollCallback);
                 GLFW.SetMouseButtonCallback(window, _mouseButtonCallback);
                 GLFW.SetWindowContentScaleCallback(window, _windowContentScaleCallback);
@@ -292,13 +469,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 reg.PixelRatio = reg.FramebufferSize / reg.WindowSize;
 
-                _windows.Add(reg);
-                _clyde._windowHandles.Add(handle);
-
                 return reg;
             }
 
-            private WindowReg FindWindow(Window* window)
+            private WindowReg? FindWindow(nint window) => FindWindow((Window*) window);
+
+            private WindowReg? FindWindow(Window* window)
             {
                 foreach (var windowReg in _windows)
                 {
@@ -308,62 +484,10 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                throw new KeyNotFoundException();
+                return null;
             }
 
-            public WindowHandle WindowCreate()
-            {
-                DebugTools.AssertNotNull(_mainWindow);
 
-                // GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
-
-                Monitor* monitor = null;
-                var window = CreateGlfwWindowForRenderer(
-                    _clyde._chosenRenderer,
-                    1280, 720,
-                    ref monitor,
-                    _mainWindow!.GlfwWindow);
-
-                if (window == null)
-                {
-                    var errCode = GLFW.GetError(out var desc);
-                    throw new GlfwException($"{errCode}: {desc}");
-                }
-
-                var reg = SetupWindow(window);
-                CreateWindowRenderTexture(reg);
-
-                GLFW.MakeContextCurrent(window);
-
-                // VSync always off for non-primary windows.
-                GLFW.SwapInterval(0);
-
-                reg.QuadVao = _clyde.MakeQuadVao();
-
-                _clyde.UniformConstantsUBO.Rebind();
-                _clyde.ProjViewUBO.Rebind();
-
-                GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
-
-                return reg.Handle;
-            }
-
-            public string KeyGetName(Keyboard.Key key)
-            {
-                var name = Keyboard.GetSpecialKeyName(key);
-                if (name != null)
-                {
-                    return Loc.GetString(name);
-                }
-
-                name = GLFW.GetKeyName(ConvertGlfwKeyReverse(key), 0);
-                if (name != null)
-                {
-                    return name.ToUpper();
-                }
-
-                return Loc.GetString("<unknown key>");
-            }
 
             public int KeyGetScanCode(Keyboard.Key key)
             {
@@ -375,14 +499,28 @@ namespace Robust.Client.Graphics.Clyde
                 return GLFW.GetKeyName(Keys.Unknown, scanCode);
             }
 
-            public string ClipboardGetText()
+            public Task<string> ClipboardGetText()
             {
-                return GLFW.GetClipboardString(_mainWindow!.GlfwWindow);
+                var tcs = new TaskCompletionSource<string>();
+                SendCmd(new CmdGetClipboard((nint) _mainWindow!.GlfwWindow, tcs));
+                return tcs.Task;
+            }
+
+            private void WinThreadGetClipboard(CmdGetClipboard cmd)
+            {
+                var clipboard = GLFW.GetClipboardString((Window*) cmd.Window);
+                // Don't have to care about synchronization I don't think so just fire this immediately.
+                cmd.Tcs.TrySetResult(clipboard);
             }
 
             public void ClipboardSetText(string text)
             {
-                GLFW.SetClipboardString(_mainWindow!.GlfwWindow, text);
+                SendCmd(new CmdSetClipboard((nint) _mainWindow!.GlfwWindow, text));
+            }
+
+            private void WinThreadSetClipboard(CmdSetClipboard cmd)
+            {
+                GLFW.SetClipboardString((Window*) cmd.Window, cmd.Text);
             }
 
             private void CreateWindowRenderTexture(WindowReg reg)
@@ -454,6 +592,8 @@ namespace Robust.Client.Graphics.Clyde
             private sealed class GlfwWindowReg : WindowReg
             {
                 public Window* GlfwWindow;
+                // Kept around to avoid it being GCd.
+                public CursorImpl? Cursor;
             }
 
             private class GlfwBindingsContext : IBindingsContext

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -15,17 +16,17 @@ using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    internal unsafe partial class Clyde
+    internal partial class Clyde
     {
-        private const int EventQueueSize = 20;
-
         private readonly List<WindowHandle> _windowHandles = new();
         private readonly List<MonitorHandle> _monitorHandles = new();
 
-        private IWindowingImpl _windowing = default!;
+        private IWindowingImpl? _windowing;
         private Renderer _chosenRenderer;
 
-        private Thread? _mainThread;
+        private Thread? _windowingThread;
+        private bool _vSync;
+        private WindowMode _windowMode;
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
@@ -34,51 +35,54 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<MouseWheelEventArgs>? MouseWheel;
         public event Action<WindowClosedEventArgs>? CloseWindow;
         public event Action? OnWindowScaleChanged;
+        public event Action<WindowResizedEventArgs>? OnWindowResized;
+        public event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
-        public IClydeWindow MainWindow => _windowing.MainWindow!.Handle;
-        public override Vector2i ScreenSize => _windowing.MainWindow!.FramebufferSize;
-        public override bool IsFocused => _windowing.MainWindow!.IsFocused;
+        public IClydeWindow MainWindow => _windowing?.MainWindow?.Handle ??
+                                          throw new InvalidOperationException("Windowing is not initialized");
+
+        public Vector2i ScreenSize => _windowing?.MainWindow?.FramebufferSize ??
+                                      throw new InvalidOperationException("Windowing is not initialized");
+
+        public bool IsFocused => _windowing?.MainWindow?.IsFocused ??
+                                 throw new InvalidOperationException("Windowing is not initialized");
+
         public IEnumerable<IClydeWindow> AllWindows => _windowHandles;
-        public Vector2 DefaultWindowScale => _windowing.MainWindow!.WindowScale;
-        public Vector2 MouseScreenPosition => _windowing.MainWindow!.LastMousePos;
+
+        public Vector2 DefaultWindowScale => _windowing?.MainWindow?.WindowScale ??
+                                             throw new InvalidOperationException("Windowing is not initialized");
+
+        public Vector2 MouseScreenPosition => _windowing?.MainWindow?.LastMousePos ??
+                                              throw new InvalidOperationException("Windowing is not initialized");
 
         public string GetKeyName(Keyboard.Key key)
         {
-            return _windowing.KeyGetName(key);
-        }
+            DebugTools.AssertNotNull(_windowing);
 
-        public string GetKeyNameScanCode(int scanCode)
-        {
-            return _windowing.KeyGetNameScanCode(scanCode);
-        }
-
-        public int GetKeyScanCode(Keyboard.Key key)
-        {
-            return _windowing.KeyGetScanCode(key);
+            return _windowing!.KeyGetName(key);
         }
 
         public uint? GetX11WindowId()
         {
-            return _windowing.WindowGetX11Id(_windowing.MainWindow!);
+            return _windowing?.WindowGetX11Id(_windowing.MainWindow!) ?? null;
         }
 
         private bool InitWindowing()
         {
-            _mainThread = Thread.CurrentThread;
+            _windowingThread = Thread.CurrentThread;
 
             _windowing = new GlfwWindowingImpl(this);
 
-            if (!_windowing.Init())
-                return false;
-
-            return InitMainWindowAndRenderer();
+            return _windowing.Init();
         }
 
-        private bool InitMainWindowAndRenderer()
+        private unsafe bool InitMainWindowAndRenderer()
         {
-            _chosenRenderer = (Renderer) ConfigurationManager.GetCVar(CVars.DisplayRenderer);
+            DebugTools.AssertNotNull(_windowing);
+
+            _chosenRenderer = (Renderer) _cfg.GetCVar(CVars.DisplayRenderer);
 
             var renderers = _chosenRenderer == Renderer.Default
                 ? stackalloc Renderer[]
@@ -93,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
             string? lastError = null;
             foreach (var renderer in renderers)
             {
-                if (!_windowing.TryInitMainWindow(renderer, out lastError))
+                if (!_windowing!.TryInitMainWindow(renderer, out lastError))
                 {
                     Logger.DebugS("clyde.win", $"{renderer} unsupported: {lastError}");
                     continue;
@@ -133,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
-            _windowing.GLInitMainContext(_isGLES);
+            _windowing!.GLInitMainContext(_isGLES);
 
             UpdateMainWindowLoadedRtSize();
 
@@ -164,44 +168,53 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ShutdownWindowing()
         {
-            _windowing.Shutdown();
+            _windowing?.Shutdown();
         }
 
-        public override void SetWindowTitle(string title)
+        public void SetWindowTitle(string title)
         {
-            _windowing.WindowSetTitle(_windowing.MainWindow!, title);
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetTitle(_windowing.MainWindow!, title);
         }
 
         public void SetWindowMonitor(IClydeMonitor monitor)
         {
-            var window = _windowing.MainWindow!;
+            DebugTools.AssertNotNull(_windowing);
+
+            var window = _windowing!.MainWindow!;
 
             _windowing.WindowSetMonitor(window, monitor);
         }
 
         public void RequestWindowAttention()
         {
-            _windowing.WindowRequestAttention(_windowing.MainWindow!);
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowRequestAttention(_windowing.MainWindow!);
         }
 
-        public IClydeWindow CreateWindow()
+        public async Task<IClydeWindow> CreateWindow()
         {
-            return _windowing.WindowCreate();
+            DebugTools.AssertNotNull(_windowing);
+
+            return await _windowing!.WindowCreate();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
-            _windowing.ProcessEvents();
+            _windowing?.ProcessEvents();
         }
 
         private void SwapMainBuffers()
         {
-            _windowing.WindowSwapBuffers(_windowing.MainWindow!);
+            _windowing?.WindowSwapBuffers(_windowing.MainWindow!);
         }
 
-        protected override void VSyncChanged()
+        private void VSyncChanged(bool newValue)
         {
-            _windowing.UpdateVSync();
+            _vSync = newValue;
+            _windowing?.UpdateVSync();
         }
 
         private void CreateWindowRenderTexture(WindowReg reg)
@@ -213,19 +226,20 @@ namespace Robust.Client.Graphics.Clyde
             });
         }
 
-        protected override void WindowModeChanged()
+        private void WindowModeChanged(int mode)
         {
-            _windowing.UpdateMainWindowMode();
+            _windowMode = (WindowMode) mode;
+            _windowing?.UpdateMainWindowMode();
         }
 
-        string IClipboardManager.GetText()
+        Task<string> IClipboardManager.GetText()
         {
-            return _windowing.ClipboardGetText();
+            return _windowing?.ClipboardGetText() ?? Task.FromResult("");
         }
 
         void IClipboardManager.SetText(string text)
         {
-            _windowing.ClipboardSetText(text);
+            _windowing?.ClipboardSetText(text);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
@@ -235,23 +249,31 @@ namespace Robust.Client.Graphics.Clyde
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
-            return _windowing.CursorGetStandard(shape);
+            DebugTools.AssertNotNull(_windowing);
+
+            return _windowing!.CursorGetStandard(shape);
         }
 
         public ICursor CreateCursor(Image<Rgba32> image, Vector2i hotSpot)
         {
-            return _windowing.CursorCreate(image, hotSpot);
+            DebugTools.AssertNotNull(_windowing);
+
+            return _windowing!.CursorCreate(image, hotSpot);
         }
 
         public void SetCursor(ICursor? cursor)
         {
-            _windowing.CursorSet(_windowing.MainWindow!, cursor);
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.CursorSet(_windowing.MainWindow!, cursor);
         }
 
 
         private void SetWindowVisible(WindowReg reg, bool visible)
         {
-            _windowing.WindowSetVisible(reg, visible);
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetVisible(reg, visible);
         }
 
         private abstract class WindowReg
@@ -263,6 +285,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i FramebufferSize;
             public Vector2i WindowSize;
             public Vector2i PrevWindowSize;
+            public Vector2i WindowPos;
             public Vector2i PrevWindowPos;
             public Vector2 LastMousePos;
             public bool IsFocused;
@@ -287,7 +310,7 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Clyde _clyde;
             private readonly WindowReg _reg;
 
-            public bool IsDisposed { get; set; }
+            public bool IsDisposed => _reg.Disposed;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {
@@ -317,7 +340,7 @@ namespace Robust.Client.Graphics.Clyde
             public string Title
             {
                 get => _reg.Title;
-                set => _clyde._windowing.WindowSetTitle(_reg, value);
+                set => _clyde._windowing!.WindowSetTitle(_reg, value);
             }
 
             public bool IsFocused => _reg.IsFocused;

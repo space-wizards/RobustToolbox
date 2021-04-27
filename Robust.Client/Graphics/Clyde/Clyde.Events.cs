@@ -8,17 +8,20 @@ namespace Robust.Client.Graphics.Clyde
     {
         private void SendKeyUp(KeyEventArgs ev)
         {
-            KeyUp?.Invoke(ev);
+            if (_initialized)
+                KeyUp?.Invoke(ev);
         }
 
         private void SendKeyDown(KeyEventArgs ev)
         {
-            KeyDown?.Invoke(ev);
+            if (_initialized)
+                KeyDown?.Invoke(ev);
         }
 
         private void SendScroll(MouseWheelEventArgs ev)
         {
-            MouseWheel?.Invoke(ev);
+            if (_initialized)
+                MouseWheel?.Invoke(ev);
         }
 
         private void SendCloseWindow(WindowClosedEventArgs ev)
@@ -45,22 +48,26 @@ namespace Robust.Client.Graphics.Clyde
                 reg.FramebufferSize,
                 reg.Handle);
 
-            OnWindowResized?.Invoke(eventArgs);
+            if (_initialized)
+                OnWindowResized?.Invoke(eventArgs);
         }
 
         private void SendWindowContentScaleChanged()
         {
-            OnWindowScaleChanged?.Invoke();
+            if (_initialized)
+                OnWindowScaleChanged?.Invoke();
         }
 
         private void SendWindowFocus(WindowFocusedEventArgs ev)
         {
-            OnWindowFocused?.Invoke(ev);
+            if (_initialized)
+                OnWindowFocused?.Invoke(ev);
         }
 
         private void SendText(TextEventArgs ev)
         {
-            TextEntered?.Invoke(ev);
+            if (_initialized)
+                TextEntered?.Invoke(ev);
         }
     }
 }

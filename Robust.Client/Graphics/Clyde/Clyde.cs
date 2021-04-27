@@ -2,11 +2,13 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IPostInjectInit
+    internal sealed partial class Clyde : IClydeInternal, IClydeAudio, IPostInjectInit
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -31,7 +33,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
         private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
@@ -53,6 +55,9 @@ namespace Robust.Client.Graphics.Clyde
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
+        private bool _initialized;
+
+        private Thread? _gameThread;
 
         public Clyde()
         {
@@ -71,28 +76,46 @@ namespace Robust.Client.Graphics.Clyde
             _currentBoundRenderTarget = _currentRenderTarget;
         }
 
-        public override bool Initialize()
+        public bool InitializePreWindowing()
         {
-            base.Initialize();
+            _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+            _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
+            _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
+            _cfg.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
+            _cfg.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
+            _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
 
-            ConfigurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+            return InitWindowing();
+        }
 
-            if (!InitWindowing())
-            {
+        public bool InitializePostWindowing()
+        {
+            _gameThread = Thread.CurrentThread;
+            if (!InitMainWindowAndRenderer())
                 return false;
-            }
 
             _initializeAudio();
-            ReloadConfig();
-
+            _initialized = true;
             return true;
+        }
+
+        public bool SeparateWindowThread => true;
+
+        public void EnterWindowLoop()
+        {
+            _windowing!.EnterWindowLoop();
+        }
+
+        public void TerminateWindowLoop()
+        {
+            _windowing!.TerminateWindowLoop();
         }
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
             _updateAudio();
 
-            _windowing.FlushDispose();
+            _windowing?.FlushDispose();
             FlushShaderInstanceDispose();
             FlushRenderTargetDispose();
             FlushTextureDispose();
@@ -109,21 +132,6 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; private set; } = default!;
         public IClydeDebugStats DebugStats => _debugStats;
 
-        protected override void ReadConfig()
-        {
-            base.ReadConfig();
-            _lightmapDivider = ConfigurationManager.GetCVar(CVars.DisplayLightMapDivider);
-            _maxLightsPerScene = ConfigurationManager.GetCVar(CVars.DisplayMaxLightsPerScene);
-            _enableSoftShadows = ConfigurationManager.GetCVar(CVars.DisplaySoftShadows);
-        }
-
-        protected override void ReloadConfig()
-        {
-            base.ReloadConfig();
-
-            RegenAllLightRts();
-        }
-
         public void PostInject()
         {
             _mapManager.TileChanged += _updateTileMapOnUpdate;
@@ -135,10 +143,6 @@ namespace Robust.Client.Graphics.Clyde
             // it overrides the version we detect to detect GL features.
             RegisterBlockCVars();
         }
-
-        public override event Action<WindowResizedEventArgs>? OnWindowResized;
-
-        public override event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         private void InitOpenGL()
         {
@@ -221,7 +225,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = ConfigurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
+            var overrideGLVersion = _cfg.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;
@@ -292,7 +296,7 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _windowing.MainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _windowing!.MainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()

@@ -30,7 +30,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckTransferringScreenshots();
 
             var allMinimized = true;
-            foreach (var windowReg in _windowing.AllWindows)
+            foreach (var windowReg in _windowing!.AllWindows)
             {
                 if (!windowReg.IsMinimized)
                 {

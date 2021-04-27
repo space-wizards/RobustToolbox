@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var prev = cap;
                 var cVarName = $"display.ogl_block_{capName}";
-                var block = ConfigurationManager.GetCVar<bool>(cVarName);
+                var block = _cfg.GetCVar<bool>(cVarName);
 
                 if (block)
                 {
@@ -146,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var cvar in cvars)
             {
-                ConfigurationManager.RegisterCVar($"display.ogl_block_{cvar}", false);
+                _cfg.RegisterCVar($"display.ogl_block_{cvar}", false);
             }
         }
 

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Management;
 using System.Net;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
@@ -82,10 +81,13 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
+        private bool StartupContinue(DisplayMode displayMode)
         {
-            if (!StartupSystemSplash(logHandlerFactory))
-                return false;
+            _clyde.InitializePostWindowing();
+            _clyde.SetWindowTitle("Space Station 14");
+
+            _taskManager.Initialize();
+            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
@@ -141,6 +143,47 @@ namespace Robust.Client
 
             GC.Collect();
 
+            // Setup main loop
+            if (_mainLoop == null)
+            {
+                _mainLoop = new GameLoop(_gameTiming)
+                {
+                    SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
+                };
+            }
+
+            _mainLoop.Tick += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Tick(args);
+                }
+            };
+
+            _mainLoop.Render += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    _gameTiming.CurFrame++;
+                    _clyde.Render();
+                }
+            };
+            _mainLoop.Input += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Input(args);
+                }
+            };
+
+            _mainLoop.Update += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Update(args);
+                }
+            };
+
             _clyde.Ready();
 
             if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
@@ -157,8 +200,6 @@ namespace Robust.Client
             ReadInitialLaunchState();
 
             SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
-
-            _taskManager.Initialize();
 
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
@@ -218,15 +259,7 @@ namespace Robust.Client
             };
 
             // Bring display up as soon as resources are mounted.
-            if (!_clyde.Initialize())
-            {
-                return false;
-            }
-
-            _clyde.SetWindowTitle("Space Station 14");
-
-            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
-            return true;
+            return _clyde.InitializePreWindowing();
         }
 
         private Stream? VerifierExtraLoadHandler(string arg)
@@ -272,8 +305,10 @@ namespace Robust.Client
 
         public void Shutdown(string? reason = null)
         {
+            DebugTools.AssertNotNull(_mainLoop);
+
             // Already got shut down I assume,
-            if (!_mainLoop.Running)
+            if (!_mainLoop!.Running)
             {
                 return;
             }

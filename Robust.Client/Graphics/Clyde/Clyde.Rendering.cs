@@ -843,7 +843,7 @@ namespace Robust.Client.Graphics.Clyde
         private unsafe void BlitSecondaryWindows()
         {
             // Only got main window.
-            if (_windowing.AllWindows.Count == 1)
+            if (_windowing!.AllWindows.Count == 1)
                 return;
 
             var (blitProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
@@ -859,7 +859,7 @@ namespace Robust.Client.Graphics.Clyde
                 sync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
                 GL.Flush();
             }
-            else if (ConfigurationManager.GetCVar(CVars.DisplayForceSyncWindows))
+            else if (_cfg.GetCVar(CVars.DisplayForceSyncWindows))
             {
                 GL.Finish();
             }

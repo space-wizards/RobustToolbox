@@ -8,9 +8,19 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed unsafe partial class GlfwWindowingImpl
         {
+            // TODO: GLFW doesn't have any events for complex monitor config changes,
+            // so we need some way to reload stuff if e.g. the primary monitor changes.
+            // Still better than SDL2 though which doesn't acknowledge monitor changes at all.
+
+            // Monitors are created at GLFW's will,
+            // so we need to make SURE monitors keep existing while operating on them.
+            // because, you know, async. Don't want a use-after-free.
+            private readonly Dictionary<int, WinThreadMonitorReg> _winThreadMonitors = new();
+
             // Can't use ClydeHandle because it's 64 bit.
             // TODO: this should be MONITOR ID.
-            private int _nextWindowId = 1;
+            private int _nextMonitorId = 1;
+            private int _primaryMonitorId;
             private readonly Dictionary<int, GlfwMonitorReg> _monitors = new();
 
             public IEnumerable<MonitorReg> AllMonitors => _monitors.Values;
@@ -21,57 +31,80 @@ namespace Robust.Client.Graphics.Clyde
 
                 for (var i = 0; i < count; i++)
                 {
-                    SetupMonitor(monitors[i]);
+                    WinThreadSetupMonitor(monitors[i]);
                 }
+
+                var primaryMonitor = GLFW.GetPrimaryMonitor();
+                var up = GLFW.GetMonitorUserPointer(primaryMonitor);
+                _primaryMonitorId = (int) up;
             }
 
-            private void SetupMonitor(Monitor* monitor)
+            private void WinThreadSetupMonitor(Monitor* monitor)
             {
-                var handle = _nextWindowId++;
+                var id = _nextMonitorId++;
 
                 DebugTools.Assert(GLFW.GetMonitorUserPointer(monitor) == null,
                     "GLFW window already has user pointer??");
 
                 var name = GLFW.GetMonitorName(monitor);
                 var videoMode = GLFW.GetVideoMode(monitor);
-                var impl = new MonitorHandle(handle, name, (videoMode->Width, videoMode->Height),
-                    videoMode->RefreshRate);
+
+                GLFW.SetMonitorUserPointer(monitor, (void*) id);
+
+                _winThreadMonitors.Add(id, new WinThreadMonitorReg {Ptr = monitor});
+
+                SendEvent(new EventMonitorSetup(id, name, *videoMode));
+            }
+
+            private void ProcessSetupMonitor(EventMonitorSetup ev)
+            {
+                var impl = new MonitorHandle(
+                    ev.Id,
+                    ev.Name,
+                    (ev.Mode.Width, ev.Mode.Height),
+                    ev.Mode.RefreshRate);
 
                 _clyde._monitorHandles.Add(impl);
-
-                GLFW.SetMonitorUserPointer(monitor, (void*) handle);
-                _monitors[handle] = new GlfwMonitorReg
+                _monitors[ev.Id] = new GlfwMonitorReg
                 {
-                    Id = handle,
-                    Handle = impl,
-                    Monitor = monitor
+                    Id = ev.Id,
+                    Handle = impl
                 };
             }
 
-            private void DestroyMonitor(Monitor* monitor)
+            private void WinThreadDestroyMonitor(Monitor* monitor)
             {
-                var ptr = GLFW.GetMonitorUserPointer(monitor);
+                var ptr = (int) GLFW.GetMonitorUserPointer(monitor);
 
-                if (ptr == null)
+                if (ptr == 0)
                 {
                     var name = GLFW.GetMonitorName(monitor);
                     _sawmill.Warning("clyde.win", $"Monitor '{name}' had no user pointer set??");
                     return;
                 }
 
-                if (_monitors.TryGetValue((int) ptr, out var reg))
-                {
-                    _monitors.Remove((int) ptr);
-                    _clyde._monitorHandles.Remove(reg.Handle);
-                }
+                _winThreadMonitors.Remove(ptr);
 
                 GLFW.SetMonitorUserPointer(monitor, null);
+
+                SendEvent(new EventMonitorDestroy(ptr));
             }
 
-            private class GlfwMonitorReg : MonitorReg
+            private void ProcessEventDestroyMonitor(EventMonitorDestroy ev)
+            {
+                var reg = _monitors[ev.Id];
+                _monitors.Remove(ev.Id);
+                _clyde._monitorHandles.Remove(reg.Handle);
+            }
+
+            private sealed class GlfwMonitorReg : MonitorReg
             {
                 public int Id;
-                public Monitor* Monitor;
+            }
+
+            private sealed class WinThreadMonitorReg
+            {
+                public Monitor* Ptr;
             }
         }
     }

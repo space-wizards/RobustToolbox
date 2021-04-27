@@ -14,8 +14,12 @@ namespace Robust.Client.Graphics
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.
-        bool Initialize();
+        bool SeparateWindowThread { get; }
+        bool InitializePreWindowing();
+        void EnterWindowLoop();
+        bool InitializePostWindowing();
         void Ready();
+        void TerminateWindowLoop();
 
         event Action<TextEventArgs> TextEntered;
         event Action<MouseMoveEventArgs> MouseMove;
@@ -48,9 +52,7 @@ namespace Robust.Client.Graphics
         ClydeDebugLayers DebugLayers { get; set; }
 
         string GetKeyName(Keyboard.Key key);
-        string GetKeyNameScanCode(int scanCode);
 
-        int GetKeyScanCode(Keyboard.Key key);
         void Shutdown();
 
         /// <returns>Null if not running on X11.</returns>

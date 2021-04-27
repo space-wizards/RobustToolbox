@@ -448,13 +448,12 @@ namespace Robust.UnitTesting
 
                     cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
 
-                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
-                    client.Startup(() => new TestLogHandler("CLIENT", failureLevel));
-
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);
+
+                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                     client.OverrideMainLoop(gameLoop);
-                    client.MainLoop(GameController.DisplayMode.Headless);
+                    client.Run(GameController.DisplayMode.Headless, () => new TestLogHandler("CLIENT", failureLevel));
                 }
                 catch (Exception e)
                 {

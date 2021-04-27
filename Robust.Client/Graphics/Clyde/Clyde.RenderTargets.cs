@@ -270,7 +270,7 @@ namespace Robust.Client.Graphics.Clyde
         private void UpdateMainWindowLoadedRtSize()
         {
             var loadedRt = RtToLoaded(_mainMainWindowRenderMainTarget);
-            loadedRt.Size = _windowing.MainWindow!.FramebufferSize;
+            loadedRt.Size = _windowing!.MainWindow!.FramebufferSize;
         }
 
         private sealed class LoadedRenderTarget
@@ -363,7 +363,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class RenderMainWindow : RenderTargetBase
         {
-            public override Vector2i Size => Clyde._windowing.MainWindow!.FramebufferSize;
+            public override Vector2i Size => Clyde._windowing!.MainWindow!.FramebufferSize;
 
             public RenderMainWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
             {

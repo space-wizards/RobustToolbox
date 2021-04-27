@@ -941,9 +941,9 @@ namespace Robust.Client.UserInterface
         public string Description => "A";
         public string Help => "A";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = IoCManager.Resolve<IClyde>().CreateWindow();
+            var window = await IoCManager.Resolve<IClyde>().CreateWindow();
             var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
 
             /*var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);

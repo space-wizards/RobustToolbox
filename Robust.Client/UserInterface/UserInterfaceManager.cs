@@ -951,29 +951,4 @@ namespace Robust.Client.UserInterface
             return false;
         }
     }
-
-    [UsedImplicitly]
-    internal sealed class TestWindowCommand : IConsoleCommand
-    {
-        public string Command => "window";
-        public string Description => "A";
-        public string Help => "A";
-
-        public async void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            var window = await IoCManager.Resolve<IClyde>().CreateWindow();
-            var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
-            window.DisposeOnClose = true;
-
-            /*var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);
-
-            var entity = IoCManager.Resolve<IEntityManager>().SpawnEntity("", new MapCoordinates(0, 0, new MapId(1)));
-            var eye = entity.AddComponent<EyeComponent>();
-            vp.Eye = eye.Eye;
-
-            root.AddChild(new ViewportControl(vp));
-            */
-            root.AddChild(new Label { Text = "AAAAAAAA"});
-        }
-    }
 }

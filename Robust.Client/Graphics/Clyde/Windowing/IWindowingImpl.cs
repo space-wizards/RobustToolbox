@@ -26,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
             void EnterWindowLoop();
             void TerminateWindowLoop();
 
-            void ProcessEvents();
+            void ProcessEvents(bool single=false);
             void FlushDispose();
 
             ICursor CursorGetStandard(StandardCursorShape shape);

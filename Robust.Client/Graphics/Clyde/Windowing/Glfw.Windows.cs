@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Keep processing events until the window task gives either an error or success.
                     WaitEvents();
-                    ProcessEvents();
+                    ProcessEvents(single: true);
                 }
             }
 

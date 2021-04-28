@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         private partial class GlfwWindowingImpl
         {
-            public void ProcessEvents()
+            public void ProcessEvents(bool single=false)
             {
                 while (_eventReader.TryRead(out var ev))
                 {
@@ -22,6 +22,9 @@ namespace Robust.Client.Graphics.Clyde
                             "clyde.win",
                             $"Caught exception in windowing event ({ev.GetType()}):\n{e}");
                     }
+
+                    if (single)
+                        break;
                 }
             }
 

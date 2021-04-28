@@ -204,6 +204,7 @@ namespace Robust.Client.Graphics.Clyde
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             _windowing?.ProcessEvents();
+            DispatchEvents();
         }
 
         private void SwapMainBuffers()

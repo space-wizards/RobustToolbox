@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
+        public bool TryGetEntitySystem<T>([MaybeNullWhen(false)] out T? entitySystem)
             where T : IEntitySystem
         {
             if (_systems.TryGetValue(typeof(T), out var system))

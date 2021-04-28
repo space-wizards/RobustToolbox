@@ -871,18 +871,30 @@ namespace Robust.Client.Graphics.Clyde
 
                 var rt = window.RenderTexture!;
 
+                // SO SOMETIMES glfwMakeContextCurrent just fails in wglMakeCurrent
+                // Why? I don't fucking know!
+                // Worst thing that happens is that it renders to the main window for one frame.
+                // I couldn't find shit about this online and AFAICT it's a driver bug.
+                // Great!
                 _windowing.GLMakeContextCurrent(window);
 
                 if (_hasGLFenceSync)
                 {
-                    GL.WaitSync(sync, WaitSyncFlags.None, long.MaxValue);
+                    // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
+                    GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
+                    CheckGlError();
                 }
 
-                GL.Enable(EnableCap.FramebufferSrgb);
+                if (!_isGLES)
+                    GL.Enable(EnableCap.FramebufferSrgb);
 
                 GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+                CheckGlError();
+                CalcScreenMatrices(window.FramebufferSize, out var projMatrix, out var screenMatrix);
                 _updateUniformConstants(window.FramebufferSize);
+                SetProjViewFull(projMatrix, screenMatrix);
                 blitProgram.ForceUse();
+                SetupGlobalUniformsImmediate(blitProgram, true);
 
                 SetTexture(TextureUnit.Texture0, rt.Texture);
                 SetTexture(TextureUnit.Texture1, _stockTextureWhite);

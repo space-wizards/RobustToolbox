@@ -429,6 +429,8 @@ namespace Robust.Client.Graphics.Clyde
                 ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
+                CalcScreenMatrices(rt.Size, out var proj, out var view);
+                SetProjViewFull(proj, view);
 
                 // Smugleaf moment
                 a();

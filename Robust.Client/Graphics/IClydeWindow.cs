@@ -12,6 +12,7 @@ namespace Robust.Client.Graphics
         bool IsFocused { get; }
         bool IsMinimized { get; }
         bool IsVisible { get; set; }
+        bool DisposeOnClose { get; set; }
         event Action<WindowClosedEventArgs> Closed;
     }
 }

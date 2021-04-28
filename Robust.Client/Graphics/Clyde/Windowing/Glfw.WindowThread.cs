@@ -56,56 +56,60 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private void ProcessGlfwCmd(CmdBase cmd)
+            private void ProcessGlfwCmd(CmdBase cmdb)
             {
-                switch (cmd)
+                switch (cmdb)
                 {
                     case CmdTerminate:
                         _windowingRunning = false;
                         break;
 
-                    case CmdWinSetTitle wst:
-                        WinThreadWinSetTitle(wst);
+                    case CmdWinSetTitle cmd:
+                        WinThreadWinSetTitle(cmd);
                         break;
 
-                    case CmdWinSetMonitor wsm:
-                        WinThreadWinSetMonitor(wsm);
+                    case CmdWinSetMonitor cmd:
+                        WinThreadWinSetMonitor(cmd);
                         break;
 
-                    case CmdWinSetVisible wsv:
-                        WinThreadWinSetVisible(wsv);
+                    case CmdWinSetVisible cmd:
+                        WinThreadWinSetVisible(cmd);
                         break;
 
-                    case CmdWinRequestAttention wra:
-                        WinThreadWinRequestAttention(wra);
+                    case CmdWinRequestAttention cmd:
+                        WinThreadWinRequestAttention(cmd);
                         break;
 
-                    case CmdWinSetFullscreen wsf:
-                        WinThreadWinSetFullscreen(wsf);
+                    case CmdWinSetFullscreen cmd:
+                        WinThreadWinSetFullscreen(cmd);
                         break;
 
-                    case CmdWinCreate wc:
-                        WinThreadWinCreate(wc);
+                    case CmdWinCreate cmd:
+                        WinThreadWinCreate(cmd);
                         break;
 
-                    case CmdSetClipboard sc:
-                        WinThreadSetClipboard(sc);
+                    case CmdWinDestroy cmd:
+                        WinThreadWinDestroy(cmd);
                         break;
 
-                    case CmdGetClipboard gc:
-                        WinThreadGetClipboard(gc);
+                    case CmdSetClipboard cmd:
+                        WinThreadSetClipboard(cmd);
                         break;
 
-                    case CmdCursorCreate cc:
-                        WinThreadCursorCreate(cc);
+                    case CmdGetClipboard cmd:
+                        WinThreadGetClipboard(cmd);
                         break;
 
-                    case CmdCursorDestroy cd:
-                        WinThreadCursorDestroy(cd);
+                    case CmdCursorCreate cmd:
+                        WinThreadCursorCreate(cmd);
                         break;
 
-                    case CmdWinCursorSet wcs:
-                        WinThreadWinCursorSet(wcs);
+                    case CmdCursorDestroy cmd:
+                        WinThreadCursorDestroy(cmd);
+                        break;
+
+                    case CmdWinCursorSet cmd:
+                        WinThreadWinCursorSet(cmd);
                         break;
                 }
             }
@@ -193,6 +197,10 @@ namespace Robust.Client.Graphics.Clyde
                 int MonitorId,
                 nint ShareWindow,
                 TaskCompletionSource<GlfwWindowCreateResult> Tcs
+            ) : CmdBase;
+
+            private sealed record CmdWinDestroy(
+                nint Window
             ) : CmdBase;
 
             private sealed record GlfwWindowCreateResult(

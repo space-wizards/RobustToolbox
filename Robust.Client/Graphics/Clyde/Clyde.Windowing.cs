@@ -34,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
         public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowDestroyedEventArgs>? DestroyWindow;
         public event Action? OnWindowScaleChanged;
         public event Action<WindowResizedEventArgs>? OnWindowResized;
         public event Action<WindowFocusedEventArgs>? OnWindowFocused;
@@ -201,6 +202,14 @@ namespace Robust.Client.Graphics.Clyde
             return await _windowing!.WindowCreate();
         }
 
+        private void DoDestroyWindow(WindowReg reg)
+        {
+            if (reg.IsMainWindow)
+                throw new InvalidOperationException("Cannot destroy main window.");
+
+            _windowing!.WindowDestroy(reg);
+        }
+
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             _windowing?.ProcessEvents();
@@ -279,7 +288,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private abstract class WindowReg
         {
-            public bool Disposed;
+            public bool IsDisposed;
 
             public Vector2 WindowScale;
             public Vector2 PixelRatio;
@@ -293,6 +302,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
+            public bool DisposeOnClose;
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
@@ -311,7 +321,7 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Clyde _clyde;
             private readonly WindowReg _reg;
 
-            public bool IsDisposed => _reg.Disposed;
+            public bool IsDisposed => _reg.IsDisposed;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {
@@ -321,6 +331,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Dispose()
             {
+                _clyde.DoDestroyWindow(_reg);
             }
 
             public Vector2i Size => _reg.FramebufferSize;
@@ -351,6 +362,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 get => _reg.IsVisible;
                 set => _clyde.SetWindowVisible(_reg, value);
+            }
+
+            public bool DisposeOnClose
+            {
+                get => _reg.DisposeOnClose;
+                set => _reg.DisposeOnClose = value;
             }
 
             public event Action<WindowClosedEventArgs> Closed

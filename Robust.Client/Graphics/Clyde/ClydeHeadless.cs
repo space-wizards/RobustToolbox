@@ -53,6 +53,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
         public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowDestroyedEventArgs>? DestroyWindow;
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -585,11 +586,11 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsFocused => false;
             public bool IsMinimized => false;
             public bool IsVisible { get; set; } = true;
+            public bool DisposeOnClose { get; set; }
             public event Action<WindowClosedEventArgs>? Closed;
 
             public void Dispose()
             {
-                Closed?.Invoke(new WindowClosedEventArgs(this));
                 IsDisposed = true;
             }
         }

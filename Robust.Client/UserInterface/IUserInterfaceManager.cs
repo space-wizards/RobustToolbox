@@ -105,5 +105,6 @@ namespace Robust.Client.UserInterface
 
         void PushModal(Control modal);
         WindowRoot CreateWindowRoot(IClydeWindow window);
+        void DestroyWindowRoot(IClydeWindow window);
     }
 }

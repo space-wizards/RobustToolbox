@@ -23,8 +23,6 @@ namespace Robust.Client.Graphics.Clyde
             private int _primaryMonitorId;
             private readonly Dictionary<int, GlfwMonitorReg> _monitors = new();
 
-            public IEnumerable<MonitorReg> AllMonitors => _monitors.Values;
-
             private void InitMonitors()
             {
                 var monitors = GLFW.GetMonitorsRaw(out var count);

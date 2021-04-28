@@ -16,7 +16,6 @@ namespace Robust.Client.Graphics.Clyde
             WindowReg? MainWindow { get; }
             IReadOnlyList<WindowReg> AllWindows { get; }
             IBindingsContext GraphicsBindingContext { get; }
-            IEnumerable<MonitorReg> AllMonitors { get; }
 
             // Lifecycle stuff
             bool Init();
@@ -40,6 +39,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
             Task<WindowHandle> WindowCreate();
+            void WindowDestroy(WindowReg reg);
 
             string KeyGetName(Keyboard.Key key);
 

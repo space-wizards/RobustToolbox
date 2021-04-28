@@ -43,32 +43,36 @@ namespace Robust.Client.Graphics.Clyde
         {
             switch (ev)
             {
-                case DEventKeyDown keyDown:
-                    KeyDown?.Invoke(keyDown.Args);
+                case DEventKeyDown(var args):
+                    KeyDown?.Invoke(args);
                     break;
-                case DEventKeyUp keyUp:
-                    KeyUp?.Invoke(keyUp.Args);
+                case DEventKeyUp(var args):
+                    KeyUp?.Invoke(args);
                     break;
-                case DEventMouseMove mouseMove:
-                    MouseMove?.Invoke(mouseMove.Args);
+                case DEventMouseMove(var args):
+                    MouseMove?.Invoke(args);
                     break;
-                case DEventScroll scroll:
-                    MouseWheel?.Invoke(scroll.Args);
+                case DEventScroll(var args):
+                    MouseWheel?.Invoke(args);
                     break;
-                case DEventText text:
-                    TextEntered?.Invoke(text.Args);
+                case DEventText(var args):
+                    TextEntered?.Invoke(args);
                     break;
-                case DEventWindowClosed winClosed:
-                    CloseWindow?.Invoke(winClosed.Args);
+                case DEventWindowClosed(var reg, var args):
+                    reg.Closed?.Invoke(args);
+                    CloseWindow?.Invoke(args);
+
+                    if (reg.DisposeOnClose && !reg.IsMainWindow)
+                        DoDestroyWindow(reg);
                     break;
                 case DEventWindowContentScaleChanged winContentScale:
                     OnWindowScaleChanged?.Invoke();
                     break;
-                case DEventWindowFocus winFocus:
-                    OnWindowFocused?.Invoke(winFocus.Args);
+                case DEventWindowFocus(var args):
+                    OnWindowFocused?.Invoke(args);
                     break;
-                case DEventWindowResized winResized:
-                    OnWindowResized?.Invoke(winResized.Args);
+                case DEventWindowResized(var args):
+                    OnWindowResized?.Invoke(args);
                     break;
             }
         }
@@ -88,9 +92,9 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventScroll(ev));
         }
 
-        private void SendCloseWindow(WindowClosedEventArgs ev)
+        private void SendCloseWindow(WindowReg windowReg, WindowClosedEventArgs ev)
         {
-            _eventDispatchQueue.Enqueue(new DEventWindowClosed(ev));
+            _eventDispatchQueue.Enqueue(new DEventWindowClosed(windowReg, ev));
         }
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
@@ -144,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventScroll(MouseWheelEventArgs Args) : DEventBase;
 
-        private sealed record DEventWindowClosed(WindowClosedEventArgs Args) : DEventBase;
+        private sealed record DEventWindowClosed(WindowReg Reg, WindowClosedEventArgs Args) : DEventBase;
 
         private sealed record DEventWindowResized(WindowResizedEventArgs Args) : DEventBase;
 

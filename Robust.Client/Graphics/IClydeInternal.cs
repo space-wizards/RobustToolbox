@@ -26,7 +26,8 @@ namespace Robust.Client.Graphics
         event Action<KeyEventArgs> KeyUp;
         event Action<KeyEventArgs> KeyDown;
         event Action<MouseWheelEventArgs> MouseWheel;
-        event Action<WindowClosedEventArgs>? CloseWindow;
+        event Action<WindowClosedEventArgs> CloseWindow;
+        event Action<WindowDestroyedEventArgs> DestroyWindow;
 
         ClydeHandle LoadShader(ParsedShader shader, string? name = null);
 

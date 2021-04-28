@@ -213,6 +213,11 @@ namespace Robust.Client.Graphics.Clyde
                 SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(reg, null), tcs));
             }
 
+            private void WinThreadWinDestroy(CmdWinDestroy cmd)
+            {
+                GLFW.DestroyWindow((Window*) cmd.Window);
+            }
+
             public void WindowSetTitle(WindowReg window, string title)
             {
                 CheckWindowDisposed(window);
@@ -407,6 +412,22 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     return null;
                 }
+            }
+
+            public void WindowDestroy(WindowReg window)
+            {
+                var reg = (GlfwWindowReg) window;
+                if (reg.IsDisposed)
+                    return;
+
+                reg.IsDisposed = true;
+
+                SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow));
+
+                _windows.Remove(reg);
+                _clyde._windowHandles.Remove(reg.Handle);
+
+                _clyde.DestroyWindow?.Invoke(new WindowDestroyedEventArgs(window.Handle));
             }
 
             private static Window* CreateGlfwWindowForRenderer(
@@ -609,7 +630,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private void CheckWindowDisposed(WindowReg reg)
             {
-                if (reg.Disposed)
+                if (reg.IsDisposed)
                     throw new ObjectDisposedException("Window disposed");
             }
 

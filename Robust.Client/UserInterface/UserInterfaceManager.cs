@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface
     internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
         [ViewVariables] public float UIScale { get; private set; } = 1;
-        [ViewVariables] public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
+        [ViewVariables] public float DefaultUIScale => _clyde.DefaultWindowScale.X;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
@@ -112,7 +112,7 @@ namespace Robust.Client.UserInterface
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _displayManager, _netManager, _mapManager);
+                _clyde, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -132,13 +132,14 @@ namespace Robust.Client.UserInterface
 
         private void _initializeCommon()
         {
-            RootControl = CreateWindowRoot(_displayManager.MainWindow);
+            RootControl = CreateWindowRoot(_clyde.MainWindow);
 
             RootControl.InvalidateMeasure();
             QueueMeasureUpdate(RootControl);
 
-            _displayManager.OnWindowResized += WindowSizeChanged;
-            _displayManager.OnWindowScaleChanged += UpdateUIScale;
+            _clyde.OnWindowResized += WindowSizeChanged;
+            _clyde.OnWindowScaleChanged += UpdateUIScale;
+            _clyde.DestroyWindow += WindowDestroyed;
 
             MainViewport = new MainViewportContainer(_eyeManager)
             {
@@ -208,6 +209,23 @@ namespace Robust.Client.UserInterface
             QueueMeasureUpdate(newRoot);
 
             return newRoot;
+        }
+
+        public void DestroyWindowRoot(IClydeWindow window)
+        {
+            // Destroy window root if this window had one.
+            if (!_windowsToRoot.TryGetValue(window, out var root))
+                return;
+
+            _windowsToRoot.Remove(window);
+            _roots.Remove(root);
+
+            root.RemoveAllChildren();
+        }
+
+        private void WindowDestroyed(WindowDestroyedEventArgs args)
+        {
+            DestroyWindowRoot(args.Window);
         }
 
         public void FrameUpdate(FrameEventArgs args)
@@ -458,13 +476,13 @@ namespace Robust.Client.UserInterface
 
             if (cursorTarget == null)
             {
-                _displayManager.SetCursor(_worldCursor);
+                _clyde.SetCursor(_worldCursor);
                 return;
             }
 
             if (cursorTarget.CustomCursorShape != null)
             {
-                _displayManager.SetCursor(cursorTarget.CustomCursorShape);
+                _clyde.SetCursor(cursorTarget.CustomCursorShape);
                 return;
             }
 
@@ -479,7 +497,7 @@ namespace Robust.Client.UserInterface
                 _ => StandardCursorShape.Arrow
             };
 
-            _displayManager.SetCursor(_displayManager.GetStandardCursor(shape));
+            _clyde.SetCursor(_clyde.GetStandardCursor(shape));
         }
 
         public void MouseWheel(MouseWheelEventArgs args)
@@ -632,7 +650,7 @@ namespace Robust.Client.UserInterface
         {
             foreach (var root in _roots)
             {
-                if (root.Window == _displayManager.MainWindow)
+                if (root.Window == _clyde.MainWindow)
                 {
                     DoRender(root);
                 }
@@ -945,6 +963,7 @@ namespace Robust.Client.UserInterface
         {
             var window = await IoCManager.Resolve<IClyde>().CreateWindow();
             var root = IoCManager.Resolve<IUserInterfaceManager>().CreateWindowRoot(window);
+            window.DisposeOnClose = true;
 
             /*var vp = IoCManager.Resolve<IClyde>().CreateViewport(window.RenderTarget.Size);
 

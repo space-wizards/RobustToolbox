@@ -69,5 +69,11 @@ namespace Robust.Client.Graphics.Clyde
             if (_initialized)
                 TextEntered?.Invoke(ev);
         }
+
+        private void SendMouseMove(MouseMoveEventArgs ev)
+        {
+            if (_initialized)
+                MouseMove?.Invoke(ev);
+        }
     }
 }

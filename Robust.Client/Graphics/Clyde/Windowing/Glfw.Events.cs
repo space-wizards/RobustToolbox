@@ -99,7 +99,7 @@ namespace Robust.Client.Graphics.Clyde
                 var delta = newPos - windowReg.LastMousePos;
                 windowReg.LastMousePos = newPos;
 
-                _clyde.MouseMove?.Invoke(new MouseMoveEventArgs(delta, newPos));
+                _clyde.SendMouseMove(new MouseMoveEventArgs(delta, newPos));
             }
 
             private void ProcessEventKey(EventKey ev)

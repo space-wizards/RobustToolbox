@@ -36,9 +36,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // tfw await not allowed in unsafe contexts
 
-                // WGL REQUIRES that the share context is unbound on all threads to create the window.
-                // So we have to block the main thread waiting on this. Ugh.
-                var unbindContextAndBlock = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !_clyde._isGLES;
+                // GL APIs don't take kindly to making a new window without unbinding the main context. Great.
+                // Leaving code for async path in, in case it works on like GLX.
+                var unbindContextAndBlock = true;
 
                 DebugTools.AssertNotNull(_mainWindow);
 

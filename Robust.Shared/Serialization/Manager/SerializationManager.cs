@@ -114,6 +114,30 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = false;
         }
 
+        public void Shutdown()
+        {
+            DependencyCollection = null!;
+
+            _constantsMapping.Clear();
+            _flagsMapping.Clear();
+
+            _genericWriterTypes.Clear();
+            _genericReaderTypes.Clear();
+            _genericCopierTypes.Clear();
+            _genericValidatorTypes.Clear();
+
+            _typeWriters.Clear();
+            _typeReaders.Clear();
+            _typeCopiers.Clear();
+            _typeValidators.Clear();
+
+            _dataDefinitions.Clear();
+
+            _copyByRefRegistrations.Clear();
+
+            _initialized = false;
+        }
+
         public bool HasDataDefinition(Type type)
         {
             if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
@@ -247,14 +271,14 @@ namespace Robust.Shared.Serialization.Manager
             return res;
         }
 
-        private SerializationDataDefinition? GetDataDefinition(Type type)
+        internal SerializationDataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
             return null;
         }
 
-        private bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
+        internal bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out SerializationDataDefinition? dataDefinition)
         {
             dataDefinition = GetDataDefinition(type);
             return dataDefinition != null;

@@ -66,6 +66,23 @@ namespace Robust.Shared.GameObjects
         Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull;
 
         /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="type">Event type being waited for.</param>
+        /// <returns></returns>
+        Task<object> AwaitEvent(EventSource source, Type type);
+
+        /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="type">Event type being waited for.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<object> AwaitEvent(EventSource source, Type type, CancellationToken cancellationToken);
+
+        /// <summary>
         /// Unsubscribes all event handlers for a given subscriber.
         /// </summary>
         /// <param name="subscriber">Owner of the handlers being removed.</param>
@@ -232,12 +249,31 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public Task<object> AwaitEvent(EventSource source, Type type)
+        {
+            return AwaitEvent(source, type, default);
+        }
+
+        /// <inheritdoc />
         public Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull
+        {
+            var type = typeof(T);
+
+            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
+            static async Task<T> DoCast(Task<object> task)
+            {
+                return (T)await task;
+            }
+
+            return DoCast(AwaitEvent(source, type, cancellationToken));
+        }
+
+        /// <inheritdoc />
+        public Task<object> AwaitEvent(EventSource source, Type type, CancellationToken cancellationToken)
         {
             if(source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            var type = typeof(T);
             if (_awaitingMessages.ContainsKey(type))
             {
                 throw new InvalidOperationException("Cannot await the same message type twice at once.");
@@ -254,14 +290,10 @@ namespace Robust.Shared.GameObjects
                 });
             }
 
-            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
-            async Task<T> DoCast(Task<object> task)
-            {
-                return (T)await task;
-            }
+
 
             _awaitingMessages.Add(type, (source, reg, tcs));
-            return DoCast(tcs.Task);
+            return tcs.Task;
         }
 
         private void UnsubscribeEvent(EventSource source, Type eventType, Delegate originalHandler, EventHandler handler, IEntityEventSubscriber subscriber)

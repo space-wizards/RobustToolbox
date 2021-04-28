@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ColorSerializer))]
-    public class ColorSerializerTest : TypeSerializerTest
+    public class ColorSerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()

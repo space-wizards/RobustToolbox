@@ -7,6 +7,8 @@ namespace Robust.Client
 {
     internal interface IGameControllerInternal : IGameController
     {
+        GameControllerOptions Options { get; }
+        bool ContentStart { get; set; }
         void SetCommandLineArgs(CommandLineArgs args);
         bool LoadConfigAndUserData { get; set; }
         void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null);

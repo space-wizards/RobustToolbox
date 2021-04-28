@@ -10,7 +10,6 @@ using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
@@ -37,18 +36,39 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // tfw await not allowed in unsafe contexts
 
-                DebugTools.AssertNotNull(_mainWindow);
+                // WGL REQUIRES that the share context is unbound on all threads to create the window.
+                // So we have to block the main thread waiting on this. Ugh.
+                var unbindContextAndBlock = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !_clyde._isGLES;
 
-                // GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
+                DebugTools.AssertNotNull(_mainWindow);
 
                 Task<GlfwWindowCreateResult> task;
                 unsafe
                 {
+                    if (unbindContextAndBlock)
+                        GLFW.MakeContextCurrent(null);
+
                     task = SharedWindowCreate(
                         _clyde._chosenRenderer,
                         1280, 720,
                         0,
                         _mainWindow!.GlfwWindow);
+                }
+
+                if (unbindContextAndBlock)
+                {
+                    unsafe
+                    {
+                        // Block the main thread (to avoid stuff like texture uploads being problematic).
+                        WaitWindowCreate(task);
+
+                        if (unbindContextAndBlock)
+                            GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
+                    }
+                }
+                else
+                {
+                    await task;
                 }
 
                 var (reg, error) = await task;
@@ -102,12 +122,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 var windowTask = SharedWindowCreate(renderer, width, height, monitorId, null);
-                while (!windowTask.IsCompleted)
-                {
-                    // Keep processing events until the window task gives either an error or success.
-                    WaitEvents();
-                    ProcessEvents();
-                }
+                WaitWindowCreate(windowTask);
 
                 var (reg, err) = windowTask.Result;
                 if (reg == null)
@@ -125,6 +140,16 @@ namespace Robust.Client.Graphics.Clyde
 
                 error = null;
                 return true;
+            }
+
+            private void WaitWindowCreate(Task<GlfwWindowCreateResult> windowTask)
+            {
+                while (!windowTask.IsCompleted)
+                {
+                    // Keep processing events until the window task gives either an error or success.
+                    WaitEvents();
+                    ProcessEvents();
+                }
             }
 
             private Task<GlfwWindowCreateResult> SharedWindowCreate(
@@ -488,7 +513,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
 
-
             public int KeyGetScanCode(Keyboard.Key key)
             {
                 return GLFW.GetKeyScancode(ConvertGlfwKeyReverse(key));
@@ -592,6 +616,7 @@ namespace Robust.Client.Graphics.Clyde
             private sealed class GlfwWindowReg : WindowReg
             {
                 public Window* GlfwWindow;
+
                 // Kept around to avoid it being GCd.
                 public CursorImpl? Cursor;
             }

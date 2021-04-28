@@ -73,7 +73,7 @@ namespace Robust.Server.Map
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
                 .Select(kv => kv.Key).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
+                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize));
 
             // no point sending empty collections
             if (gridDatums.Count        == 0)  gridDatums        = default;

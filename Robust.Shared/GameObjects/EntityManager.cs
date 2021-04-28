@@ -297,7 +297,13 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out var _);
+            if (!TryGetEntity(uid, out var ent))
+                return false;
+
+            if (ent.Deleted)
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -349,8 +355,13 @@ namespace Robust.Shared.GameObjects
 
             var entity = new Entity(this, uid.Value);
 
+
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
+
+            // We do this after the event, so if the event throws we have not committed 
+            Entities[entity.Uid] = entity;
+            AllEntities.Add(entity);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
@@ -358,8 +369,6 @@ namespace Robust.Shared.GameObjects
             // allocate the required TransformComponent
             _componentManager.AddComponent<TransformComponent>(entity);
 
-            Entities[entity.Uid] = entity;
-            AllEntities.Add(entity);
 
             return entity;
         }

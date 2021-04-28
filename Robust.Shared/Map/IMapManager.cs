@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
@@ -80,7 +80,7 @@ namespace Robust.Shared.Map
 
         void DeleteMap(MapId mapID);
 
-        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
+        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16);
         IMapGrid GetGrid(GridId gridID);
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(GridId gridID);

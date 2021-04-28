@@ -728,7 +728,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private Vector2 _localCenter;
+        private Vector2 _localCenter = Vector2.Zero;
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.

@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
-        public static bool TryGet<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem
+        public static bool TryGet<T>([MaybeNullWhen(false)] out T? entitySystem) where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem(out entitySystem);
         }

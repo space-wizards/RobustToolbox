@@ -10,6 +10,7 @@ using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Utility;
 using Robust.Shared;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
@@ -31,6 +32,7 @@ namespace Robust.Client.Graphics.Clyde
             public WindowReg? MainWindow => _mainWindow;
             private GlfwWindowReg? _mainWindow;
             private GlfwBindingsContext _mainGraphicsContext = default!;
+            private int _nextWindowId = 1;
 
             public async Task<WindowHandle> WindowCreate()
             {
@@ -132,6 +134,8 @@ namespace Robust.Client.Graphics.Clyde
 
                     return false;
                 }
+
+                DebugTools.Assert(reg.Id == WindowId.Main);
 
                 _mainWindow = reg;
                 reg.IsMainWindow = true;
@@ -482,7 +486,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var reg = new GlfwWindowReg
                 {
-                    GlfwWindow = window
+                    GlfwWindow = window,
+                    Id = new WindowId(_nextWindowId++)
                 };
                 var handle = new WindowHandle(_clyde, reg);
                 reg.Handle = handle;
@@ -493,6 +498,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.SetKeyCallback(window, _keyCallback);
                 GLFW.SetWindowCloseCallback(window, _windowCloseCallback);
                 GLFW.SetCursorPosCallback(window, _cursorPosCallback);
+                GLFW.SetCursorEnterCallback(window, _cursorEnterCallback);
                 GLFW.SetWindowSizeCallback(window, _windowSizeCallback);
                 GLFW.SetWindowPosCallback(window, _windowPosCallback);
                 GLFW.SetScrollCallback(window, _scrollCallback);

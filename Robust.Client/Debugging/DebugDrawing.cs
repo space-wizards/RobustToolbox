@@ -155,7 +155,7 @@ namespace Robust.Client.Debugging
                 _hoverBodies.Clear();
                 var mouseScreenPos = _inputManager.MouseScreenPosition;
                 var mouseWorldPos = _eyeManager.ScreenToMap(mouseScreenPos).Position;
-                _hoverStartScreen = mouseScreenPos;
+                _hoverStartScreen = mouseScreenPos.Position;
 
                 var viewport = _eyeManager.GetWorldViewport();
 

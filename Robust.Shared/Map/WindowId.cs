@@ -3,9 +3,22 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
+    /// <summary>
+    ///     An identifier for a single OS window on the client. See <c>IClydeWindow</c> in the client project.
+    /// </summary>
     [Serializable, NetSerializable]
     public readonly struct WindowId : IEquatable<WindowId>
     {
+        /// <summary>
+        ///     An invalid, default value. Does not represent any actual window.
+        /// </summary>
+        public static readonly WindowId Invalid = default;
+
+        /// <summary>
+        ///     Always the ID of the main game window.
+        /// </summary>
+        public static readonly WindowId Main = new(1);
+
         internal readonly int Value;
 
         public WindowId(int value)

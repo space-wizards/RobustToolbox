@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
+using Robust.Shared.Map;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -35,15 +36,18 @@ namespace Robust.Client.Graphics.Clyde
                 _eventReader.WaitToReadAsync().AsTask().Wait();
             }
 
-            private void ProcessEvent(EventBase ev)
+            private void ProcessEvent(EventBase evb)
             {
-                switch (ev)
+                switch (evb)
                 {
                     case EventMouseButton mb:
                         ProcessEventMouseButton(mb);
                         break;
                     case EventCursorPos cp:
                         ProcessEventCursorPos(cp);
+                        break;
+                    case EventCursorEnter ev:
+                        ProcessEventCursorEnter(ev);
                         break;
                     case EventScroll s:
                         ProcessEventScroll(s);
@@ -82,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
                         ProcessEventWindowContentScale(cs);
                         break;
                     default:
-                        _sawmill.Error("clyde.win", $"Unknown GLFW event type: {ev.GetType()}");
+                        _sawmill.Error("clyde.win", $"Unknown GLFW event type: {evb.GetType()}");
                         break;
                 }
             }
@@ -102,7 +106,27 @@ namespace Robust.Client.Graphics.Clyde
                 var delta = newPos - windowReg.LastMousePos;
                 windowReg.LastMousePos = newPos;
 
-                _clyde.SendMouseMove(new MouseMoveEventArgs(delta, newPos));
+                _clyde._currentHoveredWindow = windowReg;
+
+                _clyde.SendMouseMove(new MouseMoveEventArgs(delta, new ScreenCoordinates(newPos, windowReg.Id)));
+            }
+
+            private void ProcessEventCursorEnter(EventCursorEnter ev)
+            {
+                var windowReg = FindWindow(ev.Window);
+                if (windowReg == null)
+                    return;
+
+                if (ev.Entered)
+                {
+                    _clyde._currentHoveredWindow = windowReg;
+                }
+                else if (_clyde._currentHoveredWindow == windowReg)
+                {
+                    _clyde._currentHoveredWindow = null;
+                }
+
+                _clyde.SendMouseEnterLeave(new MouseEnterLeaveEventArgs(windowReg.Handle, ev.Entered));
             }
 
             private void ProcessEventKey(EventKey ev)
@@ -149,7 +173,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var eventArgs = new MouseWheelEventArgs(
                     ((float) ev.XOffset, (float) ev.YOffset),
-                    windowReg.LastMousePos);
+                    new ScreenCoordinates(windowReg.LastMousePos, windowReg.Id));
                 _clyde.SendScroll(eventArgs);
             }
 

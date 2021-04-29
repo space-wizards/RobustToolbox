@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Client.Console;
-using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -11,9 +9,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -97,7 +93,7 @@ namespace Robust.Client.UserInterface
         private bool _needUpdateActiveCursor;
 
         private readonly List<WindowRoot> _roots = new();
-        private readonly Dictionary<IClydeWindow, WindowRoot> _windowsToRoot = new();
+        private readonly Dictionary<WindowId, WindowRoot> _windowsToRoot = new();
 
         public void Initialize()
         {
@@ -189,7 +185,7 @@ namespace Robust.Client.UserInterface
 
         public WindowRoot CreateWindowRoot(IClydeWindow window)
         {
-            if (_windowsToRoot.ContainsKey(window))
+            if (_windowsToRoot.ContainsKey(window.Id))
             {
                 throw new ArgumentException("Window already has a UI root.");
             }
@@ -203,7 +199,7 @@ namespace Robust.Client.UserInterface
             };
 
             _roots.Add(newRoot);
-            _windowsToRoot.Add(window, newRoot);
+            _windowsToRoot.Add(window.Id, newRoot);
 
             newRoot.InvalidateMeasure();
             QueueMeasureUpdate(newRoot);
@@ -214,10 +210,10 @@ namespace Robust.Client.UserInterface
         public void DestroyWindowRoot(IClydeWindow window)
         {
             // Destroy window root if this window had one.
-            if (!_windowsToRoot.TryGetValue(window, out var root))
+            if (!_windowsToRoot.TryGetValue(window.Id, out var root))
                 return;
 
-            _windowsToRoot.Remove(window);
+            _windowsToRoot.Remove(window.Id);
             _roots.Remove(root);
 
             root.RemoveAllChildren();
@@ -330,15 +326,16 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool HandleCanFocusDown(Vector2 pointerPosition)
+        public bool HandleCanFocusDown(ScreenCoordinates pointerPosition)
         {
             var control = MouseGetControl(pointerPosition);
+            var pos = pointerPosition.Position;
 
             // If we have a modal open and the mouse down was outside it, close said modal.
             while (_modalStack.Count != 0)
             {
                 var top = _modalStack[^1];
-                var offset = pointerPosition - top.GlobalPixelPosition;
+                var offset = pos - top.GlobalPixelPosition;
                 if (!top.HasPoint(offset / UIScale))
                 {
                     if (top.MouseFilter != Control.MouseFilterMode.Stop)
@@ -394,7 +391,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
 
             if (control == null)
             {
@@ -415,7 +412,7 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
             if (control == null)
             {
                 return;
@@ -459,11 +456,12 @@ namespace Robust.Client.UserInterface
             var target = ControlFocused ?? newHovered;
             if (target != null)
             {
+                var pos = mouseMoveEventArgs.Position.Position;
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
                     target,
-                    mouseMoveEventArgs.Position / UIScale, mouseMoveEventArgs.Position,
-                    mouseMoveEventArgs.Position / UIScale - target.GlobalPosition,
-                    mouseMoveEventArgs.Position - target.GlobalPixelPosition);
+                    pos / UIScale, mouseMoveEventArgs.Position,
+                    pos / UIScale - target.GlobalPosition,
+                    pos - target.GlobalPixelPosition);
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
             }
@@ -510,9 +508,11 @@ namespace Robust.Client.UserInterface
 
             args.Handle();
 
+            var pos = args.Position.Position;
+
             var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control,
-                args.Position / UIScale, args.Position,
-                args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition);
+                pos / UIScale, args.Position,
+                pos / UIScale - control.GlobalPosition, pos - control.GlobalPixelPosition);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }
@@ -539,21 +539,19 @@ namespace Robust.Client.UserInterface
             popup.OpenCentered();
         }
 
-        public Control? MouseGetControl(Vector2 coordinates)
+        public Control? MouseGetControl(ScreenCoordinates coordinates)
         {
-            return _mouseFindControlAtPos(RootControl, coordinates);
+            if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))
+                return null;
+
+            return _mouseFindControlAtPos(root, coordinates.Position);
         }
 
-        public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+        public ScreenCoordinates MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
 
-        public Vector2 ScreenToUIPosition(Vector2 position)
+        public ScreenCoordinates ScreenToUIPosition(ScreenCoordinates coordinates)
         {
-            return position / UIScale;
-        }
-
-        public Vector2 ScreenToUIPosition(ScreenCoordinates coordinates)
-        {
-            return ScreenToUIPosition(coordinates.Position);
+            return new ScreenCoordinates(coordinates.Position / UIScale, coordinates.Window);
         }
 
         /// <inheritdoc />
@@ -761,7 +759,7 @@ namespace Robust.Client.UserInterface
             for (var i = control.ChildCount - 1; i >= 0; i--)
             {
                 var child = control.GetChild(i);
-                if (!child.Visible || (child.RectClipContent && !child.PixelRect.Contains((Vector2i) position)))
+                if (!child.Visible || child.RectClipContent && !child.PixelRect.Contains((Vector2i) position))
                 {
                     continue;
                 }
@@ -920,7 +918,7 @@ namespace Robust.Client.UserInterface
 
         private void WindowSizeChanged(WindowResizedEventArgs windowResizedEventArgs)
         {
-            if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window, out var root))
+            if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window.Id, out var root))
                 return;
 
             root.InvalidateMeasure();

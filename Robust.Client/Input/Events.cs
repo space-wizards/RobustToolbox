@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Text;
+using Robust.Client.Graphics;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Input
@@ -87,9 +89,9 @@ namespace Robust.Client.Input
         /// <summary>
         ///     Position of the mouse relative to the screen.
         /// </summary>
-        public Vector2 Position { get; }
+        public ScreenCoordinates Position { get; }
 
-        protected MouseEventArgs(Vector2 position)
+        protected MouseEventArgs(ScreenCoordinates position)
         {
             Position = position;
         }
@@ -103,7 +105,7 @@ namespace Robust.Client.Input
         public Mouse.Button Button { get; }
 
         // ALL the parameters!
-        public MouseButtonEventArgs(Mouse.Button button, Vector2 position)
+        public MouseButtonEventArgs(Mouse.Button button, ScreenCoordinates position)
             : base(position)
         {
             Button = button;
@@ -118,7 +120,7 @@ namespace Robust.Client.Input
         public Vector2 Delta { get; }
 
         // ALL the parameters!
-        public MouseWheelEventArgs(Vector2 delta, Vector2 position)
+        public MouseWheelEventArgs(Vector2 delta, ScreenCoordinates position)
             : base(position)
         {
             Delta = delta;
@@ -133,10 +135,27 @@ namespace Robust.Client.Input
         public Vector2 Relative { get; }
 
         // ALL the parameters!
-        public MouseMoveEventArgs(Vector2 relative, Vector2 position)
+        public MouseMoveEventArgs(Vector2 relative, ScreenCoordinates position)
             : base(position)
         {
             Relative = relative;
+        }
+    }
+
+    public class MouseEnterLeaveEventArgs : EventArgs
+    {
+        public IClydeWindow Window { get; }
+
+        /// <summary>
+        ///     True if the mouse ENTERED the window, false if it LEFT the window.
+        /// </summary>
+        public bool Entered { get; }
+
+        // ALL the parameters!
+        public MouseEnterLeaveEventArgs(IClydeWindow window, bool entered)
+        {
+            Window = window;
+            Entered = entered;
         }
     }
 }

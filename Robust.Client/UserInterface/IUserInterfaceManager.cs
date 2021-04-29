@@ -64,15 +64,14 @@ namespace Robust.Client.UserInterface
 
         void Popup(string contents, string title = "Alert!");
 
-        Control? MouseGetControl(Vector2 coordinates);
+        Control? MouseGetControl(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Gets the mouse position in UI space, accounting for <see cref="UIScale"/>.
         /// </summary>
-        Vector2 MousePositionScaled { get; }
+        ScreenCoordinates MousePositionScaled { get; }
 
-        Vector2 ScreenToUIPosition(Vector2 position);
-        Vector2 ScreenToUIPosition(ScreenCoordinates coordinates);
+        ScreenCoordinates ScreenToUIPosition(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).

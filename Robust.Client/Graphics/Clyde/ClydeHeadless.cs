@@ -28,6 +28,7 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 DefaultWindowScale => (1, 1);
         public bool IsFocused => true;
         private readonly List<IClydeWindow> _windows = new();
+        private int _nextWindowId = 2;
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -37,18 +38,19 @@ namespace Robust.Client.Graphics.Clyde
         public ClydeHeadless()
         {
             var mainRt = new DummyRenderWindow(this);
-            var window = new DummyWindow(mainRt);
+            var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
 
             _windows.Add(window);
             MainWindow = window;
         }
 
-        public Vector2 MouseScreenPosition => ScreenSize / 2;
+        public ScreenCoordinates MouseScreenPosition => default;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
@@ -210,7 +212,10 @@ namespace Robust.Client.Graphics.Clyde
 
         public Task<IClydeWindow> CreateWindow()
         {
-            var window = new DummyWindow(CreateRenderTarget((123, 123), default));
+            var window = new DummyWindow(CreateRenderTarget((123, 123), default))
+            {
+                Id = new WindowId(_nextWindowId++)
+            };
             _windows.Add(window);
 
             return Task.FromResult<IClydeWindow>(window);
@@ -581,6 +586,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public Vector2i Size { get; } = default;
             public bool IsDisposed { get; private set; }
+            public WindowId Id { get; set; }
             public IRenderTarget RenderTarget { get; }
             public string Title { get; set; } = "";
             public bool IsFocused => false;

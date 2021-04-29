@@ -52,6 +52,9 @@ namespace Robust.Client.Graphics.Clyde
                 case DEventMouseMove(var args):
                     MouseMove?.Invoke(args);
                     break;
+                case DEventMouseEnterLeave(var args):
+                    MouseEnterLeave?.Invoke(args);
+                    break;
                 case DEventScroll(var args):
                     MouseWheel?.Invoke(args);
                     break;
@@ -139,6 +142,11 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventMouseMove(ev));
         }
 
+        private void SendMouseEnterLeave(MouseEnterLeaveEventArgs ev)
+        {
+            _eventDispatchQueue.Enqueue(new DEventMouseEnterLeave(ev));
+        }
+
         // D stands for Dispatch
         private abstract record DEventBase;
 
@@ -159,5 +167,6 @@ namespace Robust.Client.Graphics.Clyde
         private sealed record DEventText(TextEventArgs Args) : DEventBase;
 
         private sealed record DEventMouseMove(MouseMoveEventArgs Args) : DEventBase;
+        private sealed record DEventMouseEnterLeave(MouseEnterLeaveEventArgs Args) : DEventBase;
     }
 }

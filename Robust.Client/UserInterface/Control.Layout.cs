@@ -1,5 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Client.Graphics;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -187,6 +189,20 @@ namespace Robust.Client.UserInterface
                 }
 
                 return offset;
+            }
+        }
+
+        [ViewVariables] public virtual IClydeWindow? Window => Parent?.Window;
+
+        [ViewVariables]
+        public virtual ScreenCoordinates ScreenCoordinates
+        {
+            get
+            {
+                // TODO: optimize for single tree walk.
+                var window = Window;
+
+                return window != null ? new(GlobalPixelPosition, window.Id) : default;
             }
         }
 

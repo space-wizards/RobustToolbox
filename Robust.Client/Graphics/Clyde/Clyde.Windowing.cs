@@ -7,6 +7,7 @@ using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -27,9 +28,11 @@ namespace Robust.Client.Graphics.Clyde
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
+        private WindowReg? _currentHoveredWindow;
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
@@ -55,8 +58,17 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 DefaultWindowScale => _windowing?.MainWindow?.WindowScale ??
                                              throw new InvalidOperationException("Windowing is not initialized");
 
-        public Vector2 MouseScreenPosition => _windowing?.MainWindow?.LastMousePos ??
-                                              throw new InvalidOperationException("Windowing is not initialized");
+        public ScreenCoordinates MouseScreenPosition
+        {
+            get
+            {
+                var window = _currentHoveredWindow;
+                if (window == null)
+                    return default;
+
+                return new ScreenCoordinates(window.LastMousePos, window.Id);
+            }
+        }
 
         public string GetKeyName(Keyboard.Key key)
         {
@@ -290,6 +302,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool IsDisposed;
 
+            public WindowId Id;
             public Vector2 WindowScale;
             public Vector2 PixelRatio;
             public Vector2i FramebufferSize;
@@ -322,6 +335,7 @@ namespace Robust.Client.Graphics.Clyde
             private readonly WindowReg _reg;
 
             public bool IsDisposed => _reg.IsDisposed;
+            public WindowId Id => _reg.Id;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {

@@ -12,6 +12,7 @@ namespace Robust.Client.Graphics.Clyde
             private GLFWCallbacks.MonitorCallback? _monitorCallback;
             private GLFWCallbacks.CharCallback? _charCallback;
             private GLFWCallbacks.CursorPosCallback? _cursorPosCallback;
+            private GLFWCallbacks.CursorEnterCallback? _cursorEnterCallback;
             private GLFWCallbacks.KeyCallback? _keyCallback;
             private GLFWCallbacks.MouseButtonCallback? _mouseButtonCallback;
             private GLFWCallbacks.ScrollCallback? _scrollCallback;
@@ -28,6 +29,7 @@ namespace Robust.Client.Graphics.Clyde
                 _monitorCallback = OnGlfwMonitor;
                 _charCallback = OnGlfwChar;
                 _cursorPosCallback = OnGlfwCursorPos;
+                _cursorEnterCallback = OnGlfwCursorEnter;
                 _keyCallback = OnGlfwKey;
                 _mouseButtonCallback = OnGlfwMouseButton;
                 _scrollCallback = OnGlfwScroll;
@@ -59,7 +61,14 @@ namespace Robust.Client.Graphics.Clyde
 
             private void OnGlfwCursorPos(Window* window, double x, double y)
             {
+                System.Console.WriteLine($"{(nint)window:X16}: {x},{y}");
                 SendEvent(new EventCursorPos((nint) window, x, y));
+            }
+
+            private void OnGlfwCursorEnter(Window* window, bool entered)
+            {
+                System.Console.WriteLine($"{(nint)window:X16}: {entered}");
+                SendEvent(new EventCursorEnter((nint) window, entered));
             }
 
             private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
@@ -125,6 +134,11 @@ namespace Robust.Client.Graphics.Clyde
                 nint Window,
                 double XPos,
                 double YPos
+            ) : EventBase;
+
+            private record EventCursorEnter(
+                nint Window,
+                bool Entered
             ) : EventBase;
 
             private record EventScroll(

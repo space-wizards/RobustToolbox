@@ -1,6 +1,7 @@
 ﻿using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Shared.Input;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -14,7 +15,7 @@ namespace Robust.Client.UserInterface
         void FrameUpdate(FrameEventArgs args);
 
         /// <returns>True if a UI control was hit and the key event should not pass through past UI.</returns>
-        bool HandleCanFocusDown(Vector2 pointerPosition);
+        bool HandleCanFocusDown(ScreenCoordinates pointerPosition);
 
         void HandleCanFocusUp();
 

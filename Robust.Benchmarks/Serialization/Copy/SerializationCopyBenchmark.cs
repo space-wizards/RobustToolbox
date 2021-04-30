@@ -87,6 +87,7 @@ namespace Robust.Benchmarks.Serialization.Copy
         [Benchmark]
         public SeedDataDefinition BaselineCreateCopySeedDataDefinition()
         {
+            // ReSharper disable once UseObjectOrCollectionInitializer
             var copy = new SeedDataDefinition();
 
             copy.ID = Seed.ID;

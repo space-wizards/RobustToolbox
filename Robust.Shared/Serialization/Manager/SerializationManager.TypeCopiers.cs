@@ -8,7 +8,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        public delegate bool CopyDelegate(
+        private delegate bool CopyDelegate(
             object source,
             ref object target,
             bool skipHook,
@@ -28,17 +28,35 @@ namespace Robust.Shared.Serialization.Manager
                     var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                     var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
+                    var targetCastVariable = Expression.Variable(tuple.targetType, "targetCastVariable");
+
+                    var returnVariable = Expression.Parameter(typeof(bool), "return");
+                    var returnLabel = Expression.Label(typeof(bool));
+                    var returnExpression = Expression.Label(returnLabel, returnVariable);
+
                     var call = Expression.Call(
                         instanceParam,
                         nameof(TryCopy),
                         new[] {t, tuple.sourceType, tuple.targetType},
                         Expression.Convert(sourceParam, tuple.sourceType),
-                        Expression.Convert(targetParam, tuple.targetType),
+                        targetCastVariable,
                         skipHookParam,
                         contextParam);
 
+                    var block = Expression.Block(
+                        new[] {targetCastVariable, returnVariable},
+                        Expression.Assign(
+                            targetCastVariable,
+                            Expression.Convert(targetParam, tuple.targetType)),
+                        Expression.Assign(returnVariable, call),
+                        Expression.IfThen(
+                            returnVariable,
+                            Expression.Assign(targetParam, targetCastVariable)),
+                        Expression.Return(returnLabel, returnVariable),
+                        returnExpression);
+
                     return Expression.Lambda<CopyDelegate>(
-                        call,
+                        block,
                         sourceParam,
                         targetParam,
                         skipHookParam,
@@ -46,7 +64,12 @@ namespace Robust.Shared.Serialization.Manager
                 }, (sourceType, targetType));
         }
 
-        private bool TryCopyRaw(Type type, object source, ref object target, bool skipHook, ISerializationContext? context = null)
+        private bool TryCopyRaw(
+            Type type,
+            object source,
+            ref object target,
+            bool skipHook,
+            ISerializationContext? context = null)
         {
             return GetOrCreateCopyDelegate(type, source.GetType(), target.GetType())(source, ref target, skipHook, context);
         }

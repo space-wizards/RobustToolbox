@@ -130,8 +130,6 @@ namespace Robust.Client.Graphics
 
         IEnumerable<IClydeMonitor> EnumerateMonitors();
 
-        Task<IClydeWindow> CreateWindow();
+        Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters);
     }
-
-    // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.
 }

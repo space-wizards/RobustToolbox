@@ -207,11 +207,11 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowRequestAttention(_windowing.MainWindow!);
         }
 
-        public async Task<IClydeWindow> CreateWindow()
+        public async Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
         {
             DebugTools.AssertNotNull(_windowing);
 
-            return await _windowing!.WindowCreate();
+            return await _windowing!.WindowCreate(parameters);
         }
 
         private void DoDestroyWindow(WindowReg reg)

@@ -178,6 +178,10 @@ namespace Robust.Client.Graphics.Clyde
                 int RefreshRate
             ) : CmdBase;
 
+            private sealed record CmdWinMaximize(
+                nint Window
+            ) : CmdBase;
+
             private sealed record CmdWinSetFullscreen(
                 nint Window
             ) : CmdBase;
@@ -193,8 +197,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private sealed record CmdWinCreate(
                 Renderer Renderer,
-                int W, int H,
-                int MonitorId,
+                WindowCreateParameters Parameters,
                 nint ShareWindow,
                 TaskCompletionSource<GlfwWindowCreateResult> Tcs
             ) : CmdBase;

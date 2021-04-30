@@ -34,7 +34,7 @@ namespace Robust.Client.Graphics.Clyde
             private GlfwBindingsContext _mainGraphicsContext = default!;
             private int _nextWindowId = 1;
 
-            public async Task<WindowHandle> WindowCreate()
+            public async Task<WindowHandle> WindowCreate(WindowCreateParameters parameters)
             {
                 // tfw await not allowed in unsafe contexts
 
@@ -52,8 +52,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     task = SharedWindowCreate(
                         _clyde._chosenRenderer,
-                        1280, 720,
-                        0,
+                        parameters,
                         _mainWindow!.GlfwWindow);
                 }
 
@@ -113,17 +112,23 @@ namespace Robust.Client.Graphics.Clyde
                 var width = _cfg.GetCVar(CVars.DisplayWidth);
                 var height = _cfg.GetCVar(CVars.DisplayHeight);
 
-                var monitorId = 0;
+                IClydeMonitor? monitor = null;
 
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
-                    monitorId = _primaryMonitorId;
-                    var monitor = _monitors[monitorId];
-                    width = monitor.Handle.Size.X;
-                    height = monitor.Handle.Size.Y;
+                    monitor = _monitors[_primaryMonitorId].Handle;
+                    width = monitor.Size.X;
+                    height = monitor.Size.Y;
                 }
 
-                var windowTask = SharedWindowCreate(renderer, width, height, monitorId, null);
+                var parameters = new WindowCreateParameters
+                {
+                    Width = width,
+                    Height = height,
+                    Monitor = monitor
+                };
+
+                var windowTask = SharedWindowCreate(renderer, parameters, null);
                 WaitWindowCreate(windowTask);
 
                 var (reg, err) = windowTask.Result;
@@ -158,16 +163,14 @@ namespace Robust.Client.Graphics.Clyde
 
             private Task<GlfwWindowCreateResult> SharedWindowCreate(
                 Renderer renderer,
-                int width, int height,
-                int monitorId,
+                WindowCreateParameters parameters,
                 Window* share)
             {
                 // Yes we ping-pong this TCS through the window thread and back, deal with it.
                 var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
                 SendCmd(new CmdWinCreate(
                     renderer,
-                    width, height,
-                    monitorId,
+                    parameters,
                     (nint) share,
                     tcs));
 
@@ -190,13 +193,9 @@ namespace Robust.Client.Graphics.Clyde
 
             private void WinThreadWinCreate(CmdWinCreate cmd)
             {
-                var (renderer, width, height, monitorId, share, tcs) = cmd;
+                var (renderer, parameters, share, tcs) = cmd;
 
-                Monitor* monitor = null;
-                if (_winThreadMonitors.TryGetValue(monitorId, out var monitorReg))
-                    monitor = monitorReg.Ptr;
-
-                var window = CreateGlfwWindowForRenderer(renderer, width, height, monitor, (Window*) share);
+                var window = CreateGlfwWindowForRenderer(renderer, parameters, (Window*) share);
 
                 if (window == null)
                 {
@@ -434,10 +433,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DestroyWindow?.Invoke(new WindowDestroyedEventArgs(window.Handle));
             }
 
-            private static Window* CreateGlfwWindowForRenderer(
+            private Window* CreateGlfwWindowForRenderer(
                 Renderer r,
-                int width, int height,
-                Monitor* monitor,
+                WindowCreateParameters parameters,
                 Window* contextShare)
             {
 #if DEBUG
@@ -479,7 +477,37 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
                 }
 
-                return GLFW.CreateWindow(width, height, string.Empty, monitor, contextShare);
+
+                Monitor* monitor = null;
+                if (parameters.Monitor != null &&
+                    _winThreadMonitors.TryGetValue(parameters.Monitor.Id, out var monitorReg))
+                {
+                    monitor = monitorReg.Ptr;
+                }
+
+                GLFW.WindowHint(WindowHintBool.Visible, false);
+
+                var window = GLFW.CreateWindow(
+                    parameters.Width, parameters.Height,
+                    parameters.Title,
+                    parameters.Fullscreen ? monitor : null,
+                    contextShare);
+
+                if (parameters.Maximized)
+                {
+                    GLFW.GetMonitorPos(monitor, out var x, out var y);
+                    GLFW.SetWindowPos(window, x, y);
+                    GLFW.MaximizeWindow(window);
+                }
+
+                if (parameters.Visible)
+                {
+                    GLFW.ShowWindow(window);
+                }
+
+
+
+                return window;
             }
 
             private GlfwWindowReg WinThreadSetupWindow(Window* window)

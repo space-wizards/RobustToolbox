@@ -38,7 +38,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
-            Task<WindowHandle> WindowCreate();
+            Task<WindowHandle> WindowCreate(WindowCreateParameters parameters);
             void WindowDestroy(WindowReg reg);
 
             string KeyGetName(Keyboard.Key key);

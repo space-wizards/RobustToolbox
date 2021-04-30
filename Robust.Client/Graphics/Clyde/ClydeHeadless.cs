@@ -210,7 +210,7 @@ namespace Robust.Client.Graphics.Clyde
             yield break;
         }
 
-        public Task<IClydeWindow> CreateWindow()
+        public Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
         {
             var window = new DummyWindow(CreateRenderTarget((123, 123), default))
             {
@@ -594,6 +594,10 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsVisible { get; set; } = true;
             public bool DisposeOnClose { get; set; }
             public event Action<WindowClosedEventArgs>? Closed;
+
+            public void MaximizeOnMonitor(IClydeMonitor monitor)
+            {
+            }
 
             public void Dispose()
             {

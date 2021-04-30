@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -52,7 +52,7 @@ namespace Robust.Client.Placement.Modes
             snapSize = 1f;
             if (gridId.IsValid())
             {
-                snapSize = pManager.MapManager.GetGrid(gridId).SnapSize; //Find snap size for the grid.
+                snapSize = pManager.MapManager.GetGrid(gridId).TileSize; //Find snap size for the grid.
                 onGrid = true;
             }
             else

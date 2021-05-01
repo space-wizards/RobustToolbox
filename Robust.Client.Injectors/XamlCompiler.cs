@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -130,13 +131,15 @@ namespace Robust.Build.Tasks
                     && m.Parameters[1].ParameterType.FullName == "System.String"));
 
 #if DEBUG
-            var hotReloadManager = asm.MainModule.GetType("Robust.Client.Debugging.XAMLUI.IXamlUiHotreloadManager");
-            var hotReloadMethod = hotReloadManager.Methods.First(m => m.Name == "Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager");
+            //Debugger.Launch();
+            var hotReloadManager = asm.MainModule.ImportReference(typeSystem.GetTypeReference(typeSystem.FindType("Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager")));
+            var hotReloadMethod = hotReloadManager.Resolve().Methods.First(m => m.Name == "TryHotReloading");
 
-            var iocmanager = asm.MainModule.GetType("Robust.Shared.IoC.IoCManager");
+            var iocmanager = typeSystem.GetTypeReference(typeSystem.FindType("Robust.Shared.IoC.IoCManager")).Resolve();
             var resolveXamluiManagerMethod = iocmanager.Methods.First(m => m.Name == "Resolve");
+
             var resolveXamluiManagerMethodRef = asm.MainModule.ImportReference(resolveXamluiManagerMethod);
-            resolveXamluiManagerMethodRef.Parameters.First().ParameterType = hotReloadManager;
+            resolveXamluiManagerMethodRef.ReturnType = hotReloadManager;
 #endif
 
             bool CompileGroup(IResourceGroup group)
@@ -204,13 +207,14 @@ namespace Robust.Build.Tasks
                         trampoline.Parameters.Add(new ParameterDefinition(classTypeDefinition));
                         classTypeDefinition.Methods.Add(trampoline);
 
+                        var ret = Instruction.Create(OpCodes.Ret);
 #if DEBUG
                         var typedHotReloadMethodRef = asm.MainModule.ImportReference(hotReloadMethod);
                         typedHotReloadMethodRef.Parameters.First().ParameterType = classTypeDefinition;
+                        //typedHotReloadMethodRef = asm.MainModule.ImportReference(typedHotReloadMethodRef);
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, resolveXamluiManagerMethodRef));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Callvirt, typedHotReloadMethodRef));
-                        var ret = Instruction.Create(OpCodes.Ret);
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, typedHotReloadMethodRef));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Brtrue_S, ret));
 #endif
 

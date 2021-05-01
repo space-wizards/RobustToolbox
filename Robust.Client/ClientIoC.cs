@@ -111,7 +111,7 @@ namespace Robust.Client
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
 #if DEBUG
-            IoCManager.Register<IXamlUiHotReloadManager, XamlUiHotreloadManager>();
+            IoCManager.Register<XamlUiHotreloadManager, XamlUiHotreloadManager>();
 #endif
         }
     }

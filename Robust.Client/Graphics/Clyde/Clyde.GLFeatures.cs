@@ -57,7 +57,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var extensions = GetGLExtensions();
 
-            Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
+            _sawmillOgl.Debug("OpenGL capabilities:");
 
             if (!_isGLES)
             {
@@ -81,7 +81,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // We're ES <3.2, KHR_debug is extension and needs KHR suffixes.
                     _isGLKhrDebugESExtension = true;
-                    Logger.DebugS("clyde.ogl", "  khr_debug is ES extension!");
+                    _sawmillOgl.Debug("  khr_debug is ES extension!");
                 }
 
                 CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", (3, 0));
@@ -104,7 +104,7 @@ namespace Robust.Client.Graphics.Clyde
             // This is 3.2 or extensions
             _hasGLFloatFramebuffers = !_isGLES;
 
-            Logger.DebugS("clyde.ogl", $"  GLES: {_isGLES}");
+            _sawmillOgl.Debug($"  GLES: {_isGLES}");
 
             void CheckGLCap(ref bool cap, string capName, (int major, int minor)? versionMin = null,
                 params string[] exts)
@@ -120,10 +120,10 @@ namespace Robust.Client.Graphics.Clyde
                 if (block)
                 {
                     cap = false;
-                    Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
+                    _sawmillOgl.Debug($"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
                 }
 
-                Logger.DebugS("clyde.ogl", $"  {capName}: {cap}");
+                _sawmillOgl.Debug($"  {capName}: {cap}");
             }
         }
 
@@ -168,14 +168,14 @@ namespace Robust.Client.Graphics.Clyde
                     extensionsText += extension;
                     extensions.Add(extension);
                 }
-                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensionsText);
+                _sawmillOgl.Debug("OpenGL Extensions: {0}", extensionsText);
                 return extensions;
             }
             else
             {
                 // GLES uses the (old?) API
                 var extensions = GL.GetString(StringName.Extensions);
-                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
+                _sawmillOgl.Debug("OpenGL Extensions: {0}", extensions);
                 return new HashSet<string>(extensions.Split(' '));
             }
         }

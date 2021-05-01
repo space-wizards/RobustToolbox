@@ -97,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
                         case RTCF.RG32F:
                         case RTCF.R11FG11FB10F:
                         case RTCF.Rgba16F:
-                            Logger.WarningS("clyde.ogl", "The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
+                            _sawmillOgl.Warning("The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
                             colorFormat = RTCF.Rgba8;
                             break;
                     }

@@ -91,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
             var bufferLength = size.X * size.Y;
             if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
             {
-                Logger.DebugS("clyde.ogl",
+                _sawmillOgl.Debug("clyde.ogl",
                     "Necessary features for async screenshots not available, falling back to blocking path.");
 
                 // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,

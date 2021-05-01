@@ -129,6 +129,16 @@ namespace Robust.Build.Tasks
                     && m.Parameters[0].ParameterType.FullName == "System.String"
                     && m.Parameters[1].ParameterType.FullName == "System.String"));
 
+#if DEBUG
+            var hotReloadManager = asm.MainModule.GetType("Robust.Client.Debugging.XAMLUI.IXamlUiHotreloadManager");
+            var hotReloadMethod = hotReloadManager.Methods.First(m => m.Name == "Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager");
+
+            var iocmanager = asm.MainModule.GetType("Robust.Shared.IoC.IoCManager");
+            var resolveXamluiManagerMethod = iocmanager.Methods.First(m => m.Name == "Resolve");
+            var resolveXamluiManagerMethodRef = asm.MainModule.ImportReference(resolveXamluiManagerMethod);
+            resolveXamluiManagerMethodRef.Parameters.First().ParameterType = hotReloadManager;
+#endif
+
             bool CompileGroup(IResourceGroup group)
             {
                 var typeDef = new TypeDefinition("CompiledRobustXaml", "!" + group.Name, TypeAttributes.Class,
@@ -194,10 +204,20 @@ namespace Robust.Build.Tasks
                         trampoline.Parameters.Add(new ParameterDefinition(classTypeDefinition));
                         classTypeDefinition.Methods.Add(trampoline);
 
+#if DEBUG
+                        var typedHotReloadMethodRef = asm.MainModule.ImportReference(hotReloadMethod);
+                        typedHotReloadMethodRef.Parameters.First().ParameterType = classTypeDefinition;
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, resolveXamluiManagerMethodRef));
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Callvirt, typedHotReloadMethodRef));
+                        var ret = Instruction.Create(OpCodes.Ret);
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Brtrue_S, ret));
+#endif
+
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, compiledPopulateMethod));
-                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+                        trampoline.Body.Instructions.Add(ret);
 
                         var foundXamlLoader = false;
                         // Find RobustXamlLoader.Load(this) and replace it with !XamlIlPopulateTrampoline(this)

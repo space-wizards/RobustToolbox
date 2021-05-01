@@ -23,6 +23,7 @@
     Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
     TaskName="CompileRobustXamlTask"
     AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(Configuration)\netstandard2.0\Robust.Client.Injectors.dll"/>
+
   <Target
     Name="CompileRobustXaml"
     Condition="Exists('@(IntermediateAssembly)')"
@@ -44,6 +45,7 @@
     to avoid unecessary execution of this target
     Saves compile time if e.g. ONLY Robust.Client changes (Content.Client doesn't have to re-xaml).
     -->
+
     <CompileRobustXamlTask
       Condition="'$(_RobustUseExternalMSBuild)' != 'true'"
       AssemblyFile="@(IntermediateAssembly)"

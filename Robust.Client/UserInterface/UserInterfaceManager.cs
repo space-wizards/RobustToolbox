@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
-        [ViewVariables] public DebugConsole DebugConsole { get; private set; } = default!;
+        [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
@@ -104,7 +104,7 @@ namespace Robust.Client.UserInterface
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
+            DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,

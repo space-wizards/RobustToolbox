@@ -1,12 +1,11 @@
 ﻿using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 
-namespace Content.Client.UserInterface
+namespace Robust.Client.UserInterface
 {
     [UsedImplicitly]
     internal sealed class TestWindowCommand : IConsoleCommand

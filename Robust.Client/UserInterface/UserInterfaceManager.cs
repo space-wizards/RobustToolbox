@@ -63,7 +63,6 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
         [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
-        [ViewVariables] public float UIScale { get; private set; } = 1;
         [ViewVariables] public float DefaultUIScale => _clyde.DefaultWindowScale.X;
         [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
@@ -299,7 +298,7 @@ namespace Robust.Client.UserInterface
 
             if (control is WindowRoot root)
             {
-                control.Measure(root.Window.RenderTarget.Size / UIScale);
+                control.Measure(root.Window.RenderTarget.Size / root.UIScale);
             }
             else if (control.PreviousMeasure.HasValue)
             {
@@ -319,7 +318,7 @@ namespace Robust.Client.UserInterface
 
             if (control is WindowRoot root)
             {
-                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.RenderTarget.Size / UIScale));
+                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.RenderTarget.Size / root.UIScale));
             }
             else if (control.PreviousArrange.HasValue)
             {
@@ -337,7 +336,7 @@ namespace Robust.Client.UserInterface
             {
                 var top = _modalStack[^1];
                 var offset = pos - top.GlobalPixelPosition;
-                if (!top.HasPoint(offset / UIScale))
+                if (!top.HasPoint(offset / top.UIScale))
                 {
                     if (top.MouseFilter != Control.MouseFilterMode.Stop)
                         RemoveModal(top);
@@ -400,7 +399,7 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
@@ -420,7 +419,7 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
@@ -458,10 +457,10 @@ namespace Robust.Client.UserInterface
             if (target != null)
             {
                 var pos = mouseMoveEventArgs.Position.Position;
-                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
+                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / target.UIScale,
                     target,
-                    pos / UIScale, mouseMoveEventArgs.Position,
-                    pos / UIScale - target.GlobalPosition,
+                    pos / target.UIScale, mouseMoveEventArgs.Position,
+                    pos / target.UIScale - target.GlobalPosition,
                     pos - target.GlobalPixelPosition);
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
@@ -512,8 +511,8 @@ namespace Robust.Client.UserInterface
             var pos = args.Position.Position;
 
             var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control,
-                pos / UIScale, args.Position,
-                pos / UIScale - control.GlobalPosition, pos - control.GlobalPixelPosition);
+                pos / control.UIScale, args.Position,
+                pos / control.UIScale - control.GlobalPosition, pos - control.GlobalPixelPosition);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }
@@ -552,7 +551,10 @@ namespace Robust.Client.UserInterface
 
         public ScreenCoordinates ScreenToUIPosition(ScreenCoordinates coordinates)
         {
-            return new ScreenCoordinates(coordinates.Position / UIScale, coordinates.Window);
+            if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))
+                return default;
+
+            return new ScreenCoordinates(coordinates.Position / root.UIScale, coordinates.Window);
         }
 
         /// <inheritdoc />
@@ -775,7 +777,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / UIScale))
+            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / control.UIScale))
             {
                 return control;
             }

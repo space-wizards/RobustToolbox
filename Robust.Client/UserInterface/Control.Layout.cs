@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface
         ///     And vp * UIScale = rp, and rp / UIScale = vp
         /// </summary>
         [ViewVariables]
-        protected virtual float UIScale => Root?.UIScale ?? 1;
+        public virtual float UIScale => Root?.UIScale ?? 1;
 
         /// <summary>
         ///     The size of this control, in virtual pixels.
@@ -93,7 +93,7 @@ namespace Robust.Client.UserInterface
         ///     The size of this control, in physical pixels.
         /// </summary>
         [ViewVariables]
-        public Vector2i PixelSize => (Vector2i) (_size * UserInterfaceManager.UIScale);
+        public Vector2i PixelSize => (Vector2i) (_size * UIScale);
 
         /// <summary>
         ///     A <see cref="UIBox2"/> with the top left at 0,0 and the size equal to <see cref="Size"/>.
@@ -145,7 +145,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="Position"/>
         [ViewVariables]
-        public Vector2i PixelPosition => (Vector2i) (Position * UserInterfaceManager.UIScale);
+        public Vector2i PixelPosition => (Vector2i) (Position * UIScale);
 
         /// <summary>
         ///     The position of the top left corner of the control, in virtual pixels.

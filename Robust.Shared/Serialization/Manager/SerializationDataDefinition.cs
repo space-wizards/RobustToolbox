@@ -229,6 +229,11 @@ namespace Robust.Shared.Serialization.Manager
 
                     EmitSetField(generator, fieldDefinition.BackingField);
 
+                    generator.Emit(OpCodes.Ldarg_0);
+                    generator.Emit(OpCodes.Ldloc_0);
+                    generator.Emit(OpCodes.Box, Type);
+                    generator.Emit(OpCodes.Stind_Ref);
+
                     generator.Emit(OpCodes.Ret);
                 }
                 else
@@ -260,7 +265,11 @@ namespace Robust.Shared.Serialization.Manager
                 case SpecificPropertyInfo property:
                     var setter = property.PropertyInfo.GetSetMethod(true) ?? throw new NullReferenceException();
 
-                    rGenerator.Emit(OpCodes.Callvirt, setter);
+                    var opCode = info.DeclaringType?.IsValueType ?? false
+                        ? OpCodes.Call
+                        : OpCodes.Callvirt;
+
+                    rGenerator.Emit(opCode, setter);
                     break;
             }
         }

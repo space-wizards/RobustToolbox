@@ -138,8 +138,8 @@ namespace Robust.Build.Tasks
             var iocmanager = typeSystem.GetTypeReference(typeSystem.FindType("Robust.Shared.IoC.IoCManager")).Resolve();
             var resolveXamluiManagerMethod = iocmanager.Methods.First(m => m.Name == "Resolve");
 
-            var resolveXamluiManagerMethodRef = asm.MainModule.ImportReference(resolveXamluiManagerMethod);
-            resolveXamluiManagerMethodRef.ReturnType = hotReloadManager;
+            var resolveXamluiManagerMethodRef = asm.MainModule.ImportReference(resolveXamluiManagerMethod.MakeGenericMethod(hotReloadManager));
+            //resolveXamluiManagerMethodRef.ReturnType = hotReloadManager;
 #endif
 
             bool CompileGroup(IResourceGroup group)
@@ -209,8 +209,7 @@ namespace Robust.Build.Tasks
 
                         var ret = Instruction.Create(OpCodes.Ret);
 #if DEBUG
-                        var typedHotReloadMethodRef = asm.MainModule.ImportReference(hotReloadMethod);
-                        typedHotReloadMethodRef.Parameters.First().ParameterType = classTypeDefinition;
+                        var typedHotReloadMethodRef = asm.MainModule.ImportReference(hotReloadMethod.MakeGenericMethod(classTypeDefinition));
                         //typedHotReloadMethodRef = asm.MainModule.ImportReference(typedHotReloadMethodRef);
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, resolveXamluiManagerMethodRef));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));

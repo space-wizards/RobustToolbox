@@ -71,7 +71,7 @@ namespace Robust.Client.ResourceManagement
             var toAtlas = new StateReg[stateCount];
 
             var frameSize = metadata.Size;
-            var rsi = new RSI(frameSize, data.Path);
+            var rsi = new RSI(frameSize, data.Path, metadata.States.Length);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
 

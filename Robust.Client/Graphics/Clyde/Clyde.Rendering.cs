@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
@@ -117,7 +118,8 @@ namespace Robust.Client.Graphics.Clyde
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye, out Matrix3 proj, out Matrix3 view)
+        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
+            out Matrix3 proj, out Matrix3 view)
         {
             eye.GetViewMatrix(out view, renderScale);
 
@@ -427,8 +429,8 @@ namespace Robust.Client.Graphics.Clyde
                         //It's important to start at Texture6 here since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
                         //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
                         //Might change this in the future?
-                        TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
-                        SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
+                        TextureUnit cTarget = TextureUnit.Texture6 + textureUnitVal;
+                        SetTexture(cTarget, ((ClydeTexture) clydeTexture).TextureId);
                         program.SetUniformTexture(name, cTarget);
                         textureUnitVal++;
                         break;
@@ -869,42 +871,41 @@ namespace Robust.Client.Graphics.Clyde
                 if (window.IsMainWindow)
                     continue;
 
-                var rt = window.RenderTexture!;
+                window.BlitDoneEvent!.Reset();
+                window.BlitChannelWriter!.TryWrite((blitProgram, sync));
+                window.BlitDoneEvent.Wait();
+            }
+        }
 
-                // SO SOMETIMES glfwMakeContextCurrent just fails in wglMakeCurrent
-                // Why? I don't fucking know!
-                // Worst thing that happens is that it renders to the main window for one frame.
-                // I couldn't find shit about this online and AFAICT it's a driver bug.
-                // Great!
-                _windowing.GLMakeContextCurrent(window);
+        private void DoSecondaryWindowBlit(WindowReg window, GLShaderProgram blitProgram, nint sync)
+        {
+            var rt = window.RenderTexture!;
 
-                if (_hasGLFenceSync)
-                {
-                    // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
-                    GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
-                    CheckGlError();
-                }
-
-                if (!_isGLES)
-                    GL.Enable(EnableCap.FramebufferSrgb);
-
-                GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+            if (_hasGLFenceSync)
+            {
+                // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
+                GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
                 CheckGlError();
-                CalcScreenMatrices(window.FramebufferSize, out var projMatrix, out var screenMatrix);
-                _updateUniformConstants(window.FramebufferSize);
-                SetProjViewFull(projMatrix, screenMatrix);
-                blitProgram.ForceUse();
-                SetupGlobalUniformsImmediate(blitProgram, true);
-
-                SetTexture(TextureUnit.Texture0, rt.Texture);
-                SetTexture(TextureUnit.Texture1, _stockTextureWhite);
-
-                DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
-
-                _windowing.WindowSwapBuffers(window);
             }
 
-            _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
+            if (!_isGLES)
+                GL.Enable(EnableCap.FramebufferSrgb);
+
+            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+            CheckGlError();
+            CalcScreenMatrices(window.FramebufferSize, out var projMatrix, out var screenMatrix);
+            _updateUniformConstants(window.FramebufferSize);
+            SetProjViewFull(projMatrix, screenMatrix);
+            blitProgram.ForceUse();
+            SetupGlobalUniformsImmediate(blitProgram, true);
+
+            SetTexture(TextureUnit.Texture0, rt.Texture);
+            SetTexture(TextureUnit.Texture1, _stockTextureWhite);
+
+            DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
+
+            window.BlitDoneEvent!.Set();
+            _windowing!.WindowSwapBuffers(window);
         }
 
         [StructLayout(LayoutKind.Explicit)]

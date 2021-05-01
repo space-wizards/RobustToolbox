@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
@@ -220,6 +222,7 @@ namespace Robust.Client.Graphics.Clyde
                 throw new InvalidOperationException("Cannot destroy main window.");
 
             _windowing!.WindowDestroy(reg);
+            reg.BlitChannelWriter!.Complete();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
@@ -298,6 +301,54 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetVisible(reg, visible);
         }
 
+        private void InitWindowBlitThread(WindowReg reg)
+        {
+            var channel = Channel.CreateUnbounded<(GLShaderProgram, nint)>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = true,
+            });
+
+            reg.BlitChannelWriter = channel.Writer;
+            reg.BlitChannelReader = channel.Reader;
+            reg.BlitDoneEvent = new ManualResetEventSlim();
+            reg.BlitThread = new Thread(() => BlitThread(reg))
+            {
+                Name = $"WinBlitThread ID:{reg.Id}",
+                IsBackground = true
+            };
+
+            System.Console.WriteLine("A");
+            reg.BlitThread.Start();
+        }
+
+        private void BlitThread(WindowReg reg)
+        {
+            _windowing!.GLMakeContextCurrent(reg);
+            _windowing.GLSwapInterval(0);
+
+            reg.QuadVao = MakeQuadVao();
+
+            UniformConstantsUBO.Rebind();
+            ProjViewUBO.Rebind();
+
+            try
+            {
+                while (true)
+                {
+                    var (blit, sync) = reg.BlitChannelReader!.ReadAsync().AsTask().Result;
+
+                    // Do channel blit.
+                    DoSecondaryWindowBlit(reg, blit, sync);
+                }
+            }
+            catch (AggregateException e)
+            {
+                // ok channel closed, we exit.
+                e.Handle(ec => ec is ChannelClosedException);
+            }
+        }
+
         private abstract class WindowReg
         {
             public bool IsDisposed;
@@ -315,7 +366,14 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
+
             public bool DisposeOnClose;
+
+            // Used EXCLUSIVELY to run the two rendering commands to blit to the window.
+            public Thread? BlitThread;
+            public ChannelWriter<(GLShaderProgram, nint)>? BlitChannelWriter;
+            public ChannelReader<(GLShaderProgram, nint)>? BlitChannelReader;
+            public ManualResetEventSlim? BlitDoneEvent;
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;

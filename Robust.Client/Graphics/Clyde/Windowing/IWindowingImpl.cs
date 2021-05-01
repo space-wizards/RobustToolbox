@@ -51,6 +51,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // OpenGL-related stuff.
             void GLMakeContextCurrent(WindowReg reg);
+            void GLSwapInterval(int interval);
             void GLInitMainContext(bool gles);
         }
     }

@@ -59,6 +59,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private Thread? _gameThread;
 
+        private ISawmill _sawmillOgl = default!;
+
         public Clyde()
         {
             // Init main window render target.
@@ -78,6 +80,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public bool InitializePreWindowing()
         {
+            _sawmillOgl = Logger.GetSawmill("clyde.ogl");
+
             _cfg.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
             _cfg.OnValueChanged(CVars.DisplayVSync, VSyncChanged, true);
             _cfg.OnValueChanged(CVars.DisplayWindowMode, WindowModeChanged, true);
@@ -152,16 +156,16 @@ namespace Robust.Client.Graphics.Clyde
             var major = GL.GetInteger(GetPName.MajorVersion);
             var minor = GL.GetInteger(GetPName.MinorVersion);
 
-            Logger.DebugS("clyde.ogl", "OpenGL Vendor: {0}", vendor);
-            Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
-            Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
+            _sawmillOgl.Debug("OpenGL Vendor: {0}", vendor);
+            _sawmillOgl.Debug("OpenGL Renderer: {0}", renderer);
+            _sawmillOgl.Debug("OpenGL Version: {0}", version);
 
             var overrideVersion = ParseGLOverrideVersion();
 
             if (overrideVersion != null)
             {
                 (major, minor) = overrideVersion.Value;
-                Logger.DebugS("clyde.ogl", "OVERRIDING detected GL version to: {0}.{1}", major, minor);
+                _sawmillOgl.Debug("OVERRIDING detected GL version to: {0}.{1}", major, minor);
             }
 
             DetectOpenGLFeatures(major, minor);
@@ -188,7 +192,7 @@ namespace Robust.Client.Graphics.Clyde
             }
             if (!HasGLAnyVertexArrayObjects)
             {
-                Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
+                _sawmillOgl.Warning("NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
 
             ResetBlendFunc();
@@ -198,23 +202,23 @@ namespace Robust.Client.Graphics.Clyde
             // Primitive Restart's presence or lack thereof changes the amount of required memory.
             InitRenderingBatchBuffers();
 
-            Logger.DebugS("clyde.ogl", "Loading stock textures...");
+            _sawmillOgl.Debug("Loading stock textures...");
 
             LoadStockTextures();
 
-            Logger.DebugS("clyde.ogl", "Loading stock shaders...");
+            _sawmillOgl.Debug("Loading stock shaders...");
 
             LoadStockShaders();
 
-            Logger.DebugS("clyde.ogl", "Creating various GL objects...");
+            _sawmillOgl.Debug("Creating various GL objects...");
 
             CreateMiscGLObjects();
 
-            Logger.DebugS("clyde.ogl", "Setting up RenderHandle...");
+            _sawmillOgl.Debug("Setting up RenderHandle...");
 
             _renderHandle = new RenderHandle(this);
 
-            Logger.DebugS("clyde.ogl", "Setting viewport and rendering splash...");
+            _sawmillOgl.Debug("Setting viewport and rendering splash...");
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
             CheckGlError();
@@ -234,14 +238,14 @@ namespace Robust.Client.Graphics.Clyde
             var split = overrideGLVersion.Split(".");
             if (split.Length != 2)
             {
-                Logger.WarningS("clyde.ogl", "display.ogl_override_version is in invalid format");
+                _sawmillOgl.Warning("display.ogl_override_version is in invalid format");
                 return null;
             }
 
             if (!int.TryParse(split[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var major)
                 || !int.TryParse(split[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var minor))
             {
-                Logger.WarningS("clyde.ogl", "display.ogl_override_version is in invalid format");
+                _sawmillOgl.Warning("display.ogl_override_version is in invalid format");
                 return null;
             }
 
@@ -320,7 +324,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             if (!_hasGLKhrDebug)
             {
-                Logger.DebugS("clyde.ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
+                _sawmillOgl.Debug("KHR_debug not present, OpenGL debug logging not enabled.");
                 return;
             }
 
@@ -343,6 +347,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
+            return;
             var contents = $"{source}: " + Marshal.PtrToStringAnsi(message, length);
 
             var category = "ogl.debug";

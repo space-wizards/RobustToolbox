@@ -438,7 +438,6 @@ namespace Robust.Client.Graphics.Clyde
                 FlushRenderQueue();
             }
 
-
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 

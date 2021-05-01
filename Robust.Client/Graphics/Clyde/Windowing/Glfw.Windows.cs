@@ -80,20 +80,8 @@ namespace Robust.Client.Graphics.Clyde
                     throw new GlfwException($"{errCode}: {desc}");
                 }
 
-                CreateWindowRenderTexture(reg);
-
-                unsafe
-                {
-                    GLFW.MakeContextCurrent(reg.GlfwWindow);
-                }
-
-                // VSync always off for non-primary windows.
-                GLFW.SwapInterval(0);
-
-                reg.QuadVao = _clyde.MakeQuadVao();
-
-                _clyde.UniformConstantsUBO.Rebind();
-                _clyde.ProjViewUBO.Rebind();
+                _clyde.CreateWindowRenderTexture(reg);
+                _clyde.InitWindowBlitThread(reg);
 
                 unsafe
                 {
@@ -602,15 +590,6 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.SetClipboardString((Window*) cmd.Window, cmd.Text);
             }
 
-            private void CreateWindowRenderTexture(WindowReg reg)
-            {
-                reg.RenderTexture = _clyde.CreateRenderTarget(reg.FramebufferSize, new RenderTargetFormatParameters
-                {
-                    ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
-                    HasDepthStencil = true
-                });
-            }
-
             public void LoadWindowIcon(Window* window)
             {
                 var icons = _clyde.LoadWindowIcons().ToArray();
@@ -660,6 +639,11 @@ namespace Robust.Client.Graphics.Clyde
                 var reg = (GlfwWindowReg) window;
 
                 GLFW.MakeContextCurrent(reg.GlfwWindow);
+            }
+
+            public void GLSwapInterval(int interval)
+            {
+                GLFW.SwapInterval(interval);
             }
 
             private void CheckWindowDisposed(WindowReg reg)

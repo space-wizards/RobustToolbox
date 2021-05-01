@@ -160,12 +160,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CheckGlErrorInternal(string? path, int line)
+        private void CheckGlErrorInternal(string? path, int line)
         {
             var err = GL.GetError();
             if (err != ErrorCode.NoError)
             {
-                Logger.ErrorS("clyde.ogl", $"OpenGL error: {err} at {path}:{line}\n{Environment.StackTrace}");
+                _sawmillOgl.Error($"OpenGL error: {err} at {path}:{line}\n{Environment.StackTrace}");
             }
         }
 

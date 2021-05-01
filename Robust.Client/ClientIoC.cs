@@ -2,6 +2,7 @@ using System;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
 using Robust.Client.Debugging;
+using Robust.Client.Debugging.XAMLUI;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
@@ -109,6 +110,9 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
+#if DEBUG
+            IoCManager.Register<IXamlUiHotReloadManager, XamlUiHotreloadManager>();
+#endif
         }
     }
 }

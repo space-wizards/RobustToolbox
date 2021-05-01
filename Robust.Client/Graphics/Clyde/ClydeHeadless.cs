@@ -103,7 +103,7 @@ namespace Robust.Client.Graphics.Clyde
             remove { }
         }
 
-        public event Action OnWindowScaleChanged
+        public event Action<WindowContentScaleEventArgs> OnWindowScaleChanged
         {
             add { }
             remove { }
@@ -592,6 +592,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsFocused => false;
             public bool IsMinimized => false;
             public bool IsVisible { get; set; } = true;
+            public Vector2 ContentScale => Vector2.One;
             public bool DisposeOnClose { get; set; }
             public event Action<WindowClosedEventArgs>? Closed;
 

@@ -99,7 +99,6 @@ namespace Robust.Client.UserInterface
         {
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
 
-            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -124,6 +123,8 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
         }
 
         private void _initializeCommon()
@@ -134,7 +135,7 @@ namespace Robust.Client.UserInterface
             QueueMeasureUpdate(RootControl);
 
             _clyde.OnWindowResized += WindowSizeChanged;
-            _clyde.OnWindowScaleChanged += UpdateUIScale;
+            _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
             _clyde.DestroyWindow += WindowDestroyed;
 
             MainViewport = new MainViewportContainer(_eyeManager)
@@ -195,7 +196,7 @@ namespace Robust.Client.UserInterface
                 MouseFilter = Control.MouseFilterMode.Ignore,
                 HorizontalAlignment = Control.HAlignment.Stretch,
                 VerticalAlignment = Control.VAlignment.Stretch,
-                IsInsideTree = true
+                UIScaleSet = window.ContentScale.X
             };
 
             _roots.Add(newRoot);
@@ -894,19 +895,25 @@ namespace Robust.Client.UserInterface
 
         private void _uiScaleChanged(float newValue)
         {
-            UpdateUIScale();
-        }
-
-        private void UpdateUIScale()
-        {
-            var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
-            UIScale = newVal == 0f ? DefaultUIScale : newVal;
-
             foreach (var root in _roots)
             {
-                _propagateUIScaleChanged(root);
-                root.InvalidateMeasure();
+                UpdateUIScale(root);
             }
+        }
+
+        private void WindowContentScaleChanged(WindowContentScaleEventArgs args)
+        {
+            if (_windowsToRoot.TryGetValue(args.Window.Id, out var root))
+                UpdateUIScale(root);
+        }
+
+        private void UpdateUIScale(WindowRoot root)
+        {
+            var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
+            root.UIScaleSet = newVal == 0f ? root.Window.ContentScale.X : newVal;
+
+            _propagateUIScaleChanged(root);
+            root.InvalidateMeasure();
         }
 
         private static void _propagateUIScaleChanged(Control control)

@@ -230,7 +230,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
 
                 windowReg.WindowScale = (ev.XScale, ev.YScale);
-                _clyde.SendWindowContentScaleChanged();
+                _clyde.SendWindowContentScaleChanged(new WindowContentScaleEventArgs(windowReg.Handle));
             }
 
             private void ProcessEventWindowIconify(EventWindowIconify ev)

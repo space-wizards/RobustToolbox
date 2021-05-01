@@ -17,6 +17,7 @@ namespace Robust.Client.Graphics
         bool IsFocused { get; }
         bool IsMinimized { get; }
         bool IsVisible { get; set; }
+        Vector2 ContentScale { get; }
 
         /// <summary>
         ///     If set to true, the user closing the window will also <see cref="IDisposable.Dispose"/> it.

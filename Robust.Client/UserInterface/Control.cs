@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
@@ -189,11 +190,14 @@ namespace Robust.Client.UserInterface
         ///     <see cref="IUserInterfaceManager.RootControl"/>
         /// </summary>
         [ViewVariables]
-        public bool IsInsideTree { get; internal set; }
+        public bool IsInsideTree => Root != null;
+
+        [ViewVariables]
+        public virtual UIRoot? Root { get; internal set; }
 
         private void _propagateExitTree()
         {
-            IsInsideTree = false;
+            Root = null;
             _exitedTree();
 
             foreach (var child in _orderedChildren)
@@ -216,14 +220,14 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.ControlRemovedFromTree(this);
         }
 
-        private void _propagateEnterTree()
+        private void _propagateEnterTree(UIRoot root)
         {
-            IsInsideTree = true;
+            Root = root;
             _enteredTree();
 
             foreach (var child in _orderedChildren)
             {
-                child._propagateEnterTree();
+                child._propagateEnterTree(root);
             }
         }
 
@@ -589,9 +593,9 @@ namespace Robust.Client.UserInterface
             _orderedChildren.Add(child);
 
             child.Parented(this);
-            if (IsInsideTree)
+            if (Root != null)
             {
-                child._propagateEnterTree();
+                child._propagateEnterTree(Root);
             }
 
             ChildAdded(child);

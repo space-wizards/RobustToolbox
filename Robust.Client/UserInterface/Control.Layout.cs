@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface
         ///     And vp * UIScale = rp, and rp / UIScale = vp
         /// </summary>
         [ViewVariables]
-        protected float UIScale => UserInterfaceManager.UIScale;
+        protected virtual float UIScale => Root?.UIScale ?? 1;
 
         /// <summary>
         ///     The size of this control, in virtual pixels.
@@ -192,7 +192,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        [ViewVariables] public virtual IClydeWindow? Window => Parent?.Window;
+        [ViewVariables] public virtual IClydeWindow? Window => Root?.Window;
 
         [ViewVariables]
         public virtual ScreenCoordinates ScreenCoordinates

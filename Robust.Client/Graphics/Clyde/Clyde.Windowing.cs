@@ -41,7 +41,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<MouseWheelEventArgs>? MouseWheel;
         public event Action<WindowClosedEventArgs>? CloseWindow;
         public event Action<WindowDestroyedEventArgs>? DestroyWindow;
-        public event Action? OnWindowScaleChanged;
+        public event Action<WindowContentScaleEventArgs>? OnWindowScaleChanged;
         public event Action<WindowResizedEventArgs>? OnWindowResized;
         public event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
@@ -449,6 +449,8 @@ namespace Robust.Client.Graphics.Clyde
                 get => _reg.IsVisible;
                 set => _clyde.SetWindowVisible(_reg, value);
             }
+
+            public Vector2 ContentScale => _reg.WindowScale;
 
             public bool DisposeOnClose
             {

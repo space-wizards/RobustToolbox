@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
@@ -31,6 +30,8 @@ namespace Robust.Client.Graphics.Clyde
         private bool _vSync;
         private WindowMode _windowMode;
         private WindowReg? _currentHoveredWindow;
+        private bool _threadWindowBlit;
+        private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
@@ -222,7 +223,7 @@ namespace Robust.Client.Graphics.Clyde
                 throw new InvalidOperationException("Cannot destroy main window.");
 
             _windowing!.WindowDestroy(reg);
-            reg.BlitChannelWriter!.Complete();
+            reg.BlitDoneEvent?.Set();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
@@ -249,6 +250,7 @@ namespace Robust.Client.Graphics.Clyde
                 ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
                 HasDepthStencil = true
             });
+            reg.RenderTexture.MakeGLFence = true;
         }
 
         private void WindowModeChanged(int mode)
@@ -303,43 +305,51 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitWindowBlitThread(WindowReg reg)
         {
-            var channel = Channel.CreateUnbounded<(GLShaderProgram, nint)>(new UnboundedChannelOptions
+            if (EffectiveThreadWindowBlit)
             {
-                SingleReader = true,
-                SingleWriter = true,
-            });
+                reg.BlitStartEvent = new ManualResetEventSlim();
+                reg.BlitDoneEvent = new ManualResetEventSlim();
+                reg.BlitThread = new Thread(() => BlitThread(reg))
+                {
+                    Name = $"WinBlitThread ID:{reg.Id}",
+                    IsBackground = true
+                };
 
-            reg.BlitChannelWriter = channel.Writer;
-            reg.BlitChannelReader = channel.Reader;
-            reg.BlitDoneEvent = new ManualResetEventSlim();
-            reg.BlitThread = new Thread(() => BlitThread(reg))
+                System.Console.WriteLine("A");
+                reg.BlitThread.Start();
+                // Wait for thread to finish init.
+                reg.BlitDoneEvent.Wait();
+            }
+            else
             {
-                Name = $"WinBlitThread ID:{reg.Id}",
-                IsBackground = true
-            };
+                // Binds GL context.
+                BlitThreadInit(reg);
 
-            System.Console.WriteLine("A");
-            reg.BlitThread.Start();
+                _windowing!.GLMakeContextCurrent(_windowing.MainWindow!);
+            }
         }
 
         private void BlitThread(WindowReg reg)
         {
-            _windowing!.GLMakeContextCurrent(reg);
-            _windowing.GLSwapInterval(0);
+            BlitThreadInit(reg);
 
-            reg.QuadVao = MakeQuadVao();
-
-            UniformConstantsUBO.Rebind();
-            ProjViewUBO.Rebind();
+            reg.BlitDoneEvent!.Set();
 
             try
             {
                 while (true)
                 {
-                    var (blit, sync) = reg.BlitChannelReader!.ReadAsync().AsTask().Result;
+                    reg.BlitStartEvent!.Wait();
+                    if (reg.IsDisposed)
+                    {
+                        BlitThreadCleanup(reg);
+                        return;
+                    }
+
+                    reg.BlitStartEvent!.Reset();
 
                     // Do channel blit.
-                    DoSecondaryWindowBlit(reg, blit, sync);
+                    BlitThreadDoSecondaryWindowBlit(reg);
                 }
             }
             catch (AggregateException e)
@@ -347,6 +357,12 @@ namespace Robust.Client.Graphics.Clyde
                 // ok channel closed, we exit.
                 e.Handle(ec => ec is ChannelClosedException);
             }
+        }
+
+        private static void BlitThreadCleanup(WindowReg reg)
+        {
+            reg.BlitDoneEvent!.Dispose();
+            reg.BlitStartEvent!.Dispose();
         }
 
         private abstract class WindowReg
@@ -371,14 +387,12 @@ namespace Robust.Client.Graphics.Clyde
 
             // Used EXCLUSIVELY to run the two rendering commands to blit to the window.
             public Thread? BlitThread;
-            public ChannelWriter<(GLShaderProgram, nint)>? BlitChannelWriter;
-            public ChannelReader<(GLShaderProgram, nint)>? BlitChannelReader;
+            public ManualResetEventSlim? BlitStartEvent;
             public ManualResetEventSlim? BlitDoneEvent;
 
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
             public RenderTexture? RenderTexture;
-            public GLHandle QuadVao;
             public Action<WindowClosedEventArgs>? Closed;
         }
 

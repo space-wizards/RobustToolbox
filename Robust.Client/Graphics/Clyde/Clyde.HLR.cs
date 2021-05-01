@@ -438,6 +438,8 @@ namespace Robust.Client.Graphics.Clyde
                 FlushRenderQueue();
             }
 
+            FenceRenderTarget(rt);
+
             PopRenderStateFull(state);
             _updateUniformConstants(_currentRenderTarget.Size);
 

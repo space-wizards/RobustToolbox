@@ -46,6 +46,10 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
+        // VBO to blit to the window
+        // VAO is per-window and not stored (not necessary!)
+        private GLBuffer WindowVBO = default!;
+
         private bool _drawingSplash = true;
 
         private GLShaderProgram? _currentProgram;
@@ -88,6 +92,8 @@ namespace Robust.Client.Graphics.Clyde
             _cfg.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
             _cfg.OnValueChanged(CVars.DisplayMaxLightsPerScene, MaxLightsPerSceneChanged, true);
             _cfg.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
+            // I can't be bothered to tear down and set these threads up in a cvar change handler.
+            _threadWindowBlit = _cfg.GetCVar(CVars.DisplayThreadWindowBlit);
 
             return InitWindowing();
         }
@@ -273,6 +279,26 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
             }
 
+            // Window VBO
+            {
+                Span<Vertex2D> winVertices = stackalloc[]
+                {
+                    new Vertex2D(-1, 1, 0, 1),
+                    new Vertex2D(-1, -1, 0, 0),
+                    new Vertex2D(1, 1, 1, 1),
+                    new Vertex2D(1, -1, 1, 0),
+                };
+
+                WindowVBO = new GLBuffer<Vertex2D>(
+                    this,
+                    BufferTarget.ArrayBuffer,
+                    BufferUsageHint.StaticDraw,
+                    winVertices,
+                    nameof(WindowVBO));
+
+                CheckGlError();
+            }
+
             // Batch rendering
             {
                 BatchVBO = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
@@ -347,7 +373,6 @@ namespace Robust.Client.Graphics.Clyde
         private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
-            return;
             var contents = $"{source}: " + Marshal.PtrToStringAnsi(message, length);
 
             var category = "ogl.debug";

@@ -295,12 +295,14 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayForceSyncWindows =
             CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
 
+        public static readonly CVarDef<bool> DisplayThreadWindowBlit =
+            CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
+
         public static readonly CVarDef<int> DisplayInputBufferSize =
             CVarDef.Create("display.input_buffer_size", 32, CVar.CLIENTONLY);
 
         public static readonly CVarDef<bool> DisplayWin32Experience =
             CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
-
 
         /*
          * AUDIO

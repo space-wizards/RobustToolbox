@@ -298,6 +298,9 @@ namespace Robust.Client.Graphics.Clyde
             protected readonly Clyde Clyde;
             private bool _disposed;
 
+            public bool MakeGLFence;
+            public nint LastGLSync;
+
             protected RenderTargetBase(Clyde clyde, ClydeHandle handle)
             {
                 Clyde = clyde;

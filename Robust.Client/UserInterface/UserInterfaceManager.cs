@@ -646,17 +646,20 @@ namespace Robust.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
+            // Render secondary windows LAST.
+            // This makes it so that (hopefully) the GPU will be done rendering secondary windows
+            // by the times we try to blit to them at the end of Clyde's render cycle,
+            // So that the GL driver doesn't have to block on glWaitSync.
+
             foreach (var root in _roots)
             {
-                if (root.Window == _clyde.MainWindow)
-                {
-                    DoRender(root);
-                }
-                else
+                if (root.Window != _clyde.MainWindow)
                 {
                     renderHandle.RenderInRenderTarget(root.Window.RenderTarget, () => DoRender(root));
                 }
             }
+
+            DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
 
             void DoRender(WindowRoot root)
             {

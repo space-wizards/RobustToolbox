@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
@@ -842,70 +841,107 @@ namespace Robust.Client.Graphics.Clyde
                 BlendingFactorDest.OneMinusSrcAlpha);
         }
 
-        private unsafe void BlitSecondaryWindows()
+        private void BlitSecondaryWindows()
         {
             // Only got main window.
             if (_windowing!.AllWindows.Count == 1)
                 return;
 
-            var (blitProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
-            SetupGlobalUniformsImmediate(blitProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
-            blitProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            blitProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
-            blitProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
-            blitProgram.SetUniform(UniIModulate, Color.White);
-
-            nint sync = 0;
-            if (_hasGLFenceSync)
-            {
-                sync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
-                GL.Flush();
-            }
-            else if (_cfg.GetCVar(CVars.DisplayForceSyncWindows))
+            if (!_hasGLFenceSync && _cfg.GetCVar(CVars.DisplayForceSyncWindows))
             {
                 GL.Finish();
             }
 
-            foreach (var window in _windowing.AllWindows)
+            if (EffectiveThreadWindowBlit)
             {
-                if (window.IsMainWindow)
-                    continue;
+                foreach (var window in _windowing.AllWindows)
+                {
+                    if (window.IsMainWindow)
+                        continue;
 
-                window.BlitDoneEvent!.Reset();
-                window.BlitChannelWriter!.TryWrite((blitProgram, sync));
-                window.BlitDoneEvent.Wait();
+                    window.BlitDoneEvent!.Reset();
+                    window.BlitStartEvent!.Set();
+                    window.BlitDoneEvent.Wait();
+                }
+            }
+            else
+            {
+                foreach (var window in _windowing.AllWindows)
+                {
+                    if (window.IsMainWindow)
+                        continue;
+
+                    _windowing.GLMakeContextCurrent(window);
+                    BlitThreadDoSecondaryWindowBlit(window);
+                }
+
+                _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
             }
         }
 
-        private void DoSecondaryWindowBlit(WindowReg window, GLShaderProgram blitProgram, nint sync)
+        private void BlitThreadDoSecondaryWindowBlit(WindowReg window)
         {
             var rt = window.RenderTexture!;
 
             if (_hasGLFenceSync)
             {
                 // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
+                var sync = rt!.LastGLSync;
                 GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
                 CheckGlError();
             }
 
+            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+            CheckGlError();
+
+            SetTexture(TextureUnit.Texture0, window.RenderTexture!.Texture);
+
+            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            CheckGlError();
+
+            window.BlitDoneEvent?.Set();
+            _windowing!.WindowSwapBuffers(window);
+        }
+
+        private void BlitThreadInit(WindowReg reg)
+        {
+            _windowing!.GLMakeContextCurrent(reg);
+            _windowing.GLSwapInterval(0);
+
             if (!_isGLES)
                 GL.Enable(EnableCap.FramebufferSrgb);
 
-            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
-            CheckGlError();
-            CalcScreenMatrices(window.FramebufferSize, out var projMatrix, out var screenMatrix);
-            _updateUniformConstants(window.FramebufferSize);
-            SetProjViewFull(projMatrix, screenMatrix);
-            blitProgram.ForceUse();
-            SetupGlobalUniformsImmediate(blitProgram, true);
+            var vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, WindowVBO.ObjectHandle);
+            // Vertex Coords
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.EnableVertexAttribArray(0);
+            // Texture Coords.
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
 
-            SetTexture(TextureUnit.Texture0, rt.Texture);
-            SetTexture(TextureUnit.Texture1, _stockTextureWhite);
+            var program = _compileProgram(_winBlitShaderVert, _winBlitShaderFrag, new (string, uint)[]
+            {
+                ("aPos", 0),
+                ("tCoord", 1),
+            }, includeLib: false);
 
-            DrawQuadWithVao(window.QuadVao, Vector2.Zero, window.FramebufferSize, Matrix3.Identity, blitProgram);
+            GL.UseProgram(program.Handle);
+            var loc = GL.GetUniformLocation(program.Handle, "tex");
+            SetTexture(TextureUnit.Texture0, reg.RenderTexture!.Texture);
+            GL.Uniform1(loc, 0);
+        }
 
-            window.BlitDoneEvent!.Set();
-            _windowing!.WindowSwapBuffers(window);
+        private void FenceRenderTarget(RenderTargetBase rt)
+        {
+            if (!_hasGLFenceSync || !rt.MakeGLFence)
+                return;
+
+            if (rt.LastGLSync != 0)
+                GL.DeleteSync(rt.LastGLSync);
+
+            rt.LastGLSync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
         }
 
         [StructLayout(LayoutKind.Explicit)]

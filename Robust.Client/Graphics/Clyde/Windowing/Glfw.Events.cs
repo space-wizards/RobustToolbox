@@ -86,7 +86,7 @@ namespace Robust.Client.Graphics.Clyde
                         ProcessEventWindowContentScale(cs);
                         break;
                     default:
-                        _sawmill.Error("clyde.win", $"Unknown GLFW event type: {evb.GetType()}");
+                        _sawmill.Error($"Unknown GLFW event type: {evb.GetType()}");
                         break;
                 }
             }

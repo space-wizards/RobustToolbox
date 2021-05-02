@@ -77,7 +77,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (ptr == 0)
                 {
                     var name = GLFW.GetMonitorName(monitor);
-                    _sawmill.Warning("clyde.win", $"Monitor '{name}' had no user pointer set??");
+                    _sawmill.Warning($"Monitor '{name}' had no user pointer set??");
                     return;
                 }
 

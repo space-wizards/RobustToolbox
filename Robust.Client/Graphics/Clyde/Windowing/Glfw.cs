@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Runtime.Serialization;
-using System.Threading;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -20,6 +18,7 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Clyde _clyde;
 
             private readonly ISawmill _sawmill;
+            private readonly ISawmill _sawmillGlfw;
 
             private bool _glfwInitialized;
             private bool _win32Experience;
@@ -30,6 +29,7 @@ namespace Robust.Client.Graphics.Clyde
                 IoCManager.InjectDependencies(this);
 
                 _sawmill = _logManager.GetSawmill("clyde.win");
+                _sawmillGlfw = _logManager.GetSawmill("clyde.win.glfw");
             }
 
             public bool Init()
@@ -57,7 +57,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (_glfwInitialized)
                 {
-                    Logger.DebugS("clyde.win", "Terminating GLFW.");
+                    _sawmill.Debug("Terminating GLFW.");
                     GLFW.Terminate();
                 }
             }
@@ -75,20 +75,20 @@ namespace Robust.Client.Graphics.Clyde
                 if (!GLFW.Init())
                 {
                     var err = GLFW.GetError(out var desc);
-                    _sawmill.Fatal("clyde.win", $"Failed to initialize GLFW! [{err}] {desc}");
+                    _sawmill.Fatal($"Failed to initialize GLFW! [{err}] {desc}");
                     return false;
                 }
 
                 _glfwInitialized = true;
                 var version = GLFW.GetVersionString();
-                _sawmill.Debug("clyde.win", "GLFW initialized, version: {0}.", version);
+                _sawmill.Debug("GLFW initialized, version: {0}.", version);
 
                 return true;
             }
 
-            private static void OnGlfwError(ErrorCode code, string description)
+            private void OnGlfwError(ErrorCode code, string description)
             {
-                Logger.ErrorS("clyde.win.glfw", "GLFW Error: [{0}] {1}", code, description);
+                _sawmillGlfw.Error("GLFW Error: [{0}] {1}", code, description);
             }
 
             [Serializable]

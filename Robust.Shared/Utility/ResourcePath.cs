@@ -73,7 +73,7 @@ namespace Robust.Shared.Utility
                 return;
             }
 
-            var splitSegments = path.Split(new string[] {separator}, StringSplitOptions.None);
+            var splitSegments = path.Split(separator);
             var segments = new List<string>(splitSegments.Length);
             var i = 0;
             if (splitSegments[0] == "")

@@ -92,11 +92,11 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.NotNull(propertyInfo.GetCustomAttribute<DataFieldAttribute>());
             Assert.NotNull(propertyInfo.GetCustomAttribute<NeverPushInheritanceAttribute>());
 
-            var neverPushDataField = new SpecificPropertyInfo(property).GetCustomAttribute<DataFieldAttribute>();
+            var neverPushDataField = new SpecificPropertyInfo(property!).GetCustomAttribute<DataFieldAttribute>();
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
-            dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property.DeclaringType!);
+            dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property!.DeclaringType!);
             Assert.NotNull(dataDefinition);
             Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Never));
         }

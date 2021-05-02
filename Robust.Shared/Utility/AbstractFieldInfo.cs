@@ -15,10 +15,10 @@ namespace Robust.Shared.Utility
         public abstract object? GetValue(object? obj);
         public abstract void SetValue(object? obj, object? value);
 
-        public abstract T? GetCustomAttribute<T>() where T : Attribute;
-        public abstract IEnumerable<T> GetCustomAttributes<T>() where T : Attribute;
-        public abstract bool HasCustomAttribute<T>() where T : Attribute;
-        public abstract bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : Attribute;
+        public abstract T? GetAttribute<T>(bool includeBacking = false) where T : Attribute;
+        public abstract IEnumerable<T> GetAttributes<T>(bool includeBacking = false) where T : Attribute;
+        public abstract bool HasAttribute<T>(bool includeBacking = false) where T : Attribute;
+        public abstract bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : Attribute;
         public abstract bool IsBackingField();
         public abstract bool HasBackingField();
         public abstract SpecificFieldInfo? GetBackingField();

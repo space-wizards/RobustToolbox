@@ -159,9 +159,12 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
 
             foreach (var abstractFieldInfo in Type.GetAllPropertiesAndFields())
             {
-                var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
+                if (abstractFieldInfo.IsBackingField())
+                {
+                    continue;
+                }
 
-                if (attr == null || abstractFieldInfo.IsBackingField())
+                if (!abstractFieldInfo.TryGetAttribute(out DataFieldAttribute? dataField, true))
                 {
                     continue;
                 }
@@ -194,17 +197,17 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                 }
 
                 var inheritanceBehaviour = InheritanceBehaviour.Default;
-                if (abstractFieldInfo.HasCustomAttribute<AlwaysPushInheritanceAttribute>())
+                if (abstractFieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Always;
                 }
-                else if (abstractFieldInfo.HasCustomAttribute<NeverPushInheritanceAttribute>())
+                else if (abstractFieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Never;
                 }
 
                 var fieldDefinition = new FieldDefinition(
-                    attr,
+                    dataField,
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,

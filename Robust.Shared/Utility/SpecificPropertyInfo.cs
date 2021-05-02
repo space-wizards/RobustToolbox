@@ -25,31 +25,45 @@ namespace Robust.Shared.Utility
         public override object? GetValue(object? obj) => PropertyInfo.GetValue(obj);
         public override void SetValue(object? obj, object? value) => PropertyInfo.SetValue(obj, value);
 
-        public override T? GetCustomAttribute<T>() where T : class
+        public override T? GetAttribute<T>(bool includeBacking = false) where T : class
         {
-            if (PropertyInfo.TryGetCustomAttribute(out T? attribute))
+            if (includeBacking && TryGetBackingField(out var backing))
             {
-                return attribute;
+                return PropertyInfo.GetCustomAttribute<T>() ?? backing.GetAttribute<T>(includeBacking);
             }
 
-            return GetBackingField()?.GetCustomAttribute<T>();
+            return PropertyInfo.GetCustomAttribute<T>(includeBacking);
         }
 
-        public override IEnumerable<T> GetCustomAttributes<T>()
+        public override IEnumerable<T> GetAttributes<T>(bool includeBacking = false)
         {
-            return PropertyInfo.GetCustomAttributes<T>()
-                .Concat(GetBackingField()?.GetCustomAttributes<T>() ?? Enumerable.Empty<T>());
+            foreach (var attribute in PropertyInfo.GetCustomAttributes<T>())
+            {
+                yield return attribute;
+            }
+
+            if (includeBacking && TryGetBackingField(out var backing))
+            {
+                foreach (var attribute in backing.GetAttributes<T>(includeBacking))
+                {
+                    yield return attribute;
+                }
+            }
         }
 
-        public override bool HasCustomAttribute<T>()
+        public override bool HasAttribute<T>(bool includeBacking = false)
         {
-            return PropertyInfo.HasCustomAttribute<T>() ||
-                   (GetBackingField()?.HasCustomAttribute<T>() ?? false);
+            if (includeBacking && TryGetBackingField(out var backing))
+            {
+                return PropertyInfo.HasCustomAttribute<T>() || backing.HasAttribute<T>(includeBacking);
+            }
+
+            return PropertyInfo.HasCustomAttribute<T>();
         }
 
-        public override bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : class
+        public override bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : class
         {
-            return (attribute = GetCustomAttribute<T>()) != null;
+            return (attribute = GetAttribute<T>(includeBacking)) != null;
         }
 
         public override bool IsBackingField()

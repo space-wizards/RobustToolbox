@@ -24,22 +24,22 @@ namespace Robust.Shared.Utility
         public override object? GetValue(object? obj) => FieldInfo.GetValue(obj);
         public override void SetValue(object? obj, object? value) => FieldInfo.SetValue(obj, value);
 
-        public override T? GetCustomAttribute<T>() where T : class
+        public override T? GetAttribute<T>(bool includeBacking = false) where T : class
         {
             return FieldInfo.GetCustomAttribute<T>();
         }
 
-        public override IEnumerable<T> GetCustomAttributes<T>()
+        public override IEnumerable<T> GetAttributes<T>(bool includeBacking = false)
         {
             return FieldInfo.GetCustomAttributes<T>();
         }
 
-        public override bool HasCustomAttribute<T>()
+        public override bool HasAttribute<T>(bool includeBacking = false)
         {
             return FieldInfo.HasCustomAttribute<T>();
         }
 
-        public override bool TryGetCustomAttribute<T>([NotNullWhen(true)] out T? attribute) where T : class
+        public override bool TryGetAttribute<T>([NotNullWhen(true)] out T? attribute, bool includeBacking = false) where T : class
         {
             return FieldInfo.TryGetCustomAttribute(out attribute);
         }

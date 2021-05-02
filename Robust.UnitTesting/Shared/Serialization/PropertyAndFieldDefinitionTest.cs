@@ -79,8 +79,8 @@ namespace Robust.UnitTesting.Shared.Serialization
             var alwaysPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
             var propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(alwaysPushDataField));
-            var inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
-            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Always));
+            var inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
+            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehavior.Always));
 
             // Get only property with backing field and another attribute targeted to the property
             Assert.That(definition.GetOnlyPropertyFieldTargetedAndOtherAttribute, Is.EqualTo(30));
@@ -103,10 +103,10 @@ namespace Robust.UnitTesting.Shared.Serialization
             var neverPushDataField = propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>();
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
-            inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
+            inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
             dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property!.DeclaringType!);
             Assert.NotNull(dataDefinition);
-            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Never));
+            Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehavior.Never));
         }
 
         [Robust.Shared.Serialization.Manager.Attributes.DataDefinition]

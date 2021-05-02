@@ -11,20 +11,20 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
             object? defaultValue,
             AbstractFieldInfo fieldInfo,
             AbstractFieldInfo backingField,
-            InheritanceBehaviour inheritanceBehaviour)
+            InheritanceBehavior inheritanceBehavior)
         {
             BackingField = backingField;
             Attribute = attr;
             DefaultValue = defaultValue;
             FieldInfo = fieldInfo;
-            InheritanceBehaviour = inheritanceBehaviour;
+            InheritanceBehavior = inheritanceBehavior;
         }
 
         public DataFieldAttribute Attribute { get; }
 
         public object? DefaultValue { get; }
 
-        public InheritanceBehaviour InheritanceBehaviour { get; }
+        public InheritanceBehavior InheritanceBehavior { get; }
 
         public AbstractFieldInfo BackingField { get; }
 

@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
 
                     if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehaviour);
+                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehavior);
                         continue;
                     }
 
@@ -33,7 +33,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
 
                     if (!mapped)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehaviour);
+                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior);
                         continue;
                     }
 
@@ -45,7 +45,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                             skipHook)
                         : serializationManager.Read(type, node, serializationContext, skipHook);
 
-                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehaviour, result);
+                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior, result);
                     mappedInfo[i] = entry;
                 }
 

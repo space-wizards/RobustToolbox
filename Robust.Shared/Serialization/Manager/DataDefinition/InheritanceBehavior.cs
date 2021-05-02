@@ -1,6 +1,6 @@
 ﻿namespace Robust.Shared.Serialization.Manager.DataDefinition
 {
-    public enum InheritanceBehaviour : byte
+    public enum InheritanceBehavior : byte
     {
         Default,
         Always,

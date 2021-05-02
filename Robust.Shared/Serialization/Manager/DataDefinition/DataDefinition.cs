@@ -196,14 +196,14 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                     }
                 }
 
-                var inheritanceBehaviour = InheritanceBehaviour.Default;
+                var inheritanceBehaviour = InheritanceBehavior.Default;
                 if (abstractFieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
                 {
-                    inheritanceBehaviour = InheritanceBehaviour.Always;
+                    inheritanceBehaviour = InheritanceBehavior.Always;
                 }
                 else if (abstractFieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
                 {
-                    inheritanceBehaviour = InheritanceBehaviour.Never;
+                    inheritanceBehaviour = InheritanceBehavior.Never;
                 }
 
                 var fieldDefinition = new FieldDefinition(

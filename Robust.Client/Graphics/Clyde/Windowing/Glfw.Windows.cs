@@ -101,19 +101,22 @@ namespace Robust.Client.Graphics.Clyde
                 var height = _cfg.GetCVar(CVars.DisplayHeight);
 
                 IClydeMonitor? monitor = null;
+                var fullscreen = false;
 
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
                     monitor = _monitors[_primaryMonitorId].Handle;
                     width = monitor.Size.X;
                     height = monitor.Size.Y;
+                    fullscreen = true;
                 }
 
                 var parameters = new WindowCreateParameters
                 {
                     Width = width,
                     Height = height,
-                    Monitor = monitor
+                    Monitor = monitor,
+                    Fullscreen = fullscreen
                 };
 
                 var windowTask = SharedWindowCreate(renderer, parameters, null);

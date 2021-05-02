@@ -35,6 +35,8 @@ namespace Robust.Client.Graphics.Clyde
                 var primaryMonitor = GLFW.GetPrimaryMonitor();
                 var up = GLFW.GetMonitorUserPointer(primaryMonitor);
                 _primaryMonitorId = (int) up;
+
+                ProcessEvents();
             }
 
             private void WinThreadSetupMonitor(Monitor* monitor)

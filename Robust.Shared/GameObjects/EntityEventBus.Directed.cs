@@ -14,7 +14,12 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : EntityEventArgs;
 
+        [Obsolete("Use the overload without the handler argument.")]
         void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntityEventArgs;
+
+        void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : EntityEventArgs;
     }
@@ -75,7 +80,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use the overload without the handler argument.")]
         public void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
+        }
+
+        /// <inheritdoc />
+        public void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {

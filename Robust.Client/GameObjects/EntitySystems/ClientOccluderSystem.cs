@@ -42,8 +42,7 @@ namespace Robust.Client.GameObjects
         public override void Shutdown()
         {
             UnsubscribeLocalEvent<OccluderDirtyEvent>();
-
-            UnsubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>(HandleSnapGridMove);
+            UnsubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>();
 
             base.Shutdown();
         }

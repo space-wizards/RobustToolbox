@@ -26,9 +26,9 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            UnsubscribeLocalEvent<SnapGridComponent, ComponentStartup>(HandleComponentStartup);
-            UnsubscribeLocalEvent<SnapGridComponent, ComponentShutdown>(HandleComponentShutdown);
-            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
+            UnsubscribeLocalEvent<SnapGridComponent, ComponentStartup>();
+            UnsubscribeLocalEvent<SnapGridComponent, ComponentShutdown>();
+            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>();
         }
 
         private void HandleComponentStartup(EntityUid uid, SnapGridComponent component, ComponentStartup args)

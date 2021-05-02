@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Raise
             var evntArgs = new TestEvent(5);
-            bus.RaiseLocalEvent(entUid, evntArgs, true);
+            bus.RaiseLocalEvent(entUid, evntArgs);
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));
@@ -78,7 +78,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Subscribe
             int calledCount = 0;
             bus.SubscribeLocalEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
-            bus.UnsubscribeLocalEvent<MetaDataComponent, TestEvent>(HandleTestEvent);
+            bus.UnsubscribeLocalEvent<MetaDataComponent, TestEvent>();
 
             // add a component to the system
             entManMock.Raise(m => m.EntityAdded += null, entManMock.Object, entUid);
@@ -86,7 +86,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Raise
             var evntArgs = new TestEvent(5);
-            bus.RaiseLocalEvent(entUid, evntArgs, true);
+            bus.RaiseLocalEvent(entUid, evntArgs);
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(0));

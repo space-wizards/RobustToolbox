@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Attributes;
+using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Shared.Serialization.Markdown;
 using YamlDotNet.RepresentationModel;
 

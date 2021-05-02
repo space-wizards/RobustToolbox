@@ -28,7 +28,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initialized;
 
         private readonly Dictionary<Type, SerializationDataDefinition> _dataDefinitions = new();
-        private readonly List<Type> _copyByRefRegistrations = new();
+        private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
 
@@ -502,7 +502,7 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            if (source.GetType().IsValueType != target.GetType().IsValueType)
+            if (sourceType.IsValueType != targetType.IsValueType)
             {
                 throw new InvalidOperationException(
                     $"Source and target do not match. Source ({sourceType}) is value type? {sourceType.IsValueType}. Target ({targetType}) is value type? {targetType.IsValueType}");
@@ -524,7 +524,7 @@ namespace Robust.Shared.Serialization.Manager
                     newArray = (Array) Activator.CreateInstance(sourceArray.GetType(), sourceArray.Length)!;
                 }
 
-                for (int i = 0; i < sourceArray.Length; i++)
+                for (var i = 0; i < sourceArray.Length; i++)
                 {
                     newArray.SetValue(CreateCopy(sourceArray.GetValue(i), context, skipHook), i);
                 }
@@ -532,13 +532,13 @@ namespace Robust.Shared.Serialization.Manager
                 return newArray;
             }
 
-            if (source.GetType().IsArray != target.GetType().IsArray)
+            if (sourceType.IsArray != targetType.IsArray)
             {
                 throw new InvalidOperationException(
                     $"Source and target do not match. Source ({sourceType}) is array type? {sourceType.IsArray}. Target ({targetType}) is array type? {targetType.IsArray}");
             }
 
-            var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
+            var commonType = TypeHelpers.SelectCommonType(sourceType, targetType);
             if (commonType == null)
             {
                 throw new InvalidOperationException("Could not find common type in Copy!");
@@ -549,7 +549,7 @@ namespace Robust.Shared.Serialization.Manager
                 return source;
             }
 
-            if (TryCopyWithTypeCopier(commonType, source, ref target, skipHook, context))
+            if (TryCopyRaw(commonType, source, ref target, skipHook, context))
             {
                 return target;
             }
@@ -605,10 +605,8 @@ namespace Robust.Shared.Serialization.Manager
 
         private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)
         {
-            if (source == null) return source;
-
-
-            if (type.IsPrimitive ||
+            if (source == null ||
+                type.IsPrimitive ||
                 type.IsEnum ||
                 source is string ||
                 _copyByRefRegistrations.Contains(type))

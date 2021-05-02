@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface
 #endif
 
 #if MACOS
-        [Dependency] private readonly Shared.Asynchronous.ITaskManager _taskManager;
+        [Dependency] private readonly Shared.Asynchronous.ITaskManager _taskManager = default!;
 #endif
 
 #if LINUX
@@ -52,7 +52,7 @@ namespace Robust.Client.UserInterface
             return File.Open(name, FileMode.Open);
         }
 
-        private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
+        private async Task<string> GetOpenFileName(FileDialogFilters? filters)
         {
 #if LINUX
             if (await IsKDialogAvailable())

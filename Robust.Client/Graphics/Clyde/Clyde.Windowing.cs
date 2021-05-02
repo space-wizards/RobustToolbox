@@ -1,388 +1,175 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using OpenToolkit;
-using OpenToolkit.Graphics.OpenGL4;
-using OpenToolkit.GraphicsLibraryFramework;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
-using Robust.Client.Utility;
 using Robust.Shared;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using static Robust.Client.Utility.LiterallyJustMessageBox;
-using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
-using GLFW = OpenToolkit.GraphicsLibraryFramework.GLFW;
-using GLFWCallbacks = OpenToolkit.GraphicsLibraryFramework.GLFWCallbacks;
-using Image = SixLabors.ImageSharp.Image;
-using Vector2 = Robust.Shared.Maths.Vector2;
-using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
-using InputAction = OpenToolkit.GraphicsLibraryFramework.InputAction;
-using KeyModifiers = OpenToolkit.GraphicsLibraryFramework.KeyModifiers;
-using Keys = OpenToolkit.GraphicsLibraryFramework.Keys;
-using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
-using MouseButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
-using OpenGlProfile = OpenToolkit.GraphicsLibraryFramework.OpenGlProfile;
-using ClientApi = OpenToolkit.GraphicsLibraryFramework.ClientApi;
-using ContextApi = OpenToolkit.GraphicsLibraryFramework.ContextApi;
-using Window = OpenToolkit.GraphicsLibraryFramework.Window;
-using WindowHintBool = OpenToolkit.GraphicsLibraryFramework.WindowHintBool;
-using WindowHintInt = OpenToolkit.GraphicsLibraryFramework.WindowHintInt;
-using WindowHintOpenGlProfile = OpenToolkit.GraphicsLibraryFramework.WindowHintOpenGlProfile;
-using WindowHintClientApi = OpenToolkit.GraphicsLibraryFramework.WindowHintClientApi;
-using WindowHintContextApi = OpenToolkit.GraphicsLibraryFramework.WindowHintContextApi;
-using WindowHintString = OpenToolkit.GraphicsLibraryFramework.WindowHintString;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    internal unsafe partial class Clyde
+    internal partial class Clyde
     {
-        // Keep delegates around to prevent GC issues.
-        private GLFWCallbacks.ErrorCallback _errorCallback = default!;
-        private GLFWCallbacks.MonitorCallback _monitorCallback = default!;
-        private GLFWCallbacks.CharCallback _charCallback = default!;
-        private GLFWCallbacks.CursorPosCallback _cursorPosCallback = default!;
-        private GLFWCallbacks.KeyCallback _keyCallback = default!;
-        private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = default!;
-        private GLFWCallbacks.ScrollCallback _scrollCallback = default!;
-        private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = default!;
-        private GLFWCallbacks.WindowSizeCallback _windowSizeCallback = default!;
-        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback = default!;
-        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback = default!;
-        private GLFWCallbacks.WindowFocusCallback _windowFocusCallback = default!;
+        private readonly List<WindowHandle> _windowHandles = new();
+        private readonly List<MonitorHandle> _monitorHandles = new();
 
-        private bool _glfwInitialized;
+        private IWindowingImpl? _windowing;
+        private Renderer _chosenRenderer;
 
-        private IBindingsContext _graphicsContext = default!;
-        private Window* _glfwWindow;
-
-        private Vector2i _framebufferSize;
-        private bool _isFocused;
-        private Vector2i _windowSize;
-        private Vector2i _prevWindowSize;
-        private Vector2i _prevWindowPos;
-        private Vector2 _windowScale;
-        private Vector2 _pixelRatio;
-        private Thread? _mainThread;
-
-        private Vector2 _lastMousePos;
-
-        // Can't use ClydeHandle because it's 64 bit.
-        private int _nextWindowId = 1;
-        private readonly Dictionary<int, MonitorReg> _monitors = new();
+        private Thread? _windowingThread;
+        private bool _vSync;
+        private WindowMode _windowMode;
+        private WindowReg? _currentHoveredWindow;
+        private bool _threadWindowBlit;
+        private bool EffectiveThreadWindowBlit => _threadWindowBlit && !_isGLES;
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
-        public event Action<string>? CloseWindow;
-        public event Action? OnWindowScaleChanged;
+        public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowDestroyedEventArgs>? DestroyWindow;
+        public event Action<WindowContentScaleEventArgs>? OnWindowScaleChanged;
+        public event Action<WindowResizedEventArgs>? OnWindowResized;
+        public event Action<WindowFocusedEventArgs>? OnWindowFocused;
 
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
-        public override Vector2i ScreenSize => _framebufferSize;
-        public override bool IsFocused => _isFocused;
-        public Vector2 DefaultWindowScale => _windowScale;
-        public Vector2 MouseScreenPosition => _lastMousePos;
+        public IClydeWindow MainWindow => _windowing?.MainWindow?.Handle ??
+                                          throw new InvalidOperationException("Windowing is not initialized");
+
+        public Vector2i ScreenSize => _windowing?.MainWindow?.FramebufferSize ??
+                                      throw new InvalidOperationException("Windowing is not initialized");
+
+        public bool IsFocused => _windowing?.MainWindow?.IsFocused ??
+                                 throw new InvalidOperationException("Windowing is not initialized");
+
+        public IEnumerable<IClydeWindow> AllWindows => _windowHandles;
+
+        public Vector2 DefaultWindowScale => _windowing?.MainWindow?.WindowScale ??
+                                             throw new InvalidOperationException("Windowing is not initialized");
+
+        public ScreenCoordinates MouseScreenPosition
+        {
+            get
+            {
+                var window = _currentHoveredWindow;
+                if (window == null)
+                    return default;
+
+                return new ScreenCoordinates(window.LastMousePos, window.Id);
+            }
+        }
 
         public string GetKeyName(Keyboard.Key key)
         {
-            var name = Keyboard.GetSpecialKeyName(key);
-            if (name != null)
-            {
-                return Loc.GetString(name);
-            }
+            DebugTools.AssertNotNull(_windowing);
 
-            name = GLFW.GetKeyName(Keyboard.ConvertGlfwKeyReverse(key), 0);
-            if (name != null)
-            {
-                return name.ToUpper();
-            }
-
-            return Loc.GetString("<unknown key>");
-        }
-
-        public string GetKeyNameScanCode(int scanCode)
-        {
-            return GLFW.GetKeyName(Keys.Unknown, scanCode);
-        }
-
-        public int GetKeyScanCode(Keyboard.Key key)
-        {
-            return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
+            return _windowing!.KeyGetName(key);
         }
 
         public uint? GetX11WindowId()
         {
-            try
-            {
-                return GLFW.GetX11Window(_glfwWindow);
-            }
-            catch (EntryPointNotFoundException)
-            {
-                return null;
-            }
-        }
-
-        private List<Exception>? _glfwExceptionList;
-        private bool _isMinimized;
-
-        private bool InitGlfw()
-        {
-            StoreCallbacks();
-
-            GLFW.SetErrorCallback(_errorCallback);
-            if (!GLFW.Init())
-            {
-                Logger.FatalS("clyde.win", "Failed to initialize GLFW!");
-                return false;
-            }
-
-            _glfwInitialized = true;
-            var version = GLFW.GetVersionString();
-            Logger.DebugS("clyde.win", "GLFW initialized, version: {0}.", version);
-
-            return true;
+            return _windowing?.WindowGetX11Id(_windowing.MainWindow!) ?? null;
         }
 
         private bool InitWindowing()
         {
-            _mainThread = Thread.CurrentThread;
-            if (!InitGlfw())
-            {
-                return false;
-            }
+            _windowingThread = Thread.CurrentThread;
 
-            InitMonitors();
-            InitCursors();
+            _windowing = new GlfwWindowingImpl(this);
 
-            return InitWindow();
+            return _windowing.Init();
         }
 
-        private void InitMonitors()
+        private unsafe bool InitMainWindowAndRenderer()
         {
-            var monitors = GLFW.GetMonitorsRaw(out var count);
+            DebugTools.AssertNotNull(_windowing);
 
-            for (var i = 0; i < count; i++)
-            {
-                SetupMonitor(monitors[i]);
-            }
-        }
+            _chosenRenderer = (Renderer) _cfg.GetCVar(CVars.DisplayRenderer);
 
-        private void SetupMonitor(Monitor* monitor)
-        {
-            var handle = _nextWindowId++;
-
-            DebugTools.Assert(GLFW.GetMonitorUserPointer(monitor) == null, "GLFW window already has user pointer??");
-
-            var name = GLFW.GetMonitorName(monitor);
-            var videoMode = GLFW.GetVideoMode(monitor);
-            var impl = new ClydeMonitorImpl(handle, name, (videoMode->Width, videoMode->Height), videoMode->RefreshRate);
-
-            GLFW.SetMonitorUserPointer(monitor, (void*) handle);
-            _monitors[handle] = new MonitorReg
-            {
-                Id = handle,
-                Impl = impl,
-                Monitor = monitor
-            };
-        }
-
-        private void DestroyMonitor(Monitor* monitor)
-        {
-            var ptr = GLFW.GetMonitorUserPointer(monitor);
-
-            if (ptr == null)
-            {
-                var name = GLFW.GetMonitorName(monitor);
-                Logger.WarningS("clyde.win", $"Monitor '{name}' had no user pointer set??");
-                return;
-            }
-
-            _monitors.Remove((int) ptr);
-            GLFW.SetMonitorUserPointer(monitor, null);
-        }
-
-        private bool InitWindow()
-        {
-            var width = ConfigurationManager.GetCVar(CVars.DisplayWidth);
-            var height = ConfigurationManager.GetCVar(CVars.DisplayHeight);
-
-            Monitor* monitor = null;
-
-            if (WindowMode == WindowMode.Fullscreen)
-            {
-                monitor = GLFW.GetPrimaryMonitor();
-                var mode = GLFW.GetVideoMode(monitor);
-                width = mode->Width;
-                height = mode->Height;
-
-                GLFW.WindowHint(WindowHintInt.RefreshRate, mode->RefreshRate);
-            }
-
-#if DEBUG
-            GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
-            GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-            GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-
-            var renderer = (Renderer) ConfigurationManager.GetCVar<int>(CVars.DisplayRenderer);
-
-            Span<Renderer> renderers = (renderer == Renderer.Default)
+            var renderers = _chosenRenderer == Renderer.Default
                 ? stackalloc Renderer[]
                 {
                     Renderer.OpenGL33,
                     Renderer.OpenGL31,
                     Renderer.OpenGLES2
                 }
-                : stackalloc Renderer[] {renderer};
+                : stackalloc Renderer[] {_chosenRenderer};
 
-            ErrorCode lastGlfwError = default;
-            string? lastGlfwErrorDesc = default;
-
-            foreach (Renderer r in renderers)
+            var succeeded = false;
+            string? lastError = null;
+            foreach (var renderer in renderers)
             {
-                CreateWindowForRenderer(r);
-
-                if (_glfwWindow != null)
+                if (!_windowing!.TryInitMainWindow(renderer, out lastError))
                 {
-                    renderer = r;
-                    _isGLES = renderer == Renderer.OpenGLES2;
-                    _isCore = renderer == Renderer.OpenGL33;
-                    break;
+                    Logger.DebugS("clyde.win", $"{renderer} unsupported: {lastError}");
+                    continue;
                 }
 
-                // Window failed to init due to error.
-                // Try not to treat the error code seriously.
-                lastGlfwError = GLFW.GetError(out lastGlfwErrorDesc);
-                Logger.DebugS("clyde.win", $"{r} unsupported: [{lastGlfwError}] ${lastGlfwErrorDesc}");
+                // We should have a main window now.
+                DebugTools.AssertNotNull(_windowing.MainWindow);
+
+                succeeded = true;
+                _chosenRenderer = renderer;
+                _isGLES = _chosenRenderer == Renderer.OpenGLES2;
+                _isCore = _chosenRenderer == Renderer.OpenGL33;
+                break;
             }
 
-            if (_glfwWindow == null)
+            if (!succeeded)
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    var errorContent = "Failed to create the game window. " +
-                                       "This probably means your GPU is too old to play the game. " +
-                                       "Try to update your graphics drivers, " +
-                                       "or enable compatibility mode in the launcher if that fails.\n" +
-                                       $"The exact error is: {lastGlfwError}\n{lastGlfwErrorDesc}";
+                    var msgBoxContent = "Failed to create the game window. " +
+                                        "This probably means your GPU is too old to play the game. " +
+                                        "Try to update your graphics drivers, " +
+                                        "or enable compatibility mode in the launcher if that fails.\n" +
+                                        $"The exact error is: {lastError}";
 
                     MessageBoxW(null,
-                        errorContent,
+                        msgBoxContent,
                         "Space Station 14: Failed to create window",
                         MB_OK | MB_ICONERROR);
                 }
 
                 Logger.FatalS("clyde.win",
-                    "Failed to create GLFW window! " +
+                    "Failed to create main game window! " +
                     "This probably means your GPU is too old to run the game. " +
-                    "That or update your graphics drivers.");
+                    $"That or update your graphics drivers. {lastError}");
+
                 return false;
             }
 
-            LoadWindowIcon();
+            _windowing!.GLInitMainContext(_isGLES);
 
-            GLFW.SetCharCallback(_glfwWindow, _charCallback);
-            GLFW.SetKeyCallback(_glfwWindow, _keyCallback);
-            GLFW.SetWindowCloseCallback(_glfwWindow, _windowCloseCallback);
-            GLFW.SetCursorPosCallback(_glfwWindow, _cursorPosCallback);
-            GLFW.SetWindowSizeCallback(_glfwWindow, _windowSizeCallback);
-            GLFW.SetScrollCallback(_glfwWindow, _scrollCallback);
-            GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
-            GLFW.SetWindowContentScaleCallback(_glfwWindow, _windowContentScaleCallback);
-            GLFW.SetWindowIconifyCallback(_glfwWindow, _windowIconifyCallback);
-            GLFW.SetWindowFocusCallback(_glfwWindow, _windowFocusCallback);
+            UpdateMainWindowLoadedRtSize();
 
-            GLFW.MakeContextCurrent(_glfwWindow);
-
-            VSyncChanged();
-
-            GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
-            _framebufferSize = (fbW, fbH);
-            UpdateWindowLoadedRtSize();
-
-            GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
-            _windowScale = (scaleX, scaleY);
-
-            GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-            _prevWindowSize = _windowSize = (w, h);
-
-            GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
-            _prevWindowPos = (x, y);
-
-            _pixelRatio = _framebufferSize / _windowSize;
-
-            InitGLContext();
-
-            // Initializing OTK 3 seems to mess with the current context, so ensure it's still set.
-            // This took me fucking *forever* to debug because this manifested differently on nvidia drivers vs intel mesa.
-            // So I thought it was a calling convention issue with the calli OpenTK emits.
-            // Because, in my tests, I had InitGLContext() AFTER the test with a delegate-based invoke of the proc.
-            GLFW.MakeContextCurrent(_glfwWindow);
-
+            _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
             InitOpenGL();
-
             return true;
-
-            void CreateWindowForRenderer(Renderer r)
-            {
-                if (r == Renderer.OpenGL33)
-                {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-                }
-                else if (r == Renderer.OpenGL31)
-                {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-                }
-                else if (r == Renderer.OpenGLES2)
-                {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 2);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 0);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
-                    // GLES2 is initialized through EGL to allow ANGLE usage.
-                    // (It may be an idea to make this a configuration cvar)
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
-                }
-
-                _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
-            }
         }
 
-        private void LoadWindowIcon()
+        private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
                 // Does nothing on macOS so don't bother.
-                return;
+                yield break;
             }
 
-            var icons = new List<Image<Rgba32>>();
             foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
             {
                 if (file.Extension != "png")
@@ -390,440 +177,300 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                using (var stream = _resourceCache.ContentFileRead(file))
-                {
-                    var image = Image.Load<Rgba32>(stream);
-                    icons.Add(image);
-                }
-            }
-
-            SetWindowIcon(icons);
-        }
-
-        private void SetWindowIcon(IEnumerable<Image<Rgba32>> icons)
-        {
-            // Turn each image into a byte[] so we can actually pin their contents.
-            // Wish I knew a clean way to do this without allocations.
-            var images = icons
-                .Select(i => (MemoryMarshal.Cast<Rgba32, byte>(i.GetPixelSpan()).ToArray(), i.Width, i.Height))
-                .ToList();
-
-            // ReSharper disable once SuggestVarOrType_Elsewhere
-            Span<GCHandle> handles = stackalloc GCHandle[images.Count];
-            Span<GlfwImage> glfwImages = new GlfwImage[images.Count];
-
-            for (var i = 0; i < images.Count; i++)
-            {
-                var image = images[i];
-                handles[i] = GCHandle.Alloc(image.Item1, GCHandleType.Pinned);
-                var addrOfPinnedObject = (byte*) handles[i].AddrOfPinnedObject();
-                glfwImages[i] = new GlfwImage(image.Width, image.Height, addrOfPinnedObject);
-            }
-
-            GLFW.SetWindowIcon(_glfwWindow, glfwImages);
-
-            foreach (var handle in handles)
-            {
-                handle.Free();
-            }
-        }
-
-        private class GLFWBindingsContext : IBindingsContext
-        {
-            public IntPtr GetProcAddress(string procName)
-            {
-                return GLFW.GetProcAddress(procName);
-            }
-        }
-
-        private void InitGLContext()
-        {
-            _graphicsContext = new GLFWBindingsContext();
-            GL.LoadBindings(_graphicsContext);
-
-            if (_isGLES)
-            {
-                // On GLES we use some OES and KHR functions so make sure to initialize them.
-                OpenToolkit.Graphics.ES20.GL.LoadBindings(_graphicsContext);
+                using var stream = _resourceCache.ContentFileRead(file);
+                yield return Image.Load<Rgba32>(stream);
             }
         }
 
         private void ShutdownWindowing()
         {
-            if (_glfwInitialized)
-            {
-                Logger.DebugS("clyde.win", "Terminating GLFW.");
-                GLFW.Terminate();
-            }
+            _windowing?.Shutdown();
         }
 
-        private static void OnGlfwError(ErrorCode code, string description)
+        public void SetWindowTitle(string title)
         {
-            Logger.ErrorS("clyde.win.glfw", "GLFW Error: [{0}] {1}", code, description);
-        }
+            DebugTools.AssertNotNull(_windowing);
 
-        private void OnGlfwMonitor(Monitor* monitor, ConnectedState state)
-        {
-            try
-            {
-                if (state == ConnectedState.Connected)
-                {
-                    SetupMonitor(monitor);
-                }
-                else
-                {
-                    DestroyMonitor(monitor);
-                }
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwChar(Window* window, uint codepoint)
-        {
-            try
-            {
-                TextEntered?.Invoke(new TextEventArgs(codepoint));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwCursorPos(Window* window, double x, double y)
-        {
-            try
-            {
-                var newPos = ((float) x, (float) y) * _pixelRatio;
-                var delta = newPos - _lastMousePos;
-                _lastMousePos = newPos;
-
-                MouseMove?.Invoke(new MouseMoveEventArgs(delta, newPos));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
-        {
-            try
-            {
-                EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwMouseButton(Window* window, MouseButton button, InputAction action, KeyModifiers mods)
-        {
-            try
-            {
-                EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
-        {
-            var shift = (mods & KeyModifiers.Shift) != 0;
-            var alt = (mods & KeyModifiers.Alt) != 0;
-            var control = (mods & KeyModifiers.Control) != 0;
-            var system = (mods & KeyModifiers.Super) != 0;
-
-            var ev = new KeyEventArgs(
-                key,
-                action == InputAction.Repeat,
-                alt, control, shift, system);
-
-            switch (action)
-            {
-                case InputAction.Release:
-                    KeyUp?.Invoke(ev);
-                    break;
-                case InputAction.Press:
-                case InputAction.Repeat:
-                    KeyDown?.Invoke(ev);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(action), action, null);
-            }
-        }
-
-        private void OnGlfwScroll(Window* window, double offsetX, double offsetY)
-        {
-            try
-            {
-                var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
-                MouseWheel?.Invoke(ev);
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwWindowClose(Window* window)
-        {
-            try
-            {
-                CloseWindow?.Invoke("Window closed");
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwWindowSize(Window* window, int width, int height)
-        {
-            try
-            {
-                var oldSize = _framebufferSize;
-                GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
-                _framebufferSize = (fbW, fbH);
-                _windowSize = (width, height);
-                UpdateWindowLoadedRtSize();
-
-                if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
-                    return;
-
-                _pixelRatio = _framebufferSize / _windowSize;
-
-                GL.Viewport(0, 0, fbW, fbH);
-                CheckGlError();
-
-                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwWindownContentScale(Window* window, float xScale, float yScale)
-        {
-            try
-            {
-                _windowScale = (xScale, yScale);
-                OnWindowScaleChanged?.Invoke();
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwWindowIconify(Window* window, bool iconified)
-        {
-            try
-            {
-                _isMinimized = iconified;
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void OnGlfwWindowFocus(Window* window, bool focused)
-        {
-            try
-            {
-                _isFocused = focused;
-                OnWindowFocused?.Invoke(new WindowFocusedEventArgs(focused));
-            }
-            catch (Exception e)
-            {
-                CatchCallbackException(e);
-            }
-        }
-
-        private void StoreCallbacks()
-        {
-            _errorCallback = OnGlfwError;
-            _monitorCallback = OnGlfwMonitor;
-            _charCallback = OnGlfwChar;
-            _cursorPosCallback = OnGlfwCursorPos;
-            _keyCallback = OnGlfwKey;
-            _mouseButtonCallback = OnGlfwMouseButton;
-            _scrollCallback = OnGlfwScroll;
-            _windowCloseCallback = OnGlfwWindowClose;
-            _windowSizeCallback = OnGlfwWindowSize;
-            _windowContentScaleCallback = OnGlfwWindownContentScale;
-            _windowIconifyCallback = OnGlfwWindowIconify;
-            _windowFocusCallback = OnGlfwWindowFocus;
-        }
-
-        public override void SetWindowTitle(string title)
-        {
-            if (title == null)
-            {
-                throw new ArgumentNullException(nameof(title));
-            }
-
-            GLFW.SetWindowTitle(_glfwWindow, title);
+            _windowing!.WindowSetTitle(_windowing.MainWindow!, title);
         }
 
         public void SetWindowMonitor(IClydeMonitor monitor)
         {
-            var monitorImpl = (ClydeMonitorImpl) monitor;
-            var reg = _monitors[monitorImpl.Id];
+            DebugTools.AssertNotNull(_windowing);
 
-            GLFW.SetWindowMonitor(
-                _glfwWindow,
-                reg.Monitor,
-                0, 0,
-                monitorImpl.Size.X, monitorImpl.Size.Y,
-                monitorImpl.RefreshRate);
+            var window = _windowing!.MainWindow!;
+
+            _windowing.WindowSetMonitor(window, monitor);
         }
 
         public void RequestWindowAttention()
         {
-            GLFW.RequestWindowAttention(_glfwWindow);
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowRequestAttention(_windowing.MainWindow!);
+        }
+
+        public async Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            return await _windowing!.WindowCreate(parameters);
+        }
+
+        private void DoDestroyWindow(WindowReg reg)
+        {
+            if (reg.IsMainWindow)
+                throw new InvalidOperationException("Cannot destroy main window.");
+
+            _windowing!.WindowDestroy(reg);
+            reg.BlitDoneEvent?.Set();
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
-            GLFW.PollEvents();
-
-            if (_glfwExceptionList == null || _glfwExceptionList.Count == 0)
-            {
-                return;
-            }
-
-            // Exception handling.
-            // See CatchCallbackException for details.
-
-            if (_glfwExceptionList.Count == 1)
-            {
-                var exception = _glfwExceptionList[0];
-                _glfwExceptionList = null;
-
-                // Rethrow without losing stack trace.
-                ExceptionDispatchInfo.Capture(exception).Throw();
-                throw exception; // Unreachable.
-            }
-
-            var list = _glfwExceptionList;
-            _glfwExceptionList = null;
-            throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
+            _windowing?.ProcessEvents();
+            DispatchEvents();
         }
 
-        // Disabling inlining so that I can easily exclude it from profiles.
-        // Doesn't matter anyways, it's a few extra cycles per frame.
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private void SwapBuffers()
+        private void SwapMainBuffers()
         {
-            GLFW.SwapBuffers(_glfwWindow);
+            _windowing?.WindowSwapBuffers(_windowing.MainWindow!);
         }
 
-        protected override void VSyncChanged()
+        private void VSyncChanged(bool newValue)
         {
-            if (_glfwWindow == null)
-            {
-                return;
-            }
-
-            GLFW.SwapInterval(VSync ? 1 : 0);
+            _vSync = newValue;
+            _windowing?.UpdateVSync();
         }
 
-        protected override void WindowModeChanged()
+        private void CreateWindowRenderTexture(WindowReg reg)
         {
-            if (_glfwWindow == null)
-            {
-                return;
-            }
+            reg.RenderTexture?.Dispose();
 
-            if (WindowMode == WindowMode.Fullscreen)
+            reg.RenderTexture = CreateRenderTarget(reg.FramebufferSize, new RenderTargetFormatParameters
             {
-                GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-                _prevWindowSize = (w, h);
-
-                GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
-                _prevWindowPos = (x, y);
-                var monitor = MonitorForWindow(_glfwWindow);
-                var mode = GLFW.GetVideoMode(monitor);
-
-                GLFW.SetWindowMonitor(_glfwWindow, monitor, 0, 0, mode->Width, mode->Height,
-                    mode->RefreshRate);
-            }
-            else
-            {
-                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X,
-                    _prevWindowSize.Y, 0);
-            }
+                ColorFormat = RenderTargetColorFormat.Rgba8Srgb,
+                HasDepthStencil = true
+            });
+            // Necessary to correctly sync multi-context blitting.
+            reg.RenderTexture.MakeGLFence = true;
         }
 
-        // glfwGetWindowMonitor only works for fullscreen windows.
-        // Picks the monitor with the top-left corner of the window.
-        private Monitor* MonitorForWindow(Window* window)
+        private void WindowModeChanged(int mode)
         {
-            GLFW.GetWindowPos(window, out var winPosX, out var winPosY);
-            var monitors = GLFW.GetMonitorsRaw(out var count);
-            for (var i = 0; i < count; i++)
-            {
-                var monitor = monitors[i];
-                GLFW.GetMonitorPos(monitor, out var monPosX, out var monPosY);
-                var videoMode = GLFW.GetVideoMode(monitor);
-
-                var box = Box2i.FromDimensions(monPosX, monPosY, videoMode->Width, videoMode->Height);
-                if (box.Contains(winPosX, winPosY))
-                    return monitor;
-            }
-
-            // Fallback
-            return GLFW.GetPrimaryMonitor();
+            _windowMode = (WindowMode) mode;
+            _windowing?.UpdateMainWindowMode();
         }
 
-        string IClipboardManager.GetText()
+        Task<string> IClipboardManager.GetText()
         {
-            return GLFW.GetClipboardString(_glfwWindow);
+            return _windowing?.ClipboardGetText() ?? Task.FromResult("");
         }
 
         void IClipboardManager.SetText(string text)
         {
-            GLFW.SetClipboardString(_glfwWindow, text);
+            _windowing?.ClipboardSetText(text);
         }
 
         public IEnumerable<IClydeMonitor> EnumerateMonitors()
         {
-            return _monitors.Values.Select(c => c.Impl);
+            return _monitorHandles;
         }
 
-        // We can't let exceptions unwind into GLFW, as that can cause the CLR to crash.
-        // And it probably messes up GLFW too.
-        // So all the callbacks are passed to this method.
-        // So they can be queued for re-throw at the end of ProcessInputs().
-        private void CatchCallbackException(Exception e)
+        public ICursor GetStandardCursor(StandardCursorShape shape)
         {
-            if (_glfwExceptionList == null)
+            DebugTools.AssertNotNull(_windowing);
+
+            return _windowing!.CursorGetStandard(shape);
+        }
+
+        public ICursor CreateCursor(Image<Rgba32> image, Vector2i hotSpot)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            return _windowing!.CursorCreate(image, hotSpot);
+        }
+
+        public void SetCursor(ICursor? cursor)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.CursorSet(_windowing.MainWindow!, cursor);
+        }
+
+
+        private void SetWindowVisible(WindowReg reg, bool visible)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.WindowSetVisible(reg, visible);
+        }
+
+        private void InitWindowBlitThread(WindowReg reg)
+        {
+            if (EffectiveThreadWindowBlit)
             {
-                _glfwExceptionList = new List<Exception>();
+                reg.BlitStartEvent = new ManualResetEventSlim();
+                reg.BlitDoneEvent = new ManualResetEventSlim();
+                reg.BlitThread = new Thread(() => BlitThread(reg))
+                {
+                    Name = $"WinBlitThread ID:{reg.Id}",
+                    IsBackground = true
+                };
+
+                // System.Console.WriteLine("A");
+                reg.BlitThread.Start();
+                // Wait for thread to finish init.
+                reg.BlitDoneEvent.Wait();
+            }
+            else
+            {
+                // Binds GL context.
+                BlitThreadInit(reg);
+
+                _windowing!.GLMakeContextCurrent(_windowing.MainWindow!);
+            }
+        }
+
+        private void BlitThread(WindowReg reg)
+        {
+            BlitThreadInit(reg);
+
+            reg.BlitDoneEvent!.Set();
+
+            try
+            {
+                while (true)
+                {
+                    reg.BlitStartEvent!.Wait();
+                    if (reg.IsDisposed)
+                    {
+                        BlitThreadCleanup(reg);
+                        return;
+                    }
+
+                    reg.BlitStartEvent!.Reset();
+
+                    // Do channel blit.
+                    BlitThreadDoSecondaryWindowBlit(reg);
+                }
+            }
+            catch (AggregateException e)
+            {
+                // ok channel closed, we exit.
+                e.Handle(ec => ec is ChannelClosedException);
+            }
+        }
+
+        private static void BlitThreadCleanup(WindowReg reg)
+        {
+            reg.BlitDoneEvent!.Dispose();
+            reg.BlitStartEvent!.Dispose();
+        }
+
+        private abstract class WindowReg
+        {
+            public bool IsDisposed;
+
+            public WindowId Id;
+            public Vector2 WindowScale;
+            public Vector2 PixelRatio;
+            public Vector2i FramebufferSize;
+            public Vector2i WindowSize;
+            public Vector2i PrevWindowSize;
+            public Vector2i WindowPos;
+            public Vector2i PrevWindowPos;
+            public Vector2 LastMousePos;
+            public bool IsFocused;
+            public bool IsMinimized;
+            public string Title = "";
+            public bool IsVisible;
+
+            public bool DisposeOnClose;
+
+            // Used EXCLUSIVELY to run the two rendering commands to blit to the window.
+            public Thread? BlitThread;
+            public ManualResetEventSlim? BlitStartEvent;
+            public ManualResetEventSlim? BlitDoneEvent;
+
+            public bool IsMainWindow;
+            public WindowHandle Handle = default!;
+            public RenderTexture? RenderTexture;
+            public Action<WindowClosedEventArgs>? Closed;
+        }
+
+        private sealed class WindowHandle : IClydeWindow
+        {
+            // So funny story
+            // When this class was a record, the C# compiler on .NET 5 stack overflowed
+            // while compiling the Closed event.
+            // VERY funny.
+
+            private readonly Clyde _clyde;
+            private readonly WindowReg _reg;
+
+            public bool IsDisposed => _reg.IsDisposed;
+            public WindowId Id => _reg.Id;
+
+            public WindowHandle(Clyde clyde, WindowReg reg)
+            {
+                _clyde = clyde;
+                _reg = reg;
             }
 
-            _glfwExceptionList.Add(e);
+            public void Dispose()
+            {
+                _clyde.DoDestroyWindow(_reg);
+            }
+
+            public Vector2i Size => _reg.FramebufferSize;
+
+            public IRenderTarget RenderTarget
+            {
+                get
+                {
+                    if (_reg.IsMainWindow)
+                    {
+                        return _clyde._mainMainWindowRenderMainTarget;
+                    }
+
+                    return _reg.RenderTexture!;
+                }
+            }
+
+            public string Title
+            {
+                get => _reg.Title;
+                set => _clyde._windowing!.WindowSetTitle(_reg, value);
+            }
+
+            public bool IsFocused => _reg.IsFocused;
+            public bool IsMinimized => _reg.IsMinimized;
+
+            public bool IsVisible
+            {
+                get => _reg.IsVisible;
+                set => _clyde.SetWindowVisible(_reg, value);
+            }
+
+            public Vector2 ContentScale => _reg.WindowScale;
+
+            public bool DisposeOnClose
+            {
+                get => _reg.DisposeOnClose;
+                set => _reg.DisposeOnClose = value;
+            }
+
+            public event Action<WindowClosedEventArgs> Closed
+            {
+                add => _reg.Closed += value;
+                remove => _reg.Closed -= value;
+            }
         }
 
-        private sealed class MonitorReg
+        private sealed class MonitorHandle : IClydeMonitor
         {
-            public int Id;
-            public Monitor* Monitor;
-            public ClydeMonitorImpl Impl = default!;
-        }
-
-        private sealed class ClydeMonitorImpl : IClydeMonitor
-        {
-            public ClydeMonitorImpl(int id, string name, Vector2i size, int refreshRate)
+            public MonitorHandle(int id, string name, Vector2i size, int refreshRate)
             {
                 Id = id;
                 Name = name;
@@ -835,6 +482,11 @@ namespace Robust.Client.Graphics.Clyde
             public string Name { get; }
             public Vector2i Size { get; }
             public int RefreshRate { get; }
+        }
+
+        private abstract class MonitorReg
+        {
+            public MonitorHandle Handle = default!;
         }
     }
 }

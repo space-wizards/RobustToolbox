@@ -720,6 +720,10 @@ namespace Robust.Shared.Physics.Broadphase
 
                                 var preventCollision = false;
                                 var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
+                                var preventCollideMessage = new PreventCollideEvent(body, other.Fixture.Body);
+                                EntityManager.EventBus.RaiseLocalEvent(body.Owner.Uid, preventCollideMessage);
+
+                                if (preventCollideMessage.Cancelled) return true;
 
                                 foreach (var modifier in state.modifiers)
                                 {

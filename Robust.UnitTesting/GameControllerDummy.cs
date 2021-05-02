@@ -9,6 +9,8 @@ namespace Robust.UnitTesting
     internal sealed class GameControllerDummy : IGameControllerInternal
     {
         public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
+        public GameControllerOptions Options { get; } = new();
+        public bool ContentStart { get; set; }
 
         public void Shutdown(string? reason = null)
         {
@@ -30,6 +32,10 @@ namespace Robust.UnitTesting
         }
 
         public string? ContentRootDir { get; set; }
+
+        public void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null)
+        {
+        }
 
         public void KeyDown(KeyEventArgs keyEvent)
         {
@@ -53,7 +59,6 @@ namespace Robust.UnitTesting
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
-            throw new NotImplementedException();
         }
     }
 }

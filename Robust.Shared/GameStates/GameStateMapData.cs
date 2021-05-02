@@ -29,12 +29,10 @@ namespace Robust.Shared.GameStates
         public struct GridCreationDatum
         {
             public readonly ushort ChunkSize;
-            public readonly float SnapSize;
 
-            public GridCreationDatum(ushort chunkSize, float snapSize)
+            public GridCreationDatum(ushort chunkSize)
             {
                 ChunkSize = chunkSize;
-                SnapSize = snapSize;
             }
         }
 

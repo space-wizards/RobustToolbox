@@ -170,7 +170,7 @@ namespace Robust.UnitTesting.Shared.Map
             if(mapMan.GridExists(id))
                 mapMan.DeleteGrid(id);
 
-            var newGrid = mapMan.CreateGrid(mapId, id, 8, 1);
+            var newGrid = mapMan.CreateGrid(mapId, id, 8);
             newGrid.WorldPosition = new Vector2(3, 5);
 
             return (IMapGridInternal)newGrid;

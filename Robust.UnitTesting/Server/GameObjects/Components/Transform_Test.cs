@@ -159,6 +159,40 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         }
 
         /// <summary>
+        ///     Tests that a child entity does not move when attaching to a parent.
+        /// </summary>
+        [Test]
+        public void ParentDoubleAttachMoveTest()
+        {
+            // Arrange
+            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
+            var childOne = EntityManager.SpawnEntity("dummy", InitialPos);
+            var childTwo = EntityManager.SpawnEntity("dummy", InitialPos);
+            var parentTrans = parent.Transform;
+            var childOneTrans = childOne.Transform;
+            var childTwoTrans = childTwo.Transform;
+            parentTrans.WorldPosition = new Vector2(1, 1);
+            childOneTrans.WorldPosition = new Vector2(2, 2);
+            childTwoTrans.WorldPosition = new Vector2(3, 3);
+
+            // Act
+            var oldWpos = childOneTrans.WorldPosition;
+            childOneTrans.AttachParent(parentTrans);
+            var newWpos = childOneTrans.WorldPosition;
+            Assert.That(oldWpos, Is.EqualTo(newWpos));
+
+            oldWpos = childTwoTrans.WorldPosition;
+            childTwoTrans.AttachParent(parentTrans);
+            newWpos = childTwoTrans.WorldPosition;
+            Assert.That(oldWpos, Is.EqualTo(newWpos));
+
+            oldWpos = childTwoTrans.WorldPosition;
+            childTwoTrans.AttachParent(childOneTrans);
+            newWpos = childTwoTrans.WorldPosition;
+            Assert.That(oldWpos, Is.EqualTo(newWpos));
+        }
+
+        /// <summary>
         ///     Tests that the entity orbits properly when the parent rotates.
         /// </summary>
         [Test]

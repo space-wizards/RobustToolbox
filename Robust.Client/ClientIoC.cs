@@ -49,6 +49,7 @@ namespace Robust.Client
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
+            IoCManager.Register<GameController, GameController>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IGameControllerInternal, GameController>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

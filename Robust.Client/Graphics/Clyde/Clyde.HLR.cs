@@ -25,18 +25,28 @@ namespace Robust.Client.Graphics.Clyde
                 =
                 new();
 
-        public void Render()
+        public unsafe void Render()
         {
             CheckTransferringScreenshots();
 
+            var allMinimized = true;
+            foreach (var windowReg in _windowing!.AllWindows)
+            {
+                if (!windowReg.IsMinimized)
+                {
+                    allMinimized = false;
+                    break;
+                }
+            }
+
             var size = ScreenSize;
-            if (size.X == 0 || size.Y == 0 || _isMinimized)
+            if (size.X == 0 || size.Y == 0 || allMinimized)
             {
                 ClearFramebuffer(Color.Black);
 
                 // We have to keep running swapbuffers here
                 // or else the user's PC will turn into a heater!!
-                SwapBuffers();
+                SwapMainBuffers();
                 return;
             }
 
@@ -52,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants(_framebufferSize);
+            _updateUniformConstants(_windowing.MainWindow!.FramebufferSize);
 
             {
                 CalcScreenMatrices(ScreenSize, out var proj, out var view);
@@ -64,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawSplash(_renderHandle);
                 FlushRenderQueue();
-                SwapBuffers();
+                SwapMainBuffers();
                 return;
             }
 
@@ -82,8 +92,10 @@ namespace Robust.Client.Graphics.Clyde
 
             TakeScreenshot(ScreenshotType.Final);
 
+            BlitSecondaryWindows();
+
             // And finally, swap those buffers!
-            SwapBuffers();
+            SwapMainBuffers();
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox)
@@ -165,16 +177,16 @@ namespace Robust.Client.Graphics.Clyde
 
             if (oTargets.Count > 0 && ScreenBufferTexture != null)
             {
-                if (lastFrameSize != _framebufferSize)
+                if (lastFrameSize != texture.Size)
                 {
                     GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
                     GL.TexImage2D(TextureTarget.Texture2D, 0,
-                        _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, _framebufferSize.X,
-                        _framebufferSize.Y, 0,
+                        _hasGLSrgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8, texture.Size.X,
+                        texture.Size.Y, 0,
                         PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
                 }
 
-                lastFrameSize = _framebufferSize;
+                lastFrameSize = texture.Size;
                 CopyRenderTextureToTexture(texture, ScreenBufferTexture);
                 foreach (Overlay overlay in oTargets)
                 {
@@ -338,6 +350,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.SetProjView(oldProj, oldView);
                     _renderHandle.UseShader(null);
+
+                    // TODO: cache this properly across frames.
+                    entityPostRenderTarget.DisposeDeferred();
                 }
             }
 
@@ -400,15 +415,8 @@ namespace Robust.Client.Graphics.Clyde
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderViewport(Viewport viewport)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a)
         {
-            if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
-            {
-                return;
-            }
-
-            using var _ = DebugGroup($"Viewport: {viewport.Name}");
-
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
             var oldTransform = _currentMatrixModel;
@@ -417,23 +425,50 @@ namespace Robust.Client.Graphics.Clyde
             // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
             FlushRenderQueue();
 
-            var eye = viewport.Eye;
-
-            var oldVp = _currentViewport;
-            _currentViewport = viewport;
-
             var state = PushRenderStateFull();
 
             {
-                // Actual code that isn't just pushing/popping renderer state so we can return safely.
-
-                var rt = _currentViewport.RenderTarget;
                 BindRenderTargetFull(RtToLoaded(rt));
                 ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
-                _updateUniformConstants(viewport.Size);
+                _updateUniformConstants(rt.Size);
+                CalcScreenMatrices(rt.Size, out var proj, out var view);
+                SetProjViewFull(proj, view);
 
-                CalcWorldMatrices(rt.Size, viewport.RenderScale, eye, out var proj, out var view);
+                // Smugleaf moment
+                a();
+
+                FlushRenderQueue();
+            }
+
+            FenceRenderTarget(rt);
+
+            PopRenderStateFull(state);
+            _updateUniformConstants(_currentRenderTarget.Size);
+
+            SetScissorFull(oldScissor);
+            _currentMatrixModel = oldTransform;
+        }
+
+        private void RenderViewport(Viewport viewport)
+        {
+            if (viewport.Eye == null || viewport.Eye.Position.MapId == MapId.Nullspace)
+            {
+                return;
+            }
+
+            RenderInRenderTarget(viewport.RenderTarget, () =>
+            {
+                using var _ = DebugGroup($"Viewport: {viewport.Name}");
+
+                var oldVp = _currentViewport;
+
+                _currentViewport = viewport;
+                var eye = viewport.Eye;
+
+                // Actual code that isn't just pushing/popping renderer state so we can return safely.
+
+                CalcWorldMatrices(viewport.RenderTarget.Size, viewport.RenderScale, eye, out var proj, out var view);
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
@@ -480,7 +515,7 @@ namespace Robust.Client.Graphics.Clyde
                     // So there are distortions from incorrect projection.
                     _renderHandle.UseShader(_fovDebugShaderInstance);
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                    var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
+                    var pos = UIBox2.FromDimensions(viewport.Size / 2 - (200, 200), (400, 400));
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 
@@ -490,19 +525,14 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
-                        UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
+                        UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
                 RenderOverlays(viewport, OverlaySpace.WorldSpace, worldBounds);
                 FlushRenderQueue();
-            }
 
-            PopRenderStateFull(state);
-            _updateUniformConstants(oldVp?.Size ?? _framebufferSize);
-
-            SetScissorFull(oldScissor);
-            _currentMatrixModel = oldTransform;
-            _currentViewport = oldVp;
+                _currentViewport = oldVp;
+            });
         }
 
         private static Box2 CalcWorldBounds(Viewport viewport)

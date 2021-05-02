@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -22,7 +21,7 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public IReadOnlyDictionary<DeserializationResult, DeserializationResult> Mappings { get; }
 
-        public override object? RawValue => Value;
+        public override object RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
@@ -62,7 +61,8 @@ namespace Robust.Shared.Serialization.Manager.Result
                     continue;
                 }
 
-                var oldEntry = mappingDict.FirstOrNull(p => Equals(p.Key.RawValue, newKeyRes.RawValue));
+                var res = newKeyRes;
+                var oldEntry = mappingDict.FirstOrNull(p => Equals(p.Key.RawValue, res.RawValue));
 
                 if (oldEntry.HasValue)
                 {

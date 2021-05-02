@@ -144,6 +144,7 @@ namespace Robust.Client.GameObjects
             // Nullspace is a valid map ID for stuff to have but we also aren't gonna bother indexing it.
             // So that's why there's a GetValueOrDefault.
             var oldMapTrees = _gridTrees.GetValueOrDefault(ev.OldMapId);
+            var newMapTrees = _gridTrees.GetValueOrDefault(ev.Entity.Transform.MapID);
 
             // TODO: MMMM probably a better way to do this.
             if (ev.Entity.TryGetComponent(out SpriteComponent? sprite))
@@ -160,17 +161,10 @@ namespace Robust.Client.GameObjects
 
                 foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Entity.Transform.MapID, bounds, true))
                 {
-                    Box2 gridBounds;
+                    var gridBounds = gridId == GridId.Invalid
+                        ? bounds : bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
 
-                    if (gridId == GridId.Invalid)
-                    {
-                        gridBounds = bounds;
-                    }
-                    else
-                    {
-                        gridBounds = bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-                    }
-                    _gridTrees[ev.Entity.Transform.MapID][gridId].SpriteTree.AddOrUpdate(sprite, gridBounds);
+                    newMapTrees?[gridId].SpriteTree.AddOrUpdate(sprite, gridBounds);
                 }
             }
 
@@ -188,17 +182,10 @@ namespace Robust.Client.GameObjects
 
                 foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Entity.Transform.MapID, bounds, true))
                 {
-                    Box2 gridBounds;
+                    var gridBounds = gridId == GridId.Invalid
+                        ? bounds : bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
 
-                    if (gridId == GridId.Invalid)
-                    {
-                        gridBounds = bounds;
-                    }
-                    else
-                    {
-                        gridBounds = bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-                    }
-                    _gridTrees[ev.Entity.Transform.MapID][gridId].LightTree.AddOrUpdate(light, gridBounds);
+                    newMapTrees?[gridId].LightTree.AddOrUpdate(light, gridBounds);
                 }
             }
         }

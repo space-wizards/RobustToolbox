@@ -908,6 +908,7 @@ Types:
     Nullable`1: { All: True }
     NullReferenceException: { All: True }
     Object: { All: True }
+    ObsoleteAttribute: { All: True }
     ParamArrayAttribute: { All: True }
     Predicate`1: { All: True } # Delegate
     Random: { All: True }

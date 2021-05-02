@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
@@ -10,6 +10,11 @@ namespace Robust.Shared.Map
     /// <inheritdoc />
     internal class MapChunk : IMapChunkInternal
     {
+        /// <summary>
+        /// New SnapGrid cells are allocated with this capacity.
+        /// </summary>
+        private const int SnapCellStartingCapacity = 1;
+
         private readonly IMapGridInternal _grid;
         private readonly Vector2i _gridIndices;
 
@@ -174,7 +179,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset)
+        public IEnumerable<EntityUid> GetSnapGridCell(ushort xCell, ushort yCell)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -183,18 +188,18 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
 
             var cell = _snapGrid[xCell, yCell];
-            var list = offset == SnapGridOffset.Center ? cell.Center : cell.Edge;
+            var list = cell.Center;
 
             if (list == null)
             {
-                return Array.Empty<SnapGridComponent>();
+                return Array.Empty<EntityUid>();
             }
 
             return list;
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -203,26 +208,12 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
 
             ref var cell = ref _snapGrid[xCell, yCell];
-            if (offset == SnapGridOffset.Center)
-            {
-                if (cell.Center == null)
-                {
-                    cell.Center = new List<SnapGridComponent>(1);
-                }
-                cell.Center.Add(snap);
-            }
-            else
-            {
-                if (cell.Edge == null)
-                {
-                    cell.Edge = new List<SnapGridComponent>(1);
-                }
-                cell.Edge.Add(snap);
-            }
+            cell.Center ??= new List<EntityUid>(SnapCellStartingCapacity);
+            cell.Center.Add(euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xCell), "Tile indices out of bounds.");
@@ -231,14 +222,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yCell), "Tile indices out of bounds.");
 
             ref var cell = ref _snapGrid[xCell, yCell];
-            if (offset == SnapGridOffset.Center)
-            {
-                cell.Center?.Remove(snap);
-            }
-            else
-            {
-                cell.Edge?.Remove(snap);
-            }
+            cell.Center?.Remove(euid);
         }
 
         public bool SuppressCollisionRegeneration { get; set; }
@@ -258,7 +242,7 @@ namespace Robust.Shared.Map
 
         public Box2 CalcWorldBounds()
         {
-            var worldPos = _grid.WorldPosition + (Vector2i)Indices * _grid.TileSize * ChunkSize;
+            var worldPos = _grid.WorldPosition + Indices * _grid.TileSize * ChunkSize;
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
 
@@ -291,8 +275,7 @@ namespace Robust.Shared.Map
 
         private struct SnapGridCell
         {
-            public List<SnapGridComponent> Center;
-            public List<SnapGridComponent> Edge;
+            public List<EntityUid>? Center;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -440,7 +440,12 @@ namespace Robust.Server.Maps
                 foreach (var grid in Grids)
                 {
                     var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
+                    if (entity.Transform.Parent != null)
+                        continue;
+
+                    var mapOffset = entity.Transform.LocalPosition;
                     entity.Transform.AttachParent(mapEntity);
+                    entity.Transform.WorldPosition = mapOffset;
                 }
             }
 

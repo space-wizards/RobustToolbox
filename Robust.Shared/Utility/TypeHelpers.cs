@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Utility
 {
@@ -118,143 +119,6 @@ namespace Robust.Shared.Utility
             }
         }
 
-        public static bool TryGenericReadOnlyCollectionType(Type type, [NotNullWhen(true)] out Type? listType)
-        {
-            if (!type.GetTypeInfo().IsGenericType)
-            {
-                listType = default;
-                return false;
-            }
-
-            var baseGeneric = type.GetGenericTypeDefinition();
-            var isList = baseGeneric == typeof(IReadOnlyCollection<>) || baseGeneric == typeof(IReadOnlyList<>);
-
-            if (isList)
-            {
-                listType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            listType = default;
-            return false;
-        }
-
-        public static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
-        {
-            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
-
-            if (isList)
-            {
-                listType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            listType = default;
-            return false;
-        }
-
-        public static bool TryGenericReadOnlyDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>);
-
-            if (isDict)
-            {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
-            }
-
-            keyType = default;
-            valType = default;
-            return false;
-        }
-
-        public static bool TryGenericReadDictType(Type type, [NotNullWhen(true)] out Type? keyType,
-            [NotNullWhen(true)] out Type? valType, [NotNullWhen(true)] out Type? dictType)
-        {
-            if (TryGenericDictType(type, out keyType, out valType))
-            {
-                // Pass through the type directly if it's Dictionary<K,V>.
-                // Since that's more efficient.
-                dictType = type;
-                return true;
-            }
-
-            if (TryGenericReadOnlyDictType(type, out keyType, out valType))
-            {
-                // If it's IReadOnlyDictionary<K,V> we need to make a Dictionary<K,V> type to use to deserialize.
-                dictType = typeof(Dictionary<,>).MakeGenericType(keyType, valType);
-                return true;
-            }
-
-            dictType = default;
-            return false;
-        }
-
-        public static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
-
-            if (isDict)
-            {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
-            }
-
-            keyType = default;
-            valType = default;
-            return false;
-        }
-
-        public static bool TryGenericSortedDictType(Type type, [NotNullWhen(true)] out Type? keyType,
-            [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>);
-
-            if (isDict)
-            {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
-            }
-
-            keyType = default;
-            valType = default;
-            return false;
-        }
-
-        public static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
-        {
-            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
-
-            if (isSet)
-            {
-                setType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            setType = default;
-            return false;
-        }
-
-        public static bool TryGenericSortedSetType(Type type, [NotNullWhen(true)] out Type? setType)
-        {
-            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedSet<>);
-
-            if (isSet)
-            {
-                setType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            setType = default;
-            return false;
-        }
-
         public static IEnumerable<AbstractFieldInfo> GetAllPropertiesAndFields(this Type type)
         {
             foreach (var field in type.GetAllFields())
@@ -281,123 +145,50 @@ namespace Robust.Shared.Utility
 
             return commonType;
         }
-    }
 
-    public abstract class AbstractFieldInfo
-    {
-        public abstract Type FieldType { get; }
-        public abstract Type? DeclaringType { get; }
-
-        public abstract object? GetValue(object? obj);
-        public abstract void SetValue(object? obj, object? value);
-
-        public abstract T? GetCustomAttribute<T>() where T : Attribute;
-        public abstract IEnumerable<T> GetCustomAttributes<T>() where T : Attribute;
-    }
-
-    public class SpecificFieldInfo : AbstractFieldInfo
-    {
-        public readonly FieldInfo FieldInfo;
-        public override Type FieldType => FieldInfo.FieldType;
-        public override Type? DeclaringType => FieldInfo.DeclaringType;
-
-        public SpecificFieldInfo(FieldInfo fieldInfo)
+        public static SpecificFieldInfo? GetBackingField(this Type type, string propertyName)
         {
-            FieldInfo = fieldInfo;
-        }
-
-        public override object? GetValue(object? obj) => FieldInfo.GetValue(obj);
-        public override void SetValue(object? obj, object? value) => FieldInfo.SetValue(obj, value);
-
-        public override T? GetCustomAttribute<T>() where T : class
-        {
-            return (T?)Attribute.GetCustomAttribute(FieldInfo, typeof(T));
-        }
-
-        public override IEnumerable<T> GetCustomAttributes<T>()
-        {
-            return FieldInfo.GetCustomAttributes<T>();
-        }
-
-        public static implicit operator FieldInfo(SpecificFieldInfo f) => f.FieldInfo;
-        public static explicit operator SpecificFieldInfo(FieldInfo f) => new(f);
-
-        public override string? ToString()
-        {
-            return FieldInfo.ToString();
-        }
-    }
-
-    public class SpecificPropertyInfo : AbstractFieldInfo
-    {
-        public readonly PropertyInfo PropertyInfo;
-        public override Type FieldType => PropertyInfo.PropertyType;
-        public override Type? DeclaringType => PropertyInfo.DeclaringType;
-
-        public SpecificPropertyInfo(PropertyInfo propertyInfo)
-        {
-            PropertyInfo = propertyInfo;
-        }
-
-        public override object? GetValue(object? obj) => PropertyInfo.GetValue(obj);
-        public override void SetValue(object? obj, object? value) => PropertyInfo.SetValue(obj, value);
-
-        public override T? GetCustomAttribute<T>() where T : class
-        {
-            return (T?)Attribute.GetCustomAttribute(PropertyInfo, typeof(T));
-        }
-
-        public override IEnumerable<T> GetCustomAttributes<T>()
-        {
-            return PropertyInfo.GetCustomAttributes<T>();
-        }
-
-        public bool IsVirtual()
-        {
-            return (PropertyInfo.GetGetMethod()?.IsVirtual ?? false) ||
-                   (PropertyInfo.GetSetMethod()?.IsVirtual ?? false);
-        }
-
-        public bool IsMostOverridden(Type type)
-        {
-            if (DeclaringType == type)
+            foreach (var parent in type.GetClassHierarchy())
             {
-                return true;
-            }
+                var field = parent.GetField($"<{propertyName}>k__BackingField",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
 
-            var setBase = PropertyInfo.SetMethod?.GetBaseDefinition();
-            var getBase = PropertyInfo.GetMethod?.GetBaseDefinition();
-            var currentType = type;
-            var relevantProperties = type.GetAllProperties().Where(p => p.Name == PropertyInfo.Name).ToList();
-            while (currentType != null)
-            {
-                foreach (var property in relevantProperties)
+                if (field != null)
                 {
-                    if(property.DeclaringType != currentType) continue;
-
-                    if (setBase != null && setBase == property.SetMethod?.GetBaseDefinition())
-                    {
-                        return property == PropertyInfo;
-                    }
-
-                    if (getBase != null && getBase == property.GetMethod?.GetBaseDefinition())
-                    {
-                        return property == PropertyInfo;
-                    }
+                    return new SpecificFieldInfo(field);
                 }
-
-                currentType = currentType.BaseType;
             }
 
-            return false;
+            return null;
         }
 
-        public static implicit operator PropertyInfo(SpecificPropertyInfo f) => f.PropertyInfo;
-        public static explicit operator SpecificPropertyInfo(PropertyInfo f) => new(f);
-
-        public override string? ToString()
+        public static bool HasBackingField(this Type type, string propertyName)
         {
-            return PropertyInfo.ToString();
+            return type.GetBackingField(propertyName) != null;
+        }
+
+        public static bool TryGetBackingField(this Type type, string propertyName,
+            [NotNullWhen(true)] out SpecificFieldInfo? field)
+        {
+            return (field = type.GetBackingField(propertyName)) != null;
+        }
+
+        public static bool IsBackingField(this MemberInfo memberInfo)
+        {
+            return memberInfo.HasCustomAttribute<CompilerGeneratedAttribute>() &&
+                   memberInfo.Name.StartsWith("<") &&
+                   memberInfo.Name.EndsWith(">k__BackingField");
+        }
+
+        public static bool HasCustomAttribute<T>(this MemberInfo memberInfo) where T : Attribute
+        {
+            return memberInfo.GetCustomAttribute<T>() != null;
+        }
+
+        public static bool TryGetCustomAttribute<T>(this MemberInfo memberInfo, [NotNullWhen(true)] out T? attribute)
+            where T : Attribute
+        {
+            return (attribute = memberInfo.GetCustomAttribute<T>()) != null;
         }
     }
 }

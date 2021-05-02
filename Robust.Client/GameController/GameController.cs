@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Management;
 using System.Net;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
@@ -61,18 +61,18 @@ namespace Robust.Client
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
-        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
-        private bool _disableAssemblyLoadContext;
+
         // Arguments for loader-load. Not used otherwise.
         private IMainArgs? _loaderArgs;
 
+        public bool ContentStart { get; set; } = false;
+        public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
         public bool LoadConfigAndUserData { get; set; } = true;
@@ -82,17 +82,20 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
+        private bool StartupContinue(DisplayMode displayMode)
         {
-            if (!StartupSystemSplash(logHandlerFactory))
-                return false;
+            _clyde.InitializePostWindowing();
+            _clyde.SetWindowTitle(Options.DefaultWindowTitle);
+
+            _taskManager.Initialize();
+            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
-            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
-            _modLoader.SetEnableSandboxing(true);
+            _modLoader.SetUseLoadContext(!ContentStart);
+            _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), Options.ContentModulePrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return false;
@@ -118,7 +121,7 @@ namespace Robust.Client
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.Initialize();
-            _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
+            _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
@@ -141,9 +144,51 @@ namespace Robust.Client
 
             GC.Collect();
 
+            // Setup main loop
+            if (_mainLoop == null)
+            {
+                _mainLoop = new GameLoop(_gameTiming)
+                {
+                    SleepMode = displayMode == DisplayMode.Headless ? SleepMode.Delay : SleepMode.None
+                };
+            }
+
+            _mainLoop.Tick += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Tick(args);
+                }
+            };
+
+            _mainLoop.Render += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    _gameTiming.CurFrame++;
+                    _clyde.Render();
+                }
+            };
+            _mainLoop.Input += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Input(args);
+                }
+            };
+
+            _mainLoop.Update += (sender, args) =>
+            {
+                if (_mainLoop.Running)
+                {
+                    Update(args);
+                }
+            };
+
             _clyde.Ready();
 
-            if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+            if (!Options.DisableCommandLineConnect &&
+                (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
                 && LaunchState.ConnectEndpoint != null)
             {
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
@@ -158,8 +203,6 @@ namespace Robust.Client
 
             SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
 
-            _taskManager.Initialize();
-
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
 
@@ -172,7 +215,7 @@ namespace Robust.Client
 
             if (LoadConfigAndUserData)
             {
-                var configFile = Path.Combine(userDataDir, "client_config.toml");
+                var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
                 if (File.Exists(configFile))
                 {
                     // Load config from user data if available.
@@ -196,7 +239,12 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
+            var mountOptions = _commandLineArgs != null
+                ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
+
+            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+                _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
+
             if (_loaderArgs != null)
             {
                 _stringSerializer.EnableCaching = false;
@@ -209,18 +257,16 @@ namespace Robust.Client
             _clyde.KeyUp += KeyUp;
             _clyde.KeyDown += KeyDown;
             _clyde.MouseWheel += MouseWheel;
-            _clyde.CloseWindow += Shutdown;
+            _clyde.CloseWindow += args =>
+            {
+                if (args.Window == _clyde.MainWindow)
+                {
+                    Shutdown("Main window closed");
+                }
+            };
 
             // Bring display up as soon as resources are mounted.
-            if (!_clyde.Initialize())
-            {
-                return false;
-            }
-
-            _clyde.SetWindowTitle("Space Station 14");
-
-            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
-            return true;
+            return _clyde.InitializePreWindowing();
         }
 
         private Stream? VerifierExtraLoadHandler(string arg)
@@ -266,8 +312,10 @@ namespace Robust.Client
 
         public void Shutdown(string? reason = null)
         {
+            DebugTools.AssertNotNull(_mainLoop);
+
             // Already got shut down I assume,
-            if (!_mainLoop.Running)
+            if (!_mainLoop!.Running)
             {
                 return;
             }

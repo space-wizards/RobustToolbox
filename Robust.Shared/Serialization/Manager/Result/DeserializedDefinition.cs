@@ -51,7 +51,9 @@ namespace Robust.Shared.Serialization.Manager.Result
             {
                 fieldEntry.Result?.CallAfterDeserializationHook();
             }
-            if(Value is ISerializationHooks hooks) hooks.AfterDeserialization();
+
+            if (Value is ISerializationHooks hooks)
+                hooks.AfterDeserialization();
         }
     }
 }

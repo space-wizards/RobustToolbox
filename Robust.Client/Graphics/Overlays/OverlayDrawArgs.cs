@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
 
         /// <summary>
         ///     The viewport control that is rendering this viewport.
-        ///     Only available for screen-space overlays.
+        ///     Not always available.
         /// </summary>
         public readonly IViewportControl? ViewportControl;
 

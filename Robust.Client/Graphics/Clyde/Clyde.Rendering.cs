@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
@@ -116,7 +117,8 @@ namespace Robust.Client.Graphics.Clyde
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye, out Matrix3 proj, out Matrix3 view)
+        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
+            out Matrix3 proj, out Matrix3 view)
         {
             eye.GetViewMatrix(out view, renderScale);
 
@@ -262,8 +264,15 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
-            BindVertexArray(QuadVAO.Handle);
+            DrawQuadWithVao(QuadVAO, a, b, modelMatrix, program);
+        }
+
+        private void DrawQuadWithVao(GLHandle vao, Vector2 a, Vector2 b, in Matrix3 modelMatrix,
+            GLShaderProgram program)
+        {
+            BindVertexArray(vao.Handle);
             CheckGlError();
+
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
@@ -419,8 +428,8 @@ namespace Robust.Client.Graphics.Clyde
                         //It's important to start at Texture6 here since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
                         //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
                         //Might change this in the future?
-                        TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
-                        SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
+                        TextureUnit cTarget = TextureUnit.Texture6 + textureUnitVal;
+                        SetTexture(cTarget, ((ClydeTexture) clydeTexture).TextureId);
                         program.SetUniformTexture(name, cTarget);
                         textureUnitVal++;
                         break;
@@ -818,7 +827,7 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = false;
             _currentMatrixModel = Matrix3.Identity;
             SetScissorFull(null);
-            BindRenderTargetFull(_mainWindowRenderTarget);
+            BindRenderTargetFull(_mainMainWindowRenderMainTarget);
             _batchMetaData = null;
             _queuedShader = _defaultShader.Handle;
         }
@@ -830,6 +839,109 @@ namespace Robust.Client.Graphics.Clyde
                 BlendingFactorDest.OneMinusSrcAlpha,
                 BlendingFactorSrc.One,
                 BlendingFactorDest.OneMinusSrcAlpha);
+        }
+
+        private void BlitSecondaryWindows()
+        {
+            // Only got main window.
+            if (_windowing!.AllWindows.Count == 1)
+                return;
+
+            if (!_hasGLFenceSync && _cfg.GetCVar(CVars.DisplayForceSyncWindows))
+            {
+                GL.Finish();
+            }
+
+            if (EffectiveThreadWindowBlit)
+            {
+                foreach (var window in _windowing.AllWindows)
+                {
+                    if (window.IsMainWindow)
+                        continue;
+
+                    window.BlitDoneEvent!.Reset();
+                    window.BlitStartEvent!.Set();
+                    window.BlitDoneEvent.Wait();
+                }
+            }
+            else
+            {
+                foreach (var window in _windowing.AllWindows)
+                {
+                    if (window.IsMainWindow)
+                        continue;
+
+                    _windowing.GLMakeContextCurrent(window);
+                    BlitThreadDoSecondaryWindowBlit(window);
+                }
+
+                _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
+            }
+        }
+
+        private void BlitThreadDoSecondaryWindowBlit(WindowReg window)
+        {
+            var rt = window.RenderTexture!;
+
+            if (_hasGLFenceSync)
+            {
+                // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
+                var sync = rt!.LastGLSync;
+                GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
+                CheckGlError();
+            }
+
+            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
+            CheckGlError();
+
+            SetTexture(TextureUnit.Texture0, window.RenderTexture!.Texture);
+
+            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            CheckGlError();
+
+            window.BlitDoneEvent?.Set();
+            _windowing!.WindowSwapBuffers(window);
+        }
+
+        private void BlitThreadInit(WindowReg reg)
+        {
+            _windowing!.GLMakeContextCurrent(reg);
+            _windowing.GLSwapInterval(0);
+
+            if (!_isGLES)
+                GL.Enable(EnableCap.FramebufferSrgb);
+
+            var vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, WindowVBO.ObjectHandle);
+            // Vertex Coords
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
+            GL.EnableVertexAttribArray(0);
+            // Texture Coords.
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
+
+            var program = _compileProgram(_winBlitShaderVert, _winBlitShaderFrag, new (string, uint)[]
+            {
+                ("aPos", 0),
+                ("tCoord", 1),
+            }, includeLib: false);
+
+            GL.UseProgram(program.Handle);
+            var loc = GL.GetUniformLocation(program.Handle, "tex");
+            SetTexture(TextureUnit.Texture0, reg.RenderTexture!.Texture);
+            GL.Uniform1(loc, 0);
+        }
+
+        private void FenceRenderTarget(RenderTargetBase rt)
+        {
+            if (!_hasGLFenceSync || !rt.MakeGLFence)
+                return;
+
+            if (rt.LastGLSync != 0)
+                GL.DeleteSync(rt.LastGLSync);
+
+            rt.LastGLSync = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
         }
 
         [StructLayout(LayoutKind.Explicit)]

@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(DictionarySerializer<,>))]
-    public class DictionarySerializerTest : TypeSerializerTest
+    public class DictionarySerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()

@@ -193,13 +193,14 @@ namespace Robust.Server.GameStates
                 if (!_entMan.EntityExists(entityUid))
                     continue;
 
+                var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
+
                 // Anchored entities don't ever leave
-                if (_compMan.HasComponent<SnapGridComponent>(entityUid))
+                if (xform.Anchored)
                     continue;
 
                 // PVS leave message
                 //TODO: Remove NaN as the signal to leave PVS
-                var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
                 var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
 
                 entityStates.Add(new EntityState(entityUid,
@@ -232,7 +233,8 @@ namespace Robust.Server.GameStates
                     // PVS enter message
 
                     // skip sending anchored entities (walls)
-                    if (_compMan.HasComponent<SnapGridComponent>(entityUid) && _entMan.GetEntity(entityUid).LastModifiedTick <= lastMapUpdate)
+                    var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
+                    if (xform.Anchored && _entMan.GetEntity(entityUid).LastModifiedTick <= lastMapUpdate)
                         continue;
 
                     // don't assume the client knows anything about us

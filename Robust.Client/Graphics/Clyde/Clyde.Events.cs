@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using OpenToolkit.Graphics.OpenGL4;
-using Robust.Client.Input;
-using Robust.Shared.Maths;
-
-// Makes switching easier.
+﻿// Makes switching easier.
 #if EXCEPTION_TOLERANCE
 #define EXCEPTION_TOLERANCE_LOCAL
 using System;
 using Robust.Shared.Log;
 #endif
+
+using System.Collections.Generic;
+using OpenToolkit.Graphics.OpenGL4;
+using Robust.Client.Input;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
 {

@@ -9,17 +9,10 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
-        private readonly Dictionary<Type, object> _typeWriters = new();
-        private readonly Dictionary<Type, object> _typeCopiers = new();
-        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeValidators = new();
-
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericReaderTypes = new();
         private readonly Dictionary<Type, Type> _genericWriterTypes = new();
         private readonly Dictionary<Type, Type> _genericCopierTypes = new();
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericValidatorTypes = new();
-
-        private readonly Dictionary<Type, object> _customTypeSerializers = new();
 
         private void InitializeTypeSerializers()
         {

@@ -5,5 +5,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [BaseTypeRequired(typeof(Attribute))]
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public class MeansDataDefinition : Attribute { }
+    public class MeansDataDefinition : Attribute
+    {
+    }
 }

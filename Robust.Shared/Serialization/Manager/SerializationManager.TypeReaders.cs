@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.IoC;
@@ -19,6 +20,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null);
 
+        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ReadDelegate>> _readDelegates = new();
 
         private ReadDelegate GetOrCreateReadDelegate(Type type, Type nodeType)

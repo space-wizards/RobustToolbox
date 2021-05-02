@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -14,6 +15,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null);
 
+        private readonly Dictionary<Type, object> _typeCopiers = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, CopyDelegate>> _copyDelegates = new();
 
         private CopyDelegate GetOrCreateCopyDelegate(Type commonType, Type sourceType, Type targetType)

@@ -63,8 +63,8 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.NotNull(property);
 
             var propertyInfo = new SpecificPropertyInfo(property!);
-            Assert.NotNull(propertyInfo.GetCustomAttribute<DataFieldAttribute>());
-            Assert.NotNull(propertyInfo.GetCustomAttribute<AlwaysPushInheritanceAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<AlwaysPushInheritanceAttribute>());
 
             // We check for the property info properly finding field targeted attributes as
             // well, otherwise we run the risk of the data field being targeted to the
@@ -76,7 +76,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(propertyInfo.DeclaringType!);
             Assert.NotNull(dataDefinition);
 
-            var alwaysPushDataField = propertyInfo.GetCustomAttribute<DataFieldAttribute>();
+            var alwaysPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
             var propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(alwaysPushDataField));
             var inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;
@@ -89,10 +89,18 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.NotNull(property);
 
             propertyInfo = new SpecificPropertyInfo(property!);
-            Assert.NotNull(propertyInfo.GetCustomAttribute<DataFieldAttribute>());
-            Assert.NotNull(propertyInfo.GetCustomAttribute<NeverPushInheritanceAttribute>());
 
-            var neverPushDataField = new SpecificPropertyInfo(property!).GetCustomAttribute<DataFieldAttribute>();
+            // Data field is targeted to the backing field
+            Assert.NotNull(propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>());
+            Assert.Null(propertyInfo.GetAttribute<DataFieldAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<DataFieldAttribute>(true));
+
+            // NeverPushInheritanceAttribute is targeted to the property
+            Assert.NotNull(propertyInfo.GetAttribute<NeverPushInheritanceAttribute>());
+            Assert.Null(propertyInfo.GetBackingField()!.GetAttribute<NeverPushInheritanceAttribute>());
+            Assert.NotNull(propertyInfo.GetAttribute<NeverPushInheritanceAttribute>(true));
+
+            var neverPushDataField = propertyInfo.GetBackingField()!.GetAttribute<DataFieldAttribute>();
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehaviour;

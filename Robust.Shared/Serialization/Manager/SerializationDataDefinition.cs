@@ -73,9 +73,12 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var abstractFieldInfo in type.GetAllPropertiesAndFields())
             {
-                var attr = abstractFieldInfo.GetCustomAttribute<DataFieldAttribute>();
+                if (abstractFieldInfo.IsBackingField())
+                {
+                    continue;
+                }
 
-                if (attr == null || abstractFieldInfo.IsBackingField())
+                if (!abstractFieldInfo.TryGetAttribute(out DataFieldAttribute? dataField, true))
                 {
                     continue;
                 }
@@ -108,17 +111,17 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 var inheritanceBehaviour = InheritanceBehaviour.Default;
-                if (abstractFieldInfo.HasCustomAttribute<AlwaysPushInheritanceAttribute>())
+                if (abstractFieldInfo.HasAttribute<AlwaysPushInheritanceAttribute>(true))
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Always;
                 }
-                else if (abstractFieldInfo.HasCustomAttribute<NeverPushInheritanceAttribute>())
+                else if (abstractFieldInfo.HasAttribute<NeverPushInheritanceAttribute>(true))
                 {
                     inheritanceBehaviour = InheritanceBehaviour.Never;
                 }
 
                 var fieldDefinition = new FieldDefinition(
-                    attr,
+                    dataField,
                     abstractFieldInfo.GetValue(dummyObj),
                     abstractFieldInfo,
                     backingField,
@@ -523,14 +526,14 @@ namespace Robust.Shared.Serialization.Manager
             public readonly InheritanceBehaviour InheritanceBehaviour;
 
             public FieldDefinition(
-                DataFieldAttribute attr,
+                DataFieldAttribute dataField,
                 object? defaultValue,
                 AbstractFieldInfo fieldInfo,
                 AbstractFieldInfo backingField,
                 InheritanceBehaviour inheritanceBehaviour)
             {
                 BackingField = backingField;
-                Attribute = attr;
+                Attribute = dataField;
                 DefaultValue = defaultValue;
                 FieldInfo = fieldInfo;
                 InheritanceBehaviour = inheritanceBehaviour;

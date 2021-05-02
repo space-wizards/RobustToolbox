@@ -99,6 +99,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var width = _cfg.GetCVar(CVars.DisplayWidth);
                 var height = _cfg.GetCVar(CVars.DisplayHeight);
+                var prevWidth = width;
+                var prevHeight = height;
 
                 IClydeMonitor? monitor = null;
                 var fullscreen = false;
@@ -135,6 +137,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 _mainWindow = reg;
                 reg.IsMainWindow = true;
+
+                if (fullscreen)
+                {
+                    reg.PrevWindowSize = (prevWidth, prevHeight);
+                    reg.PrevWindowPos = (50, 50);
+                }
 
                 UpdateVSync();
 
@@ -267,7 +275,7 @@ namespace Robust.Client.Graphics.Clyde
                     (Window*) cmd.Window,
                     monitorPtr,
                     cmd.X, cmd.Y,
-                    cmd.W, cmd.W,
+                    cmd.W, cmd.H,
                     cmd.RefreshRate
                 );
             }

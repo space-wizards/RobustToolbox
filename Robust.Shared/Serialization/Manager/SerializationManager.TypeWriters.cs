@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,8 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
+        private readonly Dictionary<Type, object> _typeWriters = new();
+
         private bool TryWriteWithTypeSerializers(
             Type type,
             object obj,
@@ -16,7 +19,7 @@ namespace Robust.Shared.Serialization.Manager
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            //TODO Paul: do this shit w/ delegates
+            // TODO Serialization: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
 

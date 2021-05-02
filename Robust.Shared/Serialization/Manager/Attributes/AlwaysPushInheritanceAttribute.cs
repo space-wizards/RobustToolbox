@@ -1,9 +1,10 @@
 using System;
-using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Serialization.Manager.Attributes
 {
-    //todo paul find a way to constrain this to datafields only & make exclusive w/ neverpush
+    // TODO Serialization: find a way to constrain this to DataFields only & make exclusive w/ NeverPush
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class AlwaysPushInheritanceAttribute : Attribute { }
+    public class AlwaysPushInheritanceAttribute : Attribute
+    {
+    }
 }

@@ -2,9 +2,9 @@
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.DataDefinition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Utility;
-using static Robust.Shared.Serialization.Manager.SerializationDataDefinition;
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -101,7 +101,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehaviour.Never));
         }
 
-        [DataDefinition]
+        [Robust.Shared.Serialization.Manager.Attributes.DataDefinition]
         public class PropertyAndFieldDefinitionTestDefinition
         {
             [DataField(GetOnlyPropertyName)]

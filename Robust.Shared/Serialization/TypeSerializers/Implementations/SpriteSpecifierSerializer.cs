@@ -104,9 +104,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            //todo paul actually validate the id
+            // TODO Serialization: actually validate the id
             return string.IsNullOrWhiteSpace(node.Value)
-                ? new ErrorNode(node, "Invalid entityprototypeid")
+                ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }
 

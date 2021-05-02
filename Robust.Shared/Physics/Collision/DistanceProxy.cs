@@ -94,7 +94,6 @@ namespace Robust.Shared.Physics.Collision
 
                     Radius = chain.Radius;
                     */
-                    break;
 
                 case ShapeType.Edge:
                     EdgeShape edge = (EdgeShape) shape;

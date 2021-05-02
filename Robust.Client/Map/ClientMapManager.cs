@@ -56,8 +56,7 @@ namespace Robust.Client.Map
                         continue;
                     }
 
-                    CreateGrid(gridData![gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
-                        creationDatum.SnapSize);
+                    CreateGrid(gridData![gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize);
                 }
             }
 

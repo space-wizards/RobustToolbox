@@ -49,7 +49,7 @@ namespace Robust.Shared.GameObjects
         internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
             where TEvent : EntityEventArgs
         {
-            _eventTables.DispatchComponent(component.Owner.Uid, component.GetType(), typeof(TEvent), args);
+            _eventTables.DispatchComponent(component.Owner.Uid, component, typeof(TEvent), args);
         }
 
         /// <inheritdoc />
@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
-        
+
         private class EventTables : IDisposable
         {
             private IEntityManager _entMan;
@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
 
                 _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
                 _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
-                
+
                 _eventTables = new();
                 _subscriptions = new();
                 _subscriptionLock = false;
@@ -119,7 +119,7 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveEntity(e);
             }
-            
+
             private void OnComponentAdded(object? sender, ComponentEventArgs e)
             {
                 _subscriptionLock = true;
@@ -160,7 +160,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                     return;
-                
+
                 compSubs.Remove(eventType);
             }
 
@@ -214,7 +214,7 @@ namespace Robust.Shared.GameObjects
             public void Dispatch(EntityUid euid, Type eventType, EntityEventArgs args)
             {
                 var eventTable = _eventTables[euid];
-                
+
                 if(!eventTable.TryGetValue(eventType, out var subscribedComps))
                     return;
 
@@ -231,15 +231,14 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            public void DispatchComponent(EntityUid euid, Type compType, Type eventType, EntityEventArgs args)
+            public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
             {
-                if (!_subscriptions.TryGetValue(compType, out var compSubs))
+                if (!_subscriptions.TryGetValue(component.GetType(), out var compSubs))
                     return;
 
                 if (!compSubs.TryGetValue(eventType, out var handler))
                     return;
 
-                var component = _entMan.ComponentManager.GetComponent(euid, compType);
                 handler(euid, component, args);
             }
 

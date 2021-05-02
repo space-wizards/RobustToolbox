@@ -321,6 +321,21 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Anchored
+        {
+            get => Owner.HasComponent<SnapGridComponent>();
+            set
+            {
+                if(value && !Owner.HasComponent<SnapGridComponent>())
+                    Owner.AddComponent<SnapGridComponent>();
+
+                else if(!value && Owner.HasComponent<SnapGridComponent>())
+                    Owner.RemoveComponent<SnapGridComponent>();
+            }
+        }
+
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);

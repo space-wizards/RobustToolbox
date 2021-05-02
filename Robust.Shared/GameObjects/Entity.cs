@@ -114,7 +114,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool IsValid()
         {
-            return !Deleted;
+            return EntityManager.EntityExists(Uid);
         }
 
         /// <summary>
@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool HasComponent<T>()
         {
-            return EntityManager.ComponentManager.HasComponent(Uid, typeof(T));
+            return EntityManager.ComponentManager.HasComponent<T>(Uid);
         }
 
         /// <inheritdoc />

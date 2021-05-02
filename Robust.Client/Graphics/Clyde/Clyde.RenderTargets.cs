@@ -332,6 +332,23 @@ namespace Robust.Client.Graphics.Clyde
                 GC.SuppressFinalize(this);
             }
 
+            public void DisposeDeferred()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                DisposeDeferredImpl();
+                GC.SuppressFinalize(this);
+            }
+
+            protected virtual void DisposeDeferredImpl()
+            {
+
+            }
+
             ~RenderTargetBase()
             {
                 Dispose(false);
@@ -359,8 +376,13 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    Clyde._renderTargetDisposeQueue.Enqueue(Handle);
+                    DisposeDeferredImpl();
                 }
+            }
+
+            protected override void DisposeDeferredImpl()
+            {
+                Clyde._renderTargetDisposeQueue.Enqueue(Handle);
             }
         }
 

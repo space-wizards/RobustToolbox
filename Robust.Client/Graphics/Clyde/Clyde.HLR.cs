@@ -350,6 +350,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.SetProjView(oldProj, oldView);
                     _renderHandle.UseShader(null);
+
+                    // TODO: cache this properly across frames.
+                    entityPostRenderTarget.DisposeDeferred();
                 }
             }
 

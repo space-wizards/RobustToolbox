@@ -125,6 +125,12 @@ namespace Robust.Shared.GameObjects
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }
         IEnumerable<EntityUid> ChildEntityUids { get; }
+
+        /// <summary>
+        /// Is this transform anchored to a grid tile?
+        /// </summary>
+        bool Anchored { get; set; }
+
         Matrix3 GetLocalMatrix();
         Matrix3 GetLocalMatrixInv();
         void DetachParentToNull();

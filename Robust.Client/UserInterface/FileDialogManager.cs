@@ -55,9 +55,9 @@ namespace Robust.Client.UserInterface
         private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
         {
 #if LINUX
-            if (filters = null)
+            if (filters == null)
             {
-                return null; 
+                return null;
             }
 
             if (await IsKDialogAvailable())

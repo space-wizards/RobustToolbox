@@ -24,9 +24,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
 
-        IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
         // Initialized in Clyde's constructor
-        private readonly RenderWindow _mainWindowRenderTarget;
+        private readonly RenderMainWindow _mainMainWindowRenderMainTarget;
 
         // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
         // It is used for SRGB emulation.
@@ -98,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
                         case RTCF.RG32F:
                         case RTCF.R11FG11FB10F:
                         case RTCF.Rgba16F:
-                            Logger.WarningS("clyde.ogl", "The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
+                            _sawmillOgl.Warning("The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
                             colorFormat = RTCF.Rgba8;
                             break;
                     }
@@ -268,10 +267,10 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void UpdateWindowLoadedRtSize()
+        private void UpdateMainWindowLoadedRtSize()
         {
-            var loadedRt = RtToLoaded(_mainWindowRenderTarget);
-            loadedRt.Size = _framebufferSize;
+            var loadedRt = RtToLoaded(_mainMainWindowRenderMainTarget);
+            loadedRt.Size = _windowing!.MainWindow!.FramebufferSize;
         }
 
         private sealed class LoadedRenderTarget
@@ -298,6 +297,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             protected readonly Clyde Clyde;
             private bool _disposed;
+
+            public bool MakeGLFence;
+            public nint LastGLSync;
 
             protected RenderTargetBase(Clyde clyde, ClydeHandle handle)
             {
@@ -384,11 +386,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class RenderWindow : RenderTargetBase, IRenderWindow
+        private sealed class RenderMainWindow : RenderTargetBase
         {
-            public override Vector2i Size => Clyde._framebufferSize;
+            public override Vector2i Size => Clyde._windowing!.MainWindow!.FramebufferSize;
 
-            public RenderWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
+            public RenderMainWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
             {
             }
         }

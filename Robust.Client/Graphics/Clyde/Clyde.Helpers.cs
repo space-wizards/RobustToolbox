@@ -47,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[target.TextureId].OpenGLObject.Handle);
             CheckGlError();
-            GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, _framebufferSize.X, _framebufferSize.Y);
+            GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, source.Size.X, source.Size.Y);
             CheckGlError();
 
             if (pause && store != null) {
@@ -160,12 +160,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void CheckGlErrorInternal(string? path, int line)
+        private void CheckGlErrorInternal(string? path, int line)
         {
             var err = GL.GetError();
             if (err != ErrorCode.NoError)
             {
-                Logger.ErrorS("clyde.ogl", $"OpenGL error: {err} at {path}:{line}\n{Environment.StackTrace}");
+                _sawmillOgl.Error($"OpenGL error: {err} at {path}:{line}\n{Environment.StackTrace}");
             }
         }
 
@@ -276,7 +276,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadGLProc<T>(string name, out T field) where T : Delegate
         {
-            var proc = _graphicsContext.GetProcAddress(name);
+            var proc = _windowing!.GraphicsBindingContext.GetProcAddress(name);
             if (proc == IntPtr.Zero || proc == new IntPtr(1) || proc == new IntPtr(2))
             {
                 throw new InvalidOperationException($"Unable to load GL function '{name}'!");

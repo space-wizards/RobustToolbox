@@ -36,7 +36,7 @@ namespace Robust.Client.Input
 
         [ViewVariables] public bool Enabled { get; set; } = true;
 
-        [ViewVariables] public virtual Vector2 MouseScreenPosition => Vector2.Zero;
+        [ViewVariables] public virtual ScreenCoordinates MouseScreenPosition => default;
 
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
@@ -344,7 +344,7 @@ namespace Robust.Client.Input
                 binding.State = state;
 
                 var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
-                    new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+                    MouseScreenPosition, binding.CanFocus);
 
                 // UI returns true here into blockPass if it wants to prevent us from giving input events
                 // to the viewport, but doesn't want it hard-handled so we keep processing possible key actions.

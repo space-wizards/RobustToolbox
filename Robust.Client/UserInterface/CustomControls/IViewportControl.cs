@@ -13,6 +13,8 @@ namespace Robust.Client.UserInterface.CustomControls
     /// </remarks>
     public interface IViewportControl
     {
+        IClydeWindow? Window { get; }
+
         /// <summary>
         ///     Converts a point on the screen to map coordinates.
         /// </summary>

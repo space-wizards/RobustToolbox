@@ -82,8 +82,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 var currentFrameIndex = MathHelper.Mod(_frameIndex - 1 - i, TrackedFrames);
                 var frameTime = _frameTimes[currentFrameIndex];
                 var frameHeight = FrameHeight * (frameTime * TargetFrameRate);
-                var x = FrameWidth * UserInterfaceManager.UIScale * (TrackedFrames - 1 - i);
-                var rect = new UIBox2(x, PixelHeight - (frameHeight * ratio), x + FrameWidth * UserInterfaceManager.UIScale, PixelHeight);
+                var x = FrameWidth * UIScale * (TrackedFrames - 1 - i);
+                var rect = new UIBox2(x, PixelHeight - (frameHeight * ratio), x + FrameWidth * UIScale, PixelHeight);
 
                 Color color;
                 if (frameTime > 1f / (TargetFrameRate / 2 - 1))

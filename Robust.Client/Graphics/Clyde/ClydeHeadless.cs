@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Input;
@@ -18,13 +19,16 @@ namespace Robust.Client.Graphics.Clyde
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
     [UsedImplicitly]
-    internal sealed class ClydeHeadless : ClydeBase, IClydeInternal, IClydeAudio
+    internal sealed class ClydeHeadless : IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
-        public IRenderWindow MainWindowRenderTarget { get; }
-        public override Vector2i ScreenSize { get; } = (1280, 720);
+        public IClydeWindow MainWindow { get; }
+        public Vector2i ScreenSize => (1280, 720);
+        public IEnumerable<IClydeWindow> AllWindows => _windows;
         public Vector2 DefaultWindowScale => (1, 1);
-        public override bool IsFocused => true;
+        public bool IsFocused => true;
+        private readonly List<IClydeWindow> _windows = new();
+        private int _nextWindowId = 2;
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -33,19 +37,25 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHeadless()
         {
-            MainWindowRenderTarget = new DummyRenderWindow(this);
+            var mainRt = new DummyRenderWindow(this);
+            var window = new DummyWindow(mainRt) {Id = new WindowId(1)};
+
+            _windows.Add(window);
+            MainWindow = window;
         }
 
-        public Vector2 MouseScreenPosition => ScreenSize / 2;
+        public ScreenCoordinates MouseScreenPosition => default;
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
         public event Action<TextEventArgs>? TextEntered;
         public event Action<MouseMoveEventArgs>? MouseMove;
+        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
-        public event Action<string>? CloseWindow;
+        public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowDestroyedEventArgs>? DestroyWindow;
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -55,8 +65,6 @@ namespace Robust.Client.Graphics.Clyde
         public ClydeDebugLayers DebugLayers { get; set; }
 
         public string GetKeyName(Keyboard.Key key) => string.Empty;
-        public string GetKeyNameScanCode(int scanCode) => string.Empty;
-        public int GetKeyScanCode(Keyboard.Key key) => default;
 
         public void Shutdown()
         {
@@ -68,7 +76,7 @@ namespace Robust.Client.Graphics.Clyde
             return null;
         }
 
-        public override void SetWindowTitle(string title)
+        public void SetWindowTitle(string title)
         {
             // Nada.
         }
@@ -83,25 +91,19 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public override bool Initialize()
-        {
-            base.Initialize();
-            return true;
-        }
-
-        public override event Action<WindowResizedEventArgs> OnWindowResized
+        public event Action<WindowResizedEventArgs> OnWindowResized
         {
             add { }
             remove { }
         }
 
-        public override event Action<WindowFocusedEventArgs> OnWindowFocused
+        public event Action<WindowFocusedEventArgs> OnWindowFocused
         {
             add { }
             remove { }
         }
 
-        public event Action OnWindowScaleChanged
+        public event Action<WindowContentScaleEventArgs> OnWindowScaleChanged
         {
             add { }
             remove { }
@@ -120,6 +122,28 @@ namespace Robust.Client.Graphics.Clyde
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             // Nada.
+        }
+
+        public bool SeparateWindowThread => false;
+
+        public bool InitializePreWindowing()
+        {
+            return true;
+        }
+
+        public void TerminateWindowLoop()
+        {
+            throw new InvalidOperationException("ClydeHeadless does not use windowing threads");
+        }
+
+        public void EnterWindowLoop()
+        {
+            throw new InvalidOperationException("ClydeHeadless does not use windowing threads");
+        }
+
+        public bool InitializePostWindowing()
+        {
+            return true;
         }
 
         public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
@@ -170,7 +194,7 @@ namespace Robust.Client.Graphics.Clyde
         public void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null)
         {
             // Immediately call callback with an empty buffer.
-            var (x, y) = ClampSubRegion(ScreenSize, subRegion);
+            var (x, y) = ClydeBase.ClampSubRegion(ScreenSize, subRegion);
             callback(new Image<Rgb24>(x, y));
         }
 
@@ -184,6 +208,17 @@ namespace Robust.Client.Graphics.Clyde
         {
             // TODO: Actually return something.
             yield break;
+        }
+
+        public Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
+        {
+            var window = new DummyWindow(CreateRenderTarget((123, 123), default))
+            {
+                Id = new WindowId(_nextWindowId++)
+            };
+            _windows.Add(window);
+
+            return Task.FromResult<IClydeWindow>(window);
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
@@ -223,9 +258,9 @@ namespace Robust.Client.Graphics.Clyde
             return DummyBufferedAudioSource.Instance;
         }
 
-        public string GetText()
+        public Task<string> GetText()
         {
-            return string.Empty;
+            return Task.FromResult(string.Empty);
         }
 
         public void SetText(string text)
@@ -440,7 +475,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
             {
-                var (x, y) = ClampSubRegion(Size, subRegion);
+                var (x, y) = ClydeBase.ClampSubRegion(Size, subRegion);
                 callback(new Image<T>(x, y));
             }
 
@@ -451,7 +486,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class DummyRenderWindow : IRenderWindow
+        private sealed class DummyRenderWindow : IRenderTarget
         {
             private readonly ClydeHeadless _clyde;
 
@@ -464,7 +499,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void CopyPixelsToMemory<T>(CopyPixelsDelegate<T> callback, UIBox2i? subRegion) where T : unmanaged, IPixel<T>
             {
-                var (x, y) = ClampSubRegion(Size, subRegion);
+                var (x, y) = ClydeBase.ClampSubRegion(Size, subRegion);
                 callback(new Image<T>(x, y));
             }
 
@@ -539,6 +574,35 @@ namespace Robust.Client.Graphics.Clyde
                 in UIBox2i viewportBounds)
             {
                 // Nada
+            }
+        }
+
+        private sealed class DummyWindow : IClydeWindow
+        {
+            public DummyWindow(IRenderTarget renderTarget)
+            {
+                RenderTarget = renderTarget;
+            }
+
+            public Vector2i Size { get; } = default;
+            public bool IsDisposed { get; private set; }
+            public WindowId Id { get; set; }
+            public IRenderTarget RenderTarget { get; }
+            public string Title { get; set; } = "";
+            public bool IsFocused => false;
+            public bool IsMinimized => false;
+            public bool IsVisible { get; set; } = true;
+            public Vector2 ContentScale => Vector2.One;
+            public bool DisposeOnClose { get; set; }
+            public event Action<WindowClosedEventArgs>? Closed;
+
+            public void MaximizeOnMonitor(IClydeMonitor monitor)
+            {
+            }
+
+            public void Dispose()
+            {
+                IsDisposed = true;
             }
         }
     }

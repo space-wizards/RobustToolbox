@@ -665,10 +665,10 @@ namespace Robust.Client.Console.Commands
         public string Description => "Gets the system clipboard";
         public string Help => "getclipboard";
 
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        public async void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
-            shell.WriteLine(mgr.GetText());
+            shell.WriteLine(await mgr.GetText());
         }
     }
 
@@ -1084,15 +1084,8 @@ namespace Robust.Client.Console.Commands
                 var key = (Keyboard.Key) parsed!;
 
                 var name = clyde.GetKeyName(key);
-                var scanCode = clyde.GetKeyScanCode(key);
-                var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
 
-                shell.WriteLine($"name: '{name}' scan code: '{scanCode}' name via scan code: '{nameScanCode}'");
-            }
-            else if (int.TryParse(args[0], out var scanCode))
-            {
-                var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
-                shell.WriteLine($"name via scan code: '{nameScanCode}'");
+                shell.WriteLine($"name: '{name}' ");
             }
         }
     }

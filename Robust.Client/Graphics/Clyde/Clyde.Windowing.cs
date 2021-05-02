@@ -315,7 +315,7 @@ namespace Robust.Client.Graphics.Clyde
                     IsBackground = true
                 };
 
-                System.Console.WriteLine("A");
+                // System.Console.WriteLine("A");
                 reg.BlitThread.Start();
                 // Wait for thread to finish init.
                 reg.BlitDoneEvent.Wait();

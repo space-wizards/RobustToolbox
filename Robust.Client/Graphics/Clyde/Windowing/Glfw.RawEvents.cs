@@ -61,13 +61,13 @@ namespace Robust.Client.Graphics.Clyde
 
             private void OnGlfwCursorPos(Window* window, double x, double y)
             {
-                System.Console.WriteLine($"{(nint)window:X16}: {x},{y}");
+                // System.Console.WriteLine($"{(nint)window:X16}: {x},{y}");
                 SendEvent(new EventCursorPos((nint) window, x, y));
             }
 
             private void OnGlfwCursorEnter(Window* window, bool entered)
             {
-                System.Console.WriteLine($"{(nint)window:X16}: {entered}");
+                // System.Console.WriteLine($"{(nint)window:X16}: {entered}");
                 SendEvent(new EventCursorEnter((nint) window, entered));
             }
 

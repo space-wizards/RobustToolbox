@@ -124,11 +124,19 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.SubscribeLocalEvent(handler);
         }
 
+        [Obsolete("Use the overload without the handler argument.")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {
-            EntityManager.EventBus.UnsubscribeLocalEvent(handler);
+            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
+        }
+
+        protected void UnsubscribeLocalEvent<TComp, TEvent>()
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)

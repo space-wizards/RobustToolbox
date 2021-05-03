@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using Robust.Client.Graphics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -9,6 +11,7 @@ namespace Robust.Client.UserInterface.CustomControls
     public sealed class FrameGraph : Control
     {
         private readonly IGameTiming _gameTiming;
+        private readonly IConfigurationManager _cfg;
 
         /// <summary>
         ///     How many frames we show at once.
@@ -26,11 +29,6 @@ namespace Robust.Client.UserInterface.CustomControls
         /// </summary>
         private const int FrameHeight = 60;
 
-        /// <summary>
-        ///     The target frame rate at which we are "good".
-        /// </summary>
-        private const int TargetFrameRate = 60;
-
         // We keep track of frame times in a ring buffer.
         private readonly float[] _frameTimes = new float[TrackedFrames];
         private readonly BitArray _gcMarkers = new(TrackedFrames);
@@ -39,9 +37,10 @@ namespace Robust.Client.UserInterface.CustomControls
         private int _frameIndex;
         private int _lastGCCount;
 
-        public FrameGraph(IGameTiming gameTiming)
+        public FrameGraph(IGameTiming gameTiming, IConfigurationManager cfg)
         {
             _gameTiming = gameTiming;
+            _cfg = cfg;
 
             HorizontalAlignment = HAlignment.Left;
         }
@@ -66,6 +65,8 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Draw(handle);
 
+            var target = _cfg.GetCVar(CVars.DebugTargetFps);
+
             Span<Vector2> triangle = stackalloc Vector2[3];
 
             float maxHeight = 0;
@@ -73,7 +74,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var currentFrameIndex = MathHelper.Mod(_frameIndex - 1 - i, TrackedFrames);
                 var frameTime = _frameTimes[currentFrameIndex];
-                maxHeight = System.Math.Max(maxHeight, FrameHeight * (frameTime * TargetFrameRate));
+                maxHeight = System.Math.Max(maxHeight, FrameHeight * (frameTime * target));
             }
 
             float ratio = maxHeight > PixelHeight ? PixelHeight / maxHeight : 1;
@@ -81,16 +82,16 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var currentFrameIndex = MathHelper.Mod(_frameIndex - 1 - i, TrackedFrames);
                 var frameTime = _frameTimes[currentFrameIndex];
-                var frameHeight = FrameHeight * (frameTime * TargetFrameRate);
+                var frameHeight = FrameHeight * (frameTime * target);
                 var x = FrameWidth * UIScale * (TrackedFrames - 1 - i);
                 var rect = new UIBox2(x, PixelHeight - (frameHeight * ratio), x + FrameWidth * UIScale, PixelHeight);
 
                 Color color;
-                if (frameTime > 1f / (TargetFrameRate / 2 - 1))
+                if (frameTime > 1f / (target / 2 - 1))
                 {
                     color = Color.Red;
                 }
-                else if (frameTime > 1f / (TargetFrameRate - 1))
+                else if (frameTime > 1f / (target - 1))
                 {
                     color = Color.Yellow;
                 }

@@ -440,5 +440,16 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> TexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+
+        /*
+         * DEBUG
+         */
+
+        /// <summary>
+        ///     Target framerate for things like the frame graph.
+        /// </summary>
+        public static readonly CVarDef<int> DebugTargetFps =
+            CVarDef.Create("debug.target_fps", 60, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

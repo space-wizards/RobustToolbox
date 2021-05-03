@@ -99,21 +99,26 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var width = _cfg.GetCVar(CVars.DisplayWidth);
                 var height = _cfg.GetCVar(CVars.DisplayHeight);
+                var prevWidth = width;
+                var prevHeight = height;
 
                 IClydeMonitor? monitor = null;
+                var fullscreen = false;
 
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
                     monitor = _monitors[_primaryMonitorId].Handle;
                     width = monitor.Size.X;
                     height = monitor.Size.Y;
+                    fullscreen = true;
                 }
 
                 var parameters = new WindowCreateParameters
                 {
                     Width = width,
                     Height = height,
-                    Monitor = monitor
+                    Monitor = monitor,
+                    Fullscreen = fullscreen
                 };
 
                 var windowTask = SharedWindowCreate(renderer, parameters, null);
@@ -132,6 +137,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 _mainWindow = reg;
                 reg.IsMainWindow = true;
+
+                if (fullscreen)
+                {
+                    reg.PrevWindowSize = (prevWidth, prevHeight);
+                    reg.PrevWindowPos = (50, 50);
+                }
 
                 UpdateVSync();
 
@@ -264,7 +275,7 @@ namespace Robust.Client.Graphics.Clyde
                     (Window*) cmd.Window,
                     monitorPtr,
                     cmd.X, cmd.Y,
-                    cmd.W, cmd.W,
+                    cmd.W, cmd.H,
                     cmd.RefreshRate
                 );
             }

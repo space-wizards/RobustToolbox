@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Shared.Localization;
@@ -47,15 +48,16 @@ namespace Robust.Client.Graphics.Clyde
 
             public string KeyGetName(Keyboard.Key key)
             {
-                var name = Keyboard.GetSpecialKeyName(key);
+                if (_printableKeyNameMap.TryGetValue(key, out var name))
+                {
+                    var textInfo = Thread.CurrentThread.CurrentCulture.TextInfo;
+                    return textInfo.ToTitleCase(name);
+                }
+
+                name = Keyboard.GetSpecialKeyName(key, _loc);
                 if (name != null)
                 {
                     return Loc.GetString(name);
-                }
-
-                if (_printableKeyNameMap.TryGetValue(key, out name))
-                {
-                    return name;
                 }
 
                 return Loc.GetString("<unknown key>");

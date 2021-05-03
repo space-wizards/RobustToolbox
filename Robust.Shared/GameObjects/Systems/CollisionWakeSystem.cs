@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
             base.Shutdown();
             UnsubscribeLocalEvent<PhysicsWakeMessage>();
             UnsubscribeLocalEvent<PhysicsSleepMessage>();
-            UnsubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>(HandleCollisionWakeState);
+            UnsubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>();
         }
 
         private void HandleWake(PhysicsWakeMessage message)

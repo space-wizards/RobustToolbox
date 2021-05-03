@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using Robust.Shared.Localization;
+using Robust.Shared.Map;
 
 namespace Robust.Client.Input
 {
@@ -172,86 +174,23 @@ namespace Robust.Client.Input
         ///     Gets a "nice" version of special unprintable keys such as <see cref="Key.Escape"/>.
         /// </summary>
         /// <returns><see langword="null"/> if there is no nice version of this special key.</returns>
-        internal static string? GetSpecialKeyName(Key key)
+        internal static string? GetSpecialKeyName(Key key, ILocalizationManager loc)
         {
-            if (_keyNiceNameMap.TryGetValue(key, out var val))
+            var locId = $"input-key-{key}";
+            if (key == Key.LSystem || key == Key.RSystem)
             {
-                return val;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    locId += "-win";
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    locId += "-mac";
+                else
+                    locId += "-linux";
             }
 
-            return null;
-        }
+            if (loc.TryGetString(locId, out var name))
+                return name;
 
-        private static readonly Dictionary<Key, string> _keyNiceNameMap;
-
-        static Keyboard()
-        {
-
-            _keyNiceNameMap = new Dictionary<Key, string>
-            {
-                {Key.Escape, "Escape"},
-                {Key.Control, "Control"},
-                {Key.Shift, "Shift"},
-                {Key.Alt, "Alt"},
-                {Key.Menu, "Menu"},
-                {Key.F1, "F1"},
-                {Key.F2, "F2"},
-                {Key.F3, "F3"},
-                {Key.F4, "F4"},
-                {Key.F5, "F5"},
-                {Key.F6, "F6"},
-                {Key.F7, "F7"},
-                {Key.F8, "F8"},
-                {Key.F9, "F9"},
-                {Key.F10, "F10"},
-                {Key.F11, "F11"},
-                {Key.F12, "F12"},
-                {Key.F13, "F13"},
-                {Key.F14, "F14"},
-                {Key.F15, "F15"},
-                {Key.Pause, "Pause"},
-                {Key.Left, "Left"},
-                {Key.Up, "Up"},
-                {Key.Down, "Down"},
-                {Key.Right, "Right"},
-                {Key.Space, "Space"},
-                {Key.Return, "Return"},
-                {Key.NumpadEnter, "Num Enter"},
-                {Key.BackSpace, "Backspace"},
-                {Key.Tab, "Tab"},
-                {Key.PageUp, "Page Up"},
-                {Key.PageDown, "Page Down"},
-                {Key.End, "End"},
-                {Key.Home, "Home"},
-                {Key.Insert, "Insert"},
-                {Key.Delete, "Delete"},
-                {Key.MouseLeft, "Mouse Left"},
-                {Key.MouseRight, "Mouse Right"},
-                {Key.MouseMiddle, "Mouse Middle"},
-                {Key.MouseButton4, "Mouse 4"},
-                {Key.MouseButton5, "Mouse 5"},
-                {Key.MouseButton6, "Mouse 6"},
-                {Key.MouseButton7, "Mouse 7"},
-                {Key.MouseButton8, "Mouse 8"},
-                {Key.MouseButton9, "Mouse 9"},
-            };
-
-            // Have to adjust system key name depending on platform.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Cmd");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Cmd");
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Win");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Win");
-            }
-            else
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Meta");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Meta");
-            }
+            return loc.GetString("input-key-unknown");
         }
     }
 }

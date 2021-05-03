@@ -110,7 +110,7 @@ namespace Robust.Client.GameObjects
                 tile = new Vector2i((int) MathF.Floor(worldPos.Position.X), (int) MathF.Floor(worldPos.Position.Y));
             }
 
-            LayoutContainer.SetPosition(_label, mousePos);
+            LayoutContainer.SetPosition(_label, mousePos.Position);
 
             if ((gridId, tile).Equals(LastTile)) return;
 

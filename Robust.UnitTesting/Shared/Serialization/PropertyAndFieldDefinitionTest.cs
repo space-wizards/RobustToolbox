@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.NotNull(definition);
 
-            // Set only property with backing field, property targeted
+            // Get only property with backing field, property targeted
             Assert.That(definition!.GetOnlyProperty, Is.EqualTo(5));
 
             var backingField = definition.GetType().GetBackingField(GetOnlyPropertyName);
@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var backingFieldValue = backingField!.GetValue(definition);
             Assert.That(backingFieldValue, Is.EqualTo(5));
 
-            // Set only property with backing field, field targeted
+            // Get only property with backing field, field targeted
             Assert.That(definition.GetOnlyPropertyFieldTargeted, Is.EqualTo(10));
 
             // Get and set property with backing field, property targeted
@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             // Field
             Assert.That(definition.Field, Is.EqualTo(20));
 
-            // Get only property with other attribute field targeted
+            // Get only property with backing field, property targeted with another attribute field targeted
             Assert.That(definition.GetOnlyPropertyWithOtherAttributeFieldTargeted, Is.EqualTo(25));
 
             var property = definition.GetType().GetProperty(GetOnlyPropertyWithOtherAttributeFieldTargetedName);
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
             Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehavior.Always));
 
-            // Get only property with backing field and another attribute targeted to the property
+            // Get only property with backing field, field targeted with another attribute property targeted
             Assert.That(definition.GetOnlyPropertyFieldTargetedAndOtherAttribute, Is.EqualTo(30));
 
             property = definition.GetType().GetProperty(GetOnlyPropertyFieldTargetedAndOtherAttributeName);

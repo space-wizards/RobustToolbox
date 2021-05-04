@@ -1,9 +1,6 @@
-using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -13,9 +10,6 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-
-        private Stack<MoveEvent> _queuedMoveEvents = new();
-        private HashSet<EntityUid> _handledThisTick = new(32);
 
         public override void Initialize()
         {

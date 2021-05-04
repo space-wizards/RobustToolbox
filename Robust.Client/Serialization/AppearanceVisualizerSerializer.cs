@@ -62,7 +62,7 @@ namespace Robust.Client.Serialization
             ISerializationContext? context = null)
         {
             var mapping = serializationManager.WriteValueAs<MappingDataNode>(value.GetType(), value, alwaysWrite, context);
-            mapping.AddNode("type", new ValueDataNode(value.GetType().Name));
+            mapping.Add("type", new ValueDataNode(value.GetType().Name));
             return mapping;
         }
 

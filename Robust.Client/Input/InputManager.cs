@@ -146,9 +146,9 @@ namespace Robust.Client.Input
                 .Where(p => _bindingsByFunction[p].Count == 0)
                 .ToArray();
 
-            mapping.AddNode("version", new ValueDataNode("1"));
-            mapping.AddNode("binds", serializationManager.WriteValue(modifiedBindings));
-            mapping.AddNode("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
+            mapping.Add("version", new ValueDataNode("1"));
+            mapping.Add("binds", serializationManager.WriteValue(modifiedBindings));
+            mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));

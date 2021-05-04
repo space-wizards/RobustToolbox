@@ -96,13 +96,15 @@ namespace Robust.Benchmarks.Serialization.Definitions
         Repeat
     }
 
-    public enum Gas {}
+    public enum Gas
+    {
+    }
 
     [DataDefinition]
     public struct SeedChemQuantity
     {
         [DataField("Min")]
-        public int Min { get; }
+        public int Min;
 
         [DataField("Max")]
         public int Max;

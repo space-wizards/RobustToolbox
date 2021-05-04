@@ -28,12 +28,12 @@ namespace Robust.UnitTesting.Shared.Serialization
         public void ParityTest()
         {
             var mapping = new MappingDataNode();
-            mapping.AddNode(GetOnlyPropertyName, new ValueDataNode("5"));
-            mapping.AddNode(GetOnlyPropertyFieldTargetedName, new ValueDataNode("10"));
-            mapping.AddNode(GetAndSetPropertyName, new ValueDataNode("15"));
-            mapping.AddNode(FieldName, new ValueDataNode("20"));
-            mapping.AddNode(GetOnlyPropertyWithOtherAttributeFieldTargetedName, new ValueDataNode("25"));
-            mapping.AddNode(GetOnlyPropertyFieldTargetedAndOtherAttributeName, new ValueDataNode("30"));
+            mapping.Add(GetOnlyPropertyName, new ValueDataNode("5"));
+            mapping.Add(GetOnlyPropertyFieldTargetedName, new ValueDataNode("10"));
+            mapping.Add(GetAndSetPropertyName, new ValueDataNode("15"));
+            mapping.Add(FieldName, new ValueDataNode("20"));
+            mapping.Add(GetOnlyPropertyWithOtherAttributeFieldTargetedName, new ValueDataNode("25"));
+            mapping.Add(GetOnlyPropertyFieldTargetedAndOtherAttributeName, new ValueDataNode("30"));
 
             var definition = Serialization.ReadValue<PropertyAndFieldDefinitionTestDefinition>(mapping);
 

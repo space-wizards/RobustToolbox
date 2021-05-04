@@ -8,13 +8,18 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Graphics
 {
+    public delegate void CopyPixelsDelegate<T>(Image<T> pixels) where T : unmanaged, IPixel<T>;
+
     public interface IClyde
     {
-        IRenderWindow MainWindowRenderTarget { get; }
+        IClydeWindow MainWindow { get; }
+        IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 
         Vector2i ScreenSize { get; }
 
         bool IsFocused { get; }
+
+        IEnumerable<IClydeWindow> AllWindows { get; }
 
         /// <summary>
         ///     The default scale ratio for window contents, given to us by the OS.
@@ -33,7 +38,7 @@ namespace Robust.Client.Graphics
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
-        event Action OnWindowScaleChanged;
+        event Action<WindowContentScaleEventArgs> OnWindowScaleChanged;
 
         OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
@@ -96,9 +101,18 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <param name="type">What kind of screenshot to take</param>
         /// <param name="callback">The callback to run when the screenshot has been made.</param>
-        void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback);
+        /// <param name="subRegion">
+        ///     The subregion of the framebuffer to copy.
+        ///     If null, the whole framebuffer is copied.
+        /// </param>
+        /// <seealso cref="ScreenshotAsync"/>
+        /// <seealso cref="IRenderTarget.CopyPixelsToMemory{T}"/>
+        void Screenshot(ScreenshotType type, CopyPixelsDelegate<Rgb24> callback, UIBox2i? subRegion = null);
 
-        Task<Image<Rgb24>> ScreenshotAsync(ScreenshotType type)
+        /// <summary>
+        ///     Async version of <see cref="Screenshot"/>.
+        /// </summary>
+        Task<Image<Rgb24>> ScreenshotAsync(ScreenshotType type, UIBox2i? subRegion = null)
         {
             var tcs = new TaskCompletionSource<Image<Rgb24>>();
 
@@ -107,10 +121,15 @@ namespace Robust.Client.Graphics
             return tcs.Task;
         }
 
-        IClydeViewport CreateViewport(Vector2i size, string? name = null);
+        IClydeViewport CreateViewport(Vector2i size, string? name = null)
+        {
+            return CreateViewport(size, default, name);
+        }
+
+        IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name = null);
 
         IEnumerable<IClydeMonitor> EnumerateMonitors();
-    }
 
-    // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.
+        Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters);
+    }
 }

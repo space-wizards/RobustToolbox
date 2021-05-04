@@ -1,29 +1,30 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using Moq;
 using NUnit.Framework;
-using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable ,TestOf(typeof(ComponentManager))]
-    class ComponentManager_Tests
+    public class ComponentManager_Tests
     {
         private const uint CompNetId = 3;
-
-#region Component Management
+        private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
 
         [Test]
         public void AddComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = new DummyComponent()
+            {
+                Owner = entity
+            };
 
             // Act
             manager.AddComponent(entity, component);
@@ -37,14 +38,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void AddComponentOverwriteTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, new DummyComponent
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = new DummyComponent()
             {
                 Owner = entity
-            });
+            };
 
             // Act
             manager.AddComponent(entity, component, true);
@@ -58,8 +59,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void AddComponent_ExistingDeleted()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
             var firstComp = new DummyComponent {Owner = entity};
             manager.AddComponent(entity, firstComp);
             manager.RemoveComponent<DummyComponent>(entity.Uid);
@@ -77,11 +80,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void HasComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.HasComponent<DummyComponent>(entity.Uid);
@@ -94,11 +97,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void HasNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.HasComponent(entity.Uid, CompNetId);
@@ -111,11 +114,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void GetNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.GetComponent(entity.Uid, CompNetId);
@@ -128,11 +131,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void TryGetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.TryGetComponent<DummyComponent>(entity.Uid, out var comp);
@@ -146,11 +149,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void TryGetNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.TryGetComponent(entity.Uid, CompNetId, out var comp);
@@ -164,11 +167,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RemoveComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             manager.RemoveComponent<DummyComponent>(entity.Uid);
@@ -182,11 +185,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void RemoveNetComponentTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             manager.RemoveComponent(entity.Uid, CompNetId);
@@ -200,11 +203,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void GetComponentsTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.GetComponents<DummyComponent>(entity.Uid);
@@ -219,11 +222,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void GetAllComponentsTest()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.EntityQuery<DummyComponent>(true);
@@ -238,70 +241,38 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void GetAllComponentInstances()
         {
             // Arrange
-            var manager = ManagerFactory(out var entityManager);
-            var entity = EntityFactory(entityManager);
-            var component = new DummyComponent();
-            component.Owner = entity;
-            manager.AddComponent(entity, component);
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var manager = sim.Resolve<IComponentManager>();
+            var entity = entMan.SpawnEntity(null, DefaultCoords);
+            var component = entity.AddComponent<DummyComponent>();
 
             // Act
             var result = manager.GetComponents(entity.Uid);
 
             // Assert
-            var list = result.ToList();
+            var list = result.Where(c=>c.Name == "Dummy").ToList();
             Assert.That(list.Count, Is.EqualTo(1));
             Assert.That(list[0], Is.EqualTo(component));
         }
 
-        #endregion
-
-        private static IComponentManager ManagerFactory(out IEntityManager entityManager)
+        private static ISimulation SimulationFactory()
         {
-            var dependencies = new DependencyCollection();
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .RegisterComponents(factory => factory.RegisterClass<DummyComponent>())
+                .InitializeInstance();
 
-            var runtimeLog = new Mock<IRuntimeLog>();
-            dependencies.RegisterInstance<IRuntimeLog>(runtimeLog.Object);
+            // Adds the map with id 1, and spawns entity 1 as the map entity.
+            sim.AddMap(1);
 
-            // set up the registration
-            var mockRegistration = new Mock<IComponentRegistration>();
-            mockRegistration.SetupGet(x => x.References).Returns(new List<Type> { typeof(DummyComponent) });
-
-            // setup the comp factory
-            var mockFactory = new Mock<IComponentFactory>();
-            mockFactory.Setup(x => x.GetRegistration(It.IsAny<IComponent>())).Returns(mockRegistration.Object);
-            mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
-            mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
-            mockFactory.Setup(x => x.GetAllRefTypes()).Returns(new[] { typeof(DummyComponent) });
-            mockFactory.Setup(x => x.GetAllNetIds()).Returns(new[] { CompNetId });
-            dependencies.RegisterInstance<IComponentFactory>(mockFactory.Object);
-            var mockCompDependencyManager = new Mock<IComponentDependencyManager>();
-            dependencies.RegisterInstance<IComponentDependencyManager>(mockCompDependencyManager.Object); //todo probably not correct
-
-            // set up the entity manager
-            var mockEntMan = new Mock<IEntityManager>();
-            dependencies.RegisterInstance<IEntityManager>(mockEntMan.Object);
-
-            var manager = new ComponentManager();
-            dependencies.InjectDependencies(manager);
-            manager.Initialize();
-
-            entityManager = mockEntMan.Object;
-            return manager;
+            return sim;
         }
 
         private class DummyComponent : Component, ICompType1, ICompType2
         {
             public override string Name => "Dummy";
             public override uint? NetID => CompNetId;
-        }
-
-        private static IEntity EntityFactory(IEntityManager entityManager)
-        {
-            var mockEnt = new Mock<IEntity>();
-            mockEnt.SetupGet(x => x.EntityManager).Returns(entityManager);
-            mockEnt.SetupGet(x => x.Uid).Returns(new EntityUid(7));
-            mockEnt.Setup(x => x.IsValid()).Returns(true);
-            return mockEnt.Object;
         }
 
         private interface ICompType1 { }

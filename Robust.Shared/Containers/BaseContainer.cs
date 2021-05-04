@@ -32,7 +32,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        [field: DataField("occludes")]
+        [DataField("occludes")]
         public bool OccludesLight { get; set; } = true;
 
         /// <inheritdoc />
@@ -41,7 +41,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        [field: DataField("showEnts")]
+        [DataField("showEnts")]
         public bool ShowContents { get; set; }
 
         /// <summary>

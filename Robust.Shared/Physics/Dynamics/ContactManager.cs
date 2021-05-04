@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -41,6 +42,8 @@ namespace Robust.Shared.Physics.Dynamics
 {
     internal sealed class ContactManager
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         internal MapId MapId { get; set; }
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
@@ -378,7 +381,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                // TODO: When we move this interface onto compbus then just have CollideWith called once with BodyA and BodyB prolly?
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
 
                 foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
@@ -397,6 +401,9 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
+
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
 
                 foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
@@ -448,4 +455,50 @@ namespace Robust.Shared.Physics.Dynamics
     }
 
     public delegate void BroadPhaseDelegate(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB);
+
+    #region Collide Events Classes
+
+    public abstract class CollideEvent : EntityEventArgs
+    {
+        public Fixture OurFixture { get; }
+        public Fixture OtherFixture { get; }
+        public Manifold Manifold { get; }
+
+        public CollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        {
+            OurFixture = ourFixture;
+            OtherFixture = otherFixture;
+            Manifold = manifold;
+        }
+    }
+
+    public sealed class StartCollideEvent : CollideEvent
+    {
+        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+            : base(ourFixture, otherFixture, manifold)
+        {
+        }
+    }
+
+    public sealed class EndCollideEvent : CollideEvent
+    {
+        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+            : base(ourFixture, otherFixture, manifold)
+        {
+        }
+    }
+
+    public sealed class PreventCollideEvent : CancellableEntityEventArgs
+    {
+        public IPhysBody BodyA;
+        public IPhysBody BodyB;
+
+        public PreventCollideEvent(IPhysBody ourBody, IPhysBody otherBody)
+        {
+            BodyA = ourBody;
+            BodyB = otherBody;
+        }
+    }
+
+    #endregion
 }

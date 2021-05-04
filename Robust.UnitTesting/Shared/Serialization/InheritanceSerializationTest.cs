@@ -5,11 +5,12 @@ using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using DataDefinition = Robust.Shared.Serialization.Manager.DataDefinition.DataDefinition;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
-    [TestOf(typeof(SerializationDataDefinition))]
+    [TestOf(typeof(DataDefinition))]
     public class InheritanceSerializationTest : RobustUnitTest
     {
         private const string BaseEntityId = "BaseEntity";

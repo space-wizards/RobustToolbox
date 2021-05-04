@@ -13,6 +13,7 @@ namespace Robust.Server.Prototypes
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IConGroupController _conGroups = default!;
+        [Dependency] private readonly INetManager _netManager = default!;
 
         public ServerPrototypeManager()
         {
@@ -23,7 +24,7 @@ namespace Robust.Server.Prototypes
         {
             base.Initialize();
 
-            NetManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, HandleReloadPrototypes, NetMessageAccept.Server);
+            _netManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, HandleReloadPrototypes, NetMessageAccept.Server);
         }
 
         private void HandleReloadPrototypes(MsgReloadPrototypes msg)

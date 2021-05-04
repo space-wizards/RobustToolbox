@@ -7,10 +7,11 @@ namespace Robust.Client
 {
     internal interface IGameControllerInternal : IGameController
     {
+        GameControllerOptions Options { get; }
+        bool ContentStart { get; set; }
         void SetCommandLineArgs(CommandLineArgs args);
         bool LoadConfigAndUserData { get; set; }
-        bool Startup(Func<ILogHandler>? logHandlerFactory = null);
-        void MainLoop(GameController.DisplayMode mode);
+        void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null);
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
         void TextEntered(TextEventArgs textEvent);

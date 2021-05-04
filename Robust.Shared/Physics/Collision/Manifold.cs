@@ -94,6 +94,22 @@ namespace Robust.Shared.Physics.Collision
         {
             return !(id == other);
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not ContactID otherID) return false;
+            return Key == otherID.Key;
+        }
+
+        public bool Equals(ContactID other)
+        {
+            return Key == other.Key;
+        }
+
+        public override int GetHashCode()
+        {
+            return Key.GetHashCode();
+        }
     }
 
     /// <summary>
@@ -202,6 +218,26 @@ namespace Robust.Shared.Physics.Collision
         public static bool operator !=(ManifoldPoint point, ManifoldPoint other)
         {
             return !(point == other);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not ManifoldPoint otherManifold) return false;
+            return this == otherManifold;
+        }
+
+        public bool Equals(ManifoldPoint other)
+        {
+            return this == other;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashcode = Id.GetHashCode();
+            hashcode = (hashcode * 397) ^ LocalPoint.GetHashCode();
+            hashcode = (hashcode * 397) ^ NormalImpulse.GetHashCode();
+            hashcode = (hashcode * 397) ^ TangentImpulse.GetHashCode();
+            return hashcode;
         }
     }
 }

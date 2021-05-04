@@ -14,7 +14,12 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : EntityEventArgs;
 
+        [Obsolete("Use the overload without the handler argument.")]
         void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+            where TComp : IComponent
+            where TEvent : EntityEventArgs;
+
+        void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : EntityEventArgs;
     }
@@ -36,9 +41,25 @@ namespace Robust.Shared.GameObjects
             _eventTables = new EventTables(_entMan);
         }
 
+        /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+            where TEvent : EntityEventArgs
+        {
+            _eventTables.DispatchComponent(component.Owner.Uid, component, typeof(TEvent), args);
+        }
+
         /// <inheritdoc />
         public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent:EntityEventArgs
+            where TEvent : EntityEventArgs
         {
             _eventTables.Dispatch(uid, typeof(TEvent), args);
 
@@ -59,13 +80,22 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Use the overload without the handler argument.")]
         public void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
-        
+
+        /// <inheritdoc />
+        public void UnsubscribeLocalEvent<TComp, TEvent>()
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
+        }
+
         private class EventTables : IDisposable
         {
             private IEntityManager _entMan;
@@ -88,7 +118,7 @@ namespace Robust.Shared.GameObjects
 
                 _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
                 _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
-                
+
                 _eventTables = new();
                 _subscriptions = new();
                 _subscriptionLock = false;
@@ -103,7 +133,7 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveEntity(e);
             }
-            
+
             private void OnComponentAdded(object? sender, ComponentEventArgs e)
             {
                 _subscriptionLock = true;
@@ -144,7 +174,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                     return;
-                
+
                 compSubs.Remove(eventType);
             }
 
@@ -198,7 +228,7 @@ namespace Robust.Shared.GameObjects
             public void Dispatch(EntityUid euid, Type eventType, EntityEventArgs args)
             {
                 var eventTable = _eventTables[euid];
-                
+
                 if(!eventTable.TryGetValue(eventType, out var subscribedComps))
                     return;
 
@@ -213,6 +243,17 @@ namespace Robust.Shared.GameObjects
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
                     handler(euid, component, args);
                 }
+            }
+
+            public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
+            {
+                if (!_subscriptions.TryGetValue(component.GetType(), out var compSubs))
+                    return;
+
+                if (!compSubs.TryGetValue(eventType, out var handler))
+                    return;
+
+                handler(euid, component, args);
             }
 
             public void ClearEntities()

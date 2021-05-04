@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public IEnumerable<DeserializationResult> Mappings { get; }
 
-        public override object? RawValue => Value;
+        public override object RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {

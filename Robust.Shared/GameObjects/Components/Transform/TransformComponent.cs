@@ -317,6 +317,21 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Anchored
+        {
+            get => Owner.HasComponent<SnapGridComponent>();
+            set
+            {
+                if(value && !Owner.HasComponent<SnapGridComponent>())
+                    Owner.AddComponent<SnapGridComponent>();
+
+                else if(!value && Owner.HasComponent<SnapGridComponent>())
+                    Owner.RemoveComponent<SnapGridComponent>();
+            }
+        }
+
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
@@ -584,13 +599,13 @@ namespace Robust.Shared.GameObjects
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
 
             // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
+            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
             _parent = newParentEnt.Uid;
             ChangeMapId(newConcrete.MapID);
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
-
+            
             RebuildMatrices();
             Dirty();
             GridID = TryGetGridIndex(out var gridId) ? gridId.Value : Parent!.GridID;

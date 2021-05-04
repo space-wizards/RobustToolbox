@@ -17,9 +17,9 @@ namespace Robust.Client.Placement
                 ZIndex = 100;
             }
 
-            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+            protected internal override void Draw(in OverlayDrawArgs args)
             {
-                _manager.Render((DrawingHandleWorld) handle);
+                _manager.Render(args.WorldHandle);
             }
         }
     }

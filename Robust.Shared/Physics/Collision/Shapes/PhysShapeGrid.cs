@@ -70,7 +70,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     handle.DrawRect(localBox, handle.CalcWakeColor(handle.GridFillColor, sleepPercent));
                 }
             }
-            handle.SetTransform(Matrix3.Identity);
+            handle.SetTransform(in Matrix3.Identity);
         }
 
         /// <summary>

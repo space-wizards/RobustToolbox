@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using GlfwKey = OpenToolkit.GraphicsLibraryFramework.Keys;
-using GlfwButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
+using Robust.Shared.Localization;
+using Robust.Shared.Map;
 
 namespace Robust.Client.Input
 {
@@ -29,11 +29,6 @@ namespace Robust.Client.Input
             return _mouseKeyMap[button];
         }
 
-        public static Button ConvertGlfwButton(GlfwButton button)
-        {
-            return _openTKButtonMap[button];
-        }
-
         private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new()
         {
             {Button.Left, Keyboard.Key.MouseLeft},
@@ -48,17 +43,6 @@ namespace Robust.Client.Input
             {Button.LastButton, Keyboard.Key.Unknown},
         };
 
-        private static readonly Dictionary<GlfwButton, Button> _openTKButtonMap = new()
-        {
-            {GlfwButton.Left, Button.Left},
-            {GlfwButton.Middle, Button.Middle},
-            {GlfwButton.Right, Button.Right},
-            {GlfwButton.Button4, Button.Button4},
-            {GlfwButton.Button5, Button.Button5},
-            {GlfwButton.Button6, Button.Button6},
-            {GlfwButton.Button7, Button.Button7},
-            {GlfwButton.Button8, Button.Button8},
-        };
     }
 
     public static class Keyboard
@@ -186,226 +170,27 @@ namespace Robust.Client.Input
             return key >= Key.MouseLeft && key <= Key.MouseButton9;
         }
 
-        internal static Key ConvertGlfwKey(GlfwKey key)
-        {
-            if (_glfwKeyMap.TryGetValue(key, out var result))
-            {
-                return result;
-            }
-
-            return Key.Unknown;
-        }
-
-        internal static GlfwKey ConvertGlfwKeyReverse(Key key)
-        {
-            if (_glfwKeyMapReverse.TryGetValue(key, out var result))
-            {
-                return result;
-            }
-
-            return GlfwKey.Unknown;
-        }
-
         /// <summary>
         ///     Gets a "nice" version of special unprintable keys such as <see cref="Key.Escape"/>.
         /// </summary>
         /// <returns><see langword="null"/> if there is no nice version of this special key.</returns>
-        internal static string? GetSpecialKeyName(Key key)
+        internal static string? GetSpecialKeyName(Key key, ILocalizationManager loc)
         {
-            if (_keyNiceNameMap.TryGetValue(key, out var val))
+            var locId = $"input-key-{key}";
+            if (key == Key.LSystem || key == Key.RSystem)
             {
-                return val;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    locId += "-win";
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                    locId += "-mac";
+                else
+                    locId += "-linux";
             }
 
-            return null;
-        }
+            if (loc.TryGetString(locId, out var name))
+                return name;
 
-        private static readonly Dictionary<GlfwKey, Key> _glfwKeyMap;
-        private static readonly Dictionary<Key, GlfwKey> _glfwKeyMapReverse;
-
-        private static readonly Dictionary<Key, string> _keyNiceNameMap;
-
-        static Keyboard()
-        {
-            _glfwKeyMap = new Dictionary<GlfwKey, Key>
-            {
-                {GlfwKey.A, Key.A},
-                {GlfwKey.B, Key.B},
-                {GlfwKey.C, Key.C},
-                {GlfwKey.D, Key.D},
-                {GlfwKey.E, Key.E},
-                {GlfwKey.F, Key.F},
-                {GlfwKey.G, Key.G},
-                {GlfwKey.H, Key.H},
-                {GlfwKey.I, Key.I},
-                {GlfwKey.J, Key.J},
-                {GlfwKey.K, Key.K},
-                {GlfwKey.L, Key.L},
-                {GlfwKey.M, Key.M},
-                {GlfwKey.N, Key.N},
-                {GlfwKey.O, Key.O},
-                {GlfwKey.P, Key.P},
-                {GlfwKey.Q, Key.Q},
-                {GlfwKey.R, Key.R},
-                {GlfwKey.S, Key.S},
-                {GlfwKey.T, Key.T},
-                {GlfwKey.U, Key.U},
-                {GlfwKey.V, Key.V},
-                {GlfwKey.W, Key.W},
-                {GlfwKey.X, Key.X},
-                {GlfwKey.Y, Key.Y},
-                {GlfwKey.Z, Key.Z},
-                {GlfwKey.D0, Key.Num0},
-                {GlfwKey.D1, Key.Num1},
-                {GlfwKey.D2, Key.Num2},
-                {GlfwKey.D3, Key.Num3},
-                {GlfwKey.D4, Key.Num4},
-                {GlfwKey.D5, Key.Num5},
-                {GlfwKey.D6, Key.Num6},
-                {GlfwKey.D7, Key.Num7},
-                {GlfwKey.D8, Key.Num8},
-                {GlfwKey.D9, Key.Num9},
-                {GlfwKey.KeyPad0, Key.NumpadNum0},
-                {GlfwKey.KeyPad1, Key.NumpadNum1},
-                {GlfwKey.KeyPad2, Key.NumpadNum2},
-                {GlfwKey.KeyPad3, Key.NumpadNum3},
-                {GlfwKey.KeyPad4, Key.NumpadNum4},
-                {GlfwKey.KeyPad5, Key.NumpadNum5},
-                {GlfwKey.KeyPad6, Key.NumpadNum6},
-                {GlfwKey.KeyPad7, Key.NumpadNum7},
-                {GlfwKey.KeyPad8, Key.NumpadNum8},
-                {GlfwKey.KeyPad9, Key.NumpadNum9},
-                {GlfwKey.Escape, Key.Escape},
-                {GlfwKey.LeftControl, Key.Control},
-                {GlfwKey.RightControl, Key.Control},
-                {GlfwKey.RightShift, Key.Shift},
-                {GlfwKey.LeftShift, Key.Shift},
-                {GlfwKey.LeftAlt, Key.Alt},
-                {GlfwKey.RightAlt, Key.Alt},
-                {GlfwKey.LeftSuper, Key.LSystem},
-                {GlfwKey.RightSuper, Key.RSystem},
-                {GlfwKey.Menu, Key.Menu},
-                {GlfwKey.LeftBracket, Key.LBracket},
-                {GlfwKey.RightBracket, Key.RBracket},
-                {GlfwKey.Semicolon, Key.SemiColon},
-                {GlfwKey.Comma, Key.Comma},
-                {GlfwKey.Period, Key.Period},
-                {GlfwKey.Apostrophe, Key.Apostrophe},
-                {GlfwKey.Slash, Key.Slash},
-                {GlfwKey.Backslash, Key.BackSlash},
-                {GlfwKey.GraveAccent, Key.Tilde},
-                {GlfwKey.Equal, Key.Equal},
-                {GlfwKey.Space, Key.Space},
-                {GlfwKey.Enter, Key.Return},
-                {GlfwKey.KeyPadEnter, Key.NumpadEnter},
-                {GlfwKey.Backspace, Key.BackSpace},
-                {GlfwKey.Tab, Key.Tab},
-                {GlfwKey.PageUp, Key.PageUp},
-                {GlfwKey.PageDown, Key.PageDown},
-                {GlfwKey.End, Key.End},
-                {GlfwKey.Home, Key.Home},
-                {GlfwKey.Insert, Key.Insert},
-                {GlfwKey.Delete, Key.Delete},
-                {GlfwKey.Minus, Key.Minus},
-                {GlfwKey.KeyPadAdd, Key.NumpadAdd},
-                {GlfwKey.KeyPadSubtract, Key.NumpadSubtract},
-                {GlfwKey.KeyPadDivide, Key.NumpadDivide},
-                {GlfwKey.KeyPadMultiply, Key.NumpadMultiply},
-                {GlfwKey.KeyPadDecimal, Key.NumpadDecimal},
-                {GlfwKey.Left, Key.Left},
-                {GlfwKey.Right, Key.Right},
-                {GlfwKey.Up, Key.Up},
-                {GlfwKey.Down, Key.Down},
-                {GlfwKey.F1, Key.F1},
-                {GlfwKey.F2, Key.F2},
-                {GlfwKey.F3, Key.F3},
-                {GlfwKey.F4, Key.F4},
-                {GlfwKey.F5, Key.F5},
-                {GlfwKey.F6, Key.F6},
-                {GlfwKey.F7, Key.F7},
-                {GlfwKey.F8, Key.F8},
-                {GlfwKey.F9, Key.F9},
-                {GlfwKey.F10, Key.F10},
-                {GlfwKey.F11, Key.F11},
-                {GlfwKey.F12, Key.F12},
-                {GlfwKey.F13, Key.F13},
-                {GlfwKey.F14, Key.F14},
-                {GlfwKey.F15, Key.F15},
-                {GlfwKey.Pause, Key.Pause},
-            };
-
-            _glfwKeyMapReverse = new Dictionary<Key, GlfwKey>();
-
-            foreach (var (key, value) in _glfwKeyMap)
-            {
-                _glfwKeyMapReverse[value] = key;
-            }
-
-            _keyNiceNameMap = new Dictionary<Key, string>
-            {
-                {Key.Escape, "Escape"},
-                {Key.Control, "Control"},
-                {Key.Shift, "Shift"},
-                {Key.Alt, "Alt"},
-                {Key.Menu, "Menu"},
-                {Key.F1, "F1"},
-                {Key.F2, "F2"},
-                {Key.F3, "F3"},
-                {Key.F4, "F4"},
-                {Key.F5, "F5"},
-                {Key.F6, "F6"},
-                {Key.F7, "F7"},
-                {Key.F8, "F8"},
-                {Key.F9, "F9"},
-                {Key.F10, "F10"},
-                {Key.F11, "F11"},
-                {Key.F12, "F12"},
-                {Key.F13, "F13"},
-                {Key.F14, "F14"},
-                {Key.F15, "F15"},
-                {Key.Pause, "Pause"},
-                {Key.Left, "Left"},
-                {Key.Up, "Up"},
-                {Key.Down, "Down"},
-                {Key.Right, "Right"},
-                {Key.Space, "Space"},
-                {Key.Return, "Return"},
-                {Key.NumpadEnter, "Num Enter"},
-                {Key.BackSpace, "Backspace"},
-                {Key.Tab, "Tab"},
-                {Key.PageUp, "Page Up"},
-                {Key.PageDown, "Page Down"},
-                {Key.End, "End"},
-                {Key.Home, "Home"},
-                {Key.Insert, "Insert"},
-                {Key.Delete, "Delete"},
-                {Key.MouseLeft, "Mouse Left"},
-                {Key.MouseRight, "Mouse Right"},
-                {Key.MouseMiddle, "Mouse Middle"},
-                {Key.MouseButton4, "Mouse 4"},
-                {Key.MouseButton5, "Mouse 5"},
-                {Key.MouseButton6, "Mouse 6"},
-                {Key.MouseButton7, "Mouse 7"},
-                {Key.MouseButton8, "Mouse 8"},
-                {Key.MouseButton9, "Mouse 9"},
-            };
-
-            // Have to adjust system key name depending on platform.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Cmd");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Cmd");
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Win");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Win");
-            }
-            else
-            {
-                _keyNiceNameMap.Add(Key.LSystem, "Left Meta");
-                _keyNiceNameMap.Add(Key.RSystem, "Right Meta");
-            }
+            return loc.GetString("input-key-unknown");
         }
     }
 }

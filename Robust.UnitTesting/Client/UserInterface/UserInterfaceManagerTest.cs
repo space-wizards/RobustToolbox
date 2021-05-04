@@ -4,6 +4,7 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Client.UserInterface
@@ -63,7 +64,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control1.Arrange(new UIBox2(0, 0, 50, 50));
 
             var mouseEvent = new BoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
-                new Robust.Shared.Map.ScreenCoordinates(30, 30), true);
+                new ScreenCoordinates(30, 30, WindowId.Main), true);
 
             var control2Fired = false;
             var control3Fired = false;
@@ -72,10 +73,10 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             void Control2MouseDown(GUIBoundKeyEventArgs ev)
             {
-                Assert.That(control2Fired, Is.False);
-                Assert.That(control3Fired, Is.True);
+                Assert.That(control2Fired, NUnit.Framework.Is.False);
+                Assert.That(control3Fired, NUnit.Framework.Is.True);
 
-                Assert.That(ev.RelativePosition, Is.EqualTo(new Vector2(25, 25)));
+                Assert.That(ev.RelativePosition, NUnit.Framework.Is.EqualTo(new Vector2(25, 25)));
 
                 control2Fired = true;
             }
@@ -84,10 +85,10 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             control3.OnKeyBindDown += ev =>
             {
-                Assert.That(control2Fired, Is.False);
-                Assert.That(control3Fired, Is.False);
+                Assert.That(control2Fired, NUnit.Framework.Is.False);
+                Assert.That(control3Fired, NUnit.Framework.Is.False);
 
-                Assert.That(ev.RelativePosition, Is.EqualTo(new Vector2(20, 20)));
+                Assert.That(ev.RelativePosition, NUnit.Framework.Is.EqualTo(new Vector2(20, 20)));
 
                 control3Fired = true;
             };
@@ -98,8 +99,8 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             Assert.Multiple(() =>
             {
-                Assert.That(control2Fired, Is.True);
-                Assert.That(control3Fired, Is.True);
+                Assert.That(control2Fired, NUnit.Framework.Is.True);
+                Assert.That(control3Fired, NUnit.Framework.Is.True);
             });
 
             // Step two: instead of relying on stop for control2 to prevent the event reaching control1,
@@ -111,10 +112,10 @@ namespace Robust.UnitTesting.Client.UserInterface
             control2.OnKeyBindDown -= Control2MouseDown;
             control2.OnKeyBindDown += ev =>
             {
-                Assert.That(control2Fired, Is.False);
-                Assert.That(control3Fired, Is.True);
+                Assert.That(control2Fired, NUnit.Framework.Is.False);
+                Assert.That(control3Fired, NUnit.Framework.Is.True);
 
-                Assert.That(ev.RelativePosition, Is.EqualTo(new Vector2(25, 25)));
+                Assert.That(ev.RelativePosition, NUnit.Framework.Is.EqualTo(new Vector2(25, 25)));
 
                 control2Fired = true;
                 ev.Handle();
@@ -125,8 +126,8 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             Assert.Multiple(() =>
             {
-                Assert.That(control2Fired, Is.True);
-                Assert.That(control3Fired, Is.True);
+                Assert.That(control2Fired, NUnit.Framework.Is.True);
+                Assert.That(control3Fired, NUnit.Framework.Is.True);
             });
 
             control1.Dispose();
@@ -138,16 +139,16 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestGrabKeyboardFocus()
         {
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
             var control1 = new Control {CanKeyboardFocus = true};
             var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
-            Assert.That(control1.HasKeyboardFocus(), Is.EqualTo(true));
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control1));
+            Assert.That(control1.HasKeyboardFocus(), NUnit.Framework.Is.EqualTo(true));
 
             control1.ReleaseKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control1.Dispose();
             control2.Dispose();
@@ -156,15 +157,15 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestGrabKeyboardFocusSteal()
         {
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
             var control1 = new Control {CanKeyboardFocus = true};
             var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.GrabKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control2));
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control2));
             control2.ReleaseKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control1.Dispose();
             control2.Dispose();
@@ -173,15 +174,15 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestGrabKeyboardFocusOtherRelease()
         {
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
             var control1 = new Control {CanKeyboardFocus = true};
             var control2 = new Control {CanKeyboardFocus = true};
 
             control1.GrabKeyboardFocus();
             control2.ReleaseKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control1));
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control1));
             _userInterfaceManager.ReleaseKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control1.Dispose();
             control2.Dispose();
@@ -216,11 +217,11 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 50, 50));
 
-            _userInterfaceManager.HandleCanFocusDown((30, 30));
+            _userInterfaceManager.HandleCanFocusDown(new ScreenCoordinates(30, 30, WindowId.Main));
 
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control));
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control));
             _userInterfaceManager.ReleaseKeyboardFocus();
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control.Dispose();
         }
@@ -239,14 +240,14 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.AddChild(control);
 
-            var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
+            var pos = new ScreenCoordinates(30, 30, WindowId.Main);
 
             var mouseEvent = new GUIBoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
                 pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
 
             _userInterfaceManager.KeyBindDown(mouseEvent);
 
-            Assert.That(_userInterfaceManager.KeyboardFocused, Is.Null);
+            Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.Null);
 
             control.Dispose();
         }

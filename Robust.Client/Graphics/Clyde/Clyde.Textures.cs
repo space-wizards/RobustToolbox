@@ -29,7 +29,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
-            DebugTools.Assert(_mainThread == Thread.CurrentThread);
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             // Load using Rgba32.
             using var image = Image.Load<Rgba32>(stream);
@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
         public OwnedTexture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
-            DebugTools.Assert(_mainThread == Thread.CurrentThread);
+            DebugTools.Assert(_gameThread == Thread.CurrentThread);
 
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);
@@ -449,24 +449,6 @@ namespace Robust.Client.Graphics.Clyde
                 var dstRow = dstSpan[di..(di + w)];
 
                 srcRow.CopyTo(dstRow);
-            }
-        }
-
-        private static void FlipCopyScreenshot(ReadOnlySpan<Rgba32> srcSpan, Span<Rgb24> dstSpan, int w, int h)
-        {
-            var dr = h - 1;
-            for (var r = 0; r < h; r++, dr--)
-            {
-                var si = r * w;
-                var di = dr * w;
-                var srcRow = srcSpan[si..(si + w)];
-                var dstRow = dstSpan[di..(di + w)];
-
-                for (var x = 0; x < w; x++)
-                {
-                    var src = srcRow[x];
-                    dstRow[x] = new Rgb24(src.R, src.G, src.B);
-                }
             }
         }
 

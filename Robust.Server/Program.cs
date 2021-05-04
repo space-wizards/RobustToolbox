@@ -62,10 +62,7 @@ namespace Robust.Server
 
             var server = IoCManager.Resolve<IBaseServerInternal>();
 
-            // When the game is ran with the startup executable being content,
-            // we have to disable the separate load context.
-            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
-            server.DisableLoadContext = contentStart;
+            server.ContentStart = contentStart;
             server.SetCommandLineArgs(args);
 
             Logger.Info("Server -> Starting");

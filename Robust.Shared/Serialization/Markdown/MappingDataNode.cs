@@ -122,13 +122,13 @@ namespace Robust.Shared.Serialization.Markdown
             var newMapping = Copy();
             foreach (var (key, val) in otherMapping.Children)
             {
-                //intentionally provokes argumentexception
+                // Intentionally raises an ArgumentException
                 newMapping.AddNode(key.Copy(), val.Copy());
             }
 
             newMapping.Tag = Tag;
 
-            //todo paul should prob make this smarter
+            // TODO Serialization: should prob make this smarter
             newMapping.Start = Start;
             newMapping.End = End;
 

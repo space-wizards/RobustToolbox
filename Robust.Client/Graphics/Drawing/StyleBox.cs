@@ -153,6 +153,17 @@ namespace Robust.Client.Graphics
             }
         }
 
+        public Thickness Padding
+        {
+            set
+            {
+                PaddingLeft = value.Left;
+                PaddingTop = value.Top;
+                PaddingRight = value.Right;
+                PaddingBottom = value.Bottom;
+            }
+        }
+
         /// <summary>
         ///     Draw this style box to the screen at the specified coordinates.
         /// </summary>

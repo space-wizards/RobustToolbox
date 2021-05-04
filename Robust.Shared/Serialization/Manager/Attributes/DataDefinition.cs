@@ -3,9 +3,9 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Serialization.Manager.Attributes
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     [MeansDataDefinition]
     [MeansImplicitUse]
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     public class DataDefinition : Attribute
     {
     }

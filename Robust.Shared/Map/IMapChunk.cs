@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
@@ -7,7 +7,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A square section of a <see cref="IMapGrid"/>.
     /// </summary>
-    public interface IMapChunk : IEnumerable<TileRef>
+    internal interface IMapChunk : IEnumerable<TileRef>
     {
         /// <summary>
         ///     The number of tiles per side of the square chunk.
@@ -76,10 +76,10 @@ namespace Robust.Shared.Map
         /// <returns>The indices relative to the grid origin.</returns>
         Vector2i ChunkTileToGridTile(Vector2i chunkTile);
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset);
+        IEnumerable<EntityUid> GetSnapGridCell(ushort xCell, ushort yCell);
 
-        void AddToSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(ushort xCell, ushort yCell, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(ushort xCell, ushort yCell, EntityUid euid);
+        void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid);
 
         Box2i CalcLocalBounds();
 

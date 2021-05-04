@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Utility
 {
@@ -107,18 +106,21 @@ namespace Robust.Shared.Utility
             Log(opcode, meth);
         }
 
-        /*public virtual void EmitCalli(OpCode opcode, CallingConventions callingConvention,
-            Type? returnType, Type[]? parameterTypes, Type[]? optionalParameterTypes)
-        {
-        }
+        // public virtual void EmitCalli(OpCode opcode, CallingConventions callingConvention,
+        //     Type? returnType, Type[]? parameterTypes, Type[]? optionalParameterTypes)
+        // {
+        // }
+        //
+        // public virtual void EmitCalli(OpCode opcode, CallingConvention unmanagedCallConv, Type? returnType, Type[]? parameterTypes)
+        // {
+        // }
+        //
 
-        public virtual void EmitCalli(OpCode opcode, CallingConvention unmanagedCallConv, Type? returnType, Type[]? parameterTypes)
+        public virtual void EmitCall(OpCode opcode, MethodInfo methodInfo, params Type[]? optionalParameterTypes)
         {
+            _generator.EmitCall(opcode, methodInfo, optionalParameterTypes);
+            Log(opcode, methodInfo);
         }
-
-        public virtual void EmitCall(OpCode opcode, MethodInfo methodInfo, Type[]? optionalParameterTypes)
-        {
-        }*/
 
         public virtual void Emit(OpCode opcode, SignatureHelper signature)
         {

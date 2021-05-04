@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -21,7 +22,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IEntityManager EntityManager = default!;
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
         [Obsolete("You need to create and store the query yourself in a field.")]
         protected IEntityQuery? EntityQuery;
@@ -103,12 +103,12 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseNetworkEvent(EntityEventArgs message)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message);
         }
 
         protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
-            EntityNetworkManager.SendSystemNetworkMessage(message, channel);
+            EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
@@ -124,11 +124,19 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.SubscribeLocalEvent(handler);
         }
 
+        [Obsolete("Use the overload without the handler argument.")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {
-            EntityManager.EventBus.UnsubscribeLocalEvent(handler);
+            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
+        }
+
+        protected void UnsubscribeLocalEvent<TComp, TEvent>()
+            where TComp : IComponent
+            where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
@@ -136,7 +144,7 @@ namespace Robust.Shared.GameObjects
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
-        
+
         #endregion
 
         #region Static Helpers
@@ -165,9 +173,9 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
-        public static bool TryGet<T>(out T entitySystem) where T : IEntitySystem
+        public static bool TryGet<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem
         {
-            return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem<T>(out entitySystem);
+            return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem(out entitySystem);
         }
 
         #endregion

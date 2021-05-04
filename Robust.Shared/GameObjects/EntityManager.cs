@@ -18,16 +18,17 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityQueryCallback(IEntity entity);
 
     /// <inheritdoc />
-    public abstract class EntityManager : IEntityManager
+    public class EntityManager : IEntityManager
     {
         #region Dependencies
 
-        [IoC.Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [IoC.Dependency] private readonly IComponentFactory ComponentFactory = default!;
         [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
 
         #endregion Dependencies
 
@@ -38,10 +39,10 @@ namespace Robust.Shared.GameObjects
         public IComponentManager ComponentManager => _componentManager;
 
         /// <inheritdoc />
-        public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
+        public IEntitySystemManager EntitySysManager => EntitySystemManager;
 
         /// <inheritdoc />
-        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+        public virtual IEntityNetworkManager? EntityNetManager => null;
 
         /// <summary>
         ///     All entities currently stored in the manager.
@@ -51,6 +52,8 @@ namespace Robust.Shared.GameObjects
         protected readonly List<Entity> AllEntities = new();
 
         private EntityEventBus _eventBus = null!;
+
+        protected virtual int NextEntityUid { get; set; } = (int)EntityUid.FirstUid;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -73,15 +76,20 @@ namespace Robust.Shared.GameObjects
         {
             _eventBus = new EntityEventBus(this);
 
-            EntityNetworkManager.SetupNetworking();
-            EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
-            EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
-
             ComponentManager.Initialize();
             _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
-        public virtual void Startup() {}
+        public virtual void Startup()
+        {
+            if (Started)
+            {
+                throw new InvalidOperationException("Startup() called multiple times");
+            }
+
+            EntitySystemManager.Initialize();
+            Started = true;
+        }
 
         public virtual void Shutdown()
         {
@@ -94,11 +102,6 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntityNet").NewTimer())
-            {
-                EntityNetworkManager.TickUpdate();
-            }
-
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
                 EntitySystemManager.TickUpdate(frameTime);
@@ -128,19 +131,56 @@ namespace Robust.Shared.GameObjects
         #region Entity Management
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName);
+        public virtual IEntity CreateEntityUninitialized(string? prototypeName)
+        {
+            return CreateEntity(prototypeName);
+        }
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        public virtual IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        {
+            var newEntity = CreateEntity(prototypeName);
+
+            if (TryGetEntity(coordinates.EntityId, out var entity))
+            {
+                newEntity.Transform.AttachParent(entity);
+                newEntity.Transform.Coordinates = coordinates;
+            }
+
+            return newEntity;
+        }
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        public virtual IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        {
+            var newEntity = CreateEntity(prototypeName);
+            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+            newEntity.Transform.WorldPosition = coordinates.Position;
+            return newEntity;
+        }
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
+        public virtual IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates)
+        {
+            if (!coordinates.IsValid(this))
+                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
+
+            var entity = CreateEntityUninitialized(protoName, coordinates);
+
+            InitializeAndStartEntity((Entity) entity);
+
+            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this))) entity.RunMapInit();
+
+            return entity;
+        }
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
+        public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
+        {
+            var entity = CreateEntityUninitialized(protoName, coordinates);
+            InitializeAndStartEntity((Entity) entity);
+            return entity;
+        }
 
         /// <summary>
         /// Returns an entity by id
@@ -257,7 +297,13 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out var _);
+            if (!TryGetEntity(uid, out var ent))
+                return false;
+
+            if (ent.Deleted)
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -309,8 +355,13 @@ namespace Robust.Shared.GameObjects
 
             var entity = new Entity(this, uid.Value);
 
+
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
+
+            // We do this after the event, so if the event throws we have not committed 
+            Entities[entity.Uid] = entity;
+            AllEntities.Add(entity);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
@@ -318,8 +369,6 @@ namespace Robust.Shared.GameObjects
             // allocate the required TransformComponent
             _componentManager.AddComponent<TransformComponent>(entity);
 
-            Entities[entity.Uid] = entity;
-            AllEntities.Add(entity);
 
             return entity;
         }
@@ -327,7 +376,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected virtual Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -401,7 +450,7 @@ namespace Robust.Shared.GameObjects
 
 #endregion Entity Management
 
-        private void DispatchComponentMessage(NetworkComponentMessage netMsg)
+        protected void DispatchComponentMessage(NetworkComponentMessage netMsg)
         {
             var compMsg = netMsg.Message;
             var compChannel = netMsg.Channel;
@@ -424,9 +473,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Factory for generating a new EntityUid for an entity currently being created.
+        ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
-        protected abstract EntityUid GenerateEntityUid();
+        /// <inheritdoc />
+        protected virtual EntityUid GenerateEntityUid()
+        {
+            return new(NextEntityUid++);
+        }
     }
 
     public enum EntityMessageType : byte

@@ -41,13 +41,15 @@ namespace Robust.Client.Graphics
         /// world space to camera space.
         /// </summary>
         /// <param name="viewMatrix">View matrix for this camera.</param>
-        void GetViewMatrix(out Matrix3 viewMatrix);
+        /// <param name="renderScale"></param>
+        void GetViewMatrix(out Matrix3 viewMatrix, Vector2 renderScale);
 
         /// <summary>
         /// Returns the inverted view matrix for this eye, used to convert a point from
         /// camera space to world space.
         /// </summary>
         /// <param name="viewMatrixInv">Inverted view matrix for this camera.</param>
-        void GetViewMatrixInv(out Matrix3 viewMatrixInv);
+        /// <param name="renderScale"></param>
+        void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale);
     }
 }

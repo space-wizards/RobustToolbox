@@ -467,12 +467,17 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     if (Editable)
                     {
-                        var clipboard = IoCManager.Resolve<IClipboardManager>();
-                        var text = clipboard.GetText();
-                        if (text != null)
+                        async void DoPaste()
                         {
-                            InsertAtCursor(text);
+                            var clipboard = IoCManager.Resolve<IClipboardManager>();
+                            var text = await clipboard.GetText();
+                            if (text != null)
+                            {
+                                InsertAtCursor(text);
+                            }
                         }
+
+                        DoPaste();
                     }
 
                     args.Handle();

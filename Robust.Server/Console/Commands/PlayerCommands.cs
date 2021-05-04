@@ -42,6 +42,12 @@ namespace Robust.Server.Console.Commands
             else
                 mapId = transform.MapID;
 
+            if (!mapMgr.MapExists(mapId))
+            {
+                shell.WriteError($"Map {mapId} doesn't exist!");
+                return;
+            }
+
             if (mapMgr.TryFindGridAt(mapId, position, out var grid))
             {
                 var gridPos = grid.WorldToLocal(position);

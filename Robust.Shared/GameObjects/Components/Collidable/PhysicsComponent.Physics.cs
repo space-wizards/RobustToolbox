@@ -136,6 +136,17 @@ namespace Robust.Shared.GameObjects
         [DataField("bodyType")]
         private BodyType _bodyType = BodyType.Static;
 
+        /// <summary>
+        /// Set awake without the sleeptimer being reset.
+        /// </summary>
+        internal void ForceAwake()
+        {
+            if (_awake || _bodyType == BodyType.Static) return;
+
+            _awake = true;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+        }
+
         // We'll also block Static bodies from ever being awake given they don't need to move.
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -509,6 +520,20 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
 
+        public IEnumerable<Joint> Joints
+        {
+            get
+            {
+                JointEdge? edge = JointEdges;
+
+                while (edge != null)
+                {
+                    yield return edge.Joint;
+                    edge = edge.Next;
+                }
+            }
+        }
+
         [DataField("fixtures")]
         [NeverPushInheritance]
         private List<Fixture> _fixtures = new();
@@ -703,7 +728,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private Vector2 _localCenter;
+        private Vector2 _localCenter = Vector2.Zero;
 
         /// <summary>
         /// Current Force being applied to this entity in Newtons.
@@ -1300,6 +1325,11 @@ namespace Robust.Shared.GameObjects
                 if (jn.Joint.CollideConnected) continue;
                 return false;
             }
+
+            var preventCollideMessage = new PreventCollideEvent(this, other);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
+
+            if (preventCollideMessage.Cancelled) return false;
 
             foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
             {

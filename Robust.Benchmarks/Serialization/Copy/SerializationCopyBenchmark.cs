@@ -4,6 +4,8 @@ using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 

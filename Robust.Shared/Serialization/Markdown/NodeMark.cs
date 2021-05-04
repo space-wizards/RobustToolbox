@@ -18,6 +18,7 @@ namespace Robust.Shared.Serialization.Markdown
         }
 
         public int Line { get; init; }
+
         public int Column { get; init; }
 
         public override string ToString()

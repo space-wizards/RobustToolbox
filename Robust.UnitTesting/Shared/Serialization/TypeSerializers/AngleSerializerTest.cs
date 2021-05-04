@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType

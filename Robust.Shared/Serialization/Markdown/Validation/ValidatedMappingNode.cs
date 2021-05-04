@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,11 +5,20 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ValidatedMappingNode : ValidationNode
     {
-        public readonly Dictionary<ValidationNode, ValidationNode> Mapping;
+        public ValidatedMappingNode(Dictionary<ValidationNode, ValidationNode> mapping)
+        {
+            Mapping = mapping;
+        }
+
+        public Dictionary<ValidationNode, ValidationNode> Mapping { get; }
+
         public override bool Valid => Mapping.All(p => p.Key.Valid && p.Value.Valid);
+
         public override IEnumerable<ErrorNode> GetErrors()
         {
-            foreach (var (key, value) in Mapping.Where(p => !p.Key.Valid || !p.Value.Valid))
+            var errors = Mapping.Where(p => !p.Key.Valid || !p.Value.Valid);
+
+            foreach (var (key, value) in errors)
             {
                 foreach (var invalid in key.GetErrors())
                 {
@@ -22,11 +30,6 @@ namespace Robust.Shared.Serialization.Markdown.Validation
                     yield return invalid;
                 }
             }
-        }
-
-        public ValidatedMappingNode(Dictionary<ValidationNode, ValidationNode> mapping)
-        {
-            Mapping = mapping;
         }
     }
 }

@@ -6,7 +6,9 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Client.Serialization
@@ -19,7 +21,7 @@ namespace Robust.Client.Serialization
             bool skipHook,
             ISerializationContext? context = null)
         {
-            if (!node.TryGetNode("type", out var typeNode))
+            if (!node.TryGet("type", out var typeNode))
                 throw new InvalidMappingException("No type specified for AppearanceVisualizer!");
 
             if (typeNode is not ValueDataNode typeValueDataNode)
@@ -32,7 +34,7 @@ namespace Robust.Client.Serialization
                     $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
 
             var newNode = (MappingDataNode)node.Copy();
-            newNode.RemoveNode("type");
+            newNode.Remove("type");
             return serializationManager.Read(type, newNode, context, skipHook);
         }
 
@@ -40,7 +42,7 @@ namespace Robust.Client.Serialization
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            if (!node.TryGetNode("type", out var typeNode) || typeNode is not ValueDataNode valueNode)
+            if (!node.TryGet("type", out var typeNode) || typeNode is not ValueDataNode valueNode)
             {
                 return new ErrorNode(node, "Missing/Invalid type", true);
             }
@@ -53,7 +55,7 @@ namespace Robust.Client.Serialization
                 return new ErrorNode(node, $"Failed to resolve type: {valueNode.Value}", true);
             }
 
-            return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().RemoveNode("type"));
+            return serializationManager.ValidateNode(type, node.CopyCast<MappingDataNode>().Remove("type"));
         }
 
         public DataNode Write(ISerializationManager serializationManager, AppearanceVisualizer value, bool alwaysWrite = false,

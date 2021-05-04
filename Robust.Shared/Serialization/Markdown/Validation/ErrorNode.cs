@@ -5,16 +5,18 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ErrorNode : ValidationNode, IEquatable<ErrorNode>
     {
-        public readonly DataNode Node;
-        public readonly string ErrorReason;
-        public readonly bool AlwaysRelevant;
-
         public ErrorNode(DataNode node, string errorReason, bool alwaysRelevant = true)
         {
             Node = node;
             ErrorReason = errorReason;
             AlwaysRelevant = alwaysRelevant;
         }
+
+        public DataNode Node { get; }
+
+        public string ErrorReason { get; }
+
+        public bool AlwaysRelevant { get; }
 
         public override bool Valid => false;
 

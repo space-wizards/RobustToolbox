@@ -16,11 +16,12 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.Core;
@@ -151,7 +152,7 @@ namespace Robust.Client.Input
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new(mapping.ToMappingNode())};
+            var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -453,7 +454,7 @@ namespace Robust.Client.Input
             var robustMapping = mapping.ToDataNode() as MappingDataNode;
             if (robustMapping == null) throw new InvalidOperationException();
 
-            if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
+            if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
             {
                 var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
@@ -482,7 +483,7 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
+            if (userData && robustMapping.TryGet("leaveEmpty", out var node))
             {
                 var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
 

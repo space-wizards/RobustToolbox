@@ -1,5 +1,5 @@
 ﻿using Robust.Shared.Serialization.Manager.Result;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.Serialization.Manager.DataDefinition
 {

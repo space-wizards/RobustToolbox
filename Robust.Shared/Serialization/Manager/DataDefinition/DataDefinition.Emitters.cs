@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Result;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.DataDefinition
@@ -29,7 +29,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                         continue;
                     }
 
-                    var mapped = mappingDataNode.HasNode(fieldDefinition.Attribute.Tag);
+                    var mapped = mappingDataNode.Has(fieldDefinition.Attribute.Tag);
 
                     if (!mapped)
                     {
@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                     }
 
                     var type = fieldDefinition.FieldType;
-                    var node = mappingDataNode.GetNode(fieldDefinition.Attribute.Tag);
+                    var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
                     var result = fieldDefinition.Attribute.CustomTypeSerializer != null
                         ? serializationManager.ReadWithTypeSerializer(type,
                             fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext,

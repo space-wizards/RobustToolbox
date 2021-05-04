@@ -12,12 +12,12 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -472,7 +472,7 @@ namespace Robust.Shared.Prototypes
                         }
 
                         var mapping = node.ToDataNodeCast<MappingDataNode>();
-                        mapping.RemoveNode("type");
+                        mapping.Remove("type");
                         var errorNodes = _serializationManager.ValidateNode(prototypeTypes[type], mapping).GetErrors()
                             .ToHashSet();
                         if (errorNodes.Count != 0)

@@ -58,7 +58,7 @@ namespace Robust.Client.ViewVariables
             var styleOther = false;
             var type = obj.GetType();
 
-            var members = new List<(MemberInfo, VVAccess, object? value, Action<object, bool> onValueChanged, Type)>();
+            var members = new List<(MemberInfo, VVAccess, object? value, Action<object?, bool> onValueChanged, Type)>();
 
             foreach (var fieldInfo in type.GetAllFields())
             {

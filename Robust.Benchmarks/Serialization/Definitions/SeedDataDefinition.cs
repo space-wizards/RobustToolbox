@@ -6,6 +6,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Benchmarks.Serialization.Definitions
 {
+    /// <summary>
+    ///     Arbitrarily large data definition for benchmarks.
+    ///     Taken from content.
+    /// </summary>
     [Prototype("seed")]
     public class SeedDataDefinition : IPrototype
     {

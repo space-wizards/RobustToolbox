@@ -96,7 +96,6 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
             return PopulateDelegate;
         }
 
-        // TODO Serialization: Turn this back into IL once it is fixed
         private SerializeDelegateSignature EmitSerializeDelegate()
         {
             MappingDataNode SerializeDelegate(
@@ -123,7 +122,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                         continue;
                     }
 
-                    var value = fieldDefinition.GetValue(obj);
+                    var value = FieldAccessors[i](ref obj);
 
                     if (value == null)
                     {
@@ -152,7 +151,6 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
             return SerializeDelegate;
         }
 
-        // TODO Serialization: Turn this back into IL once it is fixed
         // TODO Serialization: add skipHook
         private CopyDelegateSignature EmitCopyDelegate()
         {

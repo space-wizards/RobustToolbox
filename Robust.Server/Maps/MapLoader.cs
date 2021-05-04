@@ -769,7 +769,7 @@ namespace Robust.Server.Maps
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
-                            compMapping.AddNode("type", new ValueDataNode(component.Name));
+                            compMapping.Add("type", new ValueDataNode(component.Name));
                             // Something actually got written!
                             components.Add(compMapping.ToYamlNode());
                         }

@@ -605,7 +605,7 @@ namespace Robust.Shared.GameObjects
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
-            
+
             RebuildMatrices();
             Dirty();
             GridID = TryGetGridIndex(out var gridId) ? gridId.Value : Parent!.GridID;

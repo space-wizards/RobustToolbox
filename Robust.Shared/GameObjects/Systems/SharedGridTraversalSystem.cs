@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private Queue<MoveEvent> _queuedMoveEvents = new();
+        private Stack<MoveEvent> _queuedMoveEvents = new();
         private HashSet<EntityUid> _handledThisTick = new(32);
 
         public override void Initialize()
@@ -29,10 +29,10 @@ namespace Robust.Shared.GameObjects
             UnsubscribeLocalEvent<MoveEvent>();
         }
 
-        public override void Update(float frameTime)
+        public override void FrameUpdate(float frameTime)
         {
-            base.Update(frameTime);
-            while (_queuedMoveEvents.TryDequeue(out var moveEvent))
+            base.FrameUpdate(frameTime);
+            while (_queuedMoveEvents.TryPop(out var moveEvent))
             {
                 var entity = moveEvent.Sender;
 
@@ -41,8 +41,8 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(entity.Uid);
 
                 if (entity.Deleted ||
-                    entity.HasComponent<MapComponent>() ||
-                    entity.HasComponent<MapGridComponent>() ||
+                    entity.HasComponent<IMapComponent>() ||
+                    entity.HasComponent<IMapGridComponent>() ||
                     entity.IsInContainer())
                 {
                     continue;
@@ -51,12 +51,11 @@ namespace Robust.Shared.GameObjects
                 var transform = entity.Transform;
 
                 // Change parent if necessary
-                // TODO: AttachParent will also duplicate some of this calculation so remove that.
                 if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
                     grid.GridEntityId.IsValid() &&
                     grid.GridEntityId != entity.Uid)
                 {
-                    // Also this may deparent if 2 entities are parented but not using containers so fix that
+                    // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                     if (grid.Index != transform.GridID)
                     {
                         transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
@@ -81,7 +80,7 @@ namespace Robust.Shared.GameObjects
 
         private void QueueMoveEvent(MoveEvent moveEvent)
         {
-            _queuedMoveEvents.Enqueue(moveEvent);
+            _queuedMoveEvents.Push(moveEvent);
         }
     }
 

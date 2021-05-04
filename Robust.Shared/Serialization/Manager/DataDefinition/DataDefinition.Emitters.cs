@@ -122,7 +122,7 @@ namespace Robust.Shared.Serialization.Manager.DataDefinition
                         continue;
                     }
 
-                    var value = fieldDefinition.GetValue(obj);
+                    var value = FieldAccessors[i](ref obj);
 
                     if (value == null)
                     {

@@ -442,7 +442,7 @@ namespace Robust.Shared.Serialization.Manager
             if (value is ISerializationHooks serHook)
                 serHook.BeforeSerialization();
 
-            if (TryWriteWithTypeSerializers(underlyingType, value, out var node, alwaysWrite, context))
+            if (TryWriteRaw(underlyingType, value, out var node, alwaysWrite, context))
             {
                 return node;
             }

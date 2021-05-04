@@ -79,16 +79,18 @@ namespace Robust.Benchmarks.Serialization.Write
             mapping.Add("idealLight", Seed.IdealLight.ToString(CultureInfo.InvariantCulture));
             mapping.Add("idealHeat", Seed.IdealHeat.ToString(CultureInfo.InvariantCulture));
 
-            var chem = Seed.Chemicals["chem.Nicotine"];
-            mapping.Add("chemicals", new MappingDataNode
+            var chemicals = new MappingDataNode();
+            foreach (var (name, quantity) in Seed.Chemicals)
             {
-                ["Nicotine"] = new MappingDataNode
+                chemicals.Add(name, new MappingDataNode
                 {
-                    ["Min"] = new ValueDataNode(chem.Min.ToString(CultureInfo.InvariantCulture)),
-                    ["Max"] = new ValueDataNode(chem.Max.ToString(CultureInfo.InvariantCulture)),
-                    ["PotencyDivisor"] = new ValueDataNode(chem.PotencyDivisor.ToString(CultureInfo.InvariantCulture))
-                }
-            });
+                    ["Min"] = new ValueDataNode(quantity.Min.ToString(CultureInfo.InvariantCulture)),
+                    ["Max"] = new ValueDataNode(quantity.Max.ToString(CultureInfo.InvariantCulture)),
+                    ["PotencyDivisor"] = new ValueDataNode(quantity.PotencyDivisor.ToString(CultureInfo.InvariantCulture))
+                });
+            }
+
+            mapping.Add("chemicals", chemicals);
 
             return mapping;
         }

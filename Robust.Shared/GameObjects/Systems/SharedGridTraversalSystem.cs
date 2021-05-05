@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(QueueMoveEvent);
+            SubscribeLocalEvent<MoveEvent>(HandleMove);
         }
 
         public override void Shutdown()
@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
             UnsubscribeLocalEvent<MoveEvent>();
         }
 
-        private void QueueMoveEvent(MoveEvent moveEvent)
+        private void HandleMove(MoveEvent moveEvent)
         {
             var entity = moveEvent.Sender;
 
@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
                 if (grid.Index != transform.GridID)
                 {
                     transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
-                    RaiseLocalEvent(new ChangedGridMessage(entity, transform.GridID, grid.Index));
+                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, transform.GridID, grid.Index));
                 }
             }
             else
@@ -57,7 +57,7 @@ namespace Robust.Shared.GameObjects
                 if (oldGridId != GridId.Invalid)
                 {
                     transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
-                    RaiseLocalEvent(new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
+                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
                 }
             }
         }

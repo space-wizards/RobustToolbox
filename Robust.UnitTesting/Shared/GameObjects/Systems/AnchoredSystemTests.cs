@@ -52,6 +52,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         /// <summary>
         /// When an entity is anchored to a grid tile, it's world position is centered on the tile.
         /// Otherwise you can anchor an entity to a tile without the entity actually being on top of the tile.
+        /// This movement will trigger a MoveEvent.
         /// </summary>
         [Test]
         public void OnAnchored_WorldPosition_TileCenter()
@@ -60,23 +61,24 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
             var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
             int calledCount = 0;
-            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
 
             // Act
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
-            Assert.That(ent1.Transform.WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f)));
-            Assert.That(calledCount, Is.EqualTo(0));
+            Assert.That(ent1.Transform.WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
+            Assert.That(calledCount, Is.EqualTo(1)); // because the ent was moved from snapping, a MoveEvent was raised.
             void MoveEventHandler(MoveEvent ev)
             {
-                Assert.Fail("MoveEvent raised when anchoring entity.");
                 calledCount++;
             }
         }
@@ -91,14 +93,17 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
-            var grid = mapMan.GetGrid(TestGridId);
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
 
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
+            // can only be anchored to a tile
+            var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coordinates);
             ent1.Transform.LocalRotation = Angle.FromDegrees(60);
 
             // Act
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             Assert.That(ent1.Transform.LocalRotation.Degrees, Is.EqualTo(90));
         }
@@ -113,16 +118,19 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
             var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
             int calledCount = 0;
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId)); // this raises MoveEvent, subscribe after
+            var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
             entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
 
             // Act
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             Assert.That(ent1.Transform.ParentUid, Is.EqualTo(grid.GridEntityId));
             Assert.That(calledCount, Is.EqualTo(1));
@@ -171,6 +179,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
+            // physics is ensured when grids are created, but we don't need it
+            entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
+
             // Act
             grid.AddToSnapGridCell(tileIndices, ent1.Uid);
 
@@ -192,16 +203,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            // coordinates are already tile centered to prevent snapping and MoveEvent
+            var coordinates = new MapCoordinates(new Vector2(7.5f, 7.5f), TestMapId);
+
+            // can only be anchored to a tile
             var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
             int calledCount = 0;
-            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
             var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
+            ent1.Transform.Anchored = true; // Anchoring will change parent if needed, raising MoveEvent, subscribe after
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
-
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
 
             // Act
             ent1.Transform.WorldPosition = new Vector2(99, 99);
@@ -229,18 +242,21 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
             var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var subscriber = new Subscriber();
             int calledCount = 0;
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
+            var ent1 = entMan.SpawnEntity(null, coordinates);
             ent1.Transform.NoLocalRotation = false;
             var testAngle = Angle.FromDegrees(90);
             ent1.Transform.LocalRotation = testAngle;
-
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
             entMan.EventBus.SubscribeEvent<RotateEvent>(EventSource.Local, subscriber, MoveEventHandler);
+
+            ent1.Transform.Anchored = true;
 
             // Act
             ent1.Transform.WorldRotation = Angle.FromDegrees(180);
@@ -265,15 +281,19 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+            
             var grid = mapMan.GetGrid(TestGridId);
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
+
+            var ent1 = entMan.SpawnEntity(null, coordinates);
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
             ent1.Transform.ParentUid = mapMan.GetMapEntityId(TestMapId);
 
+            Assert.That(ent1.Transform.Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
         }
@@ -392,15 +412,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
 
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
             var grid = mapMan.GetGrid(TestGridId);
-            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
-            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
-            grid.SetTile(tileIndices, new Tile(1));
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+
+            var ent1 = entMan.SpawnEntity(null, coordinates);
             var physComp = ent1.AddComponent<PhysicsComponent>();
             physComp.BodyType = BodyType.Dynamic;
 
             // Act
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
         }
@@ -420,10 +443,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
             var physComp = ent1.AddComponent<PhysicsComponent>();
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
-            grid.RemoveFromSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = false;
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
         }

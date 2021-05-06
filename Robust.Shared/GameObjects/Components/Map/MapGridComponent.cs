@@ -2,6 +2,8 @@ using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -18,6 +20,9 @@ namespace Robust.Shared.GameObjects
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
         void ClearGridId();
+
+        bool AnchorEntity(ITransformComponent transform);
+        void UnanchorEntity(ITransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -47,6 +52,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
+        /// <inheritdoc />
         public void ClearGridId()
         {
             _gridIndex = GridId.Invalid;
@@ -60,6 +66,45 @@ namespace Robust.Shared.GameObjects
             if (_mapManager.HasMapEntity(mapId))
             {
                 Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+            }
+        }
+
+        /// <inheritdoc />
+        public bool AnchorEntity(ITransformComponent transform)
+        {
+            var xform = (TransformComponent) transform;
+            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
+            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner.Uid);
+
+            if (result)
+            {
+                xform.Parent = Owner.Transform;
+
+                // anchor snapping
+                xform.LocalRotation = xform.LocalRotation.GetCardinalDir().ToAngle();
+                xform.LocalPosition = Grid.GridTileToLocal(Grid.TileIndicesFor(xform.LocalPosition)).Position;
+
+                xform.SetAnchored(result);
+
+                if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+                {
+                    physicsComponent.BodyType = BodyType.Static;
+                }
+            }
+
+            return result;
+        }
+
+        /// <inheritdoc />
+        public void UnanchorEntity(ITransformComponent transform)
+        {
+            var xform = (TransformComponent)transform;
+            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
+            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner.Uid);
+            xform.SetAnchored(false);
+            if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+            {
+                physicsComponent.BodyType = BodyType.Dynamic;
             }
         }
 

@@ -66,7 +66,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansDataDefinition>())
+            foreach (var meansAttr in _reflectionManager.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
             {
                 foreach (var type in _reflectionManager.FindTypesWithAttribute(meansAttr))
                 {

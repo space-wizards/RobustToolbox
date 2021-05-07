@@ -6,6 +6,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Benchmarks.Serialization.Definitions
 {
+    /// <summary>
+    ///     Arbitrarily large data definition for benchmarks.
+    ///     Taken from content.
+    /// </summary>
     [Prototype("seed")]
     public class SeedDataDefinition : IPrototype
     {
@@ -96,13 +100,15 @@ namespace Robust.Benchmarks.Serialization.Definitions
         Repeat
     }
 
-    public enum Gas {}
+    public enum Gas
+    {
+    }
 
     [DataDefinition]
     public struct SeedChemQuantity
     {
         [DataField("Min")]
-        public int Min { get; }
+        public int Min;
 
         [DataField("Max")]
         public int Max;

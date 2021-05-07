@@ -169,8 +169,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.AddNode("sprite", serializationManager.WriteValue(value.RsiPath));
-            mapping.AddNode("state", new ValueDataNode(value.RsiState));
+            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.Add("state", new ValueDataNode(value.RsiState));
             return mapping;
         }
 

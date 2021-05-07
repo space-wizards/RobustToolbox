@@ -1,6 +1,5 @@
 using JetBrains.Annotations;
 using Moq;
-using Robust.Server.GameObjects;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -10,7 +9,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -150,14 +148,14 @@ namespace Robust.UnitTesting.Server
 
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinition>())
+                .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
                 .Returns(() => new[]
                 {
-                    typeof(DataDefinition)
+                    typeof(DataDefinitionAttribute)
                 });
 
             reflectionManager
-                .Setup(x => x.FindTypesWithAttribute(typeof(DataDefinition)))
+                .Setup(x => x.FindTypesWithAttribute(typeof(DataDefinitionAttribute)))
                 .Returns(() => new[]
                 {
                     typeof(EntityPrototype),

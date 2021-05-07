@@ -25,6 +25,12 @@ namespace Robust.Shared.Prototypes
         protected abstract void Unregister();
         public abstract void RefreshPrototype();
 
+        public event Action? ReferenceChanged;
+
+        protected void InvokeReferenceChanged()
+        {
+            ReferenceChanged?.Invoke();
+        }
     }
 
     public abstract class PrototypeReference<T> : PrototypeReference where T : IPrototype
@@ -64,6 +70,7 @@ namespace Robust.Shared.Prototypes
         public override void RefreshPrototype()
         {
             PrototypeRef.SetTarget(_manager.TryIndex(ID, out T? prototype) ? prototype : null);
+            InvokeReferenceChanged();
         }
 
         public WeakReference<T?> PrototypeRef { get; private set; } = new(null);

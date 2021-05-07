@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -30,7 +31,7 @@ namespace Robust.Shared.Serialization.Manager
         private bool _initializing;
         private bool _initialized;
 
-        private readonly Dictionary<Type, DataDefinition.DataDefinition> _dataDefinitions = new();
+        private readonly Dictionary<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -89,7 +90,7 @@ namespace Robust.Shared.Serialization.Manager
                     continue;
                 }
 
-                _dataDefinitions.Add(type, new DataDefinition.DataDefinition(type));
+                _dataDefinitions.Add(type, new DataDefinition(type));
             }
 
             var error = new StringBuilder();
@@ -273,14 +274,14 @@ namespace Robust.Shared.Serialization.Manager
             return res;
         }
 
-        internal DataDefinition.DataDefinition? GetDataDefinition(Type type)
+        internal DataDefinition? GetDataDefinition(Type type)
         {
             if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
             return null;
         }
 
-        internal bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out DataDefinition.DataDefinition? dataDefinition)
+        internal bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
         {
             dataDefinition = GetDataDefinition(type);
             return dataDefinition != null;

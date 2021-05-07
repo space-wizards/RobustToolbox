@@ -8,7 +8,7 @@ using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Serialization.Manager.DataDefinition
+namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {

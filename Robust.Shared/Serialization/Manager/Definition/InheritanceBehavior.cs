@@ -1,4 +1,4 @@
-﻿namespace Robust.Shared.Serialization.Manager.DataDefinition
+﻿namespace Robust.Shared.Serialization.Manager.Definition
 {
     public enum InheritanceBehavior : byte
     {

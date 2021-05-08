@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -149,7 +150,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [DataField("parent")]
+        [DataField("parent", customTypeSerializer:typeof(PrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
 
         /// <summary>

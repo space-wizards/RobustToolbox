@@ -80,13 +80,9 @@ namespace Robust.Server.GameObjects
                 Identifier = id
             };
 
-            var players = (playerFilter as IFilter).Recipients;
-            foreach (var player in players)
-            {
-                RaiseNetworkEvent(msg, player.ConnectedClient);
-            }
+            RaiseNetworkEvent(msg, playerFilter);
 
-            return new AudioSourceServer(this, id, players);
+            return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
         /// <inheritdoc />
@@ -105,21 +101,17 @@ namespace Robust.Server.GameObjects
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
             };
-            
-            IList<ICommonSession> players;
-            var recipients = (playerFilter as IFilter).Recipients;
 
+            // We clone the filter here as to not modify the original instance.
             if (range > 0.0f)
-                players = PasInRange(recipients, entity.Transform.MapPosition, range);
-            else
-                players = recipients;
+                playerFilter = playerFilter.Clone().AddInRange(entity.Transform.MapPosition, range);
 
-            foreach (var player in players)
+            foreach (var player in playerFilter.Recipients)
             {
                 RaiseNetworkEvent(msg, player.ConnectedClient);
             }
-            
-            return new AudioSourceServer(this, id, players);
+
+            return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
         /// <inheritdoc />
@@ -136,29 +128,17 @@ namespace Robust.Server.GameObjects
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
-            
-            IList<ICommonSession> players;
-            var recipients = (playerFilter as IFilter).Recipients;
 
+            // We clone the filter here as to not modify the original instance.
             if (range > 0.0f)
-                players = PasInRange(recipients, coordinates.ToMap(EntityManager), range);
-            else
-                players = recipients;
+                playerFilter = playerFilter.Clone().AddInRange(coordinates.ToMap(EntityManager), range);
 
-            foreach (var player in players)
+            foreach (var player in playerFilter.Recipients)
             {
                 RaiseNetworkEvent(msg, player.ConnectedClient);
             }
-            
-            return new AudioSourceServer(this, id, players);
-        }
 
-        private static List<ICommonSession> PasInRange(IEnumerable<ICommonSession> players, MapCoordinates position, float range)
-        {
-            return players.Where(x =>
-                    x.AttachedEntity != null &&
-                    position.InRange(x.AttachedEntity.Transform.MapPosition, range))
-                .ToList();
+            return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
     }
 }

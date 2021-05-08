@@ -55,10 +55,24 @@ namespace Robust.Server.Player
         private readonly Dictionary<string, NetUserId> _userIdMap = new();
 
         /// <inheritdoc />
-        public IEnumerable<ICommonSession> NetworkedSessions => _sessions.Values;
+        public IEnumerable<ICommonSession> NetworkedSessions => Sessions;
 
         /// <inheritdoc />
-        public IEnumerable<ICommonSession> Sessions => _sessions.Values;
+        public IEnumerable<ICommonSession> Sessions
+        {
+            get
+            {
+                _sessionsLock.EnterReadLock();
+                try
+                {
+                    return _sessions.Values;
+                }
+                finally
+                {
+                    _sessionsLock.ExitReadLock();
+                }
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -109,11 +123,20 @@ namespace Robust.Server.Player
                 return false;
             }
 
-            if (_sessions.TryGetValue(userId, out var iSession))
+            _sessionsLock.EnterReadLock();
+            try
             {
-                session = iSession;
-                return true;
+                if (_sessions.TryGetValue(userId, out var iSession))
+                {
+                    session = iSession;
+                    return true;
+                }
             }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
+
 
             session = null;
             return false;
@@ -210,7 +233,9 @@ namespace Robust.Server.Player
             try
             {
                 foreach (var s in _sessions.Values)
+                {
                     s.JoinGame();
+                }
             }
             finally
             {
@@ -237,7 +262,9 @@ namespace Robust.Server.Player
             try
             {
                 foreach (var s in _sessions.Values)
+                {
                     s.DetachFromEntity();
+                }
             }
             finally
             {
@@ -286,9 +313,7 @@ namespace Robust.Server.Player
             try
             {
                 return
-                    _sessions.Values.Where(predicate)
-                        .Cast<IPlayerSession>()
-                        .ToList();
+                    _sessions.Values.Where(predicate).ToList();
             }
             finally
             {

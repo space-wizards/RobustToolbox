@@ -159,7 +159,6 @@ namespace Robust.Shared.Player
         public Filter RemoveWhere(Predicate<ICommonSession> predicate)
         {
             _recipients.RemoveWhere(predicate);
-
             return this;
         }
 

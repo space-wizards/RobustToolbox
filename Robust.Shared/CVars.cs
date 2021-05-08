@@ -418,6 +418,7 @@ namespace Robust.Shared
         /// <summary>
         /// Maximum linear velocity per second.
         /// Make sure that MaxLinVelocity / <see cref="NetTickrate"/> is around 0.5 or higher so that moving objects don't go through walls.
+        /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
         /// </summary>
         /// <remarks>
         /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
@@ -427,6 +428,7 @@ namespace Robust.Shared
 
         /// <summary>
         /// Maximum angular velocity in full rotations per second.
+        /// MaxAngVelocity is compared to the squared rotation.
         /// </summary>
         /// <remarks>
         /// Default is 15 rotations per second. Approximately a quarter rotation per tick at 60 ticks per second.

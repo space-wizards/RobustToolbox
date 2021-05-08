@@ -17,7 +17,7 @@ namespace Robust.Shared.Player
     [PublicAPI]
     public class Filter
     {
-        private List<ICommonSession> _recipients = new();
+        private HashSet<ICommonSession> _recipients = new();
 
         private Filter() { }
 
@@ -99,10 +99,10 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddAllPlayers()
         {
-            _recipients.Clear();
-
             var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
-            _recipients.AddRange(playerMan.NetworkedSessions);
+
+            _recipients = new HashSet<ICommonSession>(playerMan.NetworkedSessions);
+
             return this;
         }
 
@@ -158,16 +158,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter RemoveWhere(Predicate<ICommonSession> predicate)
         {
-            for (var i = 0; i < _recipients.Count; i++)
-            {
-                var player = _recipients[i];
-
-                if (!predicate(player))
-                    continue;
-
-                _recipients.RemoveSwap(i);
-                i--;
-            }
+            _recipients.RemoveWhere(predicate);
 
             return this;
         }
@@ -189,7 +180,7 @@ namespace Robust.Shared.Player
         {
             return new()
             {
-                _recipients = new List<ICommonSession>(_recipients),
+                _recipients = new HashSet<ICommonSession>(_recipients),
                 SendReliable = SendReliable,
                 CheckPrediction = CheckPrediction,
             };

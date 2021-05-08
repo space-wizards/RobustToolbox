@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 
 namespace Robust.Shared.GameObjects
@@ -109,6 +110,14 @@ namespace Robust.Shared.GameObjects
         protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
+        }
+
+        protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter)
+        {
+            foreach (var session in filter.Recipients)
+            {
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+            }
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)

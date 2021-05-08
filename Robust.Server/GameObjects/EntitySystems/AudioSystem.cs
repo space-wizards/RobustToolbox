@@ -106,10 +106,7 @@ namespace Robust.Server.GameObjects
             if (range > 0.0f)
                 playerFilter = playerFilter.Clone().AddInRange(entity.Transform.MapPosition, range);
 
-            foreach (var player in playerFilter.Recipients)
-            {
-                RaiseNetworkEvent(msg, player.ConnectedClient);
-            }
+            RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
@@ -133,10 +130,7 @@ namespace Robust.Server.GameObjects
             if (range > 0.0f)
                 playerFilter = playerFilter.Clone().AddInRange(coordinates.ToMap(EntityManager), range);
 
-            foreach (var player in playerFilter.Recipients)
-            {
-                RaiseNetworkEvent(msg, player.ConnectedClient);
-            }
+            RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }

@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -52,7 +53,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         {
             var mapping = new MappingDataNode();
 
-            mapping.AddNode(
+            mapping.Add(
                 serializationManager.WriteValue(typeof(T1), value.Item1, alwaysWrite, context),
                 serializationManager.WriteValue(typeof(T2), value.Item2, alwaysWrite, context)
             );

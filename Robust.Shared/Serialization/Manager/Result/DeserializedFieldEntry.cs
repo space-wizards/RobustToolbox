@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Serialization.Manager.DataDefinition;
+﻿using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {

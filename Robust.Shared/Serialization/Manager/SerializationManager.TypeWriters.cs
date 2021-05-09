@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
+using System.Linq.Expressions;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -10,34 +10,58 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private readonly Dictionary<Type, object> _typeWriters = new();
+        private delegate bool WriteDelegate(
+            object obj,
+            [NotNullWhen(true)] out DataNode? node,
+            bool alwaysWrite,
+            ISerializationContext? context);
 
-        private bool TryWriteWithTypeSerializers(
+        private readonly Dictionary<Type, object> _typeWriters = new();
+        private readonly ConcurrentDictionary<Type, WriteDelegate> _writerDelegates = new();
+
+        private WriteDelegate GetOrCreateWriteDelegate(Type type)
+        {
+            return _writerDelegates
+                .GetOrAdd(type, (_, t) =>
+                {
+                    var instanceParam = Expression.Constant(this);
+                    var objParam = Expression.Parameter(typeof(object), "obj");
+                    var nodeParam = Expression.Parameter(typeof(DataNode).MakeByRefType(), "node");
+                    var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
+                    var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+
+                    var call = Expression.Call(
+                        instanceParam,
+                        nameof(TryWrite),
+                        new[] {t},
+                        Expression.Convert(objParam, t),
+                        nodeParam,
+                        alwaysWriteParam,
+                        contextParam);
+
+                    return Expression.Lambda<WriteDelegate>(
+                        call,
+                        objParam,
+                        nodeParam,
+                        alwaysWriteParam,
+                        contextParam).Compile();
+                }, type);
+        }
+
+        private bool TryWriteRaw(
             Type type,
             object obj,
             [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            // TODO Serialization: do this shit w/ delegates
-            var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
-                m.Name == nameof(TryWriteWithTypeSerializers) && m.GetParameters().Length == 4).MakeGenericMethod(type);
-
-            node = null;
-
-            var arr = new[] {obj, node, alwaysWrite, context};
-            var res = method.Invoke(this, arr);
-
-            if (res as bool? ?? false)
-            {
-                node = (DataNode) arr[1]!;
-                return true;
-            }
-
-            return false;
+            return GetOrCreateWriteDelegate(type)(obj, out node, alwaysWrite, context);
         }
 
-        private bool TryGetWriter<T>(ISerializationContext? context, [NotNullWhen(true)] out ITypeWriter<T>? writer) where T : notnull
+        private bool TryGetWriter<T>(
+            ISerializationContext? context,
+            [NotNullWhen(true)] out ITypeWriter<T>? writer)
+            where T : notnull
         {
             if (context != null && context.TypeWriters.TryGetValue(typeof(T), out var rawTypeWriter) ||
                 _typeWriters.TryGetValue(typeof(T), out rawTypeWriter))
@@ -49,11 +73,12 @@ namespace Robust.Shared.Serialization.Manager
             return TryGetGenericWriter(out writer);
         }
 
-        private bool TryWriteWithTypeSerializers<T>(
+        private bool TryWrite<T>(
             T obj,
             [NotNullWhen(true)] out DataNode? node,
             bool alwaysWrite = false,
-            ISerializationContext? context = null) where T : notnull
+            ISerializationContext? context = null)
+            where T : notnull
         {
             node = default;
             if (TryGetWriter<T>(context, out var writer))
@@ -65,7 +90,9 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryGetGenericWriter<T>([NotNullWhen(true)] out ITypeWriter<T>? rawWriter) where T : notnull
+        private bool TryGetGenericWriter<T>(
+            [NotNullWhen(true)] out ITypeWriter<T>? rawWriter)
+            where T : notnull
         {
             rawWriter = null;
 

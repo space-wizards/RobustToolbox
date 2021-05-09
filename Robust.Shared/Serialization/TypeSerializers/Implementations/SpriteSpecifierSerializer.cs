@@ -4,7 +4,9 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 using static Robust.Shared.Utility.SpriteSpecifier;
@@ -62,12 +64,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
-            if (!node.TryGetNode("sprite", out var pathNode))
+            if (!node.TryGet("sprite", out var pathNode))
             {
                 throw new InvalidMappingException("Expected sprite-node");
             }
 
-            if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode valueDataNode)
+            if (!node.TryGet("state", out var stateNode) || stateNode is not ValueDataNode valueDataNode)
             {
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
@@ -132,12 +134,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            if (!node.TryGetNode("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
+            if (!node.TryGet("sprite", out var pathNode) || pathNode is not ValueDataNode valuePathNode)
             {
                 return new ErrorNode(node, "Missing/Invalid sprite node");
             }
 
-            if (!node.TryGetNode("state", out var stateNode) || stateNode is not ValueDataNode)
+            if (!node.TryGet("state", out var stateNode) || stateNode is not ValueDataNode)
             {
                 return new ErrorNode(node, "Missing/Invalid state node");
             }
@@ -167,8 +169,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var mapping = new MappingDataNode();
-            mapping.AddNode("sprite", serializationManager.WriteValue(value.RsiPath));
-            mapping.AddNode("state", new ValueDataNode(value.RsiState));
+            mapping.Add("sprite", serializationManager.WriteValue(value.RsiPath));
+            mapping.Add("state", new ValueDataNode(value.RsiState));
             return mapping;
         }
 

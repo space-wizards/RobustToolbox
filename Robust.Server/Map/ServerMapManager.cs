@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -9,10 +10,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Map
 {
+    [UsedImplicitly]
     internal sealed class ServerMapManager : MapManager, IServerMapManager
     {
-        [Dependency] private readonly INetManager _netManager = default!;
-
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new();
 

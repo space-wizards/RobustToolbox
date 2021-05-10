@@ -374,6 +374,19 @@ namespace Robust.Shared.Prototypes
                 {
                     PushInheritance(type, baseNode, null, new HashSet<string>());
                 }
+
+                // Go over all prototypes and double check that their parent actually exists.
+                var typePrototypes = prototypes[type];
+                foreach (var (id, proto) in typePrototypes)
+                {
+                    var iProto = (IInheritingPrototype) proto;
+
+                    var parent = iProto.Parent;
+                    if (parent != null && !typePrototypes.ContainsKey(parent!))
+                    {
+                        Logger.ErrorS("Serv3", $"{iProto.GetType().Name} '{id}' has invalid parent: {parent}");
+                    }
+                }
             }
         }
 

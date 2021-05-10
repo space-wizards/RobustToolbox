@@ -24,12 +24,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
 
-        [Obsolete("You need to create and store the query yourself in a field.")]
-        protected IEntityQuery? EntityQuery;
-
-        [Obsolete("You need to use `EntityManager.GetEntities(EntityQuery)`, or store a query yourself.")]
-        protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
-
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
@@ -9,7 +10,9 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager
     {
-        private readonly Dictionary<string, EntityLocData> _entityCache = new();
+        // Concurrent dict so that multiple threads "reading" .Name won't cause a concurrent write issue
+        // when the cache gets populated.
+        private readonly ConcurrentDictionary<string, EntityLocData> _entityCache = new();
 
         private void FlushEntityCache()
         {
@@ -125,13 +128,7 @@ namespace Robust.Shared.Localization
 
         public EntityLocData GetEntityData(string prototypeId)
         {
-            if (!_entityCache.TryGetValue(prototypeId, out var data))
-            {
-                data = CalcEntityLoc(prototypeId);
-                _entityCache.Add(prototypeId, data);
-            }
-
-            return data;
+            return _entityCache.GetOrAdd(prototypeId, (id, t) => t.CalcEntityLoc(id), this);
         }
     }
 }

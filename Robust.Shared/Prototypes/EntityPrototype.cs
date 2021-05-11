@@ -18,8 +18,9 @@ namespace Robust.Shared.Prototypes
     [Prototype("entity", -1)]
     public class EntityPrototype : IPrototype, IInheritingPrototype
     {
+        private readonly ILocalizationManager _loc = IoCManager.Resolve<ILocalizationManager>();
+
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
-        private static ILocalizationManager Loc => IoCManager.Resolve<ILocalizationManager>();
 
         // LOCALIZATION NOTE:
         // Localization-related properties in here are manually localized in LocalizationManager.
@@ -65,20 +66,20 @@ namespace Robust.Shared.Prototypes
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables]
-        public string Name => Loc.GetEntityData(ID).Name;
+        public string Name => _loc.GetEntityData(ID).Name;
 
         /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
-        public string Description => Loc.GetEntityData(ID).Desc;
+        public string Description => _loc.GetEntityData(ID).Desc;
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
         ///     to provide additional info without ruining the Name property itself.
         /// </summary>
         [ViewVariables]
-        public string? EditorSuffix => Loc.GetEntityData(ID).Suffix;
+        public string? EditorSuffix => _loc.GetEntityData(ID).Suffix;
 
         /// <summary>
         /// Fluent messageId used to lookup the entity's name and localization attributes.

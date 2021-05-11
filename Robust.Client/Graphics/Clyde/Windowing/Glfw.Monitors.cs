@@ -20,7 +20,6 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Dictionary<int, WinThreadMonitorReg> _winThreadMonitors = new();
 
             // Can't use ClydeHandle because it's 64 bit.
-            // TODO: this should be MONITOR ID.
             private int _nextMonitorId = 1;
             private int _primaryMonitorId;
             private readonly Dictionary<int, GlfwMonitorReg> _monitors = new();

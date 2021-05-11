@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Player;
 using Robust.Shared.Reflection;
 
 namespace Robust.Shared.GameObjects
@@ -22,12 +23,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IEntityManager EntityManager = default!;
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-
-        [Obsolete("You need to create and store the query yourself in a field.")]
-        protected IEntityQuery? EntityQuery;
-
-        [Obsolete("You need to use `EntityManager.GetEntities(EntityQuery)`, or store a query yourself.")]
-        protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -109,6 +104,14 @@ namespace Robust.Shared.GameObjects
         protected void RaiseNetworkEvent(EntityEventArgs message, INetChannel channel)
         {
             EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, channel);
+        }
+
+        protected void RaiseNetworkEvent(EntityEventArgs message, Filter filter)
+        {
+            foreach (var session in filter.Recipients)
+            {
+                EntityManager.EntityNetManager?.SendSystemNetworkMessage(message, session.ConnectedClient);
+            }
         }
 
         protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)

@@ -376,7 +376,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 // Go over all prototypes and double check that their parent actually exists.
-                var typePrototypes = prototypes[type];
+                var typePrototypes = _prototypes[type];
                 foreach (var (id, proto) in typePrototypes)
                 {
                     var iProto = (IInheritingPrototype) proto;

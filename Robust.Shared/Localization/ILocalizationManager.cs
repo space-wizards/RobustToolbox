@@ -94,6 +94,11 @@ namespace Robust.Shared.Localization
         [Obsolete]
         [StringFormatMethod("text")]
         string GetString(string text, params object[] args);
+
+        /// <summary>
+        ///     Gets localization data for an entity prototype.
+        /// </summary>
+        EntityLocData GetEntityData(string prototypeId);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

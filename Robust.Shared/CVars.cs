@@ -415,14 +415,26 @@ namespace Robust.Shared
             CVarDef.Create("physics.maxangularcorrection", 8.0f / 180.0f * MathF.PI);
 
         // - Maximums
-        // Squared
-        // 35 m/s, AKA half a tile per frame allowed. Divide this by frametime to get units per second.
+        /// <summary>
+        /// Maximum linear velocity per second.
+        /// Make sure that MaxLinVelocity / <see cref="NetTickrate"/> is around 0.5 or higher so that moving objects don't go through walls.
+        /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
+        /// </summary>
+        /// <remarks>
+        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 0.56f);
+            CVarDef.Create("physics.maxlinvelocity", 35f);
 
-        // Squared
+        /// <summary>
+        /// Maximum angular velocity in full rotations per second.
+        /// MaxAngVelocity is compared to the squared rotation.
+        /// </summary>
+        /// <remarks>
+        /// Default is 15 rotations per second. Approximately a quarter rotation per tick at 60 ticks per second.
+        /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
-            CVarDef.Create("physics.maxangvelocity", 0.5f * MathF.PI);
+            CVarDef.Create("physics.maxangvelocity", 15f);
 
         /*
          * DISCORD

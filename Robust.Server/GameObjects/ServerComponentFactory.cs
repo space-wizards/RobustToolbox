@@ -26,8 +26,7 @@ namespace Robust.Server.GameObjects
             Register<EyeComponent>();
             RegisterReference<EyeComponent, SharedEyeComponent>();
 
-            Register<BasicActorComponent>();
-            RegisterReference<BasicActorComponent, IActorComponent>();
+            Register<ActorComponent>();
 
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();

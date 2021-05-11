@@ -118,8 +118,8 @@ namespace Robust.Server.Player
                 return;
             }
 
-            var actorComponent = a.AddComponent<BasicActorComponent>();
-            actorComponent.playerSession = this;
+            var actorComponent = a.AddComponent<ActorComponent>();
+            actorComponent.PlayerSession = this;
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
@@ -137,11 +137,11 @@ namespace Robust.Server.Player
                 throw new InvalidOperationException("Tried to detach player, but my entity does not exist!");
             }
 
-            if (AttachedEntity.TryGetComponent<BasicActorComponent>(out var actor))
+            if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))
             {
                 AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
                 AttachedEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerDetachedSystemMessage(AttachedEntity));
-                AttachedEntity.RemoveComponent<BasicActorComponent>();
+                AttachedEntity.RemoveComponent<ActorComponent>();
                 AttachedEntity = null;
                 UpdatePlayerState();
             }

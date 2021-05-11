@@ -132,11 +132,11 @@ namespace Robust.Server.GameStates
             if (session.Status != SessionStatus.InGame || session.AttachedEntityUid is null)
                 return viewers;
 
-            var query = _compMan.EntityQuery<BasicActorComponent>();
+            var query = _compMan.EntityQuery<ActorComponent>();
 
             foreach (var actorComp in query)
             {
-                if (actorComp.playerSession == session)
+                if (actorComp.PlayerSession == session)
                     viewers.Add(actorComp.Owner.Uid);
             }
 

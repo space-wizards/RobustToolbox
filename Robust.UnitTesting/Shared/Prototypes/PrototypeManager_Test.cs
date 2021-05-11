@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void Setup()
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.Register<TestBasicPrototypeComponent>();
+            factory.RegisterClass<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();

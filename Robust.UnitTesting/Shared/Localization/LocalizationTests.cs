@@ -19,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Localization
         public void Setup()
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
-            IoCManager.Resolve<IComponentFactory>().Register<GrammarComponent>();
+            IoCManager.Resolve<IComponentFactory>().RegisterClass<GrammarComponent>();
 
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);

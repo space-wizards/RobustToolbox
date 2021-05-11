@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
 
                 if (oldAnchored != anchored)
                 {
-                    SendMessage(new AnchoredChangedMessage(Anchored));
+                    SendMessage(new AnchoredChangedMessage(anchored));
                 }
             }
         }
@@ -1331,6 +1331,7 @@ namespace Robust.Shared.GameObjects
 
             if (preventCollideMessage.Cancelled) return false;
 
+#pragma warning disable 618
             foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
             {
                 if (comp.PreventCollide(other)) return false;
@@ -1340,6 +1341,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (comp.PreventCollide(this)) return false;
             }
+#pragma warning restore 618
 
             return true;
         }

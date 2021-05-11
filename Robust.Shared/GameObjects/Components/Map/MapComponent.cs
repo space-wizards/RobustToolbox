@@ -1,6 +1,5 @@
 ﻿using System;
 using Robust.Shared.Map;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -18,6 +17,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="IMapComponent"/>
+    [ComponentReference(typeof(IMapComponent))]
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]

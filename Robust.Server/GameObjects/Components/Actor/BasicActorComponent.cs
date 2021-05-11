@@ -5,6 +5,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [ComponentReference(typeof(IActorComponent))]
     public class BasicActorComponent : Component, IActorComponent
     {
         public override string Name => "BasicActor";
@@ -15,7 +16,7 @@ namespace Robust.Server.GameObjects
         protected override void Shutdown()
         {
             base.Shutdown();
-            
+
             // Warning: careful here, Detach removes this component, make sure this is after the base shutdown
             // to prevent infinite recursion
             // ReSharper disable once ConstantConditionalAccessQualifier

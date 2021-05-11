@@ -1,68 +1,37 @@
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 
-using Robust.Shared.Physics;
-
 namespace Robust.Server.GameObjects
 {
     public class ServerComponentFactory : ComponentFactory
     {
         public ServerComponentFactory()
         {
-            // Required for the engine to work
-            Register<MetaDataComponent>();
-            RegisterReference<MetaDataComponent, IMetaDataComponent>();
-
-            // Required for the engine to work
-            Register<TransformComponent>();
-            RegisterReference<TransformComponent, ITransformComponent>();
-
-            Register<MapComponent>();
-            RegisterReference<MapComponent, IMapComponent>();
-
-            Register<MapGridComponent>();
-            RegisterReference<MapGridComponent, IMapGridComponent>();
-
-            Register<EyeComponent>();
-            RegisterReference<EyeComponent, SharedEyeComponent>();
-
-            Register<BasicActorComponent>();
-            RegisterReference<BasicActorComponent, IActorComponent>();
-
-            Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, IPhysBody>();
-
-            Register<CollisionWakeComponent>();
-
-            Register<ContainerManagerComponent>();
-            RegisterReference<ContainerManagerComponent, IContainerManager>();
-
-            Register<OccluderComponent>();
-
             RegisterIgnore("Input");
-            Register<SpriteComponent>();
-            RegisterReference<SpriteComponent, SharedSpriteComponent>();
-            RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
-
-            Register<AppearanceComponent>();
-            RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
-
-            Register<SnapGridComponent>();
-
-            Register<ServerUserInterfaceComponent>();
-            RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
-
-            Register<TimerComponent>();
-
             RegisterIgnore("AnimationPlayer");
 
-#if DEBUG
-            Register<DebugExceptionOnAddComponent>();
-            Register<DebugExceptionInitializeComponent>();
-            Register<DebugExceptionStartupComponent>();
-#endif
+            RegisterClass<MetaDataComponent>();
+            RegisterClass<TransformComponent>();
+            RegisterClass<MapComponent>();
+            RegisterClass<MapGridComponent>();
+            RegisterClass<EyeComponent>();
+            RegisterClass<BasicActorComponent>();
+            RegisterClass<PhysicsComponent>();
+            RegisterClass<CollisionWakeComponent>();
+            RegisterClass<ContainerManagerComponent>();
+            RegisterClass<OccluderComponent>();
+            RegisterClass<SpriteComponent>();
+            RegisterClass<AppearanceComponent>();
+            RegisterClass<SnapGridComponent>();
+            RegisterClass<ServerUserInterfaceComponent>();
+            RegisterClass<TimerComponent>();
+            RegisterClass<MapSaveIdComponent>();
 
-            Register<MapSaveIdComponent>();
+#if DEBUG
+            RegisterClass<DebugExceptionOnAddComponent>();
+            RegisterClass<DebugExceptionInitializeComponent>();
+            RegisterClass<DebugExceptionStartupComponent>();
+#endif
         }
     }
 }

@@ -71,7 +71,7 @@ namespace Robust.Client.Graphics.Clyde
                 var impl = (CursorImpl) cursor;
                 DebugTools.Assert(impl.Owner == this);
 
-                if (impl.Id == null)
+                if (impl.Id == default)
                 {
                     throw new ObjectDisposedException(nameof(cursor));
                 }

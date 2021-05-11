@@ -206,7 +206,6 @@ namespace Robust.Shared.Prototypes
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
-        private bool _hasEverResynced;
 
         #region IPrototypeManager members
 
@@ -353,8 +352,8 @@ namespace Robust.Shared.Prototypes
 
             foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
-                foreach (var entity in _entityManager.GetEntities(
-                    new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype)))
+                foreach (var entity in _entityManager.GetEntities()
+                    .Where(e => e.Prototype != null && e.Prototype.ID == prototype))
                 {
                     ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
                 }

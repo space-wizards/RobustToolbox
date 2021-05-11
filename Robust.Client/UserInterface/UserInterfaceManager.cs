@@ -25,8 +25,6 @@ namespace Robust.Client.UserInterface
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;

@@ -212,6 +212,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [Obsolete("IEntityQuery is obsolete")]
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
             return query.Match(this);
@@ -359,7 +360,7 @@ namespace Robust.Shared.GameObjects
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
 
-            // We do this after the event, so if the event throws we have not committed 
+            // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
             AllEntities.Add(entity);
 

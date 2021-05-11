@@ -14,6 +14,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [ComponentReference(typeof(ITransformComponent))]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]
@@ -576,7 +577,7 @@ namespace Robust.Shared.GameObjects
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
             Owner.SendMessage(this, compMessage);
-            
+
             RebuildMatrices();
             Dirty();
         }

@@ -17,6 +17,7 @@ namespace Robust.Client.GameObjects
             RegisterClass<MapGridComponent>();
             RegisterClass<PhysicsComponent>();
             RegisterClass<CollisionWakeComponent>();
+            RegisterClass<ClientUserInterfaceComponent>();
             RegisterClass<ContainerManagerComponent>();
             RegisterClass<InputComponent>();
             RegisterClass<SpriteComponent>();

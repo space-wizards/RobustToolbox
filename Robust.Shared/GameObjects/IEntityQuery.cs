@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -6,6 +7,7 @@ namespace Robust.Shared.GameObjects
     /// An entity query is a type that can filter entities based on certain criteria,
     /// for example based on the components that the entity has.
     /// </summary>
+    [Obsolete("Use any of the other entity query methods instead.")]
     public interface IEntityQuery
     {
         /// <summary>

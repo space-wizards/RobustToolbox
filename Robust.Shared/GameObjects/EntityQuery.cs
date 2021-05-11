@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     ///     An entity query that will let all entities pass.
     ///     This is the same as matching <c>ITransformComponent</c>, but faster.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class AllEntityQuery : IEntityQuery
     {
         /// <inheritdoc />
@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects
     ///     An entity query which will match entities based on a predicate.
     ///     If you only want a single type of Component, use <c>TypeEntityQuery</c>.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class PredicateEntityQuery : IEntityQuery
     {
         private readonly Predicate<IEntity> Predicate;
@@ -59,7 +59,7 @@ namespace Robust.Shared.GameObjects
     ///     An entity query that will match one type of component.
     ///     This the fastest and most common query, and should be the default choice.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class TypeEntityQuery : IEntityQuery
     {
         private readonly Type ComponentType;
@@ -90,7 +90,7 @@ namespace Robust.Shared.GameObjects
     ///     This the fastest and most common query, and should be the default choice.
     /// </summary>
     /// <typeparamref name="T">Type of component to match.</typeparamref>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class TypeEntityQuery<T> : IEntityQuery where T : IComponent
     {
         public bool Match(IEntity entity) => entity.HasComponent<T>();
@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     An entity query that will match all entities that intersect with the argument entity.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class IntersectingEntityQuery : IEntityQuery
     {
         private readonly IEntity Entity;
@@ -137,7 +137,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     An entity query that will match entities that have all of the provided components.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public class MultipleTypeEntityQuery : IEntityQuery
     {
         private readonly List<Type> ComponentTypes;

@@ -334,6 +334,7 @@ namespace Robust.Client.Input
         {
             // christ this crap *is* re-entrant thanks to PlacementManager and
             // I honestly have no idea what the best solution here is.
+            // note from the future: context switches won't cause re-entrancy anymore because InputContextContainer defers context switches
             DebugTools.Assert(!_currentlyFindingViewport, "Re-entrant key events??");
 
             try
@@ -341,6 +342,8 @@ namespace Robust.Client.Input
                 // This is terrible but anyways.
                 // This flag keeps track of "did a viewport fire the key up for us" so we know we don't do it again.
                 _currentlyFindingViewport = true;
+                // And this stops context switches from causing crashes
+                Contexts.DeferringEnabled = true;
 
                 binding.State = state;
 
@@ -361,12 +364,14 @@ namespace Robust.Client.Input
             finally
             {
                 _currentlyFindingViewport = false;
+                Contexts.DeferringEnabled = false;
             }
         }
 
         public void ViewportKeyEvent(Control? viewport, BoundKeyEventArgs eventArgs)
         {
             _currentlyFindingViewport = false;
+            Contexts.DeferringEnabled = false;
 
             var cmd = GetInputCommand(eventArgs.Function);
             // TODO: Allow input commands to still get forwarded to server if necessary.

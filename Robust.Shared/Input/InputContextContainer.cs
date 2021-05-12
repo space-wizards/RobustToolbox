@@ -65,9 +65,16 @@ namespace Robust.Shared.Input
 
         /// <summary>
         ///     Sets the context with the given unique name as the Active context.
+        ///     Since this may be called while handling an input, this is deferred to the next tick.
         /// </summary>
         /// <param name="uniqueName">Unique name of the context to set as active.</param>
         void SetActiveContext(string uniqueName);
+
+        /// <summary>
+        ///     Runs context switches that have been deferred.
+        ///     At present, called from InputSystem.FrameUpdate
+        /// </summary>
+        void RunDeferredContextSwitch();
     }
 
     /// <inheritdoc />
@@ -82,19 +89,23 @@ namespace Robust.Shared.Input
         public event EventHandler<ContextChangedEventArgs>? ContextChanged;
 
         private readonly Dictionary<string, InputCmdContext> _contexts = new();
+        // Random scribble here:
+        // InputManager r/n feeds the first active context using DefaultContextName
+        // This is why SetActiveContext needs to be careful to *not* defer the switch if there's no context,
+        //  or else the client instantly crashes because there's no context on startup
         private InputCmdContext _activeContext = default!;
+        /// <summary>
+        ///     This is used to hold a pending context switch, because someone decided that:
+        ///      + Reentrant input events were illegal
+        ///       and
+        ///      + Context switches ought to generate input events
+        ///     This prevents the inevitable errors this caused from input events that switch contexts,
+        ///      by deferring the context switches until we're definitely out of input event code.
+        /// </summary>
+        private InputCmdContext? _deferredContextSwitch = null;
 
         /// <inheritdoc />
-        public IInputCmdContext ActiveContext
-        {
-            get => _activeContext;
-            private set
-            {
-                var args = new ContextChangedEventArgs(_activeContext, value);
-                _activeContext = (InputCmdContext) value;
-                ContextChanged?.Invoke(this, args);
-            }
-        }
+        public IInputCmdContext ActiveContext => _activeContext;
 
         /// <summary>
         ///     Creates a new instance of <see cref="InputCmdContext"/>.
@@ -179,7 +190,28 @@ namespace Robust.Shared.Input
         /// <inheritdoc />
         public void SetActiveContext(string uniqueName)
         {
-            ActiveContext = _contexts[uniqueName];
+            _deferredContextSwitch = _contexts[uniqueName];
+            // If we're literally just starting, InputManager feeds us the default context
+            if (_activeContext == null)
+                RunDeferredContextSwitch();
+        }
+
+        private void _setActiveContextImmediately(InputCmdContext icc)
+        {
+            var args = new ContextChangedEventArgs(_activeContext, icc);
+            _activeContext = icc;
+            ContextChanged?.Invoke(this, args);
+        }
+
+        /// <inheritdoc />
+        public void RunDeferredContextSwitch()
+        {
+            if (_deferredContextSwitch != null)
+            {
+                var icc = _deferredContextSwitch;
+                _deferredContextSwitch = null;
+                _setActiveContextImmediately(icc);
+            }
         }
     }
 

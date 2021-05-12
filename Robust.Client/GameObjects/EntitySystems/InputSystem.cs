@@ -152,12 +152,6 @@ namespace Robust.Client.GameObjects
 
             SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
         }
-
-        /// <inheritdoc />
-        public virtual void FrameUpdate(float frameTime) {
-            base.FrameUpdate(frameTime);
-            _inputManager.Contexts.RunDeferredContextSwitch();
-        }
     }
 
     /// <summary>

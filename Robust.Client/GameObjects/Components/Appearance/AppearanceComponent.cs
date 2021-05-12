@@ -10,6 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedAppearanceComponent))]
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]

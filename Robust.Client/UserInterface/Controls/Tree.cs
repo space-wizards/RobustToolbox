@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool HideRoot { get; set; }
 
-        public Item? Root => _root;
+        public Item? TreeRoot => _root;
 
         public Item? Selected => _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
 

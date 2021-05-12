@@ -79,6 +79,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="query">The query to test.</param>
         /// <returns>An enumerable over all matching entities.</returns>
+        [Obsolete("IEntityQuery is obsolete")]
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
         IEnumerable<IEntity> GetEntities();

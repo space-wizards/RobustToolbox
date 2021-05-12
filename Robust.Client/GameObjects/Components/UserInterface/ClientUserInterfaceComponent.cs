@@ -10,6 +10,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedUserInterfaceComponent))]
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

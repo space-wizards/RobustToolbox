@@ -26,6 +26,34 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
+    public sealed class MonitorInfoCommand : IConsoleCommand
+    {
+        public string Command => "monitorinfo";
+        public string Description => "";
+        public string Help => "Usage: monitorinfo <id>";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            if (args.Length < 1)
+            {
+                shell.WriteError("Expected one argument.");
+                return;
+            }
+
+            var clyde = IoCManager.Resolve<IClyde>();
+            var monitor = clyde.EnumerateMonitors().Single(c => c.Id == int.Parse(args[0]));
+
+            shell.WriteLine($"{monitor.Id}: {monitor.Name}");
+            shell.WriteLine($"Video modes:");
+
+            foreach (var mode in monitor.VideoModes)
+            {
+                shell.WriteLine($"  {mode.Width}x{mode.Height} {mode.RefreshRate} Hz {mode.RedBits}/{mode.GreenBits}/{mode.BlueBits}");
+            }
+        }
+    }
+
+    [UsedImplicitly]
     public sealed class SetMonitorCommand : IConsoleCommand
     {
         public string Command => "setmonitor";

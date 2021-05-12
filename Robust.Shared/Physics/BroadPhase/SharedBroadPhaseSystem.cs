@@ -723,6 +723,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                                 if (preventCollideMessage.Cancelled) return true;
 
+#pragma warning disable 618
                                 foreach (var modifier in state.modifiers)
                                 {
                                     preventCollision |= modifier.PreventCollide(other.Fixture.Body);
@@ -731,6 +732,7 @@ namespace Robust.Shared.Physics.Broadphase
                                 {
                                     preventCollision |= modifier.PreventCollide(body);
                                 }
+#pragma warning restore 618
 
                                 if (preventCollision)
                                     return true;

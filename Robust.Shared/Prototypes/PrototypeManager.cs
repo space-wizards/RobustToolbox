@@ -206,7 +206,6 @@ namespace Robust.Shared.Prototypes
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
-        private bool _hasEverResynced;
 
         #region IPrototypeManager members
 
@@ -353,8 +352,8 @@ namespace Robust.Shared.Prototypes
 
             foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
-                foreach (var entity in _entityManager.GetEntities(
-                    new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype)))
+                foreach (var entity in _entityManager.GetEntities()
+                    .Where(e => e.Prototype != null && e.Prototype.ID == prototype))
                 {
                     ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
                 }
@@ -373,6 +372,19 @@ namespace Robust.Shared.Prototypes
                 foreach (var baseNode in tree.BaseNodes)
                 {
                     PushInheritance(type, baseNode, null, new HashSet<string>());
+                }
+
+                // Go over all prototypes and double check that their parent actually exists.
+                var typePrototypes = _prototypes[type];
+                foreach (var (id, proto) in typePrototypes)
+                {
+                    var iProto = (IInheritingPrototype) proto;
+
+                    var parent = iProto.Parent;
+                    if (parent != null && !typePrototypes.ContainsKey(parent!))
+                    {
+                        Logger.ErrorS("Serv3", $"{iProto.GetType().Name} '{id}' has invalid parent: {parent}");
+                    }
                 }
             }
         }

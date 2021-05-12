@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Shared.Utility;
+using GlfwVideoMode = OpenToolkit.GraphicsLibraryFramework.VideoMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -18,7 +20,6 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Dictionary<int, WinThreadMonitorReg> _winThreadMonitors = new();
 
             // Can't use ClydeHandle because it's 64 bit.
-            // TODO: this should be MONITOR ID.
             private int _nextMonitorId = 1;
             private int _primaryMonitorId;
             private readonly Dictionary<int, GlfwMonitorReg> _monitors = new();
@@ -39,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
                 ProcessEvents();
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
             private void WinThreadSetupMonitor(Monitor* monitor)
             {
                 var id = _nextMonitorId++;
@@ -48,12 +50,31 @@ namespace Robust.Client.Graphics.Clyde
 
                 var name = GLFW.GetMonitorName(monitor);
                 var videoMode = GLFW.GetVideoMode(monitor);
+                var modesPtr = GLFW.GetVideoModesRaw(monitor, out var modeCount);
+                var modes = new VideoMode[modeCount];
+                for (var i = 0; i < modes.Length; i++)
+                {
+                    modes[i] = ConvertVideoMode(modesPtr[i]);
+                }
 
                 GLFW.SetMonitorUserPointer(monitor, (void*) id);
 
                 _winThreadMonitors.Add(id, new WinThreadMonitorReg {Ptr = monitor});
 
-                SendEvent(new EventMonitorSetup(id, name, *videoMode));
+                SendEvent(new EventMonitorSetup(id, name, ConvertVideoMode(*videoMode), modes));
+            }
+
+            private static VideoMode ConvertVideoMode(in GlfwVideoMode mode)
+            {
+                return new()
+                {
+                    Width = (ushort) mode.Width,
+                    Height = (ushort) mode.Height,
+                    RedBits = (byte) mode.RedBits,
+                    RefreshRate = (ushort) mode.RefreshRate,
+                    GreenBits = (byte) mode.GreenBits,
+                    BlueBits = (byte) mode.BlueBits,
+                };
             }
 
             private void ProcessSetupMonitor(EventMonitorSetup ev)
@@ -61,8 +82,9 @@ namespace Robust.Client.Graphics.Clyde
                 var impl = new MonitorHandle(
                     ev.Id,
                     ev.Name,
-                    (ev.Mode.Width, ev.Mode.Height),
-                    ev.Mode.RefreshRate);
+                    (ev.CurrentMode.Width, ev.CurrentMode.Height),
+                    ev.CurrentMode.RefreshRate,
+                    ev.AllModes);
 
                 _clyde._monitorHandles.Add(impl);
                 _monitors[ev.Id] = new GlfwMonitorReg

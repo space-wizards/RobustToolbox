@@ -193,20 +193,11 @@ namespace Robust.UnitTesting.Server
 
             var compFactory = container.Resolve<IComponentFactory>();
 
-            compFactory.Register<MetaDataComponent>();
-            compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
-
-            compFactory.Register<TransformComponent>();
-            compFactory.RegisterReference<TransformComponent, ITransformComponent>();
-
-            compFactory.Register<MapComponent>();
-            compFactory.RegisterReference<MapComponent, IMapComponent>();
-
-            compFactory.Register<MapGridComponent>();
-            compFactory.RegisterReference<MapGridComponent, IMapGridComponent>();
-
-            compFactory.Register<PhysicsComponent>();
-            compFactory.RegisterReference<PhysicsComponent, IPhysBody>();
+            compFactory.RegisterClass<MetaDataComponent>();
+            compFactory.RegisterClass<TransformComponent>();
+            compFactory.RegisterClass<MapComponent>();
+            compFactory.RegisterClass<MapGridComponent>();
+            compFactory.RegisterClass<PhysicsComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

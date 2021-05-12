@@ -288,7 +288,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
                 catch (Exception e)
                 {
-                    sawmill.Warning("Failed to load debug console history due to exception!\n{e}");
+                    sawmill.Warning($"Failed to load debug console history due to exception!\n{e}");
                     return null;
                 }
                 finally

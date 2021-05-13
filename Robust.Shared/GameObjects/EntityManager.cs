@@ -458,6 +458,7 @@ namespace Robust.Shared.GameObjects
             var session = netMsg.Session;
             compMsg.Remote = true;
 
+#pragma warning disable 618
             var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
@@ -471,6 +472,7 @@ namespace Robust.Shared.GameObjects
                     component.HandleNetworkMessage(compMsg, compChannel, session);
                 }
             }
+#pragma warning restore 618
         }
 
         /// <summary>

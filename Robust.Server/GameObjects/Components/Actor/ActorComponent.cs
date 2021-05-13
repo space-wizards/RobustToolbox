@@ -27,6 +27,7 @@ namespace Robust.Server.GameObjects
     ///     Raised on an entity whenever a player attaches to this entity.
     /// </summary>
     [Serializable]
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class PlayerAttachedMsg : ComponentMessage
     {
         public IPlayerSession NewPlayer { get; }
@@ -41,6 +42,7 @@ namespace Robust.Server.GameObjects
     ///     Raised on an entity whenever a player detaches from this entity.
     /// </summary>
     [Serializable]
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class PlayerDetachedMsg : ComponentMessage
     {
         public IPlayerSession OldPlayer { get; }

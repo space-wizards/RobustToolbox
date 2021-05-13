@@ -5,7 +5,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Client.Player
 {
-    internal sealed class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : ICommonSession
     {
         internal SessionStatus Status { get; set; } = SessionStatus.Connecting;
 

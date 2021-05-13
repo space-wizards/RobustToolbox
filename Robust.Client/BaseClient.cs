@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -165,7 +166,7 @@ namespace Robust.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedServer(IPlayerSession session)
+        private void OnPlayerJoinedServer(ICommonSession session)
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
@@ -188,7 +189,7 @@ namespace Robust.Client
         ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedGame(IPlayerSession session)
+        private void OnPlayerJoinedGame(ICommonSession session)
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
@@ -295,12 +296,12 @@ namespace Robust.Client
         /// <summary>
         ///     The session that triggered the event.
         /// </summary>
-        private IPlayerSession? Session { get; }
+        private ICommonSession? Session { get; }
 
         /// <summary>
         ///     Constructs a new instance of the class.
         /// </summary>
-        public PlayerEventArgs(IPlayerSession? session)
+        public PlayerEventArgs(ICommonSession? session)
         {
             Session = session;
         }

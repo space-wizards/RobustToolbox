@@ -22,6 +22,29 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
+
+            SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            UnsubscribeNetworkEvent<BoundUIWrapMessage>();
+        }
+
+        internal void SendTo(IPlayerSession session, BoundUIWrapMessage msg)
+        {
+            RaiseNetworkEvent(msg, session.ConnectedClient);
+        }
+
+        private void OnMessageReceived(BoundUIWrapMessage msg, EntitySessionEventArgs args)
+        {
+            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(msg.Entity, out var uiComp))
+                return;
+
+            uiComp.ReceiveMessage((IPlayerSession) args.SenderSession, msg);
         }
 
         /// <inheritdoc />

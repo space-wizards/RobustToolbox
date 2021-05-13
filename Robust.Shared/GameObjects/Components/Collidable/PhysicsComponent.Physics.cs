@@ -98,7 +98,6 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType == value)
                     return;
 
-                var oldAnchored = _bodyType == BodyType.Static;
                 var oldType = _bodyType;
                 _bodyType = value;
 
@@ -121,14 +120,7 @@ namespace Robust.Shared.GameObjects
 
                 RegenerateContacts();
 
-                var anchored = value == BodyType.Static;
-
                 Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
-
-                if (oldAnchored != anchored)
-                {
-                    SendMessage(new AnchoredChangedMessage(anchored));
-                }
             }
         }
 
@@ -900,35 +892,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <summary>
-        ///     Whether or not the entity is anchored in place.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use BodyType.Static instead")]
-        public bool Anchored
-        {
-            get => BodyType == BodyType.Static;
-            set
-            {
-                var anchored = BodyType == BodyType.Static;
-
-                if (anchored == value)
-                    return;
-
-                if (value)
-                {
-                    _bodyType = BodyType.Static;
-                }
-                else
-                {
-                    _bodyType = BodyType.Dynamic;
-                }
-
-                SendMessage(new AnchoredChangedMessage(Anchored));
-                Dirty();
-            }
-        }
-
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict
         {
@@ -1347,16 +1310,6 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public class AnchoredChangedMessage : ComponentMessage
-    {
-        public readonly bool Anchored;
-
-        public AnchoredChangedMessage(bool anchored)
-        {
-            Anchored = anchored;
-        }
-    }
-
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
@@ -1371,11 +1324,6 @@ namespace Robust.Shared.GameObjects
         ///     Old BodyType of the entity.
         /// </summary>
         public BodyType Old { get; }
-
-        /// <summary>
-        ///     Whether the body is "anchored".
-        /// </summary>
-        public bool Anchored => New == BodyType.Static;
 
         public PhysicsBodyTypeChangedEvent(BodyType newType, BodyType oldType)
         {

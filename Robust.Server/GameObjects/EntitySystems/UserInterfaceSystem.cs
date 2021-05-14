@@ -25,6 +25,15 @@ namespace Robust.Server.GameObjects
             base.Initialize();
 
             SubscribeNetworkEvent<BoundUIWrapMessage>(OnMessageReceived);
+            SubscribeLocalEvent<ServerUserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
+        }
+
+        private void OnUserInterfaceShutdown(EntityUid uid, ServerUserInterfaceComponent component, ComponentShutdown args)
+        {
+            foreach (var bui in component.Interfaces)
+            {
+                DeactivateInterface(bui);
+            }
         }
 
         public override void Shutdown()

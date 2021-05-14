@@ -5,6 +5,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
@@ -21,6 +22,9 @@ namespace Robust.Client.GameObjects
 
         [DataField("interfaces", readOnly: true)]
         private List<PrototypeData> _interfaceData = new();
+
+        [ViewVariables]
+        public IEnumerable<BoundUserInterface> Interfaces => _openInterfaces.Values;
 
         void ISerializationHooks.AfterDeserialization()
         {

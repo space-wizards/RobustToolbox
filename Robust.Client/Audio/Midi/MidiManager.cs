@@ -424,7 +424,22 @@ namespace Robust.Client.Audio.Midi
 
                 try
                 {
-                    stream.ReadExact(span);
+                    // Fluidsynth does a LOT of tiny allocations (frankly, way too much).
+                    if (count < 1024)
+                    {
+                        // ReSharper disable once SuggestVarOrType_Elsewhere
+                        Span<byte> buffer = stackalloc byte[(int)count];
+
+                        stream.ReadExact(buffer);
+
+                        buffer.CopyTo(span);
+                    }
+                    else
+                    {
+                        var buffer = stream.ReadExact(length);
+
+                        buffer.CopyTo(span);
+                    }
                 }
                 catch (EndOfStreamException)
                 {

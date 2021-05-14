@@ -175,18 +175,6 @@ namespace Robust.Client.Audio.Midi
             _sawmill.Log(rLevel, message);
         }
 
-        /*
-        public bool IsMidiFile(string filename)
-        {
-            return SoundFont.IsMidiFile(filename);
-        }
-
-        public bool IsSoundfontFile(string filename)
-        {
-            return SoundFont.IsSoundFont(filename);
-        }
-        */
-
         public IMidiRenderer? GetNewRenderer()
         {
             if (!FluidsynthInitialized)
@@ -455,6 +443,7 @@ namespace Robust.Client.Audio.Midi
                 {
                     return -1;
                 }
+
                 return 0;
             }
 
@@ -476,10 +465,12 @@ namespace Robust.Client.Audio.Midi
 
             public override int Close(IntPtr sfHandle)
             {
-                var stream = _openStreams[(int) sfHandle];
+                if (!_openStreams.Remove((int) sfHandle, out var stream))
+                    return -1;
+
                 stream.Dispose();
-                _openStreams.Remove((int) sfHandle);
                 return 0;
+
             }
         }
     }

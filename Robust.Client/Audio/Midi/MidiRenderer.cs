@@ -311,7 +311,11 @@ namespace Robust.Client.Audio.Midi
             Status = MidiRendererStatus.Input;
             StopAllNotes();
 
-            _driver = new MidiDriver(_settings, MidiDriverEventHandler);
+            lock (_playerStateLock)
+            {
+                _driver = new MidiDriver(_settings, MidiDriverEventHandler);
+            }
+
             return true;
         }
 
@@ -349,8 +353,13 @@ namespace Robust.Client.Audio.Midi
         {
             if (Status != MidiRendererStatus.Input) return false;
             Status = MidiRendererStatus.None;
-            _driver?.Dispose();
-            _driver = null;
+
+            lock (_playerStateLock)
+            {
+                _driver?.Dispose();
+                _driver = null;
+            }
+
             StopAllNotes();
             return true;
         }
@@ -374,7 +383,8 @@ namespace Robust.Client.Audio.Midi
 
         public void StopAllNotes()
         {
-            _synth.AllNotesOff(-1);
+            lock(_playerStateLock)
+                _synth.AllNotesOff(-1);
         }
 
         public void LoadSoundfont(string filename, bool resetPresets = false)

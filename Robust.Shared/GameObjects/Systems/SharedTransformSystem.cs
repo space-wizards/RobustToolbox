@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Robust.Shared.GameObjects
 {
@@ -31,7 +31,6 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     RaiseLocalEvent(ev);
-                    ev.Handled = true;
                 }
             }
         }

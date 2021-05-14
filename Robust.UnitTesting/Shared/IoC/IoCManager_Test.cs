@@ -37,6 +37,18 @@ namespace Robust.UnitTesting.Shared.IoC
         }
 
         [Test]
+        public void IoCTestConstructorInjection()
+        {
+            IoCManager.Register<TestFieldInjection, TestFieldInjection>();
+            IoCManager.Register<TestConstructorInjection, TestConstructorInjection>();
+            IoCManager.BuildGraph();
+
+            var tester = IoCManager.Resolve<TestConstructorInjection>();
+
+            Assert.That(tester.FieldInjection, Is.Not.Null);
+        }
+
+        [Test]
         public void IoCTestBasic()
         {
             IoCManager.Register<TestFieldInjection, TestFieldInjection>();
@@ -189,6 +201,16 @@ namespace Robust.UnitTesting.Shared.IoC
             base.Test();
             Assert.That(myuniqueself, Is.EqualTo(this));
             Assert.That(mydifferentself, Is.EqualTo(this));
+        }
+    }
+
+    public class TestConstructorInjection
+    {
+        public TestFieldInjection FieldInjection { get; }
+
+        public TestConstructorInjection(TestFieldInjection fieldInjection)
+        {
+            FieldInjection = fieldInjection;
         }
     }
 

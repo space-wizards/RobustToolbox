@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
+    [ComponentReference(typeof(IMapGridComponent))]
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -49,20 +50,6 @@ namespace Robust.Shared.GameObjects
         public void ClearGridId()
         {
             _gridIndex = GridId.Invalid;
-        }
-
-        public override void OnRemove()
-        {
-            if(GridIndex != GridId.Invalid)
-            {
-                if(_mapManager.GridExists(_gridIndex))
-                {
-                    Logger.DebugS("map", $"Entity {Owner.Uid} removed grid component, removing bound grid {_gridIndex}");
-                    _mapManager.DeleteGrid(_gridIndex);
-                }
-            }
-
-            base.OnRemove();
         }
 
         /// <param name="player"></param>

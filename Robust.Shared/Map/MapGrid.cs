@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -62,18 +63,17 @@ namespace Robust.Shared.Map
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
         /// </summary>
         /// <param name="mapManager">Reference to the <see cref="MapManager"/> that will manage this grid.</param>
+        /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
         /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
         /// <param name="parentMapId">Parent map identifier.</param>
-        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, float snapSize,
-            MapId parentMapId)
+        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, MapId parentMapId)
         {
             _mapManager = mapManager;
             _entityManager = entityManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
-            SnapSize = snapSize;
             ParentMapId = parentMapId;
             LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
             HasGravity = false;
@@ -100,10 +100,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public ushort ChunkSize { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public float SnapSize { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -171,18 +167,6 @@ namespace Robust.Shared.Map
         public void NotifyChunkCollisionRegenerated()
         {
             UpdateAABB();
-        }
-
-        /// <inheritdoc />
-        public bool OnSnapCenter(Vector2 position)
-        {
-            return (MathHelper.CloseTo(position.X % SnapSize, 0) && MathHelper.CloseTo(position.Y % SnapSize, 0));
-        }
-
-        /// <inheritdoc />
-        public bool OnSnapBorder(Vector2 position)
-        {
-            return (MathHelper.CloseTo(position.X % SnapSize, SnapSize / 2) && MathHelper.CloseTo(position.Y % SnapSize, SnapSize / 2));
         }
 
         #region TileAccess
@@ -349,72 +333,67 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset)
+        public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
         {
-            return GetSnapGridCell(SnapGridCellFor(coords, offset), offset);
+            return GetAnchoredEntities(TileIndicesFor(coords));
         }
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos, SnapGridOffset offset)
+        public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset);
+            return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
+        public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
-            return SnapGridCellFor(local, offset);
+            return SnapGridLocalCellFor(local);
         }
 
         /// <inheritdoc />
-        public Vector2i SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset)
+        public Vector2i TileIndicesFor(MapCoordinates worldPos)
         {
             DebugTools.Assert(ParentMapId == worldPos.MapId);
 
             var localPos = WorldToLocal(worldPos.Position);
-            return SnapGridCellFor(localPos, offset);
+            return SnapGridLocalCellFor(localPos);
         }
 
-        /// <inheritdoc />
-        public Vector2i SnapGridCellFor(Vector2 localPos, SnapGridOffset offset)
+        private Vector2i SnapGridLocalCellFor(Vector2 localPos)
         {
-            if (offset == SnapGridOffset.Edge)
-            {
-                localPos += new Vector2(TileSize / 2f, TileSize / 2f);
-            }
             var x = (int)Math.Floor(localPos.X / TileSize);
             var y = (int)Math.Floor(localPos.Y / TileSize);
             return new Vector2i(x, y);
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
-            AddToSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
+            AddToSnapGridCell(TileIndicesFor(coords), euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
-            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, offset, snap);
+            chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort) chunkTile.Y, euid);
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
-            RemoveFromSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
+            RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
         private (IMapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
@@ -423,6 +402,88 @@ namespace Robust.Shared.Map
             var chunk = GetChunk(gridChunkIndices);
             var chunkTile = chunk.GridTileToChunkTile(pos);
             return (chunk, chunkTile);
+        }
+
+        private static Vector2i SnapGridPosAt(Vector2i position, Direction dir, int dist = 1)
+        {
+            switch (dir)
+            {
+                case Direction.East:
+                    return position + new Vector2i(dist, 0);
+                case Direction.SouthEast:
+                    return position + new Vector2i(dist, -dist);
+                case Direction.South:
+                    return position + new Vector2i(0, -dist);
+                case Direction.SouthWest:
+                    return position + new Vector2i(-dist, -dist);
+                case Direction.West:
+                    return position + new Vector2i(-dist, 0);
+                case Direction.NorthWest:
+                    return position + new Vector2i(-dist, dist);
+                case Direction.North:
+                    return position + new Vector2i(0, dist);
+                case Direction.NorthEast:
+                    return position + new Vector2i(dist, dist);
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir)
+        {
+            var pos = SnapGridPosAt(TileIndicesFor(position), dir);
+            return GetAnchoredEntities(pos);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset)
+        {
+            var pos = TileIndicesFor(coords) + offset;
+            return GetAnchoredEntities(pos);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetLocal(EntityCoordinates coords)
+        {
+            return GetAnchoredEntities(TileIndicesFor(coords));
+        }
+
+        /// <inheritdoc />
+        public EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction)
+        {
+            return GridTileToLocal(SnapGridPosAt(TileIndicesFor(coords), direction));
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords)
+        {
+            var position = TileIndicesFor(coords);
+            foreach (var cell in GetAnchoredEntities(position))
+                yield return cell;
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(0, 1)))
+                yield return cell;
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(0, -1)))
+                yield return cell;
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(1, 0)))
+                yield return cell;
+            foreach (var cell in GetAnchoredEntities(position + new Vector2i(-1, 0)))
+                yield return cell;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n)
+        {
+            var position = TileIndicesFor(coords);
+
+            for (var y = -n; y <= n; ++y)
+                for (var x = -n; x <= n; ++x)
+                {
+                    foreach (var cell in GetAnchoredEntities(position + new Vector2i(x, y)))
+                    {
+                        yield return cell;
+                    }
+                }
         }
 
         #endregion
@@ -468,6 +529,8 @@ namespace Robust.Shared.Map
         /// </summary>
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);

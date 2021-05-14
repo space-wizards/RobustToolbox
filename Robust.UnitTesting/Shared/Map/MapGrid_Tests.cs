@@ -1,11 +1,13 @@
-﻿using System.Linq;
+using System.Linq;
+using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
+using Robust.Shared.Physics.Broadphase;
 using MapGrid = Robust.Shared.Map.MapGrid;
 
 namespace Robust.UnitTesting.Shared.Map
@@ -13,16 +15,17 @@ namespace Robust.UnitTesting.Shared.Map
     [TestFixture, TestOf(typeof(MapGrid))]
     class MapGrid_Tests : RobustUnitTest
     {
-        [OneTimeSetUp]
-        public void Setup()
+        protected override void OverrideIoC()
         {
-            var compMan = IoCManager.Resolve<IComponentManager>();
-            compMan.Initialize();
+            base.OverrideIoC();
 
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var mock = new Mock<IEntitySystemManager>();
+            var broady = new BroadPhaseSystem();
+            var physics = new PhysicsSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
-            mapMan.Initialize();
-            mapMan.Startup();
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
 
         [Test]
@@ -155,7 +158,6 @@ namespace Robust.UnitTesting.Shared.Map
         private static IMapGridInternal MapGridFactory(GridId id)
         {
             var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();
-            entMan.CullDeletionHistory(GameTick.MaxValue);
 
             var mapId = new MapId(5);
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -168,7 +170,7 @@ namespace Robust.UnitTesting.Shared.Map
             if(mapMan.GridExists(id))
                 mapMan.DeleteGrid(id);
 
-            var newGrid = mapMan.CreateGrid(mapId, id, 8, 1);
+            var newGrid = mapMan.CreateGrid(mapId, id, 8);
             newGrid.WorldPosition = new Vector2(3, 5);
 
             return (IMapGridInternal)newGrid;

@@ -6,6 +6,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -77,28 +78,28 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedCollection<List<T>, T>(list, results, elements => elements);
         }
 
-        ValidationNode ITypeReader<ImmutableList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<ImmutableList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyCollection<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyList<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<List<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
@@ -232,6 +233,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return list;
         }
 
+        [MustUseReturnValue]
         public ImmutableList<T> Copy(ISerializationManager serializationManager, ImmutableList<T> source,
             ImmutableList<T> target, bool skipHook, ISerializationContext? context = null)
         {

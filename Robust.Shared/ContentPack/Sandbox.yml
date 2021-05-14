@@ -567,6 +567,7 @@ Types:
       - "System.Text.Encoding get_UTF8()"
       - "System.Text.Encoding get_UTF32()"
     NormalizationForm: { } # Enum
+    Rune: { All: True }
     StringBuilder:
       Methods:
       - "bool Equals(System.ReadOnlySpan`1<char>)"
@@ -823,7 +824,7 @@ Types:
     Converter`2: { All: True } # Delegate
     DateTime: { All: True }
     DateTimeKind: { } # Enum
-    DateTimeOffse: { All: True }
+    DateTimeOffset: { All: True }
     Delegate:
       Methods:
       - "System.Delegate Combine(System.Delegate, System.Delegate)"
@@ -907,6 +908,7 @@ Types:
     Nullable`1: { All: True }
     NullReferenceException: { All: True }
     Object: { All: True }
+    ObsoleteAttribute: { All: True }
     ParamArrayAttribute: { All: True }
     Predicate`1: { All: True } # Delegate
     Random: { All: True }
@@ -1131,7 +1133,7 @@ Types:
       - "string[] Split(string, System.StringSplitOptions)"
       - "string[] Split(string[], int, System.StringSplitOptions)"
       - "string[] Split(string[], System.StringSplitOptions)"
-      - "StringRuneEnumerator EnumerateRunes()"
+      - "System.Text.StringRuneEnumerator EnumerateRunes()"
       - "System.CharEnumerator GetEnumerator()"
       - "System.ReadOnlySpan`1<char> op_Implicit(string)"
       - "System.TypeCode GetTypeCode()"

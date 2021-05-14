@@ -1,3 +1,5 @@
+using Robust.Shared.Utility;
+
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
@@ -14,6 +16,9 @@ namespace Robust.Shared.GameObjects
     {
         public static void RunMapInit(this IEntity entity)
         {
+            DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
+            entity.LifeStage = EntityLifeStage.MapInitialized;
+
             foreach (var init in entity.GetAllComponents<IMapInit>())
             {
                 init.MapInit();

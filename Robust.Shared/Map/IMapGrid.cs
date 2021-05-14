@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -17,6 +17,9 @@ namespace Robust.Shared.Map
         /// </summary>
         MapId ParentMapId { get; set; }
 
+        /// <summary>
+        /// The entity this grid is represented by in the ECS system.
+        /// </summary>
         EntityUid GridEntityId { get; }
 
         /// <summary>
@@ -40,11 +43,6 @@ namespace Robust.Shared.Map
         ushort ChunkSize { get; }
 
         /// <summary>
-        ///     The distance between the snap grid, between each center snap and between each offset snap grid location
-        /// </summary>
-        float SnapSize { get; }
-
-        /// <summary>
         ///     The origin of the grid in world coordinates. Make sure to set this!
         /// </summary>
         Vector2 WorldPosition { get; set; }
@@ -53,16 +51,6 @@ namespace Robust.Shared.Map
         ///     Whether or not this grid has gravity
         /// </summary>
         bool HasGravity { get; set; }
-
-        /// <summary>
-        ///     Is this located at a position on the center grid of snap positions, accepts local coordinates
-        /// </summary>
-        bool OnSnapCenter(Vector2 position);
-
-        /// <summary>
-        ///     Is this located at a position on the border grid of snap positions, accepts local coordinates
-        /// </summary>
-        bool OnSnapBorder(Vector2 position);
 
         #region TileAccess
 
@@ -115,17 +103,27 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset);
-        IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos, SnapGridOffset offset);
+        IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
 
-        Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset);
-        Vector2i SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
-        Vector2i SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
+        Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
+        Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
+        Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);
 
-        void AddToSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
-        void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(Vector2i pos, EntityUid euid);
+        void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
+        void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid);
+        void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid);
+
+        /// <summary>
+        ///     Returns an enumerable over all the entities which are one tile over in a certain direction.
+        /// </summary>
+        IEnumerable<EntityUid> GetInDir(EntityCoordinates position, Direction dir);
+        IEnumerable<EntityUid> GetOffset(EntityCoordinates coords, Vector2i offset);
+        IEnumerable<EntityUid> GetLocal(EntityCoordinates coords);
+        EntityCoordinates DirectionToGrid(EntityCoordinates coords, Direction direction);
+        IEnumerable<EntityUid> GetCardinalNeighborCells(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetCellsInSquareArea(EntityCoordinates coords, int n);
 
         #endregion SnapGridAccess
 

@@ -12,7 +12,8 @@ namespace Robust.Client.Graphics.Clyde
         static Clyde()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-                RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                RuntimeInformation.ProcessArchitecture == Architecture.X64 &&
+                Environment.GetEnvironmentVariable("ROBUST_INTEGRATED_GPU") != "1")
             {
                 try
                 {

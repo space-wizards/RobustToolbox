@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(RegexSerializer))]
-    public class RegexSerializerTest : TypeSerializerTest
+    public class RegexSerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 
 namespace Robust.Client.Player
 {
     public interface IPlayerManager : Shared.Players.ISharedPlayerManager
     {
-        new IEnumerable<IPlayerSession> Sessions { get; }
-        IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict { get; }
+        new IEnumerable<ICommonSession> Sessions { get; }
+        IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict { get; }
 
         LocalPlayer? LocalPlayer { get; }
 
@@ -20,8 +21,7 @@ namespace Robust.Client.Player
         event EventHandler PlayerListUpdated;
 
         void Initialize();
-        void Startup(INetChannel channel);
-        void Update(float frameTime);
+        void Startup();
         void Shutdown();
 
         void ApplyPlayerStates(IEnumerable<PlayerState>? list);

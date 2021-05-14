@@ -4,6 +4,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
@@ -13,9 +14,6 @@ namespace Robust.Client.Player
     /// </summary>
     public class LocalPlayer
     {
-        private readonly IConfigurationManager _configManager;
-        private readonly IClientNetManager _networkManager;
-
         /// <summary>
         ///     An entity has been attached to the local player.
         /// </summary>
@@ -39,7 +37,7 @@ namespace Robust.Client.Player
         ///     Session of the local client.
         /// </summary>
         [ViewVariables]
-        public IPlayerSession Session => InternalSession;
+        public ICommonSession Session => InternalSession;
 
         internal PlayerSession InternalSession { get; set; } = default!;
 
@@ -53,17 +51,6 @@ namespace Robust.Client.Player
         ///     The status of the client's session has changed.
         /// </summary>
         public event EventHandler<StatusEventArgs>? StatusChanged;
-
-        /// <summary>
-        ///     Constructs an instance of this object.
-        /// </summary>
-        /// <param name="netMan"></param>
-        /// <param name="configMan"></param>
-        public LocalPlayer(IClientNetManager netMan, IConfigurationManager configMan)
-        {
-            _networkManager = netMan;
-            _configManager = configMan;
-        }
 
         /// <summary>
         ///     Attaches a client to an entity.

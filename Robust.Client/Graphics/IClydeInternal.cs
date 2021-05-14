@@ -1,5 +1,7 @@
+using System;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -13,8 +15,21 @@ namespace Robust.Client.Graphics
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.
-        bool Initialize();
+        bool SeparateWindowThread { get; }
+        bool InitializePreWindowing();
+        void EnterWindowLoop();
+        bool InitializePostWindowing();
         void Ready();
+        void TerminateWindowLoop();
+
+        event Action<TextEventArgs> TextEntered;
+        event Action<MouseMoveEventArgs> MouseMove;
+        event Action<MouseEnterLeaveEventArgs> MouseEnterLeave;
+        event Action<KeyEventArgs> KeyUp;
+        event Action<KeyEventArgs> KeyDown;
+        event Action<MouseWheelEventArgs> MouseWheel;
+        event Action<WindowClosedEventArgs> CloseWindow;
+        event Action<WindowDestroyedEventArgs> DestroyWindow;
 
         ClydeHandle LoadShader(ParsedShader shader, string? name = null);
 
@@ -29,7 +44,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     This is purely a hook for <see cref="IInputManager"/>, use that instead.
         /// </summary>
-        Vector2 MouseScreenPosition { get; }
+        ScreenCoordinates MouseScreenPosition { get; }
 
         IClydeDebugInfo DebugInfo { get; }
 
@@ -40,9 +55,7 @@ namespace Robust.Client.Graphics
         ClydeDebugLayers DebugLayers { get; set; }
 
         string GetKeyName(Keyboard.Key key);
-        string GetKeyNameScanCode(int scanCode);
 
-        int GetKeyScanCode(Keyboard.Key key);
         void Shutdown();
 
         /// <returns>Null if not running on X11.</returns>

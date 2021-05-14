@@ -22,8 +22,10 @@ namespace Robust.Shared.Network.Messages
 
         public EntityMessageType Type { get; set; }
 
-        public EntitySystemMessage SystemMessage { get; set; }
+        public EntityEventArgs SystemMessage { get; set; }
+#pragma warning disable 618
         public ComponentMessage ComponentMessage { get; set; }
+#pragma warning restore 618
 
         public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
@@ -43,7 +45,7 @@ namespace Robust.Shared.Network.Messages
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAlignedMemory(length);
-                    SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                    SystemMessage = serializer.Deserialize<EntityEventArgs>(stream);
                 }
                     break;
 
@@ -55,7 +57,9 @@ namespace Robust.Shared.Network.Messages
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAlignedMemory(length);
+#pragma warning disable 618
                     ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
+#pragma warning restore 618
                 }
                     break;
             }

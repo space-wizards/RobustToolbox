@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -9,7 +10,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ListSerializers<>))]
-    public class ArraySerializerTest : TypeSerializerTest
+    public class ArraySerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()

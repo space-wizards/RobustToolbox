@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Network;
@@ -30,6 +30,12 @@ namespace Robust.Shared.GameObjects
         ///     and correspond to counterparts across the network.
         /// </summary>
         EntityUid Uid { get; }
+
+        /// <summary>
+        ///     The current lifetime stage of this entity. You can use this to check
+        ///     if the entity is initialized or being deleted.
+        /// </summary>
+        EntityLifeStage LifeStage { get; internal set; }
 
         /// <summary>
         ///     Whether this entity has fully initialized.
@@ -122,17 +128,6 @@ namespace Robust.Shared.GameObjects
         IComponent GetComponent(Type type);
 
         /// <summary>
-        ///     Retrieves the component with the specified network ID.
-        /// </summary>
-        /// <param name="netID">The net ID of the component to retrieve.</param>
-        /// <returns>The component with the provided net ID.</returns>
-        /// <seealso cref="IComponent.NetID" />
-        /// <exception cref="Shared.GameObjects.UnknownComponentException">
-        ///     Thrown if there is no component with the specified net ID.
-        /// </exception>
-        IComponent GetComponent(uint netID);
-
-        /// <summary>
         ///     Attempt to retrieve the component with specified type,
         ///     writing it to the <paramref name="component" /> out parameter if it was found.
         /// </summary>
@@ -167,30 +162,6 @@ namespace Robust.Shared.GameObjects
         IComponent? GetComponentOrNull(Type type);
 
         /// <summary>
-        ///     Attempt to retrieve the component with specified network ID,
-        ///     writing it to the <paramref name="component" /> out parameter if it was found.
-        /// </summary>
-        /// <param name="netId">The component net ID to attempt to fetch.</param>
-        /// <param name="component">The component, if it was found. Null otherwise.</param>
-        /// <returns>True if a component with specified net ID was found.</returns>
-        bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component);
-
-        /// <summary>
-        ///     Attempt to retrieve the component with specified network ID,
-        ///     returning it if it was found.
-        /// </summary>
-        /// <param name="netId">The component net ID to attempt to fetch.</param>
-        /// <returns>The component, if it was found. Null otherwise.</returns>
-        IComponent? GetComponentOrNull(uint netId);
-
-        /// <summary>
-        ///     Used by the entity manager to delete the entity.
-        ///     Do not call directly. If you want to delete entities,
-        ///     see <see cref="Delete" />.
-        /// </summary>
-        void Shutdown();
-
-        /// <summary>
         ///     Deletes this entity.
         /// </summary>
         void Delete();
@@ -214,6 +185,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="owner">Object that sent the event.</param>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void SendMessage(IComponent? owner, ComponentMessage message);
 
         /// <summary>
@@ -221,8 +193,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null);
 
+        /// <summary>
+        /// Marks this entity as dirty so that it will be updated over the network.
+        /// </summary>
         void Dirty();
     }
 }

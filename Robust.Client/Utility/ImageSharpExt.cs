@@ -42,19 +42,20 @@ namespace Robust.Client.Utility
         {
             var dstSpan = destination.GetPixelSpan();
             var dstWidth = destination.Width;
+            var srcHeight = sourceRect.Height;
+            var srcWidth = sourceRect.Width;
 
             var (ox, oy) = destinationOffset;
 
-            for (var y = 0; y < sourceRect.Height; y++)
+            for (var y = 0; y < srcHeight; y++)
             {
                 var sourceRowOffset = sourceWidth * (y + sourceRect.Top) + sourceRect.Left;
                 var destRowOffset = dstWidth * (y + oy) + ox;
 
-                for (var x = 0; x < sourceRect.Width; x++)
-                {
-                    var pixel = source[x + sourceRowOffset];
-                    dstSpan[x + destRowOffset] = pixel;
-                }
+                var srcRow = source[sourceRowOffset..(sourceRowOffset + srcWidth)];
+                var dstRow = dstSpan[destRowOffset..(destRowOffset + srcWidth)];
+
+                srcRow.CopyTo(dstRow);
             }
         }
 

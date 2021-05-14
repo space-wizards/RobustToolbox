@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool HideRoot { get; set; }
 
-        public Item? Root => _root;
+        public Item? TreeRoot => _root;
 
         public Item? Selected => _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
 
@@ -219,9 +219,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var offset = itemSelected.GetContentOffset(Vector2.Zero);
                 var baseLine = offset + (hOffset, vOffset + font.GetAscent(UIScale));
-                foreach (var chr in item.Text)
+                foreach (var rune in item.Text.EnumerateRunes())
                 {
-                    baseLine += (font.DrawChar(handle, chr, baseLine, UIScale, Color.White), 0);
+                    baseLine += (font.DrawChar(handle, rune, baseLine, UIScale, Color.White), 0);
                 }
             }
 

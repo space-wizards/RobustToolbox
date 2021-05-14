@@ -10,6 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedAppearanceComponent))]
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]
@@ -94,8 +95,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntitySystem.Get<AppearanceSystem>()
-                .EnqueueAppearanceUpdate(this);
+            EntitySystem.Get<AppearanceSystem>().EnqueueUpdate(this);
             _appearanceDirty = true;
         }
 
@@ -114,21 +114,6 @@ namespace Robust.Client.GameObjects
             }
 
             MarkDirty();
-        }
-
-
-        internal class SpriteLayerToggle : AppearanceVisualizer
-        {
-            public const string NAME = "sprite_layer_toggle";
-
-            public readonly object Key;
-            public readonly int SpriteLayer;
-
-            public SpriteLayerToggle(object key, int spriteLayer)
-            {
-                Key = key;
-                SpriteLayer = spriteLayer;
-            }
         }
     }
 

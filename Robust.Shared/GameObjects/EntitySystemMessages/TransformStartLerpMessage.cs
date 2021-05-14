@@ -1,6 +1,6 @@
 namespace Robust.Shared.GameObjects
 {
-    internal sealed class TransformStartLerpMessage : EntitySystemMessage
+    internal sealed class TransformStartLerpMessage : EntityEventArgs
     {
         public TransformStartLerpMessage(TransformComponent transform)
         {

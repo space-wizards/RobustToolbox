@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -46,7 +47,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
-        bool TryGetEntitySystem<T>(out T entitySystem) where T : IEntitySystem;
+        bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem;
 
         /// <summary>
         /// Initialize, discover systems and initialize them through <see cref="IEntitySystem.Initialize"/>.
@@ -65,7 +66,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="frameTime">Time since the last frame was rendered.</param>
         /// <seealso cref="IEntitySystem.Update(float)"/>
-        void Update(float frameTime);
+        void TickUpdate(float frameTime);
         void FrameUpdate(float frameTime);
 
         /// <summary>

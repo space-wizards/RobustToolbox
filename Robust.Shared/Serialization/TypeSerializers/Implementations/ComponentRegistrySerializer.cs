@@ -9,7 +9,10 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
@@ -30,7 +33,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
-                string compType = ((ValueDataNode) componentMapping.GetNode("type")).Value;
+                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
                 {
@@ -41,19 +44,19 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        Logger.Error(SerializationManager.LogCategory, $"Unknown component '{compType}' in prototype!");
+                        Logger.ErrorS(SerializationManager.LogCategory, $"Unknown component '{compType}' in prototype!");
                         continue;
                 }
 
                 // Has this type already been added?
                 if (components.Keys.Contains(compType))
                 {
-                    Logger.Error(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
+                    Logger.ErrorS(SerializationManager.LogCategory, $"Component of type '{compType}' defined twice in prototype!");
                     continue;
                 }
 
                 var copy = componentMapping.Copy()!;
-                copy.RemoveNode("type");
+                copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
                 var read = serializationManager.ReadWithValueOrThrow<IComponent>(type, copy, skipHook: skipHook);
@@ -93,7 +96,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
-                string compType = ((ValueDataNode) componentMapping.GetNode("type")).Value;
+                string compType = ((ValueDataNode) componentMapping.Get("type")).Value;
                 // See if type exists to detect errors.
                 switch (factory.GetComponentAvailability(compType))
                 {
@@ -117,7 +120,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
 
                 var copy = componentMapping.Copy()!;
-                copy.RemoveNode("type");
+                copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
 
@@ -154,11 +157,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             {
                 var node = serializationManager.WriteValue(component.GetType(), component, alwaysWrite, context);
                 if (node is not MappingDataNode mapping) throw new InvalidNodeTypeException();
-//                if (mapping.Children.Count != 0)
-//                {
-                    mapping.AddNode("type", new ValueDataNode(type));
-                    compSequence.Add(mapping);
-//                }
+
+                mapping.Add("type", new ValueDataNode(type));
+                compSequence.Add(mapping);
             }
 
             return compSequence;

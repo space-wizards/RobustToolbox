@@ -1,0 +1,5 @@
+<Control xmlns="https://spacestation14.io" Visible="False">
+    <LayoutContainer>
+        <DebugConsole Name="MainControl" />
+    </LayoutContainer>
+</Control>

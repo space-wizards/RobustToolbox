@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();
-            private uint _handle = 0;
+            public uint Handle = 0;
             private GLShader? _fragmentShader;
             private GLShader? _vertexShader;
             public string? Name { get; }
@@ -49,22 +49,22 @@ namespace Robust.Client.Graphics.Clyde
             public void Link((string, uint)[] attribLocations)
             {
                 ClearCaches();
-                _handle = (uint) GL.CreateProgram();
+                Handle = (uint) GL.CreateProgram();
                 _clyde.CheckGlError();
                 if (Name != null)
                 {
-                    _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
+                    _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Program, Handle, Name);
                 }
 
                 if (_vertexShader != null)
                 {
-                    GL.AttachShader(_handle, _vertexShader.ObjectHandle);
+                    GL.AttachShader(Handle, _vertexShader.ObjectHandle);
                     _clyde.CheckGlError();
                 }
 
                 if (_fragmentShader != null)
                 {
-                    GL.AttachShader(_handle, _fragmentShader.ObjectHandle);
+                    GL.AttachShader(Handle, _fragmentShader.ObjectHandle);
                     _clyde.CheckGlError();
                 }
 
@@ -74,45 +74,50 @@ namespace Robust.Client.Graphics.Clyde
                     // So we have to manually do it here.
                     // Ugh.
 
-                    GL.BindAttribLocation(_handle, loc, varName);
+                    GL.BindAttribLocation(Handle, loc, varName);
                     _clyde.CheckGlError();
                 }
 
-                GL.LinkProgram(_handle);
+                GL.LinkProgram(Handle);
                 _clyde.CheckGlError();
 
-                GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out var compiled);
+                GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out var compiled);
                 _clyde.CheckGlError();
                 if (compiled != 1)
                 {
-                    throw new ShaderCompilationException(GL.GetProgramInfoLog((int) _handle));
+                    throw new ShaderCompilationException(GL.GetProgramInfoLog((int) Handle));
                 }
             }
 
             public void Use()
             {
-                DebugTools.Assert(_handle != 0);
-
                 if (_clyde._currentProgram == this)
                 {
                     return;
                 }
 
+                ForceUse();
+            }
+
+            public void ForceUse()
+            {
+                DebugTools.Assert(Handle != 0);
+
                 _clyde._currentProgram = this;
-                GL.UseProgram(_handle);
+                GL.UseProgram(Handle);
                 _clyde.CheckGlError();
             }
 
             public void Delete()
             {
-                if (_handle == 0)
+                if (Handle == 0)
                 {
                     return;
                 }
 
-                GL.DeleteProgram(_handle);
+                GL.DeleteProgram(Handle);
                 _clyde.CheckGlError();
-                _handle = 0;
+                Handle = 0;
             }
 
             public int GetUniform(string name)
@@ -137,14 +142,14 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool TryGetUniform(string name, out int index)
             {
-                DebugTools.Assert(_handle != 0);
+                DebugTools.Assert(Handle != 0);
 
                 if (_uniformCache.TryGetValue(name, out index))
                 {
                     return index != -1;
                 }
 
-                index = GL.GetUniformLocation(_handle, name);
+                index = GL.GetUniformLocation(Handle, name);
                 _clyde.CheckGlError();
                 _uniformCache.Add(name, index);
                 return index != -1;
@@ -152,7 +157,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public bool TryGetUniform(int id, out int index)
             {
-                DebugTools.Assert(_handle != 0);
+                DebugTools.Assert(Handle != 0);
                 DebugTools.Assert(id < UniCount);
 
                 var value = _uniformIntCache[id];
@@ -192,7 +197,7 @@ namespace Robust.Client.Graphics.Clyde
                         throw new ArgumentOutOfRangeException();
                 }
 
-                index = GL.GetUniformLocation(_handle, name);
+                index = GL.GetUniformLocation(Handle, name);
                 _clyde.CheckGlError();
                 _uniformIntCache[id] = (sbyte)index;
                 return index != -1;
@@ -203,9 +208,9 @@ namespace Robust.Client.Graphics.Clyde
 
             public void BindBlock(string blockName, uint blockBinding)
             {
-                var index = (uint) GL.GetUniformBlockIndex(_handle, blockName);
+                var index = (uint) GL.GetUniformBlockIndex(Handle, blockName);
                 _clyde.CheckGlError();
-                GL.UniformBlockBinding(_handle, index, blockBinding);
+                GL.UniformBlockBinding(Handle, index, blockBinding);
                 _clyde.CheckGlError();
             }
 

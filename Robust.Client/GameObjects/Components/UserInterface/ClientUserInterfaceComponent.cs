@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
-using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedUserInterfaceComponent))]
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
@@ -33,48 +32,40 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
-            ICommonSession? session = null)
+        internal void MessageReceived(BoundUIWrapMessage msg)
         {
-            base.HandleNetworkMessage(message, netChannel, session);
-
-            switch (message)
+            switch (msg.Message)
             {
-                case BoundInterfaceMessageWrapMessage wrapped:
-                    // Double nested switches who needs readability anyways.
-                    switch (wrapped.Message)
+                case OpenBoundInterfaceMessage _:
+                    if (_openInterfaces.ContainsKey(msg.UiKey))
                     {
-                        case OpenBoundInterfaceMessage _:
-                            if (_openInterfaces.ContainsKey(wrapped.UiKey))
-                            {
-                                return;
-                            }
+                        return;
+                    }
 
-                            OpenInterface(wrapped);
-                            break;
+                    OpenInterface(msg);
+                    break;
 
-                        case CloseBoundInterfaceMessage _:
-                            Close(wrapped.UiKey, true);
-                            break;
+                case CloseBoundInterfaceMessage _:
+                    Close(msg.UiKey, true);
+                    break;
 
-                        default:
-                            if (_openInterfaces.TryGetValue(wrapped.UiKey, out var bi))
-                            {
-                                bi.InternalReceiveMessage(wrapped.Message);
-                            }
-                            break;
+                default:
+                    if (_openInterfaces.TryGetValue(msg.UiKey, out var bi))
+                    {
+                        bi.InternalReceiveMessage(msg.Message);
                     }
 
                     break;
             }
         }
 
-        private void OpenInterface(BoundInterfaceMessageWrapMessage wrapped)
+        private void OpenInterface(BoundUIWrapMessage wrapped)
         {
             var data = _interfaces[wrapped.UiKey];
             // TODO: This type should be cached, but I'm too lazy.
             var type = _reflectionManager.LooseGetType(data.ClientType);
-            var boundInterface = (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[]{this, wrapped.UiKey});
+            var boundInterface =
+                (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[] {this, wrapped.UiKey});
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;
         }
@@ -86,7 +77,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            if(!remoteCall)
+            if (!remoteCall)
                 SendMessage(new CloseBoundInterfaceMessage(), uiKey);
             _openInterfaces.Remove(uiKey);
             boundUserInterface.Dispose();
@@ -94,7 +85,8 @@ namespace Robust.Client.GameObjects
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)
         {
-            SendNetworkMessage(new BoundInterfaceMessageWrapMessage(message, uiKey));
+            EntitySystem.Get<UserInterfaceSystem>()
+                .Send(new BoundUIWrapMessage(Owner.Uid, message, uiKey));
         }
     }
 

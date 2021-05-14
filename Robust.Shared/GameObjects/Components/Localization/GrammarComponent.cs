@@ -1,9 +1,14 @@
+using System;
+using System.Collections.Generic;
 using Robust.Shared.Enums;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components.Localization
 {
+    /// <summary>
+    ///     Overrides grammar attributes specified in prototypes or localization files.
+    /// </summary>
     [RegisterComponent]
     public class GrammarComponent : Component
     {
@@ -11,15 +16,33 @@ namespace Robust.Shared.GameObjects.Components.Localization
         public override uint? NetID => NetIDs.GRAMMAR;
 
         [ViewVariables]
-        [DataField("localizationId")]
-        public string LocalizationId = "";
+        [DataField("attributes")]
+        public Dictionary<string, string> Attributes { get; } = new();
 
         [ViewVariables]
-        [DataField("gender")]
-        public Gender? Gender = null;
+        public Gender? Gender
+        {
+            get => Attributes.TryGetValue("gender", out var g) ? Enum.Parse<Gender>(g, true) : null;
+            set
+            {
+                if (value.HasValue)
+                    Attributes["gender"] = value.Value.ToString();
+                else
+                    Attributes.Remove("gender");
+            }
+        }
 
         [ViewVariables]
-        [DataField("proper")]
-        public bool? ProperNoun = null;
+        public bool? ProperNoun
+        {
+            get => Attributes.TryGetValue("proper", out var g) ? bool.Parse(g) : null;
+            set
+            {
+                if (value.HasValue)
+                    Attributes["proper"] = value.Value.ToString();
+                else
+                    Attributes.Remove("proper");
+            }
+        }
     }
 }

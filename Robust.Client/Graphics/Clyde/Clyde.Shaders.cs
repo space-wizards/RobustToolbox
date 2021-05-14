@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +22,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private string _shaderWrapCodeRawFrag = default!;
         private string _shaderWrapCodeRawVert = default!;
+
+        private string _winBlitShaderVert = default!;
+        private string _winBlitShaderFrag = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
             new();
@@ -117,6 +120,9 @@ namespace Robust.Client.Graphics.Clyde
             _shaderWrapCodeRawVert = ReadEmbeddedShader("base-raw.vert");
             _shaderWrapCodeRawFrag = ReadEmbeddedShader("base-raw.frag");
 
+            _winBlitShaderVert = ReadEmbeddedShader("winblit.vert");
+            _winBlitShaderFrag = ReadEmbeddedShader("winblit.frag");
+
             var defaultLoadedShader = _resourceCache
                 .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
 
@@ -135,7 +141,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
-            (string, uint)[] attribLocations, string? name = null)
+            (string, uint)[] attribLocations, string? name = null, bool includeLib=true)
         {
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
@@ -172,8 +178,9 @@ namespace Robust.Client.Graphics.Clyde
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
             }
 
-            vertexSource = versionHeader + "#define VERTEX_SHADER\n" + _shaderLibrary + vertexSource;
-            fragmentSource = versionHeader + "#define FRAGMENT_SHADER\n" + _shaderLibrary + fragmentSource;
+            var lib = includeLib ? _shaderLibrary : "";
+            vertexSource = versionHeader + "#define VERTEX_SHADER\n" + lib + vertexSource;
+            fragmentSource = versionHeader + "#define FRAGMENT_SHADER\n" + lib + fragmentSource;
 
             try
             {
@@ -428,7 +435,8 @@ namespace Robust.Client.Graphics.Clyde
 
             private protected override void SetParameterImpl(string name, Texture value)
             {
-                throw new NotImplementedException();
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
             }
 
             private protected override void SetStencilOpImpl(StencilOp op)

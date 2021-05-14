@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Serialization;
+using Robust.Shared.Serialization;
 using System;
 
 namespace Robust.Shared.GameObjects
@@ -9,6 +9,8 @@ namespace Robust.Shared.GameObjects
         public EntityUid Uid { get; }
         public ComponentChanged[]? ComponentChanges { get; }
         public ComponentState[]? ComponentStates { get; }
+
+        public bool Empty => ComponentChanges is null && ComponentStates is null;
 
         public EntityState(EntityUid uid, ComponentChanged[]? changedComponents, ComponentState[]? componentStates)
         {

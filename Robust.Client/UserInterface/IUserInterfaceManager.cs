@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -33,6 +34,8 @@ namespace Robust.Client.UserInterface
         /// </summary>
         Control? ControlFocused { get; }
 
+        ViewportContainer MainViewport { get; }
+
         LayoutContainer StateRoot { get; }
 
         LayoutContainer WindowRoot { get; }
@@ -42,8 +45,6 @@ namespace Robust.Client.UserInterface
         PopupContainer ModalRoot { get; }
 
         Control? CurrentlyHovered { get; }
-
-        float UIScale { get; }
 
         /// <summary>
         ///     Gets the default UIScale that we will use if <see cref="CVars.DisplayUIScale"/> gets set to 0.
@@ -55,21 +56,20 @@ namespace Robust.Client.UserInterface
         ///     The "root" control to which all other controls are parented,
         ///     potentially indirectly.
         /// </summary>
-        Control RootControl { get; }
+        WindowRoot RootControl { get; }
 
         IDebugMonitors DebugMonitors { get; }
 
         void Popup(string contents, string title = "Alert!");
 
-        Control? MouseGetControl(Vector2 coordinates);
+        Control? MouseGetControl(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Gets the mouse position in UI space, accounting for <see cref="UIScale"/>.
         /// </summary>
-        Vector2 MousePositionScaled { get; }
+        ScreenCoordinates MousePositionScaled { get; }
 
-        Vector2 ScreenToUIPosition(Vector2 position);
-        Vector2 ScreenToUIPosition(ScreenCoordinates coordinates);
+        ScreenCoordinates ScreenToUIPosition(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).
@@ -101,5 +101,7 @@ namespace Robust.Client.UserInterface
         ICursor? WorldCursor { get; set; }
 
         void PushModal(Control modal);
+        WindowRoot CreateWindowRoot(IClydeWindow window);
+        void DestroyWindowRoot(IClydeWindow window);
     }
 }

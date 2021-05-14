@@ -23,13 +23,12 @@ namespace Robust.Client.Player
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IConfigurationManager _config = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new();
+        private readonly Dictionary<NetUserId, ICommonSession> _sessions = new();
 
         /// <inheritdoc />
         public IEnumerable<ICommonSession> NetworkedSessions
@@ -70,10 +69,10 @@ namespace Robust.Client.Player
 
         /// <inheritdoc />
         [ViewVariables]
-        IEnumerable<IPlayerSession> IPlayerManager.Sessions => _sessions.Values;
+        IEnumerable<ICommonSession> IPlayerManager.Sessions => _sessions.Values;
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;
+        public IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict => _sessions;
 
         /// <inheritdoc />
         public event EventHandler? PlayerListUpdated;
@@ -81,24 +80,20 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
+            _client.RunLevelChanged += OnRunLevelChanged;
+
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
         }
 
         /// <inheritdoc />
-        public void Startup(INetChannel channel)
+        public void Startup()
         {
-            LocalPlayer = new LocalPlayer(_network, _config);
+            LocalPlayer = new LocalPlayer();
 
             var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
             // message is empty
             _network.ClientSendMessage(msgList);
-        }
-
-        /// <inheritdoc />
-        public void Update(float frameTime)
-        {
-            // Uh, nothing anymore I guess.
         }
 
         /// <inheritdoc />
@@ -229,6 +224,35 @@ namespace Robust.Client.Player
             {
                 PlayerListUpdated?.Invoke(this, EventArgs.Empty);
             }
+        }
+
+        private void OnRunLevelChanged(object? sender, RunLevelChangedEventArgs e)
+        {
+            if (e.NewLevel != ClientRunLevel.SinglePlayerGame)
+                return;
+
+            DebugTools.AssertNotNull(LocalPlayer);
+
+            // We do some further setup steps for singleplayer here...
+
+            // The local player's GUID in singleplayer will always be the default.
+            var guid = default(NetUserId);
+
+            var session = new PlayerSession(guid)
+            {
+                Name = LocalPlayer!.Name,
+                Ping = 0,
+            };
+
+            LocalPlayer.UserId = guid;
+            LocalPlayer.InternalSession = session;
+
+            // Add the local session to the list.
+            _sessions.Add(guid, session);
+
+            LocalPlayer.SwitchState(SessionStatus.InGame);
+
+            PlayerListUpdated?.Invoke(this, EventArgs.Empty);
         }
     }
 }

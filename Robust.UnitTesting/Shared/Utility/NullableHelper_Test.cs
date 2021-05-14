@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -9,13 +9,14 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestOf(typeof(NullableHelper))]
     public class NullableHelper_Test
     {
-        [OneTimeSetUp]
-        public void OneTimeSetup()
+        [SetUp]
+        public void Setup()
         {
             //initializing logmanager so it wont error out if nullablehelper logs an error
-            IoCManager.InitThread();
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.BuildGraph();
+            var collection = new DependencyCollection();
+            collection.Register<ILogManager, LogManager>();
+            collection.BuildGraph();
+            IoCManager.InitThread(collection, true);
         }
 
         [Test]

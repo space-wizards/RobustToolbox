@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Generic;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -10,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(DictionarySerializer<,>))]
-    public class DictionarySerializerTest : TypeSerializerTest
+    public class DictionarySerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()
@@ -39,9 +40,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             };
             var node = new MappingDataNode();
 
-            node.AddNode("1", new ValueDataNode("A"));
-            node.AddNode("2", new ValueDataNode("B"));
-            node.AddNode("3", new ValueDataNode("C"));
+            node.Add("1", new ValueDataNode("A"));
+            node.Add("2", new ValueDataNode("B"));
+            node.Add("3", new ValueDataNode("C"));
 
             var deserializedDictionary = Serialization.ReadValue<Dictionary<int, string>>(node);
 

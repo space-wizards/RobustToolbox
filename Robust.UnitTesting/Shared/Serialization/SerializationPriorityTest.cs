@@ -7,6 +7,8 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using YamlDotNet.RepresentationModel;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -36,8 +38,8 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(component.Strings.Count, Is.EqualTo(3));
             Assert.That(component.First, Is.EqualTo("A"));
-            Assert.That(component.Second, Is.EqualTo("B"));
-            Assert.That(component.Third, Is.EqualTo("C"));
+            Assert.That(component.Second, Is.EqualTo("C"));
+            Assert.That(component.Third, Is.EqualTo("B"));
         }
     }
 
@@ -54,14 +56,14 @@ namespace Robust.UnitTesting.Shared.Serialization
             set => Strings.Add(value);
         }
 
-        [DataField("second", priority: 2)]
+        [DataField("second", priority: 1)]
         public string Second
         {
             get => Strings[1];
             set => Strings.Add(value);
         }
 
-        [DataField("third", priority: 1)]
+        [DataField("third", priority: 2)]
         public string Third
         {
             get => Strings[2];

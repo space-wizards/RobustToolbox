@@ -70,10 +70,10 @@ namespace Robust.Client.ViewVariables.Traits
 
                         var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
                         editor.WireNetworkSelector(Instance.Session!.SessionId, selectorChain);
-                        editor.OnValueChanged += o =>
+                        editor.OnValueChanged += (o, r) =>
                         {
                             Instance.ViewVariablesManager.ModifyRemote(Instance.Session!,
-                                selectorChain, o);
+                                selectorChain, o, r);
                         };
 
                         _memberList.AddChild(propertyEdit);

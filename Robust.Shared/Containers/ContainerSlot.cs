@@ -19,15 +19,29 @@ namespace Robust.Shared.Containers
         {
             get
             {
-                if (ContainedEntity == null) return Array.Empty<IEntity>();
+                if (ContainedEntity == null)
+                    return Array.Empty<IEntity>();
 
-                return new List<IEntity> {ContainedEntity};
+                // Cast to handle nullability.
+                return (IEntity[]) _containedEntityArray!;
             }
         }
 
         [ViewVariables]
-        [field: DataField("ent")]
-        public IEntity? ContainedEntity { get; private set; }
+        [DataField("ent")]
+        public IEntity? ContainedEntity
+        {
+            get => _containedEntity;
+            private set
+            {
+                _containedEntity = value;
+                _containedEntityArray[0] = value;
+            }
+        }
+
+        private IEntity? _containedEntity;
+        // Used by ContainedEntities to avoid allocating.
+        private readonly IEntity?[] _containedEntityArray = new IEntity[1];
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;

@@ -1,4 +1,4 @@
-﻿using Robust.Client.GameStates;
+using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
@@ -36,9 +36,9 @@ namespace Robust.Client.UserInterface.CustomControls
             HorizontalAlignment = HAlignment.Left;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
-            base.Update(args);
+            base.FrameUpdate(args);
 
             if (!VisibleInTree)
             {

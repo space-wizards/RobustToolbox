@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -10,6 +10,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedEyeComponent))]
     public class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -25,7 +26,7 @@ namespace Robust.Client.GameObjects
         [DataField("drawFov")]
         private bool _setDrawFovOnInitialize = true;
         [DataField("zoom")]
-        private Vector2 _setZoomOnInitialize = Vector2.One/2f;
+        private Vector2 _setZoomOnInitialize = Vector2.One;
         private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
@@ -152,6 +153,7 @@ namespace Robust.Client.GameObjects
             Zoom = state.Zoom;
             Offset = state.Offset;
             Rotation = state.Rotation;
+            VisibilityMask = state.VisibilityMask;
         }
 
         public override void OnRemove()

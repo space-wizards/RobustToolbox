@@ -31,6 +31,8 @@ namespace Robust.Shared.IoC
 
         private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
 
+        private readonly Queue<Type> _pendingResolves = new();
+
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
         private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
@@ -38,9 +40,38 @@ namespace Robust.Shared.IoC
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
-            where TImplementation : class, TInterface, new()
+            where TImplementation : class, TInterface
         {
-            Register<TInterface, TImplementation>(() => new TImplementation(), overwrite);
+            Register<TInterface, TImplementation>(() =>
+            {
+                var objectType  = typeof(TImplementation);
+                var constructors = objectType.GetConstructors();
+
+                if (constructors.Length != 1)
+                    throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' requires exactly one constructor.");
+
+                var constructorParams = constructors[0].GetParameters();
+                var parameters = new object[constructorParams.Length];
+
+                for (var index = 0; index < constructorParams.Length; index++)
+                {
+                    var param = constructorParams[index];
+
+                    if (_services.TryGetValue(param.ParameterType, out var instance))
+                        parameters[index] = instance;
+                    else
+                    {
+                        if (_resolveTypes.ContainsKey(param.ParameterType))
+                        {
+                            throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' ctor requires {param.ParameterType.FullName} registered before it.");
+                        }
+
+                        throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' ctor has unknown dependency {param.ParameterType.FullName}");
+                    }
+                }
+
+                return (TImplementation) Activator.CreateInstance(objectType, parameters)!;
+            }, overwrite);
         }
 
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
@@ -51,6 +82,7 @@ namespace Robust.Shared.IoC
 
             _resolveTypes[interfaceType] = typeof(TImplementation);
             _resolveFactories[typeof(TImplementation)] = factory;
+            _pendingResolves.Enqueue(interfaceType);
         }
 
         [AssertionMethod]
@@ -151,8 +183,11 @@ namespace Robust.Shared.IoC
 
             // First we build every type we have registered but isn't yet built.
             // This allows us to run this after the content assembly has been loaded.
-            foreach (var (key, value) in _resolveTypes.Where(p => !_services.ContainsKey(p.Key)))
+            while(_pendingResolves.Count > 0)
             {
+                Type key = _pendingResolves.Dequeue();
+                var value = _resolveTypes[key];
+
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.

@@ -112,6 +112,11 @@ namespace Robust.Client.Graphics.Clyde
                 return clydeTexture;
             }
 
+            public void RenderInRenderTarget(IRenderTarget target, Action a)
+            {
+                _clyde.RenderInRenderTarget((RenderTargetBase) target, a);
+            }
+
             public void SetScissor(UIBox2i? scissorBox)
             {
                 _clyde.DrawSetScissor(scissorBox);

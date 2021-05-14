@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -19,6 +19,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -26,6 +27,8 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedSpriteComponent))]
+    [ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug, ISerializationHooks
     {
@@ -36,13 +39,13 @@ namespace Robust.Client.GameObjects
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Visible
+        public override bool Visible
         {
             get => _visible;
             set => _visible = value;
         }
 
-        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
+        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -847,8 +850,8 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
-                        Environment.StackTrace);
+                    Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI {1}. Trace:\n{2}", stateId,
+                        actualRsi.Path, Environment.StackTrace);
                     theLayer.Texture = null;
                 }
             }
@@ -1575,9 +1578,10 @@ namespace Robust.Client.GameObjects
         {
             var builder = new StringBuilder();
             builder.AppendFormat(
-                "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
+                "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, Directional, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation)
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation),
+                DirectionOverride
             );
 
             foreach (var layer in Layers)
@@ -2084,6 +2088,7 @@ namespace Robust.Client.GameObjects
             public IEntityManager EntityManager { get; } = null!;
             public string Name { get; set; } = string.Empty;
             public EntityUid Uid { get; } = EntityUid.Invalid;
+            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
             public bool Initialized { get; } = false;
             public bool Initializing { get; } = false;
             public bool Deleted { get; } = true;
@@ -2100,6 +2105,7 @@ namespace Robust.Client.GameObjects
             public IMetaDataComponent MetaData { get; } = null!;
 
             private Dictionary<Type, IComponent> _components = new();
+            private EntityLifeStage _lifeStage;
 
             public T AddComponent<T>() where T : Component, new()
             {
@@ -2147,11 +2153,6 @@ namespace Robust.Client.GameObjects
                 return null!;
             }
 
-            public IComponent GetComponent(uint netID)
-            {
-                return null!;
-            }
-
             public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
@@ -2178,21 +2179,6 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
-            {
-                component = null;
-                return false;
-            }
-
-            public IComponent? GetComponentOrNull(uint netId)
-            {
-                return null;
-            }
-
-            public void Shutdown()
-            {
-            }
-
             public void Delete()
             {
             }
@@ -2207,10 +2193,12 @@ namespace Robust.Client.GameObjects
                 return Enumerable.Empty<T>();
             }
 
+            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
             public void SendMessage(IComponent? owner, ComponentMessage message)
             {
             }
 
+            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
             public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
             {
             }

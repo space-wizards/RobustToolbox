@@ -1,15 +1,16 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
-    [TestOf(typeof(SerializationDataDefinition))]
+    [TestOf(typeof(DataDefinition))]
     public class InheritanceSerializationTest : RobustUnitTest
     {
         private const string BaseEntityId = "BaseEntity";
@@ -54,9 +55,6 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             serializationManager.Initialize();
 
-            var componentManager = IoCManager.Resolve<IComponentManager>();
-            componentManager.Initialize();
-
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
             prototypeManager.LoadString(Prototypes);
@@ -64,8 +62,6 @@ namespace Robust.UnitTesting.Shared.Serialization
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            mapManager.Initialize();
-            mapManager.Startup();
 
             var mapId = new MapId(1);
 

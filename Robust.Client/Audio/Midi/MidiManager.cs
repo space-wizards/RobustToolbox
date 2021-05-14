@@ -11,8 +11,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -72,6 +72,8 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+
+        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
 
         public bool IsAvailable
         {
@@ -156,6 +158,7 @@ namespace Robust.Client.Audio.Midi
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
 
+            _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
             FluidsynthInitialized = true;
         }
 
@@ -303,7 +306,7 @@ namespace Robust.Client.Audio.Midi
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,
@@ -318,6 +321,11 @@ namespace Robust.Client.Audio.Midi
                         if (renderer.Source.SetPosition(pos.Position))
                         {
                             continue;
+                        }
+
+                        if (renderer.TrackingEntity != null)
+                        {
+                            renderer.Source.SetVelocity(renderer.TrackingEntity.GlobalLinearVelocity());
                         }
 
                         if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))

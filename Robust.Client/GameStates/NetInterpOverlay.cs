@@ -1,3 +1,4 @@
+using Robust.Shared.Enums;
 ﻿using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -5,6 +6,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using System;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -18,18 +20,19 @@ namespace Robust.Client.GameStates
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
 
-        public NetInterpOverlay() : base(nameof(NetInterpOverlay))
+        public NetInterpOverlay()
         {
             IoCManager.InjectDependencies(this);
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
         }
 
-        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
+        protected internal override void Draw(in OverlayDrawArgs args)
         {
+            var handle = args.DrawingHandle;
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>(true))
+            foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;
@@ -42,7 +45,7 @@ namespace Robust.Client.GameStates
                 if(transform.LerpDestination == null)
                     continue;
 
-                var aabb = ((IPhysBody)boundingBox).AABB;
+                var aabb = boundingBox.GetWorldAABB();
 
                 // if not on screen, or too small, continue
                 if (!aabb.Translated(transform.WorldPosition).Intersects(viewport) || aabb.IsEmpty())
@@ -85,14 +88,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (bValue && !overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                if (bValue && !overlayMan.HasOverlay<NetInterpOverlay>())
                 {
                     overlayMan.AddOverlay(new NetInterpOverlay());
                     shell.WriteLine("Enabled network interp overlay.");
                 }
-                else if (overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                else if (overlayMan.HasOverlay<NetInterpOverlay>())
                 {
-                    overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
+                    overlayMan.RemoveOverlay<NetInterpOverlay>();
                     shell.WriteLine("Disabled network interp overlay.");
                 }
             }

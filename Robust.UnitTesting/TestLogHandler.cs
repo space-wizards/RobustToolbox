@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
@@ -7,7 +7,6 @@ using Serilog.Events;
 
 namespace Robust.UnitTesting
 {
-
     public sealed class TestLogHandler : ILogHandler, IDisposable
     {
         private readonly string? _prefix;
@@ -16,9 +15,12 @@ namespace Robust.UnitTesting
 
         private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-        public TestLogHandler(string? prefix = null)
+        private readonly LogLevel? _failureLevel;
+
+        public TestLogHandler(string? prefix = null, LogLevel? failureLevel = null)
         {
             _prefix = prefix;
+            _failureLevel = failureLevel;
             _writer = TestContext.Out;
             _writer.WriteLine($"{GetPrefix()}Started {DateTime.Now:o}");
         }
@@ -30,10 +32,18 @@ namespace Robust.UnitTesting
 
         public void Log(string sawmillName, LogEvent message)
         {
-            var name = LogMessage.LogLevelToName(message.Level.ToRobust());
-            var seconds = _sw.ElapsedMilliseconds/1000d;
+            var level = message.Level.ToRobust();
+            var name = LogMessage.LogLevelToName(level);
+            var seconds = _sw.ElapsedMilliseconds / 1000d;
             var rendered = message.RenderMessage();
-            _writer.WriteLine($"{GetPrefix()}{seconds:F3}s [{name}] {sawmillName}: {rendered}");
+            var line = $"{GetPrefix()}{seconds:F3}s [{name}] {sawmillName}: {rendered}";
+            _writer.WriteLine(line);
+
+            if (_failureLevel == null || level < _failureLevel)
+                return;
+
+            _writer.Flush();
+            Assert.Fail(line);
         }
 
         private string GetPrefix()
@@ -41,5 +51,4 @@ namespace Robust.UnitTesting
             return _prefix != null ? $"{_prefix}: " : "";
         }
     }
-
 }

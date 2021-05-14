@@ -8,8 +8,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
@@ -24,17 +24,32 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
+        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+
         private readonly List<PlayingStream> _playingClydeStreams = new();
-        
+
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
             SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
             SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
             SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
 
             SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
+            _broadPhaseSystem = Get<SharedBroadPhaseSystem>();
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            UnsubscribeNetworkEvent<PlayAudioEntityMessage>();
+            UnsubscribeNetworkEvent<PlayAudioGlobalMessage>();
+            UnsubscribeNetworkEvent<PlayAudioPositionalMessage>();
+            UnsubscribeNetworkEvent<StopAudioMessageClient>();
+
+            UnsubscribeLocalEvent<SoundSystem.QueryAudioSystem>();
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
@@ -141,7 +156,7 @@ namespace Robust.Client.GameObjects
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,
@@ -160,6 +175,12 @@ namespace Robust.Client.GameObjects
                             Logger.Warning("Interrupting positional audio, can't set position.");
                             stream.Source.StopPlaying();
                         }
+
+                        if (stream.TrackingEntity != null)
+                        {
+                            stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
+                        }
+
                     }
                 }
             }
@@ -183,7 +204,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(string filename, AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
@@ -199,7 +220,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream Play(AudioStream stream, AudioParams? audioParams = null)
+        private IPlayingAudioStream Play(AudioStream stream, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             ApplyAudioParams(audioParams, source);
@@ -221,7 +242,7 @@ namespace Robust.Client.GameObjects
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream? Play(string filename, IEntity entity, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
@@ -238,7 +259,7 @@ namespace Robust.Client.GameObjects
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream? Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(entity.Transform.WorldPosition))
@@ -267,7 +288,7 @@ namespace Robust.Client.GameObjects
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
@@ -284,7 +305,7 @@ namespace Robust.Client.GameObjects
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
+        private IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);

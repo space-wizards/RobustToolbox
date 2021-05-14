@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
@@ -45,9 +45,9 @@ namespace Robust.Client.UserInterface.CustomControls
             Visible = false;
         }
 
-        protected override void Update(FrameEventArgs args)
+        protected override void FrameUpdate(FrameEventArgs args)
         {
-            base.Update(args);
+            base.FrameUpdate(args);
 
             if ((_gameTiming.RealTime - _lastUpdate).Seconds < 1 || !VisibleInTree)
             {

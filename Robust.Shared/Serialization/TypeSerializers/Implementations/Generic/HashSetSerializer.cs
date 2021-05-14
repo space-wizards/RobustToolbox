@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -38,14 +39,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
         }
 
-        ValidationNode ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Validate(
+        ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
             ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
+        ValidationNode ITypeValidator<HashSet<T>, SequenceDataNode>.Validate(ISerializationManager serializationManager,
             SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);

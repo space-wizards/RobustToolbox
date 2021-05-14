@@ -30,7 +30,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// The message payload.
         /// </summary>
+#pragma warning disable 618
         public readonly ComponentMessage Message;
+#pragma warning restore 618
 
         /// <summary>
         /// If the message is from the client, the client's session.

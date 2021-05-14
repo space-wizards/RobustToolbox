@@ -8,11 +8,14 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [ComponentReference(typeof(SharedSpriteComponent))]
+    [ComponentReference(typeof(ISpriteRenderableComponent))]
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent, ISerializationHooks
     {
         const string LayerSerializationCache = "spritelayersrv";
@@ -24,7 +27,7 @@ namespace Robust.Server.GameObjects
         [DataField("visible")]
         private bool _visible = true;
 
-        [DataFieldWithConstant("drawdepth", typeof(DrawDepthTag))]
+        [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
         private int _drawDepth = DrawDepthTag.Default;
 
         [DataField("scale")]
@@ -54,17 +57,19 @@ namespace Robust.Server.GameObjects
             get => _drawDepth;
             set
             {
+                if (_drawDepth == value) return;
                 _drawDepth = value;
                 Dirty();
             }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Visible
+        public override bool Visible
         {
             get => _visible;
             set
             {
+                if (_visible == value) return;
                 _visible = value;
                 Dirty();
             }

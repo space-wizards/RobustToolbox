@@ -50,9 +50,9 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
-        public void GetViewMatrix(out Matrix3 viewMatrix)
+        public void GetViewMatrix(out Matrix3 viewMatrix, Vector2 renderScale)
         {
-            var scaleMat = Matrix3.CreateScale(_scale.X, _scale.Y);
+            var scaleMat = Matrix3.CreateScale(_scale.X * renderScale.X, _scale.Y * renderScale.Y);
             var rotMat = Matrix3.CreateRotation(_rotation);
             var transMat = Matrix3.CreateTranslation(-_coords.Position);
 
@@ -60,9 +60,9 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
-        public void GetViewMatrixInv(out Matrix3 viewMatrixInv)
+        public void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale)
         {
-            GetViewMatrix(out var viewMatrix);
+            GetViewMatrix(out var viewMatrix, renderScale);
             viewMatrixInv = Matrix3.Invert(viewMatrix);
         }
     }

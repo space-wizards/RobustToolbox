@@ -60,5 +60,31 @@ namespace Robust.Shared.Utility
                 read += cRead;
             }
         }
+
+        public static int ReadToEnd(this Stream stream, Span<byte> buffer)
+        {
+            var totalRead = 0;
+            while (true)
+            {
+                var read = stream.Read(buffer);
+                totalRead += read;
+                if (read == 0)
+                    return totalRead;
+
+                buffer = buffer[read..];
+            }
+        }
+
+        public static int ReadToEnd(this Stream stream, byte[] buffer)
+        {
+            var totalRead = 0;
+            while (true)
+            {
+                var read = stream.Read(buffer, totalRead, buffer.Length - totalRead);
+                totalRead += read;
+                if (read == 0)
+                    return totalRead;
+            }
+        }
     }
 }

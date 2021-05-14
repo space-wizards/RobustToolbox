@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -20,10 +21,11 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Queue<IEntity> _dirtyEntities = new();
+        private readonly Queue<EntityUid> _dirtyEntities = new();
 
         private uint _updateGeneration;
 
+        /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
@@ -32,6 +34,17 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
+
+            SubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>(HandleSnapGridMove);
+        }
+
+        /// <inheritdoc />
+        public override void Shutdown()
+        {
+            UnsubscribeLocalEvent<OccluderDirtyEvent>();
+            UnsubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>();
+
+            base.Shutdown();
         }
 
         public override void FrameUpdate(float frameTime)
@@ -47,8 +60,8 @@ namespace Robust.Client.GameObjects
 
             while (_dirtyEntities.TryDequeue(out var entity))
             {
-                if (!entity.Deleted
-                    && entity.TryGetComponent(out ClientOccluderComponent? occluder)
+                if (EntityManager.EntityExists(entity)
+                    && ComponentManager.TryGetComponent(entity, out ClientOccluderComponent? occluder)
                     && occluder.UpdateGeneration != _updateGeneration)
                 {
                     occluder.Update();
@@ -58,6 +71,11 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        private static void HandleSnapGridMove(EntityUid uid, ClientOccluderComponent component, SnapGridPositionChangedEvent args)
+        {
+            component.SnapGridOnPositionChanged();
+        }
+
         private void HandleDirtyEvent(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
@@ -65,13 +83,14 @@ namespace Robust.Client.GameObjects
                 sender.TryGetComponent(out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
-                var snapGrid = sender.GetComponent<SnapGridComponent>();
+                var grid1 = _mapManager.GetGrid(sender.Transform.GridID);
+                var coords = sender.Transform.Coordinates;
 
-                _dirtyEntities.Enqueue(sender);
-                AddValidEntities(snapGrid.GetInDir(Direction.North));
-                AddValidEntities(snapGrid.GetInDir(Direction.South));
-                AddValidEntities(snapGrid.GetInDir(Direction.East));
-                AddValidEntities(snapGrid.GetInDir(Direction.West));
+                _dirtyEntities.Enqueue(sender.Uid);
+                AddValidEntities(grid1.GetInDir(coords, Direction.North));
+                AddValidEntities(grid1.GetInDir(coords, Direction.South));
+                AddValidEntities(grid1.GetInDir(coords, Direction.East));
+                AddValidEntities(grid1.GetInDir(coords, Direction.West));
             }
 
             // Entity is no longer valid, update around the last position it was at.
@@ -79,44 +98,37 @@ namespace Robust.Client.GameObjects
             {
                 var pos = ev.LastPosition.Value.pos;
 
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(1, 0), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(-1, 0), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, 1), ev.Offset));
-                AddValidEntities(grid.GetSnapGridCell(pos + new Vector2i(0, -1), ev.Offset));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(1, 0)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(-1, 0)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, 1)));
+                AddValidEntities(grid.GetAnchoredEntities(pos + new Vector2i(0, -1)));
             }
         }
 
-        private void AddValidEntities(IEnumerable<IEntity> candidates)
+        private void AddValidEntities(IEnumerable<EntityUid> candidates)
         {
             foreach (var entity in candidates)
             {
-                if (entity.HasComponent<ClientOccluderComponent>())
+                if (ComponentManager.HasComponent<ClientOccluderComponent>(entity))
                 {
                     _dirtyEntities.Enqueue(entity);
                 }
             }
-        }
-
-        private void AddValidEntities(IEnumerable<IComponent> candidates)
-        {
-            AddValidEntities(candidates.Select(c => c.Owner));
         }
     }
 
     /// <summary>
     ///     Event raised by a <see cref="ClientOccluderComponent"/> when it needs to be recalculated.
     /// </summary>
-    internal sealed class OccluderDirtyEvent : EntitySystemMessage
+    internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition, SnapGridOffset offset)
+        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
-            Offset = offset;
             Sender = sender;
         }
 
         public (GridId grid, Vector2i pos)? LastPosition { get; }
-        public SnapGridOffset Offset { get; }
         public IEntity Sender { get; }
     }
 }

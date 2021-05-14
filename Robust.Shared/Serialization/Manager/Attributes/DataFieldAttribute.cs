@@ -20,13 +20,16 @@ namespace Robust.Shared.Serialization.Manager.Attributes
 
         public readonly bool ServerOnly;
 
-        public DataFieldAttribute([NotNull] string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false)
+        public readonly Type? CustomTypeSerializer;
+
+        public DataFieldAttribute([NotNull] string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
         {
             Tag = tag;
             Priority = priority;
             ReadOnly = readOnly;
             Required = required;
             ServerOnly = serverOnly;
+            CustomTypeSerializer = customTypeSerializer;
         }
     }
 }

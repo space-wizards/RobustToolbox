@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
@@ -38,6 +39,14 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public string? Name { get; set; }
+
+        /// <summary>
+        ///     If true, this control will always be rendered, even if other UI rendering is disabled.
+        /// </summary>
+        /// <remarks>
+        ///     Useful for e.g. primary viewports.
+        /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)] public bool AlwaysRender { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.
@@ -181,11 +190,14 @@ namespace Robust.Client.UserInterface
         ///     <see cref="IUserInterfaceManager.RootControl"/>
         /// </summary>
         [ViewVariables]
-        public bool IsInsideTree { get; internal set; }
+        public bool IsInsideTree => Root != null;
+
+        [ViewVariables]
+        public virtual UIRoot? Root { get; internal set; }
 
         private void _propagateExitTree()
         {
-            IsInsideTree = false;
+            Root = null;
             _exitedTree();
 
             foreach (var child in _orderedChildren)
@@ -208,14 +220,14 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.ControlRemovedFromTree(this);
         }
 
-        private void _propagateEnterTree()
+        private void _propagateEnterTree(UIRoot root)
         {
-            IsInsideTree = true;
+            Root = root;
             _enteredTree();
 
             foreach (var child in _orderedChildren)
             {
-                child._propagateEnterTree();
+                child._propagateEnterTree(root);
             }
         }
 
@@ -581,9 +593,9 @@ namespace Robust.Client.UserInterface
             _orderedChildren.Add(child);
 
             child.Parented(this);
-            if (IsInsideTree)
+            if (Root != null)
             {
-                child._propagateEnterTree();
+                child._propagateEnterTree(Root);
             }
 
             ChildAdded(child);
@@ -671,8 +683,6 @@ namespace Robust.Client.UserInterface
         /// <returns>True if this control does have the point and should be counted as a hit.</returns>
         protected internal virtual bool HasPoint(Vector2 point)
         {
-            // This is effectively the same implementation as the default Godot one in Control.cpp.
-            // That one gets ignored because to Godot it looks like we're ALWAYS implementing a custom HasPoint.
             var size = Size;
             return point.X >= 0 && point.X <= size.X && point.Y >= 0 && point.Y <= size.Y;
         }
@@ -817,25 +827,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Called when the size of the control changes.
         /// </summary>
-        protected virtual void Resized()
-        {
-        }
-
-        internal void DoUpdate(FrameEventArgs args)
-        {
-            Update(args);
-            foreach (var child in Children)
-            {
-                child.DoUpdate(args);
-            }
-        }
-
-        /// <summary>
-        ///     This is called every process frame.
-        /// </summary>
-        protected virtual void Update(FrameEventArgs args)
-        {
-        }
+        protected virtual void Resized() { }
 
         internal void DoFrameUpdate(FrameEventArgs args)
         {

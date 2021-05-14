@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
@@ -28,7 +29,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 
             foreach (var (key, val) in value)
             {
-                mappingNode.AddNode(
+                mappingNode.Add(
                     serializationManager.WriteValue(key, alwaysWrite, context),
                     serializationManager.WriteValue(typeof(TValue), val, alwaysWrite, context));
             }
@@ -54,21 +55,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
         }
 
-        ValidationNode ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
             ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager, MappingDataNode node, IDependencyCollection dependencies,
             ISerializationContext? context)
         {
             return Validate(serializationManager, node, context);
         }
 
-        ValidationNode ITypeReader<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
+        ValidationNode ITypeValidator<Dictionary<TKey, TValue>, MappingDataNode>.Validate(
             ISerializationManager serializationManager,
             MappingDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
         {

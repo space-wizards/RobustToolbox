@@ -9,17 +9,19 @@ using Fluent.Net.RuntimeAst;
 using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Localization;using Robust.Shared.IoC;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
+    internal sealed partial class LocalizationManager : ILocalizationManagerInternal, IPostInjectInit
     {
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
+        [Dependency] private readonly IPrototypeManager _prototype = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, MessageContext> _contexts = new();
@@ -29,101 +31,7 @@ namespace Robust.Shared.Localization
         void IPostInjectInit.PostInject()
         {
             _logSawmill = _log.GetSawmill("loc");
-        }
-
-        public bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
-        {
-            var attributeSource = "";
-
-            if (entity.TryGetComponent<GrammarComponent>(out var grammar) && !string.IsNullOrEmpty(grammar.LocalizationId))
-            {
-                attributeSource = grammar.LocalizationId;
-            }
-            else if(!string.IsNullOrEmpty(entity.Prototype?.LocalizationID))
-            {
-                attributeSource = entity.Prototype.LocalizationID;
-            }
-
-            if (!string.IsNullOrEmpty(attributeSource))
-            {
-                if (TryGetString($"{attributeSource}.{attribute}", out value))
-                {
-                    return true;
-                }
-            }
-
-            value = null;
-            return false;
-        }
-
-        void AddBuiltinFunctions(MessageContext context)
-        {
-            //Grammatical gender
-            context.Functions.Add("GENDER", (args, options) => CallFunction((args) =>
-            {
-                if (args.Args.Count < 1) return new LocValueString("other");
-
-                ILocValue entity0 = args.Args[0];
-                if (entity0.Value != null)
-                {
-                    IEntity entity = (IEntity)entity0.Value;
-
-                    if(entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.Gender.HasValue)
-                    {
-                        return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
-                    }
-
-                    if(TryGetEntityLocAttrib(entity, "gender", out var gender))
-                    {
-                        return new LocValueString(gender);
-                    }
-                }
-
-                return new LocValueString("other");
-            }, args, options));
-
-            //Proper nouns
-            context.Functions.Add("PROPER", (args, options) => CallFunction((args) =>
-            {
-                if (args.Args.Count < 1) return new LocValueString("other");
-
-                ILocValue entity0 = args.Args[0];
-                if (entity0.Value != null)
-                {
-                    IEntity entity = (IEntity)entity0.Value;
-
-                    if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.ProperNoun.HasValue)
-                    {
-                        return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
-                    }
-
-                    if (TryGetEntityLocAttrib(entity, "proper", out var proper))
-                    {
-                        return new LocValueString(proper);
-                    }
-                }
-
-                return new LocValueString("other");
-            }, args, options));
-
-            //Misc Attribs
-            context.Functions.Add("ATTRIB", (args, options) => CallFunction((args) =>
-            {
-                if(args.Args.Count < 2) return new LocValueString("other");
-
-                ILocValue entity0 = args.Args[0];
-                if (entity0.Value != null)
-                {
-                    IEntity entity = (IEntity)entity0.Value;
-                    ILocValue attrib0 = args.Args[1];
-                    if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(context)), out var attrib))
-                    {
-                        return new LocValueString(attrib);
-                    }
-                }
-
-                return new LocValueString("other");
-            }, args, options));
+            _prototype.PrototypesReloaded += OnPrototypesReloaded;
         }
 
         public string GetString(string messageId)
@@ -193,19 +101,28 @@ namespace Robust.Shared.Localization
             return DoFormat(messageId, out value, context, node, args);
         }
 
+        private bool TryGetMessage(
+            string messageId,
+            [NotNullWhen(true)] out MessageContext? ctx,
+            [NotNullWhen(true)] out Message? message)
+        {
+            if (_defaultCulture == null)
+            {
+                ctx = null;
+                message = null;
+                return false;
+            }
+
+            ctx = _contexts[_defaultCulture];
+            message = ctx.GetMessage(messageId);
+            return message != null;
+        }
+
         private bool TryGetNode(
             string messageId,
             [NotNullWhen(true)] out MessageContext? ctx,
             [NotNullWhen(true)] out Node? node)
         {
-            if (_defaultCulture == null)
-            {
-                ctx = null;
-                node = null;
-                return false;
-            }
-
-            ctx = _contexts[_defaultCulture];
             string? attribName = null;
 
             if (messageId.Contains('.'))
@@ -215,9 +132,7 @@ namespace Robust.Shared.Localization
                 attribName = split[1];
             }
 
-            var message = ctx.GetMessage(messageId);
-
-            if (message == null)
+            if (!TryGetMessage(messageId, out ctx, out var message))
             {
                 node = null;
                 return false;
@@ -259,36 +174,8 @@ namespace Robust.Shared.Localization
 
                 _loadData(_res, culture, newContext);
             }
-        }
 
-        public void AddFunction(CultureInfo culture, string name, LocFunction function)
-        {
-            var context = _contexts[culture];
-
-            context.Functions.Add(name, (args, options) => CallFunction(function, args, options));
-        }
-
-        private FluentType CallFunction(
-            LocFunction function,
-            IList<object> fluentArgs, IDictionary<string, object> fluentOptions)
-        {
-            var args = new ILocValue[fluentArgs.Count];
-            for (var i = 0; i < args.Length; i++)
-            {
-                args[i] = ValFromFluent(fluentArgs[i]);
-            }
-
-            var options = new Dictionary<string, ILocValue>(fluentOptions.Count);
-            foreach (var (k, v) in fluentOptions)
-            {
-                options.Add(k, ValFromFluent(v));
-            }
-
-            var argStruct = new LocArgs(args, options);
-
-            var ret = function(argStruct);
-
-            return ValToFluent(ret);
+            FlushEntityCache();
         }
 
         private static ILocValue ValFromFluent(object arg)
@@ -445,7 +332,7 @@ namespace Robust.Shared.Localization
                 var errors = context.AddResource(resource);
                 foreach (var error in errors)
                 {
-                    _logSawmill.Warning("{path}: {exception}", path, error.Message);
+                    _logSawmill.Error("{path}: {exception}", path, error.Message);
                 }
             }
         }

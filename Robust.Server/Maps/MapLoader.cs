@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -15,7 +15,9 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -266,6 +268,7 @@ namespace Robust.Server.Maps
             public Dictionary<(Type, Type), object> TypeReaders { get; }
             public Dictionary<Type, object> TypeWriters { get; }
             public Dictionary<Type, object> TypeCopiers => TypeWriters;
+            public Dictionary<(Type, Type), object> TypeValidators => TypeReaders;
 
             public bool MapIsPostInit { get; private set; }
 
@@ -439,7 +442,12 @@ namespace Robust.Server.Maps
                 foreach (var grid in Grids)
                 {
                     var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
+                    if (entity.Transform.Parent != null)
+                        continue;
+
+                    var mapOffset = entity.Transform.LocalPosition;
                     entity.Transform.AttachParent(mapEntity);
+                    entity.Transform.WorldPosition = mapOffset;
                 }
             }
 
@@ -589,17 +597,7 @@ namespace Robust.Server.Maps
             {
                 foreach (var entity in Entities)
                 {
-                    _serverEntityManager.UpdateEntityTree(entity);
-                }
-
-                foreach (var entity in Entities)
-                {
                     _serverEntityManager.FinishEntityStartup(entity);
-                }
-
-                foreach (var entity in Entities)
-                {
-                    _serverEntityManager.UpdateEntityTree(entity);
                 }
             }
 
@@ -771,7 +769,7 @@ namespace Robust.Server.Maps
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
-                            compMapping.AddNode("type", new ValueDataNode(component.Name));
+                            compMapping.Add("type", new ValueDataNode(component.Name));
                             // Something actually got written!
                             components.Add(compMapping.ToYamlNode());
                         }
@@ -862,7 +860,7 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            ValidationNode ITypeReader<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
@@ -873,7 +871,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidationNode ITypeReader<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null")
@@ -889,7 +887,7 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            ValidationNode ITypeReader<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
+            ValidationNode ITypeValidator<GridId, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
                 if (node.Value == "null") return new ValidatedValueNode(node);

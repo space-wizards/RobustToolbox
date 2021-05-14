@@ -58,7 +58,7 @@ namespace Robust.Client.ViewVariables
             var styleOther = false;
             var type = obj.GetType();
 
-            var members = new List<(MemberInfo, VVAccess, object? value, Action<object> onValueChanged, Type)>();
+            var members = new List<(MemberInfo, VVAccess, object? value, Action<object?, bool> onValueChanged, Type)>();
 
             foreach (var fieldInfo in type.GetAllFields())
             {
@@ -68,7 +68,7 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
-                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), v => fieldInfo.SetValue(obj, v),
+                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
                     fieldInfo.FieldType));
             }
 
@@ -86,7 +86,7 @@ namespace Robust.Client.ViewVariables
                 }
 
                 members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
-                    v => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
+                    (v, _) => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }
 
             var groupedSorted = members

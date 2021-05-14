@@ -422,6 +422,7 @@ namespace Robust.Client.Audio.Midi
                 var span = new Span<byte>(buf.ToPointer(), length);
                 var stream = _openStreams[(int) sfHandle];
 
+                // Fluidsynth's docs state that this method should leave the buffer unmodified if it fails. (returns -1)
                 try
                 {
                     // Fluidsynth does a LOT of tiny allocations (frankly, way too much).

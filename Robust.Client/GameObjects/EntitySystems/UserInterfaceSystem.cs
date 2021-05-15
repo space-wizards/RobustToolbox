@@ -27,6 +27,7 @@ namespace Robust.Client.GameObjects
             base.Shutdown();
 
             UnsubscribeNetworkEvent<BoundUIWrapMessage>();
+            UnsubscribeLocalEvent<ClientUserInterfaceComponent, ComponentShutdown>();
         }
 
         private void MessageReceived(BoundUIWrapMessage ev)

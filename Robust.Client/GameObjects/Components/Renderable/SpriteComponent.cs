@@ -2179,6 +2179,10 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
+            public void QueueDelete()
+            {
+            }
+
             public void Delete()
             {
             }

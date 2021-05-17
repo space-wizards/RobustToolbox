@@ -12,14 +12,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>(HandleCollisionWakeState);
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            UnsubscribeLocalEvent<PhysicsWakeMessage>();
-            UnsubscribeLocalEvent<PhysicsSleepMessage>();
-            UnsubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>();
-        }
-
         private void HandleWake(PhysicsWakeMessage message)
         {
             if (!message.Body.Owner.TryGetComponent<CollisionWakeComponent>(out var comp) || !comp.Enabled) return;

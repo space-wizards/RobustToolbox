@@ -36,13 +36,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            UnsubscribeNetworkEvent<BoundUIWrapMessage>();
-        }
-
         internal void SendTo(IPlayerSession session, BoundUIWrapMessage msg)
         {
             RaiseNetworkEvent(msg, session.ConnectedClient);

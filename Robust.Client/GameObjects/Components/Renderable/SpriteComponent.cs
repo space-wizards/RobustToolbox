@@ -125,6 +125,18 @@ namespace Robust.Client.GameObjects
         [DataField("directional")]
         private bool _directional = true;
 
+        /// <summary>
+        /// What MapId we are intersecting for RenderingTreeSystem.
+        /// </summary>
+        [ViewVariables]
+        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
+
+        /// <summary>
+        /// What grids we're on for RenderingTreeSystem.
+        /// </summary>
+        [ViewVariables]
+        internal List<GridId> IntersectingGrids { get; } = new();
+
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums
         {
@@ -1355,7 +1367,7 @@ namespace Robust.Client.GameObjects
             if (map != MapId.Nullspace)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new RenderTreeRemoveSpriteMessage(this, map));
+                    new RenderTreeRemoveSpriteEvent(this, map));
             }
         }
 

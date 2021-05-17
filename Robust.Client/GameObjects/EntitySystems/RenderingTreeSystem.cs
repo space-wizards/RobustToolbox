@@ -290,6 +290,8 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
+                sprite.IntersectingMapId = mapId;
+
                 if (mapId == MapId.Nullspace) continue;
 
                 var mapTree = _gridTrees[mapId];
@@ -318,7 +320,6 @@ namespace Robust.Client.GameObjects
                     sprite.IntersectingGrids.Add(gridId);
                 }
 
-                sprite.IntersectingMapId = mapId;
                 sprite.TreeUpdateQueued = false;
             }
 
@@ -342,6 +343,8 @@ namespace Robust.Client.GameObjects
                         light.IntersectingGrids.Clear();
                     }
                 }
+
+                light.IntersectingMapId = mapId;
 
                 if (mapId == MapId.Nullspace) continue;
 
@@ -370,7 +373,6 @@ namespace Robust.Client.GameObjects
                     light.IntersectingGrids.Add(gridId);
                 }
 
-                light.IntersectingMapId = mapId;
                 light.TreeUpdateQueued = false;
             }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
 using JetBrains.Annotations;
@@ -199,8 +198,7 @@ namespace Robust.Shared.Prototypes
 
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] protected readonly ITaskManager TaskManager = default!;
@@ -408,7 +406,7 @@ namespace Robust.Shared.Prototypes
 
             newResult.CallAfterDeserializationHook();
             var populatedRes =
-                _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition) newResult);
+                _serializationManager.PopulateDataDefinition(_prototypes[type][id], (IDeserializedDefinition) newResult);
             SetPrototype(type, id, (IPrototype) populatedRes.RawValue!);
         }
 
@@ -433,7 +431,7 @@ namespace Robust.Shared.Prototypes
             if (!inheritingPrototype.Abstract)
                 newResult.CallAfterDeserializationHook();
             var populatedRes =
-                _serializationManager.PopulateDataDefinition(prototypes[type][id], (IDeserializedDefinition) newResult);
+                _serializationManager.PopulateDataDefinition(_prototypes[type][id], (IDeserializedDefinition) newResult);
             SetPrototype(type, id, (IPrototype) populatedRes.RawValue!);
         }
 
@@ -669,7 +667,7 @@ namespace Robust.Shared.Prototypes
 
         private void SetPrototype(Type type, string id, IPrototype prototype)
         {
-            prototypes[type][prototype.ID] = prototype;
+            _prototypes[type][prototype.ID] = prototype;
             RefreshPrototypeReferences(type, id);
         }
 
@@ -781,8 +779,8 @@ namespace Robust.Shared.Prototypes
             }
 
             _prototypeReferences[type] = new Dictionary<string, List<WeakReference<PrototypeReference>>>();
-            prototypeTypes[attribute.Type] = type;
-            prototypePriorities[type] = attribute.LoadPriority;
+            _prototypeTypes[attribute.Type] = type;
+            _prototypePriorities[type] = attribute.LoadPriority;
 
             if (typeof(IPrototype).IsAssignableFrom(type))
             {

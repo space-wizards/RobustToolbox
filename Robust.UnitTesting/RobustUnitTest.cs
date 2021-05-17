@@ -96,8 +96,6 @@ namespace Robust.UnitTesting
             {
                 entMan.Startup();
             }
-
-            IoCManager.Resolve<ISerializationManager>().Initialize();
         }
 
         [OneTimeTearDown]

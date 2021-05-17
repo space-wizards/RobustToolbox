@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.UnitTesting.Shared.Prototypes
@@ -33,6 +34,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [OneTimeSetUp]
         public void Setup()
         {
+            IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadString(PROTOTYPES);
         }

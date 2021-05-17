@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Maths;
+﻿using System.Collections.Generic;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
@@ -14,5 +15,7 @@ namespace Robust.Client.Graphics
         string Name { get; }
         Vector2i Size { get; }
         int RefreshRate { get; }
+
+        IEnumerable<VideoMode> VideoModes { get; }
     }
 }

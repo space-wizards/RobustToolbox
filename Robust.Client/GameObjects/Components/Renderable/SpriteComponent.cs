@@ -27,6 +27,8 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(SharedSpriteComponent))]
+    [ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug, ISerializationHooks
     {
@@ -1576,9 +1578,10 @@ namespace Robust.Client.GameObjects
         {
             var builder = new StringBuilder();
             builder.AppendFormat(
-                "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
+                "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, Directional, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation)
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation),
+                DirectionOverride
             );
 
             foreach (var layer in Layers)
@@ -2176,6 +2179,10 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
+            public void QueueDelete()
+            {
+            }
+
             public void Delete()
             {
             }
@@ -2190,10 +2197,12 @@ namespace Robust.Client.GameObjects
                 return Enumerable.Empty<T>();
             }
 
+            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
             public void SendMessage(IComponent? owner, ComponentMessage message)
             {
             }
 
+            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
             public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
             {
             }

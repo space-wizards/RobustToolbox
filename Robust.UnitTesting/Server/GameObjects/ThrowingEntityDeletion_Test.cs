@@ -38,10 +38,10 @@ namespace Robust.UnitTesting.Server.GameObjects
         {
             _componentFactory = IoCManager.Resolve<IComponentFactory>();
 
-            _componentFactory.Register<ThrowsInAddComponent>();
-            _componentFactory.Register<ThrowsInInitializeComponent>();
-            _componentFactory.Register<ThrowsInStartupComponent>();
-            
+            _componentFactory.RegisterClass<ThrowsInAddComponent>();
+            _componentFactory.RegisterClass<ThrowsInInitializeComponent>();
+            _componentFactory.RegisterClass<ThrowsInStartupComponent>();
+
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
 

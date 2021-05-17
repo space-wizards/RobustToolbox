@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); factory.RegisterReference<ContainerManagerComponent, IContainerManager>(); })
+                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); })
                 .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
                 .InitializeInstance();
 

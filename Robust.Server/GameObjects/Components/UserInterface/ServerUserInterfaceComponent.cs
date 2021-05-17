@@ -7,8 +7,6 @@ using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
-using Robust.Shared.Network;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -20,6 +18,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
+    [ComponentReference(typeof(SharedUserInterfaceComponent))]
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
@@ -48,7 +47,8 @@ namespace Robust.Server.GameObjects
             return _interfaces[uiKey];
         }
 
-        public bool TryGetBoundUserInterface(object uiKey, [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
+        public bool TryGetBoundUserInterface(object uiKey,
+            [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
         {
             return _interfaces.TryGetValue(uiKey, out boundUserInterface);
         }
@@ -67,32 +67,20 @@ namespace Robust.Server.GameObjects
 
         internal void SendToSession(IPlayerSession session, BoundUserInterfaceMessage message, object uiKey)
         {
-            SendNetworkMessage(new BoundInterfaceMessageWrapMessage(message, uiKey), session.ConnectedClient);
+            EntitySystem.Get<UserInterfaceSystem>()
+                .SendTo(session, new BoundUIWrapMessage(Owner.Uid, message, uiKey));
         }
 
-        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
-            ICommonSession? session = null)
+        internal void ReceiveMessage(IPlayerSession session, BoundUIWrapMessage msg)
         {
-            base.HandleNetworkMessage(message, netChannel, session);
-
-            switch (message)
+            if (!_interfaces.TryGetValue(msg.UiKey, out var @interface))
             {
-                case BoundInterfaceMessageWrapMessage wrapped:
-                    if (session == null)
-                    {
-                        throw new ArgumentNullException(nameof(session));
-                    }
-
-                    if (!_interfaces.TryGetValue(wrapped.UiKey, out var @interface))
-                    {
-                        Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}",
-                            wrapped.UiKey);
-                        return;
-                    }
-
-                    @interface.ReceiveMessage(wrapped.Message, (IPlayerSession)session);
-                    break;
+                Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}",
+                    msg.UiKey);
+                return;
             }
+
+            @interface.ReceiveMessage(msg.Message, session);
         }
     }
 
@@ -153,6 +141,7 @@ namespace Robust.Server.GameObjects
             {
                 _playerStateOverrides[session] = state;
             }
+
             _stateDirty = true;
         }
 
@@ -176,7 +165,6 @@ namespace Robust.Server.GameObjects
                 Open(session);
             }
         }
-
 
 
         /// <summary>

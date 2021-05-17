@@ -10,10 +10,10 @@ namespace Robust.Server.Player
             if (entity == null)
                 return null;
             
-            if (!entity.TryGetComponent(out IActorComponent? actorComponent))
+            if (!entity.TryGetComponent(out ActorComponent? actorComponent))
                 return null;
 
-            return actorComponent.playerSession;
+            return actorComponent.PlayerSession;
         }
     }
 }

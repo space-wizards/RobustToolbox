@@ -7,6 +7,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Server.GameObjects
 {
+    [ComponentReference(typeof(SharedAppearanceComponent))]
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]

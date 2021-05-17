@@ -65,6 +65,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="IMetaDataComponent"/>
+    [ComponentReference(typeof(IMetaDataComponent))]
     internal class MetaDataComponent : Component, IMetaDataComponent
     {
         [Dependency] private readonly IPrototypeManager _prototypes = default!;

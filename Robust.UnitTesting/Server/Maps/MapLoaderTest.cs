@@ -83,7 +83,7 @@ entities:
         public void Setup()
         {
             var compFactory = IoCManager.Resolve<IComponentFactory>();
-            compFactory.Register<MapDeserializeTestComponent>();
+            compFactory.RegisterClass<MapDeserializeTestComponent>();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();

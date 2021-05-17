@@ -21,6 +21,17 @@ namespace Robust.Client.Audio.Midi
 
     public interface IMidiRenderer : IDisposable
     {
+
+        /// <summary>
+        ///     The buffered audio source of this renderer.
+        /// </summary>
+        internal IClydeBufferedAudioSource Source { get; }
+
+        /// <summary>
+        ///     Whether this renderer has been disposed or not.
+        /// </summary>
+        bool Disposed { get; }
+
         /// <summary>
         ///     This controls whether the midi file being played will loop or not.
         /// </summary>
@@ -111,6 +122,11 @@ namespace Robust.Client.Audio.Midi
         void StopAllNotes();
 
         /// <summary>
+        ///     Render and play MIDI to the audio source.
+        /// </summary>
+        internal void Render();
+
+        /// <summary>
         ///     Loads a new soundfont into the renderer.
         /// </summary>
         void LoadSoundfont(string filename, bool resetPresets = false);
@@ -159,7 +175,7 @@ namespace Robust.Client.Audio.Midi
         internal void InternalDispose();
     }
 
-    public class MidiRenderer : IMidiRenderer
+    internal class MidiRenderer : IMidiRenderer
     {
         [Dependency] private readonly IClydeAudio _clydeAudio = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
@@ -188,6 +204,7 @@ namespace Robust.Client.Audio.Midi
         private readonly object _playerStateLock = new();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
+        IClydeBufferedAudioSource IMidiRenderer.Source => Source;
         public bool Disposed { get; private set; } = false;
 
         public byte MidiProgram
@@ -294,7 +311,11 @@ namespace Robust.Client.Audio.Midi
             Status = MidiRendererStatus.Input;
             StopAllNotes();
 
-            _driver = new MidiDriver(_settings, MidiDriverEventHandler);
+            lock (_playerStateLock)
+            {
+                _driver = new MidiDriver(_settings, MidiDriverEventHandler);
+            }
+
             return true;
         }
 
@@ -332,8 +353,13 @@ namespace Robust.Client.Audio.Midi
         {
             if (Status != MidiRendererStatus.Input) return false;
             Status = MidiRendererStatus.None;
-            _driver?.Dispose();
-            _driver = null;
+
+            lock (_playerStateLock)
+            {
+                _driver?.Dispose();
+                _driver = null;
+            }
+
             StopAllNotes();
             return true;
         }
@@ -357,7 +383,8 @@ namespace Robust.Client.Audio.Midi
 
         public void StopAllNotes()
         {
-            _synth.AllNotesOff(-1);
+            lock(_playerStateLock)
+                _synth.AllNotesOff(-1);
         }
 
         public void LoadSoundfont(string filename, bool resetPresets = false)
@@ -372,7 +399,12 @@ namespace Robust.Client.Audio.Midi
         public event Action<Shared.Audio.Midi.MidiEvent>? OnMidiEvent;
         public event Action? OnMidiPlayerFinished;
 
-        internal void Render(int length = SampleRate / 250)
+        void IMidiRenderer.Render()
+        {
+            Render();
+        }
+
+        private void Render(int length = SampleRate / 250)
         {
             if (Disposed) return;
 
@@ -452,6 +484,7 @@ namespace Robust.Client.Audio.Midi
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
             midiEv.Tick = timestamp;
+            midiEvent.Dispose();
             SendMidiEvent(midiEv);
             return 0;
         }
@@ -462,6 +495,7 @@ namespace Robust.Client.Audio.Midi
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
             midiEv.Tick = timestamp;
+            midiEvent.Dispose();
             SendMidiEvent(midiEv);
             return 0;
         }

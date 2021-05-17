@@ -15,6 +15,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [ComponentReference(typeof(ITransformComponent))]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]

@@ -8,6 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [ComponentReference(typeof(SharedEyeComponent))]
     public class EyeComponent : SharedEyeComponent
     {
         [DataField("drawFov")]

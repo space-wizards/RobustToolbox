@@ -168,14 +168,6 @@ namespace Robust.Shared.GameObjects
 
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
-
-            UnsubscribeLocalEvent<PhysicsUpdateMessage>();
-            UnsubscribeLocalEvent<PhysicsWakeMessage>();
-            UnsubscribeLocalEvent<PhysicsSleepMessage>();
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
-
-            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
-            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)

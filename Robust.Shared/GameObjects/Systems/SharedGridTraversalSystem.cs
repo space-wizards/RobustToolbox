@@ -17,12 +17,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(HandleMove);
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            UnsubscribeLocalEvent<MoveEvent>();
-        }
-
         private void HandleMove(MoveEvent moveEvent)
         {
             var entity = moveEvent.Sender;

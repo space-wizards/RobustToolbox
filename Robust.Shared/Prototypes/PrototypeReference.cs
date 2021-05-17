@@ -6,13 +6,14 @@ namespace Robust.Shared.Prototypes
 {
     public abstract class PrototypeReference : IDisposable
     {
-        [Dependency] protected IPrototypeManager _manager = null!;
+        protected IPrototypeManager _manager;
 
         public readonly string ID;
 
         public PrototypeReference(string id)
         {
             ID = id;
+            _manager = IoCManager.Resolve<IPrototypeManager>();
             Register();
         }
 

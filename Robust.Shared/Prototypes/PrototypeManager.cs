@@ -792,6 +792,7 @@ namespace Robust.Shared.Prototypes
             }
 
             list.Add(new WeakReference<PrototypeReference>(prototypeReference));
+            prototypeReference.RefreshPrototype();
         }
 
         private void RefreshPrototypeReferences(Type type, string ID)

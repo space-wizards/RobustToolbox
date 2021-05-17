@@ -94,7 +94,7 @@ namespace Robust.Shared.GameObjects
                 sub.Unsubscribe(this, EntityManager.EventBus);
             }
 
-            _subscriptions.Clear();
+            _subscriptions = null;
         }
 
         private abstract class SubBase

@@ -58,17 +58,11 @@ namespace Robust.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+
             _mapManager.MapCreated -= MapManagerOnMapCreated;
             _mapManager.MapDestroyed -= MapManagerOnMapDestroyed;
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
             _mapManager.OnGridRemoved -= MapManagerOnGridRemoved;
-
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<MoveEvent>();
-            UnsubscribeLocalEvent<EntParentChangedMessage>();
-            UnsubscribeLocalEvent<PointLightRadiusChangedMessage>();
-            UnsubscribeLocalEvent<RenderTreeRemoveSpriteMessage>();
-            UnsubscribeLocalEvent<RenderTreeRemoveLightMessage>();
         }
 
         // For these next 2 methods (the Remove* ones):

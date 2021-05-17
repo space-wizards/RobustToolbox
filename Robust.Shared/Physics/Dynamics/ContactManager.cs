@@ -384,6 +384,7 @@ namespace Robust.Shared.Physics.Dynamics
                 _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
 
+#pragma warning disable 618
                 foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
@@ -395,6 +396,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (bodyA.Deleted) break;
                     comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
+#pragma warning restore 618
             }
 
             foreach (var contact in _endCollisions)
@@ -405,6 +407,7 @@ namespace Robust.Shared.Physics.Dynamics
                 _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
 
+#pragma warning disable 618
                 foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
@@ -416,6 +419,7 @@ namespace Robust.Shared.Physics.Dynamics
                     if (bodyA.Deleted) break;
                     comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
                 }
+#pragma warning restore 618
             }
 
             _startCollisions.Clear();

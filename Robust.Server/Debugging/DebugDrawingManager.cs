@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -6,10 +7,10 @@ using Robust.Shared.Physics;
 
 namespace Robust.Server.Debugging
 {
+    [UsedImplicitly]
     internal class DebugDrawingManager : IDebugDrawingManager
     {
         [Dependency] private readonly IServerNetManager _net = default!;
-        [Dependency] private readonly IPhysicsManager _physics = default!;
 
         public void Initialize()
         {

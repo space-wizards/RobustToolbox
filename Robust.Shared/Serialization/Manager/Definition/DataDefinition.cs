@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Serialization.Manager.DataDefinition
+namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {

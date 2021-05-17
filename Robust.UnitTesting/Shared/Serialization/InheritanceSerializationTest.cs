@@ -5,7 +5,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using DataDefinition = Robust.Shared.Serialization.Manager.DataDefinition.DataDefinition;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             serializationManager.Initialize();
-            
+
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
 
             prototypeManager.LoadString(Prototypes);

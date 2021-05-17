@@ -48,14 +48,14 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
         public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
-        public event Action<TextEventArgs>? TextEntered;
-        public event Action<MouseMoveEventArgs>? MouseMove;
-        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave;
-        public event Action<KeyEventArgs>? KeyUp;
-        public event Action<KeyEventArgs>? KeyDown;
-        public event Action<MouseWheelEventArgs>? MouseWheel;
-        public event Action<WindowClosedEventArgs>? CloseWindow;
-        public event Action<WindowDestroyedEventArgs>? DestroyWindow;
+        public event Action<TextEventArgs>? TextEntered { add { } remove { } }
+        public event Action<MouseMoveEventArgs>? MouseMove { add { } remove { } }
+        public event Action<MouseEnterLeaveEventArgs>? MouseEnterLeave { add { } remove { } }
+        public event Action<KeyEventArgs>? KeyUp { add { } remove { } }
+        public event Action<KeyEventArgs>? KeyDown { add { } remove { } }
+        public event Action<MouseWheelEventArgs>? MouseWheel { add { } remove { } }
+        public event Action<WindowClosedEventArgs>? CloseWindow { add { } remove { } }
+        public event Action<WindowDestroyedEventArgs>? DestroyWindow { add { } remove { } }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -594,7 +594,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
             public bool DisposeOnClose { get; set; }
-            public event Action<WindowClosedEventArgs>? Closed;
+            public event Action<WindowClosedEventArgs>? Closed { add { } remove { } }
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {

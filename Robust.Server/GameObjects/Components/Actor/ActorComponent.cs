@@ -5,21 +5,21 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public class BasicActorComponent : Component, IActorComponent
+    public class ActorComponent : Component
     {
-        public override string Name => "BasicActor";
+        public override string Name => "Actor";
 
-        [ViewVariables] public IPlayerSession playerSession { get; internal set; } = default!;
+        [ViewVariables] public IPlayerSession PlayerSession { get; internal set; } = default!;
 
         /// <inheritdoc />
         protected override void Shutdown()
         {
             base.Shutdown();
-            
+
             // Warning: careful here, Detach removes this component, make sure this is after the base shutdown
             // to prevent infinite recursion
             // ReSharper disable once ConstantConditionalAccessQualifier
-            playerSession?.DetachFromEntity();
+            PlayerSession?.DetachFromEntity();
         }
     }
 
@@ -27,6 +27,7 @@ namespace Robust.Server.GameObjects
     ///     Raised on an entity whenever a player attaches to this entity.
     /// </summary>
     [Serializable]
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class PlayerAttachedMsg : ComponentMessage
     {
         public IPlayerSession NewPlayer { get; }
@@ -41,6 +42,7 @@ namespace Robust.Server.GameObjects
     ///     Raised on an entity whenever a player detaches from this entity.
     /// </summary>
     [Serializable]
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class PlayerDetachedMsg : ComponentMessage
     {
         public IPlayerSession OldPlayer { get; }

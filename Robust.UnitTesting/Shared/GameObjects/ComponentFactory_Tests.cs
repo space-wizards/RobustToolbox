@@ -17,7 +17,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            IoCManager.Resolve<IComponentFactory>().Register<TestComponent>();
+            IoCManager.Resolve<IComponentFactory>().RegisterClass<TestComponent>();
         }
 
         [Test]

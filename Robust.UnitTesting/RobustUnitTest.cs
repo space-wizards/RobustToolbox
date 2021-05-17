@@ -89,8 +89,7 @@ namespace Robust.UnitTesting
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
-                compFactory.Register<MetaDataComponent>();
-                compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
+                compFactory.RegisterClass<MetaDataComponent>();
             }
 
             if(entMan.EventBus == null)

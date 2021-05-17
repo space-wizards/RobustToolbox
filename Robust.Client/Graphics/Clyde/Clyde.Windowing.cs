@@ -470,18 +470,20 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class MonitorHandle : IClydeMonitor
         {
-            public MonitorHandle(int id, string name, Vector2i size, int refreshRate)
+            public MonitorHandle(int id, string name, Vector2i size, int refreshRate, VideoMode[] videoModes)
             {
                 Id = id;
                 Name = name;
                 Size = size;
                 RefreshRate = refreshRate;
+                VideoModes = videoModes;
             }
 
             public int Id { get; }
             public string Name { get; }
             public Vector2i Size { get; }
             public int RefreshRate { get; }
+            public IEnumerable<VideoMode> VideoModes { get; }
         }
 
         private abstract class MonitorReg

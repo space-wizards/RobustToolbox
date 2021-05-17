@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
+    [ComponentReference(typeof(IMapGridComponent))]
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -49,6 +50,17 @@ namespace Robust.Shared.GameObjects
         public void ClearGridId()
         {
             _gridIndex = GridId.Invalid;
+        }
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            var mapId = Owner.Transform.MapID;
+
+            if (_mapManager.HasMapEntity(mapId))
+            {
+                Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+            }
         }
 
         /// <param name="player"></param>

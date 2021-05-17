@@ -59,7 +59,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
-        private bool _initialized;
 
         private Thread? _gameThread;
 
@@ -105,7 +104,6 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
 
             _initializeAudio();
-            _initialized = true;
             return true;
         }
 

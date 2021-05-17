@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -61,22 +56,6 @@ namespace Robust.Shared.Physics
             var manifold = target.GetWorldAABB().Intersect(source.GetWorldAABB());
             if (manifold.IsEmpty()) return 0.0f;
             return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
-        }
-
-        [Obsolete("Use fixture masks and layers instead")]
-        public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
-        {
-            if (a == b)
-                return false;
-
-            if (!a.CanCollide || !b.CanCollide)
-                return false;
-
-            if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
-                (b.CollisionMask & a.CollisionLayer) == 0x0)
-                return false;
-
-            return true;
         }
     }
 }

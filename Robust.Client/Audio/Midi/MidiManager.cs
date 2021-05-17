@@ -85,7 +85,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        private readonly List<MidiRenderer> _renderers = new();
+        private readonly List<IMidiRenderer> _renderers = new();
 
         private bool _alive = true;
         private Settings? _settings;
@@ -175,18 +175,6 @@ namespace Robust.Client.Audio.Midi
             _sawmill.Log(rLevel, message);
         }
 
-        /*
-        public bool IsMidiFile(string filename)
-        {
-            return SoundFont.IsMidiFile(filename);
-        }
-
-        public bool IsSoundfontFile(string filename)
-        {
-            return SoundFont.IsSoundFont(filename);
-        }
-        */
-
         public IMidiRenderer? GetNewRenderer()
         {
             if (!FluidsynthInitialized)
@@ -250,7 +238,9 @@ namespace Robust.Client.Audio.Midi
                 }
 
                 lock (_renderers)
+                {
                     _renderers.Add(renderer);
+                }
 
                 return renderer;
             }
@@ -269,6 +259,7 @@ namespace Robust.Client.Audio.Midi
 
             // Update positions of streams every frame.
             lock (_renderers)
+            {
                 foreach (var renderer in _renderers)
                 {
                     if (renderer.Disposed)
@@ -336,6 +327,7 @@ namespace Robust.Client.Audio.Midi
                         renderer.Source.StopPlaying();
                     }
                 }
+            }
         }
 
         /// <summary>
@@ -346,6 +338,7 @@ namespace Robust.Client.Audio.Midi
             while (_alive)
             {
                 lock (_renderers)
+                {
                     for (var i = 0; i < _renderers.Count; i++)
                     {
                         var renderer = _renderers[i];
@@ -353,10 +346,11 @@ namespace Robust.Client.Audio.Midi
                             renderer.Render();
                         else
                         {
-                            ((IMidiRenderer)renderer).InternalDispose();
+                            renderer.InternalDispose();
                             _renderers.Remove(renderer);
                         }
                     }
+                }
 
                 Thread.Sleep(1);
             }
@@ -367,9 +361,13 @@ namespace Robust.Client.Audio.Midi
             _alive = false;
             _midiThread?.Join();
             _settings?.Dispose();
-            foreach (var renderer in _renderers)
+
+            lock (_renderers)
             {
-                renderer?.Dispose();
+                foreach (var renderer in _renderers)
+                {
+                    renderer?.Dispose();
+                }
             }
 
             if (FluidsynthInitialized && !_failedInitialize)
@@ -424,6 +422,7 @@ namespace Robust.Client.Audio.Midi
                 var span = new Span<byte>(buf.ToPointer(), length);
                 var stream = _openStreams[(int) sfHandle];
 
+                // Fluidsynth's docs state that this method should leave the buffer unmodified if it fails. (returns -1)
                 try
                 {
                     // Fluidsynth does a LOT of tiny allocations (frankly, way too much).
@@ -447,6 +446,7 @@ namespace Robust.Client.Audio.Midi
                 {
                     return -1;
                 }
+
                 return 0;
             }
 
@@ -468,10 +468,12 @@ namespace Robust.Client.Audio.Midi
 
             public override int Close(IntPtr sfHandle)
             {
-                var stream = _openStreams[(int) sfHandle];
+                if (!_openStreams.Remove((int) sfHandle, out var stream))
+                    return -1;
+
                 stream.Dispose();
-                _openStreams.Remove((int) sfHandle);
                 return 0;
+
             }
         }
     }

@@ -53,6 +53,7 @@ namespace Robust.Shared.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+
             _mapManager.MapCreated -= OnMapCreated;
             _mapManager.MapDestroyed -= OnMapDestroyed;
             _mapManager.OnGridCreated -= OnGridCreated;

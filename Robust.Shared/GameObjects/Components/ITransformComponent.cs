@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Map;
@@ -93,9 +94,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         bool IsMapTransform { get; }
 
-        /// <summary>
-        ///
-        /// </summary>
         Vector2? LerpDestination { get; }
 
         /// <summary>

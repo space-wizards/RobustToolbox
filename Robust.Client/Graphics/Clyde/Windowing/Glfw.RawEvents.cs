@@ -210,7 +210,8 @@ namespace Robust.Client.Graphics.Clyde
             (
                 int Id,
                 string Name,
-                VideoMode Mode
+                VideoMode CurrentMode,
+                VideoMode[] AllModes
             ) : EventBase;
 
             private record EventMonitorDestroy

@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Containers
@@ -5,6 +6,7 @@ namespace Robust.Shared.Containers
     /// <summary>
     /// The contents of this container have been changed.
     /// </summary>
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class ContainerContentsModifiedMessage : ComponentMessage
     {
         /// <summary>

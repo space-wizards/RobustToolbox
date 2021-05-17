@@ -44,6 +44,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
 
+        protected readonly HashSet<EntityUid> QueuedDeletions = new();
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
@@ -110,6 +112,16 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             {
                 _eventBus.ProcessEventQueue();
+            }
+
+            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            {
+                foreach (var uid in QueuedDeletions)
+                {
+                    DeleteEntity(uid);
+                }
+
+                QueuedDeletions.Clear();
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
@@ -286,6 +298,16 @@ namespace Robust.Shared.GameObjects
             entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
+        }
+
+        public void QueueDeleteEntity(IEntity entity)
+        {
+            QueueDeleteEntity(entity.Uid);
+        }
+
+        public void QueueDeleteEntity(EntityUid uid)
+        {
+            QueuedDeletions.Add(uid);
         }
 
         public void DeleteEntity(EntityUid uid)

@@ -162,6 +162,11 @@ namespace Robust.Shared.GameObjects
         IComponent? GetComponentOrNull(Type type);
 
         /// <summary>
+        ///     Queues this entity for deletion at the end of the tick.
+        /// </summary>
+        void QueueDelete();
+
+        /// <summary>
         ///     Deletes this entity.
         /// </summary>
         void Delete();

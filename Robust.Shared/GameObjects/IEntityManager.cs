@@ -84,6 +84,10 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntities();
 
+        public void QueueDeleteEntity(IEntity entity);
+
+        public void QueueDeleteEntity(EntityUid uid);
+
         /// <summary>
         /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
         /// </summary>

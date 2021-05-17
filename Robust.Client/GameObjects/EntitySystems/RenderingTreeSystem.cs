@@ -273,21 +273,19 @@ namespace Robust.Client.GameObjects
             {
                 var mapId = sprite.Owner.Transform.MapID;
 
-                if (sprite.IntersectingMapId != MapId.Nullspace)
+                // If we're on a new map then clear the old one.
+                if (sprite.IntersectingMapId != mapId)
                 {
-                    // If we're on a new map then clear the old one.
-                    if (sprite.IntersectingMapId != mapId)
+                    if (_gridTrees.TryGetValue(sprite.IntersectingMapId, out var oldMapTree))
                     {
-                        var oldMapTree = _gridTrees[sprite.IntersectingMapId];
-
                         foreach (var gridId in sprite.IntersectingGrids)
                         {
                             if (!oldMapTree.TryGetValue(gridId, out var gridTree)) continue;
                             gridTree.SpriteTree.Remove(sprite);
                         }
-
-                        sprite.IntersectingGrids.Clear();
                     }
+
+                    sprite.IntersectingGrids.Clear();
                 }
 
                 sprite.IntersectingMapId = mapId;
@@ -327,23 +325,20 @@ namespace Robust.Client.GameObjects
             {
                 var mapId = light.Owner.Transform.MapID;
 
-                if (light.IntersectingMapId != MapId.Nullspace)
+                // If we're on a new map then clear the old one.
+                if (light.IntersectingMapId != mapId)
                 {
-                    // If we're on a new map then clear the old one.
-                    if (light.IntersectingMapId != mapId)
+                    if (_gridTrees.TryGetValue(light.IntersectingMapId, out var oldMapTree))
                     {
-                        var oldMapTree = _gridTrees[light.IntersectingMapId];
-
                         foreach (var gridId in light.IntersectingGrids)
                         {
                             if (!oldMapTree.TryGetValue(gridId, out var gridTree)) continue;
                             gridTree.LightTree.Remove(light);
                         }
-
-                        light.IntersectingGrids.Clear();
                     }
-                }
 
+                    light.IntersectingGrids.Clear();
+                }
                 light.IntersectingMapId = mapId;
 
                 if (mapId == MapId.Nullspace) continue;

@@ -22,14 +22,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            UnsubscribeNetworkEvent<BoundUIWrapMessage>();
-            UnsubscribeLocalEvent<ClientUserInterfaceComponent, ComponentShutdown>();
-        }
-
         private void MessageReceived(BoundUIWrapMessage ev)
         {
             var cmp = ComponentManager.GetComponent<ClientUserInterfaceComponent>(ev.Entity);

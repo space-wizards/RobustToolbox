@@ -20,12 +20,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<MoveEvent>(QueueMoveEvent);
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            UnsubscribeLocalEvent<MoveEvent>();
-        }
-
         public override void Update(float frameTime)
         {
             base.Update(frameTime);

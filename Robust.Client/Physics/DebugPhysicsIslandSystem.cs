@@ -52,7 +52,7 @@ namespace Robust.Client.Physics
         public override void Shutdown()
         {
             base.Shutdown();
-            UnsubscribeLocalEvent<IslandSolveMessage>();
+
             IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsIslandOverlay));
         }
 

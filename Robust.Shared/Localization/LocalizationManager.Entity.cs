@@ -41,18 +41,18 @@ namespace Robust.Shared.Localization
         // Flush caches conservatively on prototype/localization changes.
         private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
         {
-            if (!args.ByType.TryGetValue(typeof(EntityPrototype), out var changeSet))
+            if (!args.ByType.TryGetValue(typeof(EntityPrototype), out _))
                 return;
 
             FlushEntityCache();
         }
 
-        private EntityLocData CalcEntityLoc(string prototypeId)
+     private EntityLocData CalcEntityLoc(string prototypeId)
         {
             string? name = null;
             string? desc = null;
             string? suffix = null;
-            Dictionary<string, string>? attribs = null;
+            Dictionary<string, string>? attributes = null;
 
             while (true)
             {
@@ -62,36 +62,37 @@ namespace Robust.Shared.Localization
                 if (TryGetMessage(locId, out var ctx, out var msg))
                 {
                     // Localization override exists.
-                    var mAttribs = msg.Attributes;
+                    var msgAttrs = msg.Attributes;
 
                     if (name == null && msg.Value != null)
                     {
                         // Only set name if the value isn't empty.
                         // So that you can override *only* a desc/suffix.
-                        name = ctx.Format(msg.Value);
+                        name = ctx.FormatPattern(msg.Value, null, out _);
                     }
 
-                    if (mAttribs != null && mAttribs.Count != 0)
+                    if (msgAttrs.Count != 0)
                     {
-                        if (desc == null && mAttribs.TryGetValue("desc", out var mDesc))
+                        if (desc == null && ctx.TryGetMsg(locId, "desc", null, out _, out desc))
                         {
-                            desc = ctx.Format(mDesc);
                         }
 
-                        if (suffix == null && mAttribs.TryGetValue("suffix", out var mSuffix))
+                        if (suffix == null && ctx.TryGetMsg(locId, "suffix",null, out _, out suffix))
                         {
-                            suffix = ctx.Format(mSuffix);
                         }
 
-                        foreach (var (attrib, value) in msg.Attributes)
+                        foreach (var (attrId, pattern) in msg.Attributes)
                         {
-                            if (attrib is "desc" or "suffix")
+                            var attrib = attrId.ToString();
+                            if (attrib.Equals("desc") 
+                                || attrib.Equals("suffix"))
                                 continue;
 
-                            attribs ??= new Dictionary<string, string>();
-                            if (!attribs.ContainsKey(attrib))
+                            attributes ??= new Dictionary<string, string>();
+                            if (!attributes.ContainsKey(attrib))
                             {
-                                attribs[attrib] = ctx.Format(value);
+                                var value = ctx.FormatPattern(pattern, null, out _);
+                                attributes[attrib] = value;
                             }
                         }
                     }
@@ -105,10 +106,10 @@ namespace Robust.Shared.Localization
                 {
                     foreach (var (attrib, value) in prototype.LocProperties)
                     {
-                        attribs ??= new Dictionary<string, string>();
-                        if (!attribs.ContainsKey(attrib))
+                        attributes ??= new Dictionary<string, string>();
+                        if (!attributes.ContainsKey(attrib))
                         {
-                            attribs[attrib] = value;
+                            attributes[attrib] = value;
                         }
                     }
                 }
@@ -123,7 +124,7 @@ namespace Robust.Shared.Localization
                 name ?? "",
                 desc ?? "",
                 suffix,
-                attribs?.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty);
+                attributes?.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty);
         }
 
         public EntityLocData GetEntityData(string prototypeId)

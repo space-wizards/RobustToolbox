@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;

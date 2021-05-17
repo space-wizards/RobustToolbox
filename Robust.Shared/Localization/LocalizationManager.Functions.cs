@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System;
+using System.Collections.Generic;
 using System.Globalization;
-using Fluent.Net;
+using Linguini.Bundle;
+using Linguini.Bundle.Types;
+using Linguini.Shared.Types.Bundle;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
@@ -9,18 +13,18 @@ namespace Robust.Shared.Localization
 {
     internal sealed partial class LocalizationManager
     {
-        private void AddBuiltinFunctions(MessageContext context)
+        private void AddBuiltInFunctions(FluentBundle bundle)
         {
             // Grammatical gender
-            AddCtxFunction(context, "GENDER", FuncGender);
+            AddCtxFunction(bundle, "GENDER", FuncGender);
 
             // Proper nouns
-            AddCtxFunction(context, "PROPER", FuncProper);
+            AddCtxFunction(bundle, "PROPER", FuncProper);
 
             // Misc Attribs
-            AddCtxFunction(context, "ATTRIB", args => FuncAttrib(context, args));
+            AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
 
-            AddCtxFunction(context, "THE", FuncThe);
+            AddCtxFunction(bundle, "THE", FuncThe);
         }
 
         private ILocValue FuncThe(LocArgs args)
@@ -51,7 +55,7 @@ namespace Robust.Shared.Localization
             return new LocValueString(nameof(Gender.Neuter));
         }
 
-        private ILocValue FuncAttrib(MessageContext context, LocArgs args)
+        private ILocValue FuncAttrib(FluentBundle context, LocArgs args)
         {
             if (args.Args.Count < 2) return new LocValueString("other");
 
@@ -92,39 +96,53 @@ namespace Robust.Shared.Localization
             return new LocValueString("false");
         }
 
-        private void AddCtxFunction(MessageContext ctx, string name, LocFunction function)
+
+        private void AddCtxFunction(FluentBundle ctx, string name, LocFunction function)
         {
-            ctx.Functions.Add(name, (args, options) => CallFunction(function, args, options));
+            ctx.AddFunction(name, (args, options)
+                => CallFunction(function, args, options), out _, InsertBehavior.Overriding);
+        }
+
+        private IFluentType CallFunction(LocFunction function,
+            IList<IFluentType> positionalArgs, IDictionary<string, IFluentType> namedArgs)
+        {
+            var args = new ILocValue[positionalArgs.Count];
+            for (var i = 0; i < args.Length; i++)
+            {
+                args[i] = positionalArgs[i].ToLocValue();
+            }
+
+            var options = new Dictionary<string, ILocValue>(namedArgs.Count);
+            foreach (var (k, v) in namedArgs)
+            {
+                options.Add(k, v.ToLocValue());
+            }
+
+            var argStruct = new LocArgs(args, options);
+            return function.Invoke(argStruct);
         }
 
         public void AddFunction(CultureInfo culture, string name, LocFunction function)
         {
             var context = _contexts[culture];
 
-            context.Functions.Add(name, (args, options) => CallFunction(function, args, options));
+            context.AddFunction(name, (args, options)
+                => CallFunction(function, args, options), out _, InsertBehavior.Overriding);
         }
+    }
 
-        private FluentType CallFunction(
-            LocFunction function,
-            IList<object> fluentArgs, IDictionary<string, object> fluentOptions)
+    static class LinguiniAdapter
+    {
+        internal static ILocValue ToLocValue(this IFluentType arg)
         {
-            var args = new ILocValue[fluentArgs.Count];
-            for (var i = 0; i < args.Length; i++)
+            return arg switch
             {
-                args[i] = ValFromFluent(fluentArgs[i]);
-            }
-
-            var options = new Dictionary<string, ILocValue>(fluentOptions.Count);
-            foreach (var (k, v) in fluentOptions)
-            {
-                options.Add(k, ValFromFluent(v));
-            }
-
-            var argStruct = new LocArgs(args, options);
-
-            var ret = function(argStruct);
-
-            return ValToFluent(ret);
+                FluentNone => new LocValueNone(""),
+                FluentNumber number => new LocValueNumber(number),
+                FluentString str => new LocValueString(str),
+                ILocValue value => value,
+                _ => throw new ArgumentOutOfRangeException(nameof(arg)),
+            };
         }
     }
 }

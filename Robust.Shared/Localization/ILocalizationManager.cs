@@ -46,13 +46,13 @@ namespace Robust.Shared.Localization
         string GetString(string messageId, params (string, object)[] args);
 
         /// <summary>
-        ///     Try- version of <see cref="GetString(string, ValueTuple{string, object}[])"/>
+        ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
         /// </summary>
         /// <remarks>
         ///     Does not log a warning if the message does not exist.
         ///     Does however log errors if any occur while formatting.
         /// </remarks>
-        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] args);
+        bool TryGetString(string messageId, [NotNullWhen(true)] out string? value, params (string, object)[] keyArgs);
 
         /// <summary>
         ///     Default culture used by other methods when no culture is explicitly specified.

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Fluent.Net;
 using JetBrains.Annotations;
+using Linguini.Bundle;
+using Linguini.Shared.Types.Bundle;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Localization
@@ -27,9 +28,9 @@ namespace Robust.Shared.Localization
     {
         public CultureInfo Culture => Context.Culture;
 
-        internal readonly MessageContext Context;
+        internal readonly FluentBundle Context;
 
-        internal LocContext(MessageContext ctx)
+        internal LocContext(FluentBundle ctx)
         {
             Context = ctx;
         }
@@ -62,7 +63,7 @@ namespace Robust.Shared.Localization
     ///     A value passed around in the localization system.
     /// </summary>
     /// <seealso cref="LocValue{T}"/>
-    public interface ILocValue
+    public interface ILocValue : IFluentType
     {
         /// <summary>
         ///     Format this value to a string.
@@ -124,6 +125,9 @@ namespace Robust.Shared.Localization
             return false;
         }
     */
+        public abstract string AsString();
+
+        public abstract IFluentType Copy();
     }
 
     public sealed record LocValueNumber(double Value) : LocValue<double>(Value)
@@ -131,6 +135,16 @@ namespace Robust.Shared.Localization
         public override string Format(LocContext ctx)
         {
             return Value.ToString(ctx.Culture);
+        }
+
+        public override string AsString()
+        {
+            return ((FluentNumber) Value).AsString();
+        }
+
+        public override IFluentType Copy()
+        {
+            return (FluentNumber) Value;
         }
     }
 
@@ -140,6 +154,16 @@ namespace Robust.Shared.Localization
         {
             return Value.ToString(ctx.Culture);
         }
+
+        public override string AsString()
+        {
+            return Value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        public override IFluentType Copy()
+        {
+            return new LocValueDateTime(this);
+        }
     }
 
     public sealed record LocValueString(string Value) : LocValue<string>(Value)
@@ -147,6 +171,16 @@ namespace Robust.Shared.Localization
         public override string Format(LocContext ctx)
         {
             return Value;
+        }
+
+        public override string AsString()
+        {
+            return Value;
+        }
+
+        public override IFluentType Copy()
+        {
+            return (FluentString) Value;
         }
     }
 
@@ -159,6 +193,16 @@ namespace Robust.Shared.Localization
         {
             return Value;
         }
+
+        public override string AsString()
+        {
+            return Value;
+        }
+
+        public override IFluentType Copy()
+        {
+            return FluentNone.None;
+        }
     }
 
     public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
@@ -166,6 +210,16 @@ namespace Robust.Shared.Localization
         public override string Format(LocContext ctx)
         {
             return Value.Name;
+        }
+
+        public override string AsString()
+        {
+            return Value.Name;
+        }
+
+        public override IFluentType Copy()
+        {
+            return new LocValueEntity(Value);
         }
     }
 

@@ -55,13 +55,12 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            Owner.Transform.GridID = GridIndex;
-        }
+            var mapId = Owner.Transform.MapID;
 
-        public override void OnRemove()
-        {
-            base.OnRemove();
-            Owner.Transform.GridID = GridId.Invalid;
+            if (_mapManager.HasMapEntity(mapId))
+            {
+                Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+            }
         }
 
         /// <param name="player"></param>

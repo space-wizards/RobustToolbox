@@ -94,19 +94,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         bool IsMapTransform { get; }
 
-        /// <summary>
-        /// Whether we are able to calculate a GridId for ourselves (rather than use our parent's).
-        /// </summary>
-        /// <returns></returns>
-        bool HasGridIndex();
-
-        /// <summary>
-        /// Tries to find whether we can calculate our GridId, and then returns what it is.
-        /// </summary>
-        /// <param name="gridId"></param>
-        /// <returns>Whether or not a GridId can be calculated e.g. if we have specific parents we may be using theirs instead.</returns>
-        bool TryGetGridIndex([NotNullWhen(true)] out GridId? gridId);
-
         Vector2? LerpDestination { get; }
 
         /// <summary>
@@ -127,7 +114,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Returns the index of the grid which this object is on
         /// </summary>
-        GridId GridID { get; set; }
+        GridId GridID { get; }
 
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);

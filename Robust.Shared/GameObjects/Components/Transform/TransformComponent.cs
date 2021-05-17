@@ -68,12 +68,13 @@ namespace Robust.Shared.GameObjects
         public GridId GridID
         {
             get => _gridId;
-            set
+            private set
             {
                 if (_gridId.Equals(value)) return;
                 _gridId = value;
-                foreach (var child in Children)
+                foreach (var transformComponent in Children)
                 {
+                    var child = (TransformComponent) transformComponent;
                     child.GridID = value;
                 }
             }
@@ -422,39 +423,27 @@ namespace Robust.Shared.GameObjects
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
             }
 
-            if (TryGetGridIndex(out var gridId))
-            {
-                GridID = gridId.Value;
-            }
+            GridID = GetGridIndex();
         }
 
-        public bool HasGridIndex()
+        private GridId GetGridIndex()
         {
-            return !Owner.HasComponent<IMapComponent>() &&
-                   !Owner.HasComponent<IMapGridComponent>() &&
-                   (!Owner.Transform.ParentUid.IsValid() ||
-                   Owner.Transform.Parent!.Owner.HasComponent<IMapComponent>() ||
-                   Owner.Transform.Parent!.Owner.HasComponent<IMapGridComponent>());
-        }
-
-        /// <inheritdoc />
-        public bool TryGetGridIndex([NotNullWhen(true)] out GridId? gridId)
-        {
-            // If entity is a map / grid ignore or if we have a parent that isn't a map / grid
-            if (!HasGridIndex())
+            if (Owner.HasComponent<IMapComponent>())
             {
-                gridId = null;
-                return false;
+                return GridId.Invalid;
             }
 
-            if (_parent.IsValid() && Parent!.Owner.TryGetComponent(out IMapGridComponent? mapGrid))
+            if (Owner.TryGetComponent(out IMapGridComponent? gridComponent))
             {
-                gridId = mapGrid.GridIndex;
-                return true;
+                return gridComponent.GridIndex;
             }
 
-            gridId = _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
-            return true;
+            if (_parent.IsValid())
+            {
+                return Parent!.GridID;
+            }
+
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
 
         /// <inheritdoc />
@@ -609,7 +598,7 @@ namespace Robust.Shared.GameObjects
 
             RebuildMatrices();
             Dirty();
-            GridID = TryGetGridIndex(out var gridId) ? gridId.Value : Parent!.GridID;
+            GridID = GetGridIndex();
         }
 
         internal void ChangeMapId(MapId newMapId)

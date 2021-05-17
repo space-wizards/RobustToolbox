@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -12,49 +11,63 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private Queue<MoveEvent> _queuedMoveEvents = new();
-
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(QueueMoveEvent);
+            SubscribeLocalEvent<MoveEvent>(HandleMove);
         }
 
-        public override void Update(float frameTime)
+        private void HandleMove(MoveEvent moveEvent)
         {
-            base.Update(frameTime);
-            while (_queuedMoveEvents.Count > 0)
+            var entity = moveEvent.Sender;
+
+            if (entity.Deleted ||
+                entity.HasComponent<IMapComponent>() ||
+                entity.HasComponent<IMapGridComponent>() ||
+                entity.IsInContainer())
             {
-                var moveEvent = _queuedMoveEvents.Dequeue();
-                var entity = moveEvent.Sender;
+                return;
+            }
 
-                if (entity.Deleted || !entity.HasComponent<PhysicsComponent>() || entity.IsInContainer()) continue;
+            var transform = entity.Transform;
 
-                var transform = entity.Transform;
-                // Change parent if necessary
-                // Given islands will probably have a bunch of static bodies in them then we'll verify velocities first as it's way cheaper
-
-                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
-                    grid.GridEntityId.IsValid() &&
-                    grid.GridEntityId != entity.Uid)
+            // Change parent if necessary
+            if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
+                grid.GridEntityId.IsValid() &&
+                grid.GridEntityId != entity.Uid)
+            {
+                // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
+                if (grid.Index != transform.GridID)
                 {
-                    // Also this may deparent if 2 entities are parented but not using containers so fix that
-                    if (grid.Index != transform.GridID)
-                    {
-                        transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
-                    }
+                    transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
+                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, transform.GridID, grid.Index));
                 }
-                else
+            }
+            else
+            {
+                var oldGridId = transform.GridID;
+
+                // Attach them to map / they are on an invalid grid
+                if (oldGridId != GridId.Invalid)
                 {
                     transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                    RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
                 }
             }
         }
+    }
 
-        private void QueueMoveEvent(MoveEvent moveEvent)
+    public sealed class ChangedGridMessage : EntityEventArgs
+    {
+        public IEntity Entity;
+        public GridId OldGrid;
+        public GridId NewGrid;
+
+        public ChangedGridMessage(IEntity entity, GridId oldGrid, GridId newGrid)
         {
-            _queuedMoveEvents.Enqueue(moveEvent);
+            Entity = entity;
+            OldGrid = oldGrid;
+            NewGrid = newGrid;
         }
     }
 }

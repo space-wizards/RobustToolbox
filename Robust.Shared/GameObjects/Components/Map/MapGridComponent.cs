@@ -52,6 +52,17 @@ namespace Robust.Shared.GameObjects
             _gridIndex = GridId.Invalid;
         }
 
+        public override void Initialize()
+        {
+            base.Initialize();
+            var mapId = Owner.Transform.MapID;
+
+            if (_mapManager.HasMapEntity(mapId))
+            {
+                Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+            }
+        }
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)

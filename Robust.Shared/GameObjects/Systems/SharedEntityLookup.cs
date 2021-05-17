@@ -193,14 +193,14 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
-            if (mapId == MapId.Nullspace)
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var mapTree))
             {
                 return Enumerable.Empty<IEntity>();
             }
 
             var list = new List<IEntity>();
 
-            _entityTreesPerMap[mapId].QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+            mapTree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
             {
                 if (!ent.Deleted)
                 {

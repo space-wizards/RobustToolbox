@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
@@ -205,8 +206,11 @@ namespace Robust.Client.Audio.Midi
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         IClydeBufferedAudioSource IMidiRenderer.Source => Source;
+
+        [ViewVariables]
         public bool Disposed { get; private set; } = false;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public byte MidiProgram
         {
             get => _midiProgram;
@@ -220,6 +224,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public byte MidiBank
         {
             get => _midiBank;
@@ -233,6 +238,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public uint MidiSoundfont
         {
             get => _midiSoundfont;
@@ -246,10 +252,16 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool DisablePercussionChannel { get; set; } = true;
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool DisableProgramChangeEvent { get; set; } = true;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public int PlayerTick
         {
             get => _player?.CurrentTick ?? 0;
@@ -260,12 +272,19 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public uint SequencerTick => _sequencer?.Tick ?? 0;
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public double SequencerTimeScale => _sequencer?.TimeScale ?? 0;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Mono { get; set; }
+
+        [ViewVariables]
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool LoopMidi
         {
             get => _loopMidi;
@@ -277,10 +296,11 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public IEntity? TrackingEntity { get; set; } = null;
-        public EntityCoordinates? TrackingCoordinates { get; set; } = null;
 
-        internal bool Free { get; set; } = false;
+        [ViewVariables(VVAccess.ReadWrite)]
+        public EntityCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal MidiRenderer(Settings settings, SoundFontLoader soundFontLoader, bool mono = true)
         {

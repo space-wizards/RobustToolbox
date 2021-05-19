@@ -62,6 +62,11 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
         }
 
+        // For the RemoveX methods
+        // If the Transform is removed BEFORE the Sprite/Light,
+        // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
+        // Otherwise these will still have their past MapId and that's all we need..
+
         #region SpriteHandlers
         private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
         {
@@ -85,7 +90,7 @@ namespace Robust.Client.GameObjects
 
         private void ClearSprite(SpriteComponent component)
         {
-            if (_gridTrees.TryGetValue(component.Owner.Transform.MapID, out var gridTrees))
+            if (_gridTrees.TryGetValue(component.IntersectingMapId, out var gridTrees))
             {
                 foreach (var gridId in component.IntersectingGrids)
                 {
@@ -150,7 +155,7 @@ namespace Robust.Client.GameObjects
 
         private void ClearLight(PointLightComponent component)
         {
-            if (_gridTrees.TryGetValue(component.Owner.Transform.MapID, out var gridTrees))
+            if (_gridTrees.TryGetValue(component.IntersectingMapId, out var gridTrees))
             {
                 foreach (var gridId in component.IntersectingGrids)
                 {
@@ -265,16 +270,7 @@ namespace Robust.Client.GameObjects
                 // If we're on a new map then clear the old one.
                 if (sprite.IntersectingMapId != mapId)
                 {
-                    if (_gridTrees.TryGetValue(sprite.IntersectingMapId, out var oldMapTree))
-                    {
-                        foreach (var gridId in sprite.IntersectingGrids)
-                        {
-                            if (!oldMapTree.TryGetValue(gridId, out var gridTree)) continue;
-                            gridTree.SpriteTree.Remove(sprite);
-                        }
-                    }
-
-                    sprite.IntersectingGrids.Clear();
+                    ClearSprite(sprite);
                 }
 
                 sprite.IntersectingMapId = mapId;
@@ -317,17 +313,9 @@ namespace Robust.Client.GameObjects
                 // If we're on a new map then clear the old one.
                 if (light.IntersectingMapId != mapId)
                 {
-                    if (_gridTrees.TryGetValue(light.IntersectingMapId, out var oldMapTree))
-                    {
-                        foreach (var gridId in light.IntersectingGrids)
-                        {
-                            if (!oldMapTree.TryGetValue(gridId, out var gridTree)) continue;
-                            gridTree.LightTree.Remove(light);
-                        }
-                    }
-
-                    light.IntersectingGrids.Clear();
+                    ClearLight(light);
                 }
+
                 light.IntersectingMapId = mapId;
 
                 if (mapId == MapId.Nullspace) continue;

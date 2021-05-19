@@ -218,13 +218,7 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Shutdown()
         {
             base.Shutdown();
-            UnsubscribeLocalEvent<CollisionChangeMessage>();
-            UnsubscribeLocalEvent<MoveEvent>();
-            UnsubscribeLocalEvent<RotateEvent>();
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
-            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
-            UnsubscribeLocalEvent<FixtureUpdateMessage>();
+
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.MapCreated -= HandleMapCreated;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
@@ -66,24 +67,20 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public GridId GridID
         {
-            get
+            get => _gridId;
+            private set
             {
-                // root node, grid id is undefined
-                if (Owner.HasComponent<IMapComponent>())
-                    return GridId.Invalid;
-
-                // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapGridComponent? gridComp))
-                    return gridComp.GridIndex;
-
-                // branch or leaf node
-                if (_parent.IsValid())
-                    return Parent!.GridID;
-
-                // Not on a grid
-                return GridId.Invalid;
+                if (_gridId.Equals(value)) return;
+                _gridId = value;
+                foreach (var transformComponent in Children)
+                {
+                    var child = (TransformComponent) transformComponent;
+                    child.GridID = value;
+                }
             }
         }
+
+        private GridId _gridId = GridId.Invalid;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -264,6 +261,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 var oldPosition = Coordinates;
+                _localPosition = value.Position;
 
                 if (value.EntityId != _parent)
                 {
@@ -271,7 +269,6 @@ namespace Robust.Shared.GameObjects
                     AttachParent(newEntity);
                 }
 
-                _localPosition = value.Position;
                 Dirty();
 
                 if (!DeferUpdates)
@@ -425,6 +422,28 @@ namespace Robust.Shared.GameObjects
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
             }
+
+            GridID = GetGridIndex();
+        }
+
+        private GridId GetGridIndex()
+        {
+            if (Owner.HasComponent<IMapComponent>())
+            {
+                return GridId.Invalid;
+            }
+
+            if (Owner.TryGetComponent(out IMapGridComponent? gridComponent))
+            {
+                return gridComponent.GridIndex;
+            }
+
+            if (_parent.IsValid())
+            {
+                return Parent!.GridID;
+            }
+
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
 
         /// <inheritdoc />
@@ -572,7 +591,6 @@ namespace Robust.Shared.GameObjects
             // offset position from world to parent
             SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
             _parent = newParentEnt.Uid;
-
             ChangeMapId(newConcrete.MapID);
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
@@ -580,6 +598,7 @@ namespace Robust.Shared.GameObjects
 
             RebuildMatrices();
             Dirty();
+            GridID = GetGridIndex();
         }
 
         internal void ChangeMapId(MapId newMapId)

@@ -306,7 +306,6 @@ namespace Robust.Server
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
-            IoCManager.Resolve<IEntityLookup>().Initialize();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
@@ -319,6 +318,7 @@ namespace Robust.Server
 
             IoCManager.Resolve<IServerConsoleHost>().Initialize();
             _entityManager.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
             _scriptHost.Initialize();
 

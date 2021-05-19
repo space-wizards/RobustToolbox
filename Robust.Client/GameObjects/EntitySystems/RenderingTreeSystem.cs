@@ -194,17 +194,6 @@ namespace Robust.Client.GameObjects
             _mapManager.MapDestroyed -= MapManagerOnMapDestroyed;
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
             _mapManager.OnGridRemoved -= MapManagerOnGridRemoved;
-
-            UnsubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<SpriteComponent, MoveEvent>();
-            UnsubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>();
-            UnsubscribeLocalEvent<SpriteComponent, RenderTreeRemoveSpriteEvent>();
-
-            UnsubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<PointLightComponent, MoveEvent>();
-            UnsubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>();
-            UnsubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>();
-            UnsubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>();
         }
 
         private void MapManagerOnMapDestroyed(object? sender, MapEventArgs e)

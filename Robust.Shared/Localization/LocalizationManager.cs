@@ -11,6 +11,7 @@ using Linguini.Bundle.Errors;
 using Linguini.Shared.Types.Bundle;
 using Linguini.Syntax.Ast;
 using Linguini.Syntax.Parser;
+using Linguini.Syntax.Parser.Error;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -256,12 +257,25 @@ namespace Robust.Shared.Localization
 
             foreach (var (path, resource) in resources)
             {
-                var errors = resource.Errors.Select(e => (FluentError) ParserFluentError.ParseError(e)).ToList();
+                var errors = resource.Errors;
                 context.AddResourceOverriding(resource);
-                foreach (var error in errors)
-                {
-                    _logSawmill.Error("{path}: {exception}", path, error.ToString());
-                }
+                WriteWarningForErrs(path, errors);
+            }
+        }
+
+        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs)
+        {
+            foreach (var err in errs)
+            {
+                _logSawmill.Warning("{path}: {exception}", path, err);
+            }
+        }
+
+        private void WriteWarningForErrs(IList<FluentError> errs, string locId)
+        {
+            foreach (var err in errs)
+            {
+                _logSawmill.Warning("Error extracting `{locId}`\n{e1}", locId, err);
             }
         }
     }

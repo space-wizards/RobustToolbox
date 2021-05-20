@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
@@ -47,7 +49,7 @@ namespace Robust.Shared.Localization
             FlushEntityCache();
         }
 
-     private EntityLocData CalcEntityLoc(string prototypeId)
+        private EntityLocData CalcEntityLoc(string prototypeId)
         {
             string? name = null;
             string? desc = null;
@@ -68,30 +70,40 @@ namespace Robust.Shared.Localization
                     {
                         // Only set name if the value isn't empty.
                         // So that you can override *only* a desc/suffix.
-                        name = ctx.FormatPattern(msg.Value, null, out _);
+                        name = ctx.FormatPattern(msg.Value, null, out var fmtErr);
+                        WriteWarningForErrs(fmtErr, locId);
                     }
 
+                    IList<FluentError> errs = new List<FluentError>();
                     if (msgAttrs.Count != 0)
                     {
-                        if (desc == null && ctx.TryGetMsg(locId, "desc", null, out _, out desc))
+                        if (desc == null
+                            && ctx.TryGetMsg(locId, "desc", null, out errs, out desc))
                         {
                         }
 
-                        if (suffix == null && ctx.TryGetMsg(locId, "suffix",null, out _, out suffix))
+                        WriteWarningForErrs(errs, locId);
+
+                        if (suffix == null
+                            && ctx.TryGetMsg(locId, "suffix", null, out errs, out suffix))
                         {
                         }
+
+                        WriteWarningForErrs(errs, locId);
+
 
                         foreach (var (attrId, pattern) in msg.Attributes)
                         {
                             var attrib = attrId.ToString();
-                            if (attrib.Equals("desc") 
+                            if (attrib.Equals("desc")
                                 || attrib.Equals("suffix"))
                                 continue;
 
                             attributes ??= new Dictionary<string, string>();
                             if (!attributes.ContainsKey(attrib))
                             {
-                                var value = ctx.FormatPattern(pattern, null, out _);
+                                var value = ctx.FormatPattern(pattern, null, out var errors);
+                                WriteWarningForErrs(errors, locId);
                                 attributes[attrib] = value;
                             }
                         }
@@ -126,6 +138,9 @@ namespace Robust.Shared.Localization
                 suffix,
                 attributes?.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty);
         }
+
+
+
 
         public EntityLocData GetEntityData(string prototypeId)
         {

@@ -16,11 +16,17 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        private RenderingTreeSystem _treeSystem = default!;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            _treeSystem = Get<RenderingTreeSystem>();
+        }
+
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
-            var renderTreeSystem = EntitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-
             // So we could calculate the correct size of the entities based on the contents of their sprite...
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
             var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);
@@ -33,18 +39,9 @@ namespace Robust.Client.GameObjects
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(currentMap, pvsBounds, true))
             {
-                Box2 gridBounds;
+                var gridBounds = gridId == GridId.Invalid ? pvsBounds : pvsBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
 
-                if (gridId == GridId.Invalid)
-                {
-                    gridBounds = pvsBounds;
-                }
-                else
-                {
-                    gridBounds = pvsBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-                }
-
-                var mapTree = renderTreeSystem.GetSpriteTreeForMap(currentMap, gridId);
+                var mapTree = _treeSystem.GetSpriteTreeForMap(currentMap, gridId);
 
                 mapTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
@@ -167,7 +168,7 @@ namespace Robust.Client.GameObjects
             set
             {
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
         }
 
@@ -178,6 +179,18 @@ namespace Robust.Client.GameObjects
             else
                 Mask = null;
         }
+
+        /// <summary>
+        /// What MapId we are intersecting for RenderingTreeSystem.
+        /// </summary>
+        [ViewVariables]
+        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
+
+        /// <summary>
+        /// What grids we're on for RenderingTreeSystem.
+        /// </summary>
+        [ViewVariables]
+        internal List<GridId> IntersectingGrids = new();
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -230,7 +243,7 @@ namespace Robust.Client.GameObjects
             if (map != MapId.Nullspace)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new RenderTreeRemoveLightMessage(this, map));
+                    new RenderTreeRemoveLightEvent(this, map));
             }
         }
 
@@ -248,11 +261,11 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    public struct PointLightRadiusChangedMessage
+    public class PointLightRadiusChangedEvent : EntityEventArgs
     {
         public PointLightComponent PointLightComponent { get; }
 
-        public PointLightRadiusChangedMessage(PointLightComponent pointLightComponent)
+        public PointLightRadiusChangedEvent(PointLightComponent pointLightComponent)
         {
             PointLightComponent = pointLightComponent;
         }

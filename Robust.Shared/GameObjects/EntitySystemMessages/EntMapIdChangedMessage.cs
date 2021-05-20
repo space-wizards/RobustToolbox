@@ -2,7 +2,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Shared.GameObjects
 {
-    public readonly struct EntMapIdChangedMessage
+    public class EntMapIdChangedMessage : EntityEventArgs
     {
         public EntMapIdChangedMessage(IEntity entity, MapId oldMapId)
         {

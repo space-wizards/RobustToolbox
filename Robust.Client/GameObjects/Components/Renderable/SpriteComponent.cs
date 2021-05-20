@@ -1359,18 +1359,6 @@ namespace Robust.Client.GameObjects
             return texture;
         }
 
-        public override void OnRemove()
-        {
-            base.OnRemove();
-
-            var map = Owner.Transform.MapID;
-            if (map != MapId.Nullspace)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new RenderTreeRemoveSpriteEvent(this, map));
-            }
-        }
-
         public void FrameUpdate(float delta)
         {
             foreach (var t in Layers)

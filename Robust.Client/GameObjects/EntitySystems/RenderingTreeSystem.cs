@@ -53,7 +53,7 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
-            SubscribeLocalEvent<SpriteComponent, RenderTreeRemoveSpriteEvent>(RemoveSprite);
+            SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
@@ -83,7 +83,7 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void RemoveSprite(EntityUid uid, SpriteComponent component, RenderTreeRemoveSpriteEvent args)
+        private void RemoveSprite(EntityUid uid, SpriteComponent component, ComponentRemove args)
         {
             ClearSprite(component);
         }
@@ -378,18 +378,6 @@ namespace Robust.Client.GameObjects
                 return Box2.CenteredAround(worldPos, (boxSize, boxSize));
             }
         }
-    }
-
-    internal class RenderTreeRemoveSpriteEvent : EntityEventArgs
-    {
-        public RenderTreeRemoveSpriteEvent(SpriteComponent sprite, MapId map)
-        {
-            Sprite = sprite;
-            Map = map;
-        }
-
-        public SpriteComponent Sprite { get; }
-        public MapId Map { get; }
     }
 
     internal class RenderTreeRemoveLightEvent : EntityEventArgs

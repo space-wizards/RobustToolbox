@@ -3,18 +3,20 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class ErrorNode : ValidationNode
+    public class ErrorNode : ValidationNode, IEquatable<ErrorNode>
     {
-        public readonly DataNode Node;
-        public readonly string ErrorReason;
-        public readonly bool AlwaysRelevant;
-
         public ErrorNode(DataNode node, string errorReason, bool alwaysRelevant = true)
         {
             Node = node;
             ErrorReason = errorReason;
             AlwaysRelevant = alwaysRelevant;
         }
+
+        public DataNode Node { get; }
+
+        public string ErrorReason { get; }
+
+        public bool AlwaysRelevant { get; }
 
         public override bool Valid => false;
 
@@ -25,17 +27,36 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 
         public override int GetHashCode()
         {
-            var code = new HashCode();
-            code.Add(Node.Start.GetHashCode());
-            code.Add(Node.End.GetHashCode());
-            code.Add(ErrorReason.GetHashCode());
-            return code.ToHashCode();
+            return HashCode.Combine(Node, ErrorReason, AlwaysRelevant);
+        }
+
+        public bool Equals(ErrorNode? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return Node.Equals(other.Node) &&
+                   ErrorReason == other.ErrorReason &&
+                   AlwaysRelevant == other.AlwaysRelevant;
         }
 
         public override bool Equals(object? obj)
         {
-            if (obj is not ErrorNode node) return false;
-            return Node.GetHashCode() == node.Node.GetHashCode(); // ErrorReason == node.ErrorReason
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+
+            return Equals((ErrorNode) obj);
+        }
+
+        public static bool operator ==(ErrorNode? left, ErrorNode? right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(ErrorNode? left, ErrorNode? right)
+        {
+            return !Equals(left, right);
         }
     }
 }

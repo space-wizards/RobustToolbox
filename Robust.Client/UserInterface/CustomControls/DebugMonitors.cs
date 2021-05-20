@@ -4,6 +4,7 @@ using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -62,7 +63,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _timeDebug = new DebugTimePanel(gameTiming1, IoCManager.Resolve<IClientGameStateManager>());
             AddChild(_timeDebug);
 
-            _frameGraph = new FrameGraph(gameTiming1);
+            _frameGraph = new FrameGraph(gameTiming1, IoCManager.Resolve<IConfigurationManager>());
             AddChild(_frameGraph);
 
             AddChild(_debugMemoryPanel = new DebugMemoryPanel());

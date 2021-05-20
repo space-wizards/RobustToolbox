@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (Viewport == null)
             {
-                handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UserInterfaceManager.UIScale), Color.Red);
+                handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UIScale), Color.Red);
             }
             else
             {

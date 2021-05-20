@@ -73,7 +73,7 @@ namespace Robust.UnitTesting
                 entMan.Startup();
             }
 
-            IoCManager.Resolve<IEntityLookup>().Initialize();
+            IoCManager.Resolve<IEntityLookup>().Startup();
             var mapMan = IoCManager.Resolve<IMapManager>();
             mapMan.Initialize();
             mapMan.Startup();
@@ -88,8 +88,7 @@ namespace Robust.UnitTesting
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
-                compFactory.Register<MetaDataComponent>();
-                compFactory.RegisterReference<MetaDataComponent, IMetaDataComponent>();
+                compFactory.RegisterClass<MetaDataComponent>();
             }
 
             if(entMan.EventBus == null)

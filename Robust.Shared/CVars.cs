@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -90,12 +91,28 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        /**
+         * SUS
+         */
+
         public static readonly CVarDef<int> SysWinTickPeriod =
             CVarDef.Create("sys.win_tick_period", 3, CVar.SERVERONLY);
 
         // On non-FULL_RELEASE builds, use ProfileOptimization/tiered JIT to speed up game startup.
         public static readonly CVarDef<bool> SysProfileOpt =
             CVarDef.Create("sys.profile_opt", true);
+
+        /// <summary>
+        ///     Controls stack size of the game logic thread, in bytes.
+        /// </summary>
+        public static readonly CVarDef<int> SysGameThreadStackSize =
+            CVarDef.Create("sys.game_thread_stack_size", 8 * 1024 * 1024);
+
+        /// <summary>
+        ///     Controls stack size of the game logic thread.
+        /// </summary>
+        public static readonly CVarDef<int> SysGameThreadPriority =
+            CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
@@ -267,6 +284,26 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        ///     Forces synchronization of multi-window rendering with <c>glFinish</c> when GL fence sync is unavailable.
+        /// </summary>
+        /// <remarks>
+        ///     If this is disabled multi-window rendering on GLES2 might run better, dunno.
+        ///     It technically causes UB thanks to the OpenGL spec with cross-context sync. Hope that won't happen.
+        ///     Let's be real the OpenGL specification is basically just a suggestion to drivers anyways so who cares.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayForceSyncWindows =
+            CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayThreadWindowBlit =
+            CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<int> DisplayInputBufferSize =
+            CVarDef.Create("display.input_buffer_size", 32, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> DisplayWin32Experience =
+            CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -378,14 +415,26 @@ namespace Robust.Shared
             CVarDef.Create("physics.maxangularcorrection", 8.0f / 180.0f * MathF.PI);
 
         // - Maximums
-        // Squared
-        // 35 m/s, AKA half a tile per frame allowed. Divide this by frametime to get units per second.
+        /// <summary>
+        /// Maximum linear velocity per second.
+        /// Make sure that MaxLinVelocity / <see cref="NetTickrate"/> is around 0.5 or higher so that moving objects don't go through walls.
+        /// MaxLinVelocity is compared to the dot product of linearVelocity * frameTime.
+        /// </summary>
+        /// <remarks>
+        /// Default is 35 m/s. Around half a tile per tick at 60 ticks per second.
+        /// </remarks>
         public static readonly CVarDef<float> MaxLinVelocity =
-            CVarDef.Create("physics.maxlinvelocity", 0.56f);
+            CVarDef.Create("physics.maxlinvelocity", 35f);
 
-        // Squared
+        /// <summary>
+        /// Maximum angular velocity in full rotations per second.
+        /// MaxAngVelocity is compared to the squared rotation.
+        /// </summary>
+        /// <remarks>
+        /// Default is 15 rotations per second. Approximately a quarter rotation per tick at 60 ticks per second.
+        /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
-            CVarDef.Create("physics.maxangvelocity", 0.5f * MathF.PI);
+            CVarDef.Create("physics.maxangvelocity", 15f);
 
         /*
          * DISCORD
@@ -403,5 +452,16 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> TexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+
+        /*
+         * DEBUG
+         */
+
+        /// <summary>
+        ///     Target framerate for things like the frame graph.
+        /// </summary>
+        public static readonly CVarDef<int> DebugTargetFps =
+            CVarDef.Create("debug.target_fps", 60, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

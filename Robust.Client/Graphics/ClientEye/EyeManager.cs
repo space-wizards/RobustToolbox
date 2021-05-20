@@ -104,13 +104,17 @@ namespace Robust.Client.Graphics
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
-            return new(WorldToScreen(point.Position));
+            return new(WorldToScreen(point.Position), MainViewport.Window?.Id ?? default);
         }
 
         /// <inheritdoc />
         public MapCoordinates ScreenToMap(ScreenCoordinates point)
         {
-            return ScreenToMap(point.Position);
+            var (pos, window) = point;
+            if (window != MainViewport.Window?.Id)
+                return default;
+
+            return MainViewport.ScreenToMap(pos);
         }
 
         /// <inheritdoc />

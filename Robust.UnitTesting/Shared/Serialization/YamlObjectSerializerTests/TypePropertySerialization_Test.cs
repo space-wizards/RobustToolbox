@@ -6,6 +6,8 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Value;
 using YamlDotNet.RepresentationModel;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
@@ -34,8 +36,8 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
             Assert.IsNotEmpty(mapping.Children);
 
-            var testPropertyOne = mapping.GetNode("testPropertyOne") as ValueDataNode;
-            var testPropertyTwo = mapping.GetNode("testPropertyTwo") as ValueDataNode;
+            var testPropertyOne = mapping.Get("testPropertyOne") as ValueDataNode;
+            var testPropertyTwo = mapping.Get("testPropertyTwo") as ValueDataNode;
 
             Assert.NotNull(testPropertyOne);
             Assert.NotNull(testPropertyTwo);

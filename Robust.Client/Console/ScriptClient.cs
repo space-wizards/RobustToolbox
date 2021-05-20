@@ -30,7 +30,8 @@ namespace Robust.Client.Console
 
             var console = new ScriptConsoleServer(this, session);
             _activeConsoles.Add(session, console);
-            console.Open();
+            // FIXME: When this is Open(), resizing the window will cause its position to get NaN'd.
+            console.OpenCentered();
         }
 
         private void ReceiveScriptResponse(MsgScriptResponse message)

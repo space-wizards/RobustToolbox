@@ -44,6 +44,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
 
+        protected readonly HashSet<EntityUid> QueuedDeletions = new();
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
@@ -110,6 +112,16 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             {
                 _eventBus.ProcessEventQueue();
+            }
+
+            using (histogram?.WithLabels("QueuedDeletion").NewTimer())
+            {
+                foreach (var uid in QueuedDeletions)
+                {
+                    DeleteEntity(uid);
+                }
+
+                QueuedDeletions.Clear();
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
@@ -212,6 +224,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        [Obsolete("IEntityQuery is obsolete")]
         public IEnumerable<IEntity> GetEntities(IEntityQuery query)
         {
             return query.Match(this);
@@ -287,6 +300,16 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
         }
 
+        public void QueueDeleteEntity(IEntity entity)
+        {
+            QueueDeleteEntity(entity.Uid);
+        }
+
+        public void QueueDeleteEntity(EntityUid uid)
+        {
+            QueuedDeletions.Add(uid);
+        }
+
         public void DeleteEntity(EntityUid uid)
         {
             if (TryGetEntity(uid, out var entity))
@@ -359,7 +382,7 @@ namespace Robust.Shared.GameObjects
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
 
-            // We do this after the event, so if the event throws we have not committed 
+            // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
             AllEntities.Add(entity);
 
@@ -457,6 +480,7 @@ namespace Robust.Shared.GameObjects
             var session = netMsg.Session;
             compMsg.Remote = true;
 
+#pragma warning disable 618
             var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
@@ -470,6 +494,7 @@ namespace Robust.Shared.GameObjects
                     component.HandleNetworkMessage(compMsg, compChannel, session);
                 }
             }
+#pragma warning restore 618
         }
 
         /// <summary>

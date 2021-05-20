@@ -11,11 +11,10 @@ namespace Robust.Shared.Serialization
     /// NB: AllowMultiple is <c>true</c> - don't assume the same representation cannot
     /// be reused between multiple fields.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true)]
     public class ConstantsForAttribute : Attribute
     {
-        private readonly Type _tag;
-        public Type Tag => _tag;
+        public Type Tag { get; }
 
         // NB: This is not generic because C# does not allow generic attributes
 
@@ -28,7 +27,7 @@ namespace Robust.Shared.Serialization
         /// </param>
         public ConstantsForAttribute(Type tag)
         {
-            _tag = tag;
+            Tag = tag;
         }
     }
 }

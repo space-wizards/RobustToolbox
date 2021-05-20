@@ -79,9 +79,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="query">The query to test.</param>
         /// <returns>An enumerable over all matching entities.</returns>
+        [Obsolete("IEntityQuery is obsolete")]
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
         IEnumerable<IEntity> GetEntities();
+
+        public void QueueDeleteEntity(IEntity entity);
+
+        public void QueueDeleteEntity(EntityUid uid);
 
         /// <summary>
         /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.

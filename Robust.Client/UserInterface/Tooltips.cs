@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface
         public static void PositionTooltip(Control tooltip)
         {
             PositionTooltip(tooltip.UserInterfaceManager.RootControl.Size,
-                tooltip.UserInterfaceManager.MousePositionScaled,
+                tooltip.UserInterfaceManager.MousePositionScaled.Position,
                 tooltip);
         }
 

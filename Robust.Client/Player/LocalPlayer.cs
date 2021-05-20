@@ -4,6 +4,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
@@ -36,7 +37,7 @@ namespace Robust.Client.Player
         ///     Session of the local client.
         /// </summary>
         [ViewVariables]
-        public IPlayerSession Session => InternalSession;
+        public ICommonSession Session => InternalSession;
 
         internal PlayerSession InternalSession { get; set; } = default!;
 

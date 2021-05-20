@@ -71,7 +71,7 @@ namespace Robust.Client.ResourceManagement
             var toAtlas = new StateReg[stateCount];
 
             var frameSize = metadata.Size;
-            var rsi = new RSI(frameSize, data.Path);
+            var rsi = new RSI(frameSize, data.Path, metadata.States.Length);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>(stateCount);
 
@@ -224,16 +224,30 @@ namespace Robust.Client.ResourceManagement
         private static RsiMetadata LoadRsiMetadata(IResourceCache cache, ResourcePath path)
         {
             var manifestPath = path / "meta.json";
-            string manifestContents;
+            RsiJsonMetadata? manifestJson;
 
             using (var manifestFile = cache.ContentFileRead(manifestPath))
-            using (var reader = new StreamReader(manifestFile))
             {
-                manifestContents = reader.ReadToEnd();
-            }
+                if (manifestFile.Length <= 4096)
+                {
+                    // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
+                    // Avoids a ton of allocations with stream reader etc
+                    // because System.Text.Json can process it directly.
+                    Span<byte> buf = stackalloc byte[4096];
+                    var totalRead = manifestFile.ReadToEnd(buf);
+                    buf = buf[..totalRead];
+                    buf = BomUtil.SkipBom(buf);
 
-            // Ok schema validated just fine.
-            var manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
+                    manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(buf, SerializerOptions);
+                }
+                else
+                {
+                    using var reader = new StreamReader(manifestFile);
+
+                    string manifestContents = reader.ReadToEnd();
+                    manifestJson = JsonSerializer.Deserialize<RsiJsonMetadata>(manifestContents, SerializerOptions);
+                }
+            }
 
             if (manifestJson == null)
                 throw new RSILoadException("Manifest JSON was null!");

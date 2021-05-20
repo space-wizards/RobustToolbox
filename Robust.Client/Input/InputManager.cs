@@ -16,11 +16,12 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.Core;
@@ -36,7 +37,7 @@ namespace Robust.Client.Input
 
         [ViewVariables] public bool Enabled { get; set; } = true;
 
-        [ViewVariables] public virtual Vector2 MouseScreenPosition => Vector2.Zero;
+        [ViewVariables] public virtual ScreenCoordinates MouseScreenPosition => default;
 
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
@@ -145,13 +146,13 @@ namespace Robust.Client.Input
                 .Where(p => _bindingsByFunction[p].Count == 0)
                 .ToArray();
 
-            mapping.AddNode("version", new ValueDataNode("1"));
-            mapping.AddNode("binds", serializationManager.WriteValue(modifiedBindings));
-            mapping.AddNode("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
+            mapping.Add("version", new ValueDataNode("1"));
+            mapping.Add("binds", serializationManager.WriteValue(modifiedBindings));
+            mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new(mapping.ToMappingNode())};
+            var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -333,6 +334,7 @@ namespace Robust.Client.Input
         {
             // christ this crap *is* re-entrant thanks to PlacementManager and
             // I honestly have no idea what the best solution here is.
+            // note from the future: context switches won't cause re-entrancy anymore because InputContextContainer defers context switches
             DebugTools.Assert(!_currentlyFindingViewport, "Re-entrant key events??");
 
             try
@@ -340,11 +342,13 @@ namespace Robust.Client.Input
                 // This is terrible but anyways.
                 // This flag keeps track of "did a viewport fire the key up for us" so we know we don't do it again.
                 _currentlyFindingViewport = true;
+                // And this stops context switches from causing crashes
+                Contexts.DeferringEnabled = true;
 
                 binding.State = state;
 
                 var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
-                    new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+                    MouseScreenPosition, binding.CanFocus);
 
                 // UI returns true here into blockPass if it wants to prevent us from giving input events
                 // to the viewport, but doesn't want it hard-handled so we keep processing possible key actions.
@@ -360,12 +364,14 @@ namespace Robust.Client.Input
             finally
             {
                 _currentlyFindingViewport = false;
+                Contexts.DeferringEnabled = false;
             }
         }
 
         public void ViewportKeyEvent(Control? viewport, BoundKeyEventArgs eventArgs)
         {
             _currentlyFindingViewport = false;
+            Contexts.DeferringEnabled = false;
 
             var cmd = GetInputCommand(eventArgs.Function);
             // TODO: Allow input commands to still get forwarded to server if necessary.
@@ -453,7 +459,7 @@ namespace Robust.Client.Input
             var robustMapping = mapping.ToDataNode() as MappingDataNode;
             if (robustMapping == null) throw new InvalidOperationException();
 
-            if (robustMapping.TryGetNode("binds", out var BaseKeyRegsNode))
+            if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
             {
                 var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
@@ -482,7 +488,7 @@ namespace Robust.Client.Input
                 }
             }
 
-            if (userData && robustMapping.TryGetNode("leaveEmpty", out var node))
+            if (userData && robustMapping.TryGet("leaveEmpty", out var node))
             {
                 var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
 

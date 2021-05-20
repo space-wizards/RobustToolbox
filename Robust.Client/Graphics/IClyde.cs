@@ -12,11 +12,14 @@ namespace Robust.Client.Graphics
 
     public interface IClyde
     {
-        IRenderWindow MainWindowRenderTarget { get; }
+        IClydeWindow MainWindow { get; }
+        IRenderTarget MainWindowRenderTarget => MainWindow.RenderTarget;
 
         Vector2i ScreenSize { get; }
 
         bool IsFocused { get; }
+
+        IEnumerable<IClydeWindow> AllWindows { get; }
 
         /// <summary>
         ///     The default scale ratio for window contents, given to us by the OS.
@@ -35,7 +38,7 @@ namespace Robust.Client.Graphics
 
         event Action<WindowFocusedEventArgs> OnWindowFocused;
 
-        event Action OnWindowScaleChanged;
+        event Action<WindowContentScaleEventArgs> OnWindowScaleChanged;
 
         OwnedTexture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
@@ -126,7 +129,7 @@ namespace Robust.Client.Graphics
         IClydeViewport CreateViewport(Vector2i size, TextureSampleParameters? sampleParameters, string? name = null);
 
         IEnumerable<IClydeMonitor> EnumerateMonitors();
-    }
 
-    // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.
+        Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters);
+    }
 }

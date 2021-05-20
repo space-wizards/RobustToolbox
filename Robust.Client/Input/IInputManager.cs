@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Client.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Maths;
+using Robust.Shared.Map;
 
 namespace Robust.Client.Input
 {
@@ -25,7 +25,10 @@ namespace Robust.Client.Input
         /// <param name="eventArgs">The key event args triggering the input.</param>
         void ViewportKeyEvent(Control? control, BoundKeyEventArgs eventArgs);
 
-        Vector2 MouseScreenPosition { get; }
+        /// <summary>
+        ///     The position and window of the mouse.
+        /// </summary>
+        ScreenCoordinates MouseScreenPosition { get; }
 
         BoundKeyMap NetworkBindMap { get; }
 

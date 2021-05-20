@@ -287,6 +287,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public void QueueDelete()
+        {
+            EntityManager.QueueDeleteEntity(this);
+        }
+
+        /// <inheritdoc />
         public void Delete()
         {
             EntityManager.DeleteEntity(this);

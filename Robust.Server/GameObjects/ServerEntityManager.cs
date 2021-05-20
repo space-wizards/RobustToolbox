@@ -137,6 +137,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
             ComponentMessage message)
         {

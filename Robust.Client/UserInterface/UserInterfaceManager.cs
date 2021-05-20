@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Client.Console;
 using Robust.Client.Graphics;
@@ -24,9 +24,7 @@ namespace Robust.Client.UserInterface
     internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
-        [Dependency] private readonly IClyde _displayManager = default!;
-        [Dependency] private readonly IClientConsoleHost _consoleHost = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -37,16 +35,20 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
 
-        [ViewVariables] public Stylesheet? Stylesheet
+        [ViewVariables]
+        public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
             {
                 _stylesheet = value;
 
-                if (RootControl?.Stylesheet != null)
+                foreach (var root in _roots)
                 {
-                    RootControl.StylesheetUpdateRecursive();
+                    if (root.Stylesheet != null)
+                    {
+                        root.StylesheetUpdateRecursive();
+                    }
                 }
             }
         }
@@ -59,12 +61,11 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
         [ViewVariables] public PopupContainer ModalRoot { get; private set; } = default!;
         [ViewVariables] public Control? CurrentlyHovered { get; private set; } = default!;
-        [ViewVariables] public float UIScale { get; private set; } = 1;
-        [ViewVariables] public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
-        [ViewVariables] public Control RootControl { get; private set; } = default!;
+        [ViewVariables] public float DefaultUIScale => _clyde.DefaultWindowScale.X;
+        [ViewVariables] public WindowRoot RootControl { get; private set; } = default!;
         [ViewVariables] public LayoutContainer WindowRoot { get; private set; } = default!;
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
-        [ViewVariables] public DebugConsole DebugConsole { get; private set; } = default!;
+        [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
@@ -88,20 +89,22 @@ namespace Robust.Client.UserInterface
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
 
+        private readonly List<WindowRoot> _roots = new();
+        private readonly Dictionary<WindowId, WindowRoot> _windowsToRoot = new();
+
         public void Initialize()
         {
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
 
-            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
 
-            DebugConsole = new DebugConsole(_consoleHost, _resourceManager);
+            DebugConsole = new DropDownDebugConsole();
             RootControl.AddChild(DebugConsole);
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
-                _displayManager, _netManager, _mapManager);
+                _clyde, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -117,24 +120,20 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
         }
 
         private void _initializeCommon()
         {
-            RootControl = new Control
-            {
-                Name = "UIRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore,
-                HorizontalAlignment = Control.HAlignment.Stretch,
-                VerticalAlignment = Control.VAlignment.Stretch,
-                IsInsideTree = true
-            };
+            RootControl = CreateWindowRoot(_clyde.MainWindow);
 
             RootControl.InvalidateMeasure();
             QueueMeasureUpdate(RootControl);
 
-            _displayManager.OnWindowResized += args => _updateRootSize();
-            _displayManager.OnWindowScaleChanged += UpdateUIScale;
+            _clyde.OnWindowResized += WindowSizeChanged;
+            _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
+            _clyde.DestroyWindow += WindowDestroyed;
 
             MainViewport = new MainViewportContainer(_eyeManager)
             {
@@ -182,7 +181,47 @@ namespace Robust.Client.UserInterface
             _initializeCommon();
         }
 
-        /// <inheritdoc />
+        public WindowRoot CreateWindowRoot(IClydeWindow window)
+        {
+            if (_windowsToRoot.ContainsKey(window.Id))
+            {
+                throw new ArgumentException("Window already has a UI root.");
+            }
+
+            var newRoot = new WindowRoot(window)
+            {
+                MouseFilter = Control.MouseFilterMode.Ignore,
+                HorizontalAlignment = Control.HAlignment.Stretch,
+                VerticalAlignment = Control.VAlignment.Stretch,
+                UIScaleSet = window.ContentScale.X
+            };
+
+            _roots.Add(newRoot);
+            _windowsToRoot.Add(window.Id, newRoot);
+
+            newRoot.InvalidateMeasure();
+            QueueMeasureUpdate(newRoot);
+
+            return newRoot;
+        }
+
+        public void DestroyWindowRoot(IClydeWindow window)
+        {
+            // Destroy window root if this window had one.
+            if (!_windowsToRoot.TryGetValue(window.Id, out var root))
+                return;
+
+            _windowsToRoot.Remove(window.Id);
+            _roots.Remove(root);
+
+            root.RemoveAllChildren();
+        }
+
+        private void WindowDestroyed(WindowDestroyedEventArgs args)
+        {
+            DestroyWindowRoot(args.Window);
+        }
+
         public void FrameUpdate(FrameEventArgs args)
         {
             // Process queued style & layout updates.
@@ -222,7 +261,10 @@ namespace Robust.Client.UserInterface
                 RunArrange(control);
             }
 
-            RootControl.DoFrameUpdate(args);
+            foreach (var root in _roots)
+            {
+                root.DoFrameUpdate(args);
+            }
 
             // count down tooltip delay if we're not showing one yet and
             // are hovering the mouse over a control without moving it
@@ -252,9 +294,9 @@ namespace Robust.Client.UserInterface
                 RunMeasure(control.Parent);
             }
 
-            if (control == RootControl)
+            if (control is WindowRoot root)
             {
-                control.Measure(_displayManager.ScreenSize / UIScale);
+                control.Measure(root.Window.RenderTarget.Size / root.UIScale);
             }
             else if (control.PreviousMeasure.HasValue)
             {
@@ -272,9 +314,9 @@ namespace Robust.Client.UserInterface
                 RunArrange(control.Parent);
             }
 
-            if (control == RootControl)
+            if (control is WindowRoot root)
             {
-                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, _displayManager.ScreenSize / UIScale));
+                control.Arrange(UIBox2.FromDimensions(Vector2.Zero, root.Window.RenderTarget.Size / root.UIScale));
             }
             else if (control.PreviousArrange.HasValue)
             {
@@ -282,16 +324,17 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool HandleCanFocusDown(Vector2 pointerPosition)
+        public bool HandleCanFocusDown(ScreenCoordinates pointerPosition)
         {
             var control = MouseGetControl(pointerPosition);
+            var pos = pointerPosition.Position;
 
             // If we have a modal open and the mouse down was outside it, close said modal.
             while (_modalStack.Count != 0)
             {
                 var top = _modalStack[^1];
-                var offset = pointerPosition - top.GlobalPixelPosition;
-                if (!top.HasPoint(offset / UIScale))
+                var offset = pos - top.GlobalPixelPosition;
+                if (!top.HasPoint(offset / top.UIScale))
                 {
                     if (top.MouseFilter != Control.MouseFilterMode.Stop)
                         RemoveModal(top);
@@ -346,7 +389,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
 
             if (control == null)
             {
@@ -354,7 +397,7 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
@@ -367,14 +410,14 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation);
             if (control == null)
             {
                 return;
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.PointerLocation.Position / control.UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
@@ -411,11 +454,12 @@ namespace Robust.Client.UserInterface
             var target = ControlFocused ?? newHovered;
             if (target != null)
             {
-                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
+                var pos = mouseMoveEventArgs.Position.Position;
+                var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / target.UIScale,
                     target,
-                    mouseMoveEventArgs.Position / UIScale, mouseMoveEventArgs.Position,
-                    mouseMoveEventArgs.Position / UIScale - target.GlobalPosition,
-                    mouseMoveEventArgs.Position - target.GlobalPixelPosition);
+                    pos / target.UIScale, mouseMoveEventArgs.Position,
+                    pos / target.UIScale - target.GlobalPosition,
+                    pos - target.GlobalPixelPosition);
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
             }
@@ -428,13 +472,13 @@ namespace Robust.Client.UserInterface
 
             if (cursorTarget == null)
             {
-                _displayManager.SetCursor(_worldCursor);
+                _clyde.SetCursor(_worldCursor);
                 return;
             }
 
             if (cursorTarget.CustomCursorShape != null)
             {
-                _displayManager.SetCursor(cursorTarget.CustomCursorShape);
+                _clyde.SetCursor(cursorTarget.CustomCursorShape);
                 return;
             }
 
@@ -449,7 +493,7 @@ namespace Robust.Client.UserInterface
                 _ => StandardCursorShape.Arrow
             };
 
-            _displayManager.SetCursor(_displayManager.GetStandardCursor(shape));
+            _clyde.SetCursor(_clyde.GetStandardCursor(shape));
         }
 
         public void MouseWheel(MouseWheelEventArgs args)
@@ -462,9 +506,11 @@ namespace Robust.Client.UserInterface
 
             args.Handle();
 
+            var pos = args.Position.Position;
+
             var guiArgs = new GUIMouseWheelEventArgs(args.Delta, control,
-                args.Position / UIScale, args.Position,
-                args.Position / UIScale - control.GlobalPosition, args.Position - control.GlobalPixelPosition);
+                pos / control.UIScale, args.Position,
+                pos / control.UIScale - control.GlobalPosition, pos - control.GlobalPixelPosition);
 
             _doMouseGuiInput(control, guiArgs, (c, ev) => c.MouseWheel(ev), true);
         }
@@ -480,11 +526,6 @@ namespace Robust.Client.UserInterface
             KeyboardFocused.TextEntered(guiArgs);
         }
 
-        public void DisposeAllComponents()
-        {
-            RootControl.DisposeAllChildren();
-        }
-
         public void Popup(string contents, string title = "Alert!")
         {
             var popup = new SS14Window
@@ -496,21 +537,22 @@ namespace Robust.Client.UserInterface
             popup.OpenCentered();
         }
 
-        public Control? MouseGetControl(Vector2 coordinates)
+        public Control? MouseGetControl(ScreenCoordinates coordinates)
         {
-            return _mouseFindControlAtPos(RootControl, coordinates);
+            if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))
+                return null;
+
+            return _mouseFindControlAtPos(root, coordinates.Position);
         }
 
-        public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+        public ScreenCoordinates MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
 
-        public Vector2 ScreenToUIPosition(Vector2 position)
+        public ScreenCoordinates ScreenToUIPosition(ScreenCoordinates coordinates)
         {
-            return position / UIScale;
-        }
+            if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))
+                return default;
 
-        public Vector2 ScreenToUIPosition(ScreenCoordinates coordinates)
-        {
-            return ScreenToUIPosition(coordinates.Position);
+            return new ScreenCoordinates(coordinates.Position / root.UIScale, coordinates.Window);
         }
 
         /// <inheritdoc />
@@ -605,7 +647,25 @@ namespace Robust.Client.UserInterface
 
         public void Render(IRenderHandle renderHandle)
         {
-            _render(renderHandle, RootControl, Vector2i.Zero, Color.White, null);
+            // Render secondary windows LAST.
+            // This makes it so that (hopefully) the GPU will be done rendering secondary windows
+            // by the times we try to blit to them at the end of Clyde's render cycle,
+            // So that the GL driver doesn't have to block on glWaitSync.
+
+            foreach (var root in _roots)
+            {
+                if (root.Window != _clyde.MainWindow)
+                {
+                    renderHandle.RenderInRenderTarget(root.Window.RenderTarget, () => DoRender(root));
+                }
+            }
+
+            DoRender(_windowsToRoot[_clyde.MainWindow.Id]);
+
+            void DoRender(WindowRoot root)
+            {
+                _render(renderHandle, root, Vector2i.Zero, Color.White, null);
+            }
         }
 
         public void QueueStyleUpdate(Control control)
@@ -703,7 +763,7 @@ namespace Robust.Client.UserInterface
             for (var i = control.ChildCount - 1; i >= 0; i--)
             {
                 var child = control.GetChild(i);
-                if (!child.Visible || (child.RectClipContent && !child.PixelRect.Contains((Vector2i) position)))
+                if (!child.Visible || child.RectClipContent && !child.PixelRect.Contains((Vector2i) position))
                 {
                     continue;
                 }
@@ -715,7 +775,7 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / UIScale))
+            if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / control.UIScale))
             {
                 return control;
             }
@@ -835,21 +895,25 @@ namespace Robust.Client.UserInterface
 
         private void _uiScaleChanged(float newValue)
         {
-            UpdateUIScale();
+            foreach (var root in _roots)
+            {
+                UpdateUIScale(root);
+            }
         }
 
-        private void UpdateUIScale()
+        private void WindowContentScaleChanged(WindowContentScaleEventArgs args)
+        {
+            if (_windowsToRoot.TryGetValue(args.Window.Id, out var root))
+                UpdateUIScale(root);
+        }
+
+        private void UpdateUIScale(WindowRoot root)
         {
             var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
-            UIScale = newVal == 0f ? DefaultUIScale : newVal;
+            root.UIScaleSet = newVal == 0f ? root.Window.ContentScale.X : newVal;
 
-            if (RootControl == null)
-            {
-                return;
-            }
-
-            _propagateUIScaleChanged(RootControl);
-            _updateRootSize();
+            _propagateUIScaleChanged(root);
+            root.InvalidateMeasure();
         }
 
         private static void _propagateUIScaleChanged(Control control)
@@ -862,9 +926,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private void _updateRootSize()
+        private void WindowSizeChanged(WindowResizedEventArgs windowResizedEventArgs)
         {
-            RootControl.InvalidateMeasure();
+            if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window.Id, out var root))
+                return;
+
+            root.InvalidateMeasure();
         }
 
         /// <summary>

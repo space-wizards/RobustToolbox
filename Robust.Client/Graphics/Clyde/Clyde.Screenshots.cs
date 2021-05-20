@@ -86,12 +86,12 @@ namespace Robust.Client.Graphics.Clyde
                 _ => throw new ArgumentException("Unsupported pixel type.")
             };
 
-            var size = ClampSubRegion(fbSize, subRegion);
+            var size = ClydeBase.ClampSubRegion(fbSize, subRegion);
 
             var bufferLength = size.X * size.Y;
             if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
             {
-                Logger.DebugS("clyde.ogl",
+                _sawmillOgl.Debug("clyde.ogl",
                     "Necessary features for async screenshots not available, falling back to blocking path.");
 
                 // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,

@@ -21,7 +21,8 @@
 
         public override void CallAfterDeserializationHook()
         {
-            if (RawValue is ISerializationHooks hooks) hooks.AfterDeserialization();
+            if (RawValue is ISerializationHooks hooks)
+                hooks.AfterDeserialization();
         }
     }
 
@@ -48,7 +49,8 @@
 
         public override void CallAfterDeserializationHook()
         {
-            if (Value is ISerializationHooks hooks) hooks.AfterDeserialization();
+            if (Value is ISerializationHooks hooks)
+                hooks.AfterDeserialization();
         }
     }
 }

@@ -8,10 +8,11 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
+    [ComponentReference(typeof(OccluderComponent))]
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        
+
         [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }

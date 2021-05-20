@@ -46,10 +46,11 @@ namespace Robust.Client
             IoCManager.Register<IMapManagerInternal, ClientMapManager>();
             IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IEntityLookup, SharedEntityLookup>();
+            IoCManager.Register<IEntityLookup, EntityLookup>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
+            IoCManager.Register<GameController, GameController>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IGameControllerInternal, GameController>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();

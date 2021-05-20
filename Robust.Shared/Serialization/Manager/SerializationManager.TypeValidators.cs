@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,8 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
+        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeValidators = new();
+
         private bool TryValidateWithTypeValidator(
             Type type,
             DataNode node,
@@ -18,7 +21,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context,
             [NotNullWhen(true)] out ValidationNode? valid)
         {
-            //TODO Paul: do this shit w/ delegates
+            // TODO Serialization: do this shit w/ delegates
             var method = typeof(SerializationManager).GetRuntimeMethods().First(m =>
                 m.Name == nameof(TryValidateWithTypeValidator) && m.GetParameters().Length == 4).MakeGenericMethod(type, node.GetType());
 

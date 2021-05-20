@@ -1,4 +1,7 @@
 using System;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown
@@ -26,7 +29,7 @@ namespace Robust.Shared.Serialization.Markdown
             return node switch
             {
                 ValueDataNode valueDataNode => new YamlScalarNode(valueDataNode.Value){Tag = valueDataNode.Tag},
-                MappingDataNode mappingDataNode => mappingDataNode.ToMappingNode(),
+                MappingDataNode mappingDataNode => mappingDataNode.ToYaml(),
                 SequenceDataNode sequenceNode => sequenceNode.ToSequenceNode(),
                 _ => throw new ArgumentOutOfRangeException(nameof(node))
             };

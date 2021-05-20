@@ -53,7 +53,7 @@ namespace Robust.Client.Graphics.Clyde
 
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
-            ConfigurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
+            _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
         }
 
         private void _audioCreateContext()
@@ -81,7 +81,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _audioOpenDevice()
         {
-            var preferredDevice = ConfigurationManager.GetCVar(CVars.AudioDevice);
+            var preferredDevice = _cfg.GetCVar(CVars.AudioDevice);
 
             // Open device.
             if (!string.IsNullOrEmpty(preferredDevice))
@@ -770,7 +770,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (SourceHandle == null) return;
 
-                if (!disposing || Thread.CurrentThread != _master._mainThread)
+                if (!disposing || Thread.CurrentThread != _master._gameThread)
                 {
                     // We can't run this code inside another thread so tell Clyde to clear it up later.
                     _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);

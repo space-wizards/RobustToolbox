@@ -30,12 +30,19 @@ namespace Robust.Shared.Map
         public float Y => Position.Y;
 
         /// <summary>
+        ///     The window which the coordinates are on.
+        /// </summary>
+        public readonly WindowId Window;
+
+        /// <summary>
         ///     Constructs a new instance of <c>ScreenCoordinates</c>.
         /// </summary>
         /// <param name="position">Position on the rendering screen.</param>
-        public ScreenCoordinates(Vector2 position)
+        /// <param name="window">Window for the coordinates.</param>
+        public ScreenCoordinates(Vector2 position, WindowId window)
         {
             Position = position;
+            Window = window;
         }
 
         /// <summary>
@@ -43,21 +50,25 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="x">X axis of a position on the screen.</param>
         /// <param name="y">Y axis of a position on the screen.</param>
-        public ScreenCoordinates(float x, float y)
+        /// <param name="window">Window for the coordinates.</param>
+        public ScreenCoordinates(float x, float y, WindowId window)
         {
             Position = new Vector2(x, y);
+            Window = window;
         }
+
+        public bool IsValid => Window != WindowId.Invalid;
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return Position.ToString();
+            return $"({Position.X}, {Position.Y}, W{Window.Value})";
         }
 
         /// <inheritdoc />
         public bool Equals(ScreenCoordinates other)
         {
-            return Position.Equals(other.Position);
+            return Position.Equals(other.Position) && Window == other.Window;
         }
 
         /// <inheritdoc />
@@ -71,7 +82,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return Position.GetHashCode();
+            return HashCode.Combine(Position, Window);
         }
 
         /// <summary>
@@ -88,6 +99,12 @@ namespace Robust.Shared.Map
         public static bool operator !=(ScreenCoordinates a, ScreenCoordinates b)
         {
             return !a.Equals(b);
+        }
+
+        public void Deconstruct(out Vector2 pos, out WindowId window)
+        {
+            pos = Position;
+            window = Window;
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.IoC;
@@ -11,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        public delegate bool ReadDelegate(
+        private delegate bool ReadDelegate(
             Type type,
             DataNode node,
             IDependencyCollection dependencies,
@@ -19,9 +20,10 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null);
 
+        private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
         private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ReadDelegate>> _readDelegates = new();
 
-        private ReadDelegate GetOrCreateDelegate(Type type, Type nodeType)
+        private ReadDelegate GetOrCreateReadDelegate(Type type, Type nodeType)
         {
             return _readDelegates
                 .GetOrAdd(type, _ => new ConcurrentDictionary<Type, ReadDelegate>())
@@ -105,7 +107,7 @@ namespace Robust.Shared.Serialization.Manager
             bool skipHook,
             ISerializationContext? context = null)
         {
-            return GetOrCreateDelegate(type, node.GetType())(type, node, dependencies, out obj, skipHook, context);
+            return GetOrCreateReadDelegate(type, node.GetType())(type, node, dependencies, out obj, skipHook, context);
         }
 
         private bool TryGetGenericReader<T, TNode>(
@@ -147,6 +149,5 @@ namespace Robust.Shared.Serialization.Manager
             reader = null;
             return false;
         }
-
     }
 }

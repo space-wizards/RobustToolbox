@@ -1,6 +1,10 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Attributes;
+using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Read
@@ -12,7 +16,7 @@ namespace Robust.Benchmarks.Serialization.Read
             InitializeSerialization();
 
             StringDataDefNode = new MappingDataNode();
-            StringDataDefNode.AddNode(new ValueDataNode("string"), new ValueDataNode("ABC"));
+            StringDataDefNode.Add(new ValueDataNode("string"), new ValueDataNode("ABC"));
 
             var yamlStream = new YamlStream();
             yamlStream.Load(new StringReader(SeedDataDefinition.Prototype));

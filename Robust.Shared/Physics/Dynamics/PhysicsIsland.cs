@@ -220,11 +220,25 @@ stored in a single array since multiple arrays lead to multiple misses.
             _velocityIterations = _configManager.GetCVar(CVars.VelocityIterations);
             _configManager.OnValueChanged(CVars.VelocityIterations, value => _velocityIterations = value);
 
-            _maxLinearVelocity = _configManager.GetCVar(CVars.MaxLinVelocity);
-            _configManager.OnValueChanged(CVars.MaxLinVelocity, value => _maxLinearVelocity = value);
+            _configManager.OnValueChanged(CVars.MaxLinVelocity, value => SetMaxLinearVelocity(value, null));
+            _configManager.OnValueChanged(CVars.NetTickrate, value => SetMaxLinearVelocity(null, value));
+            void SetMaxLinearVelocity(float? maxLinVelocity = null, int? tickrate = null)
+            {
+                maxLinVelocity ??= _configManager.GetCVar(CVars.MaxLinVelocity);
+                tickrate ??= _configManager.GetCVar(CVars.NetTickrate);
+                _maxLinearVelocity = (float)(maxLinVelocity / tickrate);
+            }
+            SetMaxLinearVelocity();
 
-            _maxAngularVelocity = _configManager.GetCVar(CVars.MaxAngVelocity);
-            _configManager.OnValueChanged(CVars.MaxAngVelocity, value => _maxAngularVelocity = value);
+            _configManager.OnValueChanged(CVars.MaxAngVelocity, value => SetMaxAngularVelocity(value, null));
+            _configManager.OnValueChanged(CVars.NetTickrate, value => SetMaxAngularVelocity(null, value));
+            void SetMaxAngularVelocity(float? maxAngVelocity = null, int? tickrate = null)
+            {
+                maxAngVelocity ??= _configManager.GetCVar(CVars.MaxAngVelocity);
+                tickrate ??= _configManager.GetCVar(CVars.NetTickrate);
+                _maxAngularVelocity = (float)((MathF.PI * 2 * maxAngVelocity) / tickrate);
+            }
+            SetMaxAngularVelocity();
 
             _positionIterations = _configManager.GetCVar(CVars.PositionIterations);
             _configManager.OnValueChanged(CVars.PositionIterations, value => _positionIterations = value);

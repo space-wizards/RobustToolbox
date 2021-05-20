@@ -481,11 +481,11 @@ namespace Robust.Client.Placement
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
             {
-                coordinates = new ScreenCoordinates(Vector2.Zero);
+                coordinates = default;
                 return false;
             }
 
-            coordinates = new ScreenCoordinates(_inputManager.MouseScreenPosition);
+            coordinates = _inputManager.MouseScreenPosition;
             return true;
         }
 
@@ -506,7 +506,7 @@ namespace Robust.Client.Placement
                     return false;
                 }
                 coordinates = EntityCoordinates.FromMap(ent.EntityManager, MapManager,
-                    eyeManager.ScreenToMap(new ScreenCoordinates(_inputManager.MouseScreenPosition)));
+                    eyeManager.ScreenToMap(_inputManager.MouseScreenPosition));
                 return true;
             }
         }

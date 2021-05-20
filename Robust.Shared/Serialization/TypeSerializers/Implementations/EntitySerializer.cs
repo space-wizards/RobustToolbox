@@ -5,6 +5,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
@@ -25,8 +26,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             var entity = dependencies.Resolve<IEntityManager>().GetEntity(uid);
-
-            // TODO Paul what type to return here
             return new DeserializedValue<IEntity>(entity);
         }
 
@@ -34,7 +33,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            // TODO Paul should we be checking entity exists here
             return EntityUid.TryParse(node.Value, out var uid) &&
                    uid.IsValid() &&
                    dependencies.Resolve<IEntityManager>().EntityExists(uid)

@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
 
             // EventType -> CompType -> Handler
-            private Dictionary<Type, Dictionary<Type, DirectedEventHandler>> _subscriptions;
+            private Dictionary<Type, Dictionary<Type, HashSet<DirectedEventHandler>>> _subscriptions;
 
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
@@ -153,17 +153,17 @@ namespace Robust.Shared.GameObjects
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {
-                    compSubs = new Dictionary<Type, DirectedEventHandler>();
+                    compSubs = new Dictionary<Type, HashSet<DirectedEventHandler>>();
                     _subscriptions.Add(compType, compSubs);
 
-                    compSubs.Add(eventType, handler);
+                    compSubs.Add(eventType, new HashSet<DirectedEventHandler>(){ handler });
                 }
                 else
                 {
-                    if (compSubs.ContainsKey(eventType))
-                        throw new InvalidOperationException($"Duplicate Subscriptions for comp={compType.Name}, event={eventType.Name}");
-
-                    compSubs.Add(eventType, handler);
+                    if (compSubs.TryGetValue(eventType, out var set))
+                        set.Add(handler);
+                    else
+                        compSubs.Add(eventType, new HashSet<DirectedEventHandler> {handler});
                 }
             }
 
@@ -194,18 +194,21 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                if (!_subscriptions.TryGetValue(compType, out var compSubs))
-                    return;
-
-                foreach (var kvSub in compSubs)
+                foreach (var type in GetReferencesAndType(compType))
                 {
-                    if(!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
-                    {
-                        subscribedComps = new HashSet<Type>();
-                        eventTable.Add(kvSub.Key, subscribedComps);
-                    }
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        continue;
 
-                    subscribedComps.Add(compType);
+                    foreach (var kvSub in compSubs)
+                    {
+                        if(!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                        {
+                            subscribedComps = new HashSet<Type>();
+                            eventTable.Add(kvSub.Key, subscribedComps);
+                        }
+
+                        subscribedComps.Add(type);
+                    }
                 }
             }
 
@@ -213,15 +216,18 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                if (!_subscriptions.TryGetValue(compType, out var compSubs))
-                    return;
-
-                foreach (var kvSub in compSubs)
+                foreach (var type in GetReferencesAndType(compType))
                 {
-                    if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
-                        return;
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        continue;
 
-                    subscribedComps.Remove(compType);
+                    foreach (var kvSub in compSubs)
+                    {
+                        if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                            return;
+
+                        subscribedComps.Remove(type);
+                    }
                 }
             }
 
@@ -237,23 +243,37 @@ namespace Robust.Shared.GameObjects
                     if(!_subscriptions.TryGetValue(compType, out var compSubs))
                         return;
 
-                    if(!compSubs.TryGetValue(eventType, out var handler))
+                    if(!compSubs.TryGetValue(eventType, out var handlers))
                         return;
 
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
-                    handler(euid, component, args);
+                    foreach (var handler in handlers)
+                    {
+                        handler(euid, component, args);
+                    }
                 }
             }
 
             public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
             {
-                if (!_subscriptions.TryGetValue(component.GetType(), out var compSubs))
-                    return;
+                void DispatchType(Type type)
+                {
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        return;
 
-                if (!compSubs.TryGetValue(eventType, out var handler))
-                    return;
+                    if (!compSubs.TryGetValue(eventType, out var handlers))
+                        return;
 
-                handler(euid, component, args);
+                    foreach (var handler in handlers)
+                    {
+                        handler(euid, component, args);
+                    }
+                }
+
+                foreach (var type in GetReferencesAndType(component.GetType()))
+                {
+                    DispatchType(type);
+                }
             }
 
             public void ClearEntities()
@@ -280,6 +300,16 @@ namespace Robust.Shared.GameObjects
                 _entMan = null!;
                 _eventTables = null!;
                 _subscriptions = null!;
+            }
+
+            private IEnumerable<Type> GetReferencesAndType(Type type)
+            {
+                var registration = _entMan.ComponentManager.ComponentFactory.GetRegistration(type);
+
+                foreach (var reference in registration.References)
+                {
+                    yield return reference;
+                }
             }
         }
 

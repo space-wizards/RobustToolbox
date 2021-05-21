@@ -99,6 +99,7 @@ namespace Robust.Shared.GameObjects
         private class EventTables : IDisposable
         {
             private IEntityManager _entMan;
+            private IComponentFactory _comFac;
 
             // eUid -> EventType -> { CompType1, ... CompTypeN }
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
@@ -112,6 +113,7 @@ namespace Robust.Shared.GameObjects
             public EventTables(IEntityManager entMan)
             {
                 _entMan = entMan;
+                _comFac = entMan.ComponentManager.ComponentFactory;
 
                 _entMan.EntityAdded += OnEntityAdded;
                 _entMan.EntityDeleted += OnEntityDeleted;
@@ -266,7 +268,6 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-
             public void ClearEntities()
             {
                 _eventTables = new();
@@ -295,7 +296,7 @@ namespace Robust.Shared.GameObjects
 
             private IEnumerable<Type> GetReferences(Type type)
             {
-                return _entMan.ComponentManager.ComponentFactory.GetRegistration(type).References;
+                return _comFac.GetRegistration(type).References;
             }
         }
 

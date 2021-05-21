@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
 
             // EventType -> CompType -> Handler
-            private Dictionary<Type, Dictionary<Type, HashSet<DirectedEventHandler>>> _subscriptions;
+            private Dictionary<Type, Dictionary<Type, DirectedEventHandler>> _subscriptions;
 
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
@@ -153,17 +153,17 @@ namespace Robust.Shared.GameObjects
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {
-                    compSubs = new Dictionary<Type, HashSet<DirectedEventHandler>>();
+                    compSubs = new Dictionary<Type, DirectedEventHandler>();
                     _subscriptions.Add(compType, compSubs);
 
-                    compSubs.Add(eventType, new HashSet<DirectedEventHandler>(){ handler });
+                    compSubs.Add(eventType, handler);
                 }
                 else
                 {
-                    if (compSubs.TryGetValue(eventType, out var set))
-                        set.Add(handler);
-                    else
-                        compSubs.Add(eventType, new HashSet<DirectedEventHandler> {handler});
+                    if (compSubs.ContainsKey(eventType))
+                        throw new InvalidOperationException($"Duplicate Subscriptions for comp={compType.Name}, event={eventType.Name}");
+
+                    compSubs.Add(eventType, handler);
                 }
             }
 
@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                foreach (var type in GetReferencesAndType(compType))
+                foreach (var type in GetReferences(compType))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                foreach (var type in GetReferencesAndType(compType))
+                foreach (var type in GetReferences(compType))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
@@ -243,38 +243,29 @@ namespace Robust.Shared.GameObjects
                     if(!_subscriptions.TryGetValue(compType, out var compSubs))
                         return;
 
-                    if(!compSubs.TryGetValue(eventType, out var handlers))
+                    if(!compSubs.TryGetValue(eventType, out var handler))
                         return;
 
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
-                    foreach (var handler in handlers)
-                    {
-                        handler(euid, component, args);
-                    }
+
+                    handler(euid, component, args);
                 }
             }
 
             public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
             {
-                void DispatchType(Type type)
+                foreach (var type in GetReferences(component.GetType()))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         return;
 
-                    if (!compSubs.TryGetValue(eventType, out var handlers))
+                    if (!compSubs.TryGetValue(eventType, out var handler))
                         return;
 
-                    foreach (var handler in handlers)
-                    {
-                        handler(euid, component, args);
-                    }
-                }
-
-                foreach (var type in GetReferencesAndType(component.GetType()))
-                {
-                    DispatchType(type);
+                    handler(euid, component, args);
                 }
             }
+
 
             public void ClearEntities()
             {
@@ -302,14 +293,9 @@ namespace Robust.Shared.GameObjects
                 _subscriptions = null!;
             }
 
-            private IEnumerable<Type> GetReferencesAndType(Type type)
+            private IEnumerable<Type> GetReferences(Type type)
             {
-                var registration = _entMan.ComponentManager.ComponentFactory.GetRegistration(type);
-
-                foreach (var reference in registration.References)
-                {
-                    yield return reference;
-                }
+                return _entMan.ComponentManager.ComponentFactory.GetRegistration(type).References;
             }
         }
 

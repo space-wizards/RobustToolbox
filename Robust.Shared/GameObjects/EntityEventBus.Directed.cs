@@ -259,10 +259,10 @@ namespace Robust.Shared.GameObjects
                 foreach (var type in GetReferences(component.GetType()))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
-                        return;
+                        continue;
 
                     if (!compSubs.TryGetValue(eventType, out var handler))
-                        return;
+                        continue;
 
                     handler(euid, component, args);
                 }

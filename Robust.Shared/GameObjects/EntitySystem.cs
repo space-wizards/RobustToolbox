@@ -53,10 +53,11 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
-        protected void RaiseLocalEvent<T>(T message, out T outMessage) where T : notnull
+        protected bool RaiseLocalEvent<T>(T message, out T outMessage) where T : notnull
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
             outMessage = message;
+            return true;
         }
 
         protected void RaiseLocalEvent(object message)
@@ -64,10 +65,11 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
-        protected void RaiseLocalEvent(object message, out object outMessage)
+        protected bool RaiseLocalEvent(object message, out object outMessage)
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
             outMessage = message;
+            return true;
         }
 
         protected void QueueLocalEvent(EntityEventArgs message)
@@ -105,11 +107,12 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, out TEvent outArgs, bool broadcast = true)
+        protected bool RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, out TEvent outArgs, bool broadcast = true)
             where TEvent : EntityEventArgs
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
             outArgs = args;
+            return true;
         }
 
         #endregion

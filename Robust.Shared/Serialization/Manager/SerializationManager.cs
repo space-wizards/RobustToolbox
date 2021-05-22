@@ -359,7 +359,7 @@ namespace Robust.Shared.Serialization.Manager
             if (node is not MappingDataNode mappingDataNode)
             {
                 if (node is not ValueDataNode emptyValueDataNode || emptyValueDataNode.Value != string.Empty)
-                    throw new ArgumentException($"No mapping node provided for type {type}");
+                    throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
 
                 // If we get an empty ValueDataNode we just use an empty mapping
                 mappingDataNode = new MappingDataNode();

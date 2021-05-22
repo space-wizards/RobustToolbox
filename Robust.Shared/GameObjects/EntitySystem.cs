@@ -48,28 +48,16 @@ namespace Robust.Shared.GameObjects
 
         #region Event Proxy
 
-        protected void RaiseLocalEvent<T>(T message) where T : notnull
+        protected T RaiseLocalEvent<T>(T message) where T : notnull
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+            return message;
         }
 
-        protected bool RaiseLocalEvent<T>(T message, out T outMessage) where T : notnull
+        protected object RaiseLocalEvent(object message)
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
-            outMessage = message;
-            return true;
-        }
-
-        protected void RaiseLocalEvent(object message)
-        {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
-        }
-
-        protected bool RaiseLocalEvent(object message, out object outMessage)
-        {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
-            outMessage = message;
-            return true;
+            return message;
         }
 
         protected void QueueLocalEvent(EntityEventArgs message)
@@ -101,18 +89,11 @@ namespace Robust.Shared.GameObjects
             return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
         }
 
-        protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
+        protected TEvent RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent : EntityEventArgs
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
-        }
-
-        protected bool RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, out TEvent outArgs, bool broadcast = true)
-            where TEvent : EntityEventArgs
-        {
-            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
-            outArgs = args;
-            return true;
+            return args;
         }
 
         #endregion

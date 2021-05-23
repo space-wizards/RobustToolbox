@@ -7,14 +7,9 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Core)]
     public class MsgPlayerList : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Core;
-        public static readonly string NAME = nameof(MsgPlayerList);
-        public MsgPlayerList(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
-
         public byte PlyCount { get; set; }
         public List<PlayerState> Plyrs { get; set; }
 

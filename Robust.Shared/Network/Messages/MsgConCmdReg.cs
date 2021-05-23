@@ -5,14 +5,9 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.String)]
     public class MsgConCmdReg : NetMessage
     {
-        #region REQUIRED
-        public const MsgGroups GROUP = MsgGroups.String;
-        public static readonly string NAME = nameof(MsgConCmdReg);
-        public MsgConCmdReg(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
-
         public Command[] Commands { get; set; }
 
         public class Command

@@ -3,19 +3,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     public class MsgReloadPrototypes : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgReloadPrototypes);
-
-        public MsgReloadPrototypes(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
-
         public ResourcePath[] Paths = default!;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

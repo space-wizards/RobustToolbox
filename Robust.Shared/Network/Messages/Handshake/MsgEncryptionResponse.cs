@@ -5,6 +5,7 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages.Handshake
 {
+    [NetMessage(MsgGroups.Core, "")]
     internal sealed class MsgEncryptionResponse : NetMessage
     {
         public MsgEncryptionResponse() : base("", MsgGroups.Core)

@@ -4,14 +4,9 @@
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     public class MsgConCmd : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Command;
-        public static readonly string NAME = nameof(MsgConCmd);
-        public MsgConCmd(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
-
         public string Text { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

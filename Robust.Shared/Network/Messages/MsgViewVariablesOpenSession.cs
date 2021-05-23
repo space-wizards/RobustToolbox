@@ -7,16 +7,9 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to notify that a session was accepted and its new ID.
     /// </summary>
+    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesOpenSession : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesOpenSession);
-        public MsgViewVariablesOpenSession(INetChannel channel) : base(NAME, GROUP) { }
-
-        #endregion
-
         /// <summary>
         ///     The request ID to identify WHICH request has been granted.
         ///     Equal to <see cref="MsgViewVariablesReqSession.RequestId"/> on the message that requested this session.

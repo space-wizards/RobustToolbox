@@ -13,7 +13,6 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using DenyReason = Robust.Shared.Network.Messages.MsgViewVariablesDenySession.DenyReason;
 
 namespace Robust.Server.ViewVariables
 {
@@ -34,16 +33,13 @@ namespace Robust.Server.ViewVariables
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(MsgViewVariablesReqSession.NAME,
-                _msgReqSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME, _msgReqData);
-            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(MsgViewVariablesModifyRemote.NAME,
-                _msgModifyRemote);
-            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(MsgViewVariablesCloseSession.NAME,
-                _msgCloseSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(MsgViewVariablesDenySession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME);
+            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(_msgReqSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(_msgReqData);
+            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(_msgModifyRemote);
+            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_msgCloseSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>();
         }
 
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
@@ -103,7 +99,7 @@ namespace Robust.Server.ViewVariables
 
         private void _msgReqSession(MsgViewVariablesReqSession message)
         {
-            void Deny(DenyReason reason)
+            void Deny(MsgViewVariablesDenySession.DenyReason reason)
             {
                 var denyMsg = _netManager.CreateNetMessage<MsgViewVariablesDenySession>();
                 denyMsg.RequestId = message.RequestId;
@@ -114,7 +110,7 @@ namespace Robust.Server.ViewVariables
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
             if (!_groupController.CanViewVar(player))
             {
-                Deny(DenyReason.NoAccess);
+                Deny(MsgViewVariablesDenySession.DenyReason.NoAccess);
                 return;
             }
 
@@ -127,7 +123,7 @@ namespace Robust.Server.ViewVariables
                     if (compType == null ||
                         !_componentManager.TryGetComponent(componentSelector.Entity, compType, out var component))
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
 
@@ -137,7 +133,7 @@ namespace Robust.Server.ViewVariables
                 {
                     if (!_entityManager.TryGetEntity(entitySelector.Entity, out var entity))
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
 
@@ -149,7 +145,7 @@ namespace Robust.Server.ViewVariables
                         || relSession.PlayerUser != message.MsgChannel.UserId)
                     {
                         // TODO: logging?
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
 
@@ -158,25 +154,25 @@ namespace Robust.Server.ViewVariables
                     {
                         if (!relSession.TryGetRelativeObject(sessionRelativeSelector.PropertyIndex, out value))
                         {
-                            Deny(DenyReason.InvalidRequest);
+                            Deny(MsgViewVariablesDenySession.DenyReason.InvalidRequest);
                             return;
                         }
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
                     catch (Exception e)
                     {
                         Logger.ErrorS("vv", "Exception while retrieving value for session. {0}", e);
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
 
                     if (value == null || value.GetType().IsValueType)
                     {
-                        Deny(DenyReason.NoObject);
+                        Deny(MsgViewVariablesDenySession.DenyReason.NoObject);
                         return;
                     }
 
@@ -187,7 +183,7 @@ namespace Robust.Server.ViewVariables
                     var reflectionManager = IoCManager.Resolve<IReflectionManager>();
                     if (!reflectionManager.TryLooseGetType(ioCSelector.TypeName, out var type))
                     {
-                        Deny(DenyReason.InvalidRequest);
+                        Deny(MsgViewVariablesDenySession.DenyReason.InvalidRequest);
                         return;
                     }
 
@@ -195,7 +191,7 @@ namespace Robust.Server.ViewVariables
                     break;
 
                 default:
-                    Deny(DenyReason.InvalidRequest);
+                    Deny(MsgViewVariablesDenySession.DenyReason.InvalidRequest);
                     return;
             }
 

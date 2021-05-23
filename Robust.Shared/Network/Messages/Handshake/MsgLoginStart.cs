@@ -5,6 +5,7 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages.Handshake
 {
+    [NetMessage(MsgGroups.Core, "")]
     internal sealed class MsgLoginStart : NetMessage
     {
         // **NOTE**: This is a special message sent during the client<->server handshake.

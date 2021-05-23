@@ -8,19 +8,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     public class MsgScriptResponse : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgScriptResponse);
-
-        public MsgScriptResponse(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
-
         public int ScriptSession { get; set; }
         public bool WasComplete { get; set; }
 

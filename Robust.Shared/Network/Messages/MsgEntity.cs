@@ -1,10 +1,10 @@
 ﻿using System;
-using Lidgren.Network;
-using Robust.Shared.GameObjects;
-using System.IO;
-using Robust.Shared.IoC;
 using System.Collections.Generic;
+using System.IO;
+using Lidgren.Network;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
@@ -12,14 +12,9 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.EntityEvent)]
     public class MsgEntity : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.EntityEvent;
-        public static readonly string NAME = nameof(MsgEntity);
-        public MsgEntity(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
-
         public EntityMessageType Type { get; set; }
 
         public EntityEventArgs SystemMessage { get; set; }

@@ -16,7 +16,6 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
 
 namespace Robust.Client.ViewVariables
 {
@@ -43,17 +42,13 @@ namespace Robust.Client.ViewVariables
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME,
-                _netMessageOpenSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME,
-                _netMessageRemoteData);
-            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(MsgViewVariablesCloseSession.NAME,
-                _netMessageCloseSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(MsgViewVariablesDenySession.NAME,
-                _netMessageDenySession);
-            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(MsgViewVariablesModifyRemote.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(MsgViewVariablesReqSession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
+            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
+            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(_netMessageDenySession);
+            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
         }
 
         public VVPropEditor PropertyFor(Type? type)
@@ -66,57 +61,57 @@ namespace Robust.Client.ViewVariables
 
             if (type == typeof(sbyte))
             {
-                return new VVPropEditorNumeric(NumberType.SByte);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.SByte);
             }
 
             if (type == typeof(byte))
             {
-                return new VVPropEditorNumeric(NumberType.Byte);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Byte);
             }
 
             if (type == typeof(ushort))
             {
-                return new VVPropEditorNumeric(NumberType.UShort);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.UShort);
             }
 
             if (type == typeof(short))
             {
-                return new VVPropEditorNumeric(NumberType.Short);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Short);
             }
 
             if (type == typeof(uint))
             {
-                return new VVPropEditorNumeric(NumberType.UInt);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.UInt);
             }
 
             if (type == typeof(int))
             {
-                return new VVPropEditorNumeric(NumberType.Int);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Int);
             }
 
             if (type == typeof(ulong))
             {
-                return new VVPropEditorNumeric(NumberType.ULong);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.ULong);
             }
 
             if (type == typeof(long))
             {
-                return new VVPropEditorNumeric(NumberType.Long);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Long);
             }
 
             if (type == typeof(float))
             {
-                return new VVPropEditorNumeric(NumberType.Float);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Float);
             }
 
             if (type == typeof(double))
             {
-                return new VVPropEditorNumeric(NumberType.Double);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Double);
             }
 
             if (type == typeof(decimal))
             {
-                return new VVPropEditorNumeric(NumberType.Decimal);
+                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Decimal);
             }
 
             if (type == typeof(string))

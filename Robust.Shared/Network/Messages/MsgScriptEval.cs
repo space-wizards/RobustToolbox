@@ -4,19 +4,9 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     public class MsgScriptEval : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgScriptEval);
-
-        public MsgScriptEval(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
-
         public int ScriptSession { get; set; }
         public string Code { get; set; }
 

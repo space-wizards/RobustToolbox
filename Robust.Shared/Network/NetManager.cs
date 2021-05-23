@@ -867,12 +867,9 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            var constructor = packetType.GetConstructor(Type.EmptyTypes)!;
             var nameField = packetType.GetBackingField(nameof(NetMessage.MsgName))!;
             var groupField = packetType.GetBackingField(nameof(NetMessage.MsgGroup))!;
             var channelField = packetType.GetBackingField(nameof(NetMessage.MsgChannel))!;
-
-            DebugTools.AssertNotNull(constructor);
 
             var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[] {typeof(INetChannel)},
                 packetType, false);
@@ -883,13 +880,16 @@ namespace Robust.Shared.Network
 
             if (packetType.TryGetCustomAttribute(out NetMessageAttribute? netMsgAttr))
             {
+                var constructor = packetType.GetConstructor(Type.EmptyTypes)!;
+                DebugTools.AssertNotNull(constructor);
+
                 gen.DeclareLocal(typeof(NetMessage));
 
                 gen.Emit(OpCodes.Newobj, constructor);
                 gen.Emit(OpCodes.Stloc_0);
 
                 gen.Emit(OpCodes.Ldloc_0);
-                gen.Emit(OpCodes.Ldstr, netMsgAttr.Name);
+                gen.Emit(OpCodes.Ldstr, netMsgAttr.Name ?? packetType.Name);
                 gen.Emit(OpCodes.Stfld, nameField);
 
                 gen.Emit(OpCodes.Ldloc_0);
@@ -900,10 +900,14 @@ namespace Robust.Shared.Network
                 gen.Emit(OpCodes.Ldarg_0);
                 gen.Emit(OpCodes.Stfld, channelField);
 
+                gen.Emit(OpCodes.Ldloc_0);
                 gen.Emit(OpCodes.Ret);
             }
             else
             {
+                var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)})!;
+                DebugTools.AssertNotNull(constructor);
+
                 gen.Emit(OpCodes.Ldarg_0);
                 gen.Emit(OpCodes.Newobj, constructor);
                 gen.Emit(OpCodes.Ret);
@@ -946,6 +950,14 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
+        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
+            where T : NetMessage
+        {
+            RegisterNetMessage(typeof(T).Name, rxCallback, accept);
+        }
+
+        /// <inheritdoc />
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
@@ -954,16 +966,48 @@ namespace Robust.Shared.Network
 
         private void CacheBlankFunction(Type type)
         {
-            var constructor = type.GetConstructor(new[] {typeof(INetChannel)})!;
-
-            DebugTools.AssertNotNull(constructor);
-
             var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
                 type, false);
-            var gen = dynamicMethod.GetILGenerator();
-            gen.Emit(OpCodes.Ldnull);
-            gen.Emit(OpCodes.Newobj, constructor);
-            gen.Emit(OpCodes.Ret);
+            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
+
+            if (type.TryGetCustomAttribute(out NetMessageAttribute? netMsgAttr))
+            {
+                var constructor = type.GetConstructor(Type.EmptyTypes)!;
+                DebugTools.AssertNotNull(constructor);
+
+                var nameField = type.GetBackingField(nameof(NetMessage.MsgName))!;
+                var groupField = type.GetBackingField(nameof(NetMessage.MsgGroup))!;
+                var channelField = type.GetBackingField(nameof(NetMessage.MsgChannel))!;
+
+                gen.DeclareLocal(typeof(NetMessage));
+
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Stloc_0);
+
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldstr, netMsgAttr.Name ?? type.Name);
+                gen.Emit(OpCodes.Stfld, nameField);
+
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldc_I4, (int) netMsgAttr.Group);
+                gen.Emit(OpCodes.Stfld, groupField);
+
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldnull);
+                gen.Emit(OpCodes.Stfld, channelField);
+
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                var constructor = type.GetConstructor(new[] {typeof(INetChannel)})!;
+                DebugTools.AssertNotNull(constructor);
+
+                gen.Emit(OpCodes.Ldnull);
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
 
             var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
 

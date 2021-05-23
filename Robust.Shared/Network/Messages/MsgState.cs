@@ -1,8 +1,8 @@
 ﻿using System;
+using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using System.IO;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -10,23 +10,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Entity)]
     public class MsgState : NetMessage
     {
         // If a state is large enough we send it ReliableUnordered instead.
         // This is to avoid states being so large that they consistently fail to reach the other end
         // (due to being in many parts).
         public const int ReliableThreshold = 1300;
-
-        #region REQUIRED
-
-        public static readonly MsgGroups GROUP = MsgGroups.Entity;
-        public static readonly string NAME = nameof(MsgState);
-
-        public MsgState(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
 
         public GameState State;
 

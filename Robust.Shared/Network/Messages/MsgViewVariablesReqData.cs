@@ -11,19 +11,9 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent client to server to request data from the server.
     /// </summary>
+    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesReqData : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesReqData);
-
-        public MsgViewVariablesReqData(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
-
         /// <summary>
         ///     The request ID that will be sent in <see cref="MsgViewVariablesRemoteData"/> to
         ///     identify this request among multiple potentially concurrent ones.

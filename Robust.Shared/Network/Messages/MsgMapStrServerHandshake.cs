@@ -5,7 +5,6 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Network.Messages
 {
-
     /// <summary>
     /// The server part of the string-exchange handshake. Sent as the
     /// first message in the handshake. Tells the client the hash of
@@ -14,14 +13,9 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
+    [NetMessage(MsgGroups.Core)]
     internal class MsgMapStrServerHandshake : NetMessage
     {
-
-        public MsgMapStrServerHandshake(INetChannel ch)
-            : base(nameof(MsgMapStrServerHandshake), MsgGroups.Core)
-        {
-        }
-
         /// <value>
         /// The hash of the current string mapping held by the server.
         /// </value>
@@ -48,7 +42,5 @@ namespace Robust.Shared.Network.Messages
             buffer.WriteVariableInt32(Hash.Length);
             buffer.Write(Hash);
         }
-
     }
-
 }

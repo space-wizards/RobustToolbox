@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Network
@@ -8,13 +7,13 @@ namespace Robust.Shared.Network
     [BaseTypeRequired(typeof(NetMessage))]
     public class NetMessageAttribute : Attribute
     {
-        public NetMessageAttribute(MsgGroups group, [CallerMemberName] string name = "")
+        public NetMessageAttribute(MsgGroups group, string? name = null)
         {
             Group = group;
             Name = name;
         }
 
-        public string Name { get; }
+        public string? Name { get; }
 
         public MsgGroups Group { get; }
     }

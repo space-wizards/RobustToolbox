@@ -61,8 +61,7 @@ namespace Robust.Shared.Network
 
             _callback = callback;
             _updateCallback = updateCallback;
-            _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, ReceiveEntries,
-                NetMessageAccept.Client);
+            _network.RegisterNetMessage<MsgStringTableEntries>(ReceiveEntries, NetMessageAccept.Client);
 
             Reset();
         }
@@ -113,9 +112,9 @@ namespace Robust.Shared.Network
             _initialized = false;
 
             // manually register the id on the client so it can bootstrap itself with incoming table entries
-            if (!TryFindStringId(MsgStringTableEntries.NAME, out _))
+            if (!TryFindStringId(nameof(MsgStringTableEntries), out _))
             {
-                _strings.Add(StringTablePacketId, MsgStringTableEntries.NAME);
+                _strings.Add(StringTablePacketId, nameof(MsgStringTableEntries));
 
                 if (_network.IsClient)
                 {
@@ -123,7 +122,7 @@ namespace Robust.Shared.Network
                         new MsgStringTableEntries.Entry
                         {
                             Id = StringTablePacketId,
-                            String = MsgStringTableEntries.NAME
+                            String = nameof(MsgStringTableEntries)
                         }
                     });
                 }
@@ -276,14 +275,9 @@ namespace Robust.Shared.Network
     /// <summary>
     /// A net message for transmitting a string table entry to clients.
     /// </summary>
+    [NetMessage(MsgGroups.String)]
     public class MsgStringTableEntries : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.String;
-        public static readonly string NAME = nameof(MsgStringTableEntries);
-        public MsgStringTableEntries(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
-
         public Entry[] Entries { get; set; } = default!;
 
         /// <summary>

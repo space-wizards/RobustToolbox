@@ -6,18 +6,13 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     internal class MsgConVars : NetMessage
     {
         // Max buffer could potentially be 255 * 128 * 1024 = ~33MB, so if MaxMessageSize starts being a problem it can be increased.
         private const int MaxMessageSize = 0x4000; // Arbitrarily chosen as a 'sane' value as the maximum size of the entire message.
         private const int MaxNameSize = 4 * 32; // UTF8 Max char size is 4 bytes, 32 chars.
         private const int MaxStringValSize = 4 * 256; // UTF8 Max char size is 4 bytes, 256 chars.
-
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Command;
-        public static readonly string NAME = nameof(MsgConVars);
-        public MsgConVars(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
 
         public GameTick Tick;
         public List<(string name, object value)> NetworkedVars = null!;

@@ -5,19 +5,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
+    [NetMessage(MsgGroups.Command)]
     public class MsgRay : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgRay);
-
-        public MsgRay(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
-
         public Vector2 RayOrigin { get; set; }
         public Vector2 RayHit { get; set; }
         public bool DidHit { get; set; }

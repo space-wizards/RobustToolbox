@@ -36,7 +36,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            _label.Text = string.Join("\n", _inputManager.DownKeyFunctions);
+            var functionsText = string.Join("\n", _inputManager.DownKeyFunctions);
+            _label.Text = $"Context: {_inputManager.Contexts.ActiveContext.Name}\n{functionsText}";
         }
     }
 }

@@ -896,7 +896,7 @@ namespace Robust.Shared.Network
 
             gen.Emit(OpCodes.Ldloc_0);
             gen.Emit(OpCodes.Ldc_I4, (int) netMsgAttr.Group);
-            gen.Emit(OpCodes.Stfld, channelField);
+            gen.Emit(OpCodes.Stfld, groupField);
 
             gen.Emit(OpCodes.Ldloc_0);
             gen.Emit(OpCodes.Ldarg_0);

@@ -204,7 +204,9 @@ namespace Robust.Client.Audio.Midi
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new();
+        private bool _debugEvents = false;
         private SequencerClientId _synthRegister;
+        private SequencerClientId _debugRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         IClydeBufferedAudioSource IMidiRenderer.Source => Source;
 
@@ -314,6 +316,7 @@ namespace Robust.Client.Audio.Midi
             _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
             _sequencer = new Sequencer(false);
+            _debugRegister = _sequencer.RegisterClient("honk", DumpSequencerEvent);
             _synthRegister = _sequencer.RegisterFluidsynth(_synth);
 
             _synth.AddSoundFontLoader(soundFontLoader);
@@ -321,6 +324,27 @@ namespace Robust.Client.Audio.Midi
             Mono = mono;
             Source.EmptyBuffers();
             Source.StartPlaying();
+        }
+
+        private void DumpSequencerEvent(uint time, SequencerEvent @event)
+        {
+            // ReSharper disable once UseStringInterpolation
+            _midiSawmill.Debug(string.Format(
+                "{0:D8}: {1} chan:{2:D2} key:{3:D5} bank:{4:D2} ctrl:{5:D5} dur:{6:D5} pitch:{7:D5} prog:{8:D3} val:{9:D5} vel:{10:D5}",
+                time,
+                @event.Type.ToString().PadLeft(22),
+                @event.Channel,
+                @event.Key,
+                @event.Bank,
+                @event.Control,
+                @event.Duration,
+                @event.Pitch,
+                @event.Program,
+                @event.Value,
+                @event.Velocity));
+
+            @event.Dest = _synthRegister;
+            _sequencer.SendNow(@event);
         }
 
         public bool OpenInput()
@@ -443,9 +467,11 @@ namespace Robust.Client.Audio.Midi
                 Source.GetBuffersProcessed(buffers);
 
                 lock (_playerStateLock)
+                {
+                    // _sequencer.Process(10);
                     _synth?.WriteSampleFloat(length * buffers.Length, audio, 0, Mono ? 1 : 2,
                         audio, Mono ? length * buffers.Length : 1, Mono ? 1 : 2);
-
+                }
                 if (Mono) // Turn audio to mono
                 {
                     var l = length * buffers.Length;
@@ -552,6 +578,12 @@ namespace Robust.Client.Audio.Midi
                         case 81:
                         // System Messages - 0xF0
                         case 240:
+                            switch (midiEvent.Control)
+                            {
+                                case 11:
+                                    _synth.AllNotesOff(midiEvent.Channel);
+                                    break;
+                            }
                             return;
 
                         default:
@@ -573,7 +605,7 @@ namespace Robust.Client.Audio.Midi
             if (Disposed) return;
 
             var seqEv = (SequencerEvent) midiEvent;
-            seqEv.Dest = _synthRegister;
+            seqEv.Dest = _debugEvents ? _debugRegister : _synthRegister;
             _sequencer.SendAt(seqEv, time, absolute);
         }
 

@@ -532,14 +532,14 @@ namespace Robust.Client.Audio.Midi
                 lock(_playerStateLock)
                     switch (midiEvent.Type)
                     {
-                        // Note On 0x80
-                        case 144:
-                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
-                            break;
-
-                        // Note Off - 0x90
+                        // Note Off - 0x80
                         case 128:
                             _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
+                            break;
+
+                        // Note On 0x90
+                        case 144:
+                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
                             break;
 
                         // After Touch - 0xA

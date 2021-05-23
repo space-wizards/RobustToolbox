@@ -16,6 +16,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
@@ -61,57 +62,57 @@ namespace Robust.Client.ViewVariables
 
             if (type == typeof(sbyte))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.SByte);
+                return new VVPropEditorNumeric(NumberType.SByte);
             }
 
             if (type == typeof(byte))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Byte);
+                return new VVPropEditorNumeric(NumberType.Byte);
             }
 
             if (type == typeof(ushort))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.UShort);
+                return new VVPropEditorNumeric(NumberType.UShort);
             }
 
             if (type == typeof(short))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Short);
+                return new VVPropEditorNumeric(NumberType.Short);
             }
 
             if (type == typeof(uint))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.UInt);
+                return new VVPropEditorNumeric(NumberType.UInt);
             }
 
             if (type == typeof(int))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Int);
+                return new VVPropEditorNumeric(NumberType.Int);
             }
 
             if (type == typeof(ulong))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.ULong);
+                return new VVPropEditorNumeric(NumberType.ULong);
             }
 
             if (type == typeof(long))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Long);
+                return new VVPropEditorNumeric(NumberType.Long);
             }
 
             if (type == typeof(float))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Float);
+                return new VVPropEditorNumeric(NumberType.Float);
             }
 
             if (type == typeof(double))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Double);
+                return new VVPropEditorNumeric(NumberType.Double);
             }
 
             if (type == typeof(decimal))
             {
-                return new VVPropEditorNumeric(VVPropEditorNumeric.NumberType.Decimal);
+                return new VVPropEditorNumeric(NumberType.Decimal);
             }
 
             if (type == typeof(string))

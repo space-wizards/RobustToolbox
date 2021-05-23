@@ -867,11 +867,6 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            if (!packetType.TryGetCustomAttribute(out NetMessageAttribute? netMsgAttr))
-            {
-                return;
-            }
-
             var constructor = packetType.GetConstructor(Type.EmptyTypes)!;
             var nameField = packetType.GetBackingField(nameof(NetMessage.MsgName))!;
             var groupField = packetType.GetBackingField(nameof(NetMessage.MsgGroup))!;
@@ -885,24 +880,34 @@ namespace Robust.Shared.Network
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
 
             var gen = dynamicMethod.GetILGenerator().GetRobustGen();
-            gen.DeclareLocal(typeof(NetMessage));
 
-            gen.Emit(OpCodes.Newobj, constructor);
-            gen.Emit(OpCodes.Stloc_0);
+            if (packetType.TryGetCustomAttribute(out NetMessageAttribute? netMsgAttr))
+            {
+                gen.DeclareLocal(typeof(NetMessage));
 
-            gen.Emit(OpCodes.Ldloc_0);
-            gen.Emit(OpCodes.Ldstr, netMsgAttr.Name);
-            gen.Emit(OpCodes.Stfld, nameField);
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Stloc_0);
 
-            gen.Emit(OpCodes.Ldloc_0);
-            gen.Emit(OpCodes.Ldc_I4, (int) netMsgAttr.Group);
-            gen.Emit(OpCodes.Stfld, groupField);
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldstr, netMsgAttr.Name);
+                gen.Emit(OpCodes.Stfld, nameField);
 
-            gen.Emit(OpCodes.Ldloc_0);
-            gen.Emit(OpCodes.Ldarg_0);
-            gen.Emit(OpCodes.Stfld, channelField);
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldc_I4, (int) netMsgAttr.Group);
+                gen.Emit(OpCodes.Stfld, groupField);
 
-            gen.Emit(OpCodes.Ret);
+                gen.Emit(OpCodes.Ldloc_0);
+                gen.Emit(OpCodes.Ldarg_0);
+                gen.Emit(OpCodes.Stfld, channelField);
+
+                gen.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                gen.Emit(OpCodes.Ldarg_0);
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
 
             var @delegate = dynamicMethod.CreateDelegate<Func<INetChannel, NetMessage>>();
 

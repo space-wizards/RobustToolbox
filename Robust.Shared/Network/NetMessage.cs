@@ -49,33 +49,22 @@ namespace Robust.Shared.Network
         /// <summary>
         /// String identifier of the message type.
         /// </summary>
-        public string MsgName { get; }
+        public string MsgName { get; } = default!;
 
         /// <summary>
         /// The group this message type belongs to.
         /// </summary>
-        public MsgGroups MsgGroup { get; }
+        public MsgGroups MsgGroup { get; } = default!;
 
         /// <summary>
         /// The channel that this message came in on.
         /// </summary>
-        public INetChannel MsgChannel { get; set; }
+        public INetChannel MsgChannel { get; set; } = default!;
 
         /// <summary>
         ///     The size of this packet in bytes.
         /// </summary>
         public int MsgSize { get; set; }
-
-        /// <summary>
-        /// Constructs an instance of the NetMessage.
-        /// </summary>
-        /// <param name="name">String identifier of the message type.</param>
-        /// <param name="group">The group this message type belongs to.</param>
-        protected NetMessage(string name, MsgGroups group)
-        {
-            MsgName = name;
-            MsgGroup = group;
-        }
 
         /// <summary>
         /// Deserializes the NetIncomingMessage into this NetMessage class.

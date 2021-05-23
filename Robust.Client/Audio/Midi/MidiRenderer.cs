@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using MidiEvent = NFluidsynth.MidiEvent;
@@ -428,9 +429,6 @@ namespace Robust.Client.Audio.Midi
         {
             if (Disposed) return;
 
-            // SSE needs this.
-            DebugTools.Assert(length % 4 == 0, "Sample length must be multiple of 4");
-
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
             if(buffersProcessed == Buffers) _midiSawmill.Warning("MIDI buffer overflow!");
             if (buffersProcessed == 0) return;
@@ -452,29 +450,7 @@ namespace Robust.Client.Audio.Midi
                 {
                     var l = length * buffers.Length;
 
-                    if (Sse.IsSupported)
-                    {
-                        fixed (float* ptr = audio)
-                        {
-                            for (var j = 0; j < l; j += 4)
-                            {
-                                var k = j + l;
-
-                                var jV = Sse.LoadVector128(ptr + j);
-                                var kV = Sse.LoadVector128(ptr + k);
-
-                                Sse.Store(j + ptr, Sse.Add(jV, kV));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for (var j = 0; j < l; j++)
-                        {
-                            var k = j + l;
-                            audio[j] = ((audio[k] + audio[j]));
-                        }
-                    }
+                    NumericsHelpers.Add(audio[..l], audio[l..]);
                 }
 
                 for (var i = 0; i < buffers.Length; i++)

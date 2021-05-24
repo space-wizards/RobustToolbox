@@ -13,9 +13,10 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    [NetMessage(MsgGroups.Core)]
     internal class MsgMapStrServerHandshake : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Core;
+
         /// <value>
         /// The hash of the current string mapping held by the server.
         /// </value>

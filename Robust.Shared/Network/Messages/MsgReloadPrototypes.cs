@@ -3,9 +3,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgReloadPrototypes : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         public ResourcePath[] Paths = default!;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

@@ -4,9 +4,10 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.String)]
     public class MsgConCmdAck : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.String;
+
         public string Text { get; set; }
         public bool Error { get; set; }
 

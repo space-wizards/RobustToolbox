@@ -8,9 +8,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesModifyRemote : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         /// <summary>
         ///     The session ID of the session to modify.
         /// </summary>

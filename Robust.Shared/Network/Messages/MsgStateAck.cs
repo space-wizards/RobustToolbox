@@ -5,9 +5,10 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Entity)]
     public class MsgStateAck : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Entity;
+
         public GameTick Sequence { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

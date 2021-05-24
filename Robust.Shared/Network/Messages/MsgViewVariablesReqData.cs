@@ -11,9 +11,10 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent client to server to request data from the server.
     /// </summary>
-    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesReqData : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         /// <summary>
         ///     The request ID that will be sent in <see cref="MsgViewVariablesRemoteData"/> to
         ///     identify this request among multiple potentially concurrent ones.

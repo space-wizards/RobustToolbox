@@ -8,9 +8,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgScriptResponse : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         public int ScriptSession { get; set; }
         public bool WasComplete { get; set; }
 

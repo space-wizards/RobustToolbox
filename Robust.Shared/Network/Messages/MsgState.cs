@@ -10,13 +10,14 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Entity)]
     public class MsgState : NetMessage
     {
         // If a state is large enough we send it ReliableUnordered instead.
         // This is to avoid states being so large that they consistently fail to reach the other end
         // (due to being in many parts).
         public const int ReliableThreshold = 1300;
+
+        public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
 

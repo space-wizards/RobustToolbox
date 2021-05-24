@@ -275,9 +275,10 @@ namespace Robust.Shared.Network
     /// <summary>
     /// A net message for transmitting a string table entry to clients.
     /// </summary>
-    [NetMessage(MsgGroups.String)]
     public class MsgStringTableEntries : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.String;
+
         public Entry[] Entries { get; set; } = default!;
 
         /// <summary>

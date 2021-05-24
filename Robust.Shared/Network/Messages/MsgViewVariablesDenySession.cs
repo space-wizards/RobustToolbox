@@ -7,9 +7,10 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to deny a <see cref="MsgViewVariablesReqSession"/>.
     /// </summary>
-    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesDenySession : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         /// <summary>
         ///     The request ID to identify WHICH request has been denied.
         ///     Equal to <see cref="MsgViewVariablesReqSession.RequestId"/> on the message that requested this denied session.

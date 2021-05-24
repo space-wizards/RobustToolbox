@@ -4,9 +4,10 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgScriptStartAck : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         public bool WasAccepted { get; set; }
         public int ScriptSession { get; set; }
 

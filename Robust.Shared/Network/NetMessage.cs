@@ -49,12 +49,12 @@ namespace Robust.Shared.Network
         /// <summary>
         /// String identifier of the message type.
         /// </summary>
-        public string MsgName { get; set; } = default!;
+        public virtual string MsgName { get; }
 
         /// <summary>
         /// The group this message type belongs to.
         /// </summary>
-        public MsgGroups MsgGroup { get; set; } = default!;
+        public virtual MsgGroups MsgGroup { get; }
 
         /// <summary>
         /// The channel that this message came in on.
@@ -80,6 +80,7 @@ namespace Robust.Shared.Network
 
         protected NetMessage()
         {
+            MsgName = GetType().Name;
         }
 
         /// <summary>

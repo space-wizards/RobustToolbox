@@ -5,12 +5,11 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages.Handshake
 {
-    [NetMessage(MsgGroups.Core, "")]
     internal sealed class MsgEncryptionResponse : NetMessage
     {
-        public MsgEncryptionResponse() : base("", MsgGroups.Core)
-        {
-        }
+        public override string MsgName => string.Empty;
+
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public Guid UserId;
         public byte[] SharedSecret;

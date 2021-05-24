@@ -4,12 +4,11 @@
 
 namespace Robust.Shared.Network.Messages.Handshake
 {
-    [NetMessage(MsgGroups.Core, "")]
     internal sealed class MsgEncryptionRequest : NetMessage
     {
-        public MsgEncryptionRequest() : base("", MsgGroups.Core)
-        {
-        }
+        public override string MsgName => string.Empty;
+
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public byte[] VerifyToken;
         public byte[] PublicKey;

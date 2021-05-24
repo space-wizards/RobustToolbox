@@ -18,9 +18,10 @@ namespace Robust.Shared.Network.Messages
     /// </remarks>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    [NetMessage(MsgGroups.Core)]
     internal class MsgMapStrClientHandshake : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Core;
+
         /// <value>
         /// <c>true</c> if the client needs a new copy of the mapping,
         /// <c>false</c> otherwise.

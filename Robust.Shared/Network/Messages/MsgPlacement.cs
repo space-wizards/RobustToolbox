@@ -9,9 +9,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgPlacement : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         public PlacementManagerMessage PlaceType { get; set; }
         public string Align { get; set; }
         public bool IsTile { get; set; }

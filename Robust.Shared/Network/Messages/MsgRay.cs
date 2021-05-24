@@ -5,9 +5,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Command)]
     public class MsgRay : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         public Vector2 RayOrigin { get; set; }
         public Vector2 RayHit { get; set; }
         public bool DidHit { get; set; }

@@ -5,15 +5,14 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages.Handshake
 {
-    [NetMessage(MsgGroups.Core, "")]
     internal sealed class MsgLoginStart : NetMessage
     {
         // **NOTE**: This is a special message sent during the client<->server handshake.
         // It doesn't actually get sent normally and as such doesn't have the "normal" boilerplate.
         // It's basically just a sane way to encapsulate the message write/read logic.
-        public MsgLoginStart() : base("", MsgGroups.Core)
-        {
-        }
+        public override string MsgName => string.Empty;
+
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public string UserName;
         public ImmutableArray<byte> HWId;

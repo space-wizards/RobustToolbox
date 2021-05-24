@@ -7,9 +7,10 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Shared.Network.Messages
 {
-    [NetMessage(MsgGroups.Core)]
     public class MsgPlayerList : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Core;
+
         public byte PlyCount { get; set; }
         public List<PlayerState> Plyrs { get; set; }
 

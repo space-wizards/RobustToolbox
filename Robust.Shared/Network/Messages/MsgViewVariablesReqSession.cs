@@ -11,9 +11,10 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent from client to server to request to open a session.
     /// </summary>
-    [NetMessage(MsgGroups.Command)]
     public class MsgViewVariablesReqSession : NetMessage
     {
+        public override MsgGroups MsgGroup => MsgGroups.Command;
+
         /// <summary>
         ///     An ID the client assigns so it knows which request was accepted/denied through
         ///     <see cref="MsgViewVariablesOpenSession"/> and <see cref="MsgViewVariablesCloseSession"/>.

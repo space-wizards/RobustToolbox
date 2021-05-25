@@ -106,6 +106,12 @@ namespace Robust.Shared.ContentPack
 
             var asmName = reader.GetString(reader.GetAssemblyDefinition().Name);
 
+            if (peReader.PEHeaders.CorHeader?.ManagedNativeHeaderDirectory is {Size: not 0})
+            {
+                _sawmill.Error($"Assembly {asmName} contains native code.");
+                return false;
+            }
+
             if (VerifyIL)
             {
                 if (!DoVerifyIL(asmName, resolver, peReader, reader))
@@ -404,7 +410,8 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private bool IsTypeAccessAllowed(SandboxConfig sandboxConfig, MTypeReferenced type, [NotNullWhen(true)] out TypeConfig? cfg)
+        private bool IsTypeAccessAllowed(SandboxConfig sandboxConfig, MTypeReferenced type,
+            [NotNullWhen(true)] out TypeConfig? cfg)
         {
             if (type.Namespace == null)
             {

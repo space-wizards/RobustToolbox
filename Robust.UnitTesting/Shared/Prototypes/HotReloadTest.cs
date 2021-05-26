@@ -62,13 +62,22 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(entityComponent.Value, Is.EqualTo(5));
             Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());
 
+            var reloaded = false;
+            _prototypes.PrototypesReloaded += _ => reloaded = true;
+
             _prototypes.ReloadPrototypes(new List<IPrototype>());
+
+            Assert.True(reloaded);
+            reloaded = false;
 
             Assert.That(entityComponent.Value, Is.EqualTo(5));
             Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());
 
             var changedPrototypes = _prototypes.LoadString(ReloadedPrototypes, true);
             _prototypes.ReloadPrototypes(changedPrototypes);
+
+            Assert.True(reloaded);
+            reloaded = false;
 
             // Existing component values are not modified in the current implementation
             Assert.That(entityComponent.Value, Is.EqualTo(5));
@@ -78,6 +87,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             changedPrototypes = _prototypes.LoadString(InitialPrototypes, true);
             _prototypes.ReloadPrototypes(changedPrototypes);
+
+            Assert.True(reloaded);
+            reloaded = false;
 
             // Existing component values are not modified in the current implementation
             Assert.That(entityComponent.Value, Is.EqualTo(5));

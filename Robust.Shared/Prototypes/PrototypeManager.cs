@@ -131,13 +131,13 @@ namespace Robust.Shared.Prototypes
         /// <summary>
         /// Load prototypes from files in a directory, recursively.
         /// </summary>
-        List<IPrototype> LoadDirectory(ResourcePath path);
+        List<IPrototype> LoadDirectory(ResourcePath path, bool overwrite = false);
 
         Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path);
 
-        List<IPrototype> LoadFromStream(TextReader stream);
+        List<IPrototype> LoadFromStream(TextReader stream, bool overwrite = false);
 
-        List<IPrototype> LoadString(string str);
+        List<IPrototype> LoadString(string str, bool overwrite = false);
 
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
@@ -294,12 +294,18 @@ namespace Robust.Shared.Prototypes
         {
 #if !FULL_RELEASE
             var changed = filePaths.SelectMany(f => LoadFile(f.ToRootedPath(), true)).ToList();
+            ReloadPrototypes(changed);
+#endif
+        }
 
-            changed.Sort((a, b) => SortPrototypesByPriority(a.GetType(), b.GetType()));
+        internal void ReloadPrototypes(List<IPrototype> prototypes)
+        {
+#if !FULL_RELEASE
+            prototypes.Sort((a, b) => SortPrototypesByPriority(a.GetType(), b.GetType()));
 
             var pushed = new Dictionary<Type, HashSet<string>>();
 
-            foreach (var prototype in changed)
+            foreach (var prototype in prototypes)
             {
                 if (prototype is not IInheritingPrototype inheritingPrototype) continue;
                 var type = prototype.GetType();
@@ -338,7 +344,7 @@ namespace Robust.Shared.Prototypes
 
             PrototypesReloaded?.Invoke(
                 new PrototypesReloadedEventArgs(
-                    changed
+                    prototypes
                         .GroupBy(p => p.GetType())
                         .ToDictionary(
                             g => g.Key,
@@ -358,7 +364,6 @@ namespace Robust.Shared.Prototypes
                     ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
                 }
             }
-
 #endif
         }
 
@@ -431,7 +436,7 @@ namespace Robust.Shared.Prototypes
         }
 
         /// <inheritdoc />
-        public List<IPrototype> LoadDirectory(ResourcePath path)
+        public List<IPrototype> LoadDirectory(ResourcePath path, bool overwrite = false)
         {
             var changedPrototypes = new List<IPrototype>();
 
@@ -441,7 +446,7 @@ namespace Robust.Shared.Prototypes
 
             foreach (var resourcePath in streams)
             {
-                var filePrototypes = LoadFile(resourcePath);
+                var filePrototypes = LoadFile(resourcePath, overwrite);
                 changedPrototypes.AddRange(filePrototypes);
             }
 
@@ -568,7 +573,7 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public List<IPrototype> LoadFromStream(TextReader stream)
+        public List<IPrototype> LoadFromStream(TextReader stream, bool overwrite = false)
         {
             var changedPrototypes = new List<IPrototype>();
             _hasEverBeenReloaded = true;
@@ -579,7 +584,7 @@ namespace Robust.Shared.Prototypes
             {
                 try
                 {
-                    var documentPrototypes = LoadFromDocument(yaml.Documents[i]);
+                    var documentPrototypes = LoadFromDocument(yaml.Documents[i], overwrite);
                     changedPrototypes.AddRange(documentPrototypes);
                 }
                 catch (Exception e)
@@ -593,9 +598,9 @@ namespace Robust.Shared.Prototypes
             return changedPrototypes;
         }
 
-        public List<IPrototype> LoadString(string str)
+        public List<IPrototype> LoadString(string str, bool overwrite = false)
         {
-            return LoadFromStream(new StringReader(str));
+            return LoadFromStream(new StringReader(str), overwrite);
         }
 
         #endregion IPrototypeManager members

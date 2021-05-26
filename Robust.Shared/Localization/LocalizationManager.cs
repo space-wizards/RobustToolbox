@@ -202,6 +202,7 @@ namespace Robust.Shared.Localization
                 .CultureInfo(culture)
                 .SkipResources()
                 .SetUseIsolating(false)
+                .UseConcurrent()
                 .UncheckedBuild();
 
             _contexts.Add(culture, bundle);

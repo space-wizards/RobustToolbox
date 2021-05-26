@@ -939,9 +939,9 @@ namespace Robust.Shared.Network
         /// <inheritdoc />
         public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage
+            where T : NetMessage, new()
         {
-            RegisterNetMessage(typeof(T).Name, rxCallback, accept);
+            RegisterNetMessage(new T().MsgName, rxCallback, accept);
         }
 
         /// <inheritdoc />
@@ -968,18 +968,7 @@ namespace Robust.Shared.Network
                 constructor = type.GetConstructor(Type.EmptyTypes)!;
                 DebugTools.AssertNotNull(constructor);
 
-                var channelField = type.GetBackingField(nameof(NetMessage.MsgChannel))!;
-
-                gen.DeclareLocal(typeof(NetMessage));
-
                 gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Stloc_0);
-
-                gen.Emit(OpCodes.Ldloc_0);
-                gen.Emit(OpCodes.Ldnull);
-                gen.Emit(OpCodes.Stfld, channelField);
-
-                gen.Emit(OpCodes.Ldloc_0);
                 gen.Emit(OpCodes.Ret);
             }
 

@@ -145,7 +145,7 @@ namespace Robust.Shared.Network
         /// </param>
         void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage;
+            where T : NetMessage, new();
 
         /// <summary>
         ///     Creates a new NetMessage to be sent.

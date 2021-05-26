@@ -282,9 +282,9 @@ namespace Robust.UnitTesting
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
             }
 
-            public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null, NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage
+            public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null, NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage, new()
             {
-                RegisterNetMessage(typeof(T).Name, rxCallback, accept);
+                RegisterNetMessage(new T().MsgName, rxCallback, accept);
             }
 
             public T CreateNetMessage<T>() where T : NetMessage

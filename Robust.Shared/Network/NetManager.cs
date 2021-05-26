@@ -874,6 +874,7 @@ namespace Robust.Shared.Network
 
             var gen = dynamicMethod.GetILGenerator().GetRobustGen();
 
+            // Obsolete path for content
             if (packetType.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
             {
                 gen.Emit(OpCodes.Ldarg_0);
@@ -948,6 +949,7 @@ namespace Robust.Shared.Network
                 type, false);
             var gen = dynamicMethod.GetILGenerator().GetRobustGen();
 
+            // Obsolete path for content
             if (type.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
             {
                 gen.Emit(OpCodes.Ldnull);

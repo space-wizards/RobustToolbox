@@ -289,12 +289,22 @@ namespace Robust.UnitTesting
 
             public T CreateNetMessage<T>() where T : NetMessage
             {
-                if (!_registeredMessages.Contains(typeof(T)))
+                var type = typeof(T);
+
+                if (!_registeredMessages.Contains(type))
                 {
                     throw new ArgumentException("Net message type is not registered.");
                 }
 
-                return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
+                // Obsolete path for content
+                if (type.GetConstructor(new[] {typeof(INetChannel)}) != null)
+                {
+                    return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
+                }
+                else
+                {
+                    return Activator.CreateInstance<T>();
+                }
             }
 
             public byte[]? RsaPublicKey => null;

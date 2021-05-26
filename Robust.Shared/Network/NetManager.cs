@@ -885,18 +885,9 @@ namespace Robust.Shared.Network
                 constructor = packetType.GetConstructor(Type.EmptyTypes)!;
                 DebugTools.AssertNotNull(constructor);
 
-                var channelField = packetType.GetBackingField(nameof(NetMessage.MsgChannel))!;
-
                 gen.DeclareLocal(typeof(NetMessage));
 
                 gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Stloc_0);
-
-                gen.Emit(OpCodes.Ldloc_0);
-                gen.Emit(OpCodes.Ldarg_0);
-                gen.Emit(OpCodes.Stfld, channelField);
-
-                gen.Emit(OpCodes.Ldloc_0);
                 gen.Emit(OpCodes.Ret);
             }
 

@@ -134,7 +134,9 @@ namespace Robust.Server.Player
 
             if (AttachedEntity.Deleted)
             {
-                throw new InvalidOperationException("Tried to detach player, but my entity does not exist!");
+                AttachedEntity = null;
+                UpdatePlayerState();
+                return;
             }
 
             if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))

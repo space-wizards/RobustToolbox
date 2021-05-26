@@ -1,3 +1,5 @@
+// ReSharper disable once RedundantUsingDirective
+// Used in EXCEPTION_TOLERANCE preprocessor
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +11,7 @@ using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;

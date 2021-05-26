@@ -6,6 +6,8 @@ using System.Threading;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -61,6 +63,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
 
@@ -94,7 +97,7 @@ namespace Robust.Client.Audio.Midi
                 if (MathHelper.CloseTo(_volume, value))
                     return;
 
-                _volume = value;
+                _cfgMan.SetCVar(CVars.MidiVolume, value);
                 _volumeDirty = true;
             }
         }
@@ -130,6 +133,12 @@ namespace Robust.Client.Audio.Midi
         private void InitializeFluidsynth()
         {
             if (FluidsynthInitialized || _failedInitialize) return;
+
+            _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
+            {
+                _volume = value;
+                _volumeDirty = true;
+            }, true);
 
             _midiSawmill = Logger.GetSawmill("midi");
             _sawmill = Logger.GetSawmill("midi.fluidsynth");

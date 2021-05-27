@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime;
@@ -215,6 +215,26 @@ namespace Robust.Server
             {
                 _logHandler = logHandler;
                 _log.RootSawmill.AddHandler(_logHandler!);
+            }
+
+            if (_commandLineArgs != null)
+            {
+                foreach (var (sawmill, level) in _commandLineArgs.LogLevels)
+                {
+                    LogLevel? logLevel;
+                    if (level == "null")
+                        logLevel = null;
+                    else
+                    {
+                        if (!Enum.TryParse<LogLevel>(level, out var result))
+                        {
+                            System.Console.WriteLine($"LogLevel {level} does not exist!");
+                            continue;
+                        }
+                        logLevel = result;
+                    }
+                    _log.GetSawmill(sawmill).Level = logLevel;
+                }
             }
 
             SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });

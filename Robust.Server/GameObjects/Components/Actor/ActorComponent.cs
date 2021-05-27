@@ -9,18 +9,8 @@ namespace Robust.Server.GameObjects
     {
         public override string Name => "Actor";
 
-        [ViewVariables] public IPlayerSession PlayerSession { get; internal set; } = default!;
-
-        /// <inheritdoc />
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-
-            // Warning: careful here, Detach removes this component, make sure this is after the base shutdown
-            // to prevent infinite recursion
-            // ReSharper disable once ConstantConditionalAccessQualifier
-            PlayerSession?.DetachFromEntity();
-        }
+        [ViewVariables]
+        public IPlayerSession PlayerSession { get; internal set; } = default!;
     }
 
     /// <summary>
@@ -51,27 +41,5 @@ namespace Robust.Server.GameObjects
         {
             OldPlayer = oldPlayer;
         }
-    }
-
-    public class PlayerAttachSystemMessage : EntityEventArgs
-    {
-        public PlayerAttachSystemMessage(IEntity entity, IPlayerSession newPlayer)
-        {
-            Entity = entity;
-            NewPlayer = newPlayer;
-        }
-
-        public IEntity Entity { get; }
-        public IPlayerSession NewPlayer { get; }
-    }
-
-    public class PlayerDetachedSystemMessage : EntityEventArgs
-    {
-        public PlayerDetachedSystemMessage(IEntity entity)
-        {
-            Entity = entity;
-        }
-
-        public IEntity Entity { get; }
     }
 }

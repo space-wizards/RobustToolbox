@@ -20,8 +20,8 @@ namespace Robust.Server.Player
         ///     NOTE: The content pack almost certainly has an alternative for this.
         ///     Do not call this directly for most content code.
         /// </summary>
-        /// <param name="a">The entity to attach to.</param>
-        void AttachToEntity(IEntity? a);
+        /// <param name="entity">The entity to attach to.</param>
+        void AttachToEntity(IEntity? entity);
 
         /// <summary>
         ///     Detaches this player from an entity.

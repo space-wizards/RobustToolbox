@@ -6,6 +6,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Server.Player
 {
@@ -109,20 +110,26 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity? a)
+        public void AttachToEntity(IEntity? entity)
         {
             DetachFromEntity();
 
-            if (a == null)
+            if (entity == null)
             {
                 return;
             }
 
-            var actorComponent = a.AddComponent<ActorComponent>();
-            actorComponent.PlayerSession = this;
-            AttachedEntity = a;
-            a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
-            a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
+            // This event needs to be broadcast.
+            var attachPlayer = new AttachPlayerEvent(entity, this);
+            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, attachPlayer);
+
+            if (!attachPlayer.Result)
+            {
+                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
+                return;
+            }
+
+            AttachedEntity = entity;
             UpdatePlayerState();
         }
 
@@ -141,9 +148,7 @@ namespace Robust.Server.Player
 
             if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))
             {
-                AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
-                AttachedEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerDetachedSystemMessage(AttachedEntity));
-                AttachedEntity.RemoveComponent<ActorComponent>();
+                AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, new DetachPlayerEvent(), false);
                 AttachedEntity = null;
                 UpdatePlayerState();
             }

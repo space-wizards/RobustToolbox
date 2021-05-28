@@ -62,9 +62,6 @@ namespace Robust.Server.GameObjects
 
         private void OnActorPlayerDetach(EntityUid uid, ActorComponent component, DetachPlayerEvent args)
         {
-            // TODO: Remove component message.
-            EntityManager.GetEntity(uid).SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
-
             // Removing the component will call shutdown, and our subscription will handle the rest of the detach logic.
             ComponentManager.RemoveComponent<ActorComponent>(uid);
             args.Result = true;
@@ -73,6 +70,9 @@ namespace Robust.Server.GameObjects
         private void OnActorShutdown(EntityUid uid, ActorComponent component, ComponentShutdown args)
         {
             component.PlayerSession.SetAttachedEntity(null);
+
+            // TODO: Remove component message.
+            EntityManager.GetEntity(uid).SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
 
             // The player is fully detached now that the component has shut down.
             RaiseLocalEvent(uid, new PlayerDetachedEvent(EntityManager.GetEntity(uid), component.PlayerSession));

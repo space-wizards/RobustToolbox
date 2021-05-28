@@ -37,6 +37,11 @@ namespace Robust.Server.Player
         /// </summary>
         IPlayerData Data { get; }
 
+        /// <summary>
+        ///     Internal method to set <see cref="ICommonSession.AttachedEntity"/> and update the player's status.
+        ///     Do NOT use this unless you know what you're doing, you probably want <see cref="AttachToEntity"/>
+        ///     and <see cref="DetachFromEntity"/> instead.
+        /// </summary>
         internal void SetAttachedEntity(IEntity? entity);
     }
 }

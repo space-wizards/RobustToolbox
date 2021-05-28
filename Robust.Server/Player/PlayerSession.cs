@@ -181,9 +181,7 @@ namespace Robust.Server.Player
 
         public LoginType AuthType => ConnectedClient.AuthType;
 
-        /// <summary>
-        ///     For internal use only.
-        /// </summary>
+        /// <inheritdoc />
         void IPlayerSession.SetAttachedEntity(IEntity? entity)
         {
             AttachedEntity = entity;

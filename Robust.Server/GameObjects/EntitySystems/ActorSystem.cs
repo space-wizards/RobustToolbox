@@ -13,43 +13,59 @@ namespace Robust.Server.GameObjects
     {
         public override void Initialize()
         {
-            SubscribeLocalEvent<ActorComponent, ComponentShutdown>(OnActorShutdown);
-            SubscribeLocalEvent<ActorComponent, DetachPlayerEvent>(OnActorPlayerDetach);
             SubscribeLocalEvent<AttachPlayerEvent>(OnActorPlayerAttach);
+            SubscribeLocalEvent<ActorComponent, DetachPlayerEvent>(OnActorPlayerDetach);
+            SubscribeLocalEvent<ActorComponent, ComponentShutdown>(OnActorShutdown);
         }
 
         private void OnActorPlayerAttach(AttachPlayerEvent args)
         {
+            // Cannot attach to a deleted entity.
             if (args.Entity.Deleted)
+            {
+                args.Result = false;
                 return;
+            }
 
             var uid = args.Entity.Uid;
 
+            // Check if there was a player attached to the entity already...
             if (ComponentManager.TryGetComponent(uid, out ActorComponent actor))
             {
+                // If we're not forcing the attach, this fails.
                 if (!args.Force)
                 {
                     args.Result = false;
                     return;
                 }
 
-                // This cannot fail, as a player is attached to this entity.
-                RaiseLocalEvent(uid, new DetachPlayerEvent());
+                // Set the event's force-kicked session before detaching it.
                 args.ForceKicked = actor.PlayerSession;
+
+                // This detach cannot fail, as a player is attached to this entity.
+                // It's important to note that detaching the player removes the component.
+                RaiseLocalEvent(uid, new DetachPlayerEvent());
             }
 
+            // We add the actor component.
             actor = ComponentManager.AddComponent<ActorComponent>(args.Entity);
             actor.PlayerSession = args.Player;
             args.Player.SetAttachedEntity(args.Entity);
             args.Result = true;
 
+            // TODO: Remove component message.
             args.Entity.SendMessage(actor, new PlayerAttachedMsg(args.Player));
+
+            // The player is fully attached now, raise an event!
             RaiseLocalEvent(uid, new PlayerAttachedEvent(args.Entity, args.Player));
         }
 
         private void OnActorPlayerDetach(EntityUid uid, ActorComponent component, DetachPlayerEvent args)
         {
+            // TODO: Remove component message.
             EntityManager.GetEntity(uid).SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
+
+            // Removing the component will call shutdown, and our subscription will handle the rest of the detach logic.
             ComponentManager.RemoveComponent<ActorComponent>(uid);
             args.Result = true;
         }
@@ -58,11 +74,14 @@ namespace Robust.Server.GameObjects
         {
             component.PlayerSession.SetAttachedEntity(null);
 
-            // The player is only fully detached when the component shuts down.
+            // The player is fully detached now that the component has shut down.
             RaiseLocalEvent(uid, new PlayerDetachedEvent(EntityManager.GetEntity(uid), component.PlayerSession));
         }
     }
 
+    /// <summary>
+    ///     Raise this broadcast event to attach a player to an entity, optionally detaching the player attached to it.
+    /// </summary>
     public class AttachPlayerEvent : EntityEventArgs
     {
         /// <summary>
@@ -105,6 +124,9 @@ namespace Robust.Server.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Raise this directed event to detach a player from an entity.
+    /// </summary>
     public class DetachPlayerEvent : EntityEventArgs
     {
         /// <summary>
@@ -115,6 +137,9 @@ namespace Robust.Server.GameObjects
         public bool Result { get; set; } = false;
     }
 
+    /// <summary>
+    ///     Event for when a player has been attached to an entity.
+    /// </summary>
     public class PlayerAttachedEvent : EntityEventArgs
     {
         public IEntity Entity { get; }
@@ -127,6 +152,9 @@ namespace Robust.Server.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Event for when a player has been detached from an entity.
+    /// </summary>
     public class PlayerDetachedEvent : EntityEventArgs
     {
         public IEntity Entity { get; }

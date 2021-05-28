@@ -86,6 +86,7 @@ namespace Robust.Server.GameObjects
 
         /// <summary>
         ///     If the attach was forced and there was a player attached to the entity before, this will be it.
+        ///     Output parameter.
         /// </summary>
         public IPlayerSession? ForceKicked { get; set; }
 

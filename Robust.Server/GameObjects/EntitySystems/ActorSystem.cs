@@ -39,6 +39,7 @@ namespace Robust.Server.GameObjects
 
             actor = ComponentManager.AddComponent<ActorComponent>(args.Entity);
             actor.PlayerSession = args.Player;
+            args.Player.SetAttachedEntity(args.Entity);
             args.Result = true;
 
             args.Entity.SendMessage(actor, new PlayerAttachedMsg(args.Player));
@@ -49,11 +50,12 @@ namespace Robust.Server.GameObjects
         {
             EntityManager.GetEntity(uid).SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
             ComponentManager.RemoveComponent<ActorComponent>(uid);
+            args.Result = true;
         }
 
         private void OnActorShutdown(EntityUid uid, ActorComponent component, ComponentShutdown args)
         {
-            component.PlayerSession.DetachFromEntity();
+            component.PlayerSession.SetAttachedEntity(null);
 
             // The player is only fully detached when the component shuts down.
             RaiseLocalEvent(uid, new PlayerDetachedEvent(EntityManager.GetEntity(uid), component.PlayerSession));

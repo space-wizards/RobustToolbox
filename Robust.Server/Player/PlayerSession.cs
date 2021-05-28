@@ -37,7 +37,7 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity? AttachedEntity { get; set; }
 
         [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
@@ -115,9 +115,7 @@ namespace Robust.Server.Player
             DetachFromEntity();
 
             if (entity == null)
-            {
                 return;
-            }
 
             // This event needs to be broadcast.
             var attachPlayer = new AttachPlayerEvent(entity, this);
@@ -126,11 +124,7 @@ namespace Robust.Server.Player
             if (!attachPlayer.Result)
             {
                 Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
-                return;
             }
-
-            AttachedEntity = entity;
-            UpdatePlayerState();
         }
 
         /// <inheritdoc />
@@ -139,22 +133,12 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
-            if (AttachedEntity.Deleted)
-            {
-                AttachedEntity = null;
-                UpdatePlayerState();
-                return;
-            }
+            var detachPlayer = new DetachPlayerEvent();
+            AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, detachPlayer, false);
 
-            if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))
+            if (!detachPlayer.Result)
             {
-                AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, new DetachPlayerEvent(), false);
-                AttachedEntity = null;
-                UpdatePlayerState();
-            }
-            else
-            {
-                throw new InvalidOperationException("Tried to detach player, but entity does not have ActorComponent!");
+                Logger.Warning($"Couldn't detach player \"{this}\" to entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
         }
 
@@ -196,6 +180,15 @@ namespace Robust.Server.Player
         }
 
         public LoginType AuthType => ConnectedClient.AuthType;
+
+        /// <summary>
+        ///     For internal use only.
+        /// </summary>
+        void IPlayerSession.SetAttachedEntity(IEntity? entity)
+        {
+            AttachedEntity = entity;
+            UpdatePlayerState();
+        }
 
         private void UpdatePlayerState()
         {

@@ -36,5 +36,7 @@ namespace Robust.Server.Player
         ///     Persistent data for this player.
         /// </summary>
         IPlayerData Data { get; }
+
+        internal void SetAttachedEntity(IEntity? entity);
     }
 }

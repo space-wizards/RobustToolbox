@@ -35,6 +35,7 @@ namespace Robust.Server.GameObjects
 
                 // This cannot fail, as a player is attached to this entity.
                 RaiseLocalEvent(uid, new DetachPlayerEvent());
+                args.ForceKicked = actor.PlayerSession;
             }
 
             actor = ComponentManager.AddComponent<ActorComponent>(args.Entity);
@@ -82,6 +83,11 @@ namespace Robust.Server.GameObjects
         ///     Input parameter.
         /// </summary>
         public bool Force { get; }
+
+        /// <summary>
+        ///     If the attach was forced and there was a player attached to the entity before, this will be it.
+        /// </summary>
+        public IPlayerSession? ForceKicked { get; set; }
 
         /// <summary>
         ///     Whether the player was attached correctly.

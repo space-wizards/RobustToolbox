@@ -49,7 +49,6 @@ namespace Robust.Shared.Localization
         private ILocValue FuncCapitalize(LocArgs args)
         {
             var input = args.Args[0].Format(new LocContext());
-            System.Console.WriteLine(input);
             if (!String.IsNullOrEmpty(input))
                 return new LocValueString(input.First().ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");

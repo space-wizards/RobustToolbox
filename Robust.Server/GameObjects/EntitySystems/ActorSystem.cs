@@ -71,11 +71,13 @@ namespace Robust.Server.GameObjects
         {
             component.PlayerSession.SetAttachedEntity(null);
 
+            var entity = EntityManager.GetEntity(uid);
+
             // TODO: Remove component message.
-            EntityManager.GetEntity(uid).SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
+            entity.SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
 
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(uid, new PlayerDetachedEvent(EntityManager.GetEntity(uid), component.PlayerSession));
+            RaiseLocalEvent(uid, new PlayerDetachedEvent(entity, component.PlayerSession));
         }
     }
 

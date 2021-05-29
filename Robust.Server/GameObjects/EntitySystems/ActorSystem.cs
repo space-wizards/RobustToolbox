@@ -13,6 +13,8 @@ namespace Robust.Server.GameObjects
     {
         public override void Initialize()
         {
+            base.Initialize();
+
             SubscribeLocalEvent<AttachPlayerEvent>(OnActorPlayerAttach);
             SubscribeLocalEvent<ActorComponent, DetachPlayerEvent>(OnActorPlayerDetach);
             SubscribeLocalEvent<ActorComponent, ComponentShutdown>(OnActorShutdown);

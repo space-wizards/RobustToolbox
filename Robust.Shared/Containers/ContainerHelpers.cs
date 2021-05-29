@@ -197,6 +197,27 @@ namespace Robust.Shared.Containers
             return userContainer == otherContainer;
         }
 
+        public static bool IsInSameOrParentContainer(this IEntity user, IEntity other)
+        {
+            DebugTools.AssertNotNull(user);
+            DebugTools.AssertNotNull(other);
+
+            var isUserContained = TryGetContainer(user, out var userContainer);
+            var isOtherContained = TryGetContainer(other, out var otherContainer);
+
+            // Both entities are not in a container
+            if (!isUserContained && !isOtherContained) return true;
+
+            // One contains the other
+            if (userContainer?.Owner == other || otherContainer?.Owner == user) return true;
+
+            // Both entities are in different contained states
+            if (isUserContained != isOtherContained) return false;
+
+            // Both entities are in the same container
+            return userContainer == otherContainer;
+        }
+
         /// <summary>
         /// Shortcut method to make creation of containers easier.
         /// Creates a new container on the entity and gives it back to you.

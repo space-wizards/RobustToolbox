@@ -50,6 +50,9 @@ namespace Robust.Client.GameObjects
             _mapManager.OnGridCreated += MapManagerOnGridCreated;
             _mapManager.OnGridRemoved += MapManagerOnGridRemoved;
 
+            // Due to how recursion works, this must be done.
+            SubscribeLocalEvent<MoveEvent>(AnythingMoved);
+
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
@@ -60,6 +63,26 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
+        }
+
+        private void AnythingMoved(MoveEvent args)
+        {
+            AnythingMovedSubHandler(args.Sender.Transform);
+        }
+
+        private void AnythingMovedSubHandler(ITransformComponent sender)
+        {
+            // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
+            // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
+            // (Struct-based events ok though)
+            if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
+                QueueSpriteUpdate(sprite);
+            if (sender.Owner.TryGetComponent(out PointLightComponent? light))
+                QueueLightUpdate(light);
+            foreach (ITransformComponent child in sender.Children)
+            {
+                AnythingMovedSubHandler(child);
+            }
         }
 
         // For the RemoveX methods

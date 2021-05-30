@@ -638,6 +638,8 @@ namespace Robust.Shared.Serialization
 
             LogSzr.Debug($"Wrote string package in {sw.ElapsedMilliseconds}ms size {ByteHelpers.FormatBytes(_mappedStringsPackage.Length)}");
             LogSzr.Debug($"String hash is {ConvertToBase64Url(_stringMapHash)}");
+
+            // File.WriteAllText("strings.txt", string.Join("\n", _dict._mappedStrings!));
         }
 
         public void Initialize()

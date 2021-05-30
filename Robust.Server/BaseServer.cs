@@ -330,6 +330,7 @@ namespace Robust.Server
 
             _watchdogApi.Initialize();
 
+            AddFinalStringsToSerializer();
             _stringSerializer.LockStrings();
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
@@ -340,6 +341,16 @@ namespace Robust.Server
             GC.Collect();
 
             return false;
+        }
+
+        private void AddFinalStringsToSerializer()
+        {
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            foreach (var regType in factory.AllRegisteredTypes)
+            {
+                var reg = factory.GetRegistration(regType);
+                _stringSerializer.AddString(reg.Name);
+            }
         }
 
         private bool SetupLoki()

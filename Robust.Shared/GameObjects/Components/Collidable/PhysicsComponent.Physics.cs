@@ -61,8 +61,9 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
+        ///     Key is Island's ID and value is our index.
         /// </summary>
-        public int IslandIndex { get; set; }
+        public Dictionary<int, int> IslandIndex { get; set; } = new();
 
         // TODO: Actually implement after the initial pr dummy
         /// <summary>

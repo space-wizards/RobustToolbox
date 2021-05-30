@@ -619,6 +619,7 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
+                body.IslandIndex.Clear();
                 body.Island = false;
                 DebugTools.Assert(body.BodyType != BodyType.Static);
 

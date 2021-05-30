@@ -281,7 +281,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public void Add(IPhysBody body)
         {
-            body.IslandIndex = BodyCount;
+            body.IslandIndex[ID] = BodyCount;
             Bodies[BodyCount++] = body;
         }
 
@@ -386,6 +386,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             SolverData.FrameTime = frameTime;
             SolverData.DtRatio = dtRatio;
             SolverData.InvDt = invDt;
+            SolverData.IslandIndex = ID;
 
             SolverData.LinearVelocities = _linearVelocities;
             SolverData.AngularVelocities = _angularVelocities;
@@ -617,6 +618,8 @@ stored in a single array since multiple arrays lead to multiple misses.
     /// </summary>
     internal sealed class SolverData
     {
+        public int IslandIndex { get; set; } = -1;
+
         public float FrameTime { get; set; }
         public float DtRatio { get; set; }
         public float InvDt { get; set; }

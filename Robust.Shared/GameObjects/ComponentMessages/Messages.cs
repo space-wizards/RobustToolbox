@@ -1,7 +1,9 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class RelayMovementEntityMessage : ComponentMessage
     {
         [PublicAPI]
@@ -16,6 +18,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     The entity transform parent has been changed.
     /// </summary>
+    [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
     public class ParentChangedMessage : ComponentMessage
     {
         /// <summary>

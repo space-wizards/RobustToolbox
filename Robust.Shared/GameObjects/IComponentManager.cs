@@ -252,5 +252,7 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
+
+        IComponentFactory ComponentFactory { get; }
     }
 }

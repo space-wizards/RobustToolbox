@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Serialization.Markdown.Value;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Serialization.Markdown
+namespace Robust.Shared.Serialization.Markdown.Sequence
 {
     public class SequenceDataNode : DataNode<SequenceDataNode>
     {
@@ -15,14 +16,22 @@ namespace Robust.Shared.Serialization.Markdown
             _nodes = nodes;
         }
 
-        public SequenceDataNode(YamlSequenceNode sequenceNode) : base(sequenceNode.Start, sequenceNode.End)
+        public SequenceDataNode(List<string> values) : this()
         {
-            foreach (var node in sequenceNode.Children)
+            foreach (var value in values)
+            {
+                _nodes.Add(new ValueDataNode(value));
+            }
+        }
+
+        public SequenceDataNode(YamlSequenceNode sequence) : base(sequence.Start, sequence.End)
+        {
+            foreach (var node in sequence.Children)
             {
                 _nodes.Add(node.ToDataNode());
             }
 
-            Tag = sequenceNode.Tag;
+            Tag = sequence.Tag;
         }
 
         public SequenceDataNode(params DataNode[] nodes) : this()
@@ -110,7 +119,7 @@ namespace Robust.Shared.Serialization.Markdown
                 if (!set.Contains(nodeNode)) newList.Add(nodeNode);
             }
 
-            if(newList.Count > 0)
+            if (newList.Count > 0)
             {
                 return new SequenceDataNode(newList)
                 {

@@ -5,12 +5,12 @@ namespace Robust.Shared.Serialization.Markdown.Validation
 {
     public class ValidatedValueNode : ValidationNode
     {
-        public readonly DataNode DataNode;
-
         public ValidatedValueNode(DataNode dataNode)
         {
             DataNode = dataNode;
         }
+
+        public DataNode DataNode { get; }
 
         public override bool Valid => true;
 

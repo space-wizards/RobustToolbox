@@ -162,6 +162,11 @@ namespace Robust.Shared.GameObjects
         IComponent? GetComponentOrNull(Type type);
 
         /// <summary>
+        ///     Queues this entity for deletion at the end of the tick.
+        /// </summary>
+        void QueueDelete();
+
+        /// <summary>
         ///     Deletes this entity.
         /// </summary>
         void Delete();
@@ -185,6 +190,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="owner">Object that sent the event.</param>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void SendMessage(IComponent? owner, ComponentMessage message);
 
         /// <summary>
@@ -192,6 +198,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
+        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null);
 
         /// <summary>

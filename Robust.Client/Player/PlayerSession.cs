@@ -5,9 +5,8 @@ using Robust.Shared.Players;
 
 namespace Robust.Client.Player
 {
-    internal sealed class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : ICommonSession
     {
-        /// <inheritdoc />
         internal SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
         /// <inheritdoc />
@@ -26,17 +25,15 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public NetUserId UserId { get; }
 
-        /// <inheritdoc cref="IPlayerSession" />
         internal string Name { get; set; } = "<Unknown>";
 
-        /// <inheritdoc cref="IPlayerSession" />
+        /// <inheritdoc />
         string ICommonSession.Name
         {
             get => this.Name;
             set => this.Name = value;
         }
 
-        /// <inheritdoc />
         internal short Ping { get; set; }
 
         /// <inheritdoc />
@@ -51,7 +48,7 @@ namespace Robust.Client.Player
 
         /// <summary>
         ///     Creates an instance of a PlayerSession.
-        /// </summary
+        /// </summary>
         public PlayerSession(NetUserId user)
         {
             UserId = user;

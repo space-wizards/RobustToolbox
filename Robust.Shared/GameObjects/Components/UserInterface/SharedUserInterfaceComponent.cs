@@ -35,25 +35,6 @@ namespace Robust.Shared.GameObjects
                 UiKey = _uiKeyRaw;
             }
         }
-
-        [NetSerializable, Serializable]
-        protected sealed class BoundInterfaceMessageWrapMessage : ComponentMessage
-        {
-            public readonly BoundUserInterfaceMessage Message;
-            public readonly object UiKey;
-
-            public BoundInterfaceMessageWrapMessage(BoundUserInterfaceMessage message, object uiKey)
-            {
-                Directed = true;
-                Message = message;
-                UiKey = uiKey;
-            }
-
-            public override string ToString()
-            {
-                return $"{nameof(BoundInterfaceMessageWrapMessage)}: {Message}";
-            }
-        }
     }
 
     [NetSerializable, Serializable]
@@ -86,5 +67,25 @@ namespace Robust.Shared.GameObjects
     [NetSerializable, Serializable]
     internal sealed class CloseBoundInterfaceMessage : BoundUserInterfaceMessage
     {
+    }
+
+    [Serializable, NetSerializable]
+    internal sealed class BoundUIWrapMessage : EntityEventArgs
+    {
+        public readonly EntityUid Entity;
+        public readonly BoundUserInterfaceMessage Message;
+        public readonly object UiKey;
+
+        public BoundUIWrapMessage(EntityUid entity, BoundUserInterfaceMessage message, object uiKey)
+        {
+            Message = message;
+            UiKey = uiKey;
+            Entity = entity;
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(BoundUIWrapMessage)}: {Message}";
+        }
     }
 }

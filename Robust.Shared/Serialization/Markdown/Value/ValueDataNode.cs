@@ -1,6 +1,6 @@
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Shared.Serialization.Markdown
+namespace Robust.Shared.Serialization.Markdown.Value
 {
     public class ValueDataNode : DataNode<ValueDataNode>
     {
@@ -11,7 +11,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public ValueDataNode(YamlScalarNode node) : base(node.Start, node.End)
         {
-            Value = node.Value ?? "";
+            Value = node.Value ?? string.Empty;
             Tag = node.Tag;
         }
 
@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override ValueDataNode Copy()
         {
-            return new ValueDataNode(Value)
+            return new(Value)
             {
                 Tag = Tag,
                 Start = Start,
@@ -29,14 +29,12 @@ namespace Robust.Shared.Serialization.Markdown
 
         public override ValueDataNode? Except(ValueDataNode node)
         {
-            if (node.Value == Value) return null;
-            return Copy();
+            return node.Value == Value ? null : Copy();
         }
 
         public override bool Equals(object? obj)
         {
-            if(obj is not ValueDataNode node) return false;
-            return node.Value == Value;
+            return obj is ValueDataNode node && node.Value == Value;
         }
 
         public override int GetHashCode()

@@ -219,13 +219,7 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Shutdown()
         {
             base.Shutdown();
-            UnsubscribeLocalEvent<CollisionChangeMessage>();
-            UnsubscribeLocalEvent<MoveEvent>();
-            UnsubscribeLocalEvent<RotateEvent>();
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
-            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
-            UnsubscribeLocalEvent<FixtureUpdateMessage>();
+
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.MapCreated -= HandleMapCreated;
@@ -725,6 +719,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                                 if (preventCollideMessage.Cancelled) return true;
 
+#pragma warning disable 618
                                 foreach (var modifier in state.modifiers)
                                 {
                                     preventCollision |= modifier.PreventCollide(other.Fixture.Body);
@@ -733,6 +728,7 @@ namespace Robust.Shared.Physics.Broadphase
                                 {
                                     preventCollision |= modifier.PreventCollide(body);
                                 }
+#pragma warning restore 618
 
                                 if (preventCollision)
                                     return true;

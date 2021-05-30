@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        public delegate bool ReadDelegate(
+        private delegate bool ReadDelegate(
             Type type,
             DataNode node,
             IDependencyCollection dependencies,
@@ -149,6 +149,5 @@ namespace Robust.Shared.Serialization.Manager
             reader = null;
             return false;
         }
-
     }
 }

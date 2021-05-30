@@ -492,6 +492,10 @@ namespace Robust.Client.Graphics.Clyde
                     parameters.Fullscreen ? monitor : null,
                     contextShare);
 
+                // Check if window failed to create.
+                if (window == null)
+                    return null;
+
                 if (parameters.Maximized)
                 {
                     GLFW.GetMonitorPos(monitor, out var x, out var y);

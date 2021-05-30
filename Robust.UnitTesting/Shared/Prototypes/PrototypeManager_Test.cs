@@ -1,5 +1,4 @@
-﻿using System.IO;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
@@ -22,12 +21,12 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void Setup()
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
-            factory.Register<TestBasicPrototypeComponent>();
+            factory.RegisterClass<TestBasicPrototypeComponent>();
             factory.RegisterClass<PointLightComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.LoadFromStream(new StringReader(DOCUMENT));
+            manager.LoadString(DOCUMENT);
             manager.Resync();
         }
 

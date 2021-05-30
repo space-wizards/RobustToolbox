@@ -99,6 +99,7 @@ namespace Robust.Shared.GameObjects
         private class EventTables : IDisposable
         {
             private IEntityManager _entMan;
+            private IComponentFactory _comFac;
 
             // eUid -> EventType -> { CompType1, ... CompTypeN }
             private Dictionary<EntityUid, Dictionary<Type, HashSet<Type>>> _eventTables;
@@ -112,6 +113,7 @@ namespace Robust.Shared.GameObjects
             public EventTables(IEntityManager entMan)
             {
                 _entMan = entMan;
+                _comFac = entMan.ComponentManager.ComponentFactory;
 
                 _entMan.EntityAdded += OnEntityAdded;
                 _entMan.EntityDeleted += OnEntityDeleted;
@@ -194,18 +196,21 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                if (!_subscriptions.TryGetValue(compType, out var compSubs))
-                    return;
-
-                foreach (var kvSub in compSubs)
+                foreach (var type in GetReferences(compType))
                 {
-                    if(!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
-                    {
-                        subscribedComps = new HashSet<Type>();
-                        eventTable.Add(kvSub.Key, subscribedComps);
-                    }
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        continue;
 
-                    subscribedComps.Add(compType);
+                    foreach (var kvSub in compSubs)
+                    {
+                        if(!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                        {
+                            subscribedComps = new HashSet<Type>();
+                            eventTable.Add(kvSub.Key, subscribedComps);
+                        }
+
+                        subscribedComps.Add(type);
+                    }
                 }
             }
 
@@ -213,15 +218,18 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                if (!_subscriptions.TryGetValue(compType, out var compSubs))
-                    return;
-
-                foreach (var kvSub in compSubs)
+                foreach (var type in GetReferences(compType))
                 {
-                    if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
-                        return;
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        continue;
 
-                    subscribedComps.Remove(compType);
+                    foreach (var kvSub in compSubs)
+                    {
+                        if (!eventTable.TryGetValue(kvSub.Key, out var subscribedComps))
+                            return;
+
+                        subscribedComps.Remove(type);
+                    }
                 }
             }
 
@@ -241,19 +249,23 @@ namespace Robust.Shared.GameObjects
                         return;
 
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
+
                     handler(euid, component, args);
                 }
             }
 
             public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
             {
-                if (!_subscriptions.TryGetValue(component.GetType(), out var compSubs))
-                    return;
+                foreach (var type in GetReferences(component.GetType()))
+                {
+                    if (!_subscriptions.TryGetValue(type, out var compSubs))
+                        continue;
 
-                if (!compSubs.TryGetValue(eventType, out var handler))
-                    return;
+                    if (!compSubs.TryGetValue(eventType, out var handler))
+                        continue;
 
-                handler(euid, component, args);
+                    handler(euid, component, args);
+                }
             }
 
             public void ClearEntities()
@@ -280,6 +292,11 @@ namespace Robust.Shared.GameObjects
                 _entMan = null!;
                 _eventTables = null!;
                 _subscriptions = null!;
+            }
+
+            private IEnumerable<Type> GetReferences(Type type)
+            {
+                return _comFac.GetRegistration(type).References;
             }
         }
 

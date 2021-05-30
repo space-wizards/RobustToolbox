@@ -21,6 +21,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
+        public IComponentFactory ComponentFactory => _componentFactory;
+
         private const int TypeCapacity = 32;
         private const int ComponentCollectionCapacity = 1024;
         private const int EntityCapacity = 1024;

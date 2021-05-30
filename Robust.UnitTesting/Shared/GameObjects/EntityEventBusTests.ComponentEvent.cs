@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -14,10 +17,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
 
+            var compRegistration = new Mock<IComponentRegistration>();
+
             var entManMock = new Mock<IEntityManager>();
-            
+
 
             var compManMock = new Mock<IComponentManager>();
+            var compFacMock = new Mock<IComponentFactory>();
+
+            compRegistration.Setup(m => m.References).Returns(new List<Type> {typeof(MetaDataComponent)});
+            compFacMock.Setup(m => m.GetRegistration(typeof(MetaDataComponent))).Returns(compRegistration.Object);
+            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
             compManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
@@ -25,6 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             compManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
+
 
             entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
@@ -62,8 +73,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
 
+            var compRegistration = new Mock<IComponentRegistration>();
 
             var compManMock = new Mock<IComponentManager>();
+            var compFacMock = new Mock<IComponentFactory>();
+
+            compRegistration.Setup(m => m.References).Returns(new List<Type> {typeof(MetaDataComponent)});
+            compFacMock.Setup(m => m.GetRegistration(typeof(MetaDataComponent))).Returns(compRegistration.Object);
+            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
             compManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
@@ -96,7 +113,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             }
 
         }
-        
+
         [Test]
         public void SubscribeCompLifeEvent()
         {
@@ -108,9 +125,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
             compInstance.Owner = mockEnt.Object;
 
             var entManMock = new Mock<IEntityManager>();
-            
+
+            var compRegistration = new Mock<IComponentRegistration>();
 
             var compManMock = new Mock<IComponentManager>();
+            var compFacMock = new Mock<IComponentFactory>();
+
+            compRegistration.Setup(m => m.References).Returns(new List<Type> {typeof(MetaDataComponent)});
+            compFacMock.Setup(m => m.GetRegistration(typeof(MetaDataComponent))).Returns(compRegistration.Object);
+            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
             compManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))

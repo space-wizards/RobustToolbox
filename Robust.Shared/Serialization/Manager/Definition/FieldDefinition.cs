@@ -2,7 +2,7 @@
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Serialization.Manager.DataDefinition
+namespace Robust.Shared.Serialization.Manager.Definition
 {
     public class FieldDefinition
     {

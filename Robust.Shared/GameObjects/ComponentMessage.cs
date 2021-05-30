@@ -7,6 +7,7 @@ namespace Robust.Shared.GameObjects
     ///     A message containing info to send through the component message system.
     /// </summary>
     [Serializable, NetSerializable]
+    [Obsolete("Component messages are deprecated. Use directed local events instead.")]
     public abstract class ComponentMessage
     {
         /// <summary>

@@ -41,17 +41,6 @@ namespace Robust.Client.GameObjects
             _broadPhaseSystem = Get<SharedBroadPhaseSystem>();
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            UnsubscribeNetworkEvent<PlayAudioEntityMessage>();
-            UnsubscribeNetworkEvent<PlayAudioGlobalMessage>();
-            UnsubscribeNetworkEvent<PlayAudioPositionalMessage>();
-            UnsubscribeNetworkEvent<StopAudioMessageClient>();
-
-            UnsubscribeLocalEvent<SoundSystem.QueryAudioSystem>();
-        }
-
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
         {
             var stream = _playingClydeStreams.Find(p => p.NetIdentifier == ev.Identifier);
@@ -265,7 +254,7 @@ namespace Robust.Client.GameObjects
             if (!source.SetPosition(entity.Transform.WorldPosition))
             {
                 source.Dispose();
-                Logger.Warning("Can't play positional audio, can't set position.");
+                Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
                 return null;
             }
 
@@ -312,7 +301,7 @@ namespace Robust.Client.GameObjects
             if (!source.SetPosition(coordinates.ToMapPos(EntityManager)))
             {
                 source.Dispose();
-                Logger.Warning("Can't play positional audio, can't set position.");
+                Logger.Warning("Can't play positional audio \"{stream.Name}\", can't set position.");
                 return null;
             }
 

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
@@ -6,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -47,13 +50,170 @@ namespace Robust.Client.GameObjects
             _mapManager.OnGridCreated += MapManagerOnGridCreated;
             _mapManager.OnGridRemoved += MapManagerOnGridRemoved;
 
-            SubscribeLocalEvent<EntMapIdChangedMessage>(EntMapIdChanged);
-            SubscribeLocalEvent<MoveEvent>(EntMoved);
-            SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
-            SubscribeLocalEvent<PointLightRadiusChangedMessage>(PointLightRadiusChanged);
-            SubscribeLocalEvent<RenderTreeRemoveSpriteMessage>(RemoveSprite);
-            SubscribeLocalEvent<RenderTreeRemoveLightMessage>(RemoveLight);
+            // Due to how recursion works, this must be done.
+            SubscribeLocalEvent<MoveEvent>(AnythingMoved);
+
+            SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
+            SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
+            SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
+            SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
+
+            SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
+            SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
+            SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
+            SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
+            SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
         }
+
+        private void AnythingMoved(MoveEvent args)
+        {
+            AnythingMovedSubHandler(args.Sender.Transform);
+        }
+
+        private void AnythingMovedSubHandler(ITransformComponent sender)
+        {
+            // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
+            // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
+            // (Struct-based events ok though)
+            if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
+                QueueSpriteUpdate(sprite);
+            if (sender.Owner.TryGetComponent(out PointLightComponent? light))
+                QueueLightUpdate(light);
+            foreach (ITransformComponent child in sender.Children)
+            {
+                AnythingMovedSubHandler(child);
+            }
+        }
+
+        // For the RemoveX methods
+        // If the Transform is removed BEFORE the Sprite/Light,
+        // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
+        // Otherwise these will still have their past MapId and that's all we need..
+
+        #region SpriteHandlers
+        private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
+        {
+            QueueSpriteUpdate(component);
+        }
+
+        private void SpriteMoved(EntityUid uid, SpriteComponent component, MoveEvent args)
+        {
+            QueueSpriteUpdate(component);
+        }
+
+        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, EntParentChangedMessage args)
+        {
+            QueueSpriteUpdate(component);
+        }
+
+        private void RemoveSprite(EntityUid uid, SpriteComponent component, ComponentRemove args)
+        {
+            ClearSprite(component);
+        }
+
+        private void ClearSprite(SpriteComponent component)
+        {
+            if (_gridTrees.TryGetValue(component.IntersectingMapId, out var gridTrees))
+            {
+                foreach (var gridId in component.IntersectingGrids)
+                {
+                    if (!gridTrees.TryGetValue(gridId, out var tree)) continue;
+                    tree.SpriteTree.Remove(component);
+                }
+            }
+
+            component.IntersectingGrids.Clear();
+        }
+
+        private void QueueSpriteUpdate(SpriteComponent component)
+        {
+            if (component.TreeUpdateQueued) return;
+
+            component.TreeUpdateQueued = true;
+            _spriteQueue.Add(component);
+
+            foreach (var child in component.Owner.Transform.Children)
+            {
+                QueueSpriteUpdate(child.Owner);
+            }
+        }
+
+        private void QueueSpriteUpdate(IEntity entity)
+        {
+            if (!entity.TryGetComponent(out SpriteComponent? spriteComponent)) return;
+            QueueSpriteUpdate(spriteComponent);
+
+            foreach (var child in entity.Transform.Children)
+            {
+                QueueSpriteUpdate(child.Owner);
+            }
+        }
+        #endregion
+
+        #region LightHandlers
+        private void LightMapChanged(EntityUid uid, PointLightComponent component, EntMapIdChangedMessage args)
+        {
+            QueueLightUpdate(component);
+        }
+
+        private void LightMoved(EntityUid uid, PointLightComponent component, MoveEvent args)
+        {
+            QueueLightUpdate(component);
+        }
+
+        private void LightParentChanged(EntityUid uid, PointLightComponent component, EntParentChangedMessage args)
+        {
+            QueueLightUpdate(component);
+        }
+
+        private void PointLightRadiusChanged(EntityUid uid, PointLightComponent component, PointLightRadiusChangedEvent args)
+        {
+            QueueLightUpdate(component);
+        }
+
+        private void RemoveLight(EntityUid uid, PointLightComponent component, RenderTreeRemoveLightEvent args)
+        {
+            ClearLight(component);
+        }
+
+        private void ClearLight(PointLightComponent component)
+        {
+            if (_gridTrees.TryGetValue(component.IntersectingMapId, out var gridTrees))
+            {
+                foreach (var gridId in component.IntersectingGrids)
+                {
+                    if (!gridTrees.TryGetValue(gridId, out var tree)) continue;
+                    tree.LightTree.Remove(component);
+                }
+            }
+
+            component.IntersectingGrids.Clear();
+        }
+
+        private void QueueLightUpdate(PointLightComponent component)
+        {
+            if (component.TreeUpdateQueued) return;
+
+            component.TreeUpdateQueued = true;
+            _lightQueue.Add(component);
+
+            foreach (var child in component.Owner.Transform.Children)
+            {
+                QueueLightUpdate(child.Owner);
+            }
+        }
+
+        private void QueueLightUpdate(IEntity entity)
+        {
+            if (!entity.TryGetComponent(out PointLightComponent? lightComponent)) return;
+            QueueLightUpdate(lightComponent);
+
+            foreach (var child in entity.Transform.Children)
+            {
+                QueueLightUpdate(child.Owner);
+            }
+        }
+        #endregion
 
         public override void Shutdown()
         {
@@ -62,136 +222,27 @@ namespace Robust.Client.GameObjects
             _mapManager.MapDestroyed -= MapManagerOnMapDestroyed;
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
             _mapManager.OnGridRemoved -= MapManagerOnGridRemoved;
-
-            UnsubscribeLocalEvent<EntMapIdChangedMessage>();
-            UnsubscribeLocalEvent<MoveEvent>();
-            UnsubscribeLocalEvent<EntParentChangedMessage>();
-            UnsubscribeLocalEvent<PointLightRadiusChangedMessage>();
-            UnsubscribeLocalEvent<RenderTreeRemoveSpriteMessage>();
-            UnsubscribeLocalEvent<RenderTreeRemoveLightMessage>();
-        }
-
-        // For these next 2 methods (the Remove* ones):
-        // If the Transform is removed BEFORE the Sprite/Light,
-        // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
-        // Otherwise these will still have their past MapId and that's all we need..
-        private void RemoveLight(RenderTreeRemoveLightMessage ev)
-        {
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Map, MapTrees.LightAabbFunc(ev.Light), true))
-            {
-                _gridTrees[ev.Map][gridId].LightTree.Remove(ev.Light);
-            }
-        }
-
-        private void RemoveSprite(RenderTreeRemoveSpriteMessage ev)
-        {
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Map, MapTrees.SpriteAabbFunc(ev.Sprite), true))
-            {
-                _gridTrees[ev.Map][gridId].SpriteTree.Remove(ev.Sprite);
-            }
-        }
-
-        private void PointLightRadiusChanged(PointLightRadiusChangedMessage ev)
-        {
-            QueueUpdateLight(ev.PointLightComponent);
-        }
-
-        private void EntParentChanged(EntParentChangedMessage ev)
-        {
-            UpdateEntity(ev.Entity);
-        }
-
-        private void EntMoved(MoveEvent ev)
-        {
-            UpdateEntity(ev.Sender);
-        }
-
-        private void UpdateEntity(IEntity entity)
-        {
-            if (entity.TryGetComponent(out SpriteComponent? spriteComponent))
-            {
-                if (!spriteComponent.TreeUpdateQueued)
-                {
-                    spriteComponent.TreeUpdateQueued = true;
-
-                    _spriteQueue.Add(spriteComponent);
-                }
-            }
-
-            if (entity.TryGetComponent(out PointLightComponent? light))
-            {
-                QueueUpdateLight(light);
-            }
-
-            foreach (var child in entity.Transform.ChildEntityUids)
-            {
-                UpdateEntity(EntityManager.GetEntity(child));
-            }
-        }
-
-        private void QueueUpdateLight(PointLightComponent light)
-        {
-            if (!light.TreeUpdateQueued)
-            {
-                light.TreeUpdateQueued = true;
-
-                _lightQueue.Add(light);
-            }
-        }
-
-        private void EntMapIdChanged(EntMapIdChangedMessage ev)
-        {
-            // Nullspace is a valid map ID for stuff to have but we also aren't gonna bother indexing it.
-            // So that's why there's a GetValueOrDefault.
-            var oldMapTrees = _gridTrees.GetValueOrDefault(ev.OldMapId);
-            var newMapTrees = _gridTrees.GetValueOrDefault(ev.Entity.Transform.MapID);
-
-            // TODO: MMMM probably a better way to do this.
-            if (ev.Entity.TryGetComponent(out SpriteComponent? sprite))
-            {
-                if (oldMapTrees != null)
-                {
-                    foreach (var (_, gridTree) in oldMapTrees)
-                    {
-                        gridTree.SpriteTree.Remove(sprite);
-                    }
-                }
-
-                var bounds = MapTrees.SpriteAabbFunc(sprite);
-
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Entity.Transform.MapID, bounds, true))
-                {
-                    var gridBounds = gridId == GridId.Invalid
-                        ? bounds : bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-
-                    newMapTrees?[gridId].SpriteTree.AddOrUpdate(sprite, gridBounds);
-                }
-            }
-
-            if (ev.Entity.TryGetComponent(out PointLightComponent? light))
-            {
-                if (oldMapTrees != null)
-                {
-                    foreach (var (_, gridTree) in oldMapTrees)
-                    {
-                        gridTree.LightTree.Remove(light);
-                    }
-                }
-
-                var bounds = MapTrees.LightAabbFunc(light);
-
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(ev.Entity.Transform.MapID, bounds, true))
-                {
-                    var gridBounds = gridId == GridId.Invalid
-                        ? bounds : bounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-
-                    newMapTrees?[gridId].LightTree.AddOrUpdate(light, gridBounds);
-                }
-            }
         }
 
         private void MapManagerOnMapDestroyed(object? sender, MapEventArgs e)
         {
+            foreach (var (_, gridTree) in _gridTrees[e.Map])
+            {
+                foreach (var comp in gridTree.LightTree)
+                {
+                    comp.IntersectingGrids.Clear();
+                }
+
+                foreach (var comp in gridTree.SpriteTree)
+                {
+                    comp.IntersectingGrids.Clear();
+                }
+
+                // Just in case?
+                gridTree.LightTree.Clear();
+                gridTree.SpriteTree.Clear();
+            }
+
             _gridTrees.Remove(e.Map);
         }
 
@@ -215,47 +266,109 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridRemoved(MapId mapId, GridId gridId)
         {
+            var gridTree = _gridTrees[mapId][gridId];
+
+            foreach (var sprite in gridTree.SpriteTree)
+            {
+                sprite.IntersectingGrids.Remove(gridId);
+            }
+
+            foreach (var light in gridTree.LightTree)
+            {
+                light.IntersectingGrids.Remove(gridId);
+            }
+
+            // Clear in case
+            gridTree.LightTree.Clear();
+            gridTree.SpriteTree.Clear();
             _gridTrees[mapId].Remove(gridId);
         }
 
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var queuedUpdateSprite in _spriteQueue)
+            foreach (var sprite in _spriteQueue)
             {
-                var map = queuedUpdateSprite.Owner.Transform.MapID;
-                if (map == MapId.Nullspace)
+                var mapId = sprite.Owner.Transform.MapID;
+
+                // If we're on a new map then clear the old one.
+                if (sprite.IntersectingMapId != mapId)
                 {
-                    continue;
+                    ClearSprite(sprite);
                 }
 
-                var mapTree = _gridTrees[map];
+                sprite.IntersectingMapId = mapId;
 
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map,
-                    MapTrees.SpriteAabbFunc(queuedUpdateSprite), true))
+                if (mapId == MapId.Nullspace) continue;
+
+                var mapTree = _gridTrees[mapId];
+                var aabb = MapTrees.SpriteAabbFunc(sprite);
+                var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
+
+                // Remove from old
+                foreach (var gridId in sprite.IntersectingGrids)
                 {
-                    mapTree[gridId].SpriteTree.AddOrUpdate(queuedUpdateSprite);
+                    if (intersectingGrids.Contains(gridId)) continue;
+                    mapTree[gridId].SpriteTree.Remove(sprite);
                 }
 
-                queuedUpdateSprite.TreeUpdateQueued = false;
+                // Rebuild in the update below
+                sprite.IntersectingGrids.Clear();
+
+                // Update / add to new
+                foreach (var gridId in intersectingGrids)
+                {
+                    var translated = aabb.Translated(gridId == GridId.Invalid
+                        ? Vector2.Zero
+                        : -_mapManager.GetGrid(gridId).WorldPosition);
+
+                    mapTree[gridId].SpriteTree.AddOrUpdate(sprite, translated);
+
+                    sprite.IntersectingGrids.Add(gridId);
+                }
+
+                sprite.TreeUpdateQueued = false;
             }
 
-            foreach (var queuedUpdateLight in _lightQueue)
+            foreach (var light in _lightQueue)
             {
-                var map = queuedUpdateLight.Owner.Transform.MapID;
-                if (map == MapId.Nullspace)
+                var mapId = light.Owner.Transform.MapID;
+
+                // If we're on a new map then clear the old one.
+                if (light.IntersectingMapId != mapId)
                 {
-                    continue;
+                    ClearLight(light);
                 }
 
-                var mapTree = _gridTrees[map];
+                light.IntersectingMapId = mapId;
 
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map,
-                    MapTrees.LightAabbFunc(queuedUpdateLight), true))
+                if (mapId == MapId.Nullspace) continue;
+
+                var mapTree = _gridTrees[mapId];
+                var aabb = MapTrees.LightAabbFunc(light);
+                var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
+
+                // Remove from old
+                foreach (var gridId in intersectingGrids)
                 {
-                    mapTree[gridId].LightTree.AddOrUpdate(queuedUpdateLight);
+                    if (intersectingGrids.Contains(gridId)) continue;
+                    mapTree[gridId].LightTree.Remove(light);
                 }
 
-                queuedUpdateLight.TreeUpdateQueued = false;
+                // Rebuild in the update below
+                light.IntersectingGrids.Clear();
+
+                // Update / add to new
+                foreach (var gridId in intersectingGrids)
+                {
+                    var translated = aabb.Translated(gridId == GridId.Invalid
+                        ? Vector2.Zero
+                        : -_mapManager.GetGrid(gridId).WorldPosition);
+
+                    mapTree[gridId].LightTree.AddOrUpdate(light, translated);
+                    light.IntersectingGrids.Add(gridId);
+                }
+
+                light.TreeUpdateQueued = false;
             }
 
             _spriteQueue.Clear();
@@ -290,21 +403,9 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal struct RenderTreeRemoveSpriteMessage
+    internal class RenderTreeRemoveLightEvent : EntityEventArgs
     {
-        public RenderTreeRemoveSpriteMessage(SpriteComponent sprite, MapId map)
-        {
-            Sprite = sprite;
-            Map = map;
-        }
-
-        public SpriteComponent Sprite { get; }
-        public MapId Map { get; }
-    }
-
-    internal struct RenderTreeRemoveLightMessage
-    {
-        public RenderTreeRemoveLightMessage(PointLightComponent light, MapId map)
+        public RenderTreeRemoveLightEvent(PointLightComponent light, MapId map)
         {
             Light = light;
             Map = map;

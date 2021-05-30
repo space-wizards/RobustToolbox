@@ -378,44 +378,54 @@ namespace Robust.Shared.Physics.Dynamics
                 // so we'll do this (TODO: Maybe it's shitty design and we should move to PostCollide? Though we still need to check for each contact anyway I guess).
                 if (!contact.IsTouching) continue;
 
-                var bodyA = contact.FixtureA!.Body;
-                var bodyB = contact.FixtureB!.Body;
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
+                var bodyA = fixtureA.Body;
+                var bodyB = fixtureB.Body;
+                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB, manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA, manifold));
 
+#pragma warning disable 618
                 foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
+                    comp.CollideWith(fixtureA, fixtureB, contact.Manifold);
                 }
 
                 foreach (var comp in bodyB.Owner.GetAllComponents<IStartCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
+                    comp.CollideWith(fixtureB, fixtureA, contact.Manifold);
                 }
+#pragma warning restore 618
             }
 
             foreach (var contact in _endCollisions)
             {
-                var bodyA = contact.FixtureA!.Body;
-                var bodyB = contact.FixtureB!.Body;
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
+                var bodyA = fixtureA.Body;
+                var bodyB = fixtureB.Body;
+                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(contact.FixtureA, contact.FixtureB, contact.Manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(contact.FixtureB, contact.FixtureA, contact.Manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB, manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA, manifold));
 
+#pragma warning disable 618
                 foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(contact.FixtureA!, contact.FixtureB!, contact.Manifold);
+                    comp.CollideWith(fixtureA, fixtureB, manifold);
                 }
 
                 foreach (var comp in bodyB.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(contact.FixtureB!, contact.FixtureA!, contact.Manifold);
+                    comp.CollideWith(fixtureB, fixtureA, manifold);
                 }
+#pragma warning restore 618
             }
 
             _startCollisions.Clear();

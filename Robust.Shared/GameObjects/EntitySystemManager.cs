@@ -9,23 +9,29 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+#if EXCEPTION_TOLERANCE
+using Robust.Shared.Exceptions;
+#endif
+
 
 namespace Robust.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
+#if EXCEPTION_TOLERANCE
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+#endif
+
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
             "Amount of time spent processing each entity system", new HistogramConfiguration
             {
                 LabelNames = new[] {"system"},
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
-
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
-#pragma warning restore 649
 
         [ViewVariables]
         private readonly List<Type> _extraLoadedTypes = new();
@@ -268,7 +274,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("entsys", e.ToString());
+                    _runtimeLog.LogException(e, "entsys");
                 }
 #endif
 
@@ -293,7 +299,7 @@ namespace Robust.Shared.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("entsys", e.ToString());
+                    _runtimeLog.LogException(e, "entsys");
                 }
 #endif
             }

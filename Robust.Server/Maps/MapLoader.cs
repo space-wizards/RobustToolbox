@@ -15,7 +15,9 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
+using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -767,7 +769,7 @@ namespace Robust.Server.Maps
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
-                            compMapping.AddNode("type", new ValueDataNode(component.Name));
+                            compMapping.Add("type", new ValueDataNode(component.Name));
                             // Something actually got written!
                             components.Add(compMapping.ToYamlNode());
                         }

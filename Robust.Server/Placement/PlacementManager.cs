@@ -212,7 +212,7 @@ namespace Robust.Server.Placement
             foreach (IEntity entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
+                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
                     continue;
                 entity.Delete();
             }
@@ -223,10 +223,10 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
-            if (!mob.TryGetComponent<IActorComponent>(out var actor))
+            if (!mob.TryGetComponent<ActorComponent>(out var actor))
                 return;
 
-            var playerConnection = actor.playerSession.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -244,10 +244,10 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
-            if (!mob.TryGetComponent<IActorComponent>(out var actor))
+            if (!mob.TryGetComponent<ActorComponent>(out var actor))
                 return;
 
-            var playerConnection = actor.playerSession.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 
@@ -265,10 +265,10 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementCancel(IEntity mob)
         {
-            if (!mob.TryGetComponent<IActorComponent>(out var actor))
+            if (!mob.TryGetComponent<ActorComponent>(out var actor))
                 return;
 
-            var playerConnection = actor.playerSession.ConnectedClient;
+            var playerConnection = actor.PlayerSession.ConnectedClient;
             if (playerConnection == null)
                 return;
 

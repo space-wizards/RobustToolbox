@@ -247,7 +247,6 @@ namespace {nameSpace}
                                 DiagnosticSeverity.Error,
                                 true),
                             Location.None));
-                    return null;
                 }
             }
 

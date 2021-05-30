@@ -125,7 +125,6 @@ namespace Robust.Client
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
-            IoCManager.Resolve<IEntityLookup>().Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();

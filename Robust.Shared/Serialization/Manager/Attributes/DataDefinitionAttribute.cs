@@ -6,7 +6,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     [MeansDataDefinition]
     [MeansImplicitUse]
-    public class DataDefinition : Attribute
+    public class DataDefinitionAttribute : Attribute
     {
     }
 }

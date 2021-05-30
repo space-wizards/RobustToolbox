@@ -28,7 +28,7 @@ namespace Robust.Client.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new();
+        private readonly Dictionary<NetUserId, ICommonSession> _sessions = new();
 
         /// <inheritdoc />
         public IEnumerable<ICommonSession> NetworkedSessions
@@ -69,10 +69,10 @@ namespace Robust.Client.Player
 
         /// <inheritdoc />
         [ViewVariables]
-        IEnumerable<IPlayerSession> IPlayerManager.Sessions => _sessions.Values;
+        IEnumerable<ICommonSession> IPlayerManager.Sessions => _sessions.Values;
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;
+        public IReadOnlyDictionary<NetUserId, ICommonSession> SessionsDict => _sessions;
 
         /// <inheritdoc />
         public event EventHandler? PlayerListUpdated;

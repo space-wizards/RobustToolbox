@@ -114,6 +114,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private interface ITestInterfaceUnreferenced : IComponent { }
 
+        [ComponentReference(typeof(ITestInterfaceInterface))]
         private class TestInterfaceComponent : Component, ITestInterfaceInterface, ITestInterfaceUnreferenced
         {
             public override string Name => "TestInterface";
@@ -155,15 +156,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void Setup()
         {
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
-            componentFactory.Register<TestOneComponent>();
-            componentFactory.Register<TestTwoComponent>();
-            componentFactory.Register<TestThreeComponent>();
-            componentFactory.Register<TestInterfaceComponent>();
-            componentFactory.RegisterReference<TestInterfaceComponent, ITestInterfaceInterface>();
-            componentFactory.Register<TestFourComponent>();
-            componentFactory.Register<TestFiveComponent>();
-            componentFactory.Register<TestSixComponent>();
-            componentFactory.Register<TestSevenComponent>();
+            componentFactory.RegisterClass<TestOneComponent>();
+            componentFactory.RegisterClass<TestTwoComponent>();
+            componentFactory.RegisterClass<TestThreeComponent>();
+            componentFactory.RegisterClass<TestInterfaceComponent>();
+            componentFactory.RegisterClass<TestFourComponent>();
+            componentFactory.RegisterClass<TestFiveComponent>();
+            componentFactory.RegisterClass<TestSixComponent>();
+            componentFactory.RegisterClass<TestSevenComponent>();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();

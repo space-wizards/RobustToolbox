@@ -150,7 +150,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         internal int ID { get; set; } = -1;
 
-        internal bool LoneIsland { get; set; } = false;
+        internal bool LoneIsland { get; set; }
 
         private float _angTolSqr;
         private float _linTolSqr;
@@ -172,6 +172,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         private Vector2[] _positions = Array.Empty<Vector2>();
         private float[] _angles = Array.Empty<float>();
+
+        private bool _positionSolved = false;
 
         internal SolverData SolverData = new();
 
@@ -336,13 +338,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// <summary>
         ///     Go through all the bodies in this island and solve.
         /// </summary>
-        /// <param name="gravity"></param>
-        /// <param name="frameTime"></param>
-        /// <param name="dtRatio"></param>
-        /// <param name="invDt"></param>
-        /// <param name="prediction"></param>
-        /// <param name="deferredUpdates">Add any transform updates to a deferred list</param>
-        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction, List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        public void Solve(Vector2 gravity, float frameTime, float dtRatio, float invDt, bool prediction)
         {
 #if DEBUG
             _debugBodies.Clear();
@@ -467,7 +463,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 _angles[i] = angle;
             }
 
-            var positionSolved = false;
+            _positionSolved = false;
 
             for (var i = 0; i < _positionIterations; i++)
             {
@@ -488,11 +484,14 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 if (contactsOkay && jointsOkay)
                 {
-                    positionSolved = true;
+                    _positionSolved = true;
                     break;
                 }
             }
+        }
 
+        internal void UpdateBodies(List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        {
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -541,39 +540,72 @@ stored in a single array since multiple arrays lead to multiple misses.
                     body.AngularVelocity = _angularVelocities[i];
                 }
             }
+        }
 
-            // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
-            if (!prediction && _sleepAllowed)
+        internal void SleepBodies(bool prediction, float frameTime)
+        {
+            if (LoneIsland)
             {
-                var minSleepTime = float.MaxValue;
-
-                for (var i = 0; i < BodyCount; i++)
-                {
-                    var body = Bodies[i];
-
-                    if (body.BodyType == BodyType.Static)
-                        continue;
-
-                    if (!body.SleepingAllowed ||
-                        body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
-                        Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
-                    {
-                        body.SleepTime = 0.0f;
-                        minSleepTime = 0.0f;
-                    }
-                    else
-                    {
-                        body.SleepTime += frameTime;
-                        minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
-                    }
-                }
-
-                if (minSleepTime >= _timeToSleep && positionSolved)
+                if (!prediction && _sleepAllowed)
                 {
                     for (var i = 0; i < BodyCount; i++)
                     {
                         var body = Bodies[i];
-                        body.Awake = false;
+
+                        if (body.BodyType == BodyType.Static) continue;
+
+                        if (!body.SleepingAllowed ||
+                            body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
+                            Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        {
+                            body.SleepTime = 0.0f;
+                        }
+                        else
+                        {
+                            body.SleepTime += frameTime;
+                        }
+
+                        if (body.SleepTime >= _timeToSleep && _positionSolved)
+                        {
+                            body.Awake = false;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Sleep bodies if needed. Prediction won't accumulate sleep-time for bodies.
+                if (!prediction && _sleepAllowed)
+                {
+                    var minSleepTime = float.MaxValue;
+
+                    for (var i = 0; i < BodyCount; i++)
+                    {
+                        var body = Bodies[i];
+
+                        if (body.BodyType == BodyType.Static) continue;
+
+                        if (!body.SleepingAllowed ||
+                            body.AngularVelocity * body.AngularVelocity > _angTolSqr ||
+                            Vector2.Dot(body.LinearVelocity, body.LinearVelocity) > _linTolSqr)
+                        {
+                            body.SleepTime = 0.0f;
+                            minSleepTime = 0.0f;
+                        }
+                        else
+                        {
+                            body.SleepTime += frameTime;
+                            minSleepTime = MathF.Min(minSleepTime, body.SleepTime);
+                        }
+                    }
+
+                    if (minSleepTime >= _timeToSleep && _positionSolved)
+                    {
+                        for (var i = 0; i < BodyCount; i++)
+                        {
+                            var body = Bodies[i];
+                            body.Awake = false;
+                        }
                     }
                 }
             }

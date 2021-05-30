@@ -58,6 +58,8 @@ namespace Robust.Shared.Physics
         public void Initialize()
         {
             _loneIsland.Initialize();
+            // Set an initial size so we don't spam a bunch of array resizes at the start
+            _loneIsland.Resize(64, 32, 8);
         }
 
         public void InitializePools()

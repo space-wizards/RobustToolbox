@@ -633,8 +633,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
         {
-            // TODO: Rest of the stuff to actually make it parallel
-
             var islands = _islandManager.GetActive;
             // Islands are already pre-sorted
             var iBegin = 0;
@@ -643,8 +641,19 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var island = islands[iBegin];
 
-                island.Solve(Gravity, frameTime, dtRatio, invDt, prediction, _deferredUpdates);
+                island.Solve(Gravity, frameTime, dtRatio, invDt, prediction);
                 iBegin++;
+                // TODO: Submit rest in parallel if applicable
+            }
+
+            // TODO: parallel dispatch here
+
+            // Update bodies sequentially to avoid race conditions. May be able to do this parallel someday
+            // but easier to just do this for now.
+            foreach (var island in islands)
+            {
+                island.UpdateBodies(_deferredUpdates);
+                island.SleepBodies(prediction, frameTime);
             }
         }
 

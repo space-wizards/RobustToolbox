@@ -1220,16 +1220,12 @@ namespace Robust.Shared.Physics.Collision
                 if (n.X < 0)
                 {
                     manifold.LocalNormal = new Vector2(-1, 0);
-                    p0.Id = new ContactID(65794);
-                    p1.Id = new ContactID(16777219);
                     p0.LocalPoint.X = abox.Width / 2;
                     p1.LocalPoint.X = abox.Width / 2;
                 }
                 else
                 {
                     manifold.LocalNormal = new Vector2(1, 0);
-                    p0.Id = new ContactID(66048);
-                    p1.Id = new ContactID(66304);
                     p0.LocalPoint.X = abox.Width / -2;
                     p1.LocalPoint.X = abox.Width / -2;
                 }
@@ -1243,9 +1239,6 @@ namespace Robust.Shared.Physics.Collision
             }
             else
             {
-                p0.Id = new ContactID(65794);
-                p1.Id = new ContactID(16777219);
-
                 // Point toward B knowing that n points from A to B
                 if (n.Y < 0)
                 {
@@ -1267,6 +1260,12 @@ namespace Robust.Shared.Physics.Collision
 
                 manifold.LocalPoint = manifold.LocalNormal * abox.Height / 2;
             }
+
+            p0.Id.Features.TypeA = (byte) ContactFeatureType.Face;
+            p0.Id.Features.TypeB = (byte) ContactFeatureType.Vertex;
+
+            p1.Id.Features.TypeA = (byte) ContactFeatureType.Face;
+            p1.Id.Features.TypeB = (byte) ContactFeatureType.Vertex;
 
             manifold.Points[0] = p0;
             manifold.Points[1] = p1;

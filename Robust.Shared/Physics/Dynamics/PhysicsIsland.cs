@@ -148,7 +148,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         private ContactSolver _contactSolver = default!;
 
-        internal int ID { get; set; }
+        internal int ID { get; set; } = -1;
 
         internal bool LoneIsland { get; set; } = false;
 

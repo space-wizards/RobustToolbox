@@ -26,7 +26,7 @@ namespace Robust.Shared.Physics
         /// The island all non-contact non-joint bodies are added to to batch together. This needs its own custom sleeping
         /// given we cant wait for every body to be ready to sleep.
         /// </summary>
-        private PhysicsIsland _loneIsland = new();// {LoneIsland = true, ID = 0};
+        private PhysicsIsland _loneIsland = new() {LoneIsland = true, ID = 0};
 
         /// <summary>
         /// Contains islands currently in use.

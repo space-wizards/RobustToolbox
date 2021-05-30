@@ -81,7 +81,6 @@ namespace Robust.Shared.Physics
             _freeIslands.Clear();
 
             // Check whether allocated islands are sorted
-            // Bullet3 uses bodycapacity but constraints are way more expensive
             var lastCapacity = 0;
             var isSorted = true;
 
@@ -103,10 +102,11 @@ namespace Robust.Shared.Physics
             }
 
             // TODO: Look at removing islands occasionally just to avoid memory bloat over time.
+            // e.g. every 30 seconds go through every island that hasn't been used in 30 seconds and remove it.
+
             // Free up islands
             foreach (var island in _allocatedIslands)
             {
-                // No need to reset ID here right...
                 island.Clear();
                 _freeIslands.Add(island);
             }
@@ -114,7 +114,6 @@ namespace Robust.Shared.Physics
 
         public PhysicsIsland AllocateIsland(int bodyCount, int contactCount, int jointCount)
         {
-            // TODO: Assert the caller
             // If only 1 body then that means no contacts or joints. This also means that we can add it to the loneisland
             if (bodyCount == 1)
             {

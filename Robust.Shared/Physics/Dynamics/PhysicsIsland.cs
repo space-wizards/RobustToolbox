@@ -297,6 +297,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public void Clear()
         {
+            ID = -1;
             BodyCount = 0;
             ContactCount = 0;
             JointCount = 0;

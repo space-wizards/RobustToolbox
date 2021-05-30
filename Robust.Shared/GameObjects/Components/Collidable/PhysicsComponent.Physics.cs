@@ -1294,6 +1294,11 @@ namespace Robust.Shared.GameObjects
 
             if (preventCollideMessage.Cancelled) return false;
 
+            preventCollideMessage = new PreventCollideEvent(other, this);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(other.Owner.Uid, preventCollideMessage);
+
+            if (preventCollideMessage.Cancelled) return false;
+
 #pragma warning disable 618
             foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
             {

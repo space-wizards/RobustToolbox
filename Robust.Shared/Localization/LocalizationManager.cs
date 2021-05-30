@@ -252,23 +252,24 @@ namespace Robust.Shared.Localization
                 using var fileStream = resourceManager.ContentFileRead(path);
                 using var reader = new StreamReader(fileStream, EncodingHelpers.UTF8);
 
-                var resource = new LinguiniParser(reader).Parse();
-                return (path, resource);
+                var parser = new LinguiniParser(reader);
+                var resource = parser.Parse();
+                return (path, resource, parser.GetReadonlyData);
             });
 
-            foreach (var (path, resource) in resources)
+            foreach (var (path, resource, data) in resources)
             {
                 var errors = resource.Errors;
                 context.AddResourceOverriding(resource);
-                WriteWarningForErrs(path, errors);
+                WriteWarningForErrs(path, errors, data);
             }
         }
 
-        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs)
+        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
         {
             foreach (var err in errs)
             {
-                _logSawmill.Warning("{path}: {exception}", path, err);
+                _logSawmill.Warning("{path}:\n{exception}", path, err.FormatCompileErrors(resource));
             }
         }
 

@@ -211,25 +211,6 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
         private int _collisionMask;
 
-        void ISerializationHooks.AfterDeserialization()
-        {
-            // TODO: Temporary until PhysShapeAabb is fixed because some weird shit happens with collisions.
-            // You'll also need a dedicated solver for circles (and ideally AABBs) as otherwise it'll be laggier casting to PolygonShape.
-            if (Shape is PhysShapeAabb aabb)
-            {
-                Shape = new PolygonShape
-                {
-                    Vertices = new List<Vector2>
-                    {
-                        aabb.LocalBounds.BottomRight,
-                        aabb.LocalBounds.TopRight,
-                        aabb.LocalBounds.TopLeft,
-                        aabb.LocalBounds.BottomLeft,
-                    }
-                };
-            }
-        }
-
         public Fixture(PhysicsComponent body, IPhysShape shape)
         {
             Body = body;

@@ -1171,7 +1171,105 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+            // Randy Gaul's AABBvsAABB
+
+            // Vector from A to B
+            Vector2 n = transformB.Position - transformA.Position;
+
+            Box2 abox = aabbA.LocalBounds;
+            Box2 bbox = aabbB.LocalBounds;
+
+            // Calculate half extents along x axis for each object
+            float a_extent_x = (abox.Right - abox.Left) / 2;
+            float b_extent_x = (bbox.Right - bbox.Left) / 2;
+
+            // Calculate overlap on x axis
+            float x_overlap = a_extent_x + b_extent_x - MathF.Abs(n.X);
+
+            // SAT test on x axis
+            if (!(x_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            // Calculate half extents along y axis for each object
+            var a_extentY = (abox.Top - abox.Bottom) / 2;
+            var b_extentY = (bbox.Top - bbox.Bottom) / 2;
+
+            // Calculate overlap on y axis
+            float y_overlap = a_extentY + b_extentY - MathF.Abs(n.Y);
+
+            // SAT test on y axis
+            if (!(y_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            var p0 = manifold.Points[0];
+            var p1 = manifold.Points[1];
+
+            manifold.PointCount = 2;
+            manifold.Type = ManifoldType.FaceA;
+
+            // Find out which axis is axis of least penetration
+            if (x_overlap <= y_overlap)
+            {
+                // Point towards B knowing that n points from A to B
+                if (n.X < 0)
+                {
+                    manifold.LocalNormal = new Vector2(-1, 0);
+                    p0.Id = new ContactID(65794);
+                    p1.Id = new ContactID(16777219);
+                    p0.LocalPoint.X = abox.Width / 2;
+                    p1.LocalPoint.X = abox.Width / 2;
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(1, 0);
+                    p0.Id = new ContactID(66048);
+                    p1.Id = new ContactID(66304);
+                    p0.LocalPoint.X = abox.Width / -2;
+                    p1.LocalPoint.X = abox.Width / -2;
+                }
+
+                var offset = n.Y * -1;
+
+                p0.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2);
+                p1.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+
+                manifold.LocalPoint = manifold.LocalNormal * abox.Width / 2;
+            }
+            else
+            {
+                p0.Id = new ContactID(65794);
+                p1.Id = new ContactID(16777219);
+
+                // Point toward B knowing that n points from A to B
+                if (n.Y < 0)
+                {
+                    manifold.LocalNormal = new Vector2(0, -1);
+                    p0.LocalPoint.Y = abox.Height / -2;
+                    p1.LocalPoint.Y = abox.Height / -2;
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0, 1);
+                    p0.LocalPoint.Y = abox.Height / 2;
+                    p1.LocalPoint.Y = abox.Height / 2;
+                }
+
+                var offset = n.X * -1;
+
+                p0.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2);
+                p1.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+
+                manifold.LocalPoint = manifold.LocalNormal * abox.Height / 2;
+            }
+
+            manifold.Points[0] = p0;
+            manifold.Points[1] = p1;
         }
 
         public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,

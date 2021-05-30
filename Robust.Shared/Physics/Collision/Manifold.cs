@@ -21,6 +21,7 @@
 */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Shared.Maths;
 
@@ -84,6 +85,12 @@ namespace Robust.Shared.Physics.Collision
         /// </summary>
         [FieldOffset(0)]
         public uint Key;
+
+        public ContactID(uint key)
+        {
+            Unsafe.SkipInit(out this);
+            Key = key;
+        }
 
         public static bool operator ==(ContactID id, ContactID other)
         {

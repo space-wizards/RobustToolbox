@@ -1107,11 +1107,11 @@ namespace Robust.Shared.GameObjects
             {
                 if (!Awake)
                 {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsSleepMessage(this));
                 }
                 else
                 {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsWakeMessage(this));
                 }
 
                 if (Owner.IsInContainer())

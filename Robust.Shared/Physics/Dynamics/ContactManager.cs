@@ -417,13 +417,13 @@ namespace Robust.Shared.Physics.Dynamics
                 foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyB.Deleted) break;
-                    comp.CollideWith(fixtureA, fixtureB, contact.Manifold);
+                    comp.CollideWith(fixtureA, fixtureB, manifold);
                 }
 
                 foreach (var comp in bodyB.Owner.GetAllComponents<IEndCollide>().ToArray())
                 {
                     if (bodyA.Deleted) break;
-                    comp.CollideWith(fixtureB, fixtureA, contact.Manifold);
+                    comp.CollideWith(fixtureB, fixtureA, manifold);
                 }
 #pragma warning restore 618
             }

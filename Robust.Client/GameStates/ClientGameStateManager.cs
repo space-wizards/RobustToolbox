@@ -318,6 +318,8 @@ namespace Robust.Client.GameStates
 
         private void ResetPredictedEntities(GameTick curTick)
         {
+            var bus = (EntityEventBus) _entities.EventBus;
+
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
@@ -346,6 +348,7 @@ namespace Robust.Client.GameStates
 
                     Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
+                    bus.RaiseComponentEvent(comp, new ComponentHandleState(compState, null));
                     comp.HandleComponentState(compState, null);
                 }
             }
@@ -454,12 +457,14 @@ namespace Robust.Client.GameStates
                 }
             }
 
+            var bus = (EntityEventBus) _entities.EventBus;
+
             // Make sure this is done after all entities have been instantiated.
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
                 var entity = (Entity) ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1,
+                HandleEntityState(entity.EntityManager.ComponentManager, entity, bus, kvStates.Value.Item1,
                     kvStates.Value.Item2);
             }
 
@@ -526,7 +531,7 @@ namespace Robust.Client.GameStates
             return created;
         }
 
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
@@ -584,6 +589,7 @@ namespace Robust.Client.GameStates
                 {
                     try
                     {
+                        bus.RaiseComponentEvent(component, new ComponentHandleState(cur, next));
                         component.HandleComponentState(cur, next);
                     }
                     catch (Exception e)

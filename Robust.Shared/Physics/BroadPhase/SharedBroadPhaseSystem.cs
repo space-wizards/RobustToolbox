@@ -678,12 +678,15 @@ namespace Robust.Shared.Physics.Broadphase
             return state.found;
         }
 
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
+        public List<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
+            // TODO: In an ideal world we'd just iterate over the body's contacts (need to make more stuff immediate
+            // for physics for this to be viable so future-work).
+            
             // If the body has just had its collision enabled or disabled it may not be ready yet so we'll wait a tick.
             if (!body.CanCollide || body.Owner.Transform.MapID == MapId.Nullspace)
             {
-                return Array.Empty<PhysicsComponent>();
+                return new List<PhysicsComponent>();
             }
 
             // Unfortunately due to the way grids are currently created we have to queue CanCollide event changes, hence we need to do this here.
@@ -692,10 +695,9 @@ namespace Robust.Shared.Physics.Broadphase
                 AddBody(body);
             }
 
-            var modifiers = body.Owner.GetAllComponents<ICollideSpecial>();
             var entities = new List<PhysicsComponent>();
 
-            var state = (body, modifiers, entities);
+            var state = (body, entities);
 
             foreach (var broadPhase in _lastBroadPhases[body])
             {
@@ -704,32 +706,12 @@ namespace Robust.Shared.Physics.Broadphase
                     foreach (var proxy in fixture.Proxies[GetGridId(broadPhase)])
                     {
                         broadPhase.QueryAabb(ref state,
-                            (ref (PhysicsComponent body, IEnumerable<ICollideSpecial> modifiers, List<PhysicsComponent> entities) state,
+                            (ref (PhysicsComponent body, List<PhysicsComponent> entities) state,
                                 in FixtureProxy other) =>
                             {
                                 if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
                                 if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-
-                                var preventCollision = false;
-                                var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
-                                var preventCollideMessage = new PreventCollideEvent(body, other.Fixture.Body);
-                                EntityManager.EventBus.RaiseLocalEvent(body.Owner.Uid, preventCollideMessage);
-
-                                if (preventCollideMessage.Cancelled) return true;
-
-#pragma warning disable 618
-                                foreach (var modifier in state.modifiers)
-                                {
-                                    preventCollision |= modifier.PreventCollide(other.Fixture.Body);
-                                }
-                                foreach (var modifier in otherModifiers)
-                                {
-                                    preventCollision |= modifier.PreventCollide(body);
-                                }
-#pragma warning restore 618
-
-                                if (preventCollision)
-                                    return true;
+                                if (!body.ShouldCollide(other.Fixture.Body)) return true;
 
                                 state.entities.Add(other.Fixture.Body);
                                 return true;

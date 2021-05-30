@@ -1299,18 +1299,6 @@ namespace Robust.Shared.GameObjects
 
             if (preventCollideMessage.Cancelled) return false;
 
-#pragma warning disable 618
-            foreach (var comp in Owner.GetAllComponents<ICollideSpecial>())
-            {
-                if (comp.PreventCollide(other)) return false;
-            }
-
-            foreach (var comp in other.Owner.GetAllComponents<ICollideSpecial>())
-            {
-                if (comp.PreventCollide(this)) return false;
-            }
-#pragma warning restore 618
-
             return true;
         }
     }

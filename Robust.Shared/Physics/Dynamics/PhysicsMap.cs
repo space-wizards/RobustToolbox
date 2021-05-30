@@ -107,8 +107,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
-        private PhysicsIsland _island = default!;
-
         /// <summary>
         ///     To build islands we do a depth-first search of all colliding bodies and group them together.
         ///     This stack is used to store bodies that are colliding.
@@ -133,8 +131,6 @@ namespace Robust.Shared.Physics.Dynamics
             IoCManager.InjectDependencies(this);
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
-            _island = new PhysicsIsland();
-            _island.Initialize();
 
             _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
             _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
@@ -483,9 +479,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
-            // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(Bodies.Count, ContactManager.ContactCount, Joints.Count);
-
             DebugTools.Assert(_islandSet.Count == 0);
 
             for (Contact? c = ContactManager.ContactList.Next; c != ContactManager.ContactList; c = c.Next)

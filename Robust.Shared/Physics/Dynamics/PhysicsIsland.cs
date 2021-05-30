@@ -175,6 +175,10 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         internal SolverData SolverData = new();
 
+        private const int BodyIncrease = 8;
+        private const int ContactIncrease = 4;
+        private const int JointIncrease = 4;
+
         /// <summary>
         ///     How many bodies we can fit in the island before needing to re-size.
         /// </summary>
@@ -254,6 +258,25 @@ stored in a single array since multiple arrays lead to multiple misses.
             _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
         }
 
+        public void Append(List<IPhysBody> bodies, List<Contact> contacts, List<Joint> joints)
+        {
+            Resize(BodyCount + bodies.Count, ContactCount + contacts.Count, JointCount + joints.Count);
+            foreach (var body in bodies)
+            {
+                Add(body);
+            }
+
+            foreach (var contact in contacts)
+            {
+                Add(contact);
+            }
+
+            foreach (var joint in joints)
+            {
+                Add(joint);
+            }
+        }
+
         public void Add(IPhysBody body)
         {
             body.IslandIndex = BodyCount;
@@ -281,35 +304,32 @@ stored in a single array since multiple arrays lead to multiple misses.
          * Look there's a whole lot of stuff going on around here but all you need to know is it's trying to avoid
          * allocations where possible so it does a whole lot of passing data around and using arrays.
          */
-
-        public void Reset(int bodyCapacity, int contactCapacity, int jointCapacity)
+        public void Resize(int bodyCount, int contactCount, int jointCount)
         {
-            BodyCapacity = bodyCapacity;
-            BodyCount = 0;
+            BodyCapacity = Math.Max(bodyCount, Bodies.Length);
+            ContactCapacity = Math.Max(contactCount, _contacts.Length);
+            JointCapacity = Math.Max(jointCount, _joints.Length);
 
-            ContactCapacity = contactCapacity;
-            ContactCount = 0;
-
-            JointCapacity = jointCapacity;
-            JointCount = 0;
-
-            if (Bodies.Length < bodyCapacity)
+            if (Bodies.Length < BodyCapacity)
             {
-                Array.Resize(ref Bodies, bodyCapacity);
-                Array.Resize(ref _linearVelocities, bodyCapacity);
-                Array.Resize(ref _angularVelocities, bodyCapacity);
-                Array.Resize(ref _positions, bodyCapacity);
-                Array.Resize(ref _angles, bodyCapacity);
+                BodyCapacity = BodyIncrease * (int) MathF.Ceiling(BodyCapacity / (float) BodyIncrease);
+                Array.Resize(ref Bodies, BodyCapacity);
+                Array.Resize(ref _linearVelocities, BodyCapacity);
+                Array.Resize(ref _angularVelocities, BodyCapacity);
+                Array.Resize(ref _positions, BodyCapacity);
+                Array.Resize(ref _angles, BodyCapacity);
             }
 
-            if (_contacts.Length < contactCapacity)
+            if (_contacts.Length < ContactCapacity)
             {
-                Array.Resize(ref _contacts, contactCapacity * 2);
+                ContactCapacity = ContactIncrease * (int) MathF.Ceiling(ContactCapacity / (float) ContactIncrease);
+                Array.Resize(ref _contacts, ContactCapacity * 2);
             }
 
-            if (_joints.Length < jointCapacity)
+            if (_joints.Length < JointCapacity)
             {
-                Array.Resize(ref _joints, jointCapacity * 2);
+                JointCapacity = JointIncrease * (int) MathF.Ceiling(JointCapacity / (float) JointIncrease);
+                Array.Resize(ref _joints, JointCapacity * 2);
             }
         }
 

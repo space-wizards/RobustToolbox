@@ -163,11 +163,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsWakeMessage(this));
             }
             else
             {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }

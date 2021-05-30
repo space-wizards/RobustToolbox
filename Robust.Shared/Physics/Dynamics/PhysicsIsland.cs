@@ -138,7 +138,7 @@ constraint structures. The body velocities/positions are held in compact, tempor
 arrays to increase the number of cache hits. Linear and angular velocity are
 stored in a single array since multiple arrays lead to multiple misses.
 */
-    internal sealed class PhysicsIsland
+    public sealed class PhysicsIsland
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 #if DEBUG
@@ -147,6 +147,10 @@ stored in a single array since multiple arrays lead to multiple misses.
 #endif
 
         private ContactSolver _contactSolver = default!;
+
+        internal int ID { get; set; }
+
+        internal bool LoneIsland { get; set; } = false;
 
         private float _angTolSqr;
         private float _linTolSqr;

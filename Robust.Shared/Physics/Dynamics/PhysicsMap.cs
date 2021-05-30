@@ -39,6 +39,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IIslandManager _islandManager = default!;
 
         private SharedPhysicsSystem _physicsSystem = default!;
 

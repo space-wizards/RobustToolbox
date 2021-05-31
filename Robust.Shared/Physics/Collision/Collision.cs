@@ -1164,8 +1164,115 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            // TODO: Either port Acruid's or use Randy Gaul's or something. Big gains
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+            if (transformA.Quaternion2D.Angle != 0.0f)
+            {
+                CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+                return;
+            }
+
+            // Vector from A to B
+            var n = transformB.Position - transformA.Position;
+
+            // Closest point on A to center of B
+            var closest = n;
+
+            // Calculate half extents along each axis
+            float x_extent = (aabbA.LocalBounds.Right - aabbA.LocalBounds.Left) / 2;
+            float y_extent = (aabbA.LocalBounds.Top - aabbA.LocalBounds.Bottom) / 2;
+
+            // Clamp point to edges of the AABB
+            closest.X = Math.Clamp(closest.X, -x_extent, x_extent);
+            closest.Y = Math.Clamp(closest.Y, -y_extent, y_extent);
+
+            bool inside = false;
+
+            // Circle is inside the AABB, so we need to clamp the circle's center
+            // to the closest edge
+            if (n == closest)
+            {
+                inside = true;
+
+                // Find closest axis
+                if (MathF.Abs(n.X) > MathF.Abs(n.Y))
+                {
+                    // Clamp to closest extent
+                    if (closest.X > 0)
+                        closest.X = x_extent;
+                    else
+                        closest.X = -x_extent;
+                }
+
+                // y axis is shorter
+                else
+                {
+                    // Clamp to closest extent
+                    if (closest.Y > 0)
+                        closest.Y = y_extent;
+                    else
+                        closest.Y = -y_extent;
+                }
+            }
+
+            var normal = n - closest;
+            var d = normal.LengthSquared;
+            var r = circleB.Radius;
+
+            // Early out of the radius is shorter than distance to closest point and
+            // Circle not inside the AABB
+            if (d > r * r && !inside)
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            manifold.PointCount = 1;
+            manifold.Type = ManifoldType.FaceA;
+
+            // Avoided sqrt until we needed
+            d = MathF.Sqrt(d);
+
+            // Collision normal needs to be flipped to point outside if circle was
+            // inside the AABB
+            /*
+            if (inside)
+            {
+                manifold.LocalNormal = -n;
+                //m->penetration = r - d
+            }
+            else
+            {
+                manifold.LocalNormal = n;
+                //m->penetration = r - d
+            }
+            */
+            if (n.X > 0.0f)
+            {
+                if (n.X >= MathF.Abs(n.Y))
+                {
+                    manifold.LocalNormal = new Vector2(1.0f, 0.0f);
+                    manifold.LocalPoint = new Vector2(n.X, 0.0f);
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0.0f, n.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, n.Y);
+                }
+            }
+            else
+            {
+                if (MathF.Abs(n.X) > MathF.Abs(n.Y) || n.X == n.Y)
+                {
+                    manifold.LocalNormal = new Vector2(-1.0f, 0.0f);
+                    manifold.LocalPoint = new Vector2(n.X, 0.0f);
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0.0f, n.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, n.Y);
+                }
+            }
+
+            return;
         }
 
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,

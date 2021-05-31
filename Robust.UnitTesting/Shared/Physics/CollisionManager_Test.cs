@@ -203,7 +203,7 @@ namespace Robust.UnitTesting.Shared.Physics
             Assert.That(manifoldA.LocalPoint, Is.EqualTo(manifoldB.LocalPoint));
             Assert.That(manifoldA.LocalNormal, Is.EqualTo(manifoldB.LocalNormal));
 
-            for (var i = 0; i < 2; i++)
+            for (var i = 0; i < manifoldA.PointCount; i++)
             {
                 //Assert.That(manifoldA.Points[i].Id, Is.EqualTo(manifoldB.Points[i].Id));
                 Assert.That(manifoldA.Points[i].LocalPoint, Is.Approximately(manifoldB.Points[i].LocalPoint));

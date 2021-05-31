@@ -9,13 +9,7 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     public class MsgViewVariablesOpenSession : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesOpenSession);
-        public MsgViewVariablesOpenSession(INetChannel channel) : base(NAME, GROUP) { }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     The request ID to identify WHICH request has been granted.

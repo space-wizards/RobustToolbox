@@ -156,7 +156,7 @@ namespace Robust.Client.Placement
         {
             _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
 
-            NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
+            NetworkManager.RegisterNetMessage<MsgPlacement>(HandlePlacementMessage);
 
             _modeDictionary.Clear();
             foreach (var type in ReflectionManager.GetAllChildren<PlacementMode>())

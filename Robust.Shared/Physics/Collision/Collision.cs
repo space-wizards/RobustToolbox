@@ -1276,17 +1276,6 @@ namespace Robust.Shared.Physics.Collision
             p0.Id.Key = 0;
             p0.LocalPoint = Vector2.Zero;
             manifold.Points[0] = p0;
-
-            // TODO: Temp Parity check
-            var tempManifold = new Manifold();
-            CollidePolygonAndCircle(ref tempManifold, (PolygonShape) aabbA, transformA, circleB, transformB);
-
-            if (!tempManifold.Equals(manifold))
-            {
-                return;
-            }
-
-            return;
         }
 
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,

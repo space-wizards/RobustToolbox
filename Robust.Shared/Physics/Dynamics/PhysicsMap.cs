@@ -27,6 +27,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
@@ -474,7 +475,7 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB(_mapManager));
+                transform.RunDeferred(physics.GetWorldAABB());
             }
 
             _deferredUpdates.Clear();
@@ -513,12 +514,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 // prediction && !seed.Predict ||
-                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
-                if ((prediction && !seed.Predict) ||
-                    (seed.Paused && !seed.IgnorePaused) ||
+                if (prediction && !seed.Predict ||
                     seed.Island ||
-                    !seed.CanCollide ||
-                    seed.BodyType == BodyType.Static) continue;
+                    seed.BodyType == BodyType.Static ||
+                    (seed.Paused && !seed.IgnorePaused) ||
+                    !seed.CanCollide) continue;
 
                 // Start of a new island
                 _island.Clear();

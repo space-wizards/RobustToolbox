@@ -61,6 +61,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>
+        /// Network identifier of this joint.
+        /// </summary>
+        [ViewVariables]
+        public string ID { get; set; } = string.Empty;
+
+        /// <summary>
         /// Indicate if this joint is enabled or not. Disabling a joint
         /// means it is still in the simulation, but inactive.
         /// </summary>

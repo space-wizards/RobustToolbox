@@ -16,7 +16,6 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public sealed class GridTileLookupSystem : EntitySystem
     {
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>> _graph =
@@ -199,16 +198,16 @@ namespace Robust.Server.GameObjects
 
         private Box2 GetEntityBox(IEntity entity)
         {
-            var aabb = _lookup.GetWorldAabbFromEntity(entity);
-            return aabb.IsEmpty() ? aabb : aabb.Enlarged(-0.1f);
+            // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
+            if (entity.TryGetComponent(out IPhysBody? physics))
+                return new Box2(physics.GetWorldAABB().BottomLeft + 0.01f, physics.GetWorldAABB().TopRight - 0.01f);
+
+            // Don't want to accidentally get neighboring tiles unless we're near an edge
+            return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
         }
 
         public override void Initialize()
         {
-            base.Initialize();
-#if DEBUG
-            SubscribeNetworkEvent<RequestGridTileLookupMessage>(HandleRequest);
-#endif
             SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
@@ -225,14 +224,6 @@ namespace Robust.Server.GameObjects
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.TileChanged -= HandleTileChanged;
         }
-
-#if DEBUG
-        private void HandleRequest(RequestGridTileLookupMessage message, EntitySessionEventArgs args)
-        {
-            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => e.Uid).ToList();
-            RaiseNetworkEvent(new SendGridTileLookupMessage(message.GridId, message.Indices, entities), args.SenderSession.ConnectedClient);
-        }
-#endif
 
         private void HandleEntityInitialized(EntityInitializedMessage message)
         {

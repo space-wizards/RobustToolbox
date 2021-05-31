@@ -20,12 +20,14 @@ namespace Robust.Shared.GameObjects
         {
             if (component.Owner.TryGetComponent(out PhysicsComponent? body) && body.Joints.Any()) return;
 
-            component.Enabled = true;
+            // Force an update
+            component.RaiseStateChange();
         }
 
         private void HandleJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
         {
-            component.Enabled = false;
+            if (!ComponentManager.TryGetComponent(uid, out PhysicsComponent body)) return;
+            body.CanCollide = true;
         }
 
         private void HandleWake(EntityUid uid, CollisionWakeComponent component, PhysicsWakeMessage args)
@@ -44,8 +46,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleCollisionWakeState(EntityUid uid, CollisionWakeComponent component, CollisionWakeStateMessage args)
         {
-            if(ComponentManager.TryGetComponent<IPhysBody>(uid, out var body))
-                body.CanCollide = !component.Enabled || body.Awake;
+            if (!ComponentManager.TryGetComponent<PhysicsComponent>(uid, out var body)) return;
+
+            body.CanCollide = !component.Enabled || body.Awake || body.Joints.Any();
         }
     }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
@@ -868,22 +867,32 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)})!;
-
-            DebugTools.AssertNotNull(constructor);
-
             var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[] {typeof(INetChannel)},
                 packetType, false);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
 
-            var gen = dynamicMethod.GetILGenerator();
-            gen.Emit(OpCodes.Ldarg_0);
-            gen.Emit(OpCodes.Newobj, constructor);
-            gen.Emit(OpCodes.Ret);
+            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
 
-            var @delegate =
-                (Func<INetChannel, NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<INetChannel, NetMessage>));
+            // Obsolete path for content
+            if (packetType.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
+            {
+                gen.Emit(OpCodes.Ldarg_0);
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                constructor = packetType.GetConstructor(Type.EmptyTypes)!;
+                DebugTools.AssertNotNull(constructor);
+
+                gen.DeclareLocal(typeof(NetMessage));
+
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
+
+            var @delegate = dynamicMethod.CreateDelegate<Func<INetChannel, NetMessage>>();
 
             ref var entry = ref _netMsgFunctions[id];
             entry.CreateFunction = @delegate;
@@ -920,6 +929,14 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
+        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
+            where T : NetMessage, new()
+        {
+            RegisterNetMessage(new T().MsgName, rxCallback, accept);
+        }
+
+        /// <inheritdoc />
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
@@ -928,16 +945,25 @@ namespace Robust.Shared.Network
 
         private void CacheBlankFunction(Type type)
         {
-            var constructor = type.GetConstructor(new[] {typeof(INetChannel)})!;
-
-            DebugTools.AssertNotNull(constructor);
-
             var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
                 type, false);
-            var gen = dynamicMethod.GetILGenerator();
-            gen.Emit(OpCodes.Ldnull);
-            gen.Emit(OpCodes.Newobj, constructor);
-            gen.Emit(OpCodes.Ret);
+            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
+
+            // Obsolete path for content
+            if (type.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
+            {
+                gen.Emit(OpCodes.Ldnull);
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
+            else
+            {
+                constructor = type.GetConstructor(Type.EmptyTypes)!;
+                DebugTools.AssertNotNull(constructor);
+
+                gen.Emit(OpCodes.Newobj, constructor);
+                gen.Emit(OpCodes.Ret);
+            }
 
             var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
 

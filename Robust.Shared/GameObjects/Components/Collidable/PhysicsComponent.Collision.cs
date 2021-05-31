@@ -30,12 +30,6 @@ namespace Robust.Shared.GameObjects
         void CollideWith(Fixture ourFixture, Fixture otherFixture, in Manifold manifold);
     }
 
-    public interface ICollideSpecial
-    {
-        [Obsolete("Use PreventCollideEvent instead")]
-        bool PreventCollide(IPhysBody collidedwith);
-    }
-
     [Serializable, NetSerializable]
     public enum BodyStatus: byte
     {

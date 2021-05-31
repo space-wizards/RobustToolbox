@@ -1,5 +1,4 @@
-﻿using System.IO;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
@@ -27,7 +26,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             manager = IoCManager.Resolve<IPrototypeManager>();
-            manager.LoadFromStream(new StringReader(DOCUMENT));
+            manager.LoadString(DOCUMENT);
             manager.Resync();
         }
 

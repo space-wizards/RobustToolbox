@@ -248,6 +248,12 @@ namespace Robust.Client.Graphics.Clyde
             return new(default, default, 1, name);
         }
 
+        public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
+        {
+            // TODO: Might wanna actually load this so the length gets reported correctly.
+            return new(default, default, channels, name);
+        }
+
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
         {
             return DummyAudioSource.Instance;
@@ -319,6 +325,11 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetVolume(float decibels)
+            {
+                // Nada.
+            }
+
+            public void SetVolumeDirect(float scale)
             {
                 // Nada.
             }

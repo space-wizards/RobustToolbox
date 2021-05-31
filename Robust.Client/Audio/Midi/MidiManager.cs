@@ -6,14 +6,18 @@ using System.Threading;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi
@@ -32,30 +36,17 @@ namespace Robust.Client.Audio.Midi
         /// </returns>
         IMidiRenderer? GetNewRenderer();
 
-        /*
-        /// <summary>
-        ///     Checks whether the file at the given path is a valid midi file or not.
-        /// </summary>
-        /// <remarks>
-        ///     We add this here so content doesn't need to reference NFluidsynth.
-        /// </remarks>
-        bool IsMidiFile(string filename);
-
-        /// <summary>
-        ///     Checks whether the file at the given path is a valid midi file or not.
-        /// </summary>
-        /// <remarks>
-        ///     We add this here so content doesn't need to reference NFluidsynth.
-        /// </remarks>
-        bool IsSoundfontFile(string filename);
-        */
-
         /// <summary>
         ///     Method called every frame.
         ///     Should be used to update positional audio.
         /// </summary>
         /// <param name="frameTime"></param>
         void FrameUpdate(float frameTime);
+
+        /// <summary>
+        ///     Volume, in db.
+        /// </summary>
+        float Volume { get; set; }
 
         /// <summary>
         ///     If true, MIDI support is available.
@@ -72,9 +63,11 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
         private SharedBroadPhaseSystem _broadPhaseSystem = default!;
 
+        [ViewVariables]
         public bool IsAvailable
         {
             get
@@ -85,12 +78,29 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
+        [ViewVariables]
         private readonly List<IMidiRenderer> _renderers = new();
 
         private bool _alive = true;
         private Settings? _settings;
         private Thread? _midiThread;
         private ISawmill _midiSawmill = default!;
+        private float _volume = 0f;
+        private bool _volumeDirty = true;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Volume
+        {
+            get => _volume;
+            set
+            {
+                if (MathHelper.CloseTo(_volume, value))
+                    return;
+
+                _cfgMan.SetCVar(CVars.MidiVolume, value);
+                _volumeDirty = true;
+            }
+        }
 
         private static readonly string[] LinuxSoundfonts =
         {
@@ -117,11 +127,18 @@ namespace Robust.Client.Audio.Midi
         private NFluidsynth.Logger.LoggerDelegate _loggerDelegate = default!;
         private ISawmill _sawmill = default!;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public int OcclusionCollisionMask { get; set; }
 
         private void InitializeFluidsynth()
         {
             if (FluidsynthInitialized || _failedInitialize) return;
+
+            _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
+            {
+                _volume = value;
+                _volumeDirty = true;
+            }, true);
 
             _midiSawmill = Logger.GetSawmill("midi");
             _sawmill = Logger.GetSawmill("midi.fluidsynth");
@@ -258,76 +275,79 @@ namespace Robust.Client.Audio.Midi
             }
 
             // Update positions of streams every frame.
-            lock (_renderers)
+            foreach (var renderer in _renderers)
             {
-                foreach (var renderer in _renderers)
+                if (renderer.Disposed)
+                    continue;
+
+                if(_volumeDirty)
+                    renderer.Source.SetVolume(Volume);
+
+                if (!renderer.Mono)
                 {
-                    if (renderer.Disposed)
+                    renderer.Source.SetGlobal();
+                    continue;
+                }
+
+                MapCoordinates? mapPos = null;
+                if (renderer.TrackingCoordinates != null)
+                {
+                    mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
+                }
+                else if (renderer.TrackingEntity != null)
+                {
+                    mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                }
+
+                if (mapPos != null)
+                {
+                    var pos = mapPos.Value;
+                    if (pos.MapId != _eyeManager.CurrentMap)
+                    {
+                        renderer.Source.SetVolume(-10000000);
+                    }
+                    else
+                    {
+                        var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                        var occlusion = 0f;
+                        if (sourceRelative.Length > 0)
+                        {
+                            occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                                pos.MapId,
+                                new CollisionRay(
+                                    pos.Position,
+                                    sourceRelative.Normalized,
+                                    OcclusionCollisionMask),
+                                sourceRelative.Length,
+                                renderer.TrackingEntity);
+                        }
+
+                        renderer.Source.SetOcclusion(occlusion);
+                    }
+
+                    if (renderer.Source.SetPosition(pos.Position))
+                    {
                         continue;
+                    }
 
-                    if (!renderer.Mono)
+                    if (renderer.TrackingEntity != null)
                     {
-                        renderer.Source.SetGlobal();
+                        renderer.Source.SetVelocity(renderer.TrackingEntity.GlobalLinearVelocity());
+                    }
+
+                    if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
+                    {
+                        // just duck out instead of move to NaN
+                        renderer.Source.SetOcclusion(float.MaxValue);
                         continue;
                     }
 
-                    MapCoordinates? mapPos = null;
-                    if (renderer.TrackingCoordinates != null)
-                    {
-                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
-                    }
-                    else if (renderer.TrackingEntity != null)
-                    {
-                        mapPos = renderer.TrackingEntity.Transform.MapPosition;
-                    }
-
-                    if (mapPos != null)
-                    {
-                        var pos = mapPos.Value;
-                        if (pos.MapId != _eyeManager.CurrentMap)
-                        {
-                            renderer.Source.SetVolume(-10000000);
-                        }
-                        else
-                        {
-                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                            var occlusion = 0f;
-                            if (sourceRelative.Length > 0)
-                            {
-                                occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                                    pos.MapId,
-                                    new CollisionRay(
-                                        pos.Position,
-                                        sourceRelative.Normalized,
-                                        OcclusionCollisionMask),
-                                    sourceRelative.Length,
-                                    renderer.TrackingEntity);
-                            }
-                            renderer.Source.SetOcclusion(occlusion);
-                        }
-
-                        if (renderer.Source.SetPosition(pos.Position))
-                        {
-                            continue;
-                        }
-
-                        if (renderer.TrackingEntity != null)
-                        {
-                            renderer.Source.SetVelocity(renderer.TrackingEntity.GlobalLinearVelocity());
-                        }
-
-                        if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
-                        {
-                            // just duck out instead of move to NaN
-                            renderer.Source.SetOcclusion(float.MaxValue);
-                            continue;
-                        }
-
-                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                        renderer.Source.StopPlaying();
-                    }
+                    _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                    renderer.Source.StopPlaying();
                 }
             }
+
+            _volumeDirty = false;
         }
 
         /// <summary>

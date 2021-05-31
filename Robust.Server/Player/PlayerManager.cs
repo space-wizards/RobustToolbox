@@ -107,8 +107,8 @@ namespace Robust.Server.Player
 
             MaxPlayers = maxPlayers;
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME, HandlePlayerListReq);
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME);
+            _network.RegisterNetMessage<MsgPlayerListReq>(HandlePlayerListReq);
+            _network.RegisterNetMessage<MsgPlayerList>();
 
             _network.Connecting += OnConnecting;
             _network.Connected += NewSession;

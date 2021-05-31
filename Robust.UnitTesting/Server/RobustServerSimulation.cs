@@ -175,7 +175,7 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
-            container.Register<IEntityLookup, SharedEntityLookup>();
+            container.Register<IEntityLookup, EntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IComponentManager, ComponentManager>();
             container.Register<IPrototypeManager, PrototypeManager>();
@@ -203,9 +203,9 @@ namespace Robust.UnitTesting.Server
 
             var entityMan = container.Resolve<IEntityManager>();
             entityMan.Initialize();
-            IoCManager.Resolve<IEntityLookup>().Initialize();
             _systemDelegate?.Invoke(container.Resolve<IEntitySystemManager>());
             entityMan.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
 
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();

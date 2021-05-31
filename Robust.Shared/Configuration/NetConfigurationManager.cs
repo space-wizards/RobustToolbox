@@ -82,7 +82,7 @@ namespace Robust.Shared.Configuration
                 _netManager.Disconnect += PeerDisconnected;
             }
 
-            _netManager.RegisterNetMessage<MsgConVars>(MsgConVars.NAME, HandleNetVarMessage);
+            _netManager.RegisterNetMessage<MsgConVars>(HandleNetVarMessage);
         }
 
         private void PeerConnected(object? sender, NetChannelArgs e)

@@ -105,7 +105,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             bool skipHook,
             ISerializationContext? context)
         {
-            return new();
+            return new(source);
         }
     }
 }

@@ -1,14 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
 using Prometheus;
 using Robust.Client.GameStates;
-using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -67,7 +62,7 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+            _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
         }
 
         public override void TickUpdate(float frameTime, Histogram? histogram)

@@ -6,6 +6,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Server.Player
 {
@@ -36,7 +37,7 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity? AttachedEntity { get; set; }
 
         [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
@@ -109,21 +110,21 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity? a)
+        public void AttachToEntity(IEntity? entity)
         {
             DetachFromEntity();
 
-            if (a == null)
-            {
+            if (entity == null)
                 return;
-            }
 
-            var actorComponent = a.AddComponent<ActorComponent>();
-            actorComponent.PlayerSession = this;
-            AttachedEntity = a;
-            a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
-            a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
-            UpdatePlayerState();
+            // This event needs to be broadcast.
+            var attachPlayer = new AttachPlayerEvent(entity, this);
+            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, attachPlayer);
+
+            if (!attachPlayer.Result)
+            {
+                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
+            }
         }
 
         /// <inheritdoc />
@@ -132,22 +133,12 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
-            if (AttachedEntity.Deleted)
-            {
-                throw new InvalidOperationException("Tried to detach player, but my entity does not exist!");
-            }
+            var detachPlayer = new DetachPlayerEvent();
+            AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, detachPlayer, false);
 
-            if (AttachedEntity.TryGetComponent<ActorComponent>(out var actor))
+            if (!detachPlayer.Result)
             {
-                AttachedEntity.SendMessage(actor, new PlayerDetachedMsg(this));
-                AttachedEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerDetachedSystemMessage(AttachedEntity));
-                AttachedEntity.RemoveComponent<ActorComponent>();
-                AttachedEntity = null;
-                UpdatePlayerState();
-            }
-            else
-            {
-                throw new InvalidOperationException("Tried to detach player, but entity does not have ActorComponent!");
+                Logger.Warning($"Couldn't detach player \"{this}\" to entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
         }
 
@@ -189,6 +180,13 @@ namespace Robust.Server.Player
         }
 
         public LoginType AuthType => ConnectedClient.AuthType;
+
+        /// <inheritdoc />
+        void IPlayerSession.SetAttachedEntity(IEntity? entity)
+        {
+            AttachedEntity = entity;
+            UpdatePlayerState();
+        }
 
         private void UpdatePlayerState()
         {

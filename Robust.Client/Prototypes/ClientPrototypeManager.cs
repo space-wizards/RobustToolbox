@@ -30,7 +30,7 @@ namespace Robust.Client.Prototypes
         {
             base.Initialize();
 
-            _netManager.RegisterNetMessage<MsgReloadPrototypes>(MsgReloadPrototypes.NAME, accept: NetMessageAccept.Server);
+            _netManager.RegisterNetMessage<MsgReloadPrototypes>(accept: NetMessageAccept.Server);
 
             _clyde.OnWindowFocused += WindowFocusedChanged;
 

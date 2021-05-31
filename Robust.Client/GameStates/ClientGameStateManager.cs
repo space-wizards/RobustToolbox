@@ -1,3 +1,5 @@
+// ReSharper disable once RedundantUsingDirective
+// Used in EXCEPTION_TOLERANCE preprocessor
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -5,19 +7,18 @@ using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Map;
-using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Input;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -80,8 +81,8 @@ namespace Robust.Client.GameStates
         {
             _processor = new GameStateProcessor(_timing);
 
-            _network.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
-            _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
+            _network.RegisterNetMessage<MsgState>(HandleStateMessage);
+            _network.RegisterNetMessage<MsgStateAck>();
             _client.RunLevelChanged += RunLevelChanged;
 
             _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);

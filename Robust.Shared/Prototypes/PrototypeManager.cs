@@ -304,6 +304,18 @@ namespace Robust.Shared.Prototypes
             _prototypes.Clear();
             _prototypeResults.Clear();
             _inheritanceTrees.Clear();
+
+            foreach (var referenceIds in _references.Values)
+            {
+                foreach (var references in referenceIds.Values)
+                {
+                    foreach (var reference in references)
+                    {
+                        reference.Set(null);
+                    }
+                }
+            }
+
             _references.Clear();
         }
 

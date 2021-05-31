@@ -1164,7 +1164,7 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            if (transformA.Quaternion2D.Angle != 0.0f)
+            if (!MathHelper.CloseTo(transformA.Quaternion2D.Angle, 0.0f))
             {
                 CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
                 return;
@@ -1250,12 +1250,12 @@ namespace Robust.Shared.Physics.Collision
                 if (n.X >= MathF.Abs(n.Y))
                 {
                     manifold.LocalNormal = new Vector2(1.0f, 0.0f);
-                    manifold.LocalPoint = new Vector2(n.X, 0.0f);
+                    manifold.LocalPoint = new Vector2(closest.X, 0.0f);
                 }
                 else
                 {
-                    manifold.LocalNormal = new Vector2(0.0f, n.Y >= 0.0f ? 1.0f : -1.0f);
-                    manifold.LocalPoint = new Vector2(0.0f, n.Y);
+                    manifold.LocalNormal = new Vector2(0.0f, closest.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, closest.Y);
                 }
             }
             else
@@ -1263,13 +1263,27 @@ namespace Robust.Shared.Physics.Collision
                 if (MathF.Abs(n.X) > MathF.Abs(n.Y) || n.X == n.Y)
                 {
                     manifold.LocalNormal = new Vector2(-1.0f, 0.0f);
-                    manifold.LocalPoint = new Vector2(n.X, 0.0f);
+                    manifold.LocalPoint = new Vector2(closest.X, 0.0f);
                 }
                 else
                 {
-                    manifold.LocalNormal = new Vector2(0.0f, n.Y >= 0.0f ? 1.0f : -1.0f);
-                    manifold.LocalPoint = new Vector2(0.0f, n.Y);
+                    manifold.LocalNormal = new Vector2(0.0f, closest.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, closest.Y);
                 }
+            }
+
+            var p0 = manifold.Points[0];
+            p0.Id.Key = 0;
+            p0.LocalPoint = Vector2.Zero;
+            manifold.Points[0] = p0;
+
+            // TODO: Temp Parity check
+            var tempManifold = new Manifold();
+            CollidePolygonAndCircle(ref tempManifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+
+            if (!tempManifold.Equals(manifold))
+            {
+                return;
             }
 
             return;

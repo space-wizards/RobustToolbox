@@ -154,6 +154,31 @@ namespace Robust.Shared.Physics.Collision
         internal FixedArray2<ManifoldPoint> Points;
 
         public ManifoldType Type;
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not Manifold otherManifold) return false;
+            if (!(PointCount == otherManifold.PointCount &&
+                   Type == otherManifold.Type &&
+                   LocalPoint.EqualsApprox(otherManifold.LocalPoint) &&
+                   LocalNormal.EqualsApprox(otherManifold.LocalNormal)))
+            {
+                return false;
+            }
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                var point = Points[i];
+                var otherPoint = otherManifold.Points[i];
+
+                if (point.Id == otherPoint.Id &&
+                    point.LocalPoint.EqualsApprox(otherPoint.LocalPoint)) continue;
+
+                return false;
+            }
+
+            return true;
+        }
     }
 
     internal struct FixedArray2<T>

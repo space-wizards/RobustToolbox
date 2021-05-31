@@ -128,9 +128,24 @@ namespace Robust.Shared.Network
         /// The side of the network this message is accepted on.
         /// If we are not on the side specified, the receive callback will not be registered even if provided.
         /// </param>
+        [Obsolete("Use the method without a name argument instead")]
         void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
             where T : NetMessage;
+
+        /// <summary>
+        ///     Registers a NetMessage to be sent or received.
+        /// </summary>
+        /// <typeparam name="T">Type to register.</typeparam>
+        /// <param name="name">String ID of the message.</param>
+        /// <param name="rxCallback">Callback function to process the received message.</param>
+        /// <param name="accept">
+        /// The side of the network this message is accepted on.
+        /// If we are not on the side specified, the receive callback will not be registered even if provided.
+        /// </param>
+        void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
+            where T : NetMessage, new();
 
         /// <summary>
         ///     Creates a new NetMessage to be sent.

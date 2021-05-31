@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Fluent.Net;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
@@ -11,23 +14,49 @@ namespace Robust.Shared.Localization
     {
         private void AddBuiltinFunctions(MessageContext context)
         {
-            // Grammatical gender
+            // Grammatical gender / pronouns
             AddCtxFunction(context, "GENDER", FuncGender);
+            AddCtxFunction(context, "SUBJECT", FuncSubject);
+            AddCtxFunction(context, "OBJECT", FuncObject);
+            AddCtxFunction(context, "POSS-ADJ", FuncPossAdj);
+            AddCtxFunction(context, "POSS-PRONOUN", FuncPossPronoun);
+            AddCtxFunction(context, "REFLEXIVE", FuncReflexive);
+
+            // Conjugation
+            AddCtxFunction(context, "CONJUGATE-BE", FuncConjugateBe);
+            AddCtxFunction(context, "CONJUGATE-HAVE", FuncConjugateHave);
 
             // Proper nouns
             AddCtxFunction(context, "PROPER", FuncProper);
-
-            // Misc Attribs
-            AddCtxFunction(context, "ATTRIB", args => FuncAttrib(context, args));
-
             AddCtxFunction(context, "THE", FuncThe);
+
+            // Misc
+            AddCtxFunction(context, "ATTRIB", args => FuncAttrib(context, args));
+            AddCtxFunction(context, "CAPITALIZE", FuncCapitalize);
         }
 
+        /// <summary>
+        /// Returns the name of the entity passed in, prepended with "the" if it is not a proper noun.
+        /// </summary>
         private ILocValue FuncThe(LocArgs args)
         {
             return new LocValueString(GetString("zzzz-the", ("ent", args.Args[0])));
         }
 
+        /// <summary>
+        /// Returns the string passed in, with the first letter capitalized.
+        /// </summary>
+        private ILocValue FuncCapitalize(LocArgs args)
+        {
+            var input = args.Args[0].Format(new LocContext());
+            if (!String.IsNullOrEmpty(input))
+                return new LocValueString(input.First().ToString().ToUpper() + input.Substring(1));
+            else return new LocValueString("");
+        }
+
+        /// <summary>
+        /// Returns the gender of the entity passed in; either Male, Female, Neuter or Epicene.
+        /// </summary>
         private ILocValue FuncGender(LocArgs args)
         {
             if (args.Args.Count < 1) return new LocValueString(nameof(Gender.Neuter));
@@ -51,6 +80,62 @@ namespace Robust.Shared.Localization
             return new LocValueString(nameof(Gender.Neuter));
         }
 
+        /// <summary>
+        /// Returns the respective subject pronoun (he, she, they, it) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncSubject(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-subject-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective object pronoun (him, her, them, it) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncObject(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-object-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective possessive adjective (his, her, their, its) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncPossAdj(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-possessive-adjective", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective possessive pronoun (his, hers, theirs, its) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncPossPronoun(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-possessive-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective reflexive pronoun (himself, herself, themselves, itself) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncReflexive(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-reflexive-pronoun", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective conjugated form of "to be" (is for male/female/neuter, are for epicene) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncConjugateBe(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-conjugate-be", ("ent", args.Args[0])));
+        }
+
+        /// <summary>
+        /// Returns the respective conjugated form of "to have" (has for male/female/neuter, have for epicene) for the entity's gender.
+        /// </summary>
+        private ILocValue FuncConjugateHave(LocArgs args)
+        {
+            return new LocValueString(GetString("zzzz-conjugate-have", ("ent", args.Args[0])));
+        }
+
         private ILocValue FuncAttrib(MessageContext context, LocArgs args)
         {
             if (args.Args.Count < 2) return new LocValueString("other");
@@ -69,6 +154,9 @@ namespace Robust.Shared.Localization
             return new LocValueString("other");
         }
 
+        /// <summary>
+        /// Returns whether the passed in entity's name is proper or not.
+        /// </summary>
         private ILocValue FuncProper(LocArgs args)
         {
             if (args.Args.Count < 1) return new LocValueString("false");

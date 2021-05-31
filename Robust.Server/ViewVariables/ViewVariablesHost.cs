@@ -13,7 +13,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using DenyReason = Robust.Shared.Network.Messages.MsgViewVariablesDenySession.DenyReason;
+using static Robust.Shared.Network.Messages.MsgViewVariablesDenySession;
 
 namespace Robust.Server.ViewVariables
 {
@@ -34,16 +34,13 @@ namespace Robust.Server.ViewVariables
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(MsgViewVariablesReqSession.NAME,
-                _msgReqSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME, _msgReqData);
-            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(MsgViewVariablesModifyRemote.NAME,
-                _msgModifyRemote);
-            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(MsgViewVariablesCloseSession.NAME,
-                _msgCloseSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(MsgViewVariablesDenySession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME);
+            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(_msgReqSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(_msgReqData);
+            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(_msgModifyRemote);
+            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_msgCloseSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>();
         }
 
         private void _msgCloseSession(MsgViewVariablesCloseSession message)

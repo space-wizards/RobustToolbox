@@ -125,7 +125,7 @@ namespace Robust.Shared.Physics.Broadphase
         public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
             // TODO: Use actual shapes and not just the AABB?
-            return bodyA.GetWorldAABB(_mapManager).IntersectPercentage(bodyB.GetWorldAABB(_mapManager));
+            return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
         }
 
         public override void Initialize()
@@ -159,7 +159,8 @@ namespace Robust.Shared.Physics.Broadphase
 
                 if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
-                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager), moveEvent.WorldAABB);
+                var mapPosition = moveEvent.NewPosition.ToMapPos(EntityManager);
+                SynchronizeFixtures(physicsComponent, mapPosition - moveEvent.OldPosition.ToMapPos(EntityManager), mapPosition, moveEvent.WorldAABB);
             }
 
             while (_queuedRotateEvent.Count > 0)
@@ -173,7 +174,7 @@ namespace Robust.Shared.Physics.Broadphase
                 if (rotateEvent.Sender.Deleted || !rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                     return;
 
-                SynchronizeFixtures(physicsComponent, Vector2.Zero, rotateEvent.WorldAABB);
+                SynchronizeFixtures(physicsComponent, Vector2.Zero, null, rotateEvent.WorldAABB);
             }
 
             _handledThisTick.Clear();
@@ -523,9 +524,7 @@ namespace Robust.Shared.Physics.Broadphase
         /// <summary>
         ///     Move all of the fixtures on this body.
         /// </summary>
-        /// <param name="body"></param>
-        /// <param name="displacement"></param>
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Vector2? worldPosition = null, Box2? worldAABB = null)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -533,8 +532,13 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
+            // TODO: These will need swept broadPhases
+            worldPosition ??= body.Owner.Transform.WorldPosition;
+            var worldRotation = body.Owner.Transform.WorldRotation;
+
+
             var mapId = body.Owner.Transform.MapID;
-            worldAABB ??= body.GetWorldAABB(_mapManager);
+            worldAABB ??= body.GetWorldAABB(worldPosition, worldRotation);
 
             // 99% of the time this is going to be 1, maybe 2, so HashSet probably slower?
 
@@ -561,9 +565,6 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             // Update retained broadphases
-            // TODO: These will need swept broadPhases
-            var offset = body.Owner.Transform.WorldPosition;
-            var worldRotation = body.Owner.Transform.WorldRotation;
 
             foreach (var broadPhase in oldBroadPhases)
             {
@@ -575,19 +576,20 @@ namespace Robust.Shared.Physics.Broadphase
                 {
                     if (!fixture.Proxies.TryGetValue(gridId, out var proxies)) continue;
 
+                    var gridPosition = worldPosition.Value;
+                    double gridRotation = worldRotation;
+
+                    if (gridId != GridId.Invalid)
+                    {
+                        var grid = _mapManager.GetGrid(gridId);
+                        gridPosition -= grid.WorldPosition;
+                        // TODO: Should probably have a helper for this
+                        gridRotation = worldRotation - EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                    }
+
                     foreach (var proxy in proxies)
                     {
-                        double gridRotation = worldRotation;
-
-                        if (gridId != GridId.Invalid)
-                        {
-                            var grid = _mapManager.GetGrid(gridId);
-                            offset -= grid.WorldPosition;
-                            // TODO: Should probably have a helper for this
-                            gridRotation = worldRotation - body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-                        }
-
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPosition);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);
@@ -680,6 +682,9 @@ namespace Robust.Shared.Physics.Broadphase
 
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
+            // TODO: In an ideal world we'd just iterate over the body's contacts (need to make more stuff immediate
+            // for physics for this to be viable so future-work).
+
             // If the body has just had its collision enabled or disabled it may not be ready yet so we'll wait a tick.
             if (!body.CanCollide || body.Owner.Transform.MapID == MapId.Nullspace)
             {
@@ -692,10 +697,9 @@ namespace Robust.Shared.Physics.Broadphase
                 AddBody(body);
             }
 
-            var modifiers = body.Owner.GetAllComponents<ICollideSpecial>();
             var entities = new List<PhysicsComponent>();
 
-            var state = (body, modifiers, entities);
+            var state = (body, entities);
 
             foreach (var broadPhase in _lastBroadPhases[body])
             {
@@ -704,32 +708,12 @@ namespace Robust.Shared.Physics.Broadphase
                     foreach (var proxy in fixture.Proxies[GetGridId(broadPhase)])
                     {
                         broadPhase.QueryAabb(ref state,
-                            (ref (PhysicsComponent body, IEnumerable<ICollideSpecial> modifiers, List<PhysicsComponent> entities) state,
+                            (ref (PhysicsComponent body, List<PhysicsComponent> entities) state,
                                 in FixtureProxy other) =>
                             {
                                 if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
                                 if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-
-                                var preventCollision = false;
-                                var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
-                                var preventCollideMessage = new PreventCollideEvent(body, other.Fixture.Body);
-                                EntityManager.EventBus.RaiseLocalEvent(body.Owner.Uid, preventCollideMessage);
-
-                                if (preventCollideMessage.Cancelled) return true;
-
-#pragma warning disable 618
-                                foreach (var modifier in state.modifiers)
-                                {
-                                    preventCollision |= modifier.PreventCollide(other.Fixture.Body);
-                                }
-                                foreach (var modifier in otherModifiers)
-                                {
-                                    preventCollision |= modifier.PreventCollide(body);
-                                }
-#pragma warning restore 618
-
-                                if (preventCollision)
-                                    return true;
+                                if (!body.ShouldCollide(other.Fixture.Body)) return true;
 
                                 state.entities.Add(other.Fixture.Body);
                                 return true;

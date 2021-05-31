@@ -55,8 +55,8 @@ namespace Robust.Shared.Physics.Dynamics
         /// </remarks>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("name", true)]
-        public string Name { get; set; } = string.Empty;
+        [DataField("id", true)]
+        public string ID { get; set; } = string.Empty;
 
         public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
 
@@ -252,7 +252,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="fixture"></param>
         internal void CopyTo(Fixture fixture)
         {
-            fixture.Name = Name;
+            fixture.ID = ID;
             fixture.Shape = Shape;
             fixture._friction = _friction;
             fixture._restitution = _restitution;
@@ -334,9 +334,9 @@ namespace Robust.Shared.Physics.Dynamics
             mapManager ??= IoCManager.Resolve<IMapManager>();
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
 
-            var worldAABB = Body.GetWorldAABB(mapManager);
             var worldPosition = Body.Owner.Transform.WorldPosition;
             var worldRotation = Body.Owner.Transform.WorldRotation;
+            var worldAABB = Body.GetWorldAABB(worldPosition, worldRotation);
 
             foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
             {
@@ -609,7 +609,7 @@ namespace Robust.Shared.Physics.Dynamics
                    _collisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
                    Body == other.Body &&
-                   Name.Equals(other.Name);
+                   ID.Equals(other.ID);
         }
     }
 

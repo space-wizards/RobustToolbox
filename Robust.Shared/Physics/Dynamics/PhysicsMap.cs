@@ -25,8 +25,10 @@ using System.Collections.Generic;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
@@ -98,9 +100,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
 
-        private HashSet<Joint> _queuedJointAdd = new();
-        private HashSet<Joint> _queuedJointRemove = new();
-
         private HashSet<PhysicsComponent> _queuedWake = new();
         private HashSet<PhysicsComponent> _queuedSleep = new();
 
@@ -159,13 +158,146 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void AddJoint(Joint joint)
         {
-            // TODO: Need static helper class to easily create Joints
-            _queuedJointAdd.Add(joint);
+            var bodyA = joint.BodyA;
+            var bodyB = joint.BodyB;
+
+            // BodyA and BodyB should share joints so we can just check if BodyA already has this joint.
+            for (var je = bodyA.JointEdges; je != null; je = je.Next)
+            {
+                if (je.Joint.Equals(joint)) continue;
+            }
+
+            // TODO: Optimise dafuk out of this.
+            if (Joints.Contains(joint))
+            {
+                Logger.ErrorS("physics", $"Tried to add joint id: {joint.ID} owner: {joint.BodyA.Owner} that's already on map");
+                return;
+            }
+
+            // Connect to the world list.
+            Joints.Add(joint);
+
+            // Connect to the bodies' doubly linked lists.
+            joint.EdgeA.Joint = joint;
+            joint.EdgeA.Other = bodyB;
+            joint.EdgeA.Prev = null;
+            joint.EdgeA.Next = bodyA.JointEdges;
+
+            if (bodyA.JointEdges != null)
+                bodyA.JointEdges.Prev = joint.EdgeA;
+
+            bodyA.JointEdges = joint.EdgeA;
+
+            joint.EdgeB.Joint = joint;
+            joint.EdgeB.Other = bodyA;
+            joint.EdgeB.Prev = null;
+            joint.EdgeB.Next = bodyB.JointEdges;
+
+            if (bodyB.JointEdges != null)
+                bodyB.JointEdges.Prev = joint.EdgeB;
+
+            bodyB.JointEdges = joint.EdgeB;
+
+            joint.BodyAUid = bodyA.Owner.Uid;
+            joint.BodyBUid = bodyB.Owner.Uid;
+
+            // If the joint prevents collisions, then flag any contacts for filtering.
+            if (!joint.CollideConnected)
+            {
+                ContactEdge? edge = bodyB.ContactEdges;
+                while (edge != null)
+                {
+                    if (edge.Other == bodyA)
+                    {
+                        // Flag the contact for filtering at the next time step (where either
+                        // body is awake).
+                        edge.Contact!.FilterFlag = true;
+                    }
+
+                    edge = edge.Next;
+                }
+            }
+
+            bodyA.Dirty();
+            bodyB.Dirty();
+            // Note: creating a joint doesn't wake the bodies.
         }
 
         public void RemoveJoint(Joint joint)
         {
-            _queuedJointRemove.Add(joint);
+            if (!Joints.Contains(joint))
+            {
+                Logger.ErrorS("physics", $"Tried to remove joint id: {joint.ID} owner: {joint.BodyA.Owner} that's not on map");
+                return;
+            }
+
+            bool collideConnected = joint.CollideConnected;
+
+            // Remove from the world list.
+            Joints.Remove(joint);
+
+            // Disconnect from island graph.
+            PhysicsComponent bodyA = joint.BodyA;
+            PhysicsComponent bodyB = joint.BodyB;
+
+            // Wake up connected bodies.
+            bodyA.Awake = true;
+            bodyB.Awake = true;
+
+            // Remove from body 1.
+            if (joint.EdgeA.Prev != null)
+            {
+                joint.EdgeA.Prev.Next = joint.EdgeA.Next;
+            }
+
+            if (joint.EdgeA.Next != null)
+            {
+                joint.EdgeA.Next.Prev = joint.EdgeA.Prev;
+            }
+
+            if (joint.EdgeA == bodyA.JointEdges)
+            {
+                bodyA.JointEdges = joint.EdgeA.Next;
+            }
+
+            joint.EdgeA.Prev = null;
+            joint.EdgeA.Next = null;
+
+            // Remove from body 2
+            if (joint.EdgeB.Prev != null)
+            {
+                joint.EdgeB.Prev.Next = joint.EdgeB.Next;
+            }
+
+            if (joint.EdgeB.Next != null)
+            {
+                joint.EdgeB.Next.Prev = joint.EdgeB.Prev;
+            }
+
+            if (joint.EdgeB == bodyB.JointEdges)
+            {
+                bodyB.JointEdges = joint.EdgeB.Next;
+            }
+
+            joint.EdgeB.Prev = null;
+            joint.EdgeB.Next = null;
+
+            // If the joint prevents collisions, then flag any contacts for filtering.
+            if (!collideConnected)
+            {
+                ContactEdge? edge = bodyB.ContactEdges;
+                while (edge != null)
+                {
+                    if (edge.Other == bodyA)
+                    {
+                        // Flag the contact for filtering at the next time step (where either
+                        // body is awake).
+                        edge.Contact!.FilterFlag = true;
+                    }
+
+                    edge = edge.Next;
+                }
+            }
         }
 
         #endregion
@@ -176,8 +308,6 @@ namespace Robust.Shared.Physics.Dynamics
             ProcessBodyChanges();
             ProcessWakeQueue();
             ProcessSleepQueue();
-            ProcessAddedJoints();
-            ProcessRemovedJoints();
         }
 
         private void ProcessBodyChanges()
@@ -238,183 +368,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             _queuedSleep.Clear();
         }
-
-        private void ProcessAddedJoints()
-        {
-            foreach (var joint in _queuedJointAdd)
-            {
-                // TODO: Optimise dafuk out of this.
-                if (Joints.Contains(joint)) continue;
-
-                // Just end me, I fucken hate how garbage the physics compstate is.
-
-                // because EACH body will have a joint update we needs to check if.
-
-                PhysicsComponent? bodyA;
-                PhysicsComponent? bodyB;
-
-                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                if (joint.BodyA == null || joint.BodyB == null)
-                {
-                    if (!_entityManager.TryGetEntity(joint.BodyAUid, out var bodyAEntity) ||
-                        !_entityManager.TryGetEntity(joint.BodyBUid, out var bodyBEntity))
-                    {
-                        continue;
-                    }
-
-                    if (!bodyAEntity.TryGetComponent(out bodyA) ||
-                        !bodyBEntity.TryGetComponent(out bodyB))
-                    {
-                        continue;
-                    }
-
-                    // TODO: Need to mark all this shit as nullable coming in from the state probably.
-                    joint.BodyA = bodyAEntity.GetComponent<PhysicsComponent>();
-                    joint.BodyB = bodyBEntity.GetComponent<PhysicsComponent>();
-                }
-                else
-                {
-                    bodyA = joint.BodyA;
-                    bodyB = joint.BodyB;
-                }
-
-                // BodyA and BodyB should share joints so we can just check if BodyA already has this joint.
-                for (var je = bodyA.JointEdges; je != null; je = je.Next)
-                {
-                    if (je.Joint.Equals(joint)) continue;
-                }
-
-                // Connect to the world list.
-                Joints.Add(joint);
-
-                // Connect to the bodies' doubly linked lists.
-                joint.EdgeA.Joint = joint;
-                joint.EdgeA.Other = bodyB;
-                joint.EdgeA.Prev = null;
-                joint.EdgeA.Next = bodyA.JointEdges;
-
-                if (bodyA.JointEdges != null)
-                    bodyA.JointEdges.Prev = joint.EdgeA;
-
-                bodyA.JointEdges = joint.EdgeA;
-
-                joint.EdgeB.Joint = joint;
-                joint.EdgeB.Other = bodyA;
-                joint.EdgeB.Prev = null;
-                joint.EdgeB.Next = bodyB.JointEdges;
-
-                if (bodyB.JointEdges != null)
-                    bodyB.JointEdges.Prev = joint.EdgeB;
-
-                bodyB.JointEdges = joint.EdgeB;
-
-                joint.BodyAUid = bodyA.Owner.Uid;
-                joint.BodyBUid = bodyB.Owner.Uid;
-
-                // If the joint prevents collisions, then flag any contacts for filtering.
-                if (!joint.CollideConnected)
-                {
-                    ContactEdge? edge = bodyB.ContactEdges;
-                    while (edge != null)
-                    {
-                        if (edge.Other == bodyA)
-                        {
-                            // Flag the contact for filtering at the next time step (where either
-                            // body is awake).
-                            edge.Contact!.FilterFlag = true;
-                        }
-
-                        edge = edge.Next;
-                    }
-                }
-
-                bodyA.Dirty();
-                bodyB.Dirty();
-                // Note: creating a joint doesn't wake the bodies.
-            }
-
-            _queuedJointAdd.Clear();
-        }
-
-        private void ProcessRemovedJoints()
-        {
-            foreach (var joint in _queuedJointRemove)
-            {
-                bool collideConnected = joint.CollideConnected;
-
-                // TODO: See above how much I hate joints rn
-                if (!Joints.Contains(joint)) continue;
-                // Remove from the world list.
-                Joints.Remove(joint);
-
-                // Disconnect from island graph.
-                PhysicsComponent bodyA = joint.BodyA;
-                PhysicsComponent bodyB = joint.BodyB;
-
-                // Wake up connected bodies.
-                bodyA.Awake = true;
-
-                bodyB.Awake = true;
-
-                // Remove from body 1.
-                if (joint.EdgeA.Prev != null)
-                {
-                    joint.EdgeA.Prev.Next = joint.EdgeA.Next;
-                }
-
-                if (joint.EdgeA.Next != null)
-                {
-                    joint.EdgeA.Next.Prev = joint.EdgeA.Prev;
-                }
-
-                if (joint.EdgeA == bodyA.JointEdges)
-                {
-                    bodyA.JointEdges = joint.EdgeA.Next;
-                }
-
-                joint.EdgeA.Prev = null;
-                joint.EdgeA.Next = null;
-
-                // Remove from body 2
-                if (joint.EdgeB.Prev != null)
-                {
-                    joint.EdgeB.Prev.Next = joint.EdgeB.Next;
-                }
-
-                if (joint.EdgeB.Next != null)
-                {
-                    joint.EdgeB.Next.Prev = joint.EdgeB.Prev;
-                }
-
-                if (joint.EdgeB == bodyB.JointEdges)
-                {
-                    bodyB.JointEdges = joint.EdgeB.Next;
-                }
-
-                joint.EdgeB.Prev = null;
-                joint.EdgeB.Next = null;
-
-                // If the joint prevents collisions, then flag any contacts for filtering.
-                if (!collideConnected)
-                {
-                    ContactEdge? edge = bodyB.ContactEdges;
-                    while (edge != null)
-                    {
-                        if (edge.Other == bodyA)
-                        {
-                            // Flag the contact for filtering at the next time step (where either
-                            // body is awake).
-                            edge.Contact!.FilterFlag = true;
-                        }
-
-                        edge = edge.Next;
-                    }
-                }
-            }
-
-            _queuedJointRemove.Clear();
-        }
-
         #endregion
 
         /// <summary>
@@ -474,7 +427,7 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB(_mapManager));
+                transform.RunDeferred(physics.GetWorldAABB());
             }
 
             _deferredUpdates.Clear();
@@ -513,12 +466,11 @@ namespace Robust.Shared.Physics.Dynamics
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 // prediction && !seed.Predict ||
-                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
-                if ((prediction && !seed.Predict) ||
-                    (seed.Paused && !seed.IgnorePaused) ||
+                if (prediction && !seed.Predict ||
                     seed.Island ||
-                    !seed.CanCollide ||
-                    seed.BodyType == BodyType.Static) continue;
+                    seed.BodyType == BodyType.Static ||
+                    (seed.Paused && !seed.IgnorePaused) ||
+                    !seed.CanCollide) continue;
 
                 // Start of a new island
                 _island.Clear();

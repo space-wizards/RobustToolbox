@@ -678,15 +678,15 @@ namespace Robust.Shared.Physics.Broadphase
             return state.found;
         }
 
-        public List<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
             // TODO: In an ideal world we'd just iterate over the body's contacts (need to make more stuff immediate
             // for physics for this to be viable so future-work).
-            
+
             // If the body has just had its collision enabled or disabled it may not be ready yet so we'll wait a tick.
             if (!body.CanCollide || body.Owner.Transform.MapID == MapId.Nullspace)
             {
-                return new List<PhysicsComponent>();
+                return Array.Empty<PhysicsComponent>();
             }
 
             // Unfortunately due to the way grids are currently created we have to queue CanCollide event changes, hence we need to do this here.

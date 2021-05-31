@@ -291,7 +291,6 @@ namespace Robust.Shared.Physics
             var item = tuple.tree.GetUserData(proxy)!;
             if (!tuple.approx)
             {
-                // TODO: The DynamicTree already stores AABBs so do we even need this? I know we fatten them but ehh
                 var precise = tuple.extract(item);
                 if (!precise.Intersects(tuple.aabb))
                 {

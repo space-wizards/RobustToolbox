@@ -278,7 +278,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(_mapManager), approximate);
             }
 
             return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
@@ -295,7 +295,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent(out IPhysBody? component))
             {
-                if (component.GetWorldAABB().Contains(mapPosition))
+                if (component.GetWorldAABB(_mapManager).Contains(mapPosition))
                     return true;
             }
             else
@@ -341,7 +341,7 @@ namespace Robust.Shared.GameObjects
         {
             if (entity.TryGetComponent<IPhysBody>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
+                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(_mapManager), range, approximate);
             }
 
             return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
@@ -474,14 +474,13 @@ namespace Robust.Shared.GameObjects
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
-                return new Box2(); // TODO: God this disgusts me but it's a bandaid for now, see tuple.extract
-
-            var worldPosition = ent.Transform.WorldPosition;
+                return new Box2(0, 0, 0, 0);
 
             if (ent.TryGetComponent(out IPhysBody? collider))
-                return collider.GetWorldAABB(worldPosition);
+                return collider.GetWorldAABB(_mapManager);
 
-            return new Box2(worldPosition, worldPosition);
+            var pos = ent.Transform.WorldPosition;
+            return new Box2(pos, pos);
         }
 
         #endregion

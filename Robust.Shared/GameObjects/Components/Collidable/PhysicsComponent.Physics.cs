@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -261,10 +262,7 @@ namespace Robust.Shared.GameObjects
             {
                 fixture.Body = this;
                 fixture.ComputeProperties();
-                if (string.IsNullOrEmpty(fixture.Name))
-                {
-                    fixture.Name = GetFixtureName(fixture);
-                }
+                fixture.ID = GetFixtureName(fixture);
             }
 
             ResetMassData();
@@ -304,60 +302,76 @@ namespace Robust.Shared.GameObjects
 
             // We will pray that this deferred joint is handled properly.
 
-            // TODO: Crude as FUCK diffing here as well, fine for now.
             /*
              * -- Joints --
              */
 
-            var existingJoints = new List<Joint>();
+            // TODO: Iterating like this is inefficient and bloated as fuck but on the other hand the linked-list is very convenient
+            // for bodies with a large number of fixtures / joints.
+            // Probably store them in Dictionaries but still store the linked-list stuff on the fixture / joint itself.
+            var existingJoints = Joints.ToList();
+            var toAddJoints = new List<Joint>();
+            var toRemoveJoints = new List<Joint>();
 
-            for (var je = JointEdges; je != null; je = je.Next)
+            foreach (var newJoint in newState.Joints)
             {
-                existingJoints.Add(je.Joint);
-            }
+                var jointFound = false;
 
-            var jointsDiff = true;
-
-            if (existingJoints.Count == newState.Joints.Count)
-            {
-                var anyDiff = false;
-                for (var i = 0; i < existingJoints.Count; i++)
+                foreach (var joint in existingJoints)
                 {
-                    var existing = existingJoints[i];
-                    var newJoint = newState.Joints[i];
-
-                    if (!existing.Equals(newJoint))
+                    if (joint.ID.Equals(newJoint.ID))
                     {
-                        anyDiff = true;
+                        if (!newJoint.Equals(joint) && TrySetupNetworkedJoint(newJoint))
+                        {
+                            toAddJoints.Add(newJoint);
+                            toRemoveJoints.Add(joint);
+                        }
+
+                        jointFound = true;
                         break;
                     }
                 }
 
-                if (!anyDiff)
+                if (!jointFound && TrySetupNetworkedJoint(newJoint))
                 {
-                    jointsDiff = false;
+                    toAddJoints.Add(newJoint);
                 }
             }
 
-            if (jointsDiff)
+            foreach (var joint in existingJoints)
             {
-                ClearJoints();
+                var jointFound = false;
 
-                foreach (var joint in newState.Joints)
+                foreach (var newJoint in newState.Joints)
                 {
-                    joint.EdgeA = new JointEdge();
-                    joint.EdgeB = new JointEdge();
-                    // Defer joints given it relies on 2 bodies.
-                    AddJoint(joint);
+                    if (joint.ID.Equals(newJoint.ID))
+                    {
+                        jointFound = true;
+                        break;
+                    }
                 }
+
+                if (jointFound) continue;
+
+                toRemoveJoints.Add(joint);
+            }
+
+            foreach (var joint in toRemoveJoints)
+            {
+                RemoveJoint(joint);
+            }
+
+            foreach (var joint in toAddJoints)
+            {
+                AddJoint(joint);
             }
 
             /*
              * -- Fixtures --
              */
 
-            var toAdd = new List<Fixture>();
-            var toRemove = new List<Fixture>();
+            var toAddFixtures = new List<Fixture>();
+            var toRemoveFixtures = new List<Fixture>();
             var computeProperties = false;
 
             // Given a bunch of data isn't serialized need to sort of re-initialise it
@@ -377,12 +391,12 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var existing in _fixtures)
                 {
-                    if (!fixture.Name.Equals(existing.Name)) continue;
+                    if (!fixture.ID.Equals(existing.ID)) continue;
 
                     if (!fixture.Equals(existing))
                     {
-                        toAdd.Add(fixture);
-                        toRemove.Add(existing);
+                        toAddFixtures.Add(fixture);
+                        toRemoveFixtures.Add(existing);
                     }
 
                     found = true;
@@ -391,7 +405,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!found)
                 {
-                    toAdd.Add(fixture);
+                    toAddFixtures.Add(fixture);
                 }
             }
 
@@ -402,7 +416,7 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var fixture in newFixtures)
                 {
-                    if (fixture.Name.Equals(existing.Name))
+                    if (fixture.ID.Equals(existing.ID))
                     {
                         found = true;
                         break;
@@ -411,18 +425,18 @@ namespace Robust.Shared.GameObjects
 
                 if (!found)
                 {
-                    toRemove.Add(existing);
+                    toRemoveFixtures.Add(existing);
                 }
             }
 
-            foreach (var fixture in toRemove)
+            foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
                 RemoveFixture(fixture);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
-            foreach (var fixture in toAdd)
+            foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
                 AddFixture(fixture);
@@ -446,6 +460,29 @@ namespace Robust.Shared.GameObjects
             Predict = false;
         }
 
+        private bool TrySetupNetworkedJoint(Joint joint)
+        {
+            // This can fail if we've already deleted the entity or remove physics from it I think?
+
+            if (!Owner.EntityManager.TryGetEntity(joint.BodyAUid, out var entityA) ||
+                !entityA.TryGetComponent(out PhysicsComponent? bodyA))
+            {
+                return false;
+            }
+
+            if (!Owner.EntityManager.TryGetEntity(joint.BodyBUid, out var entityB) ||
+                !entityB.TryGetComponent(out PhysicsComponent? bodyB))
+            {
+                return false;
+            }
+
+            joint.BodyA = bodyA;
+            joint.BodyB = bodyB;
+            joint.EdgeA = new JointEdge();
+            joint.EdgeB = new JointEdge();
+            return true;
+        }
+
         public Fixture? GetFixture(string name)
         {
             // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
@@ -455,7 +492,7 @@ namespace Robust.Shared.GameObjects
             // If we really need it then you just deserialize onto a dummy field that then just never gets used again.
             foreach (var fixture in _fixtures)
             {
-                if (fixture.Name.Equals(name))
+                if (fixture.ID.Equals(name))
                 {
                     return fixture;
                 }
@@ -529,7 +566,6 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
@@ -951,10 +987,44 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
-        internal string GetFixtureName(Fixture fixture)
+        private string GetFixtureName(Fixture fixture)
         {
+            if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
+
             // For any fixtures that aren't named in the code we will assign one.
             return $"fixture-{_fixtures.IndexOf(fixture)}";
+        }
+
+        private string GetJointName(Joint joint)
+        {
+            var id = joint.ID;
+
+            if (!string.IsNullOrEmpty(id)) return id;
+
+            var jointCount = Joints.Count();
+
+            for (var i = 0; i < jointCount + 1; i++)
+            {
+                id = $"joint-{i}";
+                if (GetJoint(id) != null) continue;
+                return id;
+            }
+
+            Logger.WarningS("physics", $"Unable to get a joint ID; using its hashcode instead.");
+            return joint.GetHashCode().ToString();
+        }
+
+        /// <summary>
+        /// Get a joint with the specified ID.
+        /// </summary>
+        public Joint? GetJoint(string id)
+        {
+            foreach (var joint in Joints)
+            {
+                if (joint.ID == id) return joint;
+            }
+
+            return null;
         }
 
         internal Transform GetTransform()
@@ -1090,11 +1160,11 @@ namespace Robust.Shared.GameObjects
             {
                 if (!Awake)
                 {
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsSleepMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
                 else
                 {
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsWakeMessage(this));
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
 
                 if (Owner.IsInContainer())
@@ -1104,14 +1174,9 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
                 }
-            }
-
-            if (EntitySystem.Get<SharedPhysicsSystem>().Maps.TryGetValue(Owner.Transform.MapID, out var map))
-            {
-                PhysicsMap = map;
             }
         }
 
@@ -1164,12 +1229,23 @@ namespace Robust.Shared.GameObjects
 
         public void AddJoint(Joint joint)
         {
+            var id = GetJointName(joint);
+
+            foreach (var existing in Joints)
+            {
+                // This can happen if a server created joint is sent and applied before the client can create it locally elsewhere
+                if (existing.ID.Equals(id)) return;
+            }
+
             PhysicsMap.AddJoint(joint);
+            joint.ID = id;
+            Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
         }
 
         public void RemoveJoint(Joint joint)
         {
             PhysicsMap.RemoveJoint(joint);
+            Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
         public override void OnRemove()
@@ -1274,11 +1350,6 @@ namespace Robust.Shared.GameObjects
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
-
-            if (preventCollideMessage.Cancelled) return false;
-
-            preventCollideMessage = new PreventCollideEvent(other, this);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(other.Owner.Uid, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 

@@ -220,6 +220,11 @@ namespace Robust.Shared.Physics.Dynamics
             bodyA.Dirty();
             bodyB.Dirty();
             // Note: creating a joint doesn't wake the bodies.
+
+            // Raise broadcast last so we can do both sides of directed first.
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new JointAddedEvent(joint), false);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new JointAddedEvent(joint), false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new JointAddedEvent(joint));
         }
 
         public void RemoveJoint(Joint joint)
@@ -297,6 +302,10 @@ namespace Robust.Shared.Physics.Dynamics
                     edge = edge.Next;
                 }
             }
+
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new JointRemovedEvent(joint), false);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new JointRemovedEvent(joint), false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new JointRemovedEvent(joint));
         }
 
         #endregion

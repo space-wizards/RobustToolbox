@@ -1,27 +1,45 @@
+using System.Linq;
 using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects
 {
-    public class CollisionWakeSystem : EntitySystem
+    public sealed class CollisionWakeSystem : EntitySystem
     {
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<PhysicsWakeMessage>(HandleWake);
-            SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleep);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
+            SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
             SubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>(HandleCollisionWakeState);
+
+            SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(HandleJointAdd);
+            SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(HandleJointRemove);
         }
 
-        private void HandleWake(PhysicsWakeMessage message)
+        private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            if (!message.Body.Owner.TryGetComponent<CollisionWakeComponent>(out var comp) || !comp.Enabled) return;
-            message.Body.CanCollide = true;
+            if (component.Owner.TryGetComponent(out PhysicsComponent? body) && body.Joints.Any()) return;
+
+            component.Enabled = true;
         }
 
-        private void HandleSleep(PhysicsSleepMessage message)
+        private void HandleJointAdd(EntityUid uid, CollisionWakeComponent component, JointAddedEvent args)
         {
-            if (!message.Body.Owner.TryGetComponent<CollisionWakeComponent>(out var comp) || !comp.Enabled) return;
-            message.Body.CanCollide = false;
+            component.Enabled = false;
+        }
+
+        private void HandleWake(EntityUid uid, CollisionWakeComponent component, PhysicsWakeMessage args)
+        {
+            if (!component.Enabled) return;
+
+            args.Body.CanCollide = true;
+        }
+
+        private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
+        {
+            if (!component.Enabled) return;
+
+            args.Body.CanCollide = false;
         }
 
         private void HandleCollisionWakeState(EntityUid uid, CollisionWakeComponent component, CollisionWakeStateMessage args)

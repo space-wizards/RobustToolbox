@@ -1,92 +1,26 @@
-using System;
-using JetBrains.Annotations;
-using Robust.Shared.IoC;
+﻿using System;
+using Robust.Shared.Serialization.Manager.Definition;
 
 namespace Robust.Shared.Prototypes
 {
-    public abstract class PrototypeReference : IDisposable
+    public class PrototypeReference
     {
-        protected IPrototypeManager _manager;
-
-        public readonly string ID;
-
-        public PrototypeReference(string id)
+        public PrototypeReference(ref object parent, FieldDefinition field)
         {
-            ID = id;
-            _manager = IoCManager.Resolve<IPrototypeManager>();
-            Register();
+            Parent = new WeakReference<object>(parent);
+            Field = field;
         }
 
-        public void Dispose()
+        public WeakReference<object> Parent { get; }
+
+        public FieldDefinition Field { get; }
+
+        public void Set(IPrototype? prototype)
         {
-            Unregister();
-        }
-
-        protected abstract void Register();
-        protected abstract void Unregister();
-        public abstract void RefreshPrototype();
-
-        public event Action? ReferenceChanged;
-
-        protected void InvokeReferenceChanged()
-        {
-            ReferenceChanged?.Invoke();
-        }
-    }
-
-    public abstract class PrototypeReference<T> : PrototypeReference where T : IPrototype
-    {
-        protected PrototypeReference([NotNull] string id) : base(id) { }
-        public abstract T? Prototype { get; }
-
-        protected override void Register()
-        {
-            _manager.RegisterPrototypeReference(this);
-        }
-
-        protected override void Unregister()
-        {
-            _manager.UnregisterPrototypeReference(this);
-        }
-
-        public static PrototypeReference<T> Create(string id)
-        {
-            if (typeof(T).IsValueType)
+            if (Parent.TryGetTarget(out var target))
             {
-                return (PrototypeReference<T>) Activator.CreateInstance(
-                    typeof(PrototypeStructReference<>).MakeGenericType(typeof(T)), id)!;
+                Field.BackingField.SetValue(target, prototype);
             }
-
-            return (PrototypeReference<T>) Activator.CreateInstance(
-                typeof(PrototypeClassReference<>).MakeGenericType(typeof(T)), id)!;
-        }
-    }
-
-    public class PrototypeClassReference<T> : PrototypeReference<T> where T : class, IPrototype
-    {
-        public override T? Prototype => PrototypeRef.TryGetTarget(out var prototype) ? prototype : null;
-
-        public PrototypeClassReference([NotNull] string id) : base(id) {}
-
-        public override void RefreshPrototype()
-        {
-            PrototypeRef.SetTarget(_manager.TryIndex(ID, out T? prototype) ? prototype : null);
-            InvokeReferenceChanged();
-        }
-
-        public WeakReference<T?> PrototypeRef { get; private set; } = new(null);
-    }
-
-    public class PrototypeStructReference<T> : PrototypeReference<T> where T : struct, IPrototype
-    {
-        public PrototypeStructReference([NotNull] string id) : base(id){ }
-
-        // aaaaaaaaa how are generics&nullability so FUCKED
-        public override T Prototype { get; }
-
-        public override void RefreshPrototype()
-        {
-            throw new NotImplementedException();
         }
     }
 }

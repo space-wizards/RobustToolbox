@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             [DataField("id")] public string ID { get; } = default!;
 
             [DataField("ref")]
-            public PrototypeReference<ReferencedPrototype> PrototypeReference { get; } = default!;
+            public ReferencedPrototype PrototypeReference { get; } = default!;
         }
 
         [Prototype("ref")]
@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
             Assert.That(pM.TryIndex<ReferenceHolderPrototype>("holderId", out var referenceHolderPrototype));
 
-            Assert.That(referenceHolderPrototype!.PrototypeReference.Prototype, Is.EqualTo(referencedPrototype));
+            Assert.That(referenceHolderPrototype!.PrototypeReference, Is.EqualTo(referencedPrototype));
         }
     }
 }

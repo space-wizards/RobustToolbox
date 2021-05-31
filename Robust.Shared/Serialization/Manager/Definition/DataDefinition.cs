@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Attributes.Deserializer;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -15,6 +18,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
+        private static readonly DefaultDataFieldDeserializer DefaultDeserializer = new();
+
         private readonly DeserializeDelegate _deserialize;
         private readonly PopulateDelegateSignature _populate;
         private readonly SerializeDelegateSignature _serialize;
@@ -40,7 +45,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             BaseFieldDefinitions = fields.ToImmutableArray();
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
-            _deserialize = EmitDeserializationDelegate();
+            _deserialize = EmitDeserializeDelegate();
             _populate = EmitPopulateDelegate();
             _serialize = EmitSerializeDelegate();
             _copy = EmitCopyDelegate();
@@ -81,10 +86,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
             object target,
             MappingDataNode mapping,
             ISerializationManager serialization,
+            IDependencyCollection dependencies,
             ISerializationContext? context,
             bool skipHook)
         {
-            var fields = _deserialize(mapping, serialization, context, skipHook);
+            var fields = _deserialize(target, mapping, serialization, dependencies, context, skipHook);
             return _populate(target, fields, DefaultValues);
         }
 
@@ -207,12 +213,21 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     inheritanceBehaviour = InheritanceBehavior.Never;
                 }
 
+                var deserializerType = abstractFieldInfo
+                    .FieldType
+                    .GetCustomAttribute<DataFieldDeserializerAttribute>()?
+                    .Deserializer;
+                var deserializer = (IDataFieldDeserializer) (deserializerType == null
+                    ? DefaultDeserializer
+                    : Activator.CreateInstance(deserializerType))!;
+
                 var fieldDefinition = new FieldDefinition(
                     dataField,
                     abstractFieldInfo.GetValue(dummyObject),
                     abstractFieldInfo,
                     backingField,
-                    inheritanceBehaviour);
+                    inheritanceBehaviour,
+                    deserializer);
 
                 fieldDefinitions.Add(fieldDefinition);
             }

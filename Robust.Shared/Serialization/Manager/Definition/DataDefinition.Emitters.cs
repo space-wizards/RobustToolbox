@@ -12,47 +12,48 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private DeserializeDelegate EmitDeserializationDelegate()
+        private DeserializeDelegate EmitDeserializeDelegate()
         {
-            DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
-                ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
+            DeserializedFieldEntry[] DeserializeDelegate(
+                object obj,
+                MappingDataNode mapping,
+                ISerializationManager manager,
+                IDependencyCollection dependencies,
+                ISerializationContext? context,
+                bool skipHook)
             {
                 var mappedInfo = new DeserializedFieldEntry[BaseFieldDefinitions.Length];
 
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
-                    var fieldDefinition = BaseFieldDefinitions[i];
+                    var field = BaseFieldDefinitions[i];
 
-                    if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
+                    if (field.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehavior);
+                        mappedInfo[i] = new DeserializedFieldEntry(false, field.InheritanceBehavior);
                         continue;
                     }
 
-                    var mapped = mappingDataNode.Has(fieldDefinition.Attribute.Tag);
+                    var mapped = mapping.Has(field.Attribute.Tag);
 
                     if (!mapped)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior);
+                        mappedInfo[i] = new DeserializedFieldEntry(mapped, field.InheritanceBehavior);
                         continue;
                     }
 
-                    var type = fieldDefinition.FieldType;
-                    var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
-                    var result = fieldDefinition.Attribute.CustomTypeSerializer != null
-                        ? serializationManager.ReadWithTypeSerializer(type,
-                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext,
-                            skipHook)
-                        : serializationManager.Read(type, node, serializationContext, skipHook);
+                    var type = field.FieldType;
+                    var node = mapping.Get(field.Attribute.Tag);
+                    var result = field.Deserializer.Read(obj, type, node, manager, dependencies, context, skipHook, field);
 
-                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior, result);
+                    var entry = new DeserializedFieldEntry(mapped, field.InheritanceBehavior, result);
                     mappedInfo[i] = entry;
                 }
 
                 return mappedInfo;
             }
 
-            return DeserializationDelegate;
+            return DeserializeDelegate;
         }
 
         private PopulateDelegateSignature EmitPopulateDelegate()

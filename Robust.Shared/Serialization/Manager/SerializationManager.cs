@@ -204,15 +204,19 @@ namespace Robust.Shared.Serialization.Manager
             if (TryValidateWithTypeValidator(underlyingType, node, DependencyCollection, context, out var valid)) return valid;
 
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
-                return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize", true);
+            {
+                return node is ValueDataNode valueDataNode
+                    ? new ValidatedValueNode(valueDataNode)
+                    : new ErrorNode(node, $"Invalid node type for {nameof(ISelfSerialize)}");
+            }
 
             if (TryGetDataDefinition(underlyingType, out var dataDefinition))
             {
                 return node switch
                 {
-                    ValueDataNode valueDataNode => valueDataNode.Value == "" ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for Datadefinition", false),
+                    ValueDataNode valueDataNode => valueDataNode.Value == "" ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid node type for data definition", false),
                     MappingDataNode mappingDataNode => dataDefinition.Validate(this, mappingDataNode, context),
-                    _ => new ErrorNode(node, "Invalid nodetype for Datadefinition", true)
+                    _ => new ErrorNode(node, "Invalid node type for data definition")
                 };
             }
 
@@ -257,7 +261,7 @@ namespace Robust.Shared.Serialization.Manager
         public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
         {
             if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
+                throw new ArgumentException($"Provided type {obj.GetType()} is not a data definition");
 
             if (obj is IPopulateDefaultValues populateDefaultValues)
             {
@@ -365,7 +369,7 @@ namespace Robust.Shared.Serialization.Manager
                 mappingDataNode = new MappingDataNode();
             }
 
-            var res = dataDef.Populate(obj, mappingDataNode, this, context, skipHook);
+            var res = dataDef.Populate(obj, mappingDataNode, this, DependencyCollection, context, skipHook);
 
             if (!skipHook && res.RawValue is ISerializationHooks serHooks)
             {

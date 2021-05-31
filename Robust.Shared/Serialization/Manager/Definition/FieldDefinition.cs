@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Attributes.Deserializer;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -11,13 +12,15 @@ namespace Robust.Shared.Serialization.Manager.Definition
             object? defaultValue,
             AbstractFieldInfo fieldInfo,
             AbstractFieldInfo backingField,
-            InheritanceBehavior inheritanceBehavior)
+            InheritanceBehavior inheritanceBehavior,
+            IDataFieldDeserializer deserializer)
         {
             BackingField = backingField;
             Attribute = attr;
             DefaultValue = defaultValue;
             FieldInfo = fieldInfo;
             InheritanceBehavior = inheritanceBehavior;
+            Deserializer = deserializer;
         }
 
         public DataFieldAttribute Attribute { get; }
@@ -26,20 +29,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         public InheritanceBehavior InheritanceBehavior { get; }
 
-        public AbstractFieldInfo BackingField { get; }
+        internal AbstractFieldInfo BackingField { get; }
 
-        public AbstractFieldInfo FieldInfo { get; }
+        internal AbstractFieldInfo FieldInfo { get; }
 
         public Type FieldType => FieldInfo.FieldType;
 
-        public object? GetValue(object? obj)
-        {
-            return BackingField.GetValue(obj);
-        }
-
-        public void SetValue(object? obj, object? value)
-        {
-            BackingField.SetValue(obj, value);
-        }
+        internal IDataFieldDeserializer Deserializer { get; }
     }
 }

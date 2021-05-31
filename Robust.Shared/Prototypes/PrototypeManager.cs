@@ -15,6 +15,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -71,6 +72,10 @@ namespace Robust.Shared.Prototypes
         /// Thrown if the ID does not exist or the type of prototype is not registered.
         /// </exception>
         IPrototype Index(Type type, string id);
+
+        T? IndexOrNull<T>(string id) where T : class, IPrototype;
+
+        IPrototype? IndexOrNull(Type type, string id);
 
         /// <summary>
         ///     Returns whether a prototype of type <typeparamref name="T"/> with the specified <param name="id"/> exists.
@@ -161,8 +166,9 @@ namespace Robust.Shared.Prototypes
         /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
         void RegisterType(Type protoClass);
 
-        void RegisterPrototypeReference<T>(PrototypeReference<T> prototypeReference) where T : IPrototype;
-        void UnregisterPrototypeReference<T>(PrototypeReference<T> prototypeReference) where T : IPrototype;
+        void RegisterReference(Type type, string id, object obj, FieldDefinition field);
+
+        void UnregisterReference(PrototypeReference prototypeReference);
 
         event Action<YamlStream, string>? LoadedData;
 
@@ -198,10 +204,11 @@ namespace Robust.Shared.Prototypes
 
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] protected readonly IResourceManager Resources = default!;
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
+        [Dependency] public readonly IResourceManager Resources = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] protected readonly ITaskManager TaskManager = default!;
+        [Dependency] public readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
         private readonly Dictionary<string, Type> _prototypeTypes = new();
@@ -215,7 +222,7 @@ namespace Robust.Shared.Prototypes
         private readonly Dictionary<Type, Dictionary<string, IPrototype>> _prototypes = new();
         private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
         private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
-        private readonly Dictionary<Type, Dictionary<string, List<WeakReference<PrototypeReference>>>> _prototypeReferences = new();
+        private readonly Dictionary<Type, Dictionary<string, HashSet<PrototypeReference>>> _references = new();
 
         private readonly HashSet<string> _ignoredPrototypeTypes = new();
 
@@ -271,6 +278,11 @@ namespace Robust.Shared.Prototypes
             }
         }
 
+        public T? IndexOrNull<T>(string id) where T : class, IPrototype
+        {
+            return TryIndex<T>(id, out var prototype) ? prototype : null;
+        }
+
         public IPrototype Index(Type type, string id)
         {
             if (!_hasEverBeenReloaded)
@@ -281,13 +293,18 @@ namespace Robust.Shared.Prototypes
             return _prototypes[type][id];
         }
 
+        public IPrototype? IndexOrNull(Type type, string id)
+        {
+            return TryIndex(type, id, out var prototype) ? prototype : null;
+        }
+
         public void Clear()
         {
             _prototypeTypes.Clear();
             _prototypes.Clear();
             _prototypeResults.Clear();
             _inheritanceTrees.Clear();
-            _prototypeReferences.Clear();
+            _references.Clear();
         }
 
         private int SortPrototypesByPriority(Type a, Type b)
@@ -612,14 +629,14 @@ namespace Robust.Shared.Prototypes
 
         public void PostInject()
         {
-            _reflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
+            ReflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
             ReloadPrototypeTypes();
         }
 
         private void ReloadPrototypeTypes()
         {
             Clear();
-            foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
+            foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
                 RegisterType(type);
             }
@@ -672,8 +689,15 @@ namespace Robust.Shared.Prototypes
 
         private void SetPrototype(Type type, string id, IPrototype prototype)
         {
-            _prototypes[type][prototype.ID] = prototype;
-            RefreshPrototypeReferences(type, id);
+            _prototypes[type][id] = prototype;
+
+            if (_references[type].TryGetValue(id, out var references))
+            {
+                foreach (var reference in references)
+                {
+                    reference.Set(prototype);
+                }
+            }
         }
 
         public bool HasIndex<T>(string id) where T : IPrototype
@@ -783,7 +807,7 @@ namespace Robust.Shared.Prototypes
                     $"Duplicate prototype type ID: {attribute.Type}. Current: {_prototypeTypes[attribute.Type]}");
             }
 
-            _prototypeReferences[type] = new Dictionary<string, List<WeakReference<PrototypeReference>>>();
+            _references[type] = new Dictionary<string, HashSet<PrototypeReference>>();
             _prototypeTypes[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;
 
@@ -796,67 +820,47 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        public void RegisterPrototypeReference<T>(PrototypeReference<T> prototypeReference) where T : IPrototype
+        public void RegisterReference(Type type, string id, ref object obj, FieldDefinition field)
         {
-            if (!_prototypeReferences[typeof(T)].TryGetValue(prototypeReference.ID, out var list))
+            var reference = new PrototypeReference(ref obj, field);
+            _references[type].GetOrNew(id).Add(reference);
+
+            if (_prototypes.TryGetValue(type, out var prototypes) &&
+                prototypes.TryGetValue(id, out var prototype))
             {
-                list = new List<WeakReference<PrototypeReference>>();
-                _prototypeReferences[typeof(T)].Add(prototypeReference.ID, list);
-            }
-
-            list.Add(new WeakReference<PrototypeReference>(prototypeReference));
-            prototypeReference.RefreshPrototype();
-        }
-
-        private void RefreshPrototypeReferences(Type type, string ID)
-        {
-            if (_prototypeReferences[type].TryGetValue(ID, out var list))
-            {
-                var toRemove = new List<WeakReference<PrototypeReference>>();
-                foreach (var reference in list)
-                {
-                    if (reference.TryGetTarget(out var target))
-                    {
-                        //yes it would be more efficient to pass the reference into this function and into refreshprototype,
-                        //altough that would make it possible to modify the reference to not match the prototypemanager entry
-                        target.RefreshPrototype();
-                    }
-                    else
-                    {
-                        toRemove.Add(reference);
-                    }
-                }
-
-                foreach (var weakReference in toRemove)
-                {
-                    list.Remove(weakReference);
-                }
-
-                if (list.Count == 0)
-                {
-                    _prototypeReferences[type].Remove(ID);
-                }
+                reference.Set(prototype);
             }
         }
 
-        public void UnregisterPrototypeReference<T>(PrototypeReference<T> prototypeReference) where T : IPrototype
+        public void UnregisterReference(Type type, string id, ref object obj, FieldDefinition field)
         {
-            if (!_prototypeReferences[typeof(T)].TryGetValue(prototypeReference.ID, out var list))
+            var references = _references[type];
+
+            if (!references.TryGetValue(id, out var set))
             {
-                Logger.Error($"Tried to unregister Prototypereference for Prototype (T:{typeof(T)}|ID:{prototypeReference.ID}) but no list was found.");
+                Logger.Error(
+                    $"Tried to unregister reference for Prototype (T:{type}|ID:{id}) but no list was found.");
                 return;
             }
 
-            if (!list.TryFirstOrDefault(x => x.TryGetTarget(out var target) && target == prototypeReference, out var reference))
+            var o = obj;
+
+            if (!set.TryFirstOrDefault(r =>
+                r.Parent.TryGetTarget(out var target) &&
+                target == o &&
+                r.Field == field, out var reference))
             {
-                Logger.Error($"Tried to unregister Prototypereference for Prototype (T:{typeof(T)}|ID:{prototypeReference.ID}) but it wasnt registered.");
+                Logger.Error(
+                    $"Tried to unregister reference for Prototype (T:{type}|ID:{id}) but it was not registered.");
                 return;
             }
 
-            list.Remove(reference);
-            if (list.Count == 0)
+            set.Remove(reference);
+            reference.Set(null);
+
+            if (set.Count == 0)
             {
-                _prototypeReferences[typeof(T)].Remove(prototypeReference.ID);
+                references.Remove(id);
             }
         }
 

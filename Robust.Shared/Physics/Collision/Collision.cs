@@ -1288,11 +1288,11 @@ namespace Robust.Shared.Physics.Collision
             // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
             // SOFTWARE.
 
-            var count1 = poly1.Vertices.Count;
-            var count2 = poly2.Vertices.Count;
             var n1s = poly1.Normals;
             var v1s = poly1.Vertices;
             var v2s = poly2.Vertices;
+            var count1 = v1s.Count;
+            var count2 = v2s.Count;
             var xf = Transform.MulT(xf2, xf1);
 
             var bestIndex = 0;

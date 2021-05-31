@@ -237,6 +237,8 @@ namespace Robust.Server
                 }
             }
 
+            ProgramShared.PrintRuntimeInfo(_log.RootSawmill);
+
             SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });
 
             if (!SetupLoki())

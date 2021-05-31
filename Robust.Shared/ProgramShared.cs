@@ -1,5 +1,6 @@
-using System.IO;
+using System.Runtime.InteropServices;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared
@@ -13,7 +14,14 @@ namespace Robust.Shared
         }
 #endif
 
-        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, bool loader=false, bool contentStart=false)
+        internal static void PrintRuntimeInfo(ISawmill sawmill)
+        {
+            sawmill.Debug($"Runtime: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.RuntimeIdentifier}");
+            sawmill.Debug($"OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
+        }
+
+        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir,
+            bool loader = false, bool contentStart = false)
         {
 #if FULL_RELEASE
             if (!loader)

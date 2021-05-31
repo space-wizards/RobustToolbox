@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
@@ -82,8 +81,8 @@ namespace Robust.Client.Player
         {
             _client.RunLevelChanged += OnRunLevelChanged;
 
-            _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
-            _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
+            _network.RegisterNetMessage<MsgPlayerListReq>();
+            _network.RegisterNetMessage<MsgPlayerList>(HandlePlayerList);
         }
 
         /// <inheritdoc />

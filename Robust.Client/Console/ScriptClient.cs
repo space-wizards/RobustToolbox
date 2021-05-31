@@ -17,11 +17,11 @@ namespace Robust.Client.Console
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgScriptStop>(MsgScriptStop.NAME);
-            _netManager.RegisterNetMessage<MsgScriptEval>(MsgScriptEval.NAME);
-            _netManager.RegisterNetMessage<MsgScriptStart>(MsgScriptStart.NAME);
-            _netManager.RegisterNetMessage<MsgScriptResponse>(MsgScriptResponse.NAME, ReceiveScriptResponse);
-            _netManager.RegisterNetMessage<MsgScriptStartAck>(MsgScriptStartAck.NAME, ReceiveScriptStartAckResponse);
+            _netManager.RegisterNetMessage<MsgScriptStop>();
+            _netManager.RegisterNetMessage<MsgScriptEval>();
+            _netManager.RegisterNetMessage<MsgScriptStart>();
+            _netManager.RegisterNetMessage<MsgScriptResponse>(ReceiveScriptResponse);
+            _netManager.RegisterNetMessage<MsgScriptStartAck>(ReceiveScriptStartAckResponse);
         }
 
         private void ReceiveScriptStartAckResponse(MsgScriptStartAck message)

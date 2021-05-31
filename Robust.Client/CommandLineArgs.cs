@@ -17,6 +17,7 @@ namespace Robust.Client
         public bool Launcher { get; }
         public string? Username { get; }
         public IReadOnlyCollection<(string key, string value)> CVars { get; }
+        public IReadOnlyCollection<(string key, string value)> LogLevels { get; }
 
         // Manual parser because C# has no good command line parsing libraries. Also dependencies bad.
         // Also I don't like spending 100ms parsing command line args. Do you?
@@ -31,6 +32,7 @@ namespace Robust.Client
             var launcher = false;
             string? username = null;
             var cvars = new List<(string, string)>();
+            var logLevels = new List<(string, string)>();
             var mountOptions = new MountOptions();
 
             using var enumerator = args.GetEnumerator();
@@ -124,6 +126,26 @@ namespace Robust.Client
 
                     mountOptions.DirMounts.Add(enumerator.Current);
                 }
+                else if (arg == "--loglevel")
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Missing loglevel sawmill.");
+                        return false;
+                    }
+
+                    var loglevel = enumerator.Current;
+                    DebugTools.AssertNotNull(loglevel);
+                    var pos = loglevel.IndexOf('=');
+
+                    if (pos == -1)
+                    {
+                        C.WriteLine("Expected = in loglevel.");
+                        return false;
+                    }
+
+                    logLevels.Add((loglevel[..pos], loglevel[(pos + 1)..]));
+                }
                 else if (arg == "--help")
                 {
                     PrintHelp();
@@ -142,6 +164,7 @@ namespace Robust.Client
                 launcher,
                 username,
                 cvars,
+                logLevels,
                 connectAddress,
                 ss14Address,
                 mountOptions);
@@ -162,6 +185,7 @@ Options:
   --launcher          Run in launcher mode (no main menu, auto connect).
   --username          Override username.
   --cvar              Specifies an additional cvar overriding the config file. Syntax is <key>=<value>
+  --loglevel          Specifies an additional sawmill log level overriding the default values. Syntax is <key>=<value>
   --mount-dir         Resource directory to mount.
   --mount-zip         Resource zip to mount.
   --help              Display this help text and exit.
@@ -175,6 +199,7 @@ Options:
             bool launcher,
             string? username,
             IReadOnlyCollection<(string key, string value)> cVars,
+            IReadOnlyCollection<(string key, string value)> logLevels,
             string connectAddress, string? ss14Address,
             MountOptions mountOptions)
         {
@@ -184,6 +209,7 @@ Options:
             Launcher = launcher;
             Username = username;
             CVars = cVars;
+            LogLevels = logLevels;
             ConnectAddress = connectAddress;
             Ss14Address = ss14Address;
             MountOptions = mountOptions;

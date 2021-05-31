@@ -9,7 +9,6 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -108,7 +107,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+            _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 

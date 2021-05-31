@@ -4,6 +4,7 @@ using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -64,6 +65,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void Test()
         {
             var deps = new DependencyCollection();
+            deps.Register<IRuntimeLog, RuntimeLog>();
             deps.Register<ILogManager, LogManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();

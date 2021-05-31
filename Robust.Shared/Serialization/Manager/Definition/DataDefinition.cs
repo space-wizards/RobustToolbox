@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -25,11 +24,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
 
-        public DataDefinition(Type type)
+        internal DataDefinition(
+            Type type,
+            Dictionary<Type, Type> dataFieldDeserializers,
+            IDynamicTypeFactoryInternal typeFactory)
         {
             Type = type;
 
-            var fieldDefs = GetFieldDefinitions();
+            var fieldDefs = GetFieldDefinitions(dataFieldDeserializers, typeFactory);
 
             Duplicates = fieldDefs
                 .Where(f =>
@@ -159,7 +161,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return duplicates.Length > 0;
         }
 
-        private List<FieldDefinition> GetFieldDefinitions()
+        private List<FieldDefinition> GetFieldDefinitions(
+            Dictionary<Type, Type> dataFieldDeserializers,
+            IDynamicTypeFactoryInternal typeFactory)
         {
             var dummyObject = Activator.CreateInstance(Type) ?? throw new NullReferenceException();
             var fieldDefinitions = new List<FieldDefinition>();
@@ -188,14 +192,16 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
-                        Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                        Logger.ErrorS(SerializationManager.LogCategory,
+                            $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }
                     else if (propertyInfo.PropertyInfo.SetMethod == null)
                     {
                         if (!propertyInfo.TryGetBackingField(out var backingFieldInfo))
                         {
-                            Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                            Logger.ErrorS(SerializationManager.LogCategory,
+                                $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
                             continue;
                         }
 
@@ -213,13 +219,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     inheritanceBehaviour = InheritanceBehavior.Never;
                 }
 
-                var deserializerType = abstractFieldInfo
-                    .FieldType
-                    .GetCustomAttribute<DataFieldDeserializerAttribute>()?
-                    .Deserializer;
-                var deserializer = (IDataFieldDeserializer) (deserializerType == null
-                    ? DefaultDeserializer
-                    : Activator.CreateInstance(deserializerType))!;
+                IDataFieldDeserializer deserializer = DefaultDeserializer;
+
+                if (dataFieldDeserializers.TryGetValue(abstractFieldInfo.FieldType, out var deserializerType))
+                {
+                    deserializer = (IDataFieldDeserializer) typeFactory.CreateInstanceUnchecked(deserializerType)!;
+                }
 
                 var fieldDefinition = new FieldDefinition(
                     dataField,

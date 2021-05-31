@@ -11,7 +11,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Prototype("holder")]
         private class ReferenceHolderPrototype : IPrototype
         {
-            [DataField("id")] public string ID { get; } = default!;
+            [DataField("id")]
+            public string ID { get; } = default!;
 
             [DataField("ref")]
             public ReferencedPrototype PrototypeReference { get; } = default!;
@@ -20,7 +21,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
         [Prototype("ref")]
         private class ReferencedPrototype : IPrototype
         {
-            [DataField("id")] public string ID { get; } = default!;
+            [DataField("id")]
+            public string ID { get; } = default!;
         }
 
         private string PROTOTYPES = @"- type: ref

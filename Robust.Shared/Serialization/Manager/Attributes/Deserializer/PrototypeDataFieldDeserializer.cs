@@ -25,7 +25,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes.Deserializer
                 throw new ArgumentException($"Unable to map a node of type {node.GetType()} into a prototype reference: Use a value node instead.");
             }
 
-            dependencies.Resolve<IPrototypeManager>().RegisterReference(type, valueNode.Value, obj, field);
+            dependencies.Resolve<IPrototypeManager>().RegisterReference(type, valueNode.Value, ref obj, field);
 
             return DeserializationResult.Value(type, null);
         }

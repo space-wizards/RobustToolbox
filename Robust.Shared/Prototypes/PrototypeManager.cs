@@ -166,9 +166,9 @@ namespace Robust.Shared.Prototypes
         /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
         void RegisterType(Type protoClass);
 
-        void RegisterReference(Type type, string id, object obj, FieldDefinition field);
+        void RegisterReference(Type type, string id, ref object obj, FieldDefinition field);
 
-        void UnregisterReference(PrototypeReference prototypeReference);
+        void UnregisterReference(Type type, string id, ref object obj, FieldDefinition field);
 
         event Action<YamlStream, string>? LoadedData;
 

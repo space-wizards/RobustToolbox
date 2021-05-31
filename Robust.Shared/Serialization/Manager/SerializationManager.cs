@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Manager.Attributes.Deserializer;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
@@ -25,6 +26,7 @@ namespace Robust.Shared.Serialization.Manager
     public partial class SerializationManager : ISerializationManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
 
         public const string LogCategory = "serialization";
 
@@ -33,6 +35,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly Dictionary<Type, DataDefinition> _dataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
+        private readonly Dictionary<Type, Type> _customDataFieldDeserializers = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
 
@@ -59,11 +62,53 @@ namespace Robust.Shared.Serialization.Manager
 
             foreach (var baseType in _reflectionManager.FindTypesWithAttribute<ImplicitDataDefinitionForInheritorsAttribute>())
             {
-                if (!baseType.IsAbstract && !baseType.IsInterface && !baseType.IsGenericTypeDefinition) registrations.Add(baseType);
+                if (!baseType.IsAbstract &&
+                    !baseType.IsInterface &&
+                    !baseType.IsGenericTypeDefinition)
+                {
+                    registrations.Add(baseType);
+                }
+
                 foreach (var child in _reflectionManager.GetAllChildren(baseType))
                 {
-                    if (child.IsAbstract || child.IsInterface || child.IsGenericTypeDefinition) continue;
+                    if (child.IsAbstract ||
+                        child.IsInterface ||
+                        child.IsGenericTypeDefinition)
+                    {
+                        continue;
+                    }
+
                     registrations.Add(child);
+                }
+            }
+
+            foreach (var baseType in _reflectionManager.FindTypesWithAttribute<DataFieldDeserializerAttribute>())
+            {
+                var deserializerType = baseType.GetCustomAttribute<DataFieldDeserializerAttribute>()!.Deserializer;
+
+                if (!deserializerType.IsAssignableTo(typeof(IDataFieldDeserializer)))
+                {
+                    Logger.Error($"Custom {nameof(IDataFieldDeserializer)} defined for type {baseType} does not implement {nameof(IDataFieldDeserializer)}. Specified type: {deserializerType}.");
+                    continue;
+                }
+
+                if (!baseType.IsAbstract &&
+                    !baseType.IsInterface &&
+                    !baseType.IsGenericTypeDefinition)
+                {
+                    _customDataFieldDeserializers.Add(baseType, deserializerType);
+                }
+
+                foreach (var child in _reflectionManager.GetAllChildren(baseType))
+                {
+                    if (child.IsAbstract ||
+                        child.IsInterface ||
+                        child.IsGenericTypeDefinition)
+                    {
+                        continue;
+                    }
+
+                    _customDataFieldDeserializers.Add(child, deserializerType);
                 }
             }
 
@@ -90,7 +135,7 @@ namespace Robust.Shared.Serialization.Manager
                     continue;
                 }
 
-                _dataDefinitions.Add(type, new DataDefinition(type));
+                _dataDefinitions.Add(type, new DataDefinition(type, _customDataFieldDeserializers, _typeFactory));
             }
 
             var error = new StringBuilder();
@@ -362,8 +407,11 @@ namespace Robust.Shared.Serialization.Manager
 
             if (node is not MappingDataNode mappingDataNode)
             {
-                if (node is not ValueDataNode emptyValueDataNode || emptyValueDataNode.Value != string.Empty)
+                if (node is not ValueDataNode emptyValueDataNode ||
+                    emptyValueDataNode.Value != string.Empty)
+                {
                     throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
+                }
 
                 // If we get an empty ValueDataNode we just use an empty mapping
                 mappingDataNode = new MappingDataNode();

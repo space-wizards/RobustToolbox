@@ -1376,50 +1376,6 @@ namespace Robust.Shared.Physics.Collision
 
             c[1] = cv1;
         }
-
-        /// <summary>
-        /// Find the separation between poly1 and poly2 for a give edge normal on poly1.
-        /// </summary>
-        /// <param name="poly1">The poly1.</param>
-        /// <param name="xf1">The XF1.</param>
-        /// <param name="edge1">The edge1.</param>
-        /// <param name="poly2">The poly2.</param>
-        /// <param name="xf2">The XF2.</param>
-        /// <returns></returns>
-        private static float EdgeSeparation(PolygonShape poly1, in Transform xf1, int edge1, PolygonShape poly2,
-            in Transform xf2)
-        {
-            List<Vector2> vertices1 = poly1.Vertices;
-            List<Vector2> normals1 = poly1.Normals;
-
-            int count2 = poly2.Vertices.Count;
-            List<Vector2> vertices2 = poly2.Vertices;
-
-            DebugTools.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
-
-            // Convert normal from poly1's frame into poly2's frame.
-            Vector2 normal1World = Transform.Mul(xf1.Quaternion2D, normals1[edge1]);
-            Vector2 normal1 = Transform.MulT(xf2.Quaternion2D, normal1World);
-
-            // Find support vertex on poly2 for -normal.
-            int index = 0;
-            float minDot = float.MaxValue;
-
-            for (int i = 0; i < count2; ++i)
-            {
-                float dot = Vector2.Dot(vertices2[i], normal1);
-                if (dot < minDot)
-                {
-                    minDot = dot;
-                    index = i;
-                }
-            }
-
-            Vector2 v1 = Transform.Mul(xf1, vertices1[edge1]);
-            Vector2 v2 = Transform.Mul(xf2, vertices2[index]);
-            float separation = Vector2.Dot(v2 - v1, normal1World);
-            return separation;
-        }
     }
 
     /// <summary>

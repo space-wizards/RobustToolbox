@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -210,11 +211,23 @@ namespace Robust.Server.GameObjects
             SubscribeNetworkEvent<RequestGridTileLookupMessage>(HandleRequest);
 #endif
             SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
             _mapManager.OnGridCreated += HandleGridCreated;
             _mapManager.OnGridRemoved += HandleGridRemoval;
             _mapManager.TileChanged += HandleTileChanged;
+        }
+
+        private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
+        {
+            HandleEntityAdd(ev.Entity);
+        }
+
+        private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
+        {
+            HandleEntityRemove(ev.Entity);
         }
 
         public override void Shutdown()
@@ -236,6 +249,11 @@ namespace Robust.Server.GameObjects
 
         private void HandleEntityInitialized(EntityInitializedMessage message)
         {
+            if (message.Entity.IsInContainer())
+            {
+                return;
+            }
+
             HandleEntityAdd(message.Entity);
         }
 

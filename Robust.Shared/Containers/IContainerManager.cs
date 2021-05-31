@@ -11,6 +11,8 @@ namespace Robust.Shared.Containers
     /// <seealso cref="IContainer" />
     public interface IContainerManager : IComponent
     {
+        IEnumerable<IContainer> Containers { get; }
+
         /// <summary>
         /// Makes a new container of the specified type.
         /// </summary>

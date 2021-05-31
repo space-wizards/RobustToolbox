@@ -32,6 +32,17 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public sealed override uint? NetID => NetIDs.CONTAINER_MANAGER;
 
+        public IEnumerable<IContainer> Containers
+        {
+            get
+            {
+                foreach (var (_, container) in _containers)
+                {
+                    yield return container;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public override void OnRemove()
         {

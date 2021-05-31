@@ -131,6 +131,8 @@ namespace Robust.Shared.Physics
         public float C;
         public float S;
 
+        public float Angle => MathF.Atan2(S, C);
+
         public Quaternion2D(float cos, float sin)
         {
             C = cos;

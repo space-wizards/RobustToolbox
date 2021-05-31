@@ -1171,7 +1171,13 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
             in Transform transformB)
         {
-            // Randy Gaul's AABBvsAABB
+            if (transformA.Quaternion2D.Angle != transformB.Quaternion2D.Angle)
+            {
+                CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+                return;
+            }
+
+            // Based on Randy Gaul's AABBvsAABB
 
             // Vector from A to B
             Vector2 n = transformB.Position - transformA.Position;
@@ -1213,50 +1219,98 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = 2;
             manifold.Type = ManifoldType.FaceA;
 
-            // Find out which axis is axis of least penetration
-            if (x_overlap <= y_overlap)
+            var flip = false;
+
+            bool xSep;
+
+            if (x_overlap < y_overlap)
             {
+                xSep = true;
+            }
+            else if (x_overlap == y_overlap && n.X >= n.Y)
+            {
+                xSep = true;
+            }
+            else
+            {
+                xSep = false;
+            }
+
+            // Find out which axis is axis of least penetration
+            if (xSep)
+            {
+                var offset = n.Y * -1;
+
                 // Point towards B knowing that n points from A to B
                 if (n.X < 0)
                 {
                     manifold.LocalNormal = new Vector2(-1, 0);
                     p0.LocalPoint.X = abox.Width / 2;
                     p1.LocalPoint.X = abox.Width / 2;
+
+                    if (offset == 0.0f)
+                    {
+                        flip = true;
+                    }
                 }
                 else
                 {
                     manifold.LocalNormal = new Vector2(1, 0);
                     p0.LocalPoint.X = abox.Width / -2;
                     p1.LocalPoint.X = abox.Width / -2;
+
+                    if (n.X == n.Y)
+                    {
+                        flip = true;
+                    }
                 }
 
-                var offset = n.Y * -1;
-
-                p0.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2);
-                p1.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+                if (!flip)
+                {
+                    p0.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2 + aabbA.Radius + aabbB.Radius);
+                    p1.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+                }
+                else
+                {
+                    p1.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2 + aabbA.Radius + aabbB.Radius);
+                    p0.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+                }
 
                 manifold.LocalPoint = manifold.LocalNormal * abox.Width / 2;
             }
             else
             {
+                var offset = n.X * -1;
+
                 // Point toward B knowing that n points from A to B
                 if (n.Y < 0)
                 {
                     manifold.LocalNormal = new Vector2(0, -1);
-                    p0.LocalPoint.Y = abox.Height / -2;
-                    p1.LocalPoint.Y = abox.Height / -2;
+                    p0.LocalPoint.Y = abox.Height / 2;
+                    p1.LocalPoint.Y = abox.Height / 2;
                 }
                 else
                 {
                     manifold.LocalNormal = new Vector2(0, 1);
-                    p0.LocalPoint.Y = abox.Height / 2;
-                    p1.LocalPoint.Y = abox.Height / 2;
+                    p0.LocalPoint.Y = abox.Height / -2;
+                    p1.LocalPoint.Y = abox.Height / -2;
+
+                    if (offset == 0f)
+                    {
+                        flip = true;
+                    }
                 }
 
-                var offset = n.X * -1;
-
-                p0.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2);
-                p1.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+                if (!flip)
+                {
+                    p0.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2 + aabbA.Radius + aabbB.Radius);
+                    p1.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+                }
+                else
+                {
+                    p1.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2 + aabbA.Radius + aabbB.Radius);
+                    p0.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+                }
 
                 manifold.LocalPoint = manifold.LocalNormal * abox.Height / 2;
             }

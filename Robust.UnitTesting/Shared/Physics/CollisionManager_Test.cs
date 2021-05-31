@@ -108,49 +108,61 @@ namespace Robust.UnitTesting.Shared.Physics
             Assert.That(manifold, Is.EqualTo(expectedManifold));
         }
 
-        public class BoxTestCase
+        public class TransformTestCase
         {
             public Transform TransformA { get; }
             public Transform TransformB { get; }
 
-            internal BoxTestCase(Transform transformA, Transform transformB)
+            internal TransformTestCase(Transform transformA, Transform transformB)
             {
                 TransformA = transformA;
                 TransformB = transformB;
             }
         }
 
-        private static IEnumerable<BoxTestCase> BoxTestCases
+        private static IEnumerable<TransformTestCase> TransformTestCases
         {
             get
             {
-                yield return new BoxTestCase(
-                    new Transform(Vector2.One + new Vector2(0.25f, 0.25f), 0f),
-                    new Transform(Vector2.One, 0f));
-
-                yield return new BoxTestCase(
+                yield return new TransformTestCase(
                     new Transform(Vector2.Zero, 0f),
                     new Transform(new Vector2(0.5f, 0.0f), 0f));
 
-                yield return new BoxTestCase(
+                yield return new TransformTestCase(
                     new Transform(Vector2.Zero, 0f),
-                    new Transform(new Vector2(-0.5f, 0.0f), 0f));
+                    new Transform(new Vector2(0.5f, 0.5f), 0f));
 
-                yield return new BoxTestCase(
+                yield return new TransformTestCase(
                     new Transform(Vector2.Zero, 0f),
                     new Transform(new Vector2(0.0f, 0.5f), 0f));
 
-                yield return new BoxTestCase(
+                yield return new TransformTestCase(
+                    new Transform(Vector2.Zero, 0f),
+                    new Transform(new Vector2(-0.5f, 0.5f), 0f));
+
+                yield return new TransformTestCase(
+                    new Transform(Vector2.Zero, 0f),
+                    new Transform(new Vector2(-0.5f, 0.0f), 0f));
+
+                yield return new TransformTestCase(
+                    new Transform(Vector2.Zero, 0f),
+                    new Transform(new Vector2(-0.5f, -0.5f), 0f));
+
+                yield return new TransformTestCase(
                     new Transform(Vector2.Zero, 0f),
                     new Transform(new Vector2(0.0f, -0.5f), 0f));
+
+                yield return new TransformTestCase(
+                    new Transform(Vector2.Zero, 0f),
+                    new Transform(new Vector2(0.5f, -0.5f), 0f));
             }
         }
 
         /// <summary>
         /// 2 box polygons and 2 aabbs / boxes should generate the same manifolds.
         /// </summary>
-        [Test, TestCaseSource(nameof(BoxTestCases))]
-        public void TestBoxCollisions(BoxTestCase testCase)
+        [Test, TestCaseSource(nameof(TransformTestCases))]
+        public void TestAABBPolygonCollisionParity(TransformTestCase testCase)
         {
             var transformA = testCase.TransformA;
             var transformB = testCase.TransformB;
@@ -168,7 +180,33 @@ namespace Robust.UnitTesting.Shared.Physics
             for (var i = 0; i < 2; i++)
             {
                 //Assert.That(manifoldA.Points[i].Id, Is.EqualTo(manifoldB.Points[i].Id));
-                Assert.That(manifoldA.Points[i].LocalPoint, Is.EqualTo(manifoldB.Points[i].LocalPoint));
+                Assert.That(manifoldA.Points[i].LocalPoint, Is.Approximately(manifoldB.Points[i].LocalPoint), $"Shoulda flipped on PosA: {testCase.TransformA.Position}, PosB: {testCase.TransformB.Position}");
+            }
+        }
+
+        /// <summary>
+        /// 2 box polygons and 2 aabbs / boxes should generate the same manifolds.
+        /// </summary>
+        [Test, TestCaseSource(nameof(TransformTestCases))]
+        public void TestAABBCircleCollisionParity(TransformTestCase testCase)
+        {
+            var transformA = testCase.TransformA;
+            var transformB = testCase.TransformB;
+            var manifoldA = new Manifold();
+            var manifoldB = new Manifold();
+
+            _collisionManager.CollidePolygonAndCircle(ref manifoldA, _polyA, transformA, _circleB, transformB);
+            _collisionManager.CollideAabbAndCircle(ref manifoldB, _aabbA, transformA, _circleB, transformB);
+
+            Assert.That(manifoldA.PointCount, Is.EqualTo(manifoldB.PointCount));
+            Assert.That(manifoldA.Type, Is.EqualTo(manifoldB.Type));
+            Assert.That(manifoldA.LocalPoint, Is.EqualTo(manifoldB.LocalPoint));
+            Assert.That(manifoldA.LocalNormal, Is.EqualTo(manifoldB.LocalNormal));
+
+            for (var i = 0; i < 2; i++)
+            {
+                //Assert.That(manifoldA.Points[i].Id, Is.EqualTo(manifoldB.Points[i].Id));
+                Assert.That(manifoldA.Points[i].LocalPoint, Is.Approximately(manifoldB.Points[i].LocalPoint));
             }
         }
     }

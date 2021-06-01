@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared;
 using Robust.Shared.Utility;
@@ -12,6 +12,7 @@ namespace Robust.Server
         public string? ConfigFile { get; }
         public string? DataDir { get; }
         public IReadOnlyCollection<(string key, string value)> CVars { get; }
+        public IReadOnlyCollection<(string key, string value)> LogLevels { get; }
 
         // Manual parser because C# has no good command line parsing libraries. Also dependencies bad.
         // Also I don't like spending 100ms parsing command line args. Do you?
@@ -21,6 +22,7 @@ namespace Robust.Server
             string? configFile = null;
             string? dataDir = null;
             var cvars = new List<(string, string)>();
+            var logLevels = new List<(string, string)>();
             var mountOptions = new MountOptions();
 
             using var enumerator = args.GetEnumerator();
@@ -93,13 +95,33 @@ namespace Robust.Server
 
                     mountOptions.DirMounts.Add(enumerator.Current);
                 }
+                else if (arg == "--loglevel")
+                {
+                    if (!enumerator.MoveNext())
+                    {
+                        C.WriteLine("Missing loglevel sawmill.");
+                        return false;
+                    }
+
+                    var loglevel = enumerator.Current;
+                    DebugTools.AssertNotNull(loglevel);
+                    var pos = loglevel.IndexOf('=');
+
+                    if (pos == -1)
+                    {
+                        C.WriteLine("Expected = in loglevel.");
+                        return false;
+                    }
+
+                    logLevels.Add((loglevel[..pos], loglevel[(pos + 1)..]));
+                }
                 else
                 {
                     C.WriteLine("Unknown argument: {0}", arg);
                 }
             }
 
-            parsed = new CommandLineArgs(configFile, dataDir, cvars, mountOptions);
+            parsed = new CommandLineArgs(configFile, dataDir, cvars, logLevels, mountOptions);
             return true;
         }
 
@@ -110,17 +132,19 @@ Options:
   --config-file     Path to the config file to read from.
   --data-dir        Path to the data directory to read/write from/to.
   --cvar            Specifies an additional cvar overriding the config file. Syntax is <key>=<value>
+  --loglevel        Specifies an additional sawmill log level overriding the default values. Syntax is <key>=<value>
   --mount-dir       Resource directory to mount.
   --mount-zip       Resource zip to mount.
   --help            Display this help text and exit.
 ");
         }
 
-        private CommandLineArgs(string? configFile, string? dataDir, IReadOnlyCollection<(string, string)> cVars, MountOptions mountOptions)
+        private CommandLineArgs(string? configFile, string? dataDir, IReadOnlyCollection<(string, string)> cVars, IReadOnlyCollection<(string, string)> logLevels, MountOptions mountOptions)
         {
             ConfigFile = configFile;
             DataDir = dataDir;
             CVars = cVars;
+            LogLevels = logLevels;
             MountOptions = mountOptions;
         }
     }

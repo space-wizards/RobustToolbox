@@ -7,16 +7,7 @@ namespace Robust.Shared.Network.Messages
 {
     public class MsgRay : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgRay);
-
-        public MsgRay(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         public Vector2 RayOrigin { get; set; }
         public Vector2 RayHit { get; set; }

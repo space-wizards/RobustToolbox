@@ -12,7 +12,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -63,8 +62,8 @@ namespace Robust.Server.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _networkManager.RegisterNetMessage<MsgState>(MsgState.NAME);
-            _networkManager.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME, HandleStateAck);
+            _networkManager.RegisterNetMessage<MsgState>();
+            _networkManager.RegisterNetMessage<MsgStateAck>(HandleStateAck);
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
@@ -211,7 +210,10 @@ namespace Robust.Server.GameStates
                     _logger.Log(LogLevel.Error, e, string.Empty);
                 }
 
-                return (new MsgState(session.ConnectedClient), null);
+                var msg = _networkManager.CreateNetMessage<MsgState>();
+                msg.MsgChannel = session.ConnectedClient;
+
+                return (msg, null);
             }
 
             var mailBag = _playerManager.GetAllPlayers()

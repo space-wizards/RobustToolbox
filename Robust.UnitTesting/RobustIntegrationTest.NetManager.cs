@@ -282,14 +282,29 @@ namespace Robust.UnitTesting
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
             }
 
+            public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null, NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage, new()
+            {
+                RegisterNetMessage(new T().MsgName, rxCallback, accept);
+            }
+
             public T CreateNetMessage<T>() where T : NetMessage
             {
-                if (!_registeredMessages.Contains(typeof(T)))
+                var type = typeof(T);
+
+                if (!_registeredMessages.Contains(type))
                 {
                     throw new ArgumentException("Net message type is not registered.");
                 }
 
-                return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
+                // Obsolete path for content
+                if (type.GetConstructor(new[] {typeof(INetChannel)}) != null)
+                {
+                    return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
+                }
+                else
+                {
+                    return Activator.CreateInstance<T>();
+                }
             }
 
             public byte[]? RsaPublicKey => null;

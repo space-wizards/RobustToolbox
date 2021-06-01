@@ -36,11 +36,11 @@ namespace Robust.Server.Scripting
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgScriptStop>(MsgScriptStop.NAME, ReceiveScriptEnd);
-            _netManager.RegisterNetMessage<MsgScriptEval>(MsgScriptEval.NAME, ReceiveScriptEval);
-            _netManager.RegisterNetMessage<MsgScriptStart>(MsgScriptStart.NAME, ReceiveScriptStart);
-            _netManager.RegisterNetMessage<MsgScriptResponse>(MsgScriptResponse.NAME);
-            _netManager.RegisterNetMessage<MsgScriptStartAck>(MsgScriptStartAck.NAME);
+            _netManager.RegisterNetMessage<MsgScriptStop>(ReceiveScriptEnd);
+            _netManager.RegisterNetMessage<MsgScriptEval>(ReceiveScriptEval);
+            _netManager.RegisterNetMessage<MsgScriptStart>(ReceiveScriptStart);
+            _netManager.RegisterNetMessage<MsgScriptResponse>();
+            _netManager.RegisterNetMessage<MsgScriptStartAck>();
 
             _playerManager.PlayerStatusChanged += PlayerManagerOnPlayerStatusChanged;
         }

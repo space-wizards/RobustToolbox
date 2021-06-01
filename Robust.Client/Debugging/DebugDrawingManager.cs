@@ -1,12 +1,12 @@
-using Robust.Shared.IoC;
-using Robust.Shared.Network.Messages;
 using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 using Robust.Shared.Enums;
+using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Network.Messages;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
@@ -54,7 +54,7 @@ namespace Robust.Client.Debugging
 
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgRay>(MsgRay.NAME, HandleDrawRay);
+            _net.RegisterNetMessage<MsgRay>(HandleDrawRay);
         }
 
         private void HandleDrawRay(MsgRay msg)

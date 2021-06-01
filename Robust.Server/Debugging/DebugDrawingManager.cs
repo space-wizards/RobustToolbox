@@ -14,7 +14,7 @@ namespace Robust.Server.Debugging
 
         public void Initialize()
         {
-            _net.RegisterNetMessage<MsgRay>(MsgRay.NAME);
+            _net.RegisterNetMessage<MsgRay>();
             // TODO _physics.DebugDrawRay += data => PhysicsOnDebugDrawRay(data);
         }
 

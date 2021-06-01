@@ -6,11 +6,7 @@ namespace Robust.Shared.Network.Messages
 {
     public class MsgConCmd : NetMessage
     {
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Command;
-        public static readonly string NAME = nameof(MsgConCmd);
-        public MsgConCmd(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         public string Text { get; set; }
 

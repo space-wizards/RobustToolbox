@@ -25,6 +25,7 @@ namespace Robust.Benchmarks.Physics
 
         private Transform _transformA = new Transform(Vector2.Zero, 0.0f);
         private Transform _transformB = new Transform(Vector2.Zero + 0.5f, 0.0f);
+        private Transform _transformC = new Transform(Vector2.Zero + 10.0f, 0.0f);
 
         private ICollisionManager _collisionManager;
 
@@ -49,6 +50,7 @@ namespace Robust.Benchmarks.Physics
             _collisionManager = IoCManager.Resolve<ICollisionManager>();
 
             _polyA.SetAsBox(1.0f, 1.0f);
+            _polyB.SetAsBox(1.0f, 1.0f);
         }
 
         [Benchmark]
@@ -59,10 +61,24 @@ namespace Robust.Benchmarks.Physics
         }
 
         [Benchmark]
+        public void PolygonPolygonNoCollide()
+        {
+            var manifold = new Manifold();
+            _collisionManager.CollidePolygons(ref manifold, _polyA, _transformA, _polyB, _transformC);
+        }
+
+        [Benchmark]
         public void AABBAABBManifold()
         {
             var manifold = new Manifold();
             _collisionManager.CollideAabbs(ref manifold, _aabbA, _transformA, _aabbB, _transformB);
+        }
+
+        [Benchmark]
+        public void AABBAABBNoCollide()
+        {
+            var manifold = new Manifold();
+            _collisionManager.CollideAabbs(ref manifold, _aabbA, _transformA, _aabbB, _transformC);
         }
 
         [Benchmark]
@@ -73,10 +89,24 @@ namespace Robust.Benchmarks.Physics
         }
 
         [Benchmark]
+        public void PolygonCircleNoCollide()
+        {
+            var manifold = new Manifold();
+            _collisionManager.CollidePolygonAndCircle(ref manifold, _polyA, _transformA, _circleA, _transformC);
+        }
+
+        [Benchmark]
         public void AABBCircleManifold()
         {
             var manifold = new Manifold();
             _collisionManager.CollideAabbAndCircle(ref manifold, _aabbA, _transformA, _circleA, _transformB);
+        }
+
+        [Benchmark]
+        public void AABBCircleNoCollide()
+        {
+            var manifold = new Manifold();
+            _collisionManager.CollideAabbAndCircle(ref manifold, _aabbA, _transformA, _circleA, _transformC);
         }
     }
 }

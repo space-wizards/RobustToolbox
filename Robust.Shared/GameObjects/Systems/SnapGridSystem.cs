@@ -21,16 +21,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<SnapGridComponent, MoveEvent>(HandleMoveEvent);
         }
 
-        /// <inheritdoc />
-        public override void Shutdown()
-        {
-            base.Shutdown();
-
-            UnsubscribeLocalEvent<SnapGridComponent, ComponentStartup>();
-            UnsubscribeLocalEvent<SnapGridComponent, ComponentShutdown>();
-            UnsubscribeLocalEvent<SnapGridComponent, MoveEvent>();
-        }
-
         private void HandleComponentStartup(EntityUid uid, SnapGridComponent component, ComponentStartup args)
         {
             var transform = ComponentManager.GetComponent<ITransformComponent>(uid);

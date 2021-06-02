@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
@@ -66,24 +67,20 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public GridId GridID
         {
-            get
+            get => _gridId;
+            private set
             {
-                // root node, grid id is undefined
-                if (Owner.HasComponent<IMapComponent>())
-                    return GridId.Invalid;
-
-                // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapGridComponent? gridComp))
-                    return gridComp.GridIndex;
-
-                // branch or leaf node
-                if (_parent.IsValid())
-                    return Parent!.GridID;
-
-                // Not on a grid
-                return GridId.Invalid;
+                if (_gridId.Equals(value)) return;
+                _gridId = value;
+                foreach (var transformComponent in Children)
+                {
+                    var child = (TransformComponent) transformComponent;
+                    child.GridID = value;
+                }
             }
         }
+
+        private GridId _gridId = GridId.Invalid;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -118,7 +115,7 @@ namespace Robust.Shared.GameObjects
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
-                SetRotation(value);
+                _localRotation = value;
                 Dirty();
 
                 if (!DeferUpdates)
@@ -261,17 +258,51 @@ namespace Robust.Shared.GameObjects
                 var valid = _parent.IsValid();
                 return new EntityCoordinates(valid ? _parent : Owner.Uid, valid ? LocalPosition : Vector2.Zero);
             }
+            // NOTE: This setter must be callable from before initialize (inheriting from AttachParent's note)
             set
             {
                 var oldPosition = Coordinates;
+                _localPosition = value.Position;
+
+                var changedParent = false;
 
                 if (value.EntityId != _parent)
                 {
-                    var newEntity = Owner.EntityManager.GetEntity(value.EntityId);
-                    AttachParent(newEntity);
+                    changedParent = true;
+                    var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
+                    var newParent = newParentEnt.Transform;
+
+                    DebugTools.Assert(newParent != this,
+                        $"Can't parent a {nameof(ITransformComponent)} to itself.");
+
+                    // That's already our parent, don't bother attaching again.
+
+                    var oldParent = Parent;
+                    var oldConcrete = (TransformComponent?) oldParent;
+                    var uid = Owner.Uid;
+                    oldConcrete?._children.Remove(uid);
+                    var newConcrete = (TransformComponent) newParent;
+                    newConcrete._children.Add(uid);
+
+                    var oldParentOwner = oldParent?.Owner;
+                    var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
+                    var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
+
+                    // offset position from world to parent
+                    _parent = newParentEnt.Uid;
+                    ChangeMapId(newConcrete.MapID);
+
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
+                    Owner.SendMessage(this, compMessage);
+
+                    GridID = GetGridIndex();
                 }
 
-                _localPosition = value.Position;
+                // These conditions roughly emulate the effects of the code before I changed things,
+                //  in regards to when to rebuild matrices.
+                // This may not in fact be the right thing.
+                if (changedParent || !DeferUpdates)
+                    RebuildMatrices();
                 Dirty();
 
                 if (!DeferUpdates)
@@ -279,7 +310,6 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        RebuildMatrices();
                         Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
                 }
@@ -307,7 +337,7 @@ namespace Robust.Shared.GameObjects
                 _nextPosition = null;
 
                 var oldGridPos = Coordinates;
-                SetPosition(value);
+                _localPosition = value;
                 Dirty();
 
                 if (!DeferUpdates)
@@ -425,6 +455,28 @@ namespace Robust.Shared.GameObjects
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
             }
+
+            GridID = GetGridIndex();
+        }
+
+        private GridId GetGridIndex()
+        {
+            if (Owner.HasComponent<IMapComponent>())
+            {
+                return GridId.Invalid;
+            }
+
+            if (Owner.TryGetComponent(out IMapGridComponent? gridComponent))
+            {
+                return gridComponent.GridIndex;
+            }
+
+            if (_parent.IsValid())
+            {
+                return Parent!.GridID;
+            }
+
+            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
 
         /// <inheritdoc />
@@ -537,49 +589,22 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        /// Sets another entity as the parent entity.
+        /// Sets another entity as the parent entity, maintaining world position.
         /// </summary>
         /// <param name="newParent"></param>
         public virtual void AttachParent(ITransformComponent newParent)
         {
             //NOTE: This function must be callable from before initialize
 
-            // nothing to attach to.
+            // don't attach to something we're already attached to
             if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,
                 $"Can't parent a {nameof(ITransformComponent)} to itself.");
 
-            // That's already our parent, don't bother attaching again.
-            var newParentEnt = newParent.Owner;
-            if (newParentEnt.Uid == _parent)
-            {
-                return;
-            }
-
-            var oldParent = Parent;
-            var oldConcrete = (TransformComponent?) oldParent;
-            var uid = Owner.Uid;
-            oldConcrete?._children.Remove(uid);
-            var newConcrete = (TransformComponent) newParent;
-            newConcrete._children.Add(uid);
-
-            var oldParentOwner = oldParent?.Owner;
-            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
-            var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
-
-            // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(WorldPosition));
-            _parent = newParentEnt.Uid;
-
-            ChangeMapId(newConcrete.MapID);
-
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
-            Owner.SendMessage(this, compMessage);
-
-            RebuildMatrices();
-            Dirty();
+            // offset position from world to parent, and set
+            Coordinates = new EntityCoordinates(newParent.Owner.Uid, newParent.InvWorldMatrix.Transform(WorldPosition));
         }
 
         internal void ChangeMapId(MapId newMapId)
@@ -694,14 +719,14 @@ namespace Robust.Shared.GameObjects
 
                 if (LocalRotation != newState.Rotation)
                 {
-                    SetRotation(newState.Rotation);
+                    _localRotation = newState.Rotation;
                     rebuildMatrices = true;
                 }
 
                 if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
                 {
                     var oldPos = Coordinates;
-                    SetPosition(newState.LocalPosition);
+                    _localPosition = newState.LocalPosition;
 
                     var ev = new MoveEvent(Owner, oldPos, Coordinates);
                     EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ev);
@@ -734,17 +759,6 @@ namespace Robust.Shared.GameObjects
                 _nextRotation = null;
                 LerpParent = EntityUid.Invalid;
             }
-        }
-
-        protected virtual void SetPosition(Vector2 position)
-        {
-            // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
-            _localPosition = position;
-        }
-
-        protected virtual void SetRotation(Angle rotation)
-        {
-            _localRotation = rotation;
         }
 
         public Matrix3 GetLocalMatrix()

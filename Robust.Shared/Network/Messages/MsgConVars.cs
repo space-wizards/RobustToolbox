@@ -13,11 +13,7 @@ namespace Robust.Shared.Network.Messages
         private const int MaxNameSize = 4 * 32; // UTF8 Max char size is 4 bytes, 32 chars.
         private const int MaxStringValSize = 4 * 256; // UTF8 Max char size is 4 bytes, 256 chars.
 
-        #region REQUIRED
-        public static readonly MsgGroups GROUP = MsgGroups.Command;
-        public static readonly string NAME = nameof(MsgConVars);
-        public MsgConVars(INetChannel channel) : base(NAME, GROUP) { }
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         public GameTick Tick;
         public List<(string name, object value)> NetworkedVars = null!;

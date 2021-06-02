@@ -463,5 +463,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> DebugTargetFps =
             CVarDef.Create("debug.target_fps", 60, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * MIDI
+         */
+
+        public static readonly CVarDef<float> MidiVolume =
+            CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
     }
 }

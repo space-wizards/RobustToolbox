@@ -1,8 +1,8 @@
 ﻿using System;
+using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using System.IO;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -17,16 +17,7 @@ namespace Robust.Shared.Network.Messages
         // (due to being in many parts).
         public const int ReliableThreshold = 1300;
 
-        #region REQUIRED
-
-        public static readonly MsgGroups GROUP = MsgGroups.Entity;
-        public static readonly string NAME = nameof(MsgState);
-
-        public MsgState(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
 

@@ -125,7 +125,6 @@ namespace Robust.Client
             _prototypeManager.Resync();
             _mapManager.Initialize();
             _entityManager.Initialize();
-            IoCManager.Resolve<IEntityLookup>().Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
@@ -202,6 +201,28 @@ namespace Robust.Client
             ReadInitialLaunchState();
 
             SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
+
+            if (_commandLineArgs != null)
+            {
+                foreach (var (sawmill, level) in _commandLineArgs.LogLevels)
+                {
+                    LogLevel? logLevel;
+                    if (level == "null")
+                        logLevel = null;
+                    else
+                    {
+                        if (!Enum.TryParse<LogLevel>(level, out var result))
+                        {
+                            System.Console.WriteLine($"LogLevel {level} does not exist!");
+                            continue;
+                        }
+                        logLevel = result;
+                    }
+                    _logManager.GetSawmill(sawmill).Level = logLevel;
+                }
+            }
+
+            ProgramShared.PrintRuntimeInfo(_logManager.RootSawmill);
 
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();

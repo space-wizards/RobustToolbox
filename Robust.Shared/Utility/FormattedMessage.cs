@@ -78,6 +78,11 @@ namespace Robust.Shared.Utility
             _tags.Add(new TagColor(color));
         }
 
+        public void PushNewline()
+        {
+            AddText("\n");
+        }
+
         public void Pop()
         {
             _tags.Add(new TagPop());

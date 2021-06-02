@@ -30,6 +30,8 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override void Shutdown()
         {
+            base.Shutdown();
+
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         }
 

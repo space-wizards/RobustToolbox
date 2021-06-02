@@ -6,16 +6,7 @@ namespace Robust.Shared.Network.Messages
 {
     public class MsgScriptStop : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgScriptStop);
-
-        public MsgScriptStop(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         public int ScriptSession { get; set; }
 

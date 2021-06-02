@@ -17,11 +17,11 @@ namespace Robust.Client.Console
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgScriptStop>(MsgScriptStop.NAME);
-            _netManager.RegisterNetMessage<MsgScriptEval>(MsgScriptEval.NAME);
-            _netManager.RegisterNetMessage<MsgScriptStart>(MsgScriptStart.NAME);
-            _netManager.RegisterNetMessage<MsgScriptResponse>(MsgScriptResponse.NAME, ReceiveScriptResponse);
-            _netManager.RegisterNetMessage<MsgScriptStartAck>(MsgScriptStartAck.NAME, ReceiveScriptStartAckResponse);
+            _netManager.RegisterNetMessage<MsgScriptStop>();
+            _netManager.RegisterNetMessage<MsgScriptEval>();
+            _netManager.RegisterNetMessage<MsgScriptStart>();
+            _netManager.RegisterNetMessage<MsgScriptResponse>(ReceiveScriptResponse);
+            _netManager.RegisterNetMessage<MsgScriptStartAck>(ReceiveScriptStartAckResponse);
         }
 
         private void ReceiveScriptStartAckResponse(MsgScriptStartAck message)
@@ -30,7 +30,8 @@ namespace Robust.Client.Console
 
             var console = new ScriptConsoleServer(this, session);
             _activeConsoles.Add(session, console);
-            console.Open();
+            // FIXME: When this is Open(), resizing the window will cause its position to get NaN'd.
+            console.OpenCentered();
         }
 
         private void ReceiveScriptResponse(MsgScriptResponse message)

@@ -20,8 +20,8 @@ namespace Robust.Server.Player
         ///     NOTE: The content pack almost certainly has an alternative for this.
         ///     Do not call this directly for most content code.
         /// </summary>
-        /// <param name="a">The entity to attach to.</param>
-        void AttachToEntity(IEntity? a);
+        /// <param name="entity">The entity to attach to.</param>
+        void AttachToEntity(IEntity? entity);
 
         /// <summary>
         ///     Detaches this player from an entity.
@@ -36,5 +36,12 @@ namespace Robust.Server.Player
         ///     Persistent data for this player.
         /// </summary>
         IPlayerData Data { get; }
+
+        /// <summary>
+        ///     Internal method to set <see cref="ICommonSession.AttachedEntity"/> and update the player's status.
+        ///     Do NOT use this unless you know what you're doing, you probably want <see cref="AttachToEntity"/>
+        ///     and <see cref="DetachFromEntity"/> instead.
+        /// </summary>
+        internal void SetAttachedEntity(IEntity? entity);
     }
 }

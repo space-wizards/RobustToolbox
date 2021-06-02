@@ -146,13 +146,12 @@ namespace Robust.Client.GameStates
         private void DrawWorld(in OverlayDrawArgs args)
         {
             bool pvsEnabled = _configurationManager.GetCVar<bool>("net.pvs");
-
             if(!pvsEnabled)
                 return;
 
-            float pvsSize = _configurationManager.GetCVar<float>("net.maxupdaterange");
+            float pvsRange = _configurationManager.GetCVar<float>("net.maxupdaterange");
             var pvsCenter = _eyeManager.CurrentEye.Position;
-            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsSize, pvsSize));
+            Box2 pvsBox = Box2.CenteredAround(pvsCenter.Position, new Vector2(pvsRange * 2, pvsRange * 2));
 
             var worldHandle = args.WorldHandle;
 

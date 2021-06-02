@@ -62,15 +62,14 @@ namespace Robust.Server.Console
                 var sudoShell = new SudoShell(this, localShell, shell);
                 ExecuteInShell(sudoShell, argStr.Substring("sudo ".Length));
             });
-            
+
             LoadConsoleCommands();
 
             // setup networking with clients
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
-            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME);
+            NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCmdAck>();
 
-            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME,
-                message => HandleRegistrationRequest(message.MsgChannel));
+            NetManager.RegisterNetMessage<MsgConCmdReg>(message => HandleRegistrationRequest(message.MsgChannel));
         }
 
         private void ExecuteInShell(IConsoleShell shell, string command)

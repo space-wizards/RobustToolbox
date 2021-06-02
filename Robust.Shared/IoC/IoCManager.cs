@@ -105,6 +105,23 @@ namespace Robust.Shared.IoC
         }
 
         /// <summary>
+        /// Register an implementation, to make it accessible to <see cref="Resolve{T}"/>
+        /// </summary>
+        /// <typeparam name="T">The type that will be resolvable and implementation.</typeparam>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="T"/> has been registered before,
+        /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
+        /// </exception>
+        public static void Register<T>(bool overwrite = false) where T : class
+        {
+            Register<T, T>(overwrite);
+        }
+
+        /// <summary>
         /// Registers an interface to an implementation, to make it accessible to <see cref="Resolve{T}"/>
         /// <see cref="BuildGraph"/> MUST be called after this method to make the new interface available.
         /// </summary>

@@ -13,16 +13,7 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     public class MsgViewVariablesRemoteData : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesRemoteData);
-
-        public MsgViewVariablesRemoteData(INetChannel channel) : base(NAME, GROUP)
-        {
-        }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     The request ID equal to the ID sent in <see cref="RequestId"/>,

@@ -33,6 +33,8 @@ namespace Robust.Shared.Input
         /// </summary>
         /// <param name="function">Function to remove.</param>
         void RemoveFunction(BoundKeyFunction function);
+
+        string Name { get; }
     }
 
     /// <inheritdoc />
@@ -40,20 +42,25 @@ namespace Robust.Shared.Input
     {
         private readonly List<BoundKeyFunction> _commands = new();
         private readonly IInputCmdContext? _parent;
+        public string Name { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="InputCmdContext"/>.
         /// </summary>
         /// <param name="parent">Parent context.</param>
-        internal InputCmdContext(IInputCmdContext? parent)
+        internal InputCmdContext(IInputCmdContext? parent, string name)
         {
             _parent = parent;
+            Name = name;
         }
 
         /// <summary>
         ///     Creates a instance of <see cref="InputCmdContext"/> with no parent.
         /// </summary>
-        internal InputCmdContext() { }
+        internal InputCmdContext(string name)
+        {
+            Name = name;
+        }
 
         /// <inheritdoc />
         public void AddFunction(BoundKeyFunction function)

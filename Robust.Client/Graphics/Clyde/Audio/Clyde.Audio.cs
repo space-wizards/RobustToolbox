@@ -44,8 +44,12 @@ namespace Robust.Client.Graphics.Clyde
 
         internal bool IsEfxSupported;
 
+        private ISawmill _openALSawmill = default!;
+
         private void _initializeAudio()
         {
+            _openALSawmill = Logger.GetSawmill("clyde.oal");
+
             _audioOpenDevice();
 
             // Create OpenAL context.
@@ -74,9 +78,9 @@ namespace Robust.Client.Graphics.Clyde
                 _alContextExtensions.Add(extension);
             }
 
-            Logger.DebugS("clyde.oal", "OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
-            Logger.DebugS("clyde.oal", "OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
-            Logger.DebugS("clyde.oal", "OpenAL Version: {0}", AL.Get(ALGetString.Version));
+            _openALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
+            _openALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
+            _openALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
         }
 
         private void _audioOpenDevice()
@@ -89,7 +93,7 @@ namespace Robust.Client.Graphics.Clyde
                 _openALDevice = ALC.OpenDevice(preferredDevice);
                 if (_openALDevice == IntPtr.Zero)
                 {
-                    Logger.WarningS("clyde.oal", "Unable to open preferred audio device '{0}': {1}. Falling back default.",
+                    _openALSawmill.Warning("Unable to open preferred audio device '{0}': {1}. Falling back default.",
                         preferredDevice, ALC.GetError(ALDevice.Null));
 
                     _openALDevice = ALC.OpenDevice(null);
@@ -153,7 +157,7 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized audio sources.
             while (_sourceDisposeQueue.TryDequeue(out var handles))
             {
-                Logger.DebugS("clyde.oal", "Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
+                _openALSawmill.Debug("Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
                 if (IsEfxSupported) RemoveEfx(handles);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
@@ -163,7 +167,7 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized buffered audio sources.
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handles))
             {
-                Logger.DebugS("clyde.oal", "Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
+                _openALSawmill.Debug("Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
                 if (IsEfxSupported) RemoveEfx(handles);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
@@ -211,24 +215,24 @@ namespace Robust.Client.Graphics.Clyde
             return audioSource;
         }
 
-        private static void _checkAlcError(ALDevice device,
+        private void _checkAlcError(ALDevice device,
             [CallerMemberName] string callerMember = "",
             [CallerLineNumber] int callerLineNumber = -1)
         {
             var error = ALC.GetError(device);
             if (error != AlcError.NoError)
             {
-                Logger.ErrorS("clyde.oal", "[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
+                _openALSawmill.Error("[{0}:{1}] ALC error: {2}", callerMember, callerLineNumber, error);
             }
         }
 
-        private static void _checkAlError([CallerMemberName] string callerMember = "",
+        private void _checkAlError([CallerMemberName] string callerMember = "",
             [CallerLineNumber] int callerLineNumber = -1)
         {
             var error = AL.GetError();
             if (error != ALError.NoError)
             {
-                Logger.ErrorS("clyde.oal", "[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
+                _openALSawmill.Error("[{0}:{1}] AL error: {2}", callerMember, callerLineNumber, error);
             }
         }
 
@@ -330,6 +334,35 @@ namespace Robust.Client.Graphics.Clyde
             return new AudioStream(handle, length, wav.NumChannels, name);
         }
 
+        public AudioStream LoadAudioRaw(ReadOnlySpan<short> samples, int channels, int sampleRate, string? name = null)
+        {
+            var fmt = channels switch
+            {
+                1 => ALFormat.Mono16,
+                2 => ALFormat.Stereo16,
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(channels), "Only stereo and mono is currently supported")
+            };
+
+            var buffer = AL.GenBuffer();
+            _checkAlError();
+
+            unsafe
+            {
+                fixed (short* ptr = samples)
+                {
+                    AL.BufferData(buffer, fmt, (IntPtr) ptr, samples.Length * sizeof(short), sampleRate);
+                }
+            }
+
+            _checkAlError();
+
+            var handle = new ClydeHandle(_audioSampleBuffers.Count);
+            var length = TimeSpan.FromSeconds((double) samples.Length / channels / sampleRate);
+            _audioSampleBuffers.Add(new LoadedAudioSample(buffer));
+            return new AudioStream(handle, length, channels, name);
+        }
+
         private sealed class LoadedAudioSample
         {
             public readonly int BufferHandle;
@@ -381,14 +414,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 AL.SourcePlay(SourceHandle);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void StopPlaying()
             {
                 _checkDisposed();
                 AL.SourceStop(SourceHandle);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public bool IsPlaying
@@ -407,14 +440,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     _checkDisposed();
                     AL.GetSource(SourceHandle, ALSourceb.Looping, out var ret);
-                    _checkAlError();
+                    _master._checkAlError();
                     return ret;
                 }
                 set
                 {
                     _checkDisposed();
                     AL.Source(SourceHandle, ALSourceb.Looping, value);
-                    _checkAlError();
+                    _master._checkAlError();
                 }
             }
 
@@ -422,7 +455,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 AL.Source(SourceHandle, ALSourceb.SourceRelative, true);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void SetVolume(float decibels)
@@ -436,7 +469,21 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 _gain =  MathF.Pow(10, decibels / 10);
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
-                _checkAlError();
+                _master._checkAlError();
+            }
+
+            public void SetVolumeDirect(float scale)
+            {
+                _checkDisposed();
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+                _gain = scale;
+                AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
+                _master._checkAlError();
             }
 
             public void SetOcclusion(float blocks)
@@ -453,7 +500,7 @@ namespace Robust.Client.Graphics.Clyde
                     gain *= gain * gain;
                     AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
                 }
-                _checkAlError();
+                _master._checkAlError();
             }
 
             private void SetOcclusionEfx(float gain, float cutoff)
@@ -473,7 +520,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 AL.Source(SourceHandle, ALSourcef.SecOffset, seconds);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public bool SetPosition(Vector2 position)
@@ -499,7 +546,7 @@ namespace Robust.Client.Graphics.Clyde
 #endif
 
                 AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
-                _checkAlError();
+                _master._checkAlError();
                 return true;
             }
 
@@ -526,14 +573,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 AL.Source(SourceHandle, ALSource3f.Velocity, x, y, 0);
 
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void SetPitch(float pitch)
             {
                 _checkDisposed();
                 AL.Source(SourceHandle, ALSourcef.Pitch, pitch);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             ~AudioSource()
@@ -559,7 +606,7 @@ namespace Robust.Client.Graphics.Clyde
                     if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
                     AL.DeleteSource(SourceHandle);
                     _master._audioSources.Remove(SourceHandle);
-                    _checkAlError();
+                    _master._checkAlError();
                 }
 
                 SourceHandle = -1;
@@ -609,7 +656,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.SourcePlay(stackalloc int[] {SourceHandle!.Value});
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void StopPlaying()
@@ -617,7 +664,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.SourceStop(SourceHandle!.Value);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public bool IsPlaying
@@ -643,7 +690,7 @@ namespace Robust.Client.Graphics.Clyde
                 _mono = false;
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle!.Value, ALSourceb.SourceRelative, true);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void SetLooping()
@@ -662,7 +709,21 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 _gain =  MathF.Pow(10, decibels / 10);
                 AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
-                _checkAlError();
+                _master._checkAlError();
+            }
+
+            public void SetVolumeDirect(float scale)
+            {
+                _checkDisposed();
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+                _gain = scale;
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
+                _master._checkAlError();
             }
 
             public void SetOcclusion(float blocks)
@@ -680,7 +741,7 @@ namespace Robust.Client.Graphics.Clyde
                     AL.Source(SourceHandle!.Value, ALSourcef.Gain, gain * _gain);
                 }
 
-                _checkAlError();
+                _master._checkAlError();
             }
 
             private void SetOcclusionEfx(float gain, float cutoff)
@@ -700,7 +761,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle!.Value, ALSourcef.SecOffset, seconds);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public bool SetPosition(Vector2 position)
@@ -717,7 +778,7 @@ namespace Robust.Client.Graphics.Clyde
                 _mono = true;
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle!.Value, ALSource3f.Position, x, y, 0);
-                _checkAlError();
+                _master._checkAlError();
                 return true;
             }
 
@@ -744,7 +805,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 AL.Source(SourceHandle!.Value, ALSource3f.Velocity, x, y, 0);
 
-                _checkAlError();
+                _master._checkAlError();
             }
 
             public void SetPitch(float pitch)
@@ -752,7 +813,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle!.Value, ALSourcef.Pitch, pitch);
-                _checkAlError();
+                _master._checkAlError();
             }
 
             ~BufferedAudioSource()
@@ -783,7 +844,7 @@ namespace Robust.Client.Graphics.Clyde
                     AL.DeleteSource(SourceHandle.Value);
                     AL.DeleteBuffers(BufferHandles);
                     _master._bufferedAudioSources.Remove(SourceHandle.Value);
-                    _checkAlError();
+                    _master._checkAlError();
                 }
 
                 SourceHandle = null;

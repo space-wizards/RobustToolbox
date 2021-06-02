@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -12,7 +14,7 @@ namespace Robust.Shared.GameObjects
     {
         // Not an EntitySystem given EntityManager has a dependency on it which means it's just easier to IoC it for tests.
 
-        void Initialize();
+        void Startup();
 
         void Shutdown();
 
@@ -61,7 +63,8 @@ namespace Robust.Shared.GameObjects
         Box2 GetWorldAabbFromEntity(in IEntity ent);
     }
 
-    public class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
+    [UsedImplicitly]
+    public class EntityLookup : IEntityLookup, IEntityEventSubscriber
     {
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
@@ -69,25 +72,32 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new();
 
         // Using stacks so we always use latest data (given we only run it once per entity).
-        private Stack<MoveEvent> _moveQueue = new();
-        private Stack<RotateEvent> _rotateQueue = new();
-        private Queue<EntMapIdChangedMessage> _mapChangeQueue = new();
+        private readonly Stack<MoveEvent> _moveQueue = new();
+        private readonly Stack<RotateEvent> _rotateQueue = new();
+        private readonly Queue<EntMapIdChangedMessage> _mapChangeQueue = new();
 
         /// <summary>
         /// Move and rotate events generate the same update so no point duplicating work in the same tick.
         /// </summary>
-        private HashSet<EntityUid> _handledThisTick = new();
+        private readonly HashSet<EntityUid> _handledThisTick = new();
 
         // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
 
-        public SharedEntityLookup(IEntityManager entityManager, IMapManager mapManager)
+        public bool Started { get; private set; } = false;
+
+        public EntityLookup(IEntityManager entityManager, IMapManager mapManager)
         {
             _entityManager = entityManager;
             _mapManager = mapManager;
         }
 
-        public void Initialize()
+        public void Startup()
         {
+            if (Started)
+            {
+                throw new InvalidOperationException("Startup() called multiple times.");
+            }
+
             var eventBus = _entityManager.EventBus;
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
@@ -96,15 +106,27 @@ namespace Robust.Shared.GameObjects
             _entityManager.EntityStarted += HandleEntityStarted;
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
+            Started = true;
         }
 
         public void Shutdown()
         {
+            // If we haven't even started up, there's nothing to clean up then.
+            if (!Started)
+                return;
+
+            _moveQueue.Clear();
+            _rotateQueue.Clear();
+            _handledThisTick.Clear();
+            _mapChangeQueue.Clear();
+            _entityTreesPerMap.Clear();
+
             _entityManager.EventBus.UnsubscribeEvents(this);
             _entityManager.EntityDeleted -= HandleEntityDeleted;
             _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
+            Started = false;
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -193,14 +215,14 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
-            if (mapId == MapId.Nullspace)
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var mapTree))
             {
                 return Enumerable.Empty<IEntity>();
             }
 
             var list = new List<IEntity>();
 
-            _entityTreesPerMap[mapId].QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+            mapTree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
             {
                 if (!ent.Deleted)
                 {

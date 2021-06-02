@@ -15,11 +15,7 @@ namespace Robust.Shared.Network.Messages
     [UsedImplicitly]
     internal class MsgMapStrStrings : NetMessage
     {
-
-        public MsgMapStrStrings(INetChannel ch)
-            : base(nameof(MsgMapStrStrings), MsgGroups.Core)
-        {
-        }
+        public override MsgGroups MsgGroup => MsgGroups.Core;
 
         /// <value>
         /// The raw bytes of the string mapping held by the server.
@@ -48,7 +44,5 @@ namespace Robust.Shared.Network.Messages
                 throw new InvalidOperationException("Not all of the bytes were written to the message.");
             }
         }
-
     }
-
 }

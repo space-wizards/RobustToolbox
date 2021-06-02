@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -37,6 +38,8 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
+            var doubledSprites = new HashSet<SpriteComponent>();
+
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(currentMap, pvsBounds, true))
             {
                 var gridBounds = gridId == GridId.Invalid ? pvsBounds : pvsBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
@@ -48,6 +51,12 @@ namespace Robust.Client.GameObjects
                     if (value.IsInert)
                     {
                         return true;
+                    }
+
+                    if (value.IntersectingGrids.Count > 1)
+                    {
+                        if (doubledSprites.Contains(value)) return true;
+                        doubledSprites.Add(value);
                     }
 
                     value.FrameUpdate(state);

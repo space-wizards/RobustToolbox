@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
@@ -495,6 +495,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
             var state = (this, worldBounds, count: 0);
+            var doubledLights = new HashSet<PointLightComponent>();
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
             {
@@ -525,6 +526,12 @@ namespace Robust.Client.Graphics.Clyde
                     if (!light.Enabled || light.ContainerOccluded)
                     {
                         return true;
+                    }
+
+                    if (light.IntersectingGrids.Count > 1)
+                    {
+                        if (doubledLights.Contains(light)) return true;
+                        doubledLights.Add(light);
                     }
 
                     var lightPos = transform.WorldMatrix.Transform(light.Offset);

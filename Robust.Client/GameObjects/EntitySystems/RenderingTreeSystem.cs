@@ -54,12 +54,10 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
 
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
-            SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
-            SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
@@ -92,11 +90,6 @@ namespace Robust.Client.GameObjects
 
         #region SpriteHandlers
         private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
-        {
-            QueueSpriteUpdate(component);
-        }
-
-        private void SpriteMoved(EntityUid uid, SpriteComponent component, MoveEvent args)
         {
             QueueSpriteUpdate(component);
         }
@@ -152,11 +145,6 @@ namespace Robust.Client.GameObjects
 
         #region LightHandlers
         private void LightMapChanged(EntityUid uid, PointLightComponent component, EntMapIdChangedMessage args)
-        {
-            QueueLightUpdate(component);
-        }
-
-        private void LightMoved(EntityUid uid, PointLightComponent component, MoveEvent args)
         {
             QueueLightUpdate(component);
         }
@@ -301,7 +289,7 @@ namespace Robust.Client.GameObjects
                 if (mapId == MapId.Nullspace) continue;
 
                 var mapTree = _gridTrees[mapId];
-                var aabb = MapTrees.SpriteAabbFunc(sprite);
+                var aabb = SpriteAabbFunc(sprite);
                 var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
 
                 // Remove from old
@@ -344,7 +332,7 @@ namespace Robust.Client.GameObjects
                 if (mapId == MapId.Nullspace) continue;
 
                 var mapTree = _gridTrees[mapId];
-                var aabb = MapTrees.LightAabbFunc(light);
+                var aabb = LightAabbFunc(light);
                 var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
 
                 // Remove from old
@@ -385,21 +373,21 @@ namespace Robust.Client.GameObjects
                 SpriteTree = new DynamicTree<SpriteComponent>(SpriteAabbFunc);
                 LightTree = new DynamicTree<PointLightComponent>(LightAabbFunc);
             }
+        }
 
-            internal static Box2 SpriteAabbFunc(in SpriteComponent value)
-            {
-                var worldPos = value.Owner.Transform.WorldPosition;
+        internal static Box2 SpriteAabbFunc(in SpriteComponent value)
+        {
+            var worldPos = value.Owner.Transform.WorldPosition;
 
-                return new Box2(worldPos, worldPos);
-            }
+            return new Box2(worldPos, worldPos);
+        }
 
-            internal static Box2 LightAabbFunc(in PointLightComponent value)
-            {
-                var worldPos = value.Owner.Transform.WorldPosition;
+        internal static Box2 LightAabbFunc(in PointLightComponent value)
+        {
+            var worldPos = value.Owner.Transform.WorldPosition;
 
-                var boxSize = value.Radius * 2;
-                return Box2.CenteredAround(worldPos, (boxSize, boxSize));
-            }
+            var boxSize = value.Radius * 2;
+            return Box2.CenteredAround(worldPos, (boxSize, boxSize));
         }
     }
 

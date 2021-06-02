@@ -18,24 +18,24 @@ namespace Robust.Shared.Localization
         private void AddBuiltInFunctions(FluentBundle bundle)
         {
             // Grammatical gender / pronouns
-            AddCtxFunction(context, "GENDER", FuncGender);
-            AddCtxFunction(context, "SUBJECT", FuncSubject);
-            AddCtxFunction(context, "OBJECT", FuncObject);
-            AddCtxFunction(context, "POSS-ADJ", FuncPossAdj);
-            AddCtxFunction(context, "POSS-PRONOUN", FuncPossPronoun);
-            AddCtxFunction(context, "REFLEXIVE", FuncReflexive);
+            AddCtxFunction(bundle, "GENDER", FuncGender);
+            AddCtxFunction(bundle, "SUBJECT", FuncSubject);
+            AddCtxFunction(bundle, "OBJECT", FuncObject);
+            AddCtxFunction(bundle, "POSS-ADJ", FuncPossAdj);
+            AddCtxFunction(bundle, "POSS-PRONOUN", FuncPossPronoun);
+            AddCtxFunction(bundle, "REFLEXIVE", FuncReflexive);
 
             // Conjugation
-            AddCtxFunction(context, "CONJUGATE-BE", FuncConjugateBe);
-            AddCtxFunction(context, "CONJUGATE-HAVE", FuncConjugateHave);
+            AddCtxFunction(bundle, "CONJUGATE-BE", FuncConjugateBe);
+            AddCtxFunction(bundle, "CONJUGATE-HAVE", FuncConjugateHave);
 
             // Proper nouns
-            AddCtxFunction(context, "PROPER", FuncProper);
-            AddCtxFunction(context, "THE", FuncThe);
+            AddCtxFunction(bundle, "PROPER", FuncProper);
+            AddCtxFunction(bundle, "THE", FuncThe);
 
             // Misc
-            AddCtxFunction(context, "ATTRIB", args => FuncAttrib(context, args));
-            AddCtxFunction(context, "CAPITALIZE", FuncCapitalize);
+            AddCtxFunction(bundle, "ATTRIB", args => FuncAttrib(bundle, args));
+            AddCtxFunction(bundle, "CAPITALIZE", FuncCapitalize);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Robust.Shared.Localization
         {
             var input = args.Args[0].Format(new LocContext());
             if (!String.IsNullOrEmpty(input))
-                return new LocValueString(input.First().ToString().ToUpper() + input.Substring(1));
+                return new LocValueString(input[0].ToString().ToUpper() + input.Substring(1));
             else return new LocValueString("");
         }
 
@@ -139,7 +139,7 @@ namespace Robust.Shared.Localization
             return new LocValueString(GetString("zzzz-conjugate-have", ("ent", args.Args[0])));
         }
 
-        private ILocValue FuncAttrib(MessageContext context, LocArgs args)
+        private ILocValue FuncAttrib(FluentBundle bundle, LocArgs args)
         {
             if (args.Args.Count < 2) return new LocValueString("other");
 
@@ -148,7 +148,7 @@ namespace Robust.Shared.Localization
             {
                 IEntity entity = (IEntity) entity0.Value;
                 ILocValue attrib0 = args.Args[1];
-                if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(context)), out var attrib))
+                if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
                     return new LocValueString(attrib);
                 }

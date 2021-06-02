@@ -140,18 +140,18 @@ namespace Robust.Shared.Localization
 
         private bool TryGetMessage(
             string messageId,
-            [NotNullWhen(true)] out FluentBundle? ctx,
+            [NotNullWhen(true)] out FluentBundle? bundle,
             [NotNullWhen(true)] out AstMessage? message)
         {
             if (_defaultCulture == null)
             {
-                ctx = null;
+                bundle = null;
                 message = null;
                 return false;
             }
 
-            ctx = _contexts[_defaultCulture];
-            return ctx.TryGetAstMessage(messageId, out message);
+            bundle = _contexts[_defaultCulture];
+            return bundle.TryGetAstMessage(messageId, out message);
         }
 
         public void ReloadLocalizations()

@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
@@ -61,7 +60,7 @@ namespace Robust.Shared.Localization
                 var prototype = _prototype.Index<EntityPrototype>(prototypeId);
                 var locId = prototype.CustomLocalizationID ?? $"ent-{prototypeId}";
 
-                if (TryGetMessage(locId, out var ctx, out var msg))
+                if (TryGetMessage(locId, out var bundle, out var msg))
                 {
                     // Localization override exists.
                     var msgAttrs = msg.Attributes;
@@ -70,7 +69,7 @@ namespace Robust.Shared.Localization
                     {
                         // Only set name if the value isn't empty.
                         // So that you can override *only* a desc/suffix.
-                        name = ctx.FormatPattern(msg.Value, null, out var fmtErr);
+                        name = bundle.FormatPattern(msg.Value, null, out var fmtErr);
                         WriteWarningForErrs(fmtErr, locId);
                     }
 
@@ -78,14 +77,14 @@ namespace Robust.Shared.Localization
                     if (msgAttrs.Count != 0)
                     {
                         if (desc == null
-                            && ctx.TryGetMsg(locId, "desc", null, out errs, out desc))
+                            && bundle.TryGetMsg(locId, "desc", null, out errs, out desc))
                         {
                         }
 
                         WriteWarningForErrs(errs, locId);
 
                         if (suffix == null
-                            && ctx.TryGetMsg(locId, "suffix", null, out errs, out suffix))
+                            && bundle.TryGetMsg(locId, "suffix", null, out errs, out suffix))
                         {
                         }
 
@@ -102,7 +101,7 @@ namespace Robust.Shared.Localization
                             attributes ??= new Dictionary<string, string>();
                             if (!attributes.ContainsKey(attrib))
                             {
-                                var value = ctx.FormatPattern(pattern, null, out var errors);
+                                var value = bundle.FormatPattern(pattern, null, out var errors);
                                 WriteWarningForErrs(errors, locId);
                                 attributes[attrib] = value;
                             }

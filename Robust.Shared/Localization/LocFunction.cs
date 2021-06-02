@@ -30,9 +30,9 @@ namespace Robust.Shared.Localization
 
         internal readonly FluentBundle Context;
 
-        internal LocContext(FluentBundle ctx)
+        internal LocContext(FluentBundle bundle)
         {
-            Context = ctx;
+            Context = bundle;
         }
     }
 
@@ -71,9 +71,9 @@ namespace Robust.Shared.Localization
         /// <remarks>
         ///     Used when this value is interpolated directly in localizations.
         /// </remarks>
-        /// <param name="ctx">Context containing data like culture used.</param>
+        /// <param name="bundle">Context containing data like culture used.</param>
         /// <returns>The formatted string.</returns>
-        string Format(LocContext ctx);
+        string Format(LocContext bundle);
 
         /// <summary>
         ///     Boxed value stored by this instance.
@@ -87,7 +87,7 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Checks if this value matches a string in a select expression.
         /// </summary>
-        bool Matches(LocContext ctx, string matchValue)
+        bool Matches(LocContext bundle, string matchValue)
         {
             return false;
         }
@@ -117,10 +117,10 @@ namespace Robust.Shared.Localization
             Value = val;
         }
 
-        public abstract string Format(LocContext ctx);
+        public abstract string Format(LocContext bundle);
 
         /*
-        public virtual bool Matches(LocContext ctx, string matchValue)
+        public virtual bool Matches(LocContext bundle, string matchValue)
         {
             return false;
         }
@@ -132,9 +132,9 @@ namespace Robust.Shared.Localization
 
     public sealed record LocValueNumber(double Value) : LocValue<double>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
-            return Value.ToString(ctx.Culture);
+            return Value.ToString(bundle.Culture);
         }
 
         public override string AsString()
@@ -150,9 +150,9 @@ namespace Robust.Shared.Localization
 
     public sealed record LocValueDateTime(DateTime Value) : LocValue<DateTime>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
-            return Value.ToString(ctx.Culture);
+            return Value.ToString(bundle.Culture);
         }
 
         public override string AsString()
@@ -168,7 +168,7 @@ namespace Robust.Shared.Localization
 
     public sealed record LocValueString(string Value) : LocValue<string>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
             return Value;
         }
@@ -189,7 +189,7 @@ namespace Robust.Shared.Localization
     /// </summary>
     public sealed record LocValueNone(string Value) : LocValue<string>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
             return Value;
         }
@@ -207,7 +207,7 @@ namespace Robust.Shared.Localization
 
     public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
             return Value.Name;
         }
@@ -227,13 +227,13 @@ namespace Robust.Shared.Localization
 
     /*public sealed record LocValueBool(bool Value) : LocValue<bool>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
-            return Value.ToString(ctx.Culture);
+            return Value.ToString(bundle.Culture);
         }
 
         /*
-        public override bool Matches(LocContext ctx, string matchValue)
+        public override bool Matches(LocContext bundle, string matchValue)
         {
             var word = Value ? "true" : "false";
             return word.Equals(matchValue, StringComparison.InvariantCultureIgnoreCase);
@@ -243,12 +243,12 @@ namespace Robust.Shared.Localization
 
     public sealed record LocValueEnum(Enum Value) : LocValue<Enum>(Value)
     {
-        public override string Format(LocContext ctx)
+        public override string Format(LocContext bundle)
         {
             return Value.ToString().ToLowerInvariant();
         }
 
-        /*public override bool Matches(LocContext ctx, string matchValue)
+        /*public override bool Matches(LocContext bundle, string matchValue)
         {
             return matchValue.Equals(Value.ToString(), StringComparison.InvariantCultureIgnoreCase);
         }#1#

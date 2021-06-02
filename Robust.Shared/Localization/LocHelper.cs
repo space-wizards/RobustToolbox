@@ -7,11 +7,6 @@ namespace Robust.Shared.Localization
 {
     public static class LocHelper
     {
-        public static string FormatCompileErrors(this ParserFluentError self, ReadOnlyMemory<char> resource)
-        {
-            return FormatErrors(self.ToString(), self.GetSpan()!, resource);
-        }
-
         public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource)
         {
             ErrorSpan span = new(self.Row, self.Slice!.Value.Start.Value, self.Slice.Value.End.Value,

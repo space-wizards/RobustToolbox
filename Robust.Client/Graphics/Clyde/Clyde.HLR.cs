@@ -367,7 +367,6 @@ namespace Robust.Client.Graphics.Clyde
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
             var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-            var doubledSprites = new HashSet<SpriteComponent>();
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
             {
@@ -392,12 +391,6 @@ namespace Robust.Client.Graphics.Clyde
                     if (value.ContainerOccluded || !value.Visible)
                     {
                         return true;
-                    }
-
-                    if (value.IntersectingGrids.Count > 1)
-                    {
-                        if (doubledSprites.Contains(value)) return true;
-                        doubledSprites.Add(value);
                     }
 
                     var entity = value.Owner;

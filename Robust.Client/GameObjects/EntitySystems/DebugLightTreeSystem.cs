@@ -67,15 +67,11 @@ namespace Robust.Client.GameObjects
                 if (map == MapId.Nullspace) return;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                var renderedLights = new HashSet<PointLightComponent>();
 
                 foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, viewport, true))
                 {
                     foreach (var light in _tree.GetLightTreeForMap(map, gridId))
                     {
-                        if (renderedLights.Contains(light)) continue;
-
-                        renderedLights.Add(light);
                         args.WorldHandle.DrawRect(_lookup.GetWorldAabbFromEntity(light.Owner), Color.Green.WithAlpha(0.1f));
                     }
                 }

@@ -129,13 +129,13 @@ namespace Robust.Client.GameObjects
         /// What MapId we are intersecting for RenderingTreeSystem.
         /// </summary>
         [ViewVariables]
-        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
+        internal MapId TreeMapId { get; set; } = MapId.Nullspace;
 
         /// <summary>
-        /// What grids we're on for RenderingTreeSystem.
+        /// What grid we're on for RenderingTreeSystem.
         /// </summary>
         [ViewVariables]
-        internal List<GridId> IntersectingGrids { get; } = new();
+        internal GridId TreeGridId { get; set; } = GridId.Invalid;
 
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums

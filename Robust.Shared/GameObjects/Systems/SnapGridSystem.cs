@@ -25,14 +25,17 @@ namespace Robust.Shared.GameObjects
         {
             var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
             UpdatePosition(uid, transform, component);
+
+            transform.Anchored = true;
         }
 
         private void HandleComponentShutdown(EntityUid uid, SnapGridComponent component, ComponentShutdown args)
         {
+            var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
+            transform.Anchored = false;
+
             if (component.LastGrid == GridId.Invalid)
                 return;
-
-            var transform = ComponentManager.GetComponent<ITransformComponent>(uid);
 
             if (_mapManager.TryGetGrid(component.LastGrid, out var grid))
             {

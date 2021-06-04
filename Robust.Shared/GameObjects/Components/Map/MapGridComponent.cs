@@ -98,6 +98,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void UnanchorEntity(ITransformComponent transform)
         {
+            //HACK: Client grid pivot causes this.
+            //TODO: make grid components the actual grid
+            if(GridIndex == GridId.Invalid)
+                return;
+
             var xform = (TransformComponent)transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner.Uid);

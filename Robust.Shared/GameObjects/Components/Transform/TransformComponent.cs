@@ -272,9 +272,6 @@ namespace Robust.Shared.GameObjects
             // NOTE: This setter must be callable from before initialize (inheriting from AttachParent's note)
             set
             {
-                if(Anchored)
-                    return;
-
                 var oldPosition = Coordinates;
                 _localPosition = value.Position;
 
@@ -282,6 +279,7 @@ namespace Robust.Shared.GameObjects
 
                 if (value.EntityId != _parent)
                 {
+                    Anchored = false; // changing the parent un-anchors the entity
                     changedParent = true;
                     var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
                     var newParent = newParentEnt.Transform;
@@ -703,7 +701,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation);
+            return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation, _anchored);
         }
 
         /// <inheritdoc />
@@ -752,6 +750,29 @@ namespace Robust.Shared.GameObjects
 
                 _prevPosition = newState.LocalPosition;
                 _prevRotation = newState.Rotation;
+
+                if (newState.Anchored && !_anchored)
+                {
+                    var grid = _mapManager.GetGrid(GridID);
+                    var gComp = Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(grid.GridEntityId);
+                    gComp.AnchorEntity(this);
+
+                    // An anchored entity is always parented to the grid, this will never throw.
+                    //Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(newState.ParentID).AnchorEntity(this);
+                }
+                else if (!newState.Anchored && _anchored)
+                {
+                    // An anchored entity is always parented to the grid, this will never throw.
+                    Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(newState.ParentID).UnanchorEntity(this);
+                }
+
+                // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.
+                // If this assert fails, the code above that sets the parent is broken.
+                DebugTools.Assert(!_parent.IsClientSide(), "Transform received a state, but is still parented to a client entity.");
+
+                // Whatever happened on the client, these should still be correct
+                DebugTools.Assert(ParentUid == newState.ParentID);
+                DebugTools.Assert(Anchored == newState.Anchored);
 
                 if (rebuildMatrices)
                 {
@@ -854,25 +875,32 @@ namespace Robust.Shared.GameObjects
             public readonly bool NoLocalRotation;
 
             /// <summary>
+            /// True if the transform is anchored to a tile.
+            /// </summary>
+            public readonly bool Anchored;
+
+            /// <summary>
             ///     Constructs a new state snapshot of a TransformComponent.
             /// </summary>
             /// <param name="localPosition">Current position offset of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
             /// <param name="noLocalRotation"></param>
-            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation)
+            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation, bool anchored)
                 : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;
                 ParentID = parentId;
                 NoLocalRotation = noLocalRotation;
+                Anchored = anchored;
             }
         }
 
         public void SetAnchored(bool value)
         {
             _anchored = value;
+            Dirty();
         }
     }
 

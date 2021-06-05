@@ -8,12 +8,19 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+            SubscribeLocalEvent<CollisionWakeComponent, EntityInitializedMessage>(HandleInitialize);
+
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
             SubscribeLocalEvent<CollisionWakeComponent, CollisionWakeStateMessage>(HandleCollisionWakeState);
 
             SubscribeLocalEvent<CollisionWakeComponent, JointAddedEvent>(HandleJointAdd);
             SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(HandleJointRemove);
+        }
+
+        private void HandleInitialize(EntityUid uid, CollisionWakeComponent component, EntityInitializedMessage args)
+        {
+            component.RaiseStateChange();
         }
 
         private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)

@@ -33,12 +33,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public override void Initialize()
-        {
-            base.Initialize();
-            RaiseStateChange();
-        }
-
         internal void RaiseStateChange()
         {
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);

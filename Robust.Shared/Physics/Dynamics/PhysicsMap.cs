@@ -222,9 +222,11 @@ namespace Robust.Shared.Physics.Dynamics
             // Note: creating a joint doesn't wake the bodies.
 
             // Raise broadcast last so we can do both sides of directed first.
-            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new JointAddedEvent(joint), false);
-            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new JointAddedEvent(joint), false);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, new JointAddedEvent(joint));
+            var vera = new JointAddedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointAddedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         public void RemoveJoint(Joint joint)
@@ -303,9 +305,11 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
-            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new JointRemovedEvent(joint), false);
-            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new JointRemovedEvent(joint), false);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, new JointRemovedEvent(joint));
+            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         #endregion

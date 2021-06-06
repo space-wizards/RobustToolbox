@@ -16,7 +16,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using NumberType = Robust.Client.ViewVariables.Editors.VVPropEditorNumeric.NumberType;
+using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
@@ -43,17 +43,13 @@ namespace Robust.Client.ViewVariables
 
         public void Initialize()
         {
-            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(MsgViewVariablesOpenSession.NAME,
-                _netMessageOpenSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(MsgViewVariablesRemoteData.NAME,
-                _netMessageRemoteData);
-            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(MsgViewVariablesCloseSession.NAME,
-                _netMessageCloseSession);
-            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(MsgViewVariablesDenySession.NAME,
-                _netMessageDenySession);
-            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>(MsgViewVariablesModifyRemote.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>(MsgViewVariablesReqSession.NAME);
-            _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
+            _netManager.RegisterNetMessage<MsgViewVariablesOpenSession>(_netMessageOpenSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesRemoteData>(_netMessageRemoteData);
+            _netManager.RegisterNetMessage<MsgViewVariablesCloseSession>(_netMessageCloseSession);
+            _netManager.RegisterNetMessage<MsgViewVariablesDenySession>(_netMessageDenySession);
+            _netManager.RegisterNetMessage<MsgViewVariablesModifyRemote>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqSession>();
+            _netManager.RegisterNetMessage<MsgViewVariablesReqData>();
         }
 
         public VVPropEditor PropertyFor(Type? type)

@@ -348,7 +348,7 @@ namespace Robust.Client.GameObjects
                 var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
 
                 // Remove from old
-                foreach (var gridId in intersectingGrids)
+                foreach (var gridId in light.IntersectingGrids)
                 {
                     if (intersectingGrids.Contains(gridId)) continue;
                     mapTree[gridId].LightTree.Remove(light);

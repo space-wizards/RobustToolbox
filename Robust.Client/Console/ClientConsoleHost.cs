@@ -36,7 +36,7 @@ namespace Robust.Client.Console
             Message = message;
         }
     }
-    
+
     /// <inheritdoc cref="IClientConsoleHost" />
     internal class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
@@ -45,9 +45,9 @@ namespace Robust.Client.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            NetManager.RegisterNetMessage<MsgConCmdReg>(MsgConCmdReg.NAME, HandleConCmdReg);
-            NetManager.RegisterNetMessage<MsgConCmdAck>(MsgConCmdAck.NAME, HandleConCmdAck);
-            NetManager.RegisterNetMessage<MsgConCmd>(MsgConCmd.NAME, ProcessCommand);
+            NetManager.RegisterNetMessage<MsgConCmdReg>(HandleConCmdReg);
+            NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
+            NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
 
             Reset();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));

@@ -10,13 +10,7 @@ namespace Robust.Shared.Network.Messages
 {
     public class MsgViewVariablesModifyRemote : NetMessage
     {
-        #region REQUIRED
-
-        public const MsgGroups GROUP = MsgGroups.Command;
-        public const string NAME = nameof(MsgViewVariablesModifyRemote);
-        public MsgViewVariablesModifyRemote(INetChannel channel) : base(NAME, GROUP) { }
-
-        #endregion
+        public override MsgGroups MsgGroup => MsgGroups.Command;
 
         /// <summary>
         ///     The session ID of the session to modify.

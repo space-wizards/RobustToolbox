@@ -27,6 +27,8 @@ namespace Robust.Client.GameObjects
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
+        private HashSet<EntityUid> _checkedChildren = new();
+
         internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map, GridId grid)
         {
             return _gridTrees[map][grid].SpriteTree;
@@ -70,7 +72,9 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMovedSubHandler(ITransformComponent sender)
         {
-            if (sender.Owner.HasComponent<MapGridComponent>() ||
+            // To avoid doing redundant updates (and we don't need to update a grid's children ever)
+            if (!_checkedChildren.Add(sender.Owner.Uid) ||
+                sender.Owner.HasComponent<MapGridComponent>() ||
                 sender.Owner.HasComponent<MapComponent>()) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
@@ -78,8 +82,10 @@ namespace Robust.Client.GameObjects
             // (Struct-based events ok though)
             if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
+
             if (sender.Owner.TryGetComponent(out PointLightComponent? light))
                 QueueLightUpdate(light);
+
             foreach (ITransformComponent child in sender.Children)
             {
                 AnythingMovedSubHandler(child);
@@ -127,22 +133,6 @@ namespace Robust.Client.GameObjects
 
             component.TreeUpdateQueued = true;
             _spriteQueue.Add(component);
-
-            foreach (var child in component.Owner.Transform.Children)
-            {
-                QueueSpriteUpdate(child.Owner);
-            }
-        }
-
-        private void QueueSpriteUpdate(IEntity entity)
-        {
-            if (!entity.TryGetComponent(out SpriteComponent? spriteComponent)) return;
-            QueueSpriteUpdate(spriteComponent);
-
-            foreach (var child in entity.Transform.Children)
-            {
-                QueueSpriteUpdate(child.Owner);
-            }
         }
         #endregion
 
@@ -187,22 +177,6 @@ namespace Robust.Client.GameObjects
 
             component.TreeUpdateQueued = true;
             _lightQueue.Add(component);
-
-            foreach (var child in component.Owner.Transform.Children)
-            {
-                QueueLightUpdate(child.Owner);
-            }
-        }
-
-        private void QueueLightUpdate(IEntity entity)
-        {
-            if (!entity.TryGetComponent(out PointLightComponent? lightComponent)) return;
-            QueueLightUpdate(lightComponent);
-
-            foreach (var child in entity.Transform.Children)
-            {
-                QueueLightUpdate(child.Owner);
-            }
         }
         #endregion
 
@@ -277,6 +251,8 @@ namespace Robust.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            _checkedChildren.Clear();
+
             foreach (var sprite in _spriteQueue)
             {
                 sprite.TreeUpdateQueued = false;

@@ -54,12 +54,10 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
 
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
-            SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
-            SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
@@ -72,6 +70,9 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMovedSubHandler(ITransformComponent sender)
         {
+            if (sender.Owner.HasComponent<MapGridComponent>() ||
+                sender.Owner.HasComponent<MapComponent>()) return;
+
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
@@ -92,11 +93,6 @@ namespace Robust.Client.GameObjects
 
         #region SpriteHandlers
         private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
-        {
-            QueueSpriteUpdate(component);
-        }
-
-        private void SpriteMoved(EntityUid uid, SpriteComponent component, MoveEvent args)
         {
             QueueSpriteUpdate(component);
         }
@@ -152,11 +148,6 @@ namespace Robust.Client.GameObjects
 
         #region LightHandlers
         private void LightMapChanged(EntityUid uid, PointLightComponent component, EntMapIdChangedMessage args)
-        {
-            QueueLightUpdate(component);
-        }
-
-        private void LightMoved(EntityUid uid, PointLightComponent component, MoveEvent args)
         {
             QueueLightUpdate(component);
         }

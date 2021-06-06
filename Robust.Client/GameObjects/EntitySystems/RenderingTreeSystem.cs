@@ -288,6 +288,7 @@ namespace Robust.Client.GameObjects
         {
             foreach (var sprite in _spriteQueue)
             {
+                sprite.TreeUpdateQueued = false;
                 var mapId = sprite.Owner.Transform.MapID;
 
                 // If we're on a new map then clear the old one.
@@ -325,12 +326,11 @@ namespace Robust.Client.GameObjects
 
                     sprite.IntersectingGrids.Add(gridId);
                 }
-
-                sprite.TreeUpdateQueued = false;
             }
 
             foreach (var light in _lightQueue)
             {
+                light.TreeUpdateQueued = false;
                 var mapId = light.Owner.Transform.MapID;
 
                 // If we're on a new map then clear the old one.
@@ -367,8 +367,6 @@ namespace Robust.Client.GameObjects
                     mapTree[gridId].LightTree.AddOrUpdate(light, translated);
                     light.IntersectingGrids.Add(gridId);
                 }
-
-                light.TreeUpdateQueued = false;
             }
 
             _spriteQueue.Clear();

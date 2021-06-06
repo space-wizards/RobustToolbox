@@ -57,12 +57,19 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
+            SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
+        }
+
+        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, SpriteUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueSpriteUpdate(component);
         }
 
         private void AnythingMoved(MoveEvent args)
@@ -289,6 +296,12 @@ namespace Robust.Client.GameObjects
             foreach (var sprite in _spriteQueue)
             {
                 var mapId = sprite.Owner.Transform.MapID;
+
+                if (!sprite.Visible || sprite.ContainerOccluded)
+                {
+                    ClearSprite(sprite);
+                    continue;
+                }
 
                 // If we're on a new map then clear the old one.
                 if (sprite.IntersectingMapId != mapId)

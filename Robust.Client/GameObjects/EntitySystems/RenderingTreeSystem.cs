@@ -63,6 +63,13 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
+            SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
+        }
+
+        private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueLightUpdate(component);
         }
 
         private void AnythingMoved(MoveEvent args)
@@ -334,14 +341,18 @@ namespace Robust.Client.GameObjects
                 var mapId = light.Owner.Transform.MapID;
 
                 // If we're on a new map then clear the old one.
-                if (light.IntersectingMapId != mapId)
+                if (light.IntersectingMapId != mapId ||
+                    !light.Enabled ||
+                    light.ContainerOccluded)
                 {
                     ClearLight(light);
                 }
 
                 light.IntersectingMapId = mapId;
 
-                if (mapId == MapId.Nullspace) continue;
+                if (mapId == MapId.Nullspace ||
+                    !light.Enabled ||
+                    light.ContainerOccluded) continue;
 
                 var mapTree = _gridTrees[mapId];
                 var aabb = MapTrees.LightAabbFunc(light);

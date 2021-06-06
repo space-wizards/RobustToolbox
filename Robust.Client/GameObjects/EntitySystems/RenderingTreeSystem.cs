@@ -27,6 +27,8 @@ namespace Robust.Client.GameObjects
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
+        private HashSet<EntityUid> _checkedChildren = new();
+
         internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map, GridId grid)
         {
             return _gridTrees[map][grid].SpriteTree;
@@ -54,12 +56,10 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
 
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
-            SubscribeLocalEvent<SpriteComponent, MoveEvent>(SpriteMoved);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
-            SubscribeLocalEvent<PointLightComponent, MoveEvent>(LightMoved);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
@@ -72,13 +72,20 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMovedSubHandler(ITransformComponent sender)
         {
+            // To avoid doing redundant updates (and we don't need to update a grid's children ever)
+            if (!_checkedChildren.Add(sender.Owner.Uid) ||
+                sender.Owner.HasComponent<MapGridComponent>() ||
+                sender.Owner.HasComponent<MapComponent>()) return;
+
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
+
             if (sender.Owner.TryGetComponent(out PointLightComponent? light))
                 QueueLightUpdate(light);
+
             foreach (ITransformComponent child in sender.Children)
             {
                 AnythingMovedSubHandler(child);
@@ -92,11 +99,6 @@ namespace Robust.Client.GameObjects
 
         #region SpriteHandlers
         private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
-        {
-            QueueSpriteUpdate(component);
-        }
-
-        private void SpriteMoved(EntityUid uid, SpriteComponent component, MoveEvent args)
         {
             QueueSpriteUpdate(component);
         }
@@ -131,32 +133,11 @@ namespace Robust.Client.GameObjects
 
             component.TreeUpdateQueued = true;
             _spriteQueue.Add(component);
-
-            foreach (var child in component.Owner.Transform.Children)
-            {
-                QueueSpriteUpdate(child.Owner);
-            }
-        }
-
-        private void QueueSpriteUpdate(IEntity entity)
-        {
-            if (!entity.TryGetComponent(out SpriteComponent? spriteComponent)) return;
-            QueueSpriteUpdate(spriteComponent);
-
-            foreach (var child in entity.Transform.Children)
-            {
-                QueueSpriteUpdate(child.Owner);
-            }
         }
         #endregion
 
         #region LightHandlers
         private void LightMapChanged(EntityUid uid, PointLightComponent component, EntMapIdChangedMessage args)
-        {
-            QueueLightUpdate(component);
-        }
-
-        private void LightMoved(EntityUid uid, PointLightComponent component, MoveEvent args)
         {
             QueueLightUpdate(component);
         }
@@ -196,22 +177,6 @@ namespace Robust.Client.GameObjects
 
             component.TreeUpdateQueued = true;
             _lightQueue.Add(component);
-
-            foreach (var child in component.Owner.Transform.Children)
-            {
-                QueueLightUpdate(child.Owner);
-            }
-        }
-
-        private void QueueLightUpdate(IEntity entity)
-        {
-            if (!entity.TryGetComponent(out PointLightComponent? lightComponent)) return;
-            QueueLightUpdate(lightComponent);
-
-            foreach (var child in entity.Transform.Children)
-            {
-                QueueLightUpdate(child.Owner);
-            }
         }
         #endregion
 
@@ -286,8 +251,11 @@ namespace Robust.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            _checkedChildren.Clear();
+
             foreach (var sprite in _spriteQueue)
             {
+                sprite.TreeUpdateQueued = false;
                 var mapId = sprite.Owner.Transform.MapID;
 
                 // If we're on a new map then clear the old one.
@@ -325,12 +293,11 @@ namespace Robust.Client.GameObjects
 
                     sprite.IntersectingGrids.Add(gridId);
                 }
-
-                sprite.TreeUpdateQueued = false;
             }
 
             foreach (var light in _lightQueue)
             {
+                light.TreeUpdateQueued = false;
                 var mapId = light.Owner.Transform.MapID;
 
                 // If we're on a new map then clear the old one.
@@ -348,7 +315,7 @@ namespace Robust.Client.GameObjects
                 var intersectingGrids = _mapManager.FindGridIdsIntersecting(mapId, aabb, true).ToList();
 
                 // Remove from old
-                foreach (var gridId in intersectingGrids)
+                foreach (var gridId in light.IntersectingGrids)
                 {
                     if (intersectingGrids.Contains(gridId)) continue;
                     mapTree[gridId].LightTree.Remove(light);
@@ -367,8 +334,6 @@ namespace Robust.Client.GameObjects
                     mapTree[gridId].LightTree.AddOrUpdate(light, translated);
                     light.IntersectingGrids.Add(gridId);
                 }
-
-                light.TreeUpdateQueued = false;
             }
 
             _spriteQueue.Clear();

@@ -43,14 +43,14 @@ namespace Robust.Client.Console
 
         public ScriptConsoleClient()
         {
-            Title = Loc.GetString("Robust C# Interactive (CLIENT)");
+            Title = Loc.GetString("script-console-client-title");
             ScriptInstanceShared.InitDummy();
 
             _globals = new ScriptGlobalsImpl(this);
 
             IoCManager.InjectDependencies(this);
 
-            OutputPanel.AddText(Loc.GetString(@"Robust C# interactive console (CLIENT)."));
+            OutputPanel.AddText(Loc.GetString("script-console-client-start-text"));
             OutputPanel.AddText(">");
         }
 

@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface.CustomControls
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
 
-            Title = Loc.GetString("Entity Spawn Panel");
+            Title = Loc.GetString("entity-spawn-window-title");
 
 
             SetSize = (250, 300);
@@ -83,13 +83,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = Loc.GetString("Search")
+                                PlaceHolder = Loc.GetString("generic-search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = Loc.GetString("Clear"),
+                                Text = Loc.GetString("generic-clear"),
                             })
                         }
                     },
@@ -109,13 +109,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (EraseButton = new Button
                             {
                                 ToggleMode = true,
-                                Text = Loc.GetString("Erase Mode")
+                                Text = Loc.GetString("entity-spawn-window-erase-button-text")
                             }),
 
                             (OverrideMenu = new OptionButton
                             {
                                 HorizontalExpand = true,
-                                ToolTip = Loc.GetString("Override placement")
+                                ToolTip = Loc.GetString("entity-spawn-window-override-menu-tooltip")
                             })
                         }
                     },

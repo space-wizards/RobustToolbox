@@ -37,9 +37,9 @@ namespace Robust.Client.UserInterface.CustomControls
                             (InputBar = new HistoryLineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = Loc.GetString("Your C# code here.")
+                                PlaceHolder = Loc.GetString("script-console-input-bar-placeholder")
                             }),
-                            (RunButton = new Button {Text = Loc.GetString("Run")})
+                            (RunButton = new Button {Text = Loc.GetString("script-console-run-button-text")})
                         }
                     },
                 }

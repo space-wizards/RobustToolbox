@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
@@ -75,7 +75,7 @@ namespace Robust.Client.UserInterface.Controls
             var control = GetChild(tab);
             var title = control.GetValue(TabTitleProperty);
 
-            return title ?? control.Name ?? Loc.GetString("No title");
+            return title ?? control.Name ?? Loc.GetString("tab-container-not-tab-title-provided");
         }
 
         public static string? GetTabTitle(Control control)

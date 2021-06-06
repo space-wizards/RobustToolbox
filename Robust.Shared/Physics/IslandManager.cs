@@ -29,10 +29,10 @@ namespace Robust.Shared.Physics
     /// Contains physics islands for use by PhysicsMaps.
     /// Key difference from bullet3 is we won't merge small islands together due to the way box2d sleeping works.
     /// </summary>
-    public class IslandManager : IIslandManager
+    internal sealed class IslandManager : IIslandManager
     {
-        private IslandBodyCapacitySort _capacitySort = new();
-        private IslandBodyCountSort _countSort = new();
+        private static readonly IslandBodyCapacitySort CapacitySort = new();
+        private static readonly IslandBodyCountSort CountSort = new();
 
         /// <summary>
         /// The island all non-contact non-joint bodies are added to to batch together. This needs its own custom sleeping
@@ -62,7 +62,7 @@ namespace Robust.Shared.Physics
                 }
 
                 // Look this is kinda stinky but it's only called at the appropriate place for now
-                _activeIslands.Sort(_countSort);
+                _activeIslands.Sort(CountSort);
                 return _activeIslands;
             }
         }
@@ -98,7 +98,7 @@ namespace Robust.Shared.Physics
 
             if (!isSorted)
             {
-                _allocatedIslands.Sort(_capacitySort);
+                _allocatedIslands.Sort(CapacitySort);
             }
 
             // TODO: Look at removing islands occasionally just to avoid memory bloat over time.

@@ -340,19 +340,21 @@ namespace Robust.Client.GameObjects
             {
                 var mapId = light.Owner.Transform.MapID;
 
+                if (!light.Enabled || light.ContainerOccluded)
+                {
+                    ClearLight(light);
+                    continue;
+                }
+
                 // If we're on a new map then clear the old one.
-                if (light.IntersectingMapId != mapId ||
-                    !light.Enabled ||
-                    light.ContainerOccluded)
+                if (light.IntersectingMapId != mapId)
                 {
                     ClearLight(light);
                 }
 
                 light.IntersectingMapId = mapId;
 
-                if (mapId == MapId.Nullspace ||
-                    !light.Enabled ||
-                    light.ContainerOccluded) continue;
+                if (mapId == MapId.Nullspace) continue;
 
                 var mapTree = _gridTrees[mapId];
                 var aabb = MapTrees.LightAabbFunc(light);

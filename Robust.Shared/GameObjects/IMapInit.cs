@@ -12,6 +12,13 @@ namespace Robust.Shared.GameObjects
         void MapInit();
     }
 
+    /// <summary>
+    ///     Raised directed on an entity when the map is initialized.
+    /// </summary>
+    public class MapInitEvent : EntityEventArgs
+    {
+    }
+
     public static class MapInitExt
     {
         public static void RunMapInit(this IEntity entity)
@@ -19,6 +26,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
             entity.LifeStage = EntityLifeStage.MapInitialized;
 
+            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, new MapInitEvent(), false);
             foreach (var init in entity.GetAllComponents<IMapInit>())
             {
                 init.MapInit();

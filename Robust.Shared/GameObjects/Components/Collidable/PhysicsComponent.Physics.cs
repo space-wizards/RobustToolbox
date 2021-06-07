@@ -283,7 +283,7 @@ namespace Robust.Shared.GameObjects
                 joints.Add(je.Joint);
             }
 
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />

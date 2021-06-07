@@ -67,17 +67,5 @@ namespace Robust.Shared.Localization
         {
             LocalizationManager.LoadCulture(resourceManager, culture);
         }
-
-
-        /// <summary>
-        /// Remnants of the old Localization system.
-        /// It exists to prevent source errors and allow existing game text to *mostly* work
-        /// </summary>
-        [Obsolete]
-        [StringFormatMethod("text")]
-        public static string GetString(string text, params object[] args)
-        {
-            return LocalizationManager.GetString(text, args);
-        }
     }
 }

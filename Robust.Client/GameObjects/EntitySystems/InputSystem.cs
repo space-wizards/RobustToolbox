@@ -186,11 +186,11 @@ namespace Robust.Client.GameObjects
 
     public class PlayerDetachedEvent : EntityEventArgs
     {
-        public PlayerDetachedEvent(IEntity old)
+        public PlayerDetachedEvent(IEntity entity)
         {
-            Old = old;
+            Entity = entity;
         }
 
-        public IEntity Old { get; }
+        public IEntity Entity { get; }
     }
 }

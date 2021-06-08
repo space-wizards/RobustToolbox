@@ -173,4 +173,24 @@ namespace Robust.Client.GameObjects
             AttachedEntity = attachedEntity;
         }
     }
+
+    public class PlayerAttachedEvent : EntityEventArgs
+    {
+        public PlayerAttachedEvent(IEntity entity)
+        {
+            Entity = entity;
+        }
+
+        public IEntity Entity { get; }
+    }
+
+    public class PlayerDetachedEvent : EntityEventArgs
+    {
+        public PlayerDetachedEvent(IEntity old)
+        {
+            Old = old;
+        }
+
+        public IEntity Old { get; }
+    }
 }

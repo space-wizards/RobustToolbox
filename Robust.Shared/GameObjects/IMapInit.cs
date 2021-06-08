@@ -21,12 +21,14 @@ namespace Robust.Shared.GameObjects
 
     public static class MapInitExt
     {
+        private static readonly MapInitEvent MapInit = new MapInitEvent();
+
         public static void RunMapInit(this IEntity entity)
         {
             DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
             entity.LifeStage = EntityLifeStage.MapInitialized;
 
-            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, new MapInitEvent(), false);
+            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, MapInit, false);
             foreach (var init in entity.GetAllComponents<IMapInit>())
             {
                 init.MapInit();

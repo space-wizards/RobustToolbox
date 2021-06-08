@@ -387,12 +387,6 @@ namespace Robust.Client.Graphics.Clyde
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
-                    // TODO: Probably value in storing this as its own DynamicTree
-                    if (value.ContainerOccluded || !value.Visible)
-                    {
-                        return true;
-                    }
-
                     var entity = value.Owner;
                     var transform = entity.Transform;
 

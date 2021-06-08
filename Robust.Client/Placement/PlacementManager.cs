@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.GameObjects;
@@ -25,7 +25,6 @@ namespace Robust.Client.Placement
 {
     public partial class PlacementManager : IPlacementManager, IDisposable
     {
-        [Dependency] public readonly IPhysicsManager PhysicsManager = default!;
         [Dependency] private readonly IClientNetManager NetworkManager = default!;
         [Dependency] public readonly IPlayerManager PlayerManager = default!;
         [Dependency] public readonly IResourceCache ResourceCache = default!;

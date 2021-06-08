@@ -95,7 +95,7 @@ namespace Robust.Shared.GameObjects
             return entity.AddComponent<T>();
         }
 
-        public static TValue SetAndDirtyIfChanged<TComp, TValue>(
+        public static TComp SetAndDirtyIfChanged<TComp, TValue>(
             this TComp comp,
             ref TValue backingField,
             TValue value)
@@ -103,13 +103,13 @@ namespace Robust.Shared.GameObjects
         {
             if (EqualityComparer<TValue>.Default.Equals(backingField, value))
             {
-                return value;
+                return comp;
             }
 
             backingField = value;
             comp.Dirty();
 
-            return value;
+            return comp;
         }
     }
 }

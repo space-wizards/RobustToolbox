@@ -514,35 +514,23 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        public Box2 GetWorldAABB(IMapManager? mapManager = null)
+        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            var bounds = new Box2();
+            worldPos ??= Owner.Transform.WorldPosition;
+            worldRot ??= Owner.Transform.WorldRotation;
+
+            var worldPosValue = worldPos.Value;
+            var worldRotValue = worldRot.Value;
+
+            var bounds = new Box2(worldPosValue, worldPosValue);
 
             foreach (var fixture in _fixtures)
             {
-                foreach (var (gridId, proxies) in fixture.Proxies)
-                {
-                    Vector2 offset;
-
-                    if (gridId == GridId.Invalid)
-                    {
-                        offset = Vector2.Zero;
-                    }
-                    else
-                    {
-                        offset = mapManager.GetGrid(gridId).WorldPosition;
-                    }
-
-                    foreach (var proxy in proxies)
-                    {
-                        var shapeBounds = proxy.AABB.Translated(offset);
-                        bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
-                    }
-                }
+                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
+                bounds = bounds.Union(boundy.Translated(worldPosValue));
             }
 
-            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
+            return bounds;
         }
 
         /// <inheritdoc />

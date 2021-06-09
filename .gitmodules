@@ -13,3 +13,6 @@
 [submodule "ManagedHttpListener"]
 	path = ManagedHttpListener
 	url = https://github.com/space-wizards/ManagedHttpListener.git
+[submodule "Linguini"]
+	path = Linguini
+	url = https://github.com/space-wizards/Linguini

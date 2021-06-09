@@ -25,13 +25,13 @@ namespace Robust.Shared.Localization
     [PublicAPI]
     public readonly struct LocContext
     {
-        public CultureInfo Culture => Context.Culture;
+        public CultureInfo Culture => Bundle.Culture;
 
-        internal readonly FluentBundle Context;
+        internal readonly FluentBundle Bundle;
 
         internal LocContext(FluentBundle bundle)
         {
-            Context = bundle;
+            Bundle = bundle;
         }
     }
 

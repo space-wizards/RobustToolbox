@@ -93,13 +93,13 @@ namespace Robust.Shared.Localization
 
             try
             {
-                bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
+                var result = bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
                 foreach (var err in errs)
                 {
                     _logSawmill.Error("{culture}/{messageId}: {error}", _defaultCulture!.Name, messageId, err);
                 }
 
-                return errs.Count == 0;
+                return result;
             }
             catch (Exception e)
             {

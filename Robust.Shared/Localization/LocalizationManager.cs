@@ -81,16 +81,7 @@ namespace Robust.Shared.Localization
             {
                 foreach (var (k, v) in keyArgs)
                 {
-                    IFluentType val = v switch
-                    {
-                        IEntity entity => new LocValueEntity(entity),
-                        DateTime dateTime => new LocValueDateTime(dateTime),
-                        bool or Enum => (FluentString) v.ToString()!.ToLowerInvariant(),
-                        _ => (FluentString) v.ToString()!,
-                    };
-
-
-                    args.Add(k, val);
+                    args.Add(k, v.FluentFromObject());
                 }
             }
 

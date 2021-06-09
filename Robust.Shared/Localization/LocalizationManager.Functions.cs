@@ -5,11 +5,9 @@ using System.Globalization;
 using Linguini.Bundle;
 using Linguini.Bundle.Types;
 using Linguini.Shared.Types.Bundle;
-
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Localization
 {
@@ -67,7 +65,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity) entity0.Value;
+                IEntity entity = (IEntity)entity0.Value;
 
                 if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.Gender.HasValue)
                 {
@@ -146,7 +144,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity) entity0.Value;
+                IEntity entity = (IEntity)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -167,7 +165,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity) entity0.Value;
+                IEntity entity = (IEntity)entity0.Value;
 
                 if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.ProperNoun.HasValue)
                 {
@@ -206,15 +204,35 @@ namespace Robust.Shared.Localization
             }
 
             var argStruct = new LocArgs(args, options);
-            return function.Invoke(argStruct);
+            return function.Invoke(argStruct).FluentFromVal();
         }
 
         public void AddFunction(CultureInfo culture, string name, LocFunction function)
         {
-            var context = _contexts[culture];
+            var bundle = _contexts[culture];
 
-            context.AddFunction(name, (args, options)
+            bundle.AddFunction(name, (args, options)
                 => CallFunction(function, args, options), out _, InsertBehavior.Overriding);
+        }
+    }
+
+    internal sealed class FluentLocWrapperType : IFluentType
+    {
+        public readonly ILocValue WrappedValue;
+
+        public FluentLocWrapperType(ILocValue wrappedValue)
+        {
+            WrappedValue = wrappedValue;
+        }
+
+        public string AsString()
+        {
+            return WrappedValue.Format(new LocContext());
+        }
+
+        public IFluentType Copy()
+        {
+            return this;
         }
     }
 
@@ -227,8 +245,34 @@ namespace Robust.Shared.Localization
                 FluentNone => new LocValueNone(""),
                 FluentNumber number => new LocValueNumber(number),
                 FluentString str => new LocValueString(str),
-                ILocValue value => value,
+                FluentLocWrapperType value => value.WrappedValue,
                 _ => throw new ArgumentOutOfRangeException(nameof(arg)),
+            };
+        }
+
+        public static IFluentType FluentFromObject(this object obj)
+        {
+            return obj switch
+            {
+                ILocValue wrap => new FluentLocWrapperType(wrap),
+                IEntity entity => new FluentLocWrapperType(new LocValueEntity(entity)),
+                DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
+                bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
+                string str => (FluentString)str,
+                double dbl => (FluentNumber)dbl,
+                _ => (FluentString)obj.ToString()!,
+            };
+        }
+
+        public static IFluentType FluentFromVal(this ILocValue locValue)
+        {
+            return locValue switch
+            {
+                LocValueNone => FluentNone.None,
+                LocValueNumber number => (FluentNumber)number.Value,
+                LocValueString str => (FluentString)str.Value,
+                LocValueDateTime dateTime => new FluentLocWrapperType(dateTime),
+                _ => new FluentLocWrapperType(locValue),
             };
         }
     }

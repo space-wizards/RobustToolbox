@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using JetBrains.Annotations;
 using Linguini.Bundle;
-using Linguini.Shared.Types.Bundle;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Localization
@@ -63,7 +62,7 @@ namespace Robust.Shared.Localization
     ///     A value passed around in the localization system.
     /// </summary>
     /// <seealso cref="LocValue{T}"/>
-    public interface ILocValue : IFluentType
+    public interface ILocValue
     {
         /// <summary>
         ///     Format this value to a string.
@@ -71,9 +70,9 @@ namespace Robust.Shared.Localization
         /// <remarks>
         ///     Used when this value is interpolated directly in localizations.
         /// </remarks>
-        /// <param name="bundle">Context containing data like culture used.</param>
+        /// <param name="ctx">Context containing data like culture used.</param>
         /// <returns>The formatted string.</returns>
-        string Format(LocContext bundle);
+        string Format(LocContext ctx);
 
         /// <summary>
         ///     Boxed value stored by this instance.
@@ -117,7 +116,7 @@ namespace Robust.Shared.Localization
             Value = val;
         }
 
-        public abstract string Format(LocContext bundle);
+        public abstract string Format(LocContext ctx);
 
         /*
         public virtual bool Matches(LocContext bundle, string matchValue)
@@ -125,101 +124,49 @@ namespace Robust.Shared.Localization
             return false;
         }
     */
-        public abstract string AsString();
-
-        public abstract IFluentType Copy();
     }
 
     public sealed record LocValueNumber(double Value) : LocValue<double>(Value)
     {
-        public override string Format(LocContext bundle)
+        public override string Format(LocContext ctx)
         {
-            return Value.ToString(bundle.Culture);
-        }
-
-        public override string AsString()
-        {
-            return ((FluentNumber) Value).AsString();
-        }
-
-        public override IFluentType Copy()
-        {
-            return (FluentNumber) Value;
+            return Value.ToString(ctx.Culture);
         }
     }
 
     public sealed record LocValueDateTime(DateTime Value) : LocValue<DateTime>(Value)
     {
-        public override string Format(LocContext bundle)
+        public override string Format(LocContext ctx)
         {
-            return Value.ToString(bundle.Culture);
-        }
-
-        public override string AsString()
-        {
-            return Value.ToString(CultureInfo.InvariantCulture);
-        }
-
-        public override IFluentType Copy()
-        {
-            return new LocValueDateTime(this);
+            return Value.ToString(ctx.Culture);
         }
     }
 
     public sealed record LocValueString(string Value) : LocValue<string>(Value)
     {
-        public override string Format(LocContext bundle)
+        public override string Format(LocContext ctx)
         {
             return Value;
-        }
-
-        public override string AsString()
-        {
-            return Value;
-        }
-
-        public override IFluentType Copy()
-        {
-            return (FluentString) Value;
         }
     }
+
 
     /// <summary>
     ///     Stores an "invalid" string value. Produced by e.g. unresolved variable references.
     /// </summary>
     public sealed record LocValueNone(string Value) : LocValue<string>(Value)
     {
-        public override string Format(LocContext bundle)
+        public override string Format(LocContext ctx)
         {
             return Value;
-        }
-
-        public override string AsString()
-        {
-            return Value;
-        }
-
-        public override IFluentType Copy()
-        {
-            return FluentNone.None;
         }
     }
 
     public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
     {
-        public override string Format(LocContext bundle)
+        public override string Format(LocContext ctx)
         {
             return Value.Name;
-        }
-
-        public override string AsString()
-        {
-            return Value.Name;
-        }
-
-        public override IFluentType Copy()
-        {
-            return new LocValueEntity(Value);
         }
     }
 

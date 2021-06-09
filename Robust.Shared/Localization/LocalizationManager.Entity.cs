@@ -73,24 +73,8 @@ namespace Robust.Shared.Localization
                         WriteWarningForErrs(fmtErr, locId);
                     }
 
-                    IList<FluentError> errs = new List<FluentError>();
                     if (msgAttrs.Count != 0)
                     {
-                        if (desc == null
-                            && bundle.TryGetMsg(locId, "desc", null, out errs, out desc))
-                        {
-                        }
-
-                        WriteWarningForErrs(errs, locId);
-
-                        if (suffix == null
-                            && bundle.TryGetMsg(locId, "suffix", null, out errs, out suffix))
-                        {
-                        }
-
-                        WriteWarningForErrs(errs, locId);
-
-
                         foreach (var (attrId, pattern) in msg.Attributes)
                         {
                             var attrib = attrId.ToString();
@@ -106,6 +90,21 @@ namespace Robust.Shared.Localization
                                 attributes[attrib] = value;
                             }
                         }
+
+                        var allErrors = new List<FluentError>();
+                        if (desc == null
+                            && bundle.TryGetMsg(locId, "desc", null, out var err1, out desc))
+                        {
+                            allErrors.AddRange(err1);
+                        }
+
+                        if (suffix == null
+                            && bundle.TryGetMsg(locId, "suffix", null, out var err, out suffix))
+                        {
+                            allErrors.AddRange(err);
+                        }
+
+                        WriteWarningForErrs(allErrors, locId);
                     }
                 }
 
@@ -137,8 +136,6 @@ namespace Robust.Shared.Localization
                 suffix,
                 attributes?.ToImmutableDictionary() ?? ImmutableDictionary<string, string>.Empty);
         }
-
-
 
 
         public EntityLocData GetEntityData(string prototypeId)

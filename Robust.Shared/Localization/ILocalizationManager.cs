@@ -46,7 +46,7 @@ namespace Robust.Shared.Localization
         string GetString(string messageId, params (string, object)[] args);
 
         /// <summary>
-        ///     Try- version of <see cref="GetString(string, (string, object)[])"/>
+        ///     Try- version of <see cref="GetString(string, ValueTuple{string, object}[])"/>
         /// </summary>
         /// <remarks>
         ///     Does not log a warning if the message does not exist.

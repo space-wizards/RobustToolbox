@@ -58,11 +58,25 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
+            SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
+            SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
+        }
+
+        private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueLightUpdate(component);
+        }
+
+        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, SpriteUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueSpriteUpdate(component);
         }
 
         private void AnythingMoved(MoveEvent args)
@@ -258,6 +272,12 @@ namespace Robust.Client.GameObjects
                 sprite.TreeUpdateQueued = false;
                 var mapId = sprite.Owner.Transform.MapID;
 
+                if (!sprite.Visible || sprite.ContainerOccluded)
+                {
+                    ClearSprite(sprite);
+                    continue;
+                }
+
                 // If we're on a new map then clear the old one.
                 if (sprite.IntersectingMapId != mapId)
                 {
@@ -299,6 +319,12 @@ namespace Robust.Client.GameObjects
             {
                 light.TreeUpdateQueued = false;
                 var mapId = light.Owner.Transform.MapID;
+
+                if (!light.Enabled || light.ContainerOccluded)
+                {
+                    ClearLight(light);
+                    continue;
+                }
 
                 // If we're on a new map then clear the old one.
                 if (light.IntersectingMapId != mapId)

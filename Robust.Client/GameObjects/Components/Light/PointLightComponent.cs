@@ -44,11 +44,29 @@ namespace Robust.Client.GameObjects
         public bool Enabled
         {
             get => _enabled;
-            set => _enabled = value;
+            set
+            {
+                if (_enabled == value) return;
+
+                _enabled = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+            }
+        }
+
+        private bool _containerOccluded;
 
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
@@ -269,5 +287,10 @@ namespace Robust.Client.GameObjects
         {
             PointLightComponent = pointLightComponent;
         }
+    }
+
+    internal sealed class PointLightUpdateEvent : EntityEventArgs
+    {
+
     }
 }

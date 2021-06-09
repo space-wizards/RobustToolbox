@@ -42,7 +42,7 @@ namespace Robust.Shared.Localization
         // Flush caches conservatively on prototype/localization changes.
         private void OnPrototypesReloaded(PrototypesReloadedEventArgs args)
         {
-            if (!args.ByType.TryGetValue(typeof(EntityPrototype), out _))
+            if (!args.ByType.ContainsKey(typeof(EntityPrototype)))
                 return;
 
             FlushEntityCache();

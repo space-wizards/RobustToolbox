@@ -5,7 +5,7 @@ using Linguini.Syntax.Parser.Error;
 
 namespace Robust.Shared.Localization
 {
-    public static class LocHelper
+    internal static class LocHelper
     {
         public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource)
         {

@@ -133,6 +133,17 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
+#if EXCEPTION_TOLERANCE
+            if (AttachedEntity.Deleted)
+            {
+                Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
+                // We can't contact ActorSystem because trying to fire an entity event would crash.
+                // Work around it.
+                ((IPlayerSession) this).SetAttachedEntity(null);
+                return;
+            }
+#endif
+
             var detachPlayer = new DetachPlayerEvent();
             AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, detachPlayer, false);
 

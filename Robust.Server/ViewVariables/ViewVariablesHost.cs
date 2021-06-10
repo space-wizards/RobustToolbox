@@ -117,6 +117,9 @@ namespace Robust.Server.ViewVariables
 
             object theObject;
 
+            // Uid for component selectors.
+            EntityUid? uid = null;
+
             switch (message.Selector)
             {
                 case ViewVariablesComponentSelector componentSelector:
@@ -129,6 +132,7 @@ namespace Robust.Server.ViewVariables
                     }
 
                     theObject = component;
+                    uid = componentSelector.Entity;
                     break;
                 case ViewVariablesEntitySelector entitySelector:
                 {
@@ -197,8 +201,8 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesesSession(message.MsgChannel.UserId, theObject, sessionId, this,
-                _robustSerializer);
+            var session = new ViewVariablesesSession(message.MsgChannel.UserId, theObject, sessionId, uid, this,
+                _robustSerializer, _reflectionManager);
 
             _sessions.Add(sessionId, session);
 

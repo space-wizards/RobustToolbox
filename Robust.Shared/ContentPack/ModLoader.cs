@@ -34,7 +34,9 @@ namespace Robust.Shared.ContentPack
         private static int _modLoaderId;
 
         private bool _useLoadContext = true;
-        private bool _sandboxingEnabled;
+
+        /// <inheritdoc />
+        public bool SandboxingEnabled { get; private set; }
 
         public ModLoader()
         {
@@ -56,7 +58,7 @@ namespace Robust.Shared.ContentPack
 
         public void SetEnableSandboxing(bool sandboxing)
         {
-            _sandboxingEnabled = sandboxing;
+            SandboxingEnabled = sandboxing;
             Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
         }
 
@@ -86,7 +88,7 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            if (_sandboxingEnabled)
+            if (SandboxingEnabled)
             {
                 var checkerSw = Stopwatch.StartNew();
 
@@ -304,7 +306,7 @@ namespace Robust.Shared.ContentPack
 
                     // Do not allow sideloading when sandboxing is enabled.
                     // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
-                    if (!_sandboxingEnabled)
+                    if (!SandboxingEnabled)
                     {
                         foreach (var assembly in _sideModules)
                         {
@@ -370,8 +372,8 @@ namespace Robust.Shared.ContentPack
         {
             return new(_res, Logger.GetSawmill("res.typecheck"))
             {
-                VerifyIL = _sandboxingEnabled,
-                DisableTypeCheck = !_sandboxingEnabled,
+                VerifyIL = SandboxingEnabled,
+                DisableTypeCheck = !SandboxingEnabled,
                 ExtraRobustLoader = VerifierExtraLoadHandler
             };
         }

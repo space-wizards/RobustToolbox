@@ -35,8 +35,8 @@ namespace Robust.Client.ViewVariables.Traits
             if (Instance.Object != null)
             {
                 var first = true;
-                foreach (var group in ViewVariablesInstance.LocalPropertyList(Instance.Object,
-                    Instance.ViewVariablesManager, _robustSerializer))
+                foreach (var group in ViewVariablesInstance.LocalPropertyList(Instance.Object, Instance.Uid,
+                    Instance.ViewVariablesManager, _robustSerializer, Instance.ReflectionManager))
                 {
                     CreateMemberGroupHeader(
                         ref first,

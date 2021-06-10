@@ -10,6 +10,9 @@ namespace Robust.UnitTesting
     {
         public Assembly[] Assemblies { get; set; } = Array.Empty<Assembly>();
 
+        // No sandboxing in here.
+        public bool SandboxingEnabled => false;
+
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
             foreach (var assembly in Assemblies)

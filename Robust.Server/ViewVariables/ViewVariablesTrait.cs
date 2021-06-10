@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
@@ -76,8 +77,9 @@ namespace Robust.Server.ViewVariables
         /// <param name="value">
         ///     The new value of the object.
         /// </param>
+        /// <param name="uid">Entity Uid for raising directed events when needed.</param>
         /// <returns>True if this trait can and did modify the property, false otherwise.</returns>
-        public virtual bool TryModifyProperty(object[] property, object value)
+        public virtual bool TryModifyProperty(object[] property, object value, EntityUid? uid)
         {
             return false;
         }

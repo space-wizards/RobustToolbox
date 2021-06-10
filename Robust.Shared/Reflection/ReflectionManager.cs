@@ -3,14 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
 {
     public abstract class ReflectionManager : IReflectionManager
     {
+        [Dependency] private IEntityManager _entityManager = default!;
+        [Dependency] private IModLoaderInternal _modLoaderInternal = default!;
+        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
+
         /// <summary>
         /// Enumerable over prefixes that are added to the type provided to <see cref="GetType(string)"/>
         /// if the type can't be found in any assemblies.
@@ -247,6 +255,82 @@ namespace Robust.Shared.Reflection
 
             _yamlTypeTagCache.Add((baseType, typeName), found);
             return found;
+        }
+
+        public void SetValue(object obj, string member, object? value, EntityUid uid = default)
+        {
+            if (_modLoaderInternal.SandboxingEnabled)
+                throw new MethodAccessException($"The {nameof(SetValue)} API is not available when the sandbox is enabled!");
+
+            ((IReflectionManager)this).SetValueInternal(obj, member, value, uid);
+        }
+
+        void IReflectionManager.SetValueInternal(object obj, string member, object? value, EntityUid uid)
+        {
+            var type = obj.GetType();
+
+            // We get all fields and properties of the type with the member name.
+            foreach (var memberInfo in type.GetMember(member, MemberTypes.Field | MemberTypes.Property, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
+            {
+                // If it's null, we do nothing, just continue.
+                if (memberInfo == null)
+                    continue;
+
+                var memberType = memberInfo.GetUnderlyingType();
+
+                if (value == null && !memberType.IsNullable())
+                    throw new InvalidOperationException($"Tried to set a null value on non-nullable member {member}!");
+
+                // We check for the ReflectRaiseEventAttribute on the member...
+                var raised = false;
+                foreach (var attribute in memberInfo.GetCustomAttributes(typeof(ReflectRaiseEventAttribute), true))
+                {
+                    // Shouldn't really happen, but just in case.
+                    if (attribute is not ReflectRaiseEventAttribute raiseEvent) continue;
+
+                    // The event type MUST inherit EntityEventArgs.
+                    if (!raiseEvent.EventType.IsAssignableTo(typeof(EntityEventArgs)))
+                        throw new InvalidCastException($"{nameof(ReflectRaiseEventAttribute)} type {raiseEvent.EventType} cannot be assigned to {typeof(EntityEventArgs)}!");
+
+                    // Dynamically create an instance of the event type, with the object value as its only constructor parameter.
+                    // This will throw if, for example, the type doesn't have an appropriate constructor.
+                    var eventObj = _dynamicTypeFactory.CreateInstance(raiseEvent.EventType, new[] {value});
+
+                    // If the UID is not invalid, we raise a directed event.
+                    if (uid != EntityUid.Invalid)
+                    {
+                        var method = typeof(IDirectedEventBus).GetMethod(nameof(IDirectedEventBus.RaiseLocalEvent))!.MakeGenericMethod(raiseEvent.EventType);
+                        method.Invoke(_entityManager.EventBus, new[] {uid, eventObj, raiseEvent.Broadcast});
+                    }
+                    // If the UID is invalid but broadcast is true, we raise a broadcast event only.
+                    else if (raiseEvent.Broadcast)
+                    {
+                        var method = typeof(IBroadcastEventBus).GetMethod(nameof(IBroadcastEventBus.RaiseEvent))!.MakeGenericMethod(raiseEvent.EventType);
+                        method.Invoke(_entityManager.EventBus, new[] {EventSource.Local, eventObj});
+                    }
+
+                    // One of the conditions above will be true, so we've raised an event successfully.
+                    // We might have to raise more than one though, so we don't break the loop here.
+                    raised = true;
+
+                    // If we have raised at least one event, do nothing else with this member.
+                    if (raised)
+                        continue;
+                }
+
+                // We didn't raise an event, we set the member data accordingly.
+                switch (memberInfo)
+                {
+                    case FieldInfo field:
+                        field.SetValue(obj, value);
+                        break;
+                    case PropertyInfo property:
+                        property.SetValue(obj, value);
+                        break;
+                    default:
+                        continue;
+                }
+            }
         }
     }
 }

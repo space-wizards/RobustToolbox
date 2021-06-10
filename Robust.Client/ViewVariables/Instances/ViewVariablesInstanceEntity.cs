@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -61,7 +62,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         private bool _serverLoaded;
 
-        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IEntityManager entityManager, IRobustSerializer robustSerializer) : base(vvm, robustSerializer)
+        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IEntityManager entityManager, IRobustSerializer robustSerializer, IReflectionManager reflectionManager) : base(vvm, robustSerializer,  reflectionManager)
         {
             _entityManager = entityManager;
         }
@@ -123,7 +124,7 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.SetTabTitle(TabClientVars, "Client Variables");
 
             var first = true;
-            foreach (var group in LocalPropertyList(obj, ViewVariablesManager, _robustSerializer))
+            foreach (var group in LocalPropertyList(obj, _entity.Uid, ViewVariablesManager, _robustSerializer, ReflectionManager))
             {
                 ViewVariablesTraitMembers.CreateMemberGroupHeader(
                     ref first,
@@ -185,7 +186,7 @@ namespace Robust.Client.ViewVariables.Instances
                     StyleClasses = { SS14Window.StyleClassWindowCloseButton },
                     HorizontalAlignment = HAlignment.Right
                 };
-                button.OnPressed += _ => ViewVariablesManager.OpenVV(component);
+                button.OnPressed += _ => ViewVariablesManager.OpenVV(component, _entity.Uid);
                 removeButton.OnPressed += _ => RemoveClientComponent(component);
                 button.AddChild(removeButton);
                 _clientComponents.AddChild(button);

@@ -14,6 +14,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
@@ -25,6 +26,7 @@ namespace Robust.Client.ViewVariables
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -209,17 +211,17 @@ namespace Robust.Client.ViewVariables
             return new VVPropEditorDummy();
         }
 
-        public void OpenVV(object obj)
+        public void OpenVV(object obj, EntityUid? uid = null)
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is IEntity entity && !entity.Deleted)
+            if (obj is IEntity {Deleted: false})
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, _reflectionManager);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
+                instance = new ViewVariablesInstanceObject(uid, this, _robustSerializer, _reflectionManager);
             }
 
             var window = new SS14Window {Title = "View Variables"};
@@ -260,11 +262,12 @@ namespace Robust.Client.ViewVariables
             ViewVariablesInstance instance;
             if (type != null && typeof(IEntity).IsAssignableFrom(type))
             {
-                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
+                instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer, _reflectionManager);
             }
             else
             {
-                instance = new ViewVariablesInstanceObject(this, _robustSerializer);
+                // uid is null here as this is a remote instance
+                instance = new ViewVariablesInstanceObject(null, this, _robustSerializer, _reflectionManager);
             }
 
             loadingLabel.Dispose();

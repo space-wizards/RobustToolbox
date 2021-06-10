@@ -4,7 +4,9 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
@@ -24,9 +26,14 @@ namespace Robust.Client.ViewVariables.Instances
 
         public ViewVariablesRemoteSession? Session { get; private set; }
         public object? Object { get; private set; }
+        public EntityUid? Uid { get; private set; }
 
-        public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
-            : base(vvm, robustSerializer) { }
+        public ViewVariablesInstanceObject(EntityUid? uid, IViewVariablesManagerInternal vvm,
+            IRobustSerializer robustSerializer, IReflectionManager reflectionManager)
+            : base(vvm, robustSerializer, reflectionManager)
+        {
+            Uid = uid;
+        }
 
         public override void Initialize(SS14Window window, object obj)
         {

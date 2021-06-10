@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -162,11 +163,11 @@ namespace Robust.Server.ViewVariables.Traits
             }
         }
 
-        public override bool TryModifyProperty(object[] property, object value)
+        public override bool TryModifyProperty(object[] property, object value, EntityUid? uid)
         {
-            if (!(property[0] is ViewVariablesMemberSelector selector))
+            if (property[0] is not ViewVariablesMemberSelector selector)
             {
-                return base.TryModifyProperty(property, value);
+                return base.TryModifyProperty(property, value, uid);
             }
 
             if (selector.Index >= _members.Count)
@@ -176,37 +177,20 @@ namespace Robust.Server.ViewVariables.Traits
 
             var member = _members[selector.Index];
 
-            switch (member)
+            uid ??= EntityUid.Invalid;
+
+            try
             {
-                case PropertyInfo propertyInfo:
-                    try
-                    {
-                        propertyInfo.GetSetMethod(true)!.Invoke(Session.Object, new[] {value});
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS("vv", "Exception while modifying property {0} on session {1} object {2}: {3}",
-                            propertyInfo.Name, Session.SessionId, Session.Object, e);
-                        return false;
-                    }
-
-                case FieldInfo field:
-                    try
-                    {
-                        field.SetValue(Session.Object, value);
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS("vv", "Exception while modifying field {0} on session {1} object {2}: {3}",
-                            field.Name, Session.SessionId, Session.Object, e);
-                        return false;
-                    }
-
-                default:
-                    throw new InvalidOperationException();
+                Session.ReflectionManager.SetValueInternal(Session.Object, member.Name, value, uid.Value);
             }
+            catch (Exception e)
+            {
+                Logger.ErrorS("vv", "Exception while modifying member {0} on session {1} object {2}: {3}",
+                    member.Name, Session.SessionId, Session.Object, e);
+                return false;
+            }
+
+            return true;
         }
     }
 }

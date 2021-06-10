@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -13,8 +15,10 @@ namespace Robust.Server.ViewVariables
         private readonly List<ViewVariablesTrait> _traits = new();
         public IViewVariablesHost Host { get; }
         public IRobustSerializer RobustSerializer { get; }
+        public IReflectionManager ReflectionManager { get; }
         public NetUserId PlayerUser { get; }
         public object Object { get; }
+        public EntityUid? Uid { get; }
         public uint SessionId { get; }
         public Type ObjectType { get; }
 
@@ -23,16 +27,19 @@ namespace Robust.Server.ViewVariables
         /// <param name="sessionId">
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
+        /// <param name="uid">UID for raising directed events when needed.</param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesesSession(NetUserId playerUser, object o, uint sessionId, IViewVariablesHost host,
-            IRobustSerializer robustSerializer)
+        public ViewVariablesesSession(NetUserId playerUser, object o, uint sessionId, EntityUid? uid, IViewVariablesHost host,
+            IRobustSerializer robustSerializer, IReflectionManager reflectionManager)
         {
             PlayerUser = playerUser;
             Object = o;
             SessionId = sessionId;
             ObjectType = o.GetType();
+            Uid = uid;
             Host = host;
             RobustSerializer = robustSerializer;
+            ReflectionManager = reflectionManager;
 
             var traitIds = Host.TraitIdsFor(ObjectType);
             if (traitIds.Contains(ViewVariablesTraits.Members))
@@ -83,7 +90,7 @@ namespace Robust.Server.ViewVariables
         {
             foreach (var trait in _traits)
             {
-                if (trait.TryModifyProperty(propertyIndex, value))
+                if (trait.TryModifyProperty(propertyIndex, value, Uid))
                 {
                     break;
                 }

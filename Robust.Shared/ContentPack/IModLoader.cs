@@ -30,6 +30,11 @@ namespace Robust.Shared.ContentPack
     internal interface IModLoaderInternal : IModLoader
     {
         /// <summary>
+        ///     Whether sandboxing is currently enabled.
+        /// </summary>
+        bool SandboxingEnabled { get; }
+
+        /// <summary>
         ///     Loads all content assemblies from the specified resource directory and filename prefix.
         /// </summary>
         /// <param name="mountPath">The directory in which to look for assemblies.</param>

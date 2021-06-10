@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Reflection
 {
@@ -111,5 +113,16 @@ namespace Robust.Shared.Reflection
         bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum);
 
         Type? YamlTypeTagLookup(Type baseType, string typeName);
+
+        /// <summary>
+        ///     Changes a member's value in an object instance.
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="member"></param>
+        /// <param name="value"></param>
+        /// <param name="uid"></param>
+        /// <param name="broadcast"></param>
+        void SetValue(object obj, string member, object? value, EntityUid uid = default);
+        internal void SetValueInternal(object obj, string member, object? value, EntityUid uid = default);
     }
 }

@@ -5,7 +5,9 @@ using System.Reflection;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -18,12 +20,14 @@ namespace Robust.Client.ViewVariables
     internal abstract class ViewVariablesInstance
     {
         public readonly IViewVariablesManagerInternal ViewVariablesManager;
+        public readonly IReflectionManager ReflectionManager;
         protected readonly IRobustSerializer _robustSerializer;
 
-        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer)
+        protected ViewVariablesInstance(IViewVariablesManagerInternal vvm, IRobustSerializer robustSerializer, IReflectionManager reflectionManager)
         {
             ViewVariablesManager = vvm;
             _robustSerializer = robustSerializer;
+            ReflectionManager = reflectionManager;
         }
 
         /// <summary>
@@ -52,12 +56,13 @@ namespace Robust.Client.ViewVariables
         {
         }
 
-        protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
-            IRobustSerializer robustSerializer)
+        protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, EntityUid? uid, IViewVariablesManagerInternal vvm,
+            IRobustSerializer robustSerializer, IReflectionManager reflectionManager)
         {
             var styleOther = false;
             var type = obj.GetType();
 
+            uid ??= EntityUid.Invalid;
             var members = new List<(MemberInfo, VVAccess, object? value, Action<object?, bool> onValueChanged, Type)>();
 
             foreach (var fieldInfo in type.GetAllFields())
@@ -68,7 +73,7 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
-                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
+                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), (v, _) => reflectionManager.SetValueInternal(obj, fieldInfo.Name, v, uid.Value),
                     fieldInfo.FieldType));
             }
 
@@ -86,7 +91,7 @@ namespace Robust.Client.ViewVariables
                 }
 
                 members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
-                    (v, _) => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
+                    (v, _) => reflectionManager.SetValueInternal(obj, propertyInfo.Name, v, uid.Value), propertyInfo.PropertyType));
             }
 
             var groupedSorted = members

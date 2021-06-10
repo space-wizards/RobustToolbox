@@ -28,7 +28,7 @@ namespace Robust.Shared.IoC
         /// <param name="type">Type of object to instantiate.</param>
         /// <param name="args">The arguments to be passed to the constructor.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstance(Type type, object[] args);
+        object CreateInstance(Type type, object?[] args);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
@@ -54,7 +54,7 @@ namespace Robust.Shared.IoC
         /// <param name="type">Type of object to instantiate.</param>
         /// <param name="args">The arguments to be passed to the constructor.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstanceUnchecked(Type type, object[] args);
+        object CreateInstanceUnchecked(Type type, object?[] args);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
@@ -117,7 +117,7 @@ namespace Robust.Shared.IoC
         /// <param name="args">The arguments to pass to the constructor.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
-        internal static T CreateInstanceUnchecked<T>(this IDynamicTypeFactoryInternal dynamicTypeFactory, Type type, object[] args)
+        internal static T CreateInstanceUnchecked<T>(this IDynamicTypeFactoryInternal dynamicTypeFactory, Type type, object?[] args)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
             return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, args);
@@ -143,7 +143,7 @@ namespace Robust.Shared.IoC
             return CreateInstanceUnchecked(type);
         }
 
-        public object CreateInstance(Type type, object[] args)
+        public object CreateInstance(Type type, object?[] args)
         {
             if (!_modLoader.IsContentTypeAccessAllowed(type))
             {
@@ -175,7 +175,7 @@ namespace Robust.Shared.IoC
             return instance;
         }
 
-        public object CreateInstanceUnchecked(Type type, object[] args)
+        public object CreateInstanceUnchecked(Type type, object?[] args)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));

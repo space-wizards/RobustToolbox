@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Input.Binding
 {
@@ -13,8 +14,8 @@ namespace Robust.Shared.Input.Binding
         // handlers in the order they should be resolved for the given key function.
         // internally we use a graph to construct this but we render it down to a flattened
         // list so we don't need to do any graph traversal at query time
-        private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
-            new();
+        private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey = new();
+        private bool _graphDirty = false;
 
         /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
@@ -41,12 +42,15 @@ namespace Robust.Shared.Input.Binding
                 _bindings.Add(new TypedCommandBind(owner, binding));
             }
 
-            RebuildGraph();
+            _graphDirty = true;
         }
 
         /// <inheritdoc />
         public IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function)
         {
+            if (_graphDirty)
+                RebuildGraph();
+
             if (_bindingsForKey.TryGetValue(function, out var handlers))
             {
                 return handlers;
@@ -58,7 +62,8 @@ namespace Robust.Shared.Input.Binding
         public void Unregister(Type owner)
         {
             _bindings.RemoveAll(binding => binding.ForType == owner);
-            RebuildGraph();
+
+            _graphDirty = true;
         }
 
         /// <inheritdoc />
@@ -77,6 +82,7 @@ namespace Robust.Shared.Input.Binding
 
             }
 
+            _graphDirty = false;
         }
 
         private Dictionary<BoundKeyFunction, List<TypedCommandBind>> FunctionToBindings()
@@ -102,89 +108,19 @@ namespace Robust.Shared.Input.Binding
         /// </summary>
         private List<InputCmdHandler> ResolveDependencies(BoundKeyFunction function, List<TypedCommandBind> bindingsForFunction)
         {
-            //TODO: Probably could be optimized if needed! Generally shouldn't be a big issue since there is a relatively
-            // tiny amount of bindings
-
-            List<GraphNode> allNodes = new();
-            Dictionary<Type,List<GraphNode>> typeToNode = new();
-            // build the dict for quick lookup on type
-            foreach (var binding in bindingsForFunction)
-            {
-                if (!typeToNode.ContainsKey(binding.ForType))
-                {
-                    typeToNode[binding.ForType] = new List<GraphNode>();
-                }
-                var newNode = new GraphNode(binding);
-                typeToNode[binding.ForType].Add(newNode);
-                allNodes.Add(newNode);
-            }
-
-            //add the graph edges
-            foreach (var curBinding in allNodes)
-            {
-                foreach (var afterType in curBinding.TypedCommandBind.CommandBind.After)
-                {
-                    // curBinding should always fire after bindings associated with this afterType, i.e.
-                    // this binding DEPENDS ON afterTypes' bindings
-                    if (typeToNode.TryGetValue(afterType, out var afterBindings))
-                    {
-                        foreach (var afterBinding in afterBindings)
-                        {
-                            curBinding.DependsOn.Add(afterBinding);
-                        }
-                    }
-                }
-                foreach (var beforeType in curBinding.TypedCommandBind.CommandBind.Before)
-                {
-                    // curBinding should always fire before bindings associated with this beforeType, i.e.
-                    // beforeTypes' bindings DEPENDS ON this binding
-                    if (typeToNode.TryGetValue(beforeType, out var beforeBindings))
-                    {
-                        foreach (var beforeBinding in beforeBindings)
-                        {
-                            beforeBinding.DependsOn.Add(curBinding);
-                        }
-                    }
-                }
-            }
-
             //TODO: Log graph structure for debugging
 
-            //use toposort to build the final result
-            var topoSorted = TopologicalSort(allNodes, function);
-            List<InputCmdHandler> result = new();
+            var dict = bindingsForFunction.ToDictionary(b => b.ForType, b => b.CommandBind);
 
-            foreach (var node in topoSorted)
-            {
-                result.Add(node.TypedCommandBind.CommandBind.Handler);
-            }
+            var nodes = TopologicalSort.FromBeforeAfter(
+                bindingsForFunction,
+                bind => bind.ForType,
+                bind => bind.CommandBind.Before,
+                bind => bind.CommandBind.After);
 
-            return result;
-        }
+            var topoSorted = TopologicalSort.Sort(nodes);
 
-        //Adapted from https://stackoverflow.com/a/24058279
-        private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes, BoundKeyFunction function)
-        {
-            var elems = nodes.ToDictionary(node => node,
-                node => new HashSet<GraphNode>(node.DependsOn));
-            while (elems.Count > 0)
-            {
-                var elem =
-                    elems.FirstOrDefault(x => x.Value.Count == 0);
-                if (elem.Key == null)
-                {
-                    throw new InvalidOperationException("Found circular dependency when resolving" +
-                                                        $" command binding handler order for key function {function.FunctionName}." +
-                                                        $" Please check the systems which register bindings for" +
-                                                        $" this function and eliminate the circular dependency.");
-                }
-                elems.Remove(elem.Key);
-                foreach (var selem in elems)
-                {
-                    selem.Value.Remove(elem.Key);
-                }
-                yield return elem.Key;
-            }
+            return topoSorted.Select(node => dict[node].Handler).ToList();
         }
 
         /// <summary>

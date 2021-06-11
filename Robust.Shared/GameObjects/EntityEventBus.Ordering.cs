@@ -104,6 +104,13 @@ namespace Robust.Shared.GameObjects
 
                 handler(eventArgs);
             }
+
+            // Go over all handlers that don't have ordering so weren't included in the sort.
+            foreach (var (handler, orderData) in found)
+            {
+                if (orderData == null)
+                    handler(eventArgs);
+            }
         }
 
         private void HandleOrderRegistration(Type eventType, OrderingData? data)

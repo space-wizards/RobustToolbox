@@ -4,7 +4,6 @@ using System.Globalization;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
@@ -120,13 +119,13 @@ namespace Robust.Shared.Timing
                 return;
 
             _conhost.RegisterCommand("pausemap",
-                Loc.GetString("pause-manager-pausemap-register-command-description"),
-                Loc.GetString("pause-manager-pausemap-register-command-help"),
+                "Pauses a map, pausing all simulation processing on it.",
+                "pausemap <map ID>",
                 (shell, _, args) =>
                 {
                     if (args.Length != 1)
                     {
-                        shell.WriteError(Loc.GetString("pause-manager-register-command-error-invalid-mapid"));
+                        shell.WriteError("Need to supply a valid MapId");
                         return;
                     }
 
@@ -135,7 +134,7 @@ namespace Robust.Shared.Timing
 
                     if (!_mapManager.MapExists(mapId))
                     {
-                        shell.WriteError(Loc.GetString("pause-manager-register-command-error-map-does-not-exist"));
+                        shell.WriteError("That map does not exist.");
                         return;
                     }
 
@@ -143,8 +142,8 @@ namespace Robust.Shared.Timing
                 });
 
             _conhost.RegisterCommand("querymappaused",
-                Loc.GetString("pause-manager-querymappaused-register-command-description"),
-                Loc.GetString("pause-manager-querymappaused-register-command-help"),
+                "Check whether a map is paused or not.",
+                "querymappaused <map ID>",
                 (shell, _, args) =>
                 {
                     string? arg = args[0];
@@ -152,7 +151,7 @@ namespace Robust.Shared.Timing
 
                     if (!_mapManager.MapExists(mapId))
                     {
-                        shell.WriteError(Loc.GetString("pause-manager-register-command-error-map-does-not-exist"));
+                        shell.WriteError("That map does not exist.");
                         return;
                     }
 
@@ -160,13 +159,13 @@ namespace Robust.Shared.Timing
                 });
 
             _conhost.RegisterCommand("unpausemap",
-                Loc.GetString("pause-manager-unpausemap-register-command-description"),
-                Loc.GetString("pause-manager-unpausemap-register-command-help"),
+                "unpauses a map, resuming all simulation processing on it.",
+                "Usage: unpausemap <map ID>",
                 (shell, _, args) =>
                 {
                     if (args.Length != 1)
                     {
-                        shell.WriteLine(Loc.GetString("pause-manager-register-command-error-invalid-mapid"));
+                        shell.WriteLine("Need to supply a valid MapId");
                         return;
                     }
 
@@ -175,7 +174,7 @@ namespace Robust.Shared.Timing
 
                     if (!_mapManager.MapExists(mapId))
                     {
-                        shell.WriteLine(Loc.GetString("pause-manager-register-command-error-map-does-not-exist"));
+                        shell.WriteLine("That map does not exist.");
                         return;
                     }
 

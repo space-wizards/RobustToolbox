@@ -1,5 +1,4 @@
 #if CLIENT_SCRIPTING
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -14,7 +13,6 @@ using Microsoft.CodeAnalysis.Text;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
@@ -43,14 +41,14 @@ namespace Robust.Client.Console
 
         public ScriptConsoleClient()
         {
-            Title = Loc.GetString("script-console-client-title");
+            Title = "Robust C# Interactive (CLIENT)";
             ScriptInstanceShared.InitDummy();
 
             _globals = new ScriptGlobalsImpl(this);
 
             IoCManager.InjectDependencies(this);
 
-            OutputPanel.AddText(Loc.GetString("script-console-client-start-text"));
+            OutputPanel.AddText("Robust C# interactive console (CLIENT).");
             OutputPanel.AddText(">");
         }
 

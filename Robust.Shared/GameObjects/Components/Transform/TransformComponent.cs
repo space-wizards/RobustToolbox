@@ -901,6 +901,8 @@ namespace Robust.Shared.GameObjects
         {
             _anchored = value;
             Dirty();
+
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new AnchorStateChangedEvent());
         }
     }
 
@@ -949,4 +951,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public Box2? WorldAABB { get; }
     }
+
+    /// <summary>
+    /// Raised when the Anchor state of the transform is changed.
+    /// </summary>
+    public class AnchorStateChangedEvent : EntityEventArgs { }
 }

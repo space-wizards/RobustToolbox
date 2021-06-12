@@ -28,7 +28,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Utility;
@@ -221,6 +220,13 @@ namespace Robust.Shared.Physics.Dynamics
             bodyA.Dirty();
             bodyB.Dirty();
             // Note: creating a joint doesn't wake the bodies.
+
+            // Raise broadcast last so we can do both sides of directed first.
+            var vera = new JointAddedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointAddedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         public void RemoveJoint(Joint joint)
@@ -298,6 +304,12 @@ namespace Robust.Shared.Physics.Dynamics
                     edge = edge.Next;
                 }
             }
+
+            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         #endregion
@@ -466,11 +478,12 @@ namespace Robust.Shared.Physics.Dynamics
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 // prediction && !seed.Predict ||
-                if (prediction && !seed.Predict ||
-                    seed.Island ||
-                    seed.BodyType == BodyType.Static ||
+                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
+                if ((prediction && !seed.Predict) ||
                     (seed.Paused && !seed.IgnorePaused) ||
-                    !seed.CanCollide) continue;
+                    seed.Island ||
+                    !seed.CanCollide ||
+                    seed.BodyType == BodyType.Static) continue;
 
                 // Start of a new island
                 _island.Clear();

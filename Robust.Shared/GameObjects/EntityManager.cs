@@ -142,6 +142,11 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
+        public IEntity CreateEntityUninitialized(string? prototypeName, EntityUid? euid)
+        {
+            return CreateEntity(prototypeName, euid);
+        }
+
         /// <inheritdoc />
         public virtual IEntity CreateEntityUninitialized(string? prototypeName)
         {

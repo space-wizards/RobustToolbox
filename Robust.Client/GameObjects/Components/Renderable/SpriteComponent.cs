@@ -42,7 +42,12 @@ namespace Robust.Client.GameObjects
         public override bool Visible
         {
             get => _visible;
-            set => _visible = value;
+            set
+            {
+                if (_visible == value) return;
+                _visible = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
         }
 
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
@@ -152,7 +157,7 @@ namespace Robust.Client.GameObjects
             }
             set
             {
-                if(value == null) return;
+                if (value == null) return;
 
                 Layers.Clear();
                 foreach (var layerDatum in value)
@@ -162,11 +167,12 @@ namespace Robust.Client.GameObjects
                     if (!string.IsNullOrWhiteSpace(layerDatum.RsiPath))
                     {
                         var path = TextureRoot / layerDatum.RsiPath;
-                        try
+
+                        if (IoCManager.Resolve<IResourceCache>().TryGetResource(path, out RSIResource? resource))
                         {
-                            layer.RSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(path).RSI;
+                            layer.RSI = resource.RSI;
                         }
-                        catch
+                        else
                         {
                             Logger.ErrorS(LogCategory, "Unable to load layer RSI '{0}'.", path);
                         }
@@ -308,13 +314,24 @@ namespace Robust.Client.GameObjects
         }
 
         [DataField("sprite", readOnly: true)] private string? rsi;
-        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new ();
+        [DataField("layers", readOnly: true)] private List<PrototypeLayerData> layerDatums = new();
 
         [DataField("state", readOnly: true)] private string? state;
         [DataField("texture", readOnly: true)] private string? texture;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
+        }
+
+        private bool _containerOccluded;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
@@ -348,13 +365,13 @@ namespace Robust.Client.GameObjects
                 if (!string.IsNullOrWhiteSpace(rsi))
                 {
                     var rsiPath = TextureRoot / rsi;
-                    try
+                    if(IoCManager.Resolve<IResourceCache>().TryGetResource(rsiPath, out RSIResource? resource))
                     {
-                        BaseRSI = IoCManager.Resolve<IResourceCache>().GetResource<RSIResource>(rsiPath).RSI;
+                        BaseRSI = resource.RSI;
                     }
-                    catch (Exception e)
+                    else
                     {
-                        Logger.ErrorS(SpriteComponent.LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath);
                     }
                 }
             }
@@ -482,7 +499,7 @@ namespace Robust.Client.GameObjects
 
         public int AddBlankLayer(int? newIndex = null)
         {
-            var layer = new Layer(this) {Visible = false};
+            var layer = new Layer(this) { Visible = false };
             return AddLayer(layer, newIndex);
         }
 
@@ -511,13 +528,13 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(Texture? texture, int? newIndex = null)
         {
-            var layer = new Layer(this) {Texture = texture};
+            var layer = new Layer(this) { Texture = texture };
             return AddLayer(layer, newIndex);
         }
 
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
         {
-            var layer = new Layer(this) {State = stateId};
+            var layer = new Layer(this) { State = stateId };
             if (BaseRSI != null && BaseRSI.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
@@ -563,7 +580,7 @@ namespace Robust.Client.GameObjects
 
         public int AddLayer(RSI.StateId stateId, RSI? rsi, int? newIndex = null)
         {
-            var layer = new Layer(this) {State = stateId, RSI = rsi};
+            var layer = new Layer(this) { State = stateId, RSI = rsi };
             if (rsi != null && rsi.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
@@ -1288,8 +1305,8 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
-            var textureSize = texture.Size / (float) EyeManager.PixelsPerMeter;
+            var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
+            var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
 
             // TODO: Implement layer-specific rotation and scale.
@@ -1309,7 +1326,7 @@ namespace Robust.Client.GameObjects
         public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
-            var segSize = (MathF.PI*2) / (numDirections * 2);
+            var segSize = (MathF.PI * 2) / (numDirections * 2);
             var segments = (int)(theta / segSize);
             var odd = segments % 2;
             var result = theta - (segments * segSize) - (odd * segSize);
@@ -1409,7 +1426,7 @@ namespace Robust.Client.GameObjects
             if (curState == null)
                 return;
 
-            var thestate = (SpriteComponentState) curState;
+            var thestate = (SpriteComponentState)curState;
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;
@@ -1979,13 +1996,13 @@ namespace Robust.Client.GameObjects
             switch (layerProp)
             {
                 case "texture":
-                    LayerSetTexture(index, (string) value);
+                    LayerSetTexture(index, (string)value);
                     return;
                 case "state":
-                    LayerSetState(index, (string) value);
+                    LayerSetState(index, (string)value);
                     return;
                 case "color":
-                    LayerSetColor(index, (Color) value);
+                    LayerSetColor(index, (Color)value);
                     return;
                 default:
                     throw new ArgumentException($"Unknown layer property '{layerProp}'");
@@ -2030,7 +2047,7 @@ namespace Robust.Client.GameObjects
                 yield break;
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
+            var dummy = new DummyIconEntity { Prototype = prototype };
             var spriteComponent = dummy.AddComponent<SpriteComponent>();
 
             if (prototype.Components.TryGetValue("Appearance", out _))
@@ -2074,7 +2091,7 @@ namespace Robust.Client.GameObjects
                 return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
+            var dummy = new DummyIconEntity { Prototype = prototype };
             var spriteComponent = dummy.AddComponent<SpriteComponent>();
             dummy.Delete();
 
@@ -2111,7 +2128,7 @@ namespace Robust.Client.GameObjects
             {
                 var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
                 var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
+                var comp = (T)typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
 
@@ -2145,7 +2162,7 @@ namespace Robust.Client.GameObjects
 
             public T GetComponent<T>()
             {
-                return (T) _components[typeof(T)];
+                return (T)_components[typeof(T)];
             }
 
             public IComponent GetComponent(Type type)
@@ -2157,7 +2174,7 @@ namespace Robust.Client.GameObjects
             {
                 component = null;
                 if (!_components.TryGetValue(typeof(T), out var value)) return false;
-                component = (T) value;
+                component = (T)value;
                 return true;
             }
 
@@ -2212,5 +2229,10 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+    }
+
+    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    {
+
     }
 }

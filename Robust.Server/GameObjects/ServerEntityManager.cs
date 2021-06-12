@@ -232,6 +232,7 @@ namespace Robust.Server.GameObjects
                     var msg = message.SystemMessage;
                     var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
                     var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
+                    ReceivedSystemMessage?.Invoke(this, msg);
                     ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }

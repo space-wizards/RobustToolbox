@@ -37,6 +37,8 @@ namespace Robust.Shared.GameObjects
         event EventHandler<EntityUid>? EntityStarted;
         event EventHandler<EntityUid>? EntityDeleted;
 
+        IEntity CreateEntityUninitialized(string? prototypeName, EntityUid? euid);
+
         IEntity CreateEntityUninitialized(string? prototypeName);
 
         IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);

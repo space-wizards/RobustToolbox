@@ -397,7 +397,7 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
             _config.TickProcessMessages();
-            _mapManager.ApplyGameStatePre(curState.MapData);
+            _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates);
             var createdEntities = ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
                 nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);

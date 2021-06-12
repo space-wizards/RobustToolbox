@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -165,6 +165,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected internal override void MouseExited()
         {
+            base.MouseExited();
+
             if (Resizable && CurrentDrag == DragMode.None)
             {
                 DefaultCursorShape = CursorShape.Arrow;

@@ -159,8 +159,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                 if (moveEvent.Sender.Deleted || !moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
-                var mapPosition = moveEvent.NewPosition.ToMapPos(EntityManager);
-                SynchronizeFixtures(physicsComponent, mapPosition - moveEvent.OldPosition.ToMapPos(EntityManager), mapPosition, moveEvent.WorldAABB);
+                SynchronizeFixtures(physicsComponent, moveEvent.NewPosition.ToMapPos(EntityManager) - moveEvent.OldPosition.ToMapPos(EntityManager), moveEvent.WorldAABB);
             }
 
             while (_queuedRotateEvent.Count > 0)
@@ -174,7 +173,7 @@ namespace Robust.Shared.Physics.Broadphase
                 if (rotateEvent.Sender.Deleted || !rotateEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
                     return;
 
-                SynchronizeFixtures(physicsComponent, Vector2.Zero, null, rotateEvent.WorldAABB);
+                SynchronizeFixtures(physicsComponent, Vector2.Zero, rotateEvent.WorldAABB);
             }
 
             _handledThisTick.Clear();
@@ -524,7 +523,9 @@ namespace Robust.Shared.Physics.Broadphase
         /// <summary>
         ///     Move all of the fixtures on this body.
         /// </summary>
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Vector2? worldPosition = null, Box2? worldAABB = null)
+        /// <param name="body"></param>
+        /// <param name="displacement"></param>
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 displacement, Box2? worldAABB = null)
         {
             // If the entity's still being initialized it might have MoveEvent called (might change in future?)
             if (!_lastBroadPhases.TryGetValue(body, out var oldBroadPhases))
@@ -532,10 +533,8 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
-            // TODO: These will need swept broadPhases
-            worldPosition ??= body.Owner.Transform.WorldPosition;
+            var worldPosition = body.Owner.Transform.WorldPosition;
             var worldRotation = body.Owner.Transform.WorldRotation;
-
 
             var mapId = body.Owner.Transform.MapID;
             worldAABB ??= body.GetWorldAABB(worldPosition, worldRotation);
@@ -565,6 +564,8 @@ namespace Robust.Shared.Physics.Broadphase
             }
 
             // Update retained broadphases
+            // TODO: These will need swept broadPhases
+
 
             foreach (var broadPhase in oldBroadPhases)
             {
@@ -576,20 +577,20 @@ namespace Robust.Shared.Physics.Broadphase
                 {
                     if (!fixture.Proxies.TryGetValue(gridId, out var proxies)) continue;
 
-                    var gridPosition = worldPosition.Value;
-                    double gridRotation = worldRotation;
-
-                    if (gridId != GridId.Invalid)
-                    {
-                        var grid = _mapManager.GetGrid(gridId);
-                        gridPosition -= grid.WorldPosition;
-                        // TODO: Should probably have a helper for this
-                        gridRotation = worldRotation - EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-                    }
-
                     foreach (var proxy in proxies)
                     {
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPosition);
+                        var gridRotation = worldRotation;
+                        var gridPos = worldPosition;
+
+                        if (gridId != GridId.Invalid)
+                        {
+                            var grid = _mapManager.GetGrid(gridId);
+                            gridPos -= grid.WorldPosition;
+                            // TODO: Should probably have a helper for this
+                            gridRotation -= body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                        }
+
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPos);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);

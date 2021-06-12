@@ -149,16 +149,16 @@ namespace Robust.Client.Graphics.Clyde
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
                 new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
+                new TextureSampleParameters { WrapMode = TextureWrapMode.Repeat },
                 nameof(_fovRenderTarget));
 
             if (_hasGLSamplerObjects)
             {
                 _fovFilterSampler = new GLHandle(GL.GenSampler());
-                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
-                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
-                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
-                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int)All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int)All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int)All.Repeat);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int)All.Repeat);
                 CheckGlError();
             }
 
@@ -180,20 +180,17 @@ namespace Robust.Client.Graphics.Clyde
             _fovCalculationProgram = _compileProgram(depthVert, depthFrag, attribLocations, "Shadow Depth Program");
 
             var debugShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/depth-debug.swsl");
-            _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
+            _fovDebugShaderInstance = (ClydeShaderInstance)InstanceShader(debugShader.ClydeHandle);
 
             ClydeHandle LoadShaderHandle(string path)
             {
-                try
+                if (_resourceCache.TryGetResource(path, out ShaderSourceResource? resource))
                 {
-                    var shaderSource = _resourceCache.GetResource<ShaderSourceResource>(path);
-                    return shaderSource.ClydeHandle;
+                    return resource.ClydeHandle;
                 }
-                catch (Exception ex)
-                {
-                    Logger.Warning($"Can't load shader {path}\n{ex.GetType().Name}: {ex.Message}");
-                    return default;
-                }
+
+                Logger.Warning($"Can't load shader {path}\n");
+                return default;
             }
 
             _lightSoftShaderHandle = LoadShaderHandle("/Shaders/Internal/light-soft.swsl");
@@ -214,7 +211,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Calculate maximum distance for the projection based on screen size.
                 var screenSizeCut = viewport.Size / EyeManager.PixelsPerMeter;
-                var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
+                var maxDist = (float)Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
                 // Once with back face culling like regular lighting.
@@ -524,12 +521,6 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    // TODO: Don't insert into trees for these, same as sprites.
-                    if (!light.Enabled || light.ContainerOccluded)
-                    {
-                        return true;
-                    }
-
                     var lightPos = transform.WorldMatrix.Transform(light.Offset);
 
                     var circle = new Circle(lightPos, light.Radius);
@@ -590,7 +581,7 @@ namespace Robust.Client.Graphics.Clyde
 
             SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
 
-            shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
+            shader.SetUniformMaybe("size", (Vector2)viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
             var size = viewport.WallBleedIntermediateRenderTarget1.Size;
@@ -809,7 +800,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
-                        var occluder = (ClientOccluderComponent) sOccluder;
+                        var occluder = (ClientOccluderComponent)sOccluder;
                         var transform = occluder.Owner.Transform;
                         if (!occluder.Enabled)
                         {
@@ -893,11 +884,11 @@ namespace Robust.Client.Graphics.Clyde
                                 // DddD
                                 // HHhh
                                 // deflection
-                                arrayVIBuffer[avi++] = (byte) ((((vi + 1) & 2) != 0) ? 0 : 255);
+                                arrayVIBuffer[avi++] = (byte)((((vi + 1) & 2) != 0) ? 0 : 255);
                                 // height
-                                arrayVIBuffer[avi++] = (byte) (((vi & 2) != 0) ? 0 : 255);
+                                arrayVIBuffer[avi++] = (byte)(((vi & 2) != 0) ? 0 : 255);
                             }
-                            QuadBatchIndexWrite(indexBuffer, ref ii, (ushort) aiBase);
+                            QuadBatchIndexWrite(indexBuffer, ref ii, (ushort)aiBase);
                         }
 
                         // North face (TL/TR)
@@ -931,7 +922,7 @@ namespace Robust.Client.Graphics.Clyde
                         arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
 
                         // Generate mask indices.
-                        QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort) ami);
+                        QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);
 
                         ami += 4;
 
@@ -973,7 +964,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightMapSize = GetLightMapSize(viewport.Size);
             var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
             var lightMapColorFormat = _hasGLFloatFramebuffers ? RenderTargetColorFormat.R11FG11FB10F : RenderTargetColorFormat.Rgba8;
-            var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
+            var lightMapSampleParameters = new TextureSampleParameters { Filter = true };
 
             viewport.LightRenderTarget?.Dispose();
             viewport.WallMaskRenderTarget?.Dispose();
@@ -1010,14 +1001,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private Vector2i GetLightMapSize(Vector2i screenSize, bool furtherDivide = false)
         {
-            var divider = (float) _lightmapDivider;
+            var divider = (float)_lightmapDivider;
             if (furtherDivide)
             {
                 divider *= 2;
             }
 
-            var w = (int) Math.Ceiling(screenSize.X / divider);
-            var h = (int) Math.Ceiling(screenSize.Y / divider);
+            var w = (int)Math.Ceiling(screenSize.X / divider);
+            var h = (int)Math.Ceiling(screenSize.Y / divider);
 
             return (w, h);
         }
@@ -1043,7 +1034,7 @@ namespace Robust.Client.Graphics.Clyde
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, _maxLightsPerScene),
                 new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                new TextureSampleParameters { WrapMode = TextureWrapMode.Repeat, Filter = true },
                 nameof(_shadowRenderTarget));
         }
 

@@ -283,7 +283,7 @@ namespace Robust.Shared.GameObjects
                 joints.Add(je.Joint);
             }
 
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -514,15 +514,20 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        public Box2 GetWorldAABB(Vector2? worldPosition = null, Angle? worldRotation = null)
+        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldRotation ??= Owner.Transform.WorldRotation;
-            worldPosition ??= Owner.Transform.WorldPosition;
-            var bounds = new Box2(worldPosition.Value, worldPosition.Value);
+            worldPos ??= Owner.Transform.WorldPosition;
+            worldRot ??= Owner.Transform.WorldRotation;
+
+            var worldPosValue = worldPos.Value;
+            var worldRotValue = worldRot.Value;
+
+            var bounds = new Box2(worldPosValue, worldPosValue);
 
             foreach (var fixture in _fixtures)
             {
-                bounds = bounds.Union(fixture.Shape.CalculateLocalBounds(worldRotation.Value).Translated(worldPosition.Value));
+                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
+                bounds = bounds.Union(boundy.Translated(worldPosValue));
             }
 
             return bounds;

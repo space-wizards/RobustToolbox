@@ -222,6 +222,8 @@ namespace Robust.Client
                 }
             }
 
+            ProgramShared.PrintRuntimeInfo(_logManager.RootSawmill);
+
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
 

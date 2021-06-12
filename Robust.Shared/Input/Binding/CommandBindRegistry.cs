@@ -72,7 +72,7 @@ namespace Robust.Shared.Input.Binding
             Unregister(typeof(TOwner));
         }
 
-        private void RebuildGraph()
+        internal void RebuildGraph()
         {
             _bindingsForKey.Clear();
 
@@ -108,33 +108,57 @@ namespace Robust.Shared.Input.Binding
         /// </summary>
         private List<InputCmdHandler> ResolveDependencies(BoundKeyFunction function, List<TypedCommandBind> bindingsForFunction)
         {
+            //TODO: Probably could be optimized if needed! Generally shouldn't be a big issue since there is a relatively
+            // tiny amount of bindings
+
+            List<TopologicalSort.GraphNode<TypedCommandBind>> allNodes = new();
+            Dictionary<Type,List<TopologicalSort.GraphNode<TypedCommandBind>>> typeToNode = new();
+            // build the dict for quick lookup on type
+            foreach (var binding in bindingsForFunction)
+            {
+                if (!typeToNode.ContainsKey(binding.ForType))
+                {
+                    typeToNode[binding.ForType] = new List<TopologicalSort.GraphNode<TypedCommandBind>>();
+                }
+                var newNode = new TopologicalSort.GraphNode<TypedCommandBind>(binding);
+                typeToNode[binding.ForType].Add(newNode);
+                allNodes.Add(newNode);
+            }
+
+            //add the graph edges
+            foreach (var curBinding in allNodes)
+            {
+                foreach (var afterType in curBinding.Value.CommandBind.After)
+                {
+                    // curBinding should always fire after bindings associated with this afterType, i.e.
+                    // this binding DEPENDS ON afterTypes' bindings
+                    if (typeToNode.TryGetValue(afterType, out var afterBindings))
+                    {
+                        foreach (var afterBinding in afterBindings)
+                        {
+                            afterBinding.Dependant.Add(curBinding);
+                        }
+                    }
+                }
+
+                foreach (var beforeType in curBinding.Value.CommandBind.Before)
+                {
+                    // curBinding should always fire before bindings associated with this beforeType, i.e.
+                    // beforeTypes' bindings DEPENDS ON this binding
+                    if (typeToNode.TryGetValue(beforeType, out var beforeBindings))
+                    {
+                        foreach (var beforeBinding in beforeBindings)
+                        {
+                            curBinding.Dependant.Add(beforeBinding);
+                        }
+                    }
+                }
+            }
+
             //TODO: Log graph structure for debugging
 
-            var dict = bindingsForFunction.ToDictionary(b => b.ForType, b => b.CommandBind);
-
-            var nodes = TopologicalSort.FromBeforeAfter(
-                bindingsForFunction,
-                bind => bind.ForType,
-                bind => bind.CommandBind.Before,
-                bind => bind.CommandBind.After);
-
-            var topoSorted = TopologicalSort.Sort(nodes);
-
-            return topoSorted.Select(node => dict[node].Handler).ToList();
-        }
-
-        /// <summary>
-        /// node in our temporary dependency graph
-        /// </summary>
-        private class GraphNode
-        {
-            public List<GraphNode> DependsOn = new();
-            public readonly TypedCommandBind TypedCommandBind;
-
-            public GraphNode(TypedCommandBind typedCommandBind)
-            {
-                TypedCommandBind = typedCommandBind;
-            }
+            //use toposort to build the final result
+            return TopologicalSort.Sort(allNodes).Select(c => c.CommandBind.Handler).ToList();
         }
 
         /// <summary>

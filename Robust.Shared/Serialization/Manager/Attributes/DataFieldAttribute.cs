@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Robust.Shared.Serialization.Manager.Attributes
 {
@@ -22,7 +21,13 @@ namespace Robust.Shared.Serialization.Manager.Attributes
 
         public readonly Type? CustomTypeSerializer;
 
-        public DataFieldAttribute([NotNull] string tag, bool readOnly = false, int priority = 1, bool required = false, bool serverOnly = false, Type? customTypeSerializer = null)
+        public DataFieldAttribute(
+            string tag,
+            bool readOnly = false,
+            int priority = 1,
+            bool required = false,
+            bool serverOnly = false,
+            Type? customTypeSerializer = null)
         {
             Tag = tag;
             Priority = priority;

@@ -1,5 +1,5 @@
-﻿using Robust.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
+﻿using Robust.Shared.Serialization.Manager.Attributes.Deserializer;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
 {
@@ -10,6 +10,7 @@ namespace Robust.Shared.Prototypes
     ///     To use this, the prototype must be accessible through IoC with <see cref="IoCTargetAttribute"/>
     ///     and it must have a <see cref="PrototypeAttribute"/> to give it a type string.
     /// </remarks>
+    [DataFieldDeserializer(typeof(PrototypeDataFieldDeserializer))]
     public interface IPrototype
     {
         /// <summary>

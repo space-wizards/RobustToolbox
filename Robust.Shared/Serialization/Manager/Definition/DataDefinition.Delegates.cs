@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Serialization.Manager.Result;
+﻿using Robust.Shared.IoC;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -6,8 +7,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
     public partial class DataDefinition
     {
         private delegate DeserializedFieldEntry[] DeserializeDelegate(
+            object obj,
             MappingDataNode mappingDataNode,
             ISerializationManager serializationManager,
+            IDependencyCollection dependencies,
             ISerializationContext? context,
             bool skipHook);
 

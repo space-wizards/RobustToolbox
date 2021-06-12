@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Reflection;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting

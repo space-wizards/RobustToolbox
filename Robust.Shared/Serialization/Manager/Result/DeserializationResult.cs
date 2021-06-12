@@ -14,8 +14,13 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public static DeserializationResult Value<T>(T value) where T : notnull
         {
-            var type = typeof(DeserializedValue<>).MakeGenericType(value.GetType());
-            return (DeserializationResult) Activator.CreateInstance(type, value)!;
+            return Value(value.GetType(), value);
+        }
+
+        public static DeserializationResult Value(Type type, object? value)
+        {
+            var deserializedValueType = typeof(DeserializedValue<>).MakeGenericType(type);
+            return (DeserializationResult) Activator.CreateInstance(deserializedValueType, value)!;
         }
 
         public T Cast<T>() where T : DeserializationResult

@@ -8,6 +8,8 @@ using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
+using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Timing;
@@ -29,7 +31,7 @@ namespace Robust.Client.Console
 
             ScriptInstanceShared.InitDummy();
 
-            Title = "Watch Window";
+            Title = Loc.GetString("watch-window-title");
 
             var mainVBox = new VBoxContainer
             {
@@ -47,11 +49,11 @@ namespace Robust.Client.Console
                             (_addWatchEdit = new HistoryLineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = "Add watch (C# interactive)"
+                                PlaceHolder = Loc.GetString("watch-window-history-line-edit-placeholder")
                             }),
                             (_addWatchButton = new Button
                             {
-                                Text = "Add"
+                                Text = Loc.GetString("generic-add")
                             })
                         }
                     }
@@ -116,7 +118,7 @@ namespace Robust.Client.Console
                         }),
                         (delButton = new Button
                         {
-                            Text = "Remove"
+                            Text = Loc.GetString("generic-remove")
                         }),
                     }
                 });
@@ -176,7 +178,7 @@ namespace Robust.Client.Console
                             ClipText = true,
                             HorizontalExpand = true
                         },
-                        (delButton = new Button {Text = "Remove"})
+                        (delButton = new Button {Text = Loc.GetString("generic-remove")})
                     }
                 });
 

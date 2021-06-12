@@ -53,15 +53,28 @@ namespace Robust.Shared.Utility
             Func<TDatum, TValue> keySelector,
             Func<TDatum, IEnumerable<TValue>> beforeSelector,
             Func<TDatum, IEnumerable<TValue>> afterSelector,
-            bool allowMissing=false)
+            bool allowMissing = false)
             where TValue : notnull
         {
-            var dict = new Dictionary<TValue, (TDatum datum, GraphNode<TValue> node)>();
+            return FromBeforeAfter(data, keySelector, keySelector, afterSelector, beforeSelector, allowMissing);
+        }
+
+        public static IEnumerable<GraphNode<TValue>> FromBeforeAfter<TDatum, TKey, TValue>(
+            IEnumerable<TDatum> data,
+            Func<TDatum, TKey> keySelector,
+            Func<TDatum, TValue> valueSelector,
+            Func<TDatum, IEnumerable<TKey>> beforeSelector,
+            Func<TDatum, IEnumerable<TKey>> afterSelector,
+            bool allowMissing=false)
+            where TKey : notnull
+        {
+            var dict = new Dictionary<TKey, (TDatum datum, GraphNode<TValue> node)>();
 
             foreach (var datum in data)
             {
                 var key = keySelector(datum);
-                dict.Add(key, (datum, new GraphNode<TValue>(key)));
+                var value = valueSelector(datum);
+                dict.Add(key, (datum, new GraphNode<TValue>(value)));
             }
 
             foreach (var (key, (datum, node)) in dict)

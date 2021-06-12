@@ -59,49 +59,16 @@ namespace Robust.Shared.GameObjects
 
         private static void DispatchOrderedEvents(object eventArgs, List<(EventHandler, OrderingData?)> found)
         {
-            var dict = new Dictionary<Type, (EventHandler handler, TopologicalSort.GraphNode<Type> node)>();
+            var nodes = TopologicalSort.FromBeforeAfter(
+                found.Where(f => f.Item2 != null),
+                n => n.Item2!.OrderType,
+                n => n.Item1!,
+                n => n.Item2!.Before ?? Array.Empty<Type>(),
+                n => n.Item2!.After ?? Array.Empty<Type>(),
+                allowMissing: true);
 
-            foreach (var (handler, orderData) in found)
+            foreach (var handler in TopologicalSort.Sort(nodes))
             {
-                if (orderData != null)
-                {
-                    var node = new TopologicalSort.GraphNode<Type>(orderData.OrderType);
-                    dict.Add(orderData.OrderType, (handler, node));
-                }
-            }
-
-            foreach (var (_, orderData) in found)
-            {
-                if (orderData == null)
-                    continue;
-
-                var (type, before, after) = orderData;
-
-                var thisNode = dict[type];
-
-                if (before != null)
-                {
-                    foreach (var bef in before)
-                    {
-                        if (dict.TryGetValue(bef, out var befNode))
-                            thisNode.node.Dependant.Add(befNode.node);
-                    }
-                }
-
-                if (after != null)
-                {
-                    foreach (var aft in after)
-                    {
-                        if (dict.TryGetValue(aft, out var aftNode))
-                            aftNode.node.Dependant.Add(thisNode.node);
-                    }
-                }
-            }
-
-            foreach (var type in TopologicalSort.Sort(dict.Values.Select(c => c.node)))
-            {
-                var handler = dict[type].handler;
-
                 handler(eventArgs);
             }
 

@@ -115,23 +115,24 @@ namespace Robust.Shared.GameObjects
         {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
             var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-            var instantiated = new Dictionary<Type, VirtualController>();
+            var instantiated = new List<VirtualController>();
 
             foreach (var type in reflectionManager.GetAllChildren(typeof(VirtualController)))
             {
                 if (type.IsAbstract)
                     continue;
 
-                instantiated.Add(type, typeFactory.CreateInstance<VirtualController>(type));
+                instantiated.Add(typeFactory.CreateInstance<VirtualController>(type));
             }
 
             var nodes = TopologicalSort.FromBeforeAfter(
                 instantiated,
-                kv => kv.Key,
-                kv => kv.Value.UpdatesBefore,
-                kv => kv.Value.UpdatesAfter);
+                c => c.GetType(),
+                c => c,
+                c => c.UpdatesBefore,
+                c => c.UpdatesAfter);
 
-            _controllers = TopologicalSort.Sort(nodes).Select(t => instantiated[t]).ToList();
+            _controllers = TopologicalSort.Sort(nodes).ToList();
 
             foreach (var controller in _controllers)
             {

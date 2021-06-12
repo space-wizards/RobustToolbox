@@ -109,12 +109,13 @@ namespace Robust.Shared.ContentPack
             var nodes = TopologicalSort.FromBeforeAfter(
                 files,
                 kv => kv.Key,
+                kv => kv.Value.Path,
                 _ => Array.Empty<string>(),
                 kv => kv.Value.references,
                 allowMissing: true); // missing refs would be non-content assemblies so allow that.
 
             // Actually load them in the order they depend on each other.
-            foreach (var path in TopologicalSort.Sort(nodes).Select(c => files[c].Path))
+            foreach (var path in TopologicalSort.Sort(nodes))
             {
                 Logger.DebugS("res.mod", $"Loading module: '{path}'");
                 try

@@ -228,7 +228,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Use the ComponentHandleState event instead.")]
         public virtual void HandleComponentState(ComponentState? curState, ComponentState? nextState) { }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".

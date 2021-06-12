@@ -1,6 +1,5 @@
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -37,9 +36,9 @@ namespace Robust.Client.UserInterface.CustomControls
                             (InputBar = new HistoryLineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = Loc.GetString("script-console-input-bar-placeholder")
+                                PlaceHolder = "Your C# code here."
                             }),
-                            (RunButton = new Button {Text = Loc.GetString("script-console-run-button-text")})
+                            (RunButton = new Button {Text = "Run"})
                         }
                     },
                 }

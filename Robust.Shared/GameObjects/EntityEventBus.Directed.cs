@@ -295,16 +295,19 @@ namespace Robust.Shared.GameObjects
             }
 
             /// <summary>
-            ///     Enumerates the type's component references backwards, therefore returning the type itself last.
+            ///     Enumerates the type's component references, returning the type itself last.
             /// </summary>
             private IEnumerable<Type> GetReferences(Type type)
             {
                 var list = _comFac.GetRegistration(type).References;
 
-                for (var i = list.Count-1; i >= 0; i--)
+                foreach (var t in list)
                 {
-                    yield return list[i];
+                    if (t == type) continue;
+                    yield return t;
                 }
+
+                yield return type;
             }
         }
 

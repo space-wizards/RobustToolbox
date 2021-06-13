@@ -294,9 +294,20 @@ namespace Robust.Shared.GameObjects
                 _subscriptions = null!;
             }
 
+            /// <summary>
+            ///     Enumerates the type's component references, returning the type itself last.
+            /// </summary>
             private IEnumerable<Type> GetReferences(Type type)
             {
-                return _comFac.GetRegistration(type).References;
+                var list = _comFac.GetRegistration(type).References;
+
+                foreach (var t in list)
+                {
+                    if (t == type) continue;
+                    yield return t;
+                }
+
+                yield return type;
             }
         }
 

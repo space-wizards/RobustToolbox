@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
@@ -18,6 +19,15 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         private class Subscriber : IEntityEventSubscriber { }
 
+
+        private const string Prototypes = @"
+- type: entity
+  name: anchoredEnt
+  id: anchoredEnt
+  components:
+  - type: Transform
+    anchored: true";
+
         private static ISimulation SimulationFactory()
         {
             var sim = RobustServerSimulation
@@ -26,7 +36,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 {
                     factory.RegisterClass<ContainerManagerComponent>();
                 })
-                //.RegisterEntitySystems((f => f.LoadExtraSystemType<ContainerSystem>()))
+                .RegisterPrototypes(f=>
+                {
+                    f.LoadString(Prototypes);
+                })
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();
@@ -342,6 +355,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             // Act
             grid.SetTile(tileIndices, Tile.Empty);
 
+            Assert.That(ent1.Transform.Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
         }
@@ -449,6 +463,27 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             ent1.Transform.Anchored = false;
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Dynamic));
+        }
+
+        /// <summary>
+        /// If an entity with an anchored prototype is spawned in an invalid location, the entity is unanchored.
+        /// </summary>
+        [Test]
+        public void SpawnAnchored_EmptyTile_Unanchors()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
+            var grid = mapMan.GetGrid(TestGridId);
+
+            // Act
+            var ent1 = entMan.SpawnEntity("anchoredEnt", new MapCoordinates(new Vector2(7, 7), TestMapId));
+
+            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
+            Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
+            Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
+            Assert.That(ent1.Transform.Anchored, Is.False);
         }
     }
 }

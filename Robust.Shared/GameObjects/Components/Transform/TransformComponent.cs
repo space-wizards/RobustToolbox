@@ -272,6 +272,10 @@ namespace Robust.Shared.GameObjects
             // NOTE: This setter must be callable from before initialize (inheriting from AttachParent's note)
             set
             {
+                // unless the parent is changing, nothing to do here
+                if(value.EntityId == _parent && _anchored)
+                    return;
+
                 var oldPosition = Coordinates;
                 _localPosition = value.Position;
 
@@ -279,7 +283,9 @@ namespace Robust.Shared.GameObjects
 
                 if (value.EntityId != _parent)
                 {
-                    Anchored = false; // changing the parent un-anchors the entity
+                    if(_parent != EntityUid.Invalid) // Allow setting Transform.Parent in Prototypes
+                        Anchored = false; // changing the parent un-anchors the entity
+
                     changedParent = true;
                     var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
                     var newParent = newParentEnt.Transform;
@@ -372,12 +378,17 @@ namespace Robust.Shared.GameObjects
             {
                 if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                    _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
-                    Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(ParentUid).UnanchorEntity(this);
+                    // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
+                    // then this will be false.
+                    if (Owner.EntityManager.ComponentManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
+                        gridComp.UnanchorEntity(this);
+                    else
+                        SetAnchored(false);
                 }
             }
         }

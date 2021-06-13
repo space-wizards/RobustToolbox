@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
+using Robust.Server.Reflection;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -152,6 +156,13 @@ namespace Robust.UnitTesting.Server
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
 
+            var realReflection = new ServerReflectionManager();
+            realReflection.LoadAssemblies(new List<Assembly>(2)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
+            });
+
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<MeansDataDefinitionAttribute>())
@@ -171,7 +182,7 @@ namespace Robust.UnitTesting.Server
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
-                .Returns(() => new[] {typeof(StringSerializer)});
+                .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
 
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);

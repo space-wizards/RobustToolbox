@@ -32,6 +32,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
+                .RegisterEntitySystems(factory =>
+                {
+                    factory.LoadExtraSystemType<SharedTransformSystem>();
+                })
                 .RegisterComponents(factory =>
                 {
                     factory.RegisterClass<ContainerManagerComponent>();
@@ -61,6 +65,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         // Unanchoring an entity should leave it parented to the grid it was anchored to.
         // Unanchoring an entity that isn't anchored should be a nop.
+
+        // And PhysicsComponent.BodyType is not able to be changed by content. PhysicsComponent.BodyType is synchronized with ITransformComponent.Anchored
+        // through anchored messages. SnapGridComponent is obsolete.
 
         /// <summary>
         /// When an entity is anchored to a grid tile, it's world position is centered on the tile.
@@ -350,14 +357,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
             grid.SetTile(tileIndices, Tile.Empty);
 
             Assert.That(ent1.Transform.Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
-            Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
+            Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
         }
 
         /// <summary>
@@ -389,10 +396,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
         }
-
-        // PhysicsComponent.Anchored is obsolete,
-        // And PhysicsComponent.BodyType is not able to be changed by content. PhysicsComponent.BodyType is synchronized with ITransformComponent.Anchored
-        // through anchored messages. SnapGridComponent is obsolete.
 
         /// <summary>
         /// Adding a physics component should poll ITransformComponent.Anchored for the correct body type.

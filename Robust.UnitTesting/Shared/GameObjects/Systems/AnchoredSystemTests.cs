@@ -57,17 +57,14 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             return sim;
         }
 
-        //TODO: An entity is anchored to the tile it is over on the target grid.
+        // An entity is anchored to the tile it is over on the target grid.
         // An entity is anchored by setting the flag on the transform.
         // An anchored entity is defined as an entity with the ITransformComponent.Anchored flag set.
         // The Anchored field is used for serialization of anchored state.
-        // The grid anchor/unanchor functions are internal, expose the query functions to content
 
-        // Unanchoring an entity should leave it parented to the grid it was anchored to.
-        // Unanchoring an entity that isn't anchored should be a nop.
-
-        // And PhysicsComponent.BodyType is not able to be changed by content. PhysicsComponent.BodyType is synchronized with ITransformComponent.Anchored
-        // through anchored messages. SnapGridComponent is obsolete.
+        // TODO: The grid SnapGrid functions are internal, expose the query functions to content.
+        // PhysicsComponent.BodyType is not able to be changed by content.
+        // SnapGridComponent is obsolete.
 
         /// <summary>
         /// When an entity is anchored to a grid tile, it's world position is centered on the tile.
@@ -177,7 +174,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(tileIndices, Tile.Empty);
 
             // Act
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
@@ -203,7 +200,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
 
             // Act
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1.Uid));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
@@ -334,7 +331,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
             ent1.Transform.ParentUid = grid.GridEntityId;
@@ -385,16 +382,18 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
-            var gridEnt = entMan.GetEntity(grid.GridEntityId);
+            var gridEnt = entMan.GetEntity(grid.GridEntityId); // we purposefully use the grid as container so parent stays the same, reparent will unanchor
             var containerMan = gridEnt.AddComponent<ContainerManagerComponent>();
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
+            Assert.That(ent1.Transform.Anchored, Is.False);
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
+            Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
         }
 
         /// <summary>
@@ -411,9 +410,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            grid.AddToSnapGridCell(tileIndices, ent1.Uid);
+            ent1.Transform.Anchored = true;
 
             // Act
+            // assumed default body is Dynamic
             var physComp = ent1.AddComponent<PhysicsComponent>();
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
@@ -487,6 +487,90 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(Tile.Empty));
             Assert.That(ent1.Transform.Anchored, Is.False);
+        }
+
+        /// <summary>
+        /// If an entity is inside a container, setting Anchored silently fails.
+        /// </summary>
+        [Test]
+        public void OnAnchored_InContainer_Nop()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
+            var grid = mapMan.GetGrid(TestGridId);
+            var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
+            var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
+            grid.SetTile(tileIndices, new Tile(1));
+            
+            var gridEnt = entMan.GetEntity(grid.GridEntityId);
+            var containerMan = gridEnt.AddComponent<ContainerManagerComponent>();
+            var container = containerMan.MakeContainer<Container>("TestContainer");
+            container.Insert(ent1);
+
+            // Act
+            ent1.Transform.Anchored = true;
+
+            Assert.That(ent1.Transform.Anchored, Is.False);
+            Assert.That(grid.GetAnchoredEntities(tileIndices).Count(), Is.EqualTo(0));
+            Assert.That(grid.GetTileRef(tileIndices).Tile, Is.EqualTo(new Tile(1)));
+            Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// Unanchoring an unanchored entity is a no-op.
+        /// </summary>
+        [Test]
+        public void Unanchored_Unanchor_Nop()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
+            var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+
+            var subscriber = new Subscriber();
+            int calledCount = 0;
+            var ent1 = entMan.SpawnEntity(null, coordinates); // this raises MoveEvent, subscribe after
+            entMan.EventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, subscriber, ParentChangedHandler);
+
+            // Act
+            ent1.Transform.Anchored = false;
+
+            Assert.That(ent1.Transform.ParentUid, Is.EqualTo(mapMan.GetMapEntityId(TestMapId)));
+            Assert.That(calledCount, Is.EqualTo(0));
+            void ParentChangedHandler(EntParentChangedMessage ev)
+            {
+                Assert.That(ev.Entity, Is.EqualTo(ent1));
+                calledCount++;
+            }
+        }
+
+        /// <summary>
+        /// Unanchoring an entity should leave it parented to the grid it was anchored to.
+        /// </summary>
+        [Test]
+        public void Anchored_Unanchored_ParentUnchanged()
+        {
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
+            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
+
+            // can only be anchored to a tile
+            var grid = mapMan.GetGrid(TestGridId);
+            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
+            var ent1 = entMan.SpawnEntity("anchoredEnt", grid.MapToGrid(coordinates));
+
+            ent1.Transform.Anchored = false;
+
+            Assert.That(ent1.Transform.ParentUid, Is.EqualTo(grid.GridEntityId));
         }
     }
 }

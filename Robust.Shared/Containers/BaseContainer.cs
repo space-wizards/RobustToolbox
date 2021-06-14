@@ -68,6 +68,10 @@ namespace Robust.Shared.Containers
             InternalInsert(toinsert);
             transform.AttachParent(Owner.Transform);
 
+            // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
+            if (transform.Anchored)
+                transform.Anchored = false;
+
             // spatially move the object to the location of the container. If you don't want this functionality, the
             // calling code can save the local position before calling this function, and apply it afterwords.
             transform.LocalPosition = Vector2.Zero;

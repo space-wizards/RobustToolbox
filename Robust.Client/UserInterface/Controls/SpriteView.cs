@@ -1,4 +1,4 @@
-﻿using Robust.Client.GameObjects;
+using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2, Scale, OverrideDirection);
+            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2, Scale * UIScale, OverrideDirection);
         }
     }
 }

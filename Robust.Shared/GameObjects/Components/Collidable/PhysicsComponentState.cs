@@ -18,10 +18,6 @@ namespace Robust.Shared.GameObjects
         public readonly List<Fixture> Fixtures;
         public readonly List<Joint> Joints;
 
-        /// <summary>
-        ///     Current mass of the entity, stored in grams.
-        /// </summary>
-        public readonly int Mass;
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
         public readonly BodyType BodyType;
@@ -35,7 +31,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="status"></param>
         /// <param name="fixtures"></param>
         /// <param name="joints"></param>
-        /// <param name="mass">Current Mass of the entity.</param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="bodyType"></param>
@@ -46,7 +41,6 @@ namespace Robust.Shared.GameObjects
             BodyStatus status,
             List<Fixture> fixtures,
             List<Joint> joints,
-            float mass,
             Vector2 linearVelocity,
             float angularVelocity,
             BodyType bodyType)
@@ -61,7 +55,6 @@ namespace Robust.Shared.GameObjects
 
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
-            Mass = (int) Math.Round(mass * 1000); // rounds kg to nearest gram
             BodyType = bodyType;
         }
     }

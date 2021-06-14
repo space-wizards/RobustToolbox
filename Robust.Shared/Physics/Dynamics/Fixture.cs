@@ -315,9 +315,9 @@ namespace Robust.Shared.Physics.Dynamics
             mapManager ??= IoCManager.Resolve<IMapManager>();
             broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
 
-            var worldAABB = Body.GetWorldAABB(mapManager);
             var worldPosition = Body.Owner.Transform.WorldPosition;
             var worldRotation = Body.Owner.Transform.WorldRotation;
+            var worldAABB = Body.GetWorldAABB(worldPosition, worldRotation);
 
             foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
             {

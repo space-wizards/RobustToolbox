@@ -220,6 +220,13 @@ namespace Robust.Shared.Physics.Dynamics
             bodyA.Dirty();
             bodyB.Dirty();
             // Note: creating a joint doesn't wake the bodies.
+
+            // Raise broadcast last so we can do both sides of directed first.
+            var vera = new JointAddedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointAddedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         public void RemoveJoint(Joint joint)
@@ -297,6 +304,12 @@ namespace Robust.Shared.Physics.Dynamics
                     edge = edge.Next;
                 }
             }
+
+            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
+            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
+            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         #endregion
@@ -426,7 +439,7 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB(_mapManager));
+                transform.RunDeferred(physics.GetWorldAABB());
             }
 
             _deferredUpdates.Clear();

@@ -42,7 +42,12 @@ namespace Robust.Client.GameObjects
         public override bool Visible
         {
             get => _visible;
-            set => _visible = value;
+            set
+            {
+                if (_visible == value) return;
+                _visible = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
         }
 
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
@@ -315,7 +320,18 @@ namespace Robust.Client.GameObjects
         [DataField("texture", readOnly: true)] private string? texture;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
+        }
+
+        private bool _containerOccluded;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
@@ -2213,5 +2229,10 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+    }
+
+    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    {
+
     }
 }

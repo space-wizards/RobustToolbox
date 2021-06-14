@@ -125,7 +125,7 @@ namespace Robust.Shared.Physics.Broadphase
         public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
         {
             // TODO: Use actual shapes and not just the AABB?
-            return bodyA.GetWorldAABB(_mapManager).IntersectPercentage(bodyB.GetWorldAABB(_mapManager));
+            return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
         }
 
         public override void Initialize()
@@ -533,8 +533,11 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
+            var worldPosition = body.Owner.Transform.WorldPosition;
+            var worldRotation = body.Owner.Transform.WorldRotation;
+
             var mapId = body.Owner.Transform.MapID;
-            worldAABB ??= body.GetWorldAABB(_mapManager);
+            worldAABB ??= body.GetWorldAABB(worldPosition, worldRotation);
 
             // 99% of the time this is going to be 1, maybe 2, so HashSet probably slower?
 
@@ -562,8 +565,7 @@ namespace Robust.Shared.Physics.Broadphase
 
             // Update retained broadphases
             // TODO: These will need swept broadPhases
-            var offset = body.Owner.Transform.WorldPosition;
-            var worldRotation = body.Owner.Transform.WorldRotation;
+
 
             foreach (var broadPhase in oldBroadPhases)
             {
@@ -577,17 +579,18 @@ namespace Robust.Shared.Physics.Broadphase
 
                     foreach (var proxy in proxies)
                     {
-                        double gridRotation = worldRotation;
+                        var gridRotation = worldRotation;
+                        var gridPos = worldPosition;
 
                         if (gridId != GridId.Invalid)
                         {
                             var grid = _mapManager.GetGrid(gridId);
-                            offset -= grid.WorldPosition;
+                            gridPos -= grid.WorldPosition;
                             // TODO: Should probably have a helper for this
-                            gridRotation = worldRotation - body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
+                            gridRotation -= body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
                         }
 
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
+                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(gridPos);
                         proxy.AABB = aabb;
 
                         broadPhase.MoveProxy(proxy.ProxyId, in aabb, displacement);

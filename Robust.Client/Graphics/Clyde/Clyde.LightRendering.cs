@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
@@ -519,12 +519,6 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         // There are too many lights to fit in the static memory.
                         return false;
-                    }
-
-                    // TODO: Don't insert into trees for these, same as sprites.
-                    if (!light.Enabled || light.ContainerOccluded)
-                    {
-                        return true;
                     }
 
                     var lightPos = transform.WorldMatrix.Transform(light.Offset);

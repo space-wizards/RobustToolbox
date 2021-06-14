@@ -162,7 +162,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
             {
-                PlaceHolder = Loc.GetString("generic-search"),
+                PlaceHolder = Loc.GetString("view-variable-instance-entity-client-components-search-bar-placeholder"),
                 HorizontalExpand = true,
             });
 
@@ -198,7 +198,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
             {
-                PlaceHolder = Loc.GetString("generic-search"),
+                PlaceHolder = Loc.GetString("view-variable-instance-entity-server-components-search-bar-placeholder"),
                 HorizontalExpand = true,
             });
 

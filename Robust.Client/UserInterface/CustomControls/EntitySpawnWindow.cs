@@ -83,13 +83,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 HorizontalExpand = true,
-                                PlaceHolder = Loc.GetString("generic-search")
+                                PlaceHolder = Loc.GetString("entity-spawn-window-search-bar-placeholder")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = Loc.GetString("generic-clear"),
+                                Text = Loc.GetString("entity-spawn-window-clear-button"),
                             })
                         }
                     },

@@ -166,15 +166,15 @@ namespace Robust.Shared.GameObjects
                 Dictionary<Type, IEntitySystem>.ValueCollection systems,
                 Dictionary<Type, IEntitySystem> supertypeSystems)
         {
-            var allNodes = new List<GraphNode<IEntitySystem>>();
-            var typeToNode = new Dictionary<Type, GraphNode<IEntitySystem>>();
+            var allNodes = new List<TopologicalSort.GraphNode<IEntitySystem>>();
+            var typeToNode = new Dictionary<Type, TopologicalSort.GraphNode<IEntitySystem>>();
 
             foreach (var system in systems)
             {
-                var node = new GraphNode<IEntitySystem>(system);
+                var node = new TopologicalSort.GraphNode<IEntitySystem>(system);
 
-                allNodes.Add(node);
                 typeToNode.Add(system.GetType(), node);
+                allNodes.Add(node);
             }
 
             foreach (var (type, system) in supertypeSystems)
@@ -183,50 +183,28 @@ namespace Robust.Shared.GameObjects
                 typeToNode[type] = node;
             }
 
-            foreach (var node in allNodes)
+            foreach (var node in typeToNode.Values)
             {
-                foreach (var after in node.System.UpdatesAfter)
+                foreach (var after in node.Value.UpdatesAfter)
                 {
                     var system = typeToNode[after];
 
-                    node.DependsOn.Add(system);
+                    system.Dependant.Add(node);
                 }
 
-                foreach (var before in node.System.UpdatesBefore)
+                foreach (var before in node.Value.UpdatesBefore)
                 {
                     var system = typeToNode[before];
 
-                    system.DependsOn.Add(node);
+                    node.Dependant.Add(system);
                 }
             }
 
-            var order = TopologicalSort(allNodes).Select(p => p.System).ToArray();
+            var order = TopologicalSort.Sort(allNodes).ToArray();
             var frameUpdate = order.Where(p => NeedsFrameUpdate(p.GetType()));
             var update = order.Where(p => NeedsUpdate(p.GetType()));
 
             return (frameUpdate, update);
-        }
-
-        internal static IEnumerable<GraphNode<T>> TopologicalSort<T>(IEnumerable<GraphNode<T>> nodes)
-        {
-            var elems = nodes.ToDictionary(node => node,
-                node => new HashSet<GraphNode<T>>(node.DependsOn));
-            while (elems.Count > 0)
-            {
-                var elem =
-                    elems.FirstOrDefault(x => x.Value.Count == 0);
-                if (elem.Key == null)
-                {
-                    throw new InvalidOperationException(
-                        "Found circular dependency when resolving entity system update dependency graph");
-                }
-                elems.Remove(elem.Key);
-                foreach (var selem in elems)
-                {
-                    selem.Value.Remove(elem.Key);
-                }
-                yield return elem.Key;
-            }
         }
 
         private static IEnumerable<Type> GetBaseTypes(Type type) {
@@ -342,18 +320,6 @@ namespace Robust.Shared.GameObjects
             DebugTools.AssertNotNull(mFrameUpdate);
 
             return mFrameUpdate!.DeclaringType != typeof(EntitySystem);
-        }
-
-        [DebuggerDisplay("GraphNode: {" + nameof(System) + "}")]
-        internal sealed class GraphNode<T>
-        {
-            public readonly T System;
-            public readonly List<GraphNode<T>> DependsOn = new();
-
-            public GraphNode(T system)
-            {
-                System = system;
-            }
         }
 
         private struct UpdateReg

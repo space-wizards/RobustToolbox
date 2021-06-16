@@ -22,8 +22,8 @@ namespace Robust.Server.GameObjects
                         yield return entity;
                     }
 
-                    if (!entity.TryGetComponent(out IContainerManager? containerManager)) continue;
-                    foreach (var container in containerManager.Containers)
+                    if (!entity.TryGetComponent(out ContainerManagerComponent? containerManager)) continue;
+                    foreach (var container in containerManager.GetAllContainers())
                     {
                         foreach (var child in container.ContainedEntities)
                         {

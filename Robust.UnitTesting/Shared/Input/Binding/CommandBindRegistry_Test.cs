@@ -222,12 +222,12 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 .Bind(bkf, bHandler1)
                 .Bind(bkf, bHandler2)
                 .Register<TypeB>(registry);
+            CommandBinds.Builder
+                .Bind(bkf, cHandler1)
+                .BindAfter(bkf, cHandler2, typeof(TypeA))
+                .Register<TypeC>(registry);
 
-            Assert.Throws<InvalidOperationException>(() =>
-                CommandBinds.Builder
-                    .Bind(bkf, cHandler1)
-                    .BindAfter(bkf, cHandler2, typeof(TypeA))
-                    .Register<TypeC>(registry));
+            Assert.Throws<InvalidOperationException>(registry.RebuildGraph);
         }
     }
 }

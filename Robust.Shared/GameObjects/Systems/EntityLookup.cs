@@ -474,14 +474,14 @@ namespace Robust.Shared.GameObjects
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
-                return new Box2(); // TODO: God this disgusts me but it's a bandaid for now, see tuple.extract
+                return new Box2(0, 0, 0, 0);
 
-            var worldPosition = ent.Transform.WorldPosition;
+            var pos = ent.Transform.WorldPosition;
 
             if (ent.TryGetComponent(out IPhysBody? collider))
-                return collider.GetWorldAABB(worldPosition);
+                return collider.GetWorldAABB(pos);
 
-            return new Box2(worldPosition, worldPosition);
+            return new Box2(pos, pos);
         }
 
         #endregion

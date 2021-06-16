@@ -220,6 +220,11 @@ namespace Robust.Shared.Map
 
         public MapId CreateMap(MapId? mapID = null)
         {
+            return CreateMap(mapID, null);
+        }
+
+        public MapId CreateMap(MapId? mapID, EntityUid? entityUid)
+        {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
 #endif
@@ -269,7 +274,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, EntityCoordinates.Invalid);
+                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, entityUid);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
@@ -400,10 +405,15 @@ namespace Robust.Shared.Map
 
         public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, true);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, true, null);
         }
 
-        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, bool createEntity)
+        public IMapGrid CreateGrid(MapId currentMapID, GridId gridID, ushort chunkSize, EntityUid euid)
+        {
+            return CreateGridImpl(currentMapID, gridID, chunkSize, true, euid);
+        }
+
+        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, bool createEntity, EntityUid? euid)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
@@ -455,20 +465,23 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt =
-                        (Entity) _entityManager.CreateEntityUninitialized(null,
-                            new MapCoordinates(Vector2.Zero, currentMapID));
-                    grid.GridEntityId = newEnt.Uid;
+                    var gridEnt = (Entity) EntityManager.CreateEntityUninitialized(null, euid);
+
+                    grid.GridEntityId = gridEnt.Uid;
 
                     Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntityId}");
 
-                    var gridComp = newEnt.AddComponent<MapGridComponent>();
+                    var gridComp = gridEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
+                    
+                    //TODO: This is a hack to get TransformComponent.MapId working before entity states
+                    //are applied. After they are applied the parent may be different, but the MapId will
+                    //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
+                    //use in transform states anytime before the state parent is properly set.
+                    gridEnt.Transform.AttachParent(GetMapEntity(currentMapID));
 
-                    newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
-
-                    newEnt.InitializeComponents();
-                    newEnt.StartAllComponents();
+                    gridEnt.InitializeComponents();
+                    gridEnt.StartAllComponents();
                 }
             }
             else
@@ -482,7 +495,7 @@ namespace Robust.Shared.Map
 
         public IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, false);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, false, null);
         }
 
         public IMapGrid GetGrid(GridId gridID)

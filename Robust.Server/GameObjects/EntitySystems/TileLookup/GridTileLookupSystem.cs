@@ -201,15 +201,17 @@ namespace Robust.Server.GameObjects
         private Box2 GetEntityBox(IEntity entity)
         {
             var aabb = _lookup.GetWorldAabbFromEntity(entity);
-            return aabb.IsEmpty() ? aabb : aabb.Enlarged(-0.1f);
+
+            // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
+            return aabb.Scale(0.98f);
         }
 
         public override void Initialize()
         {
             base.Initialize();
-#if DEBUG
+            #if DEBUG
             SubscribeNetworkEvent<RequestGridTileLookupMessage>(HandleRequest);
-#endif
+            #endif
             SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);

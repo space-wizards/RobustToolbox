@@ -4,9 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Fluent.Net;
-using Fluent.Net.RuntimeAst;
 using JetBrains.Annotations;
+using Linguini.Bundle;
+using Linguini.Bundle.Builder;
+using Linguini.Bundle.Errors;
+using Linguini.Shared.Types.Bundle;
+using Linguini.Syntax.Ast;
+using Linguini.Syntax.Parser;
+using Linguini.Syntax.Parser.Error;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -24,7 +29,7 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly IPrototypeManager _prototype = default!;
 
         private ISawmill _logSawmill = default!;
-        private readonly Dictionary<CultureInfo, MessageContext> _contexts = new();
+        private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();
 
         private CultureInfo? _defaultCulture;
 
@@ -48,16 +53,6 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
-        {
-            if (!TryGetNode(messageId, out var context, out var node))
-            {
-                value = null;
-                return false;
-            }
-
-            return DoFormat(messageId, out value, context, node);
-        }
 
         public string GetString(string messageId, params (string, object)[] args0)
         {
@@ -73,144 +68,38 @@ namespace Robust.Shared.Localization
             return msg;
         }
 
-        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
-            params (string, object)[] args0)
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value)
         {
-            if (!TryGetNode(messageId, out var context, out var node))
+            return TryGetString(messageId, out value, null);
+        }
+
+        public bool TryGetString(string messageId, [NotNullWhen(true)] out string? value,
+            params (string, object)[]? keyArgs)
+        {
+            var args = new Dictionary<string, IFluentType>();
+            if (keyArgs != null)
+            {
+                foreach (var (k, v) in keyArgs)
+                {
+                    args.Add(k, v.FluentFromObject());
+                }
+            }
+
+            if (!HasMessage(messageId, out var bundle))
             {
                 value = null;
                 return false;
             }
 
-            var args = new Dictionary<string, object>();
-            foreach (var (k, v) in args0)
-            {
-                var val = v switch
-                {
-                    IEntity entity => new LocValueEntity(entity),
-                    bool or Enum => v.ToString()!.ToLowerInvariant(),
-                    _ => v,
-                };
-
-                if (val is ILocValue locVal)
-                    val = new FluentLocWrapperType(locVal);
-
-                args.Add(k, val);
-            }
-
-            return DoFormat(messageId, out value, context, node, args);
-        }
-
-        private bool TryGetMessage(
-            string messageId,
-            [NotNullWhen(true)] out MessageContext? ctx,
-            [NotNullWhen(true)] out Message? message)
-        {
-            if (_defaultCulture == null)
-            {
-                ctx = null;
-                message = null;
-                return false;
-            }
-
-            ctx = _contexts[_defaultCulture];
-            message = ctx.GetMessage(messageId);
-            return message != null;
-        }
-
-        private bool TryGetNode(
-            string messageId,
-            [NotNullWhen(true)] out MessageContext? ctx,
-            [NotNullWhen(true)] out Node? node)
-        {
-            string? attribName = null;
-
-            if (messageId.Contains('.'))
-            {
-                var split = messageId.Split('.');
-                messageId = split[0];
-                attribName = split[1];
-            }
-
-            if (!TryGetMessage(messageId, out ctx, out var message))
-            {
-                node = null;
-                return false;
-            }
-
-            if (attribName != null)
-            {
-                if (message.Attributes == null || !message.Attributes.TryGetValue(attribName, out var attrib))
-                {
-                    node = null;
-                    return false;
-                }
-
-                node = attrib;
-            }
-            else
-            {
-                node = message;
-            }
-
-            return true;
-        }
-
-        public void ReloadLocalizations()
-        {
-            foreach (var (culture, context) in _contexts.ToArray())
-            {
-                // Fluent.Net doesn't allow us to remove messages so...
-                var newContext = new MessageContext(
-                    culture.Name,
-                    new MessageContextOptions
-                    {
-                        UseIsolating = false,
-                        Functions = context.Functions
-                    }
-                );
-
-                _contexts[culture] = newContext;
-
-                _loadData(_res, culture, newContext);
-            }
-
-            FlushEntityCache();
-        }
-
-        private static ILocValue ValFromFluent(object arg)
-        {
-            return arg switch
-            {
-                FluentNone none => new LocValueNone(none.Value),
-                FluentNumber number => new LocValueNumber(double.Parse(number.Value)),
-                FluentString str => new LocValueString(str.Value),
-                FluentDateTime dateTime =>
-                    new LocValueDateTime(DateTime.Parse(dateTime.Value, null, DateTimeStyles.RoundtripKind)),
-                FluentLocWrapperType wrap => wrap.WrappedValue,
-                _ => throw new ArgumentOutOfRangeException(nameof(arg))
-            };
-        }
-
-        private static FluentType ValToFluent(ILocValue arg)
-        {
-            return arg switch
-            {
-                LocValueNone =>
-                    throw new NotSupportedException("Cannot currently return LocValueNone from loc functions."),
-                LocValueNumber number => new FluentNumber(number.Value.ToString("R")),
-                LocValueString str => new FluentString(str.Value),
-                LocValueDateTime dateTime => new FluentDateTime(dateTime.Value),
-                _ => new FluentLocWrapperType(arg)
-            };
-        }
-
-        private bool DoFormat(string messageId, out string? value, MessageContext context, Node node, IDictionary<string, object>? args = null)
-        {
-            var errs = new List<FluentError>();
             try
             {
-                value = context.Format(node, args, errs);
+                var result = bundle.TryGetAttrMsg(messageId, args, out var errs, out value);
+                foreach (var err in errs)
+                {
+                    _logSawmill.Error("{culture}/{messageId}: {error}", _defaultCulture!.Name, messageId, err);
+                }
+
+                return result;
             }
             catch (Exception e)
             {
@@ -218,13 +107,52 @@ namespace Robust.Shared.Localization
                 value = null;
                 return false;
             }
+        }
 
-            foreach (var err in errs)
+        private bool HasMessage(
+            string messageId,
+            [NotNullWhen(true)] out FluentBundle? bundle)
+        {
+            if (_defaultCulture == null)
             {
-                _logSawmill.Error("{culture}/{messageId}: {error}", _defaultCulture!.Name, messageId, err);
+                bundle = null;
+                return false;
             }
 
-            return true;
+            bundle = _contexts[_defaultCulture];
+            if (messageId.Contains('.'))
+            {
+                var split = messageId.Split('.');
+                return bundle.HasMessage(split[0]);
+            }
+
+            return bundle.HasMessage(messageId);
+        }
+
+        private bool TryGetMessage(
+            string messageId,
+            [NotNullWhen(true)] out FluentBundle? bundle,
+            [NotNullWhen(true)] out AstMessage? message)
+        {
+            if (_defaultCulture == null)
+            {
+                bundle = null;
+                message = null;
+                return false;
+            }
+
+            bundle = _contexts[_defaultCulture];
+            return bundle.TryGetAstMessage(messageId, out message);
+        }
+
+        public void ReloadLocalizations()
+        {
+            foreach (var (culture, context) in _contexts.ToArray())
+            {
+                _loadData(_res, culture, context);
+            }
+
+            FlushEntityCache();
         }
 
         /// <summary>
@@ -261,26 +189,18 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
-            var context = new MessageContext(
-                culture.Name,
-                new MessageContextOptions
-                {
-                    UseIsolating = false,
-                    // Have to pass empty dict here or else Fluent.Net will fuck up
-                    // and share the same dict between multiple message contexts.
-                    // Yes, you read that right.
-                    Functions = new Dictionary<string, Resolver.ExternalFunction>(),
-                }
-            );
-            AddBuiltinFunctions(context);
+            var bundle = LinguiniBuilder.Builder()
+                .CultureInfo(culture)
+                .SkipResources()
+                .SetUseIsolating(false)
+                .UseConcurrent()
+                .UncheckedBuild();
 
-            _contexts.Add(culture, context);
+            _contexts.Add(culture, bundle);
+            AddBuiltInFunctions(bundle);
 
-            _loadData(_res, culture, context);
-            if (DefaultCulture == null)
-            {
-                DefaultCulture = culture;
-            }
+            _loadData(_res, culture, bundle);
+            DefaultCulture ??= culture;
         }
 
         public void AddLoadedToStringSerializer(IRobustMappedStringSerializer serializer)
@@ -307,7 +227,7 @@ namespace Robust.Shared.Localization
             */
         }
 
-        private void _loadData(IResourceManager resourceManager, CultureInfo culture, MessageContext context)
+        private void _loadData(IResourceManager resourceManager, CultureInfo culture, FluentBundle context)
         {
             // Load data from .ftl files.
             // Data is loaded from /Locale/<language-code>/*
@@ -323,39 +243,32 @@ namespace Robust.Shared.Localization
                 using var fileStream = resourceManager.ContentFileRead(path);
                 using var reader = new StreamReader(fileStream, EncodingHelpers.UTF8);
 
-                var resource = FluentResource.FromReader(reader);
-                return (path, resource);
+                var parser = new LinguiniParser(reader);
+                var resource = parser.Parse();
+                return (path, resource, parser.GetReadonlyData);
             });
 
-            foreach (var (path, resource) in resources)
+            foreach (var (path, resource, data) in resources)
             {
-                var errors = context.AddResource(resource);
-                foreach (var error in errors)
-                {
-                    _logSawmill.Error("{path}: {exception}", path, error.Message);
-                }
+                var errors = resource.Errors;
+                context.AddResourceOverriding(resource);
+                WriteWarningForErrs(path, errors, data);
             }
         }
 
-        private sealed class FluentLocWrapperType : FluentType
+        private void WriteWarningForErrs(ResourcePath path, List<ParseError> errs, ReadOnlyMemory<char> resource)
         {
-            public readonly ILocValue WrappedValue;
-
-            public FluentLocWrapperType(ILocValue wrappedValue)
+            foreach (var err in errs)
             {
-                WrappedValue = wrappedValue;
+                _logSawmill.Warning("{path}:\n{exception}", path, err.FormatCompileErrors(resource));
             }
+        }
 
-            public override string Format(MessageContext ctx)
+        private void WriteWarningForErrs(IList<FluentError> errs, string locId)
+        {
+            foreach (var err in errs)
             {
-                return WrappedValue.Format(new LocContext(ctx));
-            }
-
-            public override bool Match(MessageContext ctx, object obj)
-            {
-                return false;
-                /*var strVal = obj is IFluentType ft ? ft.Value : obj.ToString() ?? "";
-                return WrappedValue.Matches(new LocContext(ctx), strVal);*/
+                _logSawmill.Warning("Error extracting `{locId}`\n{e1}", locId, err);
             }
         }
     }

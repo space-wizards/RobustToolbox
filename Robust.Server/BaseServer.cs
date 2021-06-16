@@ -237,6 +237,8 @@ namespace Robust.Server
                 }
             }
 
+            ProgramShared.PrintRuntimeInfo(_log.RootSawmill);
+
             SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });
 
             if (!SetupLoki())
@@ -370,6 +372,19 @@ namespace Robust.Server
             {
                 var reg = factory.GetRegistration(regType);
                 _stringSerializer.AddString(reg.Name);
+            }
+
+            using var extraMappedStrings = typeof(BaseServer).Assembly
+                .GetManifestResourceStream("Robust.Server.ExtraMappedSerializerStrings.txt");
+
+            if (extraMappedStrings != null)
+            {
+                using var sr = new StreamReader(extraMappedStrings);
+                string? line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    _stringSerializer.AddString(line);
+                }
             }
         }
 

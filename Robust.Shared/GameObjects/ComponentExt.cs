@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Log;
 
@@ -92,6 +93,22 @@ namespace Robust.Shared.GameObjects
             Logger.Warning(warning);
 
             return entity.AddComponent<T>();
+        }
+
+        public static IComponent SetAndDirtyIfChanged<TValue>(
+            this IComponent comp,
+            ref TValue backingField,
+            TValue value)
+        {
+            if (EqualityComparer<TValue>.Default.Equals(backingField, value))
+            {
+                return comp;
+            }
+
+            backingField = value;
+            comp.Dirty();
+
+            return comp;
         }
     }
 }

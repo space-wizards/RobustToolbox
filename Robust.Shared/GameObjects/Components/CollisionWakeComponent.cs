@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -32,7 +33,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void RaiseStateChange()
+        internal void RaiseStateChange()
         {
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
         }

@@ -29,6 +29,9 @@
     <Content Include="server_config.toml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="ExtraMappedSerializerStrings.txt">
+      <LogicalName>Robust.Server.ExtraMappedSerializerStrings.txt</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

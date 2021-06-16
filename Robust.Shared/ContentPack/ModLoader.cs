@@ -106,8 +106,16 @@ namespace Robust.Shared.ContentPack
                 Logger.DebugS("res.mod", $"Verified assemblies in {checkerSw.ElapsedMilliseconds}ms");
             }
 
+            var nodes = TopologicalSort.FromBeforeAfter(
+                files,
+                kv => kv.Key,
+                kv => kv.Value.Path,
+                _ => Array.Empty<string>(),
+                kv => kv.Value.references,
+                allowMissing: true); // missing refs would be non-content assemblies so allow that.
+
             // Actually load them in the order they depend on each other.
-            foreach (var path in TopologicalSortModules(files))
+            foreach (var path in TopologicalSort.Sort(nodes))
             {
                 Logger.DebugS("res.mod", $"Loading module: '{path}'");
                 try
@@ -134,38 +142,6 @@ namespace Robust.Shared.ContentPack
             Logger.DebugS("res.mod", $"DONE loading modules: {sw.Elapsed}");
 
             return true;
-        }
-
-        private static IEnumerable<ResourcePath> TopologicalSortModules(
-            IEnumerable<KeyValuePair<string, (ResourcePath Path, string[] references)>> modules)
-        {
-            var elems = modules.ToDictionary(
-                node => node.Key,
-                node => (node.Value.Path, refs: new HashSet<string>(node.Value.references)));
-
-            // Remove assembly references we aren't sorting for.
-            foreach (var (_, set) in elems.Values)
-            {
-                set.RemoveWhere(r => !elems.ContainsKey(r));
-            }
-
-            while (elems.Count > 0)
-            {
-                var elem = elems.FirstOrNull(x => x.Value.refs.Count == 0);
-                if (elem == null)
-                {
-                    throw new InvalidOperationException(
-                        "Found circular dependency in assembly dependency graph");
-                }
-
-                elems.Remove(elem.Value.Key);
-                foreach (var sElem in elems)
-                {
-                    sElem.Value.refs.Remove(elem.Value.Key);
-                }
-
-                yield return elem.Value.Value.Path;
-            }
         }
 
         private static (string[] refs, string name) GetAssemblyReferenceData(Stream stream)

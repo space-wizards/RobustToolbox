@@ -117,11 +117,7 @@ namespace Robust.Server.Player
             if (entity == null)
                 return;
 
-            // This event needs to be broadcast.
-            var attachPlayer = new AttachPlayerEvent(entity, this);
-            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, attachPlayer);
-
-            if (!attachPlayer.Result)
+            if (!EntitySystem.Get<ActorSystem>().Attach(entity, this))
             {
                 Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
             }
@@ -133,10 +129,19 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 return;
 
-            var detachPlayer = new DetachPlayerEvent();
-            AttachedEntity.EntityManager.EventBus.RaiseLocalEvent(AttachedEntity.Uid, detachPlayer, false);
+#if EXCEPTION_TOLERANCE
+            if (AttachedEntity.Deleted)
+            {
+                Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
+                // We can't contact ActorSystem because trying to fire an entity event would crash.
+                // Work around it.
+                AttachedEntity = null;
+                UpdatePlayerState();
+                return;
+            }
+#endif
 
-            if (!detachPlayer.Result)
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
             {
                 Logger.Warning($"Couldn't detach player \"{this}\" to entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }

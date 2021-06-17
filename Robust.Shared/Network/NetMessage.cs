@@ -66,18 +66,6 @@ namespace Robust.Shared.Network
         /// </summary>
         public int MsgSize { get; set; }
 
-        /// <summary>
-        /// Constructs an instance of the NetMessage.
-        /// </summary>
-        /// <param name="name">String identifier of the message type.</param>
-        /// <param name="group">The group this message type belongs to.</param>
-        [Obsolete("Use NetMessageAttribute and no constructor instead")]
-        protected NetMessage(string name, MsgGroups group)
-        {
-            MsgName = name;
-            MsgGroup = group;
-        }
-
         protected NetMessage()
         {
             MsgName = GetType().Name;

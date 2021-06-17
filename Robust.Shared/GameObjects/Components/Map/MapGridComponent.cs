@@ -58,7 +58,7 @@ namespace Robust.Shared.GameObjects
             _gridIndex = GridId.Invalid;
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             var mapId = Owner.Transform.MapID;

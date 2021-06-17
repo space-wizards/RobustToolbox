@@ -1,5 +1,8 @@
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    /// The life stages of an ECS Entity.
+    /// </summary>
     public enum EntityLifeStage
     {
         /// <summary>

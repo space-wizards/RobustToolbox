@@ -1149,7 +1149,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 
@@ -1254,7 +1254,7 @@ namespace Robust.Shared.GameObjects
             Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
             // Need to do these immediately in case collision behaviors deleted the body

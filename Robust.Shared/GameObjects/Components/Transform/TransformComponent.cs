@@ -430,7 +430,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables] public EntityUid LerpParent { get; private set; }
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 

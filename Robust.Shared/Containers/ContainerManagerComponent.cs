@@ -33,7 +33,7 @@ namespace Robust.Shared.Containers
         public sealed override uint? NetID => NetIDs.CONTAINER_MANAGER;
 
         /// <inheritdoc />
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 
@@ -47,7 +47,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 

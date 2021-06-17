@@ -182,7 +182,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
-            container.Register<IPhysicsManager, PhysicsManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             _diFactory?.Invoke(container);

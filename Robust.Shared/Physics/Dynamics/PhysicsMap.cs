@@ -440,7 +440,7 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB(_mapManager));
+                transform.RunDeferred(physics.GetWorldAABB());
             }
 
             _deferredUpdates.Clear();

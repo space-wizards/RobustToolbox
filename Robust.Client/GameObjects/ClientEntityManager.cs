@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Prometheus;
 using Robust.Client.GameStates;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -16,6 +17,7 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -143,7 +145,11 @@ namespace Robust.Client.GameObjects
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    ReceivedSystemMessage?.Invoke(this, message.SystemMessage);
+                    var msg = message.SystemMessage;
+                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(_playerManager.LocalPlayer!.Session), msg)!;
+                    ReceivedSystemMessage?.Invoke(this, msg);
+                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }
         }

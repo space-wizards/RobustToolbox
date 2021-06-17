@@ -108,6 +108,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
+
+            IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
 

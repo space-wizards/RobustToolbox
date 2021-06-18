@@ -47,11 +47,6 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
-        /// <summary>
-        ///     Whether or not this grid has gravity
-        /// </summary>
-        bool HasGravity { get; set; }
-
         #region TileAccess
 
         /// <summary>

@@ -147,7 +147,6 @@ namespace Robust.Shared.Containers
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntInsertedIntoContainerMessage(toinsert, this));
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
-            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
             Manager.Dirty();
         }
 
@@ -164,7 +163,6 @@ namespace Robust.Shared.Containers
 
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntRemovedFromContainerMessage(toremove, this));
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
-            Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
             Manager.Dirty();
         }
     }

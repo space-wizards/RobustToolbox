@@ -284,16 +284,11 @@ namespace Robust.Shared.GameObjects
                     var newConcrete = (TransformComponent) newParent;
                     newConcrete._children.Add(uid);
 
-                    var oldParentOwner = oldParent?.Owner;
-                    var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
-                    var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
-
                     // offset position from world to parent
                     _parent = newParentEnt.Uid;
                     ChangeMapId(newConcrete.MapID);
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
-                    Owner.SendMessage(this, compMessage);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
 
                     GridID = GetGridIndex();
                 }
@@ -572,13 +567,8 @@ namespace Robust.Shared.GameObjects
             var uid = Owner.Uid;
             oldConcrete._children.Remove(uid);
 
-            var oldParentOwner = oldParent?.Owner;
-
-            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
-            var compMessage = new ParentChangedMessage(null, oldParentOwner);
             _parent = EntityUid.Invalid;
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, entMessage);
-            Owner.SendMessage(this, compMessage);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
 

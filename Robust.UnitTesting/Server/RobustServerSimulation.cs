@@ -199,6 +199,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
+            container.Register<IIslandManager, IslandManager>();
             container.Register<ICollisionManager, CollisionManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
 

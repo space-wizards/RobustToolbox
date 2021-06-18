@@ -376,7 +376,19 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
             set
             {
-                if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
+                // This will be set again when the transform starts, actually anchoring it.
+                if (LifeStage < ComponentLifeStage.Starting)
+                {
+                    _anchored = value;
+                }
+                else if (LifeStage == ComponentLifeStage.Starting)
+                {
+                    if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
+                    {
+                        _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                    }
+                }
+                else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
                     _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                 }
@@ -508,11 +520,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         protected override void Startup()
         {
-            base.Startup();
-
             // Re-Anchor the entity if needed.
             if (_anchored)
                 Anchored = true;
+
+            base.Startup();
 
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
@@ -597,6 +609,8 @@ namespace Robust.Shared.GameObjects
             {
                 return;
             }
+
+            Anchored = false;
 
             var oldConcrete = (TransformComponent) oldParent;
             var uid = Owner.Uid;
@@ -762,20 +776,7 @@ namespace Robust.Shared.GameObjects
                 _prevPosition = newState.LocalPosition;
                 _prevRotation = newState.Rotation;
 
-                if (newState.Anchored && !_anchored)
-                {
-                    var grid = _mapManager.GetGrid(GridID);
-                    var gComp = Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(grid.GridEntityId);
-                    gComp.AnchorEntity(this);
-
-                    // An anchored entity is always parented to the grid, this will never throw.
-                    //Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(newState.ParentID).AnchorEntity(this);
-                }
-                else if (!newState.Anchored && _anchored)
-                {
-                    // An anchored entity is always parented to the grid, this will never throw.
-                    Owner.EntityManager.ComponentManager.GetComponent<IMapGridComponent>(newState.ParentID).UnanchorEntity(this);
-                }
+                Anchored = newState.Anchored;
 
                 // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.
                 // If this assert fails, the code above that sets the parent is broken.

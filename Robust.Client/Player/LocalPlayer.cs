@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -70,11 +70,9 @@ namespace Robust.Client.Player
             eye.Current = true;
 
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
-            entity.SendMessage(null, new PlayerAttachedMsg());
 
             // notify ECS Systems
             ControlledEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
-
             ControlledEntity.EntityManager.EventBus.RaiseLocalEvent(ControlledEntity.Uid, new PlayerAttachedEvent(ControlledEntity));
         }
 
@@ -87,11 +85,9 @@ namespace Robust.Client.Player
             if (previous is {Initialized: true, Deleted: false})
             {
                 previous.GetComponent<EyeComponent>().Current = false;
-                previous.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems
                 previous.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-
                 previous.EntityManager.EventBus.RaiseLocalEvent(previous.Uid, new PlayerDetachedEvent(previous));
             }
 

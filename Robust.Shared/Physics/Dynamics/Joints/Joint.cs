@@ -138,6 +138,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             {
                 if (_collideConnected == value) return;
                 _collideConnected = value;
+
+                if (!_collideConnected)
+                    EntitySystem.Get<SharedPhysicsSystem>().FilterContactsForJoint(this);
+
                 Dirty();
             }
         }

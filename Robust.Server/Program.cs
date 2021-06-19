@@ -98,7 +98,7 @@ namespace Robust.Server
 
         internal static void SetupLogging()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
 #if WINDOWS_USE_UTF8_CONSOLE
                 System.Console.OutputEncoding = Encoding.UTF8;

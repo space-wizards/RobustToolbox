@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using OpenToolkit.GraphicsLibraryFramework;
@@ -13,11 +13,6 @@ namespace Robust.Client.Graphics.Clyde
     {
         private sealed partial class GlfwWindowingImpl
         {
-            // glfwPostEmptyEvent is broken on macOS and crashes when not called from the main thread
-            // (despite what the docs claim, and yes this makes it useless).
-            // Because of this, we just forego it and use glfwWaitEventsTimeout on macOS instead.
-            private static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-
             private bool _windowingRunning;
             private ChannelWriter<CmdBase> _cmdWriter = default!;
             private ChannelReader<CmdBase> _cmdReader = default!;
@@ -53,7 +48,10 @@ namespace Robust.Client.Graphics.Clyde
 
                 while (_windowingRunning)
                 {
-                    if (IsMacOS)
+                    // glfwPostEmptyEvent is broken on macOS and crashes when not called from the main thread
+                    // (despite what the docs claim, and yes this makes it useless).
+                    // Because of this, we just forego it and use glfwWaitEventsTimeout on macOS instead.
+                    if (OperatingSystem.IsMacOS())
                         GLFW.WaitEventsTimeout(0.008);
                     else
                         GLFW.WaitEvents();
@@ -157,7 +155,7 @@ namespace Robust.Client.Graphics.Clyde
                 _cmdWriter.TryWrite(cmd);
 
                 // Post empty event to unstuck WaitEvents if necessary.
-                if (!IsMacOS)
+                if (!OperatingSystem.IsMacOS())
                     GLFW.PostEmptyEvent();
             }
 

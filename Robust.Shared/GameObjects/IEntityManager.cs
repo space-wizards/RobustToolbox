@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -76,7 +75,19 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity);
 
+        /// <summary>
+        /// Returns all entities
+        /// </summary>
+        /// <returns></returns>
         IEnumerable<IEntity> GetEntities();
+
+
+        /// <summary>
+        /// Returns all entities which pass the provided filter
+        /// </summary>
+        /// <param name="filter">Filter query</param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetEntities(Func<IEntity, bool> filter);
 
         public void QueueDeleteEntity(IEntity entity);
 

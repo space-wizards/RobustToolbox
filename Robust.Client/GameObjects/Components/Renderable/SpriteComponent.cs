@@ -2160,6 +2160,16 @@ namespace Robust.Client.GameObjects
                 return _components.ContainsKey(type);
             }
 
+            public bool HasAllComponents(IEnumerable<IComponent> components)
+            {
+                return components.All(c => HasComponent(c.GetType()));
+            }
+
+            public bool HasAllComponents(IEnumerable<Type> components)
+            {
+                return components.All(c => HasComponent(c));
+            }
+
             public T GetComponent<T>()
             {
                 return (T)_components[typeof(T)];

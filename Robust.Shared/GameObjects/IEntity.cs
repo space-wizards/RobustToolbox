@@ -108,6 +108,20 @@ namespace Robust.Shared.GameObjects
         bool HasComponent(Type type);
 
         /// <summary>
+        ///     Checks if the entity has all specified components.
+        /// </summary>
+        /// <param name="components">Enumeration of types which must be attached to the entity</param>
+        /// <returns></returns>
+        bool HasAllComponents(IEnumerable<IComponent> components);
+
+        /// <summary>
+        ///     Checks if the entity has all specified components.
+        /// </summary>
+        /// <param name="components">Enumeration of components which must be attached to the entity</param>
+        /// <returns></returns>
+        bool HasAllComponents(IEnumerable<Type> components);
+
+        /// <summary>
         ///     Retrieves the component of the specified type.
         /// </summary>
         /// <typeparam name="T">The component reference type to fetch.</typeparam>

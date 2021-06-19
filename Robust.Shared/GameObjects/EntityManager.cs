@@ -1,14 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -229,6 +226,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities()
         {
             // Need to do an iterator loop to avoid issues with concurrent access.
@@ -243,6 +241,21 @@ namespace Robust.Shared.GameObjects
 
                 yield return entity;
             }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntities(Func<IEntity, bool> filter)
+        {
+            var entities = new ConcurrentBag<IEntity>();
+
+            Parallel.ForEach(
+                AllEntities.Where(filter),
+                e =>
+                    {
+                        entities.Add(e);
+                    });
+
+            return entities;
         }
 
         /// <summary>

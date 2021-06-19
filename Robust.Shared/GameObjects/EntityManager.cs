@@ -229,12 +229,6 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        [Obsolete("IEntityQuery is obsolete")]
-        public IEnumerable<IEntity> GetEntities(IEntityQuery query)
-        {
-            return query.Match(this);
-        }
-
         public IEnumerable<IEntity> GetEntities()
         {
             // Need to do an iterator loop to avoid issues with concurrent access.

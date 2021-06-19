@@ -372,6 +372,20 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasAllComponents(EntityUid uid, IEnumerable<IComponent> components)
+        {
+            return HasAllComponents(uid, components.Select(c => c.GetType()));
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasAllComponents(EntityUid uid, IEnumerable<Type> components)
+        {
+            return components.All(c => HasComponent(uid, c));
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
             return (T) GetComponent(uid, typeof(T));

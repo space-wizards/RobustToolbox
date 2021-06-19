@@ -121,6 +121,22 @@ namespace Robust.Shared.GameObjects
         bool HasComponent(EntityUid uid, uint netId);
 
         /// <summary>
+        ///     Checks if the entity has all specified components.
+        /// </summary>
+        /// <param name="uid">Entity UID to check</param>
+        /// <param name="components">Enumeration of types which must be attached to the entity</param>
+        /// <returns></returns>
+        bool HasAllComponents(EntityUid uid, IEnumerable<IComponent> components);
+
+        /// <summary>
+        ///     Checks if the entity has all specified components.
+        /// </summary>
+        /// <param name="uid">Entity UID to check</param>
+        /// <param name="components">Enumeration of components which must be attached to the entity</param>
+        /// <returns></returns>
+        bool HasAllComponents(EntityUid uid, IEnumerable<Type> components);
+
+        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>

@@ -249,13 +249,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false);
 
         /// <summary>
-        ///      Returns ALL Entities which have ALL specified types attached.
-        /// </summary>
-        /// <param name="types">All traits or component types to check for.</param>
-        /// <returns>All entities which have all specified types.</returns>
-        IEnumerable<IEntity> GetAllEntitiesWithAllComponents(IEnumerable<Type> types);
-
-        /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();

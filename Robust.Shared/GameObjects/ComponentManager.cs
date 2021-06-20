@@ -586,16 +586,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public IEnumerable<IEntity> GetAllEntitiesWithAllComponents(IEnumerable<Type> types)
-        {
-            var filteredTypes = types.Select(t => _entTraitDict[t]);
-            if (!filteredTypes.Any()) return Enumerable.Empty<IEntity>();
-            var fetchedEntities = filteredTypes.Select(x => x.Values.Select(y => y.Owner).ToList());
-            var intersectedEntities = fetchedEntities.Skip(1).Aggregate(new HashSet<IEntity>(fetchedEntities.First()), (h, e) => { h.IntersectWith(e); return h; });
-            return intersectedEntities.ToList();
-        }
-
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

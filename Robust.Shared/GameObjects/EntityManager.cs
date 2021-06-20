@@ -243,21 +243,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntities(Func<IEntity, bool> filter)
-        {
-            var entities = new ConcurrentBag<IEntity>();
-
-            Parallel.ForEach(
-                AllEntities.Where(filter),
-                e =>
-                    {
-                        entities.Add(e);
-                    });
-
-            return entities;
-        }
-
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>

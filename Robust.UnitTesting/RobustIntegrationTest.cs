@@ -20,6 +20,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using ServerProgram = Robust.Server.Program;
 
@@ -413,6 +414,7 @@ namespace Robust.UnitTesting
                 IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
                 IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                 IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
+                IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
                 _options?.InitIoC?.Invoke();
                 IoCManager.BuildGraph();
                 //ServerProgram.SetupLogging();
@@ -525,6 +527,7 @@ namespace Robust.UnitTesting
                 IoCManager.Register<IModLoader, TestingModLoader>(true);
                 IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
                 IoCManager.Register<TestingModLoader, TestingModLoader>(true);
+                IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
                 _options?.InitIoC?.Invoke();
                 IoCManager.BuildGraph();
 

@@ -14,6 +14,7 @@ using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -76,8 +77,10 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
-            private protected Thread InstanceThread = default!;
+            private readonly IntegrationOptions? _options;
+            private protected Thread? InstanceThread;
             private protected IDependencyCollection DependencyCollection = default!;
+            private protected IntegrationGameLoop GameLoop = default!;
 
             private protected readonly ChannelReader<object> _toInstanceReader;
             private protected readonly ChannelWriter<object> _toInstanceWriter;
@@ -132,8 +135,10 @@ namespace Robust.UnitTesting
                 }
             }
 
-            private protected IntegrationInstance()
+            private protected IntegrationInstance(IntegrationOptions? options)
             {
+                _options = options;
+
                 var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
                 {
                     SingleReader = true,
@@ -182,7 +187,18 @@ namespace Robust.UnitTesting
             /// <exception cref="Exception">
             ///     Thrown if <paramref name="throwOnUnhandled"/> is true and the instance shuts down on an unhandled exception.
             /// </exception>
-            public async Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
+            public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
+            {
+                if (_options?.Asynchronous == true)
+                {
+                    return WaitIdleImplAsync(throwOnUnhandled, cancellationToken);
+                }
+
+                WaitIdleImplSync(throwOnUnhandled);
+                return Task.CompletedTask;
+            }
+
+            private async Task WaitIdleImplAsync(bool throwOnUnhandled, CancellationToken cancellationToken)
             {
                 while (_isAlive && _currentTicksId != _ackTicksId)
                 {
@@ -219,6 +235,56 @@ namespace Robust.UnitTesting
                 }
 
                 _isSurelyIdle = true;
+            }
+
+            private void WaitIdleImplSync(bool throwOnUnhandled)
+            {
+                var oldSyncContext = SynchronizationContext.Current;
+                try
+                {
+                    // Set up thread-local resources for instance switch.
+                    {
+                        var taskMgr = DependencyCollection.Resolve<TaskManager>();
+                        IoCManager.InitThread(DependencyCollection, replaceExisting: true);
+                        taskMgr.ResetSynchronizationContext();
+                    }
+
+                    GameLoop.SingleThreadRunUntilEmpty();
+                    _isSurelyIdle = true;
+
+                    while (_fromInstanceReader.TryRead(out var msg))
+                    {
+                        switch (msg)
+                        {
+                            case ShutDownMessage shutDownMessage:
+                            {
+                                _isAlive = false;
+                                _unhandledException = shutDownMessage.UnhandledException;
+                                if (throwOnUnhandled && _unhandledException != null)
+                                {
+                                    ExceptionDispatchInfo.Capture(_unhandledException).Throw();
+                                    return;
+                                }
+
+                                break;
+                            }
+
+                            case AssertFailMessage assertFailMessage:
+                            {
+                                // Rethrow exception without losing stack trace.
+                                ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
+                                break; // Unreachable.
+                            }
+                        }
+                    }
+
+                    _isSurelyIdle = true;
+                }
+                finally
+                {
+                    // NUnit has its own synchronization context so let's *not* break everything.
+                    SynchronizationContext.SetSynchronizationContext(oldSyncContext);
+                }
             }
 
             /// <summary>
@@ -303,71 +369,28 @@ namespace Robust.UnitTesting
         {
             private readonly ServerIntegrationOptions? _options;
 
-            internal ServerIntegrationInstance(ServerIntegrationOptions? options)
+            internal ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
                 _options = options;
-                InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 DependencyCollection = new DependencyCollection();
-                InstanceThread.Start();
+                if (options?.Asynchronous == true)
+                {
+                    InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
+                    InstanceThread.Start();
+                }
+                else
+                {
+                    Init();
+                }
             }
 
             private void _serverMain()
             {
                 try
                 {
-                    IoCManager.InitThread(DependencyCollection);
-                    ServerIoC.RegisterIoC();
-                    IoCManager.Register<INetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
-                    IoCManager.Register<IModLoader, TestingModLoader>(true);
-                    IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
-                    IoCManager.Register<TestingModLoader, TestingModLoader>(true);
-                    IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
-                    _options?.InitIoC?.Invoke();
-                    IoCManager.BuildGraph();
-                    //ServerProgram.SetupLogging();
-                    ServerProgram.InitReflectionManager();
-
-                    var server = DependencyCollection.Resolve<IBaseServerInternal>();
-
-                    server.LoadConfigAndUserData = false;
-
-                    if (_options?.ContentAssemblies != null)
-                    {
-                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
-                    }
-
-                    var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
-
-                    if (_options != null)
-                    {
-                        _options.BeforeStart?.Invoke();
-                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                        if (_options.ExtraPrototypes != null)
-                        {
-                            IoCManager.Resolve<IResourceManagerInternal>()
-                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
-                        }
-                    }
-
-                    cfg.OverrideConVars(new []{("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
-
-                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
-                    server.ContentStart = _options?.ContentStart ?? false;
-                    if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
-                    {
-                        throw new Exception("Server failed to start.");
-                    }
-
-                    var gameLoop = new IntegrationGameLoop(
-                        DependencyCollection.Resolve<IGameTiming>(),
-                        _fromInstanceWriter, _toInstanceReader);
-                    server.OverrideMainLoop(gameLoop);
-
-                    server.MainLoop();
+                    var server = Init();
+                    GameLoop.Run();
+                    server.FinishMainLoop();
                 }
                 catch (Exception e)
                 {
@@ -377,18 +400,86 @@ namespace Robust.UnitTesting
 
                 _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
             }
+
+            private BaseServer Init()
+            {
+                IoCManager.InitThread(DependencyCollection, replaceExisting: true);
+                ServerIoC.RegisterIoC();
+                IoCManager.Register<INetManager, IntegrationNetManager>(true);
+                IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
+                IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
+                IoCManager.Register<IModLoader, TestingModLoader>(true);
+                IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
+                IoCManager.Register<TestingModLoader, TestingModLoader>(true);
+                IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
+                _options?.InitIoC?.Invoke();
+                IoCManager.BuildGraph();
+                //ServerProgram.SetupLogging();
+                ServerProgram.InitReflectionManager();
+
+                var server = DependencyCollection.Resolve<BaseServer>();
+
+                server.LoadConfigAndUserData = false;
+
+                if (_options?.ContentAssemblies != null)
+                {
+                    IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                }
+
+                var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+
+                if (_options != null)
+                {
+                    _options.BeforeStart?.Invoke();
+                    cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                    if (_options.ExtraPrototypes != null)
+                    {
+                        IoCManager.Resolve<IResourceManagerInternal>()
+                            .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                    }
+                }
+
+                cfg.OverrideConVars(new[] {("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
+
+                var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
+                server.ContentStart = _options?.ContentStart ?? false;
+                if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
+                {
+                    throw new Exception("Server failed to start.");
+                }
+
+                GameLoop = new IntegrationGameLoop(
+                    DependencyCollection.Resolve<IGameTiming>(),
+                    _fromInstanceWriter, _toInstanceReader);
+                server.OverrideMainLoop(GameLoop);
+                server.SetupMainLoop();
+
+                GameLoop.RunInit();
+
+                return server;
+            }
         }
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
             private readonly ClientIntegrationOptions? _options;
 
-            internal ClientIntegrationInstance(ClientIntegrationOptions? options)
+            internal ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
             {
                 _options = options;
-                InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 DependencyCollection = new DependencyCollection();
-                InstanceThread.Start();
+
+                if (options?.Asynchronous == true)
+                {
+                    InstanceThread = new Thread(ThreadMain) {Name = "Client Instance Thread"};
+                    InstanceThread.Start();
+                }
+                else
+                {
+                    Init();
+                }
             }
 
             /// <summary>
@@ -407,55 +498,13 @@ namespace Robust.UnitTesting
                 clientNetManager.NextConnectChannel = serverNetManager.MessageChannelWriter;
             }
 
-            private void _clientMain()
+            private void ThreadMain()
             {
                 try
                 {
-                    IoCManager.InitThread(DependencyCollection);
-                    ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
-                    IoCManager.Register<INetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IModLoader, TestingModLoader>(true);
-                    IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
-                    IoCManager.Register<TestingModLoader, TestingModLoader>(true);
-                    _options?.InitIoC?.Invoke();
-                    IoCManager.BuildGraph();
-
-                    GameController.RegisterReflection();
-
-                    var client = DependencyCollection.Resolve<IGameControllerInternal>();
-
-                    if (_options?.ContentAssemblies != null)
-                    {
-                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
-                    }
-
-                    client.LoadConfigAndUserData = false;
-
-                    var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
-
-                    if (_options != null)
-                    {
-                        _options.BeforeStart?.Invoke();
-                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
-
-                        if (_options.ExtraPrototypes != null)
-                        {
-                            IoCManager.Resolve<IResourceManagerInternal>()
-                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
-                        }
-                    }
-
-                    cfg.OverrideConVars(new []{(CVars.NetPredictLagBias.Name, "0")});
-
-                    var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
-                        _fromInstanceWriter, _toInstanceReader);
-
-                    var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
-                    client.OverrideMainLoop(gameLoop);
-                    client.ContentStart = true;
-                    client.Run(GameController.DisplayMode.Headless, () => new TestLogHandler("CLIENT", failureLevel));
+                    var client = Init();
+                    GameLoop.Run();
+                    client.Cleanup();
                 }
                 catch (Exception e)
                 {
@@ -464,6 +513,60 @@ namespace Robust.UnitTesting
                 }
 
                 _fromInstanceWriter.TryWrite(new ShutDownMessage(null));
+            }
+
+            private GameController Init()
+            {
+                IoCManager.InitThread(DependencyCollection, replaceExisting: true);
+                ClientIoC.RegisterIoC(GameController.DisplayMode.Headless);
+                IoCManager.Register<INetManager, IntegrationNetManager>(true);
+                IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
+                IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
+                IoCManager.Register<IModLoader, TestingModLoader>(true);
+                IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
+                IoCManager.Register<TestingModLoader, TestingModLoader>(true);
+                _options?.InitIoC?.Invoke();
+                IoCManager.BuildGraph();
+
+                GameController.RegisterReflection();
+
+                var client = DependencyCollection.Resolve<GameController>();
+
+                if (_options?.ContentAssemblies != null)
+                {
+                    IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                }
+
+                client.LoadConfigAndUserData = false;
+
+                var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+
+                if (_options != null)
+                {
+                    _options.BeforeStart?.Invoke();
+                    cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                    if (_options.ExtraPrototypes != null)
+                    {
+                        IoCManager.Resolve<IResourceManagerInternal>()
+                            .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                    }
+                }
+
+                cfg.OverrideConVars(new[] {(CVars.NetPredictLagBias.Name, "0")});
+
+                GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
+                    _fromInstanceWriter, _toInstanceReader);
+
+                var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
+                client.OverrideMainLoop(GameLoop);
+                client.ContentStart = true;
+                client.StartupSystemSplash(() => new TestLogHandler("CLIENT", failureLevel));
+                client.StartupContinue(GameController.DisplayMode.Headless);
+
+                GameLoop.RunInit();
+
+                return client;
             }
         }
 
@@ -500,16 +603,30 @@ namespace Robust.UnitTesting
 
             public void Run()
             {
+                // Main run method is only used when running from asynchronous thread.
+
                 // Ack tick message 1 is implied as "init done"
                 _channelWriter.TryWrite(new AckTicksMessage(1));
-                Running = true;
-
-                _gameTiming.InSimulation = true;
 
                 while (Running)
                 {
-                    var message = _channelReader.ReadAsync().AsTask().Result;
+                    _channelReader.WaitToReadAsync().AsTask().Wait();
 
+                    SingleThreadRunUntilEmpty();
+                }
+            }
+
+            public void RunInit()
+            {
+                Running = true;
+
+                _gameTiming.InSimulation = true;
+            }
+
+            public void SingleThreadRunUntilEmpty()
+            {
+                while (Running && _channelReader.TryRead(out var message))
+                {
                     switch (message)
                     {
                         case RunTicksMessage msg:
@@ -570,6 +687,7 @@ namespace Robust.UnitTesting
             public bool ContentStart { get; set; } = false;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
+            public bool Asynchronous { get; set; } = true;
         }
 
         /// <summary>

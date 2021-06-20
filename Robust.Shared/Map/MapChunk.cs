@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -209,6 +210,8 @@ namespace Robust.Shared.Map
 
             ref var cell = ref _snapGrid[xCell, yCell];
             cell.Center ??= new List<EntityUid>(SnapCellStartingCapacity);
+
+            DebugTools.Assert(!cell.Center.Contains(euid));
             cell.Center.Add(euid);
         }
 

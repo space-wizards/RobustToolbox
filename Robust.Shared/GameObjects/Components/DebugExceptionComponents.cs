@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
     {
         public override string Name => "DebugExceptionOnAdd";
 
-        public override void OnAdd() => throw new NotSupportedException();
+        protected override void OnAdd() => throw new NotSupportedException();
     }
 
     /// <summary>
@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects
     {
         public override string Name => "DebugExceptionInitialize";
 
-        public override void Initialize() => throw new NotSupportedException();
+        protected override void Initialize() => throw new NotSupportedException();
     }
 
     /// <summary>

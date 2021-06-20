@@ -34,11 +34,11 @@ namespace Robust.Client.GameObjects
 
             if (Owner.Transform.Anchored)
             {
-                SnapGridOnPositionChanged();
+                AnchorStateChanged();
             }
         }
 
-        public void SnapGridOnPositionChanged()
+        public void AnchorStateChanged()
         {
             SendDirty();
 

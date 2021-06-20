@@ -344,10 +344,10 @@ namespace Robust.Shared.GameObjects
             get => _localPosition;
             set
             {
-                if (_localPosition.EqualsApprox(value, 0.00001))
+                if(Anchored)
                     return;
 
-                if(Anchored)
+                if (_localPosition.EqualsApprox(value, 0.00001))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.

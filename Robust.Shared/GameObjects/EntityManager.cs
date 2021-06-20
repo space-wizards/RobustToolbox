@@ -79,7 +79,6 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             ComponentManager.Initialize();
-            _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
         public virtual void Startup()

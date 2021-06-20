@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
-    public interface IComponent : IEntityEventSubscriber
+    public interface IComponent
     {
         /// <summary>
         ///     Represents the network ID for the component.

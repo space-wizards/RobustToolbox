@@ -7,16 +7,22 @@ namespace Robust.Shared.GameObjects
     {
         private List<SubBase>? _subscriptions;
 
-        protected void SubscribeNetworkEvent<T>(EntityEventHandler<T> handler)
+        // NOTE: EntityEventHandler<T> and EntitySessionEventHandler<T> CANNOT BE ORDERED BETWEEN EACH OTHER.
+
+        protected void SubscribeNetworkEvent<T>(
+            EntityEventHandler<T> handler,
+            Type[]? before=null, Type[]? after=null)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler);
+            EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler, GetType(), before, after);
 
             _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(EventSource.Network));
         }
 
-        protected void SubscribeNetworkEvent<T>(EntitySessionEventHandler<T> handler)
+        protected void SubscribeNetworkEvent<T>(
+            EntitySessionEventHandler<T> handler,
+            Type[]? before=null, Type[]? after=null)
             where T : notnull
         {
             EntityManager.EventBus.SubscribeSessionEvent(EventSource.Network, this, handler);
@@ -25,16 +31,20 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(EventSource.Network));
         }
 
-        protected void SubscribeLocalEvent<T>(EntityEventHandler<T> handler)
+        protected void SubscribeLocalEvent<T>(
+            EntityEventHandler<T> handler,
+            Type[]? before=null, Type[]? after=null)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler);
+            EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
 
             _subscriptions ??= new();
             _subscriptions.Add(new SubBroadcast<T>(EventSource.Local));
         }
 
-        protected void SubscribeLocalEvent<T>(EntitySessionEventHandler<T> handler)
+        protected void SubscribeLocalEvent<T>(
+            EntitySessionEventHandler<T> handler,
+            Type[]? before=null, Type[]? after=null)
             where T : notnull
         {
             EntityManager.EventBus.SubscribeSessionEvent(EventSource.Local, this, handler);
@@ -57,8 +67,9 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
         }
 
-
-        protected void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            ComponentEventHandler<TComp, TEvent> handler,
+            Type[]? before=null, Type[]? after=null)
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {

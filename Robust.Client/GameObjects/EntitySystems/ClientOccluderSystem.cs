@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
 
-            SubscribeLocalEvent<ClientOccluderComponent, SnapGridPositionChangedEvent>(HandleSnapGridMove);
+            SubscribeLocalEvent<ClientOccluderComponent, AnchorStateChangedEvent>(HandleAnchorChanged);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -62,9 +62,9 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void HandleSnapGridMove(EntityUid uid, ClientOccluderComponent component, SnapGridPositionChangedEvent args)
+        private static void HandleAnchorChanged(EntityUid uid, ClientOccluderComponent component, AnchorStateChangedEvent args)
         {
-            component.SnapGridOnPositionChanged();
+            component.AnchorStateChanged();
         }
 
         private void HandleDirtyEvent(OccluderDirtyEvent ev)

@@ -15,7 +15,7 @@ namespace Robust.Shared.Physics
     {
         bool IgnoreGravity { get; set; }
 
-        int IslandIndex { get; set; }
+        Dictionary<int, int> IslandIndex { get; set; }
 
         /// <summary>
         ///     Has this body already been added to a physics island

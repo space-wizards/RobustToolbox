@@ -8,13 +8,13 @@ namespace Robust.Shared.GameObjects
     {
         public override string Name => "IgnorePause";
 
-        public override void OnAdd()
+        protected override void OnAdd()
         {
             base.OnAdd();
             Owner.Paused = false;
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
             if (IoCManager.Resolve<IPauseManager>().IsMapPaused(Owner.Transform.MapID))

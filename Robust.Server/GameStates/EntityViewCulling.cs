@@ -213,7 +213,8 @@ namespace Robust.Server.GameStates
                         new TransformComponent.TransformComponentState(Vector2NaN,
                             oldState.Rotation,
                             oldState.ParentID,
-                            oldState.NoLocalRotation)
+                            oldState.NoLocalRotation,
+                            oldState.Anchored)
                     }));
             }
 

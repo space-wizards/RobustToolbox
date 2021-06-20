@@ -104,7 +104,7 @@ namespace Robust.Client.GameObjects
             _appearanceDirty = false;
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 

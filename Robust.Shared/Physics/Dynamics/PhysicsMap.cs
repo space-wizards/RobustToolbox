@@ -40,6 +40,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IIslandManager _islandManager = default!;
 
         private SharedPhysicsSystem _physicsSystem = default!;
 
@@ -104,7 +105,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
-        private PhysicsIsland _island = default!;
+        private List<IPhysBody> _islandBodies = new(64);
+        private List<Contact> _islandContacts = new(32);
+        private List<Joint> _islandJoints = new(8);
 
         /// <summary>
         ///     To build islands we do a depth-first search of all colliding bodies and group them together.
@@ -130,8 +133,6 @@ namespace Robust.Shared.Physics.Dynamics
             IoCManager.InjectDependencies(this);
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
-            _island = new PhysicsIsland();
-            _island.Initialize();
 
             _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
             _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
@@ -447,8 +448,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void Solve(float frameTime, float dtRatio, float invDt, bool prediction)
         {
-            // Re-size island for worst-case -> TODO Probably smaller than this given everything's awake at the start?
-            _island.Reset(Bodies.Count, ContactManager.ContactCount, Joints.Count);
+            _islandManager.InitializePools();
 
             DebugTools.Assert(_islandSet.Count == 0);
 
@@ -463,7 +463,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Build and simulated islands from awake bodies.
-            // Ideally you don't need a stack size for all bodies but we'll optimise it later.
+            // Ideally you don't need a stack size for all bodies but we'll TODO: optimise it later.
             var stackSize = Bodies.Count;
             if (stackSize > _stack.Length)
             {
@@ -486,17 +486,19 @@ namespace Robust.Shared.Physics.Dynamics
                     seed.BodyType == BodyType.Static) continue;
 
                 // Start of a new island
-                _island.Clear();
+                _islandBodies.Clear();
+                _islandContacts.Clear();
+                _islandJoints.Clear();
                 var stackCount = 0;
                 _stack[stackCount++] = seed;
 
-                _islandSet.Add(seed);
+                // TODO: Probably don't need _islandSet anymore.
                 seed.Island = true;
 
                 while (stackCount > 0)
                 {
                     var body = _stack[--stackCount];
-                    _island.Add(body);
+                    _islandBodies.Add(body);
                     _islandSet.Add(body);
 
                     // Static bodies don't propagate islands
@@ -518,7 +520,7 @@ namespace Robust.Shared.Physics.Dynamics
                         // Skip sensors.
                         if (contact.FixtureA?.Hard != true || contact.FixtureB?.Hard != true) continue;
 
-                        _island.Add(contact);
+                        _islandContacts.Add(contact);
                         contact.IslandFlag = true;
 
                         var other = contactEdge.Other!;
@@ -528,9 +530,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                         DebugTools.Assert(stackCount < stackSize);
                         _stack[stackCount++] = other;
-
-                        if (!_islandSet.Contains(body))
-                            _islandSet.Add(body);
 
                         other.Island = true;
                     }
@@ -547,7 +546,7 @@ namespace Robust.Shared.Physics.Dynamics
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;
 
-                        _island.Add(je.Joint);
+                        _islandJoints.Add(je.Joint);
                         je.Joint.IslandFlag = true;
 
                         if (other.Island) continue;
@@ -555,19 +554,18 @@ namespace Robust.Shared.Physics.Dynamics
                         DebugTools.Assert(stackCount < stackSize);
                         _stack[stackCount++] = other;
 
-                        if (!_islandSet.Contains(body))
-                            _islandSet.Add(body);
-
                         other.Island = true;
                     }
                 }
 
-                _island.Solve(Gravity, frameTime, dtRatio, invDt, prediction, _deferredUpdates);
+                _islandManager
+                    .AllocateIsland(_islandBodies.Count, _islandContacts.Count, _islandJoints.Count)
+                    .Append(_islandBodies, _islandContacts, _islandJoints);
 
-                // Post-solve cleanup for island
-                for (var i = 0; i < _island.BodyCount; i++)
+                // Allow static bodies to be re-used in other islands
+                for (var i = 0; i < _islandBodies.Count; i++)
                 {
-                    var body = _island.Bodies[i];
+                    var body = _islandBodies[i];
 
                     // Static bodies can participate in other islands
                     if (body.BodyType == BodyType.Static)
@@ -577,6 +575,8 @@ namespace Robust.Shared.Physics.Dynamics
                 }
             }
 
+            SolveIslands(frameTime, dtRatio, invDt, prediction);
+
             foreach (var body in _islandSet)
             {
                 if (!body.Island || body.Deleted)
@@ -584,6 +584,7 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
+                body.IslandIndex.Clear();
                 body.Island = false;
                 DebugTools.Assert(body.BodyType != BodyType.Static);
 
@@ -594,6 +595,32 @@ namespace Robust.Shared.Physics.Dynamics
             _awakeBodyList.Clear();
 
             ContactManager.PostSolve();
+        }
+
+        private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)
+        {
+            var islands = _islandManager.GetActive;
+            // Islands are already pre-sorted
+            var iBegin = 0;
+
+            while (iBegin < islands.Count)
+            {
+                var island = islands[iBegin];
+
+                island.Solve(Gravity, frameTime, dtRatio, invDt, prediction);
+                iBegin++;
+                // TODO: Submit rest in parallel if applicable
+            }
+
+            // TODO: parallel dispatch here
+
+            // Update bodies sequentially to avoid race conditions. May be able to do this parallel someday
+            // but easier to just do this for now.
+            foreach (var island in islands)
+            {
+                island.UpdateBodies(_deferredUpdates);
+                island.SleepBodies(prediction, frameTime);
+            }
         }
 
         private void ClearForces()

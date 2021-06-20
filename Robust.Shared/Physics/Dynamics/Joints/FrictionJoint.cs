@@ -159,8 +159,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         internal override void InitVelocityConstraints(SolverData data)
         {
-            _indexA = BodyA.IslandIndex;
-            _indexB = BodyB.IslandIndex;
+            _indexA = BodyA.IslandIndex[data.IslandIndex];
+            _indexB = BodyB.IslandIndex[data.IslandIndex];
             _localCenterA = Vector2.Zero; // BodyA._sweep.LocalCenter;
             _localCenterB = Vector2.Zero; //BodyB._sweep.LocalCenter;
             _invMassA = BodyA.InvMass;

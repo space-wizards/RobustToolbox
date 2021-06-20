@@ -24,6 +24,15 @@ namespace Robust.Shared.GameObjects
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler) where T : notnull;
 
+        void SubscribeEvent<T>(
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntityEventHandler<T> eventHandler,
+            Type orderType,
+            Type[]? before=null,
+            Type[]? after=null)
+            where T : notnull;
+
         /// <summary>
         /// Unsubscribes all event handlers of a given type.
         /// </summary>
@@ -137,7 +146,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // UnsubscribeEvent modifies _inverseEventSubscriptions, requires val to be cached
-            foreach (var (type, (source, originalHandler, handler)) in val.ToList())
+            foreach (var (type, (source, originalHandler, handler, _)) in val.ToList())
             {
                 UnsubscribeEvent(source, type, originalHandler, handler, subscriber);
             }
@@ -154,7 +163,36 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler) where T : notnull
+        public void SubscribeEvent<T>(
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntityEventHandler<T> eventHandler)
+            where T : notnull
+        {
+            SubscribeEventCommon(source, subscriber, eventHandler, null);
+        }
+
+        public void SubscribeEvent<T>(
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntityEventHandler<T> eventHandler,
+            Type orderType,
+            Type[]? before=null,
+            Type[]? after=null)
+            where T : notnull
+        {
+            var order = new OrderingData(orderType, before, after);
+
+            SubscribeEventCommon(source, subscriber, eventHandler, order);
+            HandleOrderRegistration(typeof(T), order);
+        }
+
+        private void SubscribeEventCommon<T>(
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntityEventHandler<T> eventHandler,
+            OrderingData? order)
+            where T : notnull
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -166,7 +204,7 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentNullException(nameof(subscriber));
 
             var eventType = typeof(T);
-            var subscriptionTuple = new Registration(source, eventHandler, ev => eventHandler((T) ev), eventHandler);
+            var subscriptionTuple = new Registration(source, eventHandler, ev => eventHandler((T) ev), eventHandler, order);
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
                 _eventSubscriptions.Add(eventType, new List<Registration> {subscriptionTuple});
             else if (!subscriptions.Any(p => p.Mask == source && p.Original == (Delegate) eventHandler))
@@ -184,7 +222,6 @@ namespace Robust.Shared.GameObjects
                     inverseSubscription
                 );
             }
-
             else if (!inverseSubscription.ContainsKey(eventType))
             {
                 inverseSubscription.Add(eventType, subscriptionTuple);
@@ -290,15 +327,13 @@ namespace Robust.Shared.GameObjects
                 });
             }
 
-
-
             _awaitingMessages.Add(type, (source, reg, tcs));
             return tcs.Task;
         }
 
         private void UnsubscribeEvent(EventSource source, Type eventType, Delegate originalHandler, EventHandler handler, IEntityEventSubscriber subscriber)
         {
-            var tuple = new Registration(source, originalHandler, handler, originalHandler);
+            var tuple = new Registration(source, originalHandler, handler, originalHandler, null);
             if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(tuple))
                 subscriptions.Remove(tuple);
 
@@ -310,7 +345,11 @@ namespace Robust.Shared.GameObjects
         {
             var eventType = eventArgs.GetType();
 
-            if (_eventSubscriptions.TryGetValue(eventType, out var subs))
+            if (_orderedEvents.Contains(eventType))
+            {
+                ProcessSingleEventOrdered(source, eventArgs, eventType);
+            }
+            else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
                 foreach (var handler in subs)
                 {
@@ -319,25 +358,20 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (_awaitingMessages.TryGetValue(eventType, out var awaiting))
-            {
-                var (mask, _, tcs) = awaiting;
-
-                if ((source & mask) != 0)
-                {
-                    tcs.TrySetResult(eventArgs);
-                    _awaitingMessages.Remove(eventType);
-                }
-            }
+            ProcessAwaitingMessages(source, eventArgs, eventType);
         }
 
         private void ProcessSingleEvent<T>(EventSource source, T eventArgs) where T : notnull
         {
             var eventType = typeof(T);
 
-            if (_eventSubscriptions.TryGetValue(eventType, out var subs))
+            if (_orderedEvents.Contains(eventType))
             {
-                foreach (var (mask, originalHandler, _) in subs)
+                ProcessSingleEventOrdered(source, eventArgs, eventType);
+            }
+            else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
+            {
+                foreach (var (mask, originalHandler, _, _) in subs)
                 {
                     if ((mask & source) != 0)
                     {
@@ -347,6 +381,13 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            ProcessAwaitingMessages(source, eventArgs, eventType);
+        }
+
+        // Generic here so we can avoid boxing alloc unless actually awaiting.
+        private void ProcessAwaitingMessages<T>(EventSource source, T eventArgs, Type eventType)
+            where T : notnull
+        {
             if (_awaitingMessages.TryGetValue(eventType, out var awaiting))
             {
                 var (mask1, _, tcs) = awaiting;
@@ -366,13 +407,20 @@ namespace Robust.Shared.GameObjects
 
             public readonly Delegate Original;
             public readonly EventHandler Handler;
+            public readonly OrderingData? Ordering;
 
-            public Registration(EventSource mask, Delegate original, EventHandler handler, object equalityToken)
+            public Registration(
+                EventSource mask,
+                Delegate original,
+                EventHandler handler,
+                object equalityToken,
+                OrderingData? ordering)
             {
                 Mask = mask;
                 Original = original;
                 Handler = handler;
                 EqualityToken = equalityToken;
+                Ordering = ordering;
             }
 
             public bool Equals(Registration other)
@@ -403,11 +451,16 @@ namespace Robust.Shared.GameObjects
                 return !left.Equals(right);
             }
 
-            public void Deconstruct(out EventSource mask, out Delegate originalHandler, out EventHandler handler)
+            public void Deconstruct(
+                out EventSource mask,
+                out Delegate originalHandler,
+                out EventHandler handler,
+                out OrderingData? order)
             {
                 mask = Mask;
                 originalHandler = Original;
                 handler = Handler;
+                order = Ordering;
             }
         }
     }

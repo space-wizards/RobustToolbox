@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -135,30 +135,13 @@ namespace Robust.Client.GameObjects
         public bool VisibleNested
         {
             get => _visibleNested;
-            set
-            {
-                if (_visibleNested == value) return;
-                _visibleNested = value;
-                if (value)
-                {
-                    if (Owner.Transform.Parent == null) return;
-
-                    _lightOnParent = true;
-                }
-                else
-                {
-                    if (!_lightOnParent) return;
-
-                    _lightOnParent = false;
-                }
-            }
+            set => _visibleNested = value;
         }
 
         [DataField("radius")]
         private float _radius = 5f;
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        private bool _lightOnParent;
         [DataField("color")]
         private Color _color = Color.White;
         [DataField("offset")]
@@ -218,42 +201,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             UpdateMask();
         }
 
-        /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, IComponent? component)
-        {
-            base.HandleMessage(message, component);
-
-            if (message is ParentChangedMessage msg)
-            {
-                HandleTransformParentChanged(msg);
-            }
-        }
-
-        private void HandleTransformParentChanged(ParentChangedMessage obj)
-        {
-            // TODO: this does not work for things nested multiply layers deep.
-            if (!VisibleNested)
-            {
-                return;
-            }
-
-            if (obj.NewParent != null && obj.NewParent.IsValid())
-            {
-                _lightOnParent = true;
-            }
-            else
-            {
-                _lightOnParent = false;
-            }
-        }
-
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 

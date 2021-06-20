@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
@@ -24,14 +25,15 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager : ISerializationManager
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         public const string LogCategory = "serialization";
 
         private bool _initializing;
         private bool _initialized;
 
-        private readonly Dictionary<Type, DataDefinition> _dataDefinitions = new();
+        // Using CWT<,> here in case we ever want assembly unloading.
+        private static readonly ConditionalWeakTable<Type, DataDefinition> DataDefinitions = new();
         private readonly HashSet<Type> _copyByRefRegistrations = new();
 
         public IDependencyCollection DependencyCollection { get; private set; } = default!;
@@ -90,12 +92,12 @@ namespace Robust.Shared.Serialization.Manager
                     continue;
                 }
 
-                _dataDefinitions.Add(type, new DataDefinition(type));
+                DataDefinitions.GetValue(type, CreateDefinitionCallback);
             }
 
             var error = new StringBuilder();
 
-            foreach (var (type, definition) in _dataDefinitions)
+            foreach (var (type, definition) in DataDefinitions)
             {
                 if (definition.TryGetDuplicates(out var definitionDuplicates))
                 {
@@ -117,6 +119,14 @@ namespace Robust.Shared.Serialization.Manager
             _initializing = false;
         }
 
+        private static readonly ConditionalWeakTable<Type, DataDefinition>.CreateValueCallback
+            CreateDefinitionCallback = CreateDataDefinition;
+
+        private static DataDefinition CreateDataDefinition(Type t)
+        {
+            return new(t);
+        }
+
         public void Shutdown()
         {
             DependencyCollection = null!;
@@ -134,7 +144,7 @@ namespace Robust.Shared.Serialization.Manager
             _typeCopiers.Clear();
             _typeValidators.Clear();
 
-            _dataDefinitions.Clear();
+            DataDefinitions.Clear();
 
             _copyByRefRegistrations.Clear();
 
@@ -144,7 +154,7 @@ namespace Robust.Shared.Serialization.Manager
         public bool HasDataDefinition(Type type)
         {
             if (type.IsGenericTypeDefinition) throw new NotImplementedException($"Cannot yet check data definitions for generic types. ({type})");
-            return _dataDefinitions.ContainsKey(type);
+            return DataDefinitions.TryGetValue(type, out _);
         }
 
         public ValidationNode ValidateNode(Type type, DataNode node, ISerializationContext? context = null)
@@ -276,7 +286,7 @@ namespace Robust.Shared.Serialization.Manager
 
         internal DataDefinition? GetDataDefinition(Type type)
         {
-            if (_dataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
+            if (DataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
 
             return null;
         }

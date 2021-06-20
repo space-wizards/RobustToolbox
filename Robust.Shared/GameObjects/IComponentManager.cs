@@ -121,22 +121,6 @@ namespace Robust.Shared.GameObjects
         bool HasComponent(EntityUid uid, uint netId);
 
         /// <summary>
-        ///     Checks if the entity has all specified components.
-        /// </summary>
-        /// <param name="uid">Entity UID to check</param>
-        /// <param name="components">Enumeration of types which must be attached to the entity</param>
-        /// <returns></returns>
-        bool HasAllComponents(EntityUid uid, IEnumerable<IComponent> components);
-
-        /// <summary>
-        ///     Checks if the entity has all specified components.
-        /// </summary>
-        /// <param name="uid">Entity UID to check</param>
-        /// <param name="components">Enumeration of components which must be attached to the entity</param>
-        /// <returns></returns>
-        bool HasAllComponents(EntityUid uid, IEnumerable<Type> components);
-
-        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
@@ -263,6 +247,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="includePaused"></param>
         /// <returns>All components that are the specified type.</returns>
         IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false);
+
+        /// <summary>
+        ///      Returns ALL Entities which have ALL specified types attached.
+        /// </summary>
+        /// <param name="types">All traits or component types to check for.</param>
+        /// <returns>All entities which have all specified types.</returns>
+        IEnumerable<IEntity> GetAllEntitiesWithAllComponents(IEnumerable<Type> types);
 
         /// <summary>
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.

@@ -81,14 +81,6 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         IEnumerable<IEntity> GetEntities();
 
-
-        /// <summary>
-        /// Returns all entities which pass the provided filter
-        /// </summary>
-        /// <param name="filter">Filter query</param>
-        /// <returns></returns>
-        IEnumerable<IEntity> GetEntities(Func<IEntity, bool> filter);
-
         public void QueueDeleteEntity(IEntity entity);
 
         public void QueueDeleteEntity(EntityUid uid);

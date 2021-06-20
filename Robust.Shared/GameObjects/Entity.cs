@@ -245,18 +245,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool HasAllComponents(IEnumerable<IComponent> components)
-        {
-            return EntityManager.ComponentManager.HasAllComponents(Uid, components);
-        }
-
-        /// <inheritdoc />
-        public bool HasAllComponents(IEnumerable<Type> components)
-        {
-            return EntityManager.ComponentManager.HasAllComponents(Uid, components);
-        }
-
-        /// <inheritdoc />
         public T GetComponent<T>()
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");

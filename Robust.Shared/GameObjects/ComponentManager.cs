@@ -190,14 +190,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, type), uid, false);
+            RemoveComponentDeferred((Component)GetComponent(uid, type), uid, false);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, uint netId)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, netId), uid, false);
+            RemoveComponentDeferred((Component)GetComponent(uid, netId), uid, false);
         }
 
         /// <inheritdoc />
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred((Component) component, uid, false);
+            RemoveComponentDeferred((Component)component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -260,23 +260,23 @@ namespace Robust.Shared.GameObjects
             try
             {
 #endif
-                // these two components are required on all entities and cannot be removed normally.
-                if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
-                {
-                    DebugTools.Assert("Tried to remove a protected component.");
-                    return;
-                }
+            // these two components are required on all entities and cannot be removed normally.
+            if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+            {
+                DebugTools.Assert("Tried to remove a protected component.");
+                return;
+            }
 
-                if (!_deleteSet.Add(component))
-                {
-                    // already deferred deletion
-                    return;
-                }
+            if (!_deleteSet.Add(component))
+            {
+                // already deferred deletion
+                return;
+            }
 
-                component.Running = false;
-                component.OnRemove();
-                _componentDependencyManager.OnComponentRemove(uid, component);
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
+            component.Running = false;
+            component.OnRemove();
+            _componentDependencyManager.OnComponentRemove(uid, component);
+            ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -372,23 +372,9 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasAllComponents(EntityUid uid, IEnumerable<IComponent> components)
-        {
-            return HasAllComponents(uid, components.Select(c => c.GetType()));
-        }
-
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasAllComponents(EntityUid uid, IEnumerable<Type> components)
-        {
-            return components.All(c => HasComponent(uid, c));
-        }
-
-        /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            return (T) GetComponent(uid, typeof(T));
+            return (T)GetComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -420,7 +406,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!comp.Deleted)
                 {
-                    component = (T) comp;
+                    component = (T)comp;
                     return true;
                 }
             }
@@ -500,7 +486,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (comp.Deleted || !includePaused && comp.Paused) continue;
 
-                yield return (T) (object) comp;
+                yield return (T)(object)comp;
             }
         }
 
@@ -521,7 +507,7 @@ namespace Robust.Shared.GameObjects
                 if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value, (TComp2) (object) t2Comp);
+                yield return ((TComp1)(object)kvComp.Value, (TComp2)(object)t2Comp);
             }
         }
 
@@ -545,9 +531,9 @@ namespace Robust.Shared.GameObjects
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value,
-                    (TComp2) (object) t2Comp,
-                    (TComp3) (object) t3Comp);
+                yield return ((TComp1)(object)kvComp.Value,
+                    (TComp2)(object)t2Comp,
+                    (TComp3)(object)t3Comp);
             }
         }
 
@@ -576,10 +562,10 @@ namespace Robust.Shared.GameObjects
                 if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value,
-                    (TComp2) (object) t2Comp,
-                    (TComp3) (object) t3Comp,
-                    (TComp4) (object) t4Comp);
+                yield return ((TComp1)(object)kvComp.Value,
+                    (TComp2)(object)t2Comp,
+                    (TComp3)(object)t3Comp,
+                    (TComp4)(object)t4Comp);
             }
         }
 
@@ -595,6 +581,16 @@ namespace Robust.Shared.GameObjects
 
                 yield return comp;
             }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetAllEntitiesWithAllComponents(IEnumerable<Type> types)
+        {
+            var filteredTypes = types.Select(t => _entTraitDict[t]);
+            if (!filteredTypes.Any()) return Enumerable.Empty<IEntity>();
+            var fetchedEntities = filteredTypes.Select(x => x.Values.Select(y => y.Owner).ToList());
+            var intersectedEntities = fetchedEntities.Skip(1).Aggregate(new HashSet<IEntity>(fetchedEntities.First()), (h, e) => { h.IntersectWith(e); return h; });
+            return intersectedEntities.ToList();
         }
 
         #endregion

@@ -164,19 +164,15 @@ namespace Robust.Shared.GameObjects
 
             _componentDependencyManager.OnComponentAdd(entity.Uid, component);
 
-            component.OnAdd();
+            component.LifeAddToEntity();
 
-            if (!entity.Initialized && !entity.Initializing) return;
+            if (!entity.Initialized && !entity.Initializing)
+                return;
 
-            component.Initialize();
-
-            DebugTools.Assert(component.Initialized, "Component is not initialized after calling Initialize(). "
-                                                     + "Did you forget to call base.Initialize() in an override?");
+            component.LifeInitialize();
 
             if (entity.Initialized)
-            {
-                component.Running = true;
-            }
+                component.LifeStartup();
         }
 
         /// <inheritdoc />
@@ -273,8 +269,11 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            component.Running = false;
-            component.OnRemove();
+                if(component.Running)
+                    component.LifeShutdown();
+
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity();
             _componentDependencyManager.OnComponentRemove(uid, component);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
@@ -300,8 +299,12 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                component.Running = false;
-                component.OnRemove(); // Sets delete
+                if(component.Running)
+                    component.LifeShutdown();
+
+                if(component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity(); // Sets delete
+
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));
 
             }

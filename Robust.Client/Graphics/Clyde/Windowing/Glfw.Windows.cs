@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 using System.Threading.Tasks;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
@@ -33,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
             private GlfwWindowReg? _mainWindow;
             private GlfwBindingsContext _mainGraphicsContext = default!;
             private int _nextWindowId = 1;
+            private static bool _eglLoaded;
 
             public async Task<WindowHandle> WindowCreate(WindowCreateParameters parameters)
             {
@@ -474,6 +476,20 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
                     GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
                     GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
+
+                    if (!_eglLoaded && OperatingSystem.IsWindows())
+                    {
+                        // On non-published builds (so, development), GLFW can't find libEGL.dll
+                        // because it'll be in runtimes/<rid>/native/ instead of next to the actual executable.
+                        // We manually preload the library here so that GLFW will find it when it does its thing.
+                        NativeLibrary.TryLoad(
+                            "libEGL.dll",
+                            typeof(Clyde).Assembly,
+                            DllImportSearchPath.SafeDirectories,
+                            out _);
+
+                        _eglLoaded = true;
+                    }
                 }
 
 

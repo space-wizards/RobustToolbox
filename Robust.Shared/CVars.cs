@@ -73,7 +73,7 @@ namespace Robust.Shared
         // just has the Lidgren thread go absolute brr polling.
         public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
                 "net.predict_lag_bias",
-                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? 0.016f : 0,
+                OperatingSystem.IsWindows() ? 0.016f : 0,
                 CVar.ARCHIVE);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =

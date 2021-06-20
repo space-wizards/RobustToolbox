@@ -134,13 +134,13 @@ namespace Robust.Shared.GameObjects
                     _ => int.MaxValue
                 });
 
-            foreach (var comp in components)
+            foreach (var component in components)
             {
-                if (comp == null || comp.Initialized) continue;
+                var comp = (Component) component;
+                if (comp.Initialized)
+                    continue;
 
-                comp.Initialize();
-
-                DebugTools.Assert(comp.Initialized, $"Component {comp.Name} did not call base {nameof(comp.Initialize)} in derived method.");
+                comp.LifeInitialize();
             }
 
 #if DEBUG
@@ -173,11 +173,12 @@ namespace Robust.Shared.GameObjects
                     _ => int.MaxValue
                 });
 
-            foreach (var comp in comps)
+            foreach (var component in comps)
             {
-                if (comp != null && comp.Initialized && !comp.Deleted)
+                var comp = (Component) component;
+                if (comp.LifeStage == ComponentLifeStage.Initialized)
                 {
-                    comp.Running = true;
+                    comp.LifeStartup();
                 }
             }
         }

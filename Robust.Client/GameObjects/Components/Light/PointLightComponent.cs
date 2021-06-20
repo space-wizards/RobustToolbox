@@ -201,13 +201,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             UpdateMask();
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 

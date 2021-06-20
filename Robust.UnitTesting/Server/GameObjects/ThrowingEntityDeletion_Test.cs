@@ -70,14 +70,14 @@ namespace Robust.UnitTesting.Server.GameObjects
         {
             public override string Name => "ThrowsInAdd";
 
-            public override void OnAdd() => throw new NotSupportedException();
+            protected override void OnAdd() => throw new NotSupportedException();
         }
 
         private sealed class ThrowsInInitializeComponent : Component
         {
             public override string Name => "ThrowsInInitialize";
 
-            public override void Initialize() => throw new NotSupportedException();
+            protected override void Initialize() => throw new NotSupportedException();
         }
 
         private sealed class ThrowsInStartupComponent : Component

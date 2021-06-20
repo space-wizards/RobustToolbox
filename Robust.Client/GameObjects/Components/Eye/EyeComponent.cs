@@ -116,7 +116,7 @@ namespace Robust.Client.GameObjects
         public MapCoordinates? Position => _eye?.Position;
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 
@@ -156,7 +156,7 @@ namespace Robust.Client.GameObjects
             VisibilityMask = state.VisibilityMask;
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 

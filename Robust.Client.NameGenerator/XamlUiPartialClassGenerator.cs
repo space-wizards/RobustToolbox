@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -147,9 +148,10 @@ namespace {nameSpace}
             foreach (var typeSymbol in symbols)
             {
                 var xamlFileName = $"{typeSymbol.Name}.xaml";
-                var relevantXamlFile = context.AdditionalFiles.FirstOrDefault(t => t.Path.EndsWith(xamlFileName));
+                var xamlFileNameSep = $"{Path.DirectorySeparatorChar}{xamlFileName}";
+                var relevantXamlFiles = context.AdditionalFiles.Where(t => t.Path.EndsWith(xamlFileNameSep)).ToArray();
 
-                if (relevantXamlFile == null)
+                if (relevantXamlFiles.Length == 0)
                 {
                     context.ReportDiagnostic(
                         Diagnostic.Create(
@@ -165,13 +167,28 @@ namespace {nameSpace}
                     continue;
                 }
 
-                var txt = relevantXamlFile.GetText()?.ToString();
-                if (txt == null)
+                if (relevantXamlFiles.Length > 1)
                 {
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             new DiagnosticDescriptor(
                                 "RXN0002",
+                                $"Found multiple candidate XAML files for {typeSymbol}",
+                                $"Multiple files exist with name {xamlFileName}",
+                                "Usage",
+                                DiagnosticSeverity.Error,
+                                true),
+                            typeSymbol.Locations[0]));
+                    continue;
+                }
+
+                var txt = relevantXamlFiles[0].GetText()?.ToString();
+                if (txt == null)
+                {
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            new DiagnosticDescriptor(
+                                "RXN0004",
                                 $"Unexpected empty Xaml-File was found at {xamlFileName}",
                                 "Expected Content due to a Class with the same name being annotated with [GenerateTypedNameReferences].",
                                 "Usage",
@@ -192,7 +209,7 @@ namespace {nameSpace}
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             new DiagnosticDescriptor(
-                                "AXN0003",
+                                "RXN0003",
                                 "Unhandled exception occured while generating typed Name references.",
                                 $"Unhandled exception occured while generating typed Name references: {e}",
                                 "Usage",

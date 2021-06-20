@@ -38,7 +38,7 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
             if (Owner.TryGetComponent(out IPhysBody? body))

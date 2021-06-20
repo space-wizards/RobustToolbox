@@ -1525,8 +1525,7 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueued = true;
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
-            // ReSharper disable once ConstantConditionalAccessQualifier
-            Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            Owner?.EntityManager?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()

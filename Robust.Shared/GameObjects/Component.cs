@@ -41,31 +41,94 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Initialized { get; private set; }
+        public ComponentLifeStage LifeStage { get; private set; } = ComponentLifeStage.PreAdd;
 
-        private bool _running;
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Running
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
+        /// calling <see cref="OnAdd" />.
+        /// </summary>
+        internal void LifeAddToEntity()
         {
-            get => _running;
-            set
-            {
-                if(_running == value)
-                    return;
+            DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
 
-                if(value)
-                    Startup();
-                else
-                    Shutdown();
+            LifeStage = ComponentLifeStage.Adding;
+            OnAdd();
 
-                _running = value;
-            }
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Added, $"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
+        /// calling <see cref="Initialize" />.
+        /// </summary>
+        internal void LifeInitialize()
+        {
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
+
+            LifeStage = ComponentLifeStage.Initializing;
+            Initialize();
+
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized, $"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Initialized" /> to
+        /// <see cref="ComponentLifeStage.Running" />, calling <see cref="Startup" />.
+        /// </summary>
+        internal void LifeStartup()
+        {
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized);
+
+            LifeStage = ComponentLifeStage.Starting;
+            Startup();
+
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Running, $"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Running" /> to <see cref="ComponentLifeStage.Stopped" />,
+        /// calling <see cref="Shutdown" />.
+        /// </summary>
+        /// <remarks>
+        /// Components are allowed to remove themselves in their own Startup function.
+        /// </remarks>
+        internal void LifeShutdown()
+        {
+            // Starting allows a component to remove itself in it's own Startup function.
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Starting || LifeStage == ComponentLifeStage.Running);
+
+            LifeStage = ComponentLifeStage.Stopping;
+            Shutdown();
+
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Stopped, $"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
+        }
+
+        /// <summary>
+        /// Increases the life stage from <see cref="ComponentLifeStage.Stopped" /> to <see cref="ComponentLifeStage.Deleted" />,
+        /// calling <see cref="OnRemove" />.
+        /// </summary>
+        internal void LifeRemoveFromEntity()
+        {
+            // can be called at any time after PreAdd, including inside other life stage events.
+            DebugTools.Assert(LifeStage != ComponentLifeStage.PreAdd);
+
+            LifeStage = ComponentLifeStage.Removing;
+            OnRemove();
+
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Deleted, $"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
         }
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Deleted { get; private set; }
+        public bool Initialized => LifeStage >= ComponentLifeStage.Initializing;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Running => ComponentLifeStage.Starting <= LifeStage && LifeStage <= ComponentLifeStage.Stopping;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Deleted => LifeStage >= ComponentLifeStage.Removing;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -91,87 +154,56 @@ namespace Robust.Shared.GameObjects
             return (EntityEventBus) Owner.EntityManager.EventBus;
         }
 
-        /// <inheritdoc />
-        public virtual void OnRemove()
+        /// <summary>
+        /// Called when the component gets added to an entity.
+        /// </summary>
+        protected virtual void OnAdd()
         {
-            if (Running)
-                throw new InvalidOperationException("Cannot Remove a running entity!");
-
-            // We have been marked for deletion by the Component Manager.
-            Deleted = true;
-            GetBus().RaiseComponentEvent(this, CompRemoveInstance);
+            CreationTick = Owner.EntityManager.CurrentTick;
+            GetBus().RaiseComponentEvent(this, CompAddInstance);
+            LifeStage = ComponentLifeStage.Added;
         }
 
         /// <summary>
-        ///     Called when the component gets added to an entity.
+        /// Called when all of the entity's other components have been added and are available,
+        /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
-        public virtual void OnAdd()
+        protected virtual void Initialize()
         {
-            if (Initialized)
-                throw new InvalidOperationException("Cannot Add an Initialized component!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Add a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Add a Deleted component!");
-
-            CreationTick = Owner.EntityManager.CurrentTick;
-            GetBus().RaiseComponentEvent(this, CompAddInstance);
-        }
-
-        /// <inheritdoc />
-        public virtual void Initialize()
-        {
-            if (Initialized)
-                throw new InvalidOperationException("Component already Initialized!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Initialize a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Initialize a Deleted component!");
-
-            Initialized = true;
             GetBus().RaiseComponentEvent(this, CompInitInstance);
+            LifeStage = ComponentLifeStage.Initialized;
         }
 
         /// <summary>
         ///     Starts up a component. This is called automatically after all components are Initialized and the entity is Initialized.
-        ///     This can be called multiple times during the component's life, and at any time.
         /// </summary>
+        /// <remarks>
+        /// Components are allowed to remove themselves in their own Startup function.
+        /// </remarks>
         protected virtual void Startup()
         {
-            if (!Initialized)
-                throw new InvalidOperationException("Cannot Start an uninitialized component!");
-
-            if (Running)
-                throw new InvalidOperationException("Cannot Startup a running component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Start a Deleted component!");
-
-            _running = true;
             GetBus().RaiseComponentEvent(this, CompStartupInstance);
+            LifeStage = ComponentLifeStage.Running;
         }
 
         /// <summary>
-        ///     Shuts down the component. The is called Automatically by OnRemove. This can be called multiple times during
-        ///     the component's life, and at any time.
+        ///     Shuts down the component. The is called Automatically by OnRemove.
         /// </summary>
         protected virtual void Shutdown()
         {
-            if (!Initialized)
-                throw new InvalidOperationException("Cannot Shutdown an uninitialized component!");
-
-            if (!Running)
-                throw new InvalidOperationException("Cannot Shutdown an unstarted component!");
-
-            if (Deleted)
-                throw new InvalidOperationException("Cannot Shutdown a Deleted component!");
-
-            _running = false;
             GetBus().RaiseComponentEvent(this, CompShutdownInstance);
+            LifeStage = ComponentLifeStage.Stopped;
+        }
+
+        /// <summary>
+        /// Called when the component is removed from an entity.
+        /// Shuts down the component.
+        /// The component has already been marked as deleted in the component manager.
+        /// </summary>
+        protected virtual void OnRemove()
+        {
+            GetBus().RaiseComponentEvent(this, CompRemoveInstance);
+            LifeStage = ComponentLifeStage.Deleted;
         }
 
         /// <inheritdoc />
@@ -242,6 +274,67 @@ namespace Robust.Shared.GameObjects
         {
             CreationTick = GameTick.Zero;
         }
+    }
+
+    /// <summary>
+    /// The life stages of an ECS component.
+    /// </summary>
+    public enum ComponentLifeStage
+    {
+        /// <summary>
+        /// The component has just been allocated.
+        /// </summary>
+        PreAdd = 0,
+
+        /// <summary>
+        /// Currently being added to an entity.
+        /// </summary>
+        Adding,
+
+        /// <summary>
+        /// Has been added to an entity.
+        /// </summary>
+        Added,
+
+        /// <summary>
+        /// Currently being initialized.
+        /// </summary>
+        Initializing,
+
+        /// <summary>
+        /// Has been initialized.
+        /// </summary>
+        Initialized,
+
+        /// <summary>
+        /// Currently being started up.
+        /// </summary>
+        Starting,
+
+        /// <summary>
+        /// Has started up.
+        /// </summary>
+        Running,
+
+        /// <summary>
+        /// Currently shutting down.
+        /// </summary>
+        Stopping,
+
+        /// <summary>
+        /// Has been shut down.
+        /// </summary>
+        Stopped,
+
+        /// <summary>
+        /// Currently being removed from it's entity.
+        /// </summary>
+        Removing,
+
+        /// <summary>
+        /// Removed from it's entity, and is deleted.
+        /// </summary>
+        Deleted,
     }
 
     /// <summary>

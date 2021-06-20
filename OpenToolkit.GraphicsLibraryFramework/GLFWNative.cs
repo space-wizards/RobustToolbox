@@ -23,12 +23,12 @@ namespace OpenToolkit.GraphicsLibraryFramework
                     return IntPtr.Zero;
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                if (OperatingSystem.IsLinux())
                 {
                     return NativeLibrary.Load("libglfw.so.3", assembly, path);
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (OperatingSystem.IsMacOS())
                 {
                     return NativeLibrary.Load("libglfw.3.dylib", assembly, path);
                 }

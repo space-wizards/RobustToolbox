@@ -353,16 +353,21 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(Vector2i pos, EntityUid euid)
+        public bool AddToSnapGridCell(Vector2i pos, EntityUid euid)
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+
+            if (chunk.GetTile((ushort) chunkTile.X, (ushort) chunkTile.Y).IsEmpty)
+                return false;
+
             chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
+            return true;
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid)
+        public bool AddToSnapGridCell(EntityCoordinates coords, EntityUid euid)
         {
-            AddToSnapGridCell(TileIndicesFor(coords), euid);
+            return AddToSnapGridCell(TileIndicesFor(coords), euid);
         }
 
         /// <inheritdoc />

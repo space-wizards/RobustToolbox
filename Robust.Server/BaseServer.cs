@@ -355,7 +355,7 @@ namespace Robust.Server
             AddFinalStringsToSerializer();
             _stringSerializer.LockStrings();
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
@@ -560,7 +560,7 @@ namespace Robust.Server
 
             //TODO: This should prob shutdown all managers in a loop.
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
                 WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }

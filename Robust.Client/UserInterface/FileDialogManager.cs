@@ -148,7 +148,7 @@ namespace Robust.Client.UserInterface
         // ReSharper disable once MemberCanBeMadeStatic.Local
         private Task<string?> RunAsyncMaybe(Func<string?> action)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (OperatingSystem.IsMacOS())
             {
                 // macOS seems pretty annoying about having the file dialog opened from the main thread.
                 // So we are forced to execute this synchronously on the main thread.
@@ -326,7 +326,7 @@ namespace Robust.Client.UserInterface
 
         private async Task<bool> IsKDialogAvailable()
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            if (!OperatingSystem.IsLinux())
                 return false;
 
             if (!_checkedKDialogAvailable)

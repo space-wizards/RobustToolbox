@@ -11,7 +11,7 @@ namespace Robust.Shared.Network
     {
         public static byte[] Calc()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 var a = new ManagementObjectSearcher("SELECT SerialNumber FROM Win32_BaseBoard");
                 var obj = a.Get().Cast<ManagementObject>().First();

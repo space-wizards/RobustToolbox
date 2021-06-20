@@ -114,7 +114,7 @@ namespace Robust.Shared.GameObjects
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 // Force IoC inject of all systems
-                var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type);
+                var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type, oneOff: true);
 
                 _systems.Add(type, instance);
 

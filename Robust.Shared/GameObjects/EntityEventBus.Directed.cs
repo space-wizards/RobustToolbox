@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.GameObjects
 {
@@ -221,7 +223,8 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                foreach (var type in GetReferences(compType))
+                var enumerator = GetReferences(compType);
+                while (enumerator.MoveNext(out var type))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
@@ -243,7 +246,8 @@ namespace Robust.Shared.GameObjects
             {
                 var eventTable = _eventTables[euid];
 
-                foreach (var type in GetReferences(compType))
+                var enumerator = GetReferences(compType);
+                while (enumerator.MoveNext(out var type))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
@@ -307,7 +311,8 @@ namespace Robust.Shared.GameObjects
 
             public void DispatchComponent(EntityUid euid, IComponent component, Type eventType, EntityEventArgs args)
             {
-                foreach (var type in GetReferences(component.GetType()))
+                var enumerator = GetReferences(component.GetType());
+                while (enumerator.MoveNext(out var type))
                 {
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
@@ -349,17 +354,46 @@ namespace Robust.Shared.GameObjects
             /// <summary>
             ///     Enumerates the type's component references, returning the type itself last.
             /// </summary>
-            private IEnumerable<Type> GetReferences(Type type)
+            private ReferencesEnumerator GetReferences(Type type)
             {
-                var list = _comFac.GetRegistration(type).References;
+                return new(type, _comFac.GetRegistration(type).References);
+            }
 
-                foreach (var t in list)
+            private struct ReferencesEnumerator
+            {
+                private readonly Type _baseType;
+                private readonly IReadOnlyList<Type> _list;
+                private readonly int _totalLength;
+                private int _idx;
+
+                public ReferencesEnumerator(Type baseType, IReadOnlyList<Type> list)
                 {
-                    if (t == type) continue;
-                    yield return t;
+                    _baseType = baseType;
+                    _list = list;
+                    _totalLength = list.Count;
+                    _idx = 0;
                 }
 
-                yield return type;
+                public bool MoveNext([NotNullWhen(true)] out Type? type)
+                {
+                    if (_idx >= _totalLength)
+                    {
+                        if (_idx++ == _totalLength)
+                        {
+                            type = _baseType;
+                            return true;
+                        }
+
+                        type = null;
+                        return false;
+                    }
+
+                    type = _list[_idx++];
+                    if (type == _baseType)
+                        return MoveNext(out type);
+
+                    return true;
+                }
             }
         }
 

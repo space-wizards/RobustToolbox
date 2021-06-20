@@ -318,6 +318,8 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
+            var sizeBox = PixelSizeBox;
+
             var font = ActualFont;
             var listBg = ActualBackground;
             var iconBg = ActualItemBackground;
@@ -346,31 +348,38 @@ namespace Robust.Client.UserInterface.Controls
                     itemHeight = item.IconSize.Y;
                 }
 
-                itemHeight = Math.Max(itemHeight, ActualFont.GetHeight(UIScale));
+                itemHeight = Math.Max(itemHeight, font.GetHeight(UIScale));
                 itemHeight += ActualItemBackground.MinimumSize.Y;
 
-                item.Region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
+                var region = UIBox2.FromDimensions(0, offset, PixelWidth, itemHeight);
+                item.Region = region;
 
-                bg.Draw(handle, item.Region.Value);
-
-                var contentBox = bg.GetContentBox(item.Region.Value);
-                var drawOffset = contentBox.TopLeft;
-                if (item.Icon != null)
+                if (region.Intersects(sizeBox))
                 {
-                    if (item.IconRegion.Size == Vector2.Zero)
-                    {
-                        handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconModulate);
-                    }
-                    else
-                    {
-                        handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size), item.IconRegion, item.IconModulate);
-                    }
-                }
+                    bg.Draw(handle, item.Region.Value);
 
-                if (item.Text != null)
-                {
-                    var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right, contentBox.Bottom);
-                    DrawTextInternal(handle, item.Text, textBox);
+                    var contentBox = bg.GetContentBox(item.Region.Value);
+                    var drawOffset = contentBox.TopLeft;
+                    if (item.Icon != null)
+                    {
+                        if (item.IconRegion.Size == Vector2.Zero)
+                        {
+                            handle.DrawTextureRect(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                                item.IconModulate);
+                        }
+                        else
+                        {
+                            handle.DrawTextureRectRegion(item.Icon, UIBox2.FromDimensions(drawOffset, item.Icon.Size),
+                                item.IconRegion, item.IconModulate);
+                        }
+                    }
+
+                    if (item.Text != null)
+                    {
+                        var textBox = new UIBox2(contentBox.Left + item.IconSize.X, contentBox.Top, contentBox.Right,
+                            contentBox.Bottom);
+                        DrawTextInternal(handle, item.Text, textBox);
+                    }
                 }
 
                 offset += itemHeight;

@@ -366,24 +366,13 @@ namespace Robust.Client.Graphics.Clyde
         private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var enlargedBounds = worldBounds.Enlarged(5);
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
+            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, enlargedBounds))
             {
-                Box2 gridBounds;
+                var bounds = enlargedBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                if (gridId == GridId.Invalid)
-                {
-                    gridBounds = worldBounds;
-                }
-                else
-                {
-                    gridBounds = worldBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-                }
-
-                var tree = spriteSystem.GetSpriteTreeForMap(map, gridId);
-
-                tree.QueryAabb(ref list, ((
+                comp.SpriteTree.QueryAabb(ref list, ((
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
@@ -398,7 +387,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y;
                     return true;
 
-                }), gridBounds, approx: true);
+                }), bounds, true);
             }
         }
 

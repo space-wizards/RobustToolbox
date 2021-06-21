@@ -21,23 +21,49 @@ namespace Robust.Client.GameObjects
     {
         // Nullspace is not indexed. Keep that in mind.
 
-        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
-
-        private readonly Dictionary<MapId, Dictionary<GridId, MapTrees>> _gridTrees = new();
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
         private HashSet<EntityUid> _checkedChildren = new();
 
-        internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map, GridId grid)
+        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
         {
-            return _gridTrees[map][grid].SpriteTree;
+            if (mapId == MapId.Nullspace) yield break;
+
+            var enclosed = false;
+
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+
+                // if we're enclosed then we know no other grids relevant + don't need the map's rendertree
+                if (grid.WorldBounds.Encloses(in worldAABB))
+                {
+                    enclosed = true;
+                    break;
+                }
+            }
+
+            if (!enclosed)
+                yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
         }
 
-        internal DynamicTree<PointLightComponent> GetLightTreeForMap(MapId map, GridId grid)
+        internal IEnumerable<DynamicTree<SpriteComponent>> GetSpriteTrees(MapId mapId, Box2 worldAABB)
         {
-            return _gridTrees[map][grid].LightTree;
+            foreach (var comp in GetRenderTrees(mapId, worldAABB))
+            {
+                yield return comp.SpriteTree;
+            }
+        }
+
+        internal IEnumerable<DynamicTree<PointLightComponent>> GetLightTrees(MapId mapId, Box2 worldAABB)
+        {
+            foreach (var comp in GetRenderTrees(mapId, worldAABB))
+            {
+                yield return comp.LightTree;
+            }
         }
 
         public override void Initialize()
@@ -49,9 +75,7 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
             _mapManager.MapCreated += MapManagerOnMapCreated;
-            _mapManager.MapDestroyed += MapManagerOnMapDestroyed;
             _mapManager.OnGridCreated += MapManagerOnGridCreated;
-            _mapManager.OnGridRemoved += MapManagerOnGridRemoved;
 
             // Due to how recursion works, this must be done.
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
@@ -66,6 +90,8 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
+
+            SubscribeLocalEvent<RenderingTreeComponent, ComponentRemove>(HandleTreeRemove);
         }
 
         private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
@@ -89,8 +115,7 @@ namespace Robust.Client.GameObjects
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(sender.Owner.Uid) ||
-                sender.Owner.HasComponent<MapGridComponent>() ||
-                sender.Owner.HasComponent<MapComponent>()) return;
+                sender.Owner.HasComponent<RenderingTreeComponent>()) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
@@ -130,16 +155,10 @@ namespace Robust.Client.GameObjects
 
         private void ClearSprite(SpriteComponent component)
         {
-            if (_gridTrees.TryGetValue(component.TreeMapId, out var gridTrees))
-            {
-                if (gridTrees.TryGetValue(component.TreeGridId, out var tree))
-                {
-                    tree.SpriteTree.Remove(component);
-                }
-            }
+            if (component.RenderTree == null) return;
 
-            component.TreeGridId = GridId.Invalid;
-            component.TreeMapId = MapId.Nullspace;
+            component.RenderTree.SpriteTree.Remove(component);
+            component.RenderTree = null;
         }
 
         private void QueueSpriteUpdate(SpriteComponent component)
@@ -174,16 +193,10 @@ namespace Robust.Client.GameObjects
 
         private void ClearLight(PointLightComponent component)
         {
-            if (_gridTrees.TryGetValue(component.TreeMapId, out var gridTrees))
-            {
-                if (gridTrees.TryGetValue(component.TreeGridId, out var tree))
-                {
-                    tree.LightTree.Remove(component);
-                }
-            }
+            if (component.RenderTree == null) return;
 
-            component.TreeMapId = MapId.Nullspace;
-            component.TreeGridId = GridId.Invalid;
+            component.RenderTree.LightTree.Remove(component);
+            component.RenderTree = null;
         }
 
         private void QueueLightUpdate(PointLightComponent component)
@@ -199,34 +212,23 @@ namespace Robust.Client.GameObjects
         {
             base.Shutdown();
             _mapManager.MapCreated -= MapManagerOnMapCreated;
-            _mapManager.MapDestroyed -= MapManagerOnMapDestroyed;
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
-            _mapManager.OnGridRemoved -= MapManagerOnGridRemoved;
         }
 
-        private void MapManagerOnMapDestroyed(object? sender, MapEventArgs e)
+        private void HandleTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
         {
-            foreach (var (_, gridTree) in _gridTrees[e.Map])
+            foreach (var sprite in component.SpriteTree)
             {
-                // Don't use ClearSprite / ClearLight as we'll just clear the whole tree at the end.
-                foreach (var comp in gridTree.LightTree)
-                {
-                    comp.TreeMapId = MapId.Nullspace;
-                    comp.TreeGridId = GridId.Invalid;
-                }
-
-                foreach (var comp in gridTree.SpriteTree)
-                {
-                    comp.TreeMapId = MapId.Nullspace;
-                    comp.TreeGridId = GridId.Invalid;
-                }
-
-                // Just in case?
-                gridTree.LightTree.Clear();
-                gridTree.SpriteTree.Clear();
+                sprite.RenderTree = null;
             }
 
-            _gridTrees.Remove(e.Map);
+            foreach (var light in component.LightTree)
+            {
+                light.RenderTree = null;
+            }
+
+            component.SpriteTree.Clear();
+            component.LightTree.Clear();
         }
 
         private void MapManagerOnMapCreated(object? sender, MapEventArgs e)
@@ -236,37 +238,31 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            _gridTrees.Add(e.Map, new Dictionary<GridId, MapTrees>
-            {
-                {GridId.Invalid, new MapTrees()}
-            });
+            _mapManager.GetMapEntity(e.Map).EnsureComponent<RenderingTreeComponent>();
         }
 
         private void MapManagerOnGridCreated(MapId mapId, GridId gridId)
         {
-            _gridTrees[mapId].Add(gridId, new MapTrees());
+            EntityManager.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).EnsureComponent<RenderingTreeComponent>();
         }
 
-        private void MapManagerOnGridRemoved(MapId mapId, GridId gridId)
+        private RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
-            var gridTree = _gridTrees[mapId][gridId];
 
-            foreach (var sprite in gridTree.SpriteTree)
+            if (entity.Transform.MapID == MapId.Nullspace ||
+                entity.HasComponent<RenderingTreeComponent>()) return null;
+
+            var parent = entity.Transform.Parent?.Owner;
+
+            while (true)
             {
-                sprite.TreeMapId = MapId.Nullspace;
-                sprite.TreeGridId = GridId.Invalid;
+                if (parent == null) break;
+
+                if (parent.TryGetComponent(out RenderingTreeComponent? comp)) return comp;
+                parent = parent.Transform.Parent?.Owner;
             }
 
-            foreach (var light in gridTree.LightTree)
-            {
-                light.TreeMapId = MapId.Nullspace;
-                light.TreeGridId = GridId.Invalid;
-            }
-
-            // Clear in case
-            gridTree.LightTree.Clear();
-            gridTree.SpriteTree.Clear();
-            _gridTrees[mapId].Remove(gridId);
+            return null;
         }
 
         public override void FrameUpdate(float frameTime)
@@ -276,38 +272,30 @@ namespace Robust.Client.GameObjects
             foreach (var sprite in _spriteQueue)
             {
                 sprite.TreeUpdateQueued = false;
-                var mapId = sprite.Owner.Transform.MapID;
-
                 if (!sprite.Visible || sprite.ContainerOccluded)
                 {
                     ClearSprite(sprite);
                     continue;
                 }
 
+                var oldMapTree = sprite.RenderTree;
+                var newMapTree = GetRenderTree(sprite.Owner);
+
+                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite).Translated(-treePos);
+
                 // If we're on a new map then clear the old one.
-                if (sprite.TreeMapId != mapId)
+                if (oldMapTree != newMapTree)
                 {
                     ClearSprite(sprite);
+                    newMapTree?.SpriteTree.Add(sprite, aabb);
                 }
-
-                sprite.TreeMapId = mapId;
-
-                if (mapId == MapId.Nullspace) continue;
-
-                var mapTree = _gridTrees[mapId];
-
-                var oldGridId = sprite.TreeGridId;
-                var gridId = sprite.Owner.Transform.GridID;
-
-                if (oldGridId != gridId)
+                else
                 {
-                    if (mapTree.TryGetValue(oldGridId, out var tree))
-                    {
-                        tree.SpriteTree.Remove(sprite);
-                    }
-
-                    sprite.TreeGridId = gridId;
+                    newMapTree?.SpriteTree.Update(sprite, aabb);
                 }
+
+                sprite.RenderTree = newMapTree;
             }
 
             foreach (var light in _lightQueue)
@@ -321,61 +309,28 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
+                var oldMapTree = light.RenderTree;
+                var newMapTree = GetRenderTree(light.Owner);
+
+                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+                var aabb = RenderingTreeComponent.LightAabbFunc(light).Translated(-treePos);
+
                 // If we're on a new map then clear the old one.
-                if (light.TreeMapId != mapId)
+                if (oldMapTree != newMapTree)
                 {
                     ClearLight(light);
+                    newMapTree?.LightTree.Add(light, aabb);
                 }
-
-                light.TreeMapId = mapId;
-
-                if (mapId == MapId.Nullspace) continue;
-
-                var mapTree = _gridTrees[mapId];
-
-                var oldGridId = light.TreeGridId;
-                var gridId = light.Owner.Transform.GridID;
-
-                if (oldGridId != gridId)
+                else
                 {
-                    if (mapTree.TryGetValue(oldGridId, out var tree))
-                    {
-                        tree.LightTree.Remove(light);
-                    }
-
-                    light.TreeGridId = gridId;
+                    newMapTree?.LightTree.Update(light, aabb);
                 }
+
+                light.RenderTree = newMapTree;
             }
 
             _spriteQueue.Clear();
             _lightQueue.Clear();
-        }
-
-        private sealed class MapTrees
-        {
-            public readonly DynamicTree<SpriteComponent> SpriteTree;
-            public readonly DynamicTree<PointLightComponent> LightTree;
-
-            public MapTrees()
-            {
-                SpriteTree = new DynamicTree<SpriteComponent>(SpriteAabbFunc);
-                LightTree = new DynamicTree<PointLightComponent>(LightAabbFunc);
-            }
-        }
-
-        internal static Box2 SpriteAabbFunc(in SpriteComponent value)
-        {
-            var worldPos = value.Owner.Transform.WorldPosition;
-
-            return new Box2(worldPos, worldPos);
-        }
-
-        internal static Box2 LightAabbFunc(in PointLightComponent value)
-        {
-            var worldPos = value.Owner.Transform.WorldPosition;
-
-            var boxSize = value.Radius * 2;
-            return Box2.CenteredAround(worldPos, (boxSize, boxSize));
         }
     }
 

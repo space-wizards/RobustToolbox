@@ -131,17 +131,8 @@ namespace Robust.Client.GameObjects
         [DataField("directional")]
         private bool _directional = true;
 
-        /// <summary>
-        /// What MapId we are intersecting for RenderingTreeSystem.
-        /// </summary>
         [ViewVariables]
-        internal MapId TreeMapId { get; set; } = MapId.Nullspace;
-
-        /// <summary>
-        /// What grid we're on for RenderingTreeSystem.
-        /// </summary>
-        [ViewVariables]
-        internal GridId TreeGridId { get; set; } = GridId.Invalid;
+        internal RenderingTreeComponent? RenderTree { get; set; } = null;
 
         [DataField("layerDatums")]
         private List<PrototypeLayerData> LayerDatums

@@ -50,13 +50,11 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(currentMap, pvsBounds, true))
+            foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var gridBounds = gridId == GridId.Invalid ? pvsBounds : pvsBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
+                var bounds = pvsBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                var mapTree = _treeSystem.GetSpriteTreeForMap(currentMap, gridId);
-
-                mapTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
+                comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {
                     if (value.IsInert)
                     {
@@ -65,7 +63,7 @@ namespace Robust.Client.GameObjects
 
                     value.FrameUpdate(state);
                     return true;
-                }, gridBounds, approx: true);
+                }, bounds, true);
             }
         }
     }

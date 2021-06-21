@@ -193,17 +193,8 @@ namespace Robust.Client.GameObjects
                 Mask = null;
         }
 
-        /// <summary>
-        /// What MapId we are intersecting for RenderingTreeSystem.
-        /// </summary>
         [ViewVariables]
-        internal MapId TreeMapId { get; set; } = MapId.Nullspace;
-
-        /// <summary>
-        /// What grid we're on for RenderingTreeSystem.
-        /// </summary>
-        [ViewVariables]
-        internal GridId TreeGridId = GridId.Invalid;
+        internal RenderingTreeComponent? RenderTree { get; set; } = null;
 
         void ISerializationHooks.AfterDeserialization()
         {

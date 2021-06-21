@@ -68,11 +68,14 @@ namespace Robust.Client.GameObjects
 
                 var viewport = _eyeManager.GetWorldViewport();
 
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, viewport, true))
+                foreach (var tree in _tree.GetLightTrees(map, viewport))
                 {
-                    foreach (var light in _tree.GetLightTreeForMap(map, gridId))
+                    foreach (var light in tree)
                     {
-                        args.WorldHandle.DrawRect(_lookup.GetWorldAabbFromEntity(light.Owner), Color.Green.WithAlpha(0.1f));
+                        var aabb = _lookup.GetWorldAabbFromEntity(light.Owner);
+                        if (!aabb.Intersects(viewport)) continue;
+
+                        args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.1f));
                     }
                 }
             }

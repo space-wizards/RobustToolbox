@@ -12,18 +12,32 @@ namespace Robust.Client.GameObjects
         internal DynamicTree<SpriteComponent> SpriteTree { get; private set; } = new(SpriteAabbFunc);
         internal DynamicTree<PointLightComponent> LightTree { get; private set; } = new(LightAabbFunc);
 
-        internal static Box2 SpriteAabbFunc(in SpriteComponent value)
+        private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
             return new Box2(worldPos, worldPos);
         }
 
-        internal static Box2 LightAabbFunc(in PointLightComponent value)
+        private static Box2 LightAabbFunc(in PointLightComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
 
             var boxSize = value.Radius * 2;
             return Box2.CenteredAround(worldPos, (boxSize, boxSize));
+        }
+
+        internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null)
+        {
+            worldPos ??= value.Owner.Transform.WorldPosition;
+
+            return new Box2(worldPos.Value, worldPos.Value);
+        }
+
+        internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
+        {
+            worldPos ??= value.Owner.Transform.WorldPosition;
+            var boxSize = value.Radius * 2;
+            return Box2.CenteredAround(worldPos.Value, (boxSize, boxSize));
         }
     }
 }

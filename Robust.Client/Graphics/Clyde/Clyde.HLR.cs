@@ -366,11 +366,9 @@ namespace Robust.Client.Graphics.Clyde
         private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            var enlargedBounds = worldBounds.Enlarged(5);
-
-            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, enlargedBounds))
+            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = enlargedBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
                 comp.SpriteTree.QueryAabb(ref list, ((
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,

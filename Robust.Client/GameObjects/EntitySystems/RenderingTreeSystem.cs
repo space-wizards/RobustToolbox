@@ -281,16 +281,16 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = sprite.RenderTree;
                 var newMapTree = GetRenderTree(sprite.Owner);
                 // TODO: Temp PVS guard
-                var (x, y) = sprite.Owner.Transform.WorldPosition;
+                var worldPos = sprite.Owner.Transform.WorldPosition;
 
-                if (float.IsNaN(x) || float.IsNaN(y))
+                if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
                     ClearSprite(sprite);
                     continue;
                 }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
-                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite).Translated(-treePos);
+                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite, worldPos).Translated(-treePos);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)
@@ -319,16 +319,16 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = light.RenderTree;
                 var newMapTree = GetRenderTree(light.Owner);
                 // TODO: Temp PVS guard
-                var (x, y) = light.Owner.Transform.WorldPosition;
+                var worldPos = light.Owner.Transform.WorldPosition;
 
-                if (float.IsNaN(x) || float.IsNaN(y))
+                if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
                     ClearLight(light);
                     continue;
                 }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
-                var aabb = RenderingTreeComponent.LightAabbFunc(light).Translated(-treePos);
+                var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos).Translated(-treePos);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)

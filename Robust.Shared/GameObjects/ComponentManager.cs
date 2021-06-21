@@ -269,11 +269,11 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-                if(component.Running)
-                    component.LifeShutdown();
+            if (component.Running)
+                component.LifeShutdown();
 
-                if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity();
+            if (component.LifeStage != ComponentLifeStage.PreAdd)
+                component.LifeRemoveFromEntity();
             _componentDependencyManager.OnComponentRemove(uid, component);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
@@ -299,10 +299,10 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                if(component.Running)
+                if (component.Running)
                     component.LifeShutdown();
 
-                if(component.LifeStage != ComponentLifeStage.PreAdd)
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(); // Sets delete
 
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));

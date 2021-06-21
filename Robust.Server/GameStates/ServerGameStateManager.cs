@@ -183,6 +183,8 @@ namespace Robust.Server.GameStates
                     oldestAck = lastAck;
                 }
 
+                DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates is not null), "Sending new maps, but no entity state.");
+
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
@@ -296,10 +298,8 @@ namespace Robust.Server.GameStates
 
                 DebugTools.Assert(entity.Initialized);
 
-                if (entity.LastModifiedTick <= fromTick)
-                    continue;
-
-                stateEntities.Add(GetEntityState(entityMan.ComponentManager, player, entity.Uid, fromTick));
+                if (entity.LastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(entityMan.ComponentManager, player, entity.Uid, fromTick));
             }
 
             // no point sending an empty collection

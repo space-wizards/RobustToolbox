@@ -42,7 +42,13 @@ namespace Robust.Client.GameObjects
         public override bool Visible
         {
             get => _visible;
-            set => _visible = value;
+            set
+            {
+                if (_visible == value) return;
+                _visible = value;
+
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
         }
 
         [DataField("drawdepth", customTypeSerializer: typeof(ConstantSerializer<DrawDepthTag>))]
@@ -266,7 +272,7 @@ namespace Robust.Client.GameObjects
                 }
 
                 _layerMapShared = true;
-                UpdateIsInert();
+                QueueUpdateIsInert();
             }
         }
 
@@ -315,10 +321,23 @@ namespace Robust.Client.GameObjects
         [DataField("texture", readOnly: true)] private string? texture;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            }
+        }
+
+        private bool _containerOccluded;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
+
+        [ViewVariables(VVAccess.ReadWrite)] private bool _inertUpdateQueued;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
@@ -620,7 +639,7 @@ namespace Robust.Client.GameObjects
                 index = Layers.Count - 1;
             }
 
-            UpdateIsInert();
+            QueueUpdateIsInert();
             return index;
         }
 
@@ -647,7 +666,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            UpdateIsInert();
+            QueueUpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -1498,8 +1517,20 @@ namespace Robust.Client.GameObjects
             };
         }
 
-        private void UpdateIsInert()
+        private void QueueUpdateIsInert()
         {
+            if (_inertUpdateQueued)
+                return;
+
+            _inertUpdateQueued = true;
+            // Yes that null check is valid because of that stupid fucking dummy IEntity.
+            // Who thought that was a good idea.
+            Owner?.EntityManager?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+        }
+
+        internal void DoUpdateIsInert()
+        {
+            _inertUpdateQueued = false;
             IsInert = true;
 
             foreach (var layer in Layers)
@@ -1849,14 +1880,14 @@ namespace Robust.Client.GameObjects
             {
                 AutoAnimated = value;
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetVisible(bool value)
             {
                 Visible = value;
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetRsi(RSI? rsi)
@@ -1888,7 +1919,7 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetState(RSI.StateId stateId)
@@ -1920,7 +1951,7 @@ namespace Robust.Client.GameObjects
                 AnimationTime = 0;
                 AnimationTimeLeft = state.GetDelay(0);
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetTexture(Texture? texture)
@@ -1928,7 +1959,7 @@ namespace Robust.Client.GameObjects
                 State = default;
                 Texture = texture;
 
-                _parent.UpdateIsInert();
+                _parent.QueueUpdateIsInert();
             }
 
             public void SetOffset(Vector2 offset)
@@ -2213,5 +2244,15 @@ namespace Robust.Client.GameObjects
             }
         }
         #endregion
+    }
+
+    internal sealed class SpriteUpdateEvent : EntityEventArgs
+    {
+
+    }
+
+    internal struct SpriteUpdateInertEvent
+    {
+        public SpriteComponent Sprite;
     }
 }

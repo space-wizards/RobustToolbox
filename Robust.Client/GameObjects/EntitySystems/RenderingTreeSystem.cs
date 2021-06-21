@@ -28,6 +28,8 @@ namespace Robust.Client.GameObjects
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
+        private HashSet<EntityUid> _checkedChildren = new();
+
         internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map, GridId grid)
         {
             return _gridTrees[map][grid].SpriteTree;
@@ -57,11 +59,25 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
+            SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
 
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
+            SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
+        }
+
+        private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueLightUpdate(component);
+        }
+
+        private void HandleSpriteUpdate(EntityUid uid, SpriteComponent component, SpriteUpdateEvent args)
+        {
+            if (component.TreeUpdateQueued) return;
+            QueueSpriteUpdate(component);
         }
 
         private void AnythingMoved(MoveEvent args)
@@ -71,11 +87,17 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMovedSubHandler(ITransformComponent sender)
         {
+            // To avoid doing redundant updates (and we don't need to update a grid's children ever)
+            if (!_checkedChildren.Add(sender.Owner.Uid) ||
+                sender.Owner.HasComponent<MapGridComponent>() ||
+                sender.Owner.HasComponent<MapComponent>()) return;
+
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
+
             if (sender.Owner.TryGetComponent(out PointLightComponent? light))
                 QueueLightUpdate(light);
 
@@ -249,9 +271,18 @@ namespace Robust.Client.GameObjects
 
         public override void FrameUpdate(float frameTime)
         {
+            _checkedChildren.Clear();
+
             foreach (var sprite in _spriteQueue)
             {
+                sprite.TreeUpdateQueued = false;
                 var mapId = sprite.Owner.Transform.MapID;
+
+                if (!sprite.Visible || sprite.ContainerOccluded)
+                {
+                    ClearSprite(sprite);
+                    continue;
+                }
 
                 // If we're on a new map then clear the old one.
                 if (sprite.TreeMapId != mapId)
@@ -277,20 +308,18 @@ namespace Robust.Client.GameObjects
 
                     sprite.TreeGridId = gridId;
                 }
-
-                // Update / add to new
-                var aabb = SpriteAabbFunc(sprite);
-                var translated = aabb.Translated(gridId == GridId.Invalid
-                    ? Vector2.Zero
-                    : -_mapManager.GetGrid(gridId).WorldPosition);
-
-                mapTree[gridId].SpriteTree.AddOrUpdate(sprite, translated);
-                sprite.TreeUpdateQueued = false;
             }
 
             foreach (var light in _lightQueue)
             {
+                light.TreeUpdateQueued = false;
                 var mapId = light.Owner.Transform.MapID;
+
+                if (!light.Enabled || light.ContainerOccluded)
+                {
+                    ClearLight(light);
+                    continue;
+                }
 
                 // If we're on a new map then clear the old one.
                 if (light.TreeMapId != mapId)
@@ -316,15 +345,6 @@ namespace Robust.Client.GameObjects
 
                     light.TreeGridId = gridId;
                 }
-
-                // Update / add to new
-                var aabb = LightAabbFunc(light);
-                var translated = aabb.Translated(gridId == GridId.Invalid
-                    ? Vector2.Zero
-                    : -_mapManager.GetGrid(gridId).WorldPosition);
-
-                mapTree[gridId].LightTree.AddOrUpdate(light, translated);
-                light.TreeUpdateQueued = false;
             }
 
             _spriteQueue.Clear();

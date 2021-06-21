@@ -1,5 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
+using Robust.Server;
+using Robust.Server.GameObjects;
+using Robust.Server.Physics;
+using Robust.Server.Reflection;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -10,6 +18,7 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -139,12 +148,20 @@ namespace Robust.UnitTesting.Server
             container.Register<ILogManager, LogManager>();
             container.Register<IRuntimeLog, RuntimeLog>();
             container.Register<IConfigurationManager, ConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
             container.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             container.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             container.Register<ILocalizationManager, LocalizationManager>();
             container.Register<IModLoader, TestingModLoader>();
             container.Register<IModLoaderInternal, TestingModLoader>();
             container.RegisterInstance<ITaskManager>(new Mock<ITaskManager>().Object);
+
+            var realReflection = new ServerReflectionManager();
+            realReflection.LoadAssemblies(new List<Assembly>(2)
+            {
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"),
+                AppDomain.CurrentDomain.GetAssemblyByName("Robust.Server"),
+            });
 
             var reflectionManager = new Mock<IReflectionManager>();
             reflectionManager
@@ -165,7 +182,7 @@ namespace Robust.UnitTesting.Server
 
             reflectionManager
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
-                .Returns(() => new[] {typeof(StringSerializer)});
+                .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
 
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
@@ -182,7 +199,8 @@ namespace Robust.UnitTesting.Server
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
-            container.Register<IPhysicsManager, PhysicsManager>();
+            container.Register<IIslandManager, IslandManager>();
+            container.Register<ICollisionManager, CollisionManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             _diFactory?.Invoke(container);
@@ -190,6 +208,13 @@ namespace Robust.UnitTesting.Server
 
             var logMan = container.Resolve<ILogManager>();
             logMan.RootSawmill.AddHandler(new TestLogHandler("SIM"));
+
+            // Because of CVarDef, we have to load every one through reflection
+            // just in case a system needs one of them.
+            var configMan = container.Resolve<IConfigurationManagerInternal>();
+            configMan.Initialize(true);
+            configMan.LoadCVarsFromAssembly(typeof(Program).Assembly); // Server
+            configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
 
             var compFactory = container.Resolve<IComponentFactory>();
 
@@ -203,7 +228,16 @@ namespace Robust.UnitTesting.Server
 
             var entityMan = container.Resolve<IEntityManager>();
             entityMan.Initialize();
-            _systemDelegate?.Invoke(container.Resolve<IEntitySystemManager>());
+
+            var entitySystemMan = container.Resolve<IEntitySystemManager>();
+
+            // PhysicsComponent Requires this.
+            entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+
+            _systemDelegate?.Invoke(entitySystemMan);
+
             entityMan.Startup();
             IoCManager.Resolve<IEntityLookup>().Startup();
 

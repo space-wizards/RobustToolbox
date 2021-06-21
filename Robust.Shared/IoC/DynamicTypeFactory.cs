@@ -45,8 +45,9 @@ namespace Robust.Shared.IoC
         ///     The type MUST have a parameterless constructor.
         /// </summary>
         /// <param name="type">Type of object to instantiate.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
         /// <returns>Newly created object.</returns>
-        object CreateInstanceUnchecked(Type type);
+        object CreateInstanceUnchecked(Type type, bool oneOff = false);
 
         /// <summary>
         ///     Constructs a new instance of the given type with Dependencies resolved.
@@ -101,12 +102,16 @@ namespace Robust.Shared.IoC
         /// </summary>
         /// <param name="dynamicTypeFactory">The dynamic type factory to use.</param>
         /// <param name="type">The type to instantiate.</param>
+        /// <param name="oneOff">If true, do not cache injector delegates.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
-        internal static T CreateInstanceUnchecked<T>(this IDynamicTypeFactoryInternal dynamicTypeFactory, Type type)
+        internal static T CreateInstanceUnchecked<T>(
+            this IDynamicTypeFactoryInternal dynamicTypeFactory,
+            Type type,
+            bool oneOff = false)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
-            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type);
+            return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, oneOff);
         }
 
         /// <summary>
@@ -117,7 +122,10 @@ namespace Robust.Shared.IoC
         /// <param name="args">The arguments to pass to the constructor.</param>
         /// <typeparam name="T">The type that the instance will be cast to.</typeparam>
         /// <returns>Newly created object, cast to <typeparamref name="T"/>.</returns>
-        internal static T CreateInstanceUnchecked<T>(this IDynamicTypeFactoryInternal dynamicTypeFactory, Type type, object[] args)
+        internal static T CreateInstanceUnchecked<T>(
+            this IDynamicTypeFactoryInternal dynamicTypeFactory,
+            Type type,
+            object[] args)
         {
             DebugTools.Assert(typeof(T).IsAssignableFrom(type), "type must be subtype of T");
             return (T) dynamicTypeFactory.CreateInstanceUnchecked(type, args);
@@ -165,13 +173,13 @@ namespace Robust.Shared.IoC
             return CreateInstanceUnchecked<T>();
         }
 
-        public object CreateInstanceUnchecked(Type type)
+        public object CreateInstanceUnchecked(Type type, bool oneOff = false)
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
             var instance = Activator.CreateInstance(type)!;
-            _dependencies.InjectDependencies(instance);
+            _dependencies.InjectDependencies(instance, oneOff);
             return instance;
         }
 

@@ -4,7 +4,6 @@ using System.Globalization;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
@@ -166,7 +165,7 @@ namespace Robust.Shared.Timing
                 {
                     if (args.Length != 1)
                     {
-                        shell.WriteLine(Loc.GetString("Need to supply a valid MapId"));
+                        shell.WriteLine("Need to supply a valid MapId");
                         return;
                     }
 

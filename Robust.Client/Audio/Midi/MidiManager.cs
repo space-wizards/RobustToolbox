@@ -225,7 +225,7 @@ namespace Robust.Client.Audio.Midi
                 // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
                 renderer.LoadSoundfont(FallbackSoundfont);
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                if (OperatingSystem.IsLinux())
                 {
                     foreach (var filepath in LinuxSoundfonts)
                     {
@@ -243,12 +243,12 @@ namespace Robust.Client.Audio.Midi
                         break;
                     }
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                else if (OperatingSystem.IsMacOS())
                 {
                     if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
                         renderer.LoadSoundfont(OsxSoundfont, true);
                 }
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                else if (OperatingSystem.IsWindows())
                 {
                     if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                         renderer.LoadSoundfont(WindowsSoundfont, true);

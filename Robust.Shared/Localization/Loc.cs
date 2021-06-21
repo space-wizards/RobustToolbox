@@ -25,7 +25,7 @@ namespace Robust.Shared.Localization
         private static ILocalizationManager LocalizationManager => IoCManager.Resolve<ILocalizationManager>();
 
         /// <summary>
-        ///     Gets a language approrpiate string represented by the supplied messageId.
+        ///     Gets a language appropriate string represented by the supplied messageId.
         /// </summary>
         /// <param name="messageId">Unique Identifier for a translated message.</param>
         /// <returns>
@@ -67,7 +67,6 @@ namespace Robust.Shared.Localization
         {
             LocalizationManager.LoadCulture(resourceManager, culture);
         }
-
 
         /// <summary>
         /// Remnants of the old Localization system.

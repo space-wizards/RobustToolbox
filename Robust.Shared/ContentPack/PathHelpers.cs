@@ -60,8 +60,8 @@ namespace Robust.Shared.ContentPack
 
         // TODO: gaf
         public static bool IsFileSystemCaseSensitive() =>
-            !RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            !OperatingSystem.IsWindows()
+            && !OperatingSystem.IsMacOS();
 
     }
 }

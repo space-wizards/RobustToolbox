@@ -1,6 +1,5 @@
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 
 namespace Robust.Client.Console.Commands
 {
@@ -41,7 +40,7 @@ namespace Robust.Client.Console.Commands
             var mgr = IoCManager.Resolve<IScriptClient>();
             if (!mgr.CanScript)
             {
-                shell.WriteError(Loc.GetString("You do not have server side scripting permission."));
+                shell.WriteError("You do not have server side scripting permission.");
                 return;
             }
 

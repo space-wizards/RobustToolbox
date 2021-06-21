@@ -4,7 +4,6 @@ using Robust.Client.Graphics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
@@ -18,16 +17,29 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private RenderingTreeSystem _treeSystem = default!;
+        private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
         public override void Initialize()
         {
             base.Initialize();
+
             _treeSystem = Get<RenderingTreeSystem>();
+            SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
+        }
+
+        private void QueueUpdateInert(SpriteUpdateInertEvent ev)
+        {
+            _inertUpdateQueue.Enqueue(ev.Sprite);
         }
 
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
+            while (_inertUpdateQueue.TryDequeue(out var sprite))
+            {
+                sprite.DoUpdateIsInert();
+            }
+
             // So we could calculate the correct size of the entities based on the contents of their sprite...
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
             var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);

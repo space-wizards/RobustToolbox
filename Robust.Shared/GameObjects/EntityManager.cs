@@ -79,7 +79,6 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             ComponentManager.Initialize();
-            _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
         public virtual void Startup()
@@ -141,6 +140,11 @@ namespace Robust.Shared.GameObjects
         }
 
         #region Entity Management
+
+        public IEntity CreateEntityUninitialized(string? prototypeName, EntityUid? euid)
+        {
+            return CreateEntity(prototypeName, euid);
+        }
 
         /// <inheritdoc />
         public virtual IEntity CreateEntityUninitialized(string? prototypeName)

@@ -469,6 +469,58 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Assert
             Assert.Throws<InvalidOperationException>(Code);
         }
+
+        [Test]
+        public void RaiseEvent_Ordered()
+        {
+            // Arrange
+            var bus = BusFactory();
+
+            // Expected order is A -> C -> B
+            var a = false;
+            var b = false;
+            var c = false;
+
+            void HandlerA(TestEventArgs ev)
+            {
+                Assert.That(b, Is.False, "A should run before B");
+                Assert.That(c, Is.False, "A should run before C");
+
+                a = true;
+            }
+
+            void HandlerB(TestEventArgs ev)
+            {
+                Assert.That(c, Is.True, "B should run after C");
+                b = true;
+            }
+
+            void HandlerC(TestEventArgs ev) => c = true;
+
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubA(), HandlerA, typeof(SubA), before: new []{typeof(SubB), typeof(SubC)});
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubB(), HandlerB, typeof(SubB), after: new []{typeof(SubC)});
+            bus.SubscribeEvent<TestEventArgs>(EventSource.Local, new SubC(), HandlerC, typeof(SubC));
+
+            // Act
+            bus.RaiseEvent(EventSource.Local, new TestEventArgs());
+
+            // Assert
+            Assert.That(a, Is.True, "A did not fire");
+            Assert.That(b, Is.True, "B did not fire");
+            Assert.That(c, Is.True, "C did not fire");
+        }
+
+        public sealed class SubA : IEntityEventSubscriber
+        {
+        }
+
+        public sealed class SubB : IEntityEventSubscriber
+        {
+        }
+
+        public sealed class SubC : IEntityEventSubscriber
+        {
+        }
     }
 
     internal class TestEventSubscriber : IEntityEventSubscriber { }

@@ -171,7 +171,7 @@ namespace Robust.Client.Debugging
                     // all entities have a TransformComponent
                     var transform = physBody.Owner.Transform;
 
-                    var worldBox = physBody.GetWorldAABB(_mapManager);
+                    var worldBox = physBody.GetWorldAABB();
                     if (worldBox.IsEmpty()) continue;
 
                     foreach (var fixture in physBody.Fixtures)

@@ -131,7 +131,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (!succeeded)
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (OperatingSystem.IsWindows())
                 {
                     var msgBoxContent = "Failed to create the game window. " +
                                         "This probably means your GPU is too old to play the game. " +
@@ -164,7 +164,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (OperatingSystem.IsMacOS())
             {
                 // Does nothing on macOS so don't bother.
                 yield break;

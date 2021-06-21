@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -120,7 +120,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             var clientVBox = new VBoxContainer {SeparationOverride = 0};
             _tabs.AddChild(clientVBox);
-            _tabs.SetTabTitle(TabClientVars, "Client Variables");
+            _tabs.SetTabTitle(TabClientVars, Loc.GetString("view-variable-instance-entity-client-variables-tab-title"));
 
             var first = true;
             foreach (var group in LocalPropertyList(obj, ViewVariablesManager, _robustSerializer))
@@ -138,7 +138,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             _clientComponents = new VBoxContainer {SeparationOverride = 0};
             _tabs.AddChild(_clientComponents);
-            _tabs.SetTabTitle(TabClientComponents, "Client Components");
+            _tabs.SetTabTitle(TabClientComponents, Loc.GetString("view-variable-instance-entity-client-components-tab-title"));
 
             PopulateClientComponents();
 
@@ -146,11 +146,11 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 _serverVariables = new VBoxContainer {SeparationOverride = 0};
                 _tabs.AddChild(_serverVariables);
-                _tabs.SetTabTitle(TabServerVars, "Server Variables");
+                _tabs.SetTabTitle(TabServerVars, Loc.GetString("view-variable-instance-entity-server-variables-tab-title"));
 
                 _serverComponents = new VBoxContainer {SeparationOverride = 0};
                 _tabs.AddChild(_serverComponents);
-                _tabs.SetTabTitle(TabServerComponents, "Server Components");
+                _tabs.SetTabTitle(TabServerComponents, Loc.GetString("view-variable-instance-entity-server-components-tab-title"));
 
                 PopulateServerComponents(false);
             }
@@ -162,13 +162,13 @@ namespace Robust.Client.ViewVariables.Instances
 
             _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
             {
-                PlaceHolder = Loc.GetString("Search"),
+                PlaceHolder = Loc.GetString("view-variable-instance-entity-client-components-search-bar-placeholder"),
                 HorizontalExpand = true,
             });
 
             _clientComponents.AddChild(_clientComponentsAddButton = new Button()
             {
-                Text = Loc.GetString("Add Component"),
+                Text = Loc.GetString("view-variable-instance-entity-server-components-add-component-button-placeholder"),
                 HorizontalExpand = true,
             });
 
@@ -198,13 +198,13 @@ namespace Robust.Client.ViewVariables.Instances
 
             _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
             {
-                PlaceHolder = Loc.GetString("Search"),
+                PlaceHolder = Loc.GetString("view-variable-instance-entity-server-components-search-bar-placeholder"),
                 HorizontalExpand = true,
             });
 
             _serverComponents.AddChild(_serverComponentsAddButton = new Button()
             {
-                Text = Loc.GetString("Add Component"),
+                Text = Loc.GetString("view-variable-instance-entity-server-components-add-component-button-placeholder"),
                 HorizontalExpand = true,
             });
 
@@ -336,7 +336,7 @@ namespace Robust.Client.ViewVariables.Instances
         {
             _addComponentWindow?.Dispose();
 
-            _addComponentWindow = new ViewVariablesAddWindow(GetValidComponentsForAdding(), "Add Component [C]");
+            _addComponentWindow = new ViewVariablesAddWindow(GetValidComponentsForAdding(), Loc.GetString("view-variable-instance-entity-add-window-client-components"));
             _addComponentWindow.AddButtonPressed += TryAdd;
             _addComponentServer = false;
 
@@ -349,7 +349,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             if (_entitySession == null) return;
 
-            _addComponentWindow = new ViewVariablesAddWindow(await GetValidServerComponentsForAdding(), "Add Component [S]");
+            _addComponentWindow = new ViewVariablesAddWindow(await GetValidServerComponentsForAdding(), Loc.GetString("view-variable-instance-entity-add-window-server-components"));
             _addComponentWindow.AddButtonPressed += TryAdd;
             _addComponentServer = true;
 

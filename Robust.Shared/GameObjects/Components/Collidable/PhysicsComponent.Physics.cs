@@ -62,8 +62,9 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
+        ///     Key is Island's ID and value is our index.
         /// </summary>
-        public int IslandIndex { get; set; }
+        public Dictionary<int, int> IslandIndex { get; set; } = new();
 
         // TODO: Actually implement after the initial pr dummy
         /// <summary>
@@ -283,7 +284,7 @@ namespace Robust.Shared.GameObjects
                 joints.Add(je.Joint);
             }
 
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, _mass, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -514,35 +515,23 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        public Box2 GetWorldAABB(IMapManager? mapManager = null)
+        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            var bounds = new Box2();
+            worldPos ??= Owner.Transform.WorldPosition;
+            worldRot ??= Owner.Transform.WorldRotation;
+
+            var worldPosValue = worldPos.Value;
+            var worldRotValue = worldRot.Value;
+
+            var bounds = new Box2(worldPosValue, worldPosValue);
 
             foreach (var fixture in _fixtures)
             {
-                foreach (var (gridId, proxies) in fixture.Proxies)
-                {
-                    Vector2 offset;
-
-                    if (gridId == GridId.Invalid)
-                    {
-                        offset = Vector2.Zero;
-                    }
-                    else
-                    {
-                        offset = mapManager.GetGrid(gridId).WorldPosition;
-                    }
-
-                    foreach (var proxy in proxies)
-                    {
-                        var shapeBounds = proxy.AABB.Translated(offset);
-                        bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
-                    }
-                }
+                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
+                bounds = bounds.Union(boundy.Translated(worldPosValue));
             }
 
-            return bounds.IsEmpty() ? Box2.UnitCentered.Translated(Owner.Transform.WorldPosition) : bounds;
+            return bounds;
         }
 
         /// <inheritdoc />
@@ -1160,7 +1149,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
 
@@ -1265,7 +1254,7 @@ namespace Robust.Shared.GameObjects
             Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
             // Need to do these immediately in case collision behaviors deleted the body

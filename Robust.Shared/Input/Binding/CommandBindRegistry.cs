@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Input.Binding
 {
@@ -13,8 +14,8 @@ namespace Robust.Shared.Input.Binding
         // handlers in the order they should be resolved for the given key function.
         // internally we use a graph to construct this but we render it down to a flattened
         // list so we don't need to do any graph traversal at query time
-        private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
-            new();
+        private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey = new();
+        private bool _graphDirty = false;
 
         /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
@@ -41,12 +42,15 @@ namespace Robust.Shared.Input.Binding
                 _bindings.Add(new TypedCommandBind(owner, binding));
             }
 
-            RebuildGraph();
+            _graphDirty = true;
         }
 
         /// <inheritdoc />
         public IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function)
         {
+            if (_graphDirty)
+                RebuildGraph();
+
             if (_bindingsForKey.TryGetValue(function, out var handlers))
             {
                 return handlers;
@@ -58,7 +62,8 @@ namespace Robust.Shared.Input.Binding
         public void Unregister(Type owner)
         {
             _bindings.RemoveAll(binding => binding.ForType == owner);
-            RebuildGraph();
+
+            _graphDirty = true;
         }
 
         /// <inheritdoc />
@@ -67,7 +72,7 @@ namespace Robust.Shared.Input.Binding
             Unregister(typeof(TOwner));
         }
 
-        private void RebuildGraph()
+        internal void RebuildGraph()
         {
             _bindingsForKey.Clear();
 
@@ -77,6 +82,7 @@ namespace Robust.Shared.Input.Binding
 
             }
 
+            _graphDirty = false;
         }
 
         private Dictionary<BoundKeyFunction, List<TypedCommandBind>> FunctionToBindings()
@@ -105,16 +111,16 @@ namespace Robust.Shared.Input.Binding
             //TODO: Probably could be optimized if needed! Generally shouldn't be a big issue since there is a relatively
             // tiny amount of bindings
 
-            List<GraphNode> allNodes = new();
-            Dictionary<Type,List<GraphNode>> typeToNode = new();
+            List<TopologicalSort.GraphNode<TypedCommandBind>> allNodes = new();
+            Dictionary<Type,List<TopologicalSort.GraphNode<TypedCommandBind>>> typeToNode = new();
             // build the dict for quick lookup on type
             foreach (var binding in bindingsForFunction)
             {
                 if (!typeToNode.ContainsKey(binding.ForType))
                 {
-                    typeToNode[binding.ForType] = new List<GraphNode>();
+                    typeToNode[binding.ForType] = new List<TopologicalSort.GraphNode<TypedCommandBind>>();
                 }
-                var newNode = new GraphNode(binding);
+                var newNode = new TopologicalSort.GraphNode<TypedCommandBind>(binding);
                 typeToNode[binding.ForType].Add(newNode);
                 allNodes.Add(newNode);
             }
@@ -122,7 +128,7 @@ namespace Robust.Shared.Input.Binding
             //add the graph edges
             foreach (var curBinding in allNodes)
             {
-                foreach (var afterType in curBinding.TypedCommandBind.CommandBind.After)
+                foreach (var afterType in curBinding.Value.CommandBind.After)
                 {
                     // curBinding should always fire after bindings associated with this afterType, i.e.
                     // this binding DEPENDS ON afterTypes' bindings
@@ -130,11 +136,12 @@ namespace Robust.Shared.Input.Binding
                     {
                         foreach (var afterBinding in afterBindings)
                         {
-                            curBinding.DependsOn.Add(afterBinding);
+                            afterBinding.Dependant.Add(curBinding);
                         }
                     }
                 }
-                foreach (var beforeType in curBinding.TypedCommandBind.CommandBind.Before)
+
+                foreach (var beforeType in curBinding.Value.CommandBind.Before)
                 {
                     // curBinding should always fire before bindings associated with this beforeType, i.e.
                     // beforeTypes' bindings DEPENDS ON this binding
@@ -142,7 +149,7 @@ namespace Robust.Shared.Input.Binding
                     {
                         foreach (var beforeBinding in beforeBindings)
                         {
-                            beforeBinding.DependsOn.Add(curBinding);
+                            curBinding.Dependant.Add(beforeBinding);
                         }
                     }
                 }
@@ -151,54 +158,7 @@ namespace Robust.Shared.Input.Binding
             //TODO: Log graph structure for debugging
 
             //use toposort to build the final result
-            var topoSorted = TopologicalSort(allNodes, function);
-            List<InputCmdHandler> result = new();
-
-            foreach (var node in topoSorted)
-            {
-                result.Add(node.TypedCommandBind.CommandBind.Handler);
-            }
-
-            return result;
-        }
-
-        //Adapted from https://stackoverflow.com/a/24058279
-        private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes, BoundKeyFunction function)
-        {
-            var elems = nodes.ToDictionary(node => node,
-                node => new HashSet<GraphNode>(node.DependsOn));
-            while (elems.Count > 0)
-            {
-                var elem =
-                    elems.FirstOrDefault(x => x.Value.Count == 0);
-                if (elem.Key == null)
-                {
-                    throw new InvalidOperationException("Found circular dependency when resolving" +
-                                                        $" command binding handler order for key function {function.FunctionName}." +
-                                                        $" Please check the systems which register bindings for" +
-                                                        $" this function and eliminate the circular dependency.");
-                }
-                elems.Remove(elem.Key);
-                foreach (var selem in elems)
-                {
-                    selem.Value.Remove(elem.Key);
-                }
-                yield return elem.Key;
-            }
-        }
-
-        /// <summary>
-        /// node in our temporary dependency graph
-        /// </summary>
-        private class GraphNode
-        {
-            public List<GraphNode> DependsOn = new();
-            public readonly TypedCommandBind TypedCommandBind;
-
-            public GraphNode(TypedCommandBind typedCommandBind)
-            {
-                TypedCommandBind = typedCommandBind;
-            }
+            return TopologicalSort.Sort(allNodes).Select(c => c.CommandBind.Handler).ToList();
         }
 
         /// <summary>

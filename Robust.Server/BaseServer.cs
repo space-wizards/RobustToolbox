@@ -355,7 +355,7 @@ namespace Robust.Server
             AddFinalStringsToSerializer();
             _stringSerializer.LockStrings();
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
                 WindowsTickPeriod.TimeBeginPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
@@ -449,8 +449,7 @@ namespace Robust.Server
             }
         }
 
-        /// <inheritdoc />
-        public void MainLoop()
+        internal void SetupMainLoop()
         {
             if (_mainLoop == null)
             {
@@ -472,12 +471,24 @@ namespace Robust.Server
 
             // set GameLoop.Running to false to return from this function.
             _time.Paused = false;
-            _mainLoop.Run();
+        }
 
+        internal void FinishMainLoop()
+        {
             _time.InSimulation = true;
             Cleanup();
 
             _shutdownEvent.Set();
+        }
+
+        /// <inheritdoc />
+        public void MainLoop()
+        {
+            SetupMainLoop();
+
+            _mainLoop.Run();
+
+            FinishMainLoop();
         }
 
         public bool ContentStart { get; set; }
@@ -560,7 +571,7 @@ namespace Robust.Server
 
             //TODO: This should prob shutdown all managers in a loop.
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
+            if (OperatingSystem.IsWindows() && _config.GetCVar(CVars.SysWinTickPeriod) >= 0)
             {
                 WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }

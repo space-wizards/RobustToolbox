@@ -15,7 +15,7 @@ namespace Robust.Shared.Physics
     {
         bool IgnoreGravity { get; set; }
 
-        int IslandIndex { get; set; }
+        Dictionary<int, int> IslandIndex { get; set; }
 
         /// <summary>
         ///     Has this body already been added to a physics island
@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     AABB of this entity in world space.
         /// </summary>
-        Box2 GetWorldAABB(IMapManager? mapManager = null);
+        Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null);
 
         /// <summary>
         /// Whether or not this body can collide.

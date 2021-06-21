@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -45,11 +45,29 @@ namespace Robust.Client.GameObjects
         public bool Enabled
         {
             get => _enabled;
-            set => _enabled = value;
+            set
+            {
+                if (_enabled == value) return;
+
+                _enabled = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+            }
+        }
+
+        private bool _containerOccluded;
 
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
@@ -118,23 +136,7 @@ namespace Robust.Client.GameObjects
         public bool VisibleNested
         {
             get => _visibleNested;
-            set
-            {
-                if (_visibleNested == value) return;
-                _visibleNested = value;
-                if (value)
-                {
-                    if (Owner.Transform.Parent == null) return;
-
-                    _lightOnParent = true;
-                }
-                else
-                {
-                    if (!_lightOnParent) return;
-
-                    _lightOnParent = false;
-                }
-            }
+            set => _visibleNested = value;
         }
 
         // TODO: Test to validate all yamls meet this value
@@ -144,7 +146,6 @@ namespace Robust.Client.GameObjects
         private float _radius = 5f;
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        private bool _lightOnParent;
         [DataField("color")]
         private Color _color = Color.White;
         [DataField("offset")]
@@ -212,42 +213,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             UpdateMask();
         }
 
-        /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, IComponent? component)
-        {
-            base.HandleMessage(message, component);
-
-            if (message is ParentChangedMessage msg)
-            {
-                HandleTransformParentChanged(msg);
-            }
-        }
-
-        private void HandleTransformParentChanged(ParentChangedMessage obj)
-        {
-            // TODO: this does not work for things nested multiply layers deep.
-            if (!VisibleNested)
-            {
-                return;
-            }
-
-            if (obj.NewParent != null && obj.NewParent.IsValid())
-            {
-                _lightOnParent = true;
-            }
-            else
-            {
-                _lightOnParent = false;
-            }
-        }
-
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 
@@ -281,5 +253,10 @@ namespace Robust.Client.GameObjects
         {
             PointLightComponent = pointLightComponent;
         }
+    }
+
+    internal sealed class PointLightUpdateEvent : EntityEventArgs
+    {
+
     }
 }

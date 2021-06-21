@@ -554,7 +554,7 @@ namespace Robust.Client.GameStates
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
+                        var newComp = (Component) _compFactory.GetComponent(compChange.NetID);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
                     }

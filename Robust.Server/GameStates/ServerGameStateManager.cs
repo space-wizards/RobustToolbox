@@ -270,7 +270,7 @@ namespace Robust.Server.GameStates
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
+                    changed.Add(ComponentChanged.Added(comp.NetID!.Value));
                 }
                 else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {

@@ -206,7 +206,7 @@ namespace Robust.Server.GameStates
                 entityStates.Add(new EntityState(entityUid,
                     new ComponentChanged[]
                     {
-                        new(false, NetIDs.TRANSFORM, "Transform")
+                        new(NetIDs.TRANSFORM, true, false)
                     },
                     new ComponentState[]
                     {

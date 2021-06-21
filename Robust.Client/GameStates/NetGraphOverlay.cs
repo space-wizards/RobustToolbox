@@ -21,6 +21,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -90,8 +91,9 @@ namespace Robust.Client.GameStates
                             sb.Append($"\n  Changes:");
                             foreach (var compChange in entState.ComponentChanges)
                             {
+                                var registration = _componentFactory.GetRegistration(compChange.NetID);
                                 var del = compChange.Deleted ? 'D' : 'C';
-                                sb.Append($"\n    [{del}]{compChange.NetID}:{compChange.ComponentName}");
+                                sb.Append($"\n    [{del}]{compChange.NetID}:{registration.Name}");
                             }
                         }
 

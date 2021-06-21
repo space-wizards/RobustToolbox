@@ -501,7 +501,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = enlargedBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
                 comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
                 {

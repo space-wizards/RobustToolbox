@@ -280,6 +280,14 @@ namespace Robust.Client.GameObjects
 
                 var oldMapTree = sprite.RenderTree;
                 var newMapTree = GetRenderTree(sprite.Owner);
+                // TODO: Temp PVS guard
+                var (x, y) = sprite.Owner.Transform.WorldPosition;
+
+                if (float.IsNaN(x) || float.IsNaN(y))
+                {
+                    ClearSprite(sprite);
+                    continue;
+                }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
                 var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite).Translated(-treePos);
@@ -301,7 +309,6 @@ namespace Robust.Client.GameObjects
             foreach (var light in _lightQueue)
             {
                 light.TreeUpdateQueued = false;
-                var mapId = light.Owner.Transform.MapID;
 
                 if (!light.Enabled || light.ContainerOccluded)
                 {
@@ -311,6 +318,14 @@ namespace Robust.Client.GameObjects
 
                 var oldMapTree = light.RenderTree;
                 var newMapTree = GetRenderTree(light.Owner);
+                // TODO: Temp PVS guard
+                var (x, y) = light.Owner.Transform.WorldPosition;
+
+                if (float.IsNaN(x) || float.IsNaN(y))
+                {
+                    ClearLight(light);
+                    continue;
+                }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
                 var aabb = RenderingTreeComponent.LightAabbFunc(light).Translated(-treePos);

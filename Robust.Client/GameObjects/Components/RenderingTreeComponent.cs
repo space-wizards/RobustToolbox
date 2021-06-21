@@ -15,7 +15,6 @@ namespace Robust.Client.GameObjects
         internal static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
-
             return new Box2(worldPos, worldPos);
         }
 

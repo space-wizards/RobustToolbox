@@ -1,3 +1,4 @@
+#if DEBUG
 using Robust.Client.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
@@ -15,3 +16,4 @@ namespace Robust.Client.Console.Commands
         }
     }
 }
+#endif

@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+#if DEBUG
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -82,3 +81,4 @@ namespace Robust.Client.GameObjects
         }
     }
 }
+#endif

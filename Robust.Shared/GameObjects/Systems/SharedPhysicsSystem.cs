@@ -12,6 +12,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -248,6 +249,25 @@ namespace Robust.Shared.GameObjects
             var mapId = message.Container.Owner.Transform.MapID;
 
             _maps[mapId].AddBody(physicsComponent);
+        }
+
+        internal void FilterContactsForJoint(Joint joint)
+        {
+            var bodyA = joint.BodyA;
+            var bodyB = joint.BodyB;
+
+            var edge = bodyB.ContactEdges;
+            while (edge != null)
+            {
+                if (edge.Other == bodyA)
+                {
+                    // Flag the contact for filtering at the next time step (where either
+                    // body is awake).
+                    edge.Contact!.FilterFlag = true;
+                }
+
+                edge = edge.Next;
+            }
         }
 
         /// <summary>

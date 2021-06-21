@@ -204,18 +204,7 @@ namespace Robust.Shared.Physics.Dynamics
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)
             {
-                ContactEdge? edge = bodyB.ContactEdges;
-                while (edge != null)
-                {
-                    if (edge.Other == bodyA)
-                    {
-                        // Flag the contact for filtering at the next time step (where either
-                        // body is awake).
-                        edge.Contact!.FilterFlag = true;
-                    }
-
-                    edge = edge.Next;
-                }
+                _physicsSystem.FilterContactsForJoint(joint);
             }
 
             bodyA.Dirty();

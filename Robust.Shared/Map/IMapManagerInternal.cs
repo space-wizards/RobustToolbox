@@ -9,6 +9,8 @@ namespace Robust.Shared.Map
         IGameTiming GameTiming { get; }
         IEntityManager EntityManager { get; }
 
+        void OnComponentRemoved(MapGridComponent comp);
+
         /// <summary>
         ///     Raises the OnTileChanged event.
         /// </summary>

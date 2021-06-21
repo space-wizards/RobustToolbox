@@ -449,8 +449,7 @@ namespace Robust.Server
             }
         }
 
-        /// <inheritdoc />
-        public void MainLoop()
+        internal void SetupMainLoop()
         {
             if (_mainLoop == null)
             {
@@ -472,12 +471,24 @@ namespace Robust.Server
 
             // set GameLoop.Running to false to return from this function.
             _time.Paused = false;
-            _mainLoop.Run();
+        }
 
+        internal void FinishMainLoop()
+        {
             _time.InSimulation = true;
             Cleanup();
 
             _shutdownEvent.Set();
+        }
+
+        /// <inheritdoc />
+        public void MainLoop()
+        {
+            SetupMainLoop();
+
+            _mainLoop.Run();
+
+            FinishMainLoop();
         }
 
         public bool ContentStart { get; set; }

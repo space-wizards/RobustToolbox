@@ -82,7 +82,7 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        private bool StartupContinue(DisplayMode displayMode)
+        internal bool StartupContinue(DisplayMode displayMode)
         {
             _clyde.InitializePostWindowing();
             _clyde.SetWindowTitle(Options.DefaultWindowTitle);
@@ -196,7 +196,7 @@ namespace Robust.Client
             return true;
         }
 
-        private bool StartupSystemSplash(Func<ILogHandler>? logHandlerFactory)
+        internal bool StartupSystemSplash(Func<ILogHandler>? logHandlerFactory)
         {
             ReadInitialLaunchState();
 
@@ -471,7 +471,7 @@ namespace Robust.Client
             Clyde,
         }
 
-        private void Cleanup()
+        internal void Cleanup()
         {
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();

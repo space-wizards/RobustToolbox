@@ -14,6 +14,11 @@ namespace Robust.Shared.Asynchronous
         public void Initialize()
         {
             _mainThreadContext = new RobustSynchronizationContext(_runtimeLog);
+            ResetSynchronizationContext();
+        }
+
+        public void ResetSynchronizationContext()
+        {
             SynchronizationContext.SetSynchronizationContext(_mainThreadContext);
         }
 

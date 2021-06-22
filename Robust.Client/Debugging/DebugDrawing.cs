@@ -130,17 +130,17 @@ namespace Robust.Client.Debugging
                 {
                     if (body != _hoverBodies[0])
                     {
-                        DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), "------");
+                        screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), "------");
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {(body).BodyType == BodyType.Static}");
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {(body).BodyType == BodyType.Static}");
                     row++;
                 }
 
@@ -196,17 +196,6 @@ namespace Robust.Client.Debugging
 
                     // draw AABB
                     worldHandle.DrawRect(worldBox, colorEdge, false);
-                }
-            }
-
-            private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
-            {
-                var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
-
-                foreach (var rune in str.EnumerateRunes())
-                {
-                    var advance = font.DrawChar(handle, rune, baseLine, 1, Color.White);
-                    baseLine += new Vector2(advance, 0);
                 }
             }
 

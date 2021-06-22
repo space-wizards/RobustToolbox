@@ -7,23 +7,22 @@ namespace Robust.Shared.GameObjects
     public sealed class EntityState
     {
         public EntityUid Uid { get; }
-        public ComponentChanged[]? ComponentChanges { get; }
-        public ComponentState[]? ComponentStates { get; }
 
-        public bool Empty => ComponentChanges is null && ComponentStates is null;
+        public ComponentChange[]? ComponentChanges { get; }
 
-        public EntityState(EntityUid uid, ComponentChanged[]? changedComponents, ComponentState[]? componentStates)
+        public bool Empty => ComponentChanges is null;
+
+        public EntityState(EntityUid uid, ComponentChange[]? changedComponents)
         {
             Uid = uid;
 
             // empty lists are 5 bytes each
             ComponentChanges = changedComponents == null || changedComponents.Length == 0 ? null : changedComponents;
-            ComponentStates = componentStates == null || componentStates.Length == 0 ? null : componentStates;
         }
     }
 
     [Serializable, NetSerializable]
-    public readonly struct ComponentChanged
+    public readonly struct ComponentChange
     {
         // 15ish bytes to create a component (strings are big), 5 bytes to remove one
 
@@ -37,33 +36,40 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Created;
 
-        //TODO: Add compstate field
+
+        public readonly ComponentState? State;
 
         /// <summary>
         ///     The Network ID of the component to remove.
         /// </summary>
         public readonly uint NetID;
 
-        public ComponentChanged(uint netId, bool created, bool deleted)
+        public ComponentChange(uint netId, bool created, bool deleted, ComponentState? state)
         {
             Deleted = deleted;
+            State = state;
             NetID = netId;
             Created = created;
         }
 
         public override string ToString()
         {
-            return $"{(Deleted ? "D" : "C")} {NetID}";
+            return $"{(Deleted ? "D" : "C")} {NetID} {State?.GetType().Name}";
         }
 
-        public static ComponentChanged Added(uint netId)
+        public static ComponentChange Added(uint netId, ComponentState? state)
         {
-            return new(netId, true, false);
+            return new(netId, true, false, state);
         }
 
-        public static ComponentChanged Removed(uint netId)
+        public static ComponentChange Changed(uint netId, ComponentState state)
         {
-            return new(netId, false, true);
+            return new(netId, false, false, state);
+        }
+
+        public static ComponentChange Removed(uint netId)
+        {
+            return new(netId, false, true, null);
         }
     }
 }

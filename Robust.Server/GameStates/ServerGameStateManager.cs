@@ -249,8 +249,7 @@ namespace Robust.Server.GameStates
         /// <returns>New entity State for the given entity.</returns>
         internal static EntityState GetEntityState(IComponentManager compMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
-            var compStates = new List<ComponentState>();
-            var changed = new List<ComponentChanged>();
+            var changed = new List<ComponentChange>();
 
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
@@ -260,27 +259,34 @@ namespace Robust.Server.GameStates
                 // "not different from entity creation".
                 // i.e. when the client spawns the entity and loads the entity prototype,
                 // the data it deserializes from the prototype SHOULD be equal
-                // to what the component state / ComponentChanged would send.
+                // to what the component state / ComponentChange would send.
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
-                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
-                    compStates.Add(comp.GetComponentState(player));
+                DebugTools.Assert(comp.LastModifiedTick >= comp.CreationTick);
 
                 if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
                 {
+                    ComponentState? state = null;
+                    if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                        state = comp.GetComponentState(player);
+
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID!.Value));
+                    changed.Add(ComponentChange.Added(comp.NetID!.Value, state));
+                }
+                else if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                {
+                    changed.Add(ComponentChange.Changed(comp.NetID!.Value, comp.GetComponentState(player)));
                 }
                 else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
+                    changed.Add(ComponentChange.Removed(comp.NetID!.Value));
                 }
             }
 
-            return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
+            return new EntityState(entityUid, changed.ToArray());
         }
 
         /// <summary>

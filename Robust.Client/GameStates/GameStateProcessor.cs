@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
@@ -198,14 +198,10 @@ namespace Robust.Client.GameStates
                             {
                                 compData.Remove(change.NetID);
                             }
-                        }
-                    }
-
-                    if (entityState.ComponentStates != null)
-                    {
-                        foreach (var compState in entityState.ComponentStates)
-                        {
-                            compData[compState.NetID] = compState;
+                            else if (change.State is not null)
+                            {
+                                compData[change.NetID] = change.State;
+                            }
                         }
                     }
                 }

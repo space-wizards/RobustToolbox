@@ -204,17 +204,14 @@ namespace Robust.Server.GameStates
                 var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
 
                 entityStates.Add(new EntityState(entityUid,
-                    new ComponentChanged[]
+                    new[]
                     {
-                        new(NetIDs.TRANSFORM, true, false)
-                    },
-                    new ComponentState[]
-                    {
-                        new TransformComponent.TransformComponentState(Vector2NaN,
+                        ComponentChange.Changed(NetIDs.TRANSFORM,
+                            new TransformComponent.TransformComponentState(Vector2NaN,
                             oldState.Rotation,
                             oldState.ParentID,
                             oldState.NoLocalRotation,
-                            oldState.Anchored)
+                            oldState.Anchored)),
                     }));
             }
 

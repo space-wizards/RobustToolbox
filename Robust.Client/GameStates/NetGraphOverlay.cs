@@ -92,17 +92,13 @@ namespace Robust.Client.GameStates
                             foreach (var compChange in entState.ComponentChanges)
                             {
                                 var registration = _componentFactory.GetRegistration(compChange.NetID);
-                                var del = compChange.Deleted ? 'D' : 'C';
-                                sb.Append($"\n    [{del}]{compChange.NetID}:{registration.Name}");
-                            }
-                        }
+                                var create = compChange.Created ? 'C' : '\0';
+                                var mod = !(compChange.Created || compChange.Created) ? 'M' : '\0';
+                                var del = compChange.Deleted ? 'D' : '\0';
+                                sb.Append($"\n    [{create}{mod}{del}]{compChange.NetID}:{registration.Name}");
 
-                        if (entState.ComponentStates is not null)
-                        {
-                            sb.Append($"\n  States:");
-                            foreach (var compState in entState.ComponentStates)
-                            {
-                                sb.Append($"\n    {compState.NetID}:{compState.GetType().Name}");
+                                if(compChange.State is not null)
+                                    sb.Append($"\n      STATE:{compChange.State.GetType().Name}");
                             }
                         }
                     }

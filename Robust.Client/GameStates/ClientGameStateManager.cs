@@ -426,8 +426,7 @@ namespace Robust.Client.GameStates
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState?) es.ComponentStates
-                            ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        var metaState = (MetaDataComponentState?) es.ComponentChanges?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA).State;
                         if (metaState == null)
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
@@ -551,35 +550,39 @@ namespace Robust.Client.GameStates
                     }
                     else
                     {
+                        //Right now we just assume every state from an unseen entity is added
+
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
                         var newComp = (Component) _compFactory.GetComponent(compChange.NetID);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
+
+                        compStateWork[compChange.NetID] = (compChange.State, null);
                     }
                 }
             }
 
-            if (curState?.ComponentStates != null)
+            if (curState?.ComponentChanges != null)
             {
-                foreach (var compState in curState.ComponentStates)
+                foreach (var compChange in curState.ComponentChanges)
                 {
-                    compStateWork[compState.NetID] = (compState, null);
+                    compStateWork[compChange.NetID] = (compChange.State, null);
                 }
             }
 
-            if (nextState?.ComponentStates != null)
+            if (nextState?.ComponentChanges != null)
             {
-                foreach (var compState in nextState.ComponentStates)
+                foreach (var compState in nextState.ComponentChanges)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))
                     {
-                        compStateWork[compState.NetID] = (state.curState, compState);
+                        compStateWork[compState.NetID] = (state.curState, compState.State);
                     }
                     else
                     {
-                        compStateWork[compState.NetID] = (null, compState);
+                        compStateWork[compState.NetID] = (null, compState.State);
                     }
                 }
             }

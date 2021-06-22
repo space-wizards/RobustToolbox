@@ -49,6 +49,8 @@ namespace Robust.Shared.Log
 
         private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
 
+        private bool _disposed;
+
         static ConsoleLogHandler()
         {
             WriteAnsiColors = !System.Console.IsOutputRedirected;
@@ -66,7 +68,7 @@ namespace Robust.Shared.Log
             {
                 lock (_stream)
                 {
-                    if (IsConsoleActive)
+                    if (IsConsoleActive && !_disposed)
                     {
                         _stream.Flush();
                     }
@@ -181,8 +183,9 @@ namespace Robust.Shared.Log
         {
             lock (_stream)
             {
-                _stream.Dispose();
+                _disposed = true;
                 _timer.Dispose();
+                _stream.Dispose();
             }
         }
     }

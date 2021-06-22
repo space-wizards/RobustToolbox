@@ -267,16 +267,6 @@ namespace Robust.Shared.GameObjects
         uint? NetID { get; }
 
         /// <summary>
-        /// True if the addition and removal of the component will be synchronized to clients.
-        /// This means that if the server adds or removes the component outside of prototype-based creation,
-        /// the client will update accordingly.
-        /// If false the client will ignore missing components even when the net ID checks out and could be instantiated.
-        /// and the client won't delete the component if no state was sent for it.
-        /// </summary>
-        /// <seealso cref="IComponent.NetworkSynchronizeExistence" />
-        bool NetworkSynchronizeExistence { get; }
-
-        /// <summary>
         /// The type that will be instantiated if this component is created.
         /// </summary>
         Type Type { get; }

@@ -18,16 +18,14 @@ namespace Robust.Shared.GameObjects
         {
             public string Name { get; }
             public uint? NetID { get; }
-            public bool NetworkSynchronizeExistence { get; }
             public Type Type { get; }
             internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
 
-            public ComponentRegistration(string name, Type type, uint? netID, bool networkSynchronizeExistence)
+            public ComponentRegistration(string name, Type type, uint? netID)
             {
                 Name = name;
                 NetID = netID;
-                NetworkSynchronizeExistence = networkSynchronizeExistence;
                 Type = type;
                 References.Add(type);
             }
@@ -98,7 +96,6 @@ namespace Robust.Shared.GameObjects
             var name = dummy.Name;
             var lowerCaseName = name.ToLowerInvariant();
             var netID = dummy.NetID;
-            var netSyncExist = dummy.NetworkSynchronizeExistence;
 
             if (IgnoredComponentNames.Contains(name))
             {
@@ -138,7 +135,7 @@ namespace Robust.Shared.GameObjects
                 RemoveComponent(netIDs[netID.Value].Name);
             }
 
-            var registration = new ComponentRegistration(name, type, netID, netSyncExist);
+            var registration = new ComponentRegistration(name, type, netID);
             names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;

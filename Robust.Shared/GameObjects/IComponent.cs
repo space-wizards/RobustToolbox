@@ -1,7 +1,6 @@
 using System;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -19,7 +18,6 @@ namespace Robust.Shared.GameObjects
         ///     on the other side of the network.
         ///     If this is <c>null</c>, the component is not replicated across the network.
         /// </summary>
-        /// <seealso cref="NetworkSynchronizeExistence" />
         /// <seealso cref="IComponentRegistration.NetID" />
         uint? NetID { get; }
 
@@ -39,16 +37,6 @@ namespace Robust.Shared.GameObjects
         ///     if the component is initialized or being deleted.
         /// </summary>
         ComponentLifeStage LifeStage { get; }
-
-        /// <summary>
-        ///     Whether the client should synchronize component additions and removals.
-        ///     If this is false and the component gets added or removed server side, the client will not do the same.
-        ///     If this is true and the server adds or removes the component, the client will do as such too.
-        ///     This flag has no effect if <see cref="NetID" /> is <c>null</c>.
-        ///     This is disabled by default, usually the client builds their instance from a prototype.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.NetworkSynchronizeExistence" />
-        bool NetworkSynchronizeExistence { get; }
 
         /// <summary>
         ///     Whether this component should be synchronized with clients when modified.

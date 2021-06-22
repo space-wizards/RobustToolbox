@@ -146,7 +146,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         public MapGridComponentState(GridId gridIndex)
-            : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
         }

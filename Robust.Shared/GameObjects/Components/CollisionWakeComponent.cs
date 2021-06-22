@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
         {
             public bool Enabled { get; }
 
-            public CollisionWakeState(bool enabled) : base(NetIDs.COLLISION_WAKE)
+            public CollisionWakeState(bool enabled)
             {
                 Enabled = enabled;
             }

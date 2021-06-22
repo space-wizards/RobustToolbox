@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public Label Label { get; }
 
-        public Button() : base()
+        public Button()
         {
             AddStyleClass(StyleClassButton);
             Label = new Label

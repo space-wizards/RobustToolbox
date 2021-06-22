@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
     {
         public Box2? LocalBounds { get; }
 
-        public ClickableComponentState(Box2? localBounds) : base(NetIDs.CLICKABLE)
+        public ClickableComponentState(Box2? localBounds)
         {
             LocalBounds = localBounds;
         }

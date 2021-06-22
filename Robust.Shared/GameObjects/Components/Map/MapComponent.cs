@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -73,7 +73,6 @@ namespace Robust.Shared.GameObjects
         public MapId MapId { get; }
 
         public MapComponentState(MapId mapId)
-            : base(NetIDs.MAP_MAP)
         {
             MapId = mapId;
         }

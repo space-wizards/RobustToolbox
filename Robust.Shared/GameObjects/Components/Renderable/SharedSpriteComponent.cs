@@ -42,7 +42,6 @@ namespace Robust.Shared.GameObjects
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
-                : base(NetIDs.SPRITE)
             {
                 Visible = visible;
                 DrawDepth = drawDepth;

@@ -52,7 +52,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
-        public SpinBox() : base()
+        public SpinBox()
         {
             MouseFilter = MouseFilterMode.Pass;
 

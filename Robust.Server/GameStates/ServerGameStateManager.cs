@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Server.Map;
 using Robust.Server.Player;
@@ -21,6 +22,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
+    [UsedImplicitly]
     public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.

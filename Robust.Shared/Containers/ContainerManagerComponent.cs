@@ -281,7 +281,7 @@ namespace Robust.Shared.Containers
         {
             public List<ContainerData> ContainerSet;
 
-            public ContainerManagerComponentState(List<ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(List<ContainerData> containers)
             {
                 ContainerSet = containers;
             }

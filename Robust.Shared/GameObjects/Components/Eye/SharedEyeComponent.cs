@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects
         public Angle Rotation { get; }
         public uint VisibilityMask { get; }
 
-        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, Angle rotation, uint visibilityMask) : base(NetIDs.EYE)
+        public EyeComponentState(bool drawFov, Vector2 zoom, Vector2 offset, Angle rotation, uint visibilityMask)
         {
             DrawFov = drawFov;
             Zoom = zoom;

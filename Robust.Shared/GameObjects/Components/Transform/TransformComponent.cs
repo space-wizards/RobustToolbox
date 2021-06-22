@@ -899,7 +899,6 @@ namespace Robust.Shared.GameObjects
             /// <param name="parentId">Current parent transform of this entity.</param>
             /// <param name="noLocalRotation"></param>
             public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation, bool anchored)
-                : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;

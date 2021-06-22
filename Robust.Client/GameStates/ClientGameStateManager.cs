@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -25,6 +26,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
+    [UsedImplicitly]
     public class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor = default!;
@@ -375,12 +377,13 @@ namespace Robust.Client.GameStates
                     var player = _players.LocalPlayer.Session;
                     var state = component.GetComponentState(player);
 
-                    if (state.GetType() == typeof(ComponentState))
+                    var netID = component.NetID;
+                    if (netID is null || state.GetType() == typeof(ComponentState))
                     {
                         continue;
                     }
 
-                    compData.Add(state.NetID, state);
+                    compData.Add(netID.Value, state);
                 }
             }
 

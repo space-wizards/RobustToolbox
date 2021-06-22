@@ -94,7 +94,7 @@ namespace Robust.Shared.GameObjects
             public bool Enabled { get; }
             public Box2 BoundingBox { get; }
 
-            public OccluderComponentState(bool enabled, Box2 boundingBox) : base(NetIDs.OCCLUDER)
+            public OccluderComponentState(bool enabled, Box2 boundingBox)
             {
                 Enabled = enabled;
                 BoundingBox = boundingBox;

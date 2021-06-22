@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -18,6 +19,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
+    [NetID(NetIDs.MAP_MAP)]
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]
@@ -26,9 +28,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "Map";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.MAP_MAP;
 
         /// <inheritdoc />
         public MapId WorldMap

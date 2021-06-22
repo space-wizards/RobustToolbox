@@ -10,7 +10,6 @@ namespace Robust.Shared.GameObjects
     public class SharedEyeComponent : Component
     {
         public override string Name => "Eye";
-        public override uint? NetID => NetIDs.EYE;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool DrawFov { get; set; }

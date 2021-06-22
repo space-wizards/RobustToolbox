@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
@@ -9,10 +10,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetID(NetIDs.OCCLUDER)]
     public class OccluderComponent : Component
     {
         public sealed override string Name => "Occluder";
-        public sealed override uint? NetID => NetIDs.OCCLUDER;
 
         [DataField("enabled")]
         private bool _enabled = true;

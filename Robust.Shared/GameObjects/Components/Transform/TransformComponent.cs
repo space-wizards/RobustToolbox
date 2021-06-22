@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -16,6 +17,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(ITransformComponent))]
+    [NetID(NetIDs.TRANSFORM)]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]
@@ -53,9 +55,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "Transform";
-
-        /// <inheritdoc />
-        public sealed override uint? NetID => NetIDs.TRANSFORM;
 
         /// <inheritdoc />
         [ViewVariables]

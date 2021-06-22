@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -11,10 +12,10 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     An optimisation component for stuff that should be set as collidable when it's awake and non-collidable when asleep.
     /// </summary>
+    [NetID(NetIDs.COLLISION_WAKE)]
     public sealed class CollisionWakeComponent : Component
     {
         public override string Name => "CollisionWake";
-        public override uint? NetID => NetIDs.COLLISION_WAKE;
 
         [DataField("enabled")]
         private bool _enabled = true;

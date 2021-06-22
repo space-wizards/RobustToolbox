@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects
@@ -263,7 +264,7 @@ namespace Robust.Shared.GameObjects
         /// ID used to reference the component type across the network.
         /// If null, no network synchronization will be available for this component.
         /// </summary>
-        /// <seealso cref="IComponent.NetID" />
+        /// <seealso cref="NetIDAttribute" />
         uint? NetID { get; }
 
         /// <summary>

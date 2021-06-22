@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -11,10 +12,10 @@ namespace Robust.Shared.GameObjects
     ///     The data works using a simple key/value system. It is recommended to use enum keys to prevent errors.
     ///     Visualization works client side with overrides of the <c>AppearanceVisualizer</c> class.
     /// </summary>
+    [NetID(NetIDs.APPEARANCE)]
     public abstract class SharedAppearanceComponent : Component
     {
         public override string Name => "Appearance";
-        public override uint? NetID => NetIDs.APPEARANCE;
 
         public abstract void SetData(string key, object value);
         public abstract void SetData(Enum key, object value);

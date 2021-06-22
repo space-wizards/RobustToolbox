@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
@@ -12,15 +13,6 @@ namespace Robust.Shared.GameObjects
     /// </remarks>
     public interface IComponent
     {
-        /// <summary>
-        ///     Represents the network ID for the component.
-        ///     The network ID is used to determine which component will receive the component state
-        ///     on the other side of the network.
-        ///     If this is <c>null</c>, the component is not replicated across the network.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.NetID" />
-        uint? NetID { get; }
-
         /// <summary>
         ///     Name that this component is represented with in prototypes.
         /// </summary>
@@ -42,7 +34,7 @@ namespace Robust.Shared.GameObjects
         ///     Whether this component should be synchronized with clients when modified.
         ///     If this is true, the server will synchronize all client instances with the data in this instance.
         ///     If this is false, clients can modify the data in their instances without being overwritten by the server.
-        ///     This flag has no effect if <see cref="NetID" /> is <c>null</c>.
+        ///     This flag has no effect if <see cref="NetIDAttribute" /> is not defined on the component.
         ///     This is enabled by default.
         /// </summary>
         bool NetSyncEnabled { get; }

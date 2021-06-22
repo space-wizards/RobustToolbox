@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
@@ -65,6 +66,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMetaDataComponent"/>
     [ComponentReference(typeof(IMetaDataComponent))]
+    [NetID(NetIDs.META_DATA)]
     internal class MetaDataComponent : Component, IMetaDataComponent
     {
         [Dependency] private readonly IPrototypeManager _prototypes = default!;
@@ -77,9 +79,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "MetaData";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.META_DATA;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

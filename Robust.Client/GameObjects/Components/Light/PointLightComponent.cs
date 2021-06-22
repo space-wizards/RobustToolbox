@@ -5,6 +5,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -17,12 +18,12 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(IPointLightComponent))]
+    [NetID(NetIDs.POINT_LIGHT)]
     public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         public override string Name => "PointLight";
-        public override uint? NetID => NetIDs.POINT_LIGHT;
 
         internal bool TreeUpdateQueued { get; set; }
 

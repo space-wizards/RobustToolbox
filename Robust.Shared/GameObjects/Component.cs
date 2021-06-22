@@ -21,10 +21,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public virtual uint? NetID => null;
-
-        /// <inheritdoc />
-        [ViewVariables]
         [DataField("netsync")]
         public bool NetSyncEnabled { get; set; } = true;
 
@@ -254,7 +250,7 @@ namespace Robust.Shared.GameObjects
             if (Attribute.GetCustomAttribute(GetType(), typeof(NetIDAttribute)) is NetIDAttribute attribute)
                 return attribute.NetId;
 
-            return NetID;
+            return null;
         }
 
         /// <param name="player"></param>

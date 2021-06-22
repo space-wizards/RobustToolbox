@@ -1,6 +1,7 @@
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
@@ -269,10 +270,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             return sim;
         }
 
+        [NetID(CompNetId)]
         private class DummyComponent : Component, ICompType1, ICompType2
         {
             public override string Name => "Dummy";
-            public override uint? NetID => CompNetId;
         }
 
         private interface ICompType1 { }

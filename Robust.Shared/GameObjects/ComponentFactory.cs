@@ -95,7 +95,7 @@ namespace Robust.Shared.GameObjects
 
             var name = dummy.Name;
             var lowerCaseName = name.ToLowerInvariant();
-            var netID = dummy.NetID;
+            var netID = dummy.GetNetId();
 
             if (IgnoredComponentNames.Contains(name))
             {

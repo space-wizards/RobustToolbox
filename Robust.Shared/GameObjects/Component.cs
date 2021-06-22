@@ -245,14 +245,22 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
+        /// <inheritdoc />
+        public uint? GetNetId()
+        {
+            return NetID;
+        }
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public virtual ComponentState GetComponentState(ICommonSession player)
         {
-            if (NetID == null)
-                throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
+            var netId = GetNetId();
 
-            return new ComponentState();
+            if(netId.HasValue)
+                throw new InvalidOperationException($"Component '{GetType().FullName}' has a NetId {netId.Value}, but did not override GetComponentState.");
+
+            throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without having a NetId.");
         }
 
         /// <inheritdoc />

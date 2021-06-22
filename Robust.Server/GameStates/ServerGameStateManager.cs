@@ -274,17 +274,17 @@ namespace Robust.Server.GameStates
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Added(component.NetID!.Value, state));
+                    changed.Add(ComponentChange.Added(netId, state));
                 }
                 else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
                 {
-                    changed.Add(ComponentChange.Changed(component.NetID!.Value, component.GetComponentState(player)));
+                    changed.Add(ComponentChange.Changed(netId, component.GetComponentState(player)));
                 }
                 else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Removed(component.NetID!.Value));
+                    changed.Add(ComponentChange.Removed(netId));
                 }
             }
 

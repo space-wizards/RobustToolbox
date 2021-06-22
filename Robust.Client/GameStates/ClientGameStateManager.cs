@@ -342,9 +342,9 @@ namespace Robust.Client.GameStates
                 // TODO: handle component deletions/creations.
                 foreach (var (netId, comp) in _componentManager.GetNetComponents(entity.Uid))
                 {
-                    DebugTools.AssertNotNull(comp.NetID);
+                    DebugTools.AssertNotNull(netId);
 
-                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(comp.NetID!.Value, out var compState))
+                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(netId, out var compState))
                     {
                         continue;
                     }
@@ -375,15 +375,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
                 {
-                    var state = component.GetComponentState(player);
-
-                    var netID = component.NetID;
-                    if (netID is null || state.GetType() == typeof(ComponentState))
-                    {
-                        continue;
-                    }
-
-                    compData.Add(netID.Value, state);
+                    compData.Add(netId, component.GetComponentState(player));
                 }
             }
 

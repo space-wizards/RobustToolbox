@@ -146,10 +146,10 @@ namespace Robust.Shared.GameObjects
             }
 
             // add the component to the netId grid
-            if (component.NetID != null)
+            if (reg.NetID != null)
             {
                 // the main comp grid keeps this in sync
-                var netId = component.NetID.Value;
+                var netId = reg.NetID.Value;
 
                 if (!_netComponents.TryGetValue(uid, out var netSet))
                 {
@@ -337,13 +337,13 @@ namespace Robust.Shared.GameObjects
             }
 
             // ReSharper disable once InvertIf
-            if (component.NetID != null)
+            if (reg.NetID != null)
             {
                 var netSet = _netComponents[entityUid];
                 if (netSet.Count == 1)
                     _netComponents.Remove(entityUid);
                 else
-                    netSet.Remove(component.NetID.Value);
+                    netSet.Remove(reg.NetID.Value);
 
                 component.Owner.Dirty();
             }

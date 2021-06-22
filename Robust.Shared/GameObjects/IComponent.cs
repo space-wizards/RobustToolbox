@@ -99,6 +99,8 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null);
 
+        uint? GetNetId();
+
         /// <summary>
         ///     Get the component's state for replicating on the client.
         /// </summary>

@@ -1,10 +1,12 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetID(NetIDs.EYE)]
     public class SharedEyeComponent : Component
     {
         public override string Name => "Eye";

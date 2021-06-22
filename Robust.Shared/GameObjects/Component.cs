@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
@@ -248,6 +249,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public uint? GetNetId()
         {
+            // It is assumed that this respects the inheritance order, so it will always return the child attribute before the parent.
+            // This would allow you to safely change the NetID of child classes.
+            if (Attribute.GetCustomAttribute(GetType(), typeof(NetIDAttribute)) is NetIDAttribute attribute)
+                return attribute.NetId;
+
             return NetID;
         }
 

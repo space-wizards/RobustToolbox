@@ -36,7 +36,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly bool Created;
 
-
+        /// <summary>
+        /// State data for the created/modified component, if any.
+        /// </summary>
         public readonly ComponentState? State;
 
         /// <summary>

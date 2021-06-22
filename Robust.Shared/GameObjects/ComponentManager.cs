@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Internal.TypeSystem;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
@@ -474,9 +476,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetNetComponents(EntityUid uid)
+        public NetComponentEnumerable GetNetComponents(EntityUid uid)
         {
-            return _netComponents[uid].Values;
+            return new NetComponentEnumerable(_netComponents[uid]);
         }
 
         #region Join Functions
@@ -596,5 +598,31 @@ namespace Robust.Shared.GameObjects
                 _entTraitDict.Add(refType, new Dictionary<EntityUid, Component>());
             }
         }
+    }
+
+    public readonly struct NetComponentEnumerable
+    {
+        private readonly Dictionary<uint, Component> _dictionary;
+
+        public NetComponentEnumerable(Dictionary<uint, Component> dictionary) => _dictionary = dictionary;
+        public NetComponentEnumerator GetEnumerator() => new(_dictionary);
+    }
+
+    public struct NetComponentEnumerator
+    {
+        // DO NOT MAKE THIS READONLY
+        private Dictionary<uint, Component>.Enumerator _dictEnum;
+
+        public NetComponentEnumerator(Dictionary<uint, Component> dictionary) => _dictEnum = dictionary.GetEnumerator();
+        public bool MoveNext() => _dictEnum.MoveNext();
+        public (uint netId, IComponent component) Current
+        {
+            get
+            {
+                var val = _dictEnum.Current;
+                return (val.Key, val.Value);
+            }
+        }
+
     }
 }

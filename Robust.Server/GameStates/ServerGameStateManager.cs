@@ -253,9 +253,9 @@ namespace Robust.Server.GameStates
         {
             var changed = new List<ComponentChange>();
 
-            foreach (var comp in compMan.GetNetComponents(entityUid))
+            foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
             {
-                DebugTools.Assert(comp.Initialized);
+                DebugTools.Assert(component.Initialized);
 
                 // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
                 // "not different from entity creation".
@@ -264,27 +264,27 @@ namespace Robust.Server.GameStates
                 // to what the component state / ComponentChange would send.
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
-                DebugTools.Assert(comp.LastModifiedTick >= comp.CreationTick);
+                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
 
-                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
+                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
                 {
                     ComponentState? state = null;
-                    if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
-                        state = comp.GetComponentState(player);
+                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                        state = component.GetComponentState(player);
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Added(comp.NetID!.Value, state));
+                    changed.Add(ComponentChange.Added(component.NetID!.Value, state));
                 }
-                else if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
                 {
-                    changed.Add(ComponentChange.Changed(comp.NetID!.Value, comp.GetComponentState(player)));
+                    changed.Add(ComponentChange.Changed(component.NetID!.Value, component.GetComponentState(player)));
                 }
-                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
+                else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Removed(comp.NetID!.Value));
+                    changed.Add(ComponentChange.Removed(component.NetID!.Value));
                 }
             }
 

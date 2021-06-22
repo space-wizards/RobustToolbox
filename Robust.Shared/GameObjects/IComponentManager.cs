@@ -195,7 +195,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>All components that have a network ID.</returns>
-        IEnumerable<IComponent> GetNetComponents(EntityUid uid);
+        NetComponentEnumerable GetNetComponents(EntityUid uid);
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

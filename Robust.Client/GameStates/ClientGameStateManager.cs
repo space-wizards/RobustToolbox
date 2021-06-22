@@ -340,7 +340,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // TODO: handle component deletions/creations.
-                foreach (var comp in _componentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, comp) in _componentManager.GetNetComponents(entity.Uid))
                 {
                     DebugTools.AssertNotNull(comp.NetID);
 
@@ -365,16 +365,16 @@ namespace Robust.Client.GameStates
             // so that we can later roll back to it (if necessary).
             var outputData = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
 
+            Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
+            var player = _players.LocalPlayer.Session;
+
             foreach (var createdEntity in createdEntities)
             {
                 var compData = new Dictionary<uint, ComponentState>();
                 outputData.Add(createdEntity, compData);
 
-                foreach (var component in _componentManager.GetNetComponents(createdEntity))
+                foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
                 {
-                    Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
-
-                    var player = _players.LocalPlayer.Session;
                     var state = component.GetComponentState(player);
 
                     var netID = component.NetID;

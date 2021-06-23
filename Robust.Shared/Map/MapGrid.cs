@@ -226,8 +226,6 @@ namespace Robust.Shared.Map
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
-            var tiles = new List<TileRef>();
-
             for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
             {
                 for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
@@ -244,7 +242,8 @@ namespace Robust.Shared.Map
 
                         if (predicate == null || predicate(tile))
                         {
-                            tiles.Add(tile);
+                            yield return tile;
+
                         }
                     }
                     else if (!ignoreEmpty)
@@ -253,12 +252,11 @@ namespace Robust.Shared.Map
 
                         if (predicate == null || predicate(tile))
                         {
-                            tiles.Add(tile);
+                            yield return tile;
                         }
                     }
                 }
             }
-            return tiles;
         }
 
         /// <inheritdoc />

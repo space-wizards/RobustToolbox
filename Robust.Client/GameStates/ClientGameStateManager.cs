@@ -375,7 +375,12 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
                 {
-                    compData.Add(netId, component.GetComponentState(player));
+                    var state = component.GetComponentState(player);
+
+                    if(state.GetType() == typeof(ComponentState))
+                        continue;
+
+                    compData.Add(netId, state);
                 }
             }
 

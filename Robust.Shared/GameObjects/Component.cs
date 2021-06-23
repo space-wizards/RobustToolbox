@@ -253,16 +253,18 @@ namespace Robust.Shared.GameObjects
             return null;
         }
 
+        private static readonly ComponentState DefaultComponentState = new();
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public virtual ComponentState GetComponentState(ICommonSession player)
         {
             var netId = GetNetId();
 
-            if(netId.HasValue)
-                throw new InvalidOperationException($"Component '{GetType().FullName}' has a NetId {netId.Value}, but did not override GetComponentState.");
+            if (!netId.HasValue)
+                throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without having a NetId.");
 
-            throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without having a NetId.");
+            return DefaultComponentState;
         }
 
         /// <inheritdoc />

@@ -157,9 +157,8 @@ namespace Robust.Shared.GameObjects
         {
             var newEntity = CreateEntity(prototypeName);
 
-            if (TryGetEntity(coordinates.EntityId, out var entity))
+            if (coordinates.IsValid(this))
             {
-                newEntity.Transform.AttachParent(entity);
                 newEntity.Transform.Coordinates = coordinates;
             }
 

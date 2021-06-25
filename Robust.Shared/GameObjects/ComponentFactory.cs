@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
+using JetBrains.Annotations;
+using Robust.Shared.Console;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -11,13 +14,13 @@ namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        private readonly IDynamicTypeFactoryInternal _typeFactory;
+        private readonly IReflectionManager _reflectionManager;
 
         private class ComponentRegistration : IComponentRegistration
         {
             public string Name { get; }
-            public uint? NetID { get; }
+            public uint? NetID { get; set; }
             public Type Type { get; }
             internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
@@ -25,7 +28,7 @@ namespace Robust.Shared.GameObjects
             public ComponentRegistration(string name, Type type, uint? netID)
             {
                 Name = name;
-                NetID = netID;
+                NetID = null;
                 Type = type;
                 References.Add(type);
             }
@@ -62,6 +65,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private readonly HashSet<string> IgnoredComponentNames = new();
 
+        private bool _registrationLock;
+
         /// <inheritdoc />
         public event Action<IComponentRegistration>? ComponentAdded;
 
@@ -76,6 +81,27 @@ namespace Robust.Shared.GameObjects
 
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
+        internal ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
+        {
+            _typeFactory = typeFactory;
+            _reflectionManager = reflectionManager;
+
+            conHost.RegisterCommand("dump_net_comps", "Prints the table of networked components.", "dump_net_comps", (shell, argStr, args) =>
+            {
+                if (!_registrationLock)
+                {
+                    shell.WriteError("Registration still writeable.");
+                    return;
+                }
+
+                shell.WriteLine("Networked Component Registrations:");
+                foreach (var (netId, registration) in netIDs)
+                {
+                    shell.WriteLine($"  [{netId, 4}] {registration.Name, -16} {registration.Type.Name}");
+                }
+            });
+        }
+
         [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
         {
@@ -84,6 +110,9 @@ namespace Robust.Shared.GameObjects
 
         private void Register(Type type, bool overwrite = false)
         {
+            if (_registrationLock)
+                throw new ComponentRegistrationLockedException();
+
             if (types.ContainsKey(type))
             {
                 throw new InvalidOperationException($"Type is already registered: {type}");
@@ -154,6 +183,9 @@ namespace Robust.Shared.GameObjects
 
         private void RegisterReference(Type target, Type @interface)
         {
+            if (_registrationLock)
+                throw new ComponentRegistrationLockedException();
+
             if (!types.ContainsKey(target))
             {
                 throw new InvalidOperationException($"Unregistered type: {target}");
@@ -191,6 +223,9 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponent(string name)
         {
+            if (_registrationLock)
+                throw new ComponentRegistrationLockedException();
+
             var registration = names[name];
             
             names.Remove(registration.Name);
@@ -403,15 +438,42 @@ namespace Robust.Shared.GameObjects
             return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
 
-        public IEnumerable<uint> GetAllNetIds()
+        /// <inheritdoc />
+        public uint CalculateNetIds()
         {
-            foreach (var registration in AllRegistrations)
+            _registrationLock = true;
+
+            // assumptions:
+            // component names are guaranteed to be unique
+            // component names are 1:1 with component concrete types
+
+            // a subset of component names are networked
+            var networkedRegs = new List<ComponentRegistration>(names.Count);
+
+            foreach (var kvRegistration in names)
             {
-                if (registration.NetID != null)
+                var registration = kvRegistration.Value;
+                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetIDAttribute)) is NetIDAttribute)
                 {
-                    yield return registration.NetID.Value;
+                    networkedRegs.Add(registration);
                 }
             }
+
+            // The sorting implementation is unstable, but there are no duplicate names, so that isn't a problem.
+            // Ordinal comparison is used so that the resulting order is always identical on every computer.
+            networkedRegs.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+            netIDs.Clear();
+
+            for (ushort i = 0; i < networkedRegs.Count; i++)
+            {
+                var registration = networkedRegs[i];
+                registration.NetID = i;
+                netIDs.Add(i, registration);
+            }
+
+            //TODO: Hash names and use as verification that the sets are identical
+            return 0;
         }
     }
 
@@ -431,4 +493,6 @@ namespace Robust.Shared.GameObjects
           SerializationInfo info,
           StreamingContext context) : base(info, context) { }
     }
+
+    public class ComponentRegistrationLockedException : Exception { }
 }

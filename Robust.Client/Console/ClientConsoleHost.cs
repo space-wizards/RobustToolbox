@@ -64,7 +64,7 @@ namespace Robust.Client.Console
         /// <inheritdoc />
         public void Reset()
         {
-            AvailableCommands.Clear();
+            //AvailableCommands.Clear();
             _requestedCommands = false;
             NetManager.Connected += OnNetworkConnected;
 
@@ -142,6 +142,9 @@ namespace Robust.Client.Console
         private void OutputText(string text, bool local, bool error)
         {
             AddString?.Invoke(this, new AddStringArgs(text, local, error));
+
+            var level = error ? LogLevel.Warning : LogLevel.Info;
+            Logger.LogS(level, "CON", text);
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)

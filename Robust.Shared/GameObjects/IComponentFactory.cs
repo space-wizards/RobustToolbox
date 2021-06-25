@@ -242,8 +242,7 @@ namespace Robust.Shared.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<Type> GetAllRefTypes();
-
-        IEnumerable<uint> GetAllNetIds();
+        uint CalculateNetIds();
     }
 
     /// <summary>

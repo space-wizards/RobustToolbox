@@ -49,7 +49,11 @@ namespace Robust.Client.Console
             NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
             NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
 
-            Reset();
+            _requestedCommands = false;
+            NetManager.Connected += OnNetworkConnected;
+
+            LoadConsoleCommands();
+            SendServerCommandRequest();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
@@ -59,17 +63,6 @@ namespace Robust.Client.Console
             LogManager.GetSawmill(SawmillName).Info($"SERVER:{text}");
 
             ExecuteCommand(null, text);
-        }
-
-        /// <inheritdoc />
-        public void Reset()
-        {
-            //AvailableCommands.Clear();
-            _requestedCommands = false;
-            NetManager.Connected += OnNetworkConnected;
-
-            LoadConsoleCommands();
-            SendServerCommandRequest();
         }
 
         /// <inheritdoc />

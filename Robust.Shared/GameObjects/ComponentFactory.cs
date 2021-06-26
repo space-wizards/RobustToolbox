@@ -439,7 +439,7 @@ namespace Robust.Shared.GameObjects
             foreach (var kvRegistration in names)
             {
                 var registration = kvRegistration.Value;
-                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetIDAttribute)) is NetIDAttribute)
+                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)
                 {
                     networkedRegs.Add(registration);
                 }

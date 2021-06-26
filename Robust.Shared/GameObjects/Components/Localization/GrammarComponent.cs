@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects.Components.Localization
     ///     Overrides grammar attributes specified in prototypes or localization files.
     /// </summary>
     [RegisterComponent]
-    [NetID()]
+    [NetworkedComponent()]
     public class GrammarComponent : Component
     {
         public override string Name => "Grammar";

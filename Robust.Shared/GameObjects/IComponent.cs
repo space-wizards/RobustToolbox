@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects
         ///     Whether this component should be synchronized with clients when modified.
         ///     If this is true, the server will synchronize all client instances with the data in this instance.
         ///     If this is false, clients can modify the data in their instances without being overwritten by the server.
-        ///     This flag has no effect if <see cref="NetIDAttribute" /> is not defined on the component.
+        ///     This flag has no effect if <see cref="NetworkedComponentAttribute" /> is not defined on the component.
         ///     This is enabled by default.
         /// </summary>
         bool NetSyncEnabled { get; }

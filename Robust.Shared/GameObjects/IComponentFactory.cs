@@ -263,7 +263,7 @@ namespace Robust.Shared.GameObjects
         /// ID used to reference the component type across the network.
         /// If null, no network synchronization will be available for this component.
         /// </summary>
-        /// <seealso cref="NetIDAttribute" />
+        /// <seealso cref="NetworkedComponentAttribute" />
         ushort? NetID { get; }
 
         /// <summary>

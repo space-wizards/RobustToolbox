@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
-    [NetID()]
+    [NetworkedComponent()]
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]

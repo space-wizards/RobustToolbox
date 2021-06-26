@@ -45,7 +45,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(IPhysBody))]
-    [NetID()]
+    [NetworkedComponent()]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
         [DataField("status", readOnly: true)]

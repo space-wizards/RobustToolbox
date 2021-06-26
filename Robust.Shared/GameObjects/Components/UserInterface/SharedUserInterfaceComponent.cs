@@ -7,7 +7,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetID()]
+    [NetworkedComponent()]
     public abstract class SharedUserInterfaceComponent : Component
     {
         public sealed override string Name => "UserInterface";

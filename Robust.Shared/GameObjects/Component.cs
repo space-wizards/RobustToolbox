@@ -248,7 +248,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual ComponentState GetComponentState(ICommonSession player)
         {
-            if (!(Attribute.GetCustomAttribute(GetType(), typeof(NetIDAttribute)) is NetIDAttribute))
+            if (!(Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute))
                 throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without being networked.");
 
             return DefaultComponentState;

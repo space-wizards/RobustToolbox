@@ -17,7 +17,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(ITransformComponent))]
-    [NetID(NetIDs.TRANSFORM)]
+    [NetID()]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]

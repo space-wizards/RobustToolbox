@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects
         private const int EntityCapacity = 1024;
         private const int NetComponentCapacity = 8;
 
-        private readonly Dictionary<EntityUid, Dictionary<uint, Component>> _netComponents
+        private readonly Dictionary<EntityUid, Dictionary<ushort, Component>> _netComponents
             = new(EntityCapacity);
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
@@ -153,7 +153,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!_netComponents.TryGetValue(uid, out var netSet))
                 {
-                    netSet = new Dictionary<uint, Component>(NetComponentCapacity);
+                    netSet = new Dictionary<ushort, Component>(NetComponentCapacity);
                     _netComponents.Add(uid, netSet);
                 }
                 netSet.Add(netId, component);
@@ -193,7 +193,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, uint netId)
+        public void RemoveComponent(EntityUid uid, ushort netId)
         {
             RemoveComponentDeferred((Component)GetComponent(uid, netId), uid, false);
         }
@@ -369,7 +369,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasComponent(EntityUid uid, uint netId)
+        public bool HasComponent(EntityUid uid, ushort netId)
         {
             return _netComponents.TryGetValue(uid, out var netSet)
                    && netSet.ContainsKey(netId);
@@ -399,7 +399,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IComponent GetComponent(EntityUid uid, uint netId)
+        public IComponent GetComponent(EntityUid uid, ushort netId)
         {
             return _netComponents[uid][netId];
         }
@@ -438,7 +438,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, uint netId, [MaybeNullWhen(false)] out IComponent component)
+        public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
             if (_netComponents.TryGetValue(uid, out var netSet)
                 && netSet.TryGetValue(netId, out var comp))
@@ -602,20 +602,20 @@ namespace Robust.Shared.GameObjects
 
     public readonly struct NetComponentEnumerable
     {
-        private readonly Dictionary<uint, Component> _dictionary;
+        private readonly Dictionary<ushort, Component> _dictionary;
 
-        public NetComponentEnumerable(Dictionary<uint, Component> dictionary) => _dictionary = dictionary;
+        public NetComponentEnumerable(Dictionary<ushort, Component> dictionary) => _dictionary = dictionary;
         public NetComponentEnumerator GetEnumerator() => new(_dictionary);
     }
 
     public struct NetComponentEnumerator
     {
         // DO NOT MAKE THIS READONLY
-        private Dictionary<uint, Component>.Enumerator _dictEnum;
+        private Dictionary<ushort, Component>.Enumerator _dictEnum;
 
-        public NetComponentEnumerator(Dictionary<uint, Component> dictionary) => _dictEnum = dictionary.GetEnumerator();
+        public NetComponentEnumerator(Dictionary<ushort, Component> dictionary) => _dictEnum = dictionary.GetEnumerator();
         public bool MoveNext() => _dictEnum.MoveNext();
-        public (uint netId, IComponent component) Current
+        public (ushort netId, IComponent component) Current
         {
             get
             {

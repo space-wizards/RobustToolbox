@@ -38,6 +38,8 @@ namespace Robust.Client.GameStates
             _pendingSystemMessages
                 = new();
 
+        private uint _metaCompNetId;
+
         [Dependency] private readonly IComponentFactory _compFactory = default!;
         [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
         [Dependency] private readonly IEntityLookup _lookup = default!;
@@ -101,6 +103,12 @@ namespace Robust.Client.GameStates
             Predicting = _config.GetCVar(CVars.NetPredict);
             PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
             PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
+
+            var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
+            if (!metaId.HasValue)
+                throw new InvalidOperationException("MetaDataComponent does not have a NetId.");
+
+            _metaCompNetId = metaId.Value;
         }
 
         /// <inheritdoc />
@@ -426,7 +434,7 @@ namespace Robust.Client.GameStates
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState?) es.ComponentChanges?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA).State;
+                        var metaState = (MetaDataComponentState?) es.ComponentChanges?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                         if (metaState == null)
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
@@ -589,7 +597,7 @@ namespace Robust.Client.GameStates
 
             foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (compMan.TryGetComponent(entityUid, netId, out var component))
+                if (compMan.TryGetComponent(entityUid, (ushort) netId, out var component))
                 {
                     try
                     {

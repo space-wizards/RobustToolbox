@@ -143,7 +143,8 @@ namespace Robust.Server.GameObjects
             if (_networkManager.IsClient)
                 return;
 
-            var netId = component.GetNetId();
+            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
+
             if (!netId.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 

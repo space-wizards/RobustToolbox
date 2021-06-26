@@ -109,7 +109,8 @@ namespace Robust.Client.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            var netId = component.GetNetId();
+            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
+
             if (!netId.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 

@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
-    [NetID(NetIDs.MAP_GRID)]
+    [NetID()]
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;

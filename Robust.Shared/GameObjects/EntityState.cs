@@ -44,9 +44,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The Network ID of the component to remove.
         /// </summary>
-        public readonly uint NetID;
+        public readonly ushort NetID;
 
-        public ComponentChange(uint netId, bool created, bool deleted, ComponentState? state)
+        public ComponentChange(ushort netId, bool created, bool deleted, ComponentState? state)
         {
             Deleted = deleted;
             State = state;
@@ -59,17 +59,17 @@ namespace Robust.Shared.GameObjects
             return $"{(Deleted ? "D" : "C")} {NetID} {State?.GetType().Name}";
         }
 
-        public static ComponentChange Added(uint netId, ComponentState? state)
+        public static ComponentChange Added(ushort netId, ComponentState? state)
         {
             return new(netId, true, false, state);
         }
 
-        public static ComponentChange Changed(uint netId, ComponentState state)
+        public static ComponentChange Changed(ushort netId, ComponentState state)
         {
             return new(netId, false, false, state);
         }
 
-        public static ComponentChange Removed(uint netId)
+        public static ComponentChange Removed(ushort netId)
         {
             return new(netId, false, true, null);
         }

@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetID(NetIDs.SPRITE)]
+    [NetID()]
     public abstract class SharedSpriteComponent : Component
     {
         public override string Name => "Sprite";

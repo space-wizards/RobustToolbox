@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetID(NetIDs.EYE)]
+    [NetID()]
     public class SharedEyeComponent : Component
     {
         public override string Name => "Eye";

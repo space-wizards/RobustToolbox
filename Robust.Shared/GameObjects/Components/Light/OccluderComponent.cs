@@ -10,7 +10,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [NetID(NetIDs.OCCLUDER)]
+    [NetID()]
     public class OccluderComponent : Component
     {
         public sealed override string Name => "Occluder";

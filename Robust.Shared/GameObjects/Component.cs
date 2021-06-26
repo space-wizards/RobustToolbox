@@ -242,27 +242,14 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
-        /// <inheritdoc />
-        public uint? GetNetId()
-        {
-            // It is assumed that this respects the inheritance order, so it will always return the child attribute before the parent.
-            // This would allow you to safely change the NetID of child classes.
-            if (Attribute.GetCustomAttribute(GetType(), typeof(NetIDAttribute)) is NetIDAttribute attribute)
-                return attribute.NetId;
-
-            return null;
-        }
-
         private static readonly ComponentState DefaultComponentState = new();
 
         /// <param name="player"></param>
         /// <inheritdoc />
         public virtual ComponentState GetComponentState(ICommonSession player)
         {
-            var netId = GetNetId();
-
-            if (!netId.HasValue)
-                throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without having a NetId.");
+            if (!(Attribute.GetCustomAttribute(GetType(), typeof(NetIDAttribute)) is NetIDAttribute))
+                throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without being networked.");
 
             return DefaultComponentState;
         }

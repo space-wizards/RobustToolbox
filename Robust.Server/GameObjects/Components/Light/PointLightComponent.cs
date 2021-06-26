@@ -11,7 +11,7 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(IPointLightComponent))]
-    [NetID(NetIDs.POINT_LIGHT)]
+    [NetID()]
     public class PointLightComponent : Component, IPointLightComponent
     {
         [DataField("color")]

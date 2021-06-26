@@ -18,7 +18,7 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(IPointLightComponent))]
-    [NetID(NetIDs.POINT_LIGHT)]
+    [NetID()]
     public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;

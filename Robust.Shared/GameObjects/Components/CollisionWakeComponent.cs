@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     An optimisation component for stuff that should be set as collidable when it's awake and non-collidable when asleep.
     /// </summary>
-    [NetID(NetIDs.COLLISION_WAKE)]
+    [NetID()]
     public sealed class CollisionWakeComponent : Component
     {
         public override string Name => "CollisionWake";

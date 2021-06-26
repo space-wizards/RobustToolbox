@@ -72,7 +72,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="netID">Network ID of the component to remove.</param>
-        void RemoveComponent(EntityUid uid, uint netID);
+        void RemoveComponent(EntityUid uid, ushort netID);
 
         /// <summary>
         ///     Removes the specified component.
@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="netId">Network ID to check for.</param>
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
-        bool HasComponent(EntityUid uid, uint netId);
+        bool HasComponent(EntityUid uid, ushort netId);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -143,7 +143,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to look on.</param>
         /// <param name="netId">Network ID of the component to retrieve.</param>
         /// <returns>The component with the specified network id.</returns>
-        IComponent GetComponent(EntityUid uid, uint netId);
+        IComponent GetComponent(EntityUid uid, ushort netId);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -171,7 +171,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="netId">Component Network ID to check for.</param>
         /// <param name="component">Component with the specified network id.</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent(EntityUid uid, uint netId, [NotNullWhen(true)] out IComponent? component);
+        bool TryGetComponent(EntityUid uid, ushort netId, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

@@ -242,7 +242,7 @@ namespace Robust.Shared.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<Type> GetAllRefTypes();
-        uint CalculateNetIds();
+        void CalculateNetIds();
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ namespace Robust.Shared.GameObjects
         /// If null, no network synchronization will be available for this component.
         /// </summary>
         /// <seealso cref="NetIDAttribute" />
-        uint? NetID { get; }
+        ushort? NetID { get; }
 
         /// <summary>
         /// The type that will be instantiated if this component is created.

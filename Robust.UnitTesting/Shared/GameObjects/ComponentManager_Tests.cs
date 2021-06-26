@@ -11,7 +11,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
     [TestFixture, Parallelizable ,TestOf(typeof(ComponentManager))]
     public class ComponentManager_Tests
     {
-        private const uint CompNetId = 3;
         private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
 
         [Test]
@@ -99,13 +98,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             // Arrange
             var sim = SimulationFactory();
+
+            var factory = sim.Resolve<IComponentFactory>();
+            var netId = factory.GetRegistration<DummyComponent>().NetID!;
+
             var entMan = sim.Resolve<IEntityManager>();
             var manager = sim.Resolve<IComponentManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             entity.AddComponent<DummyComponent>();
 
             // Act
-            var result = manager.HasComponent(entity.Uid, CompNetId);
+            var result = manager.HasComponent(entity.Uid, netId.Value);
 
             // Assert
             Assert.That(result, Is.True);
@@ -116,13 +119,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             // Arrange
             var sim = SimulationFactory();
+
+            var factory = sim.Resolve<IComponentFactory>();
+            var netId = factory.GetRegistration<DummyComponent>().NetID!;
+
             var entMan = sim.Resolve<IEntityManager>();
             var manager = sim.Resolve<IComponentManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var component = entity.AddComponent<DummyComponent>();
 
             // Act
-            var result = manager.GetComponent(entity.Uid, CompNetId);
+            var result = manager.GetComponent(entity.Uid, netId.Value);
 
             // Assert
             Assert.That(result, Is.EqualTo(component));
@@ -151,13 +158,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             // Arrange
             var sim = SimulationFactory();
+
+            var factory = sim.Resolve<IComponentFactory>();
+            var netId = factory.GetRegistration<DummyComponent>().NetID!;
+
             var entMan = sim.Resolve<IEntityManager>();
             var manager = sim.Resolve<IComponentManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var component = entity.AddComponent<DummyComponent>();
 
             // Act
-            var result = manager.TryGetComponent(entity.Uid, CompNetId, out var comp);
+            var result = manager.TryGetComponent(entity.Uid, netId.Value, out var comp);
 
             // Assert
             Assert.That(result, Is.True);
@@ -187,13 +198,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             // Arrange
             var sim = SimulationFactory();
+
+            var factory = sim.Resolve<IComponentFactory>();
+            var netId = factory.GetRegistration<DummyComponent>().NetID!;
+
             var entMan = sim.Resolve<IEntityManager>();
             var manager = sim.Resolve<IComponentManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var component = entity.AddComponent<DummyComponent>();
 
             // Act
-            manager.RemoveComponent(entity.Uid, CompNetId);
+            manager.RemoveComponent(entity.Uid, netId.Value);
             manager.CullRemovedComponents();
 
             // Assert
@@ -270,7 +285,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             return sim;
         }
 
-        [NetID(CompNetId)]
+        [NetID()]
         private class DummyComponent : Component, ICompType1, ICompType2
         {
             public override string Name => "Dummy";

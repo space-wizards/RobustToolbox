@@ -20,12 +20,12 @@ namespace Robust.Shared.GameObjects
         private class ComponentRegistration : IComponentRegistration
         {
             public string Name { get; }
-            public uint? NetID { get; set; }
+            public ushort? NetID { get; set; }
             public Type Type { get; }
             internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
 
-            public ComponentRegistration(string name, Type type, uint? netID)
+            public ComponentRegistration(string name, Type type)
             {
                 Name = name;
                 NetID = null;
@@ -124,7 +124,6 @@ namespace Robust.Shared.GameObjects
 
             var name = dummy.Name;
             var lowerCaseName = name.ToLowerInvariant();
-            var netID = dummy.GetNetId();
 
             if (IgnoredComponentNames.Contains(name))
             {
@@ -154,24 +153,11 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (netID != null && netIDs.ContainsKey(netID.Value))
-            {
-                if (!overwrite)
-                {
-                    throw new InvalidOperationException($"{name} has duplicate network ID {netID}, previous: {netIDs[netID.Value]}");
-                }
-
-                RemoveComponent(netIDs[netID.Value].Name);
-            }
-
-            var registration = new ComponentRegistration(name, type, netID);
+            var registration = new ComponentRegistration(name, type);
             names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
-            if (netID != null)
-            {
-                netIDs[netID.Value] = registration;
-            }
+
             ComponentAdded?.Invoke(registration);
         }
 
@@ -439,7 +425,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public uint CalculateNetIds()
+        public void CalculateNetIds()
         {
             _registrationLock = true;
 
@@ -471,9 +457,6 @@ namespace Robust.Shared.GameObjects
                 registration.NetID = i;
                 netIDs.Add(i, registration);
             }
-
-            //TODO: Hash names and use as verification that the sets are identical
-            return 0;
         }
     }
 

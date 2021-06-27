@@ -1,14 +1,11 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Prometheus;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -227,12 +224,7 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        [Obsolete("IEntityQuery is obsolete")]
-        public IEnumerable<IEntity> GetEntities(IEntityQuery query)
-        {
-            return query.Match(this);
-        }
-
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities()
         {
             // Need to do an iterator loop to avoid issues with concurrent access.

@@ -628,10 +628,15 @@ namespace Robust.Client.Audio.Midi
         void IMidiRenderer.InternalDispose()
         {
             Source?.Dispose();
+            _driver?.Dispose();
+
+            // Do NOT dispose of the sequencer after the synth or it'll cause a segfault for some fucking reason.
+            _sequencer?.UnregisterClient(_debugRegister);
+            _sequencer?.UnregisterClient(_synthRegister);
+            _sequencer?.Dispose();
+            
             _synth?.Dispose();
             _player?.Dispose();
-            _driver?.Dispose();
-            _sequencer?.Dispose();
         }
     }
 }

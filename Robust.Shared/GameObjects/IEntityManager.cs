@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -77,13 +76,9 @@ namespace Robust.Shared.GameObjects
         bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity);
 
         /// <summary>
-        /// Returns all entities that match with the provided query.
+        /// Returns all entities
         /// </summary>
-        /// <param name="query">The query to test.</param>
-        /// <returns>An enumerable over all matching entities.</returns>
-        [Obsolete("IEntityQuery is obsolete")]
-        IEnumerable<IEntity> GetEntities(IEntityQuery query);
-
+        /// <returns></returns>
         IEnumerable<IEntity> GetEntities();
 
         public void QueueDeleteEntity(IEntity entity);

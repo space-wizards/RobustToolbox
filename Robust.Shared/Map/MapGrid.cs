@@ -34,30 +34,13 @@ namespace Robust.Shared.Map
         [ViewVariables]
         public EntityUid GridEntityId { get; internal set; }
 
-        [ViewVariables]
-        public bool HasGravity
-        {
-            get => _hasGravity;
-            set
-            {
-                _hasGravity = value;
-
-                if (GridEntityId.IsValid())
-                {
-                    // HasGravity is synchronized MapGridComponent states.
-                    _mapManager.EntityManager.GetEntity(GridEntityId).GetComponent<MapGridComponent>().Dirty();
-                }
-            }
-        }
-
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
         private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
-        private readonly IEntityManager _entityManager;
-        private bool _hasGravity;
+        private readonly IEntityManager _entityManager;     
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
@@ -76,7 +59,6 @@ namespace Robust.Shared.Map
             ChunkSize = chunkSize;
             ParentMapId = parentMapId;
             LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
-            HasGravity = false;
         }
 
         /// <summary>
@@ -226,8 +208,6 @@ namespace Robust.Shared.Map
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
-            var tiles = new List<TileRef>();
-
             for (var x = gridTileLb.X; x <= gridTileRt.X; x++)
             {
                 for (var y = gridTileLb.Y; y <= gridTileRt.Y; y++)
@@ -244,7 +224,8 @@ namespace Robust.Shared.Map
 
                         if (predicate == null || predicate(tile))
                         {
-                            tiles.Add(tile);
+                            yield return tile;
+
                         }
                     }
                     else if (!ignoreEmpty)
@@ -253,12 +234,11 @@ namespace Robust.Shared.Map
 
                         if (predicate == null || predicate(tile))
                         {
-                            tiles.Add(tile);
+                            yield return tile;
                         }
                     }
                 }
             }
-            return tiles;
         }
 
         /// <inheritdoc />

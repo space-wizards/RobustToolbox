@@ -178,7 +178,7 @@ namespace Robust.Client.GameStates
                 var yPos = 10 + _lineHeight * i;
                 var name = $"({netEnt.Id}) {ent.Prototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
-                DrawString(screenHandle, _font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
+                screenHandle.DrawString(_font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);
             }
         }
@@ -221,17 +221,6 @@ namespace Robust.Client.GameStates
         {
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
             base.DisposeBehavior();
-        }
-
-        private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str, Color textColor)
-        {
-            var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
-
-            foreach (var rune in str.EnumerateRunes())
-            {
-                var advance = font.DrawChar(handle, rune, baseLine, 1, textColor);
-                baseLine += new Vector2(advance, 0);
-            }
         }
 
         private struct NetEntity

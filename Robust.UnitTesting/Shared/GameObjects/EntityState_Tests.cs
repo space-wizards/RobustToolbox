@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using NUnit.Framework;
 using Robust.Server.Reflection;
@@ -64,7 +64,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     },
                     new []
                     {
-                        new MapGridComponentState(new GridId(0), true),
+                        new MapGridComponentState(new GridId(0)),
                     });
 
                 serializer.Serialize(stream, payload);

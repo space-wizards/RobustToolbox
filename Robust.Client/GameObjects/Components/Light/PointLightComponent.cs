@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -168,6 +170,8 @@ namespace Robust.Client.GameObjects
             get => _radius;
             set
             {
+                if (MathHelper.CloseTo(value, _radius)) return;
+
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
@@ -181,17 +185,8 @@ namespace Robust.Client.GameObjects
                 Mask = null;
         }
 
-        /// <summary>
-        /// What MapId we are intersecting for RenderingTreeSystem.
-        /// </summary>
         [ViewVariables]
-        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
-
-        /// <summary>
-        /// What grids we're on for RenderingTreeSystem.
-        /// </summary>
-        [ViewVariables]
-        internal List<GridId> IntersectingGrids = new();
+        internal RenderingTreeComponent? RenderTree { get; set; }
 
         void ISerializationHooks.AfterDeserialization()
         {

@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,6 +21,8 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     public sealed class RenderingTreeSystem : EntitySystem
     {
+        internal const string LoggerSawmill = "rendertree";
+
         // Nullspace is not indexed. Keep that in mind.
 
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -27,6 +31,11 @@ namespace Robust.Client.GameObjects
         private readonly List<PointLightComponent> _lightQueue = new();
 
         private HashSet<EntityUid> _checkedChildren = new();
+
+        /// <summary>
+        /// <see cref="CVars.MaxLightRadius"/>
+        /// </summary>
+        public float MaxLightRadius { get; private set; }
 
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
         {
@@ -92,6 +101,9 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
 
             SubscribeLocalEvent<RenderingTreeComponent, ComponentRemove>(HandleTreeRemove);
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.MaxLightRadius, value => MaxLightRadius = value, true);
         }
 
         private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
@@ -120,6 +132,7 @@ namespace Robust.Client.GameObjects
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
+            // Ironically this was lagging the GC lolz
             if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
 
@@ -325,6 +338,13 @@ namespace Robust.Client.GameObjects
                 {
                     ClearLight(light);
                     continue;
+                }
+
+                // TODO: Events need a bit of cleanup so we only validate this on initialize and radius changed events
+                // this is fine for now IMO as it's 1 float check for every light that moves
+                if (light.Radius > MaxLightRadius)
+                {
+                    Logger.WarningS(LoggerSawmill, $"Light radius for {light.Owner} set above max radius of {MaxLightRadius}. This may lead to pop-in.");
                 }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;

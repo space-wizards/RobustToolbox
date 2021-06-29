@@ -212,6 +212,21 @@ namespace Robust.Shared
             CVarDef.Create("log.runtimelog", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
+         * Light
+         */
+
+        /// <summary>
+        /// This is the maximum the viewport is enlarged to check for any intersecting render-trees for lights.
+        /// This should be set to your maximum light radius.
+        /// </summary>
+        /// <remarks>
+        /// If this value is too small it just means there may be pop-in where a light is located on a render-tree
+        /// outside of our viewport.
+        /// </remarks>
+        public static readonly CVarDef<float> MaxLightRadius =
+            CVarDef.Create("light.max_radius", 20.0f, CVar.CLIENTONLY);
+
+        /*
          * LOKI
          */
 

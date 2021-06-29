@@ -493,8 +493,8 @@ namespace Robust.Client.Graphics.Clyde
         private ((PointLightComponent light, Vector2 pos, float distanceSquared)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            var enlargedBounds = worldBounds.Enlarged(PointLightComponent.MaxRadius);
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var enlargedBounds = worldBounds.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var state = (this, worldBounds, count: 0);

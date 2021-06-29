@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -139,9 +140,6 @@ namespace Robust.Client.GameObjects
             set => _visibleNested = value;
         }
 
-        // TODO: Test to validate all yamls meet this value
-        public const float MaxRadius = 10.0f;
-
         [DataField("radius")]
         private float _radius = 5f;
         [DataField("nestedvisible")]
@@ -174,12 +172,6 @@ namespace Robust.Client.GameObjects
             {
                 if (MathHelper.CloseTo(value, _radius)) return;
 
-                if (_radius > MaxRadius)
-                {
-                    Logger.Error($"Tried to set pointlight with higher radius {value} than max for {Owner}");
-                    _radius = MaxRadius;
-                }
-
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
@@ -194,7 +186,7 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables]
-        internal RenderingTreeComponent? RenderTree { get; set; } = null;
+        internal RenderingTreeComponent? RenderTree { get; set; }
 
         void ISerializationHooks.AfterDeserialization()
         {

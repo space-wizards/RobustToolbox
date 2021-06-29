@@ -542,7 +542,7 @@ namespace Robust.Client.GameStates
         private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
-            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
+            var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
             var entityUid = entity.Uid;
 
             if (curState?.ComponentChanges != null)

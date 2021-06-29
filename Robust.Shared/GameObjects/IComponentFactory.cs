@@ -60,6 +60,16 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> AllRegisteredTypes { get; }
 
         /// <summary>
+        /// The subset of all registered components that are networked, so that they can be
+        /// referenced between the client and the server.
+        /// </summary>
+        /// <remarks>
+        /// This will be null if the network Ids have not been generated yet.
+        /// </remarks>
+        /// <seealso cref="GenerateNetIds"/>
+        IReadOnlyList<IComponentRegistration>? NetworkedComponents { get; }
+
+        /// <summary>
         /// Get whether a component is available right now.
         /// </summary>
         /// <param name="componentName">The name of the component to check.</param>
@@ -143,7 +153,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given id <see cref="netId"/>.
         /// </exception>
-        IComponent GetComponent(uint netId);
+        IComponent GetComponent(ushort netId);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
@@ -182,7 +192,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component with id <see cref="netID"/> exists.
         /// </exception>
-        IComponentRegistration GetRegistration(uint netID);
+        IComponentRegistration GetRegistration(ushort netID);
 
         /// <summary>
         ///     Gets the registration of a component, throwing an exception if
@@ -226,7 +236,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="netID">The network ID corresponding to the component.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out IComponentRegistration? registration);
 
         /// <summary>
         ///     Tries to get the registration of a component.
@@ -242,7 +252,7 @@ namespace Robust.Shared.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<Type> GetAllRefTypes();
-        void CalculateNetIds();
+        void GenerateNetIds();
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -42,6 +42,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             _components = IoCManager.Resolve<IComponentFactory>();
             _components.RegisterClass<HotReloadTestComponentOne>();
             _components.RegisterClass<HotReloadTestComponentTwo>();
+            _components.GenerateNetIds();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             _prototypes = (PrototypeManager) IoCManager.Resolve<IPrototypeManager>();

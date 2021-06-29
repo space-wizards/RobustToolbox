@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -44,6 +44,9 @@ namespace Robust.UnitTesting.Shared.Map
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();
+
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            factory.GenerateNetIds();
         }
 
         /// <summary>

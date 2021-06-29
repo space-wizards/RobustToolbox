@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
 {
@@ -35,6 +36,18 @@ namespace Robust.Shared.Utility
                 dict[item.Key] = item.Value;
             }
             return dict;
+        }
+
+        public static bool TryGetValue<T>(this IList<T> list, int index, out T value)
+        {
+            if (list.Count > index)
+            {
+                value = list[index];
+                return true;
+            }
+
+            value = default!;
+            return false;
         }
 
         /// <summary>

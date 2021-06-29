@@ -90,7 +90,7 @@ namespace Robust.Client.Console
                 return;
 
             // echo the command locally
-            WriteError(null, "> " + command);
+            WriteLine(null, "> " + command);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();

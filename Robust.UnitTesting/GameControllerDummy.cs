@@ -33,7 +33,7 @@ namespace Robust.UnitTesting
 
         public string? ContentRootDir { get; set; }
 
-        public void Run(GameController.DisplayMode mode, Func<ILogHandler>? logHandlerFactory = null)
+        public void Run(GameController.DisplayMode mode, GameControllerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
         }
 

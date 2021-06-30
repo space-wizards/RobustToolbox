@@ -422,7 +422,10 @@ namespace Robust.UnitTesting
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
-                server.LoadConfigAndUserData = false;
+                var serverOptions = _options != null ? _options.Options : new ServerOptions()
+                {
+                    LoadConfigAndUserData = false,
+                };
 
                 if (_options?.ContentAssemblies != null)
                 {
@@ -447,7 +450,7 @@ namespace Robust.UnitTesting
 
                 var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                 server.ContentStart = _options?.ContentStart ?? false;
-                if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
+                if (server.Start(serverOptions, () => new TestLogHandler("SERVER", failureLevel)))
                 {
                     throw new Exception("Server failed to start.");
                 }
@@ -535,12 +538,16 @@ namespace Robust.UnitTesting
 
                 var client = DependencyCollection.Resolve<GameController>();
 
+                var clientOptions = _options != null ? _options.Options : new GameControllerOptions()
+                {
+                    LoadContentResources = false,
+                    LoadConfigAndUserData = false,
+                };
+
                 if (_options?.ContentAssemblies != null)
                 {
                     IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
                 }
-
-                client.LoadConfigAndUserData = false;
 
                 var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
@@ -563,8 +570,8 @@ namespace Robust.UnitTesting
 
                 var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                 client.OverrideMainLoop(GameLoop);
-                client.ContentStart = true;
-                client.StartupSystemSplash(() => new TestLogHandler("CLIENT", failureLevel));
+                client.ContentStart = _options?.ContentStart ?? false;
+                client.StartupSystemSplash(clientOptions, () => new TestLogHandler("CLIENT", failureLevel));
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();
@@ -674,10 +681,20 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
+            public virtual ServerOptions Options { get; set; } = new()
+            {
+                LoadConfigAndUserData = false,
+                LoadContentResources = false,
+            };
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
+            public virtual GameControllerOptions Options { get; set; } = new()
+            {
+                LoadContentResources = false,
+                LoadConfigAndUserData = false,
+            };
         }
 
         public abstract class IntegrationOptions

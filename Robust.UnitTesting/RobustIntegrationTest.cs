@@ -17,6 +17,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -700,7 +701,7 @@ namespace Robust.UnitTesting
         public abstract class IntegrationOptions
         {
             public Action? InitIoC { get; set; }
-            public Action? BeforeStart { get; set; }
+            public virtual Action? BeforeStart { get; set; } = () => { IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations(); };
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
             public LogLevel? FailureLogLevel { get; set; } = LogLevel.Error;

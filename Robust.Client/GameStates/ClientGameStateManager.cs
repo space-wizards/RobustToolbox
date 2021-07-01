@@ -210,6 +210,11 @@ namespace Robust.Client.GameStates
                     ResetPredictedEntities(_timing.CurTick);
                 }
 
+                if (!curState.Extrapolated)
+                {
+                    _processor.UpdateFullRep(curState);
+                }
+
                 // Store last tick we got from the GameStateProcessor.
                 _lastProcessedTick = _timing.CurTick;
 
@@ -422,6 +427,7 @@ namespace Robust.Client.GameStates
                     //Known entities
                     if (_entities.TryGetEntity(es.Uid, out var entity))
                     {
+                        // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
                         toApply.Add(entity, (es, null));
                     }
                     else //Unknown entities
@@ -432,6 +438,7 @@ namespace Robust.Client.GameStates
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
                         }
+                        // Logger.Debug($"[{IGameTiming.TickStampStatic}] CREATE {es.Uid} {metaState.PrototypeId}");
                         var newEntity = (Entity)_entities.CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
@@ -471,6 +478,7 @@ namespace Robust.Client.GameStates
 
             foreach (var id in deletions)
             {
+                // Logger.Debug($"[{IGameTiming.TickStampStatic}] DELETE {id}");
                 _entities.DeleteEntity(id);
             }
 

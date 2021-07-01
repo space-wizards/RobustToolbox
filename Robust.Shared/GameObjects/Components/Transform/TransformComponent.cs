@@ -113,9 +113,6 @@ namespace Robust.Shared.GameObjects
                 if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
-                if(Anchored)
-                    return;
-
                 var oldRotation = _localRotation;
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.

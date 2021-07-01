@@ -79,7 +79,6 @@ namespace Robust.Shared.GameObjects
                 xform.Parent = Owner.Transform;
 
                 // anchor snapping
-                xform.LocalRotation = xform.LocalRotation.GetCardinalDir().ToAngle();
                 xform.LocalPosition = Grid.GridTileToLocal(Grid.TileIndicesFor(xform.LocalPosition)).Position;
 
                 xform.SetAnchored(result);

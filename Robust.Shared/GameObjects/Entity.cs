@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
@@ -321,6 +322,9 @@ namespace Robust.Shared.GameObjects
         public void Dirty()
         {
             LastModifiedTick = EntityManager.CurrentTick;
+
+            if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored)
+                EntityManager.ComponentManager.GetComponent<IMapGridComponent>(Transform.ParentUid).AnchoredEntityDirty(Transform);
         }
 
         #endregion GameState

@@ -80,6 +80,7 @@ namespace Robust.Shared.Map
 
         void AddToSnapGridCell(ushort xCell, ushort yCell, EntityUid euid);
         void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid);
+        IEnumerable<EntityUid> GetAllAnchoredEnts();
 
         Box2i CalcLocalBounds();
 

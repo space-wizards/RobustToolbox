@@ -426,7 +426,12 @@ namespace Robust.UnitTesting
                 var serverOptions = _options != null ? _options.Options : new ServerOptions()
                 {
                     LoadConfigAndUserData = false,
+                    LoadContentResources = false,
                 };
+
+                // Autoregister components if options are null or we're NOT starting from content.
+                if(!_options?.ContentStart ?? true)
+                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
 
                 if (_options?.ContentAssemblies != null)
                 {
@@ -544,6 +549,10 @@ namespace Robust.UnitTesting
                     LoadContentResources = false,
                     LoadConfigAndUserData = false,
                 };
+
+                // Autoregister components if options are null or we're NOT starting from content.
+                if(!_options?.ContentStart ?? true)
+                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
 
                 if (_options?.ContentAssemblies != null)
                 {
@@ -701,7 +710,7 @@ namespace Robust.UnitTesting
         public abstract class IntegrationOptions
         {
             public Action? InitIoC { get; set; }
-            public virtual Action? BeforeStart { get; set; } = () => { IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations(); };
+            public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
             public LogLevel? FailureLogLevel { get; set; } = LogLevel.Error;

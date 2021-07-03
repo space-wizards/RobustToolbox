@@ -573,7 +573,17 @@ namespace Robust.UnitTesting
                     }
                 }
 
-                cfg.OverrideConVars(new[] {(CVars.NetPredictLagBias.Name, "0")});
+                cfg.OverrideConVars(new[]
+                {
+                    (CVars.NetPredictLagBias.Name, "0"),
+
+                    // Connecting to Discord is a massive waste of time.
+                    // Basically just makes the CI logs a mess.
+                    (CVars.DiscordEnabled.Name, "false"),
+
+                    // Avoid preloading textures.
+                    (CVars.TexturePreloadingEnabled.Name, "false"),
+                });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);

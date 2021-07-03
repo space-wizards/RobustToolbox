@@ -17,6 +17,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -422,7 +423,15 @@ namespace Robust.UnitTesting
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
-                server.LoadConfigAndUserData = false;
+                var serverOptions = _options != null ? _options.Options : new ServerOptions()
+                {
+                    LoadConfigAndUserData = false,
+                    LoadContentResources = false,
+                };
+
+                // Autoregister components if options are null or we're NOT starting from content.
+                if(!_options?.ContentStart ?? true)
+                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
 
                 if (_options?.ContentAssemblies != null)
                 {
@@ -447,7 +456,7 @@ namespace Robust.UnitTesting
 
                 var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                 server.ContentStart = _options?.ContentStart ?? false;
-                if (server.Start(() => new TestLogHandler("SERVER", failureLevel)))
+                if (server.Start(serverOptions, () => new TestLogHandler("SERVER", failureLevel)))
                 {
                     throw new Exception("Server failed to start.");
                 }
@@ -535,12 +544,20 @@ namespace Robust.UnitTesting
 
                 var client = DependencyCollection.Resolve<GameController>();
 
+                var clientOptions = _options != null ? _options.Options : new GameControllerOptions()
+                {
+                    LoadContentResources = false,
+                    LoadConfigAndUserData = false,
+                };
+
+                // Autoregister components if options are null or we're NOT starting from content.
+                if(!_options?.ContentStart ?? true)
+                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
+
                 if (_options?.ContentAssemblies != null)
                 {
                     IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
                 }
-
-                client.LoadConfigAndUserData = false;
 
                 var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
@@ -556,15 +573,25 @@ namespace Robust.UnitTesting
                     }
                 }
 
-                cfg.OverrideConVars(new[] {(CVars.NetPredictLagBias.Name, "0")});
+                cfg.OverrideConVars(new[]
+                {
+                    (CVars.NetPredictLagBias.Name, "0"),
+
+                    // Connecting to Discord is a massive waste of time.
+                    // Basically just makes the CI logs a mess.
+                    (CVars.DiscordEnabled.Name, "false"),
+
+                    // Avoid preloading textures.
+                    (CVars.TexturePreloadingEnabled.Name, "false"),
+                });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
 
                 var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                 client.OverrideMainLoop(GameLoop);
-                client.ContentStart = true;
-                client.StartupSystemSplash(() => new TestLogHandler("CLIENT", failureLevel));
+                client.ContentStart = _options?.ContentStart ?? false;
+                client.StartupSystemSplash(clientOptions, () => new TestLogHandler("CLIENT", failureLevel));
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();
@@ -674,10 +701,20 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
+            public virtual ServerOptions Options { get; set; } = new()
+            {
+                LoadConfigAndUserData = false,
+                LoadContentResources = false,
+            };
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
+            public virtual GameControllerOptions Options { get; set; } = new()
+            {
+                LoadContentResources = false,
+                LoadConfigAndUserData = false,
+            };
         }
 
         public abstract class IntegrationOptions

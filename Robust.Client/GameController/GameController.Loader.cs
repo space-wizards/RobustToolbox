@@ -11,7 +11,7 @@ namespace Robust.Client
         {
             public void Main(IMainArgs args)
             {
-                Start(args.Args, contentStart: false, args);
+                Start(args.Args, new GameControllerOptions(), contentStart: false, args);
             }
         }
     }

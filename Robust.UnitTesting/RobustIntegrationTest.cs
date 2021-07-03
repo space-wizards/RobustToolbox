@@ -296,7 +296,7 @@ namespace Robust.UnitTesting
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
-                _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, 1 / 60f, _currentTicksId));
+                _toInstanceWriter.TryWrite(new RunTicksMessage(ticks, _currentTicksId));
             }
 
             /// <summary>
@@ -634,7 +634,7 @@ namespace Robust.UnitTesting
                     {
                         case RunTicksMessage msg:
                             _gameTiming.InSimulation = true;
-                            var simFrameEvent = new FrameEventArgs(msg.Delta);
+                            var simFrameEvent = new FrameEventArgs((float) _gameTiming.TickPeriod.TotalSeconds);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
                                 Input?.Invoke(this, simFrameEvent);
@@ -698,15 +698,13 @@ namespace Robust.UnitTesting
         /// </summary>
         private sealed class RunTicksMessage
         {
-            public RunTicksMessage(int ticks, float delta, int messageId)
+            public RunTicksMessage(int ticks, int messageId)
             {
                 Ticks = ticks;
-                Delta = delta;
                 MessageId = messageId;
             }
 
             public int Ticks { get; }
-            public float Delta { get; }
             public int MessageId { get; }
         }
 

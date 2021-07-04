@@ -26,7 +26,10 @@ namespace Robust.Shared.Map
         private IList<Box2> _colBoxes;
 
         /// <inheritdoc />
-        public GameTick LastModifiedTick { get; private set; }
+        public GameTick LastTileModifiedTick { get; private set; }
+
+        /// <inheritdoc />
+        public GameTick LastAnchoredModifiedTick { get; set; }
 
         public IEnumerable<Box2> CollisionBoxes => _colBoxes;
 
@@ -40,7 +43,7 @@ namespace Robust.Shared.Map
         public MapChunk(IMapGridInternal grid, int x, int y, ushort chunkSize)
         {
             _grid = grid;
-            LastModifiedTick = grid.CurTick;
+            LastTileModifiedTick = grid.CurTick;
             _gridIndices = new Vector2i(x, y);
             ChunkSize = chunkSize;
 
@@ -128,7 +131,7 @@ namespace Robust.Shared.Map
             var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
-            LastModifiedTick = _grid.CurTick;
+            LastTileModifiedTick = _grid.CurTick;
 
             _tiles[xIndex, yIndex] = tile;
 
@@ -213,6 +216,7 @@ namespace Robust.Shared.Map
 
             DebugTools.Assert(!cell.Center.Contains(euid));
             cell.Center.Add(euid);
+            LastAnchoredModifiedTick = _grid.CurTick;
         }
 
         /// <inheritdoc />
@@ -226,6 +230,21 @@ namespace Robust.Shared.Map
 
             ref var cell = ref _snapGrid[xCell, yCell];
             cell.Center?.Remove(euid);
+            LastAnchoredModifiedTick = _grid.CurTick;
+        }
+
+        public IEnumerable<EntityUid> GetAllAnchoredEnts()
+        {
+            foreach (var cell in _snapGrid)
+            {
+                if(cell.Center is null)
+                    continue;
+
+                foreach (var euid in cell.Center)
+                {
+                    yield return euid;
+                }
+            }
         }
 
         public bool SuppressCollisionRegeneration { get; set; }

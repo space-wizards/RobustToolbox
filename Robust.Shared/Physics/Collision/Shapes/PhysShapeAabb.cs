@@ -82,7 +82,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             handle.SetTransform(m);
             handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         // TODO

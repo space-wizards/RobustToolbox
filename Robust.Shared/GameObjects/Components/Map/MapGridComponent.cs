@@ -1,10 +1,8 @@
 using System;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -81,7 +79,6 @@ namespace Robust.Shared.GameObjects
                 xform.Parent = Owner.Transform;
 
                 // anchor snapping
-                xform.LocalRotation = xform.LocalRotation.GetCardinalDir().ToAngle();
                 xform.LocalPosition = Grid.GridTileToLocal(Grid.TileIndicesFor(xform.LocalPosition)).Position;
 
                 xform.SetAnchored(result);
@@ -117,7 +114,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MapGridComponentState(_gridIndex, Grid.HasGravity);
+            return new MapGridComponentState(_gridIndex);
         }
 
         /// <inheritdoc />
@@ -125,11 +122,10 @@ namespace Robust.Shared.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MapGridComponentState state))
+            if (curState is not MapGridComponentState state)
                 return;
 
             _gridIndex = state.GridIndex;
-            Grid.HasGravity = state.HasGravity;
         }
     }
 
@@ -144,17 +140,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public GridId GridIndex { get; }
 
-        public bool HasGravity { get; }
-
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
-        public MapGridComponentState(GridId gridIndex, bool hasGravity)
+        public MapGridComponentState(GridId gridIndex)
             : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
-            HasGravity = hasGravity;
         }
     }
 }

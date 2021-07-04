@@ -55,9 +55,10 @@ namespace Robust.UnitTesting.Server.GameObjects
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }
 
-        [Test]
-        public void Test([Values("throwInAdd", "throwsInInitialize", "throwsInStartup")]
-            string prototypeName)
+        [TestCase("throwInAdd")]
+        [TestCase("throwsInInitialize")]
+        [TestCase("throwsInStartup")]
+        public void Test(string prototypeName)
         {
             Assert.That(() => EntityManager.SpawnEntity(prototypeName, MapCoordinates.Nullspace),
                 Throws.TypeOf<EntityCreationException>());

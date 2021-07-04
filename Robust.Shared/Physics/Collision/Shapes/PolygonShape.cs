@@ -188,7 +188,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             handle.SetTransform(modelMatrix);
             handle.DrawPolygonShape(_vertices.ToArray(), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)

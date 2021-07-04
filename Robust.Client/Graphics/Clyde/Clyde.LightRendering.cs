@@ -494,24 +494,16 @@ namespace Robust.Client.Graphics.Clyde
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var enlargedBounds = worldBounds.Enlarged(renderingTreeSystem.MaxLightRadius);
+
+            // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var state = (this, worldBounds, count: 0);
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, worldBounds, true))
+            foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                Box2 gridBounds;
+                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                if (gridId == GridId.Invalid)
-                {
-                    gridBounds = worldBounds;
-                }
-                else
-                {
-                    gridBounds = worldBounds.Translated(-_mapManager.GetGrid(gridId).WorldPosition);
-                }
-
-                var lightTree = renderingTreeSystem.GetLightTreeForMap(map, gridId);
-
-                lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
+                comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
                 {
                     var transform = light.Owner.Transform;
 
@@ -535,7 +527,7 @@ namespace Robust.Client.Graphics.Clyde
                     state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
 
                     return true;
-                }, gridBounds);
+                }, bounds);
             }
 
             if (state.count > _maxLightsPerScene)

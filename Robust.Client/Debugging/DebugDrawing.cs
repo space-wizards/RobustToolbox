@@ -177,7 +177,7 @@ namespace Robust.Client.Debugging
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
-                        var sleepPercent = physBody.Awake ? physBody.SleepTime / sleepThreshold : 1.0f;
+                        var sleepPercent = physBody.Awake ? 0.0f : 1.0f;
                         shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
                     }
 

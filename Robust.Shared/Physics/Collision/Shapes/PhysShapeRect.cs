@@ -60,7 +60,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var rotationMatrix = Matrix3.CreateRotation(Math.PI);
             handle.SetTransform(rotationMatrix * modelMatrix);
             handle.DrawRect(Rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         [field: NonSerialized]

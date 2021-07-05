@@ -1,8 +1,8 @@
 using System;
+using System.IO;
 using JetBrains.Annotations;
-using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Console;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -38,9 +38,15 @@ namespace Robust.Client.CEF
         {
             DebugTools.Assert(!_initialized);
 
-            // Register this funny command for easy debugging.
-            // TODO CEF: Actually make this command work. I used to have this in content before because it was easier...
-            _consoleHost.RegisterCommand("browse", "Opens an embedded web browser in an in-game window!", "browse <url>", BrowseCommand);
+            string subProcessName;
+            if (OperatingSystem.IsWindows())
+                subProcessName = "Robust.Client.CEF.exe";
+            else if (OperatingSystem.IsLinux())
+                subProcessName = "Robust.Client.CEF";
+            else
+                throw new NotSupportedException("Unsupported platform for CEF!");
+
+            var subProcessPath = PathHelpers.ExecutableRelativeFile(subProcessName);
 
             var settings = new CefSettings()
             {
@@ -51,13 +57,13 @@ namespace Robust.Client.CEF
                 // TODO CEF Unhardcode these paths below somehow, it seems CEF needs paths in the actual disk for these...
 
                 // Multi-process currently doesn't work...
-                BrowserSubprocessPath = "/home/zumo/Projects/space-station-14/bin/Content.Client/Robust.Client.CEF",
+                BrowserSubprocessPath = subProcessPath,
 
                 // I don't think this is needed? Research.
-                LocalesDirPath = "/home/zumo/Projects/space-station-14/bin/Content.Client/locales/",
+                LocalesDirPath = Path.Combine(PathHelpers.GetExecutableDirectory(), "locales"),
 
                 // I don't think this is needed either? Do research.
-                ResourcesDirPath = "/home/zumo/Projects/space-station-14/bin/Content.Client/",
+                ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -85,35 +91,6 @@ namespace Robust.Client.CEF
             _initialized = true;
         }
 
-        private void BrowseCommand(IConsoleShell shell, string argstr, string[] args)
-        {
-            if (!_initialized)
-            {
-                shell.WriteError("CEF is not initialized!");
-                return;
-            }
-
-            if (args.Length != 1)
-            {
-                shell.WriteError("Incorrect amount of arguments! Must be a single one.");
-                return;
-            }
-
-            var window = new SS14Window();
-
-            var browser = new BrowserControl();
-
-            if (args.Length < 1)
-                return;
-
-            browser.MouseFilter = Control.MouseFilterMode.Stop;
-            window.MouseFilter = Control.MouseFilterMode.Pass;
-            window.Contents.AddChild(browser);
-
-            browser.Browse(args[0]);
-
-            window.Open();
-        }
 
         /// <summary>
         ///     Needs to be called regularly for CEF to keep working.
@@ -154,7 +131,7 @@ namespace Robust.Client.CEF
             commandLine.AppendSwitch("--no-zygote");
 
             // We use single-process for now as multi-process requires us to ship a native program
-            commandLine.AppendSwitch("--single-process");
+            // commandLine.AppendSwitch("--single-process");
 
             // We do CPU rendering, disable the GPU...
             commandLine.AppendSwitch("--disable-gpu");

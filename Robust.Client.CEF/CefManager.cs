@@ -50,8 +50,6 @@ namespace Robust.Client.CEF
                 ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
 
-                // TODO CEF Unhardcode these paths below somehow, it seems CEF needs paths in the actual disk for these...
-
                 // Multi-process currently doesn't work...
                 BrowserSubprocessPath = subProcessPath,
 
@@ -130,8 +128,8 @@ namespace Robust.Client.CEF
             // commandLine.AppendSwitch("--single-process");
 
             // We do CPU rendering, disable the GPU...
-            //commandLine.AppendSwitch("--disable-gpu");
-            //commandLine.AppendSwitch("--disable-gpu-compositing");
+            commandLine.AppendSwitch("--disable-gpu");
+            commandLine.AppendSwitch("--disable-gpu-compositing");
             commandLine.AppendSwitch("--in-process-gpu");
 
             Logger.Debug($"{commandLine}");

@@ -4,6 +4,7 @@ using Robust.Client.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
 
@@ -18,6 +19,16 @@ namespace Robust.Client.CEF
         private RobustWebClient _client;
         private CefBrowser _browser;
         private ControlRenderHandler _renderer;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string Url
+        {
+            get => _browser.GetMainFrame().Url;
+            set => _browser.GetMainFrame().LoadUrl(value);
+        }
+
+        [ViewVariables]
+        public bool IsLoading => _browser.IsLoading;
 
         public BrowserControl()
         {
@@ -120,11 +131,6 @@ namespace Robust.Client.CEF
             _texture = _clyde.CreateBlankTexture<Bgra32>((PixelWidth, PixelHeight));
         }
 
-        public void Browse(string url)
-        {
-            _browser.GetMainFrame().LoadUrl(url);
-        }
-
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
@@ -140,6 +146,39 @@ namespace Robust.Client.CEF
                     Math.Min(PixelHeight, bufImg.Height)));
 
             handle.DrawTexture(_texture, Vector2.Zero);
+        }
+
+        public void StopLoad()
+        {
+            _browser.StopLoad();
+        }
+
+        public void Reload()
+        {
+            _browser.Reload();
+        }
+
+        public bool GoBack()
+        {
+            if (!_browser.CanGoBack)
+                return false;
+
+            _browser.GoBack();
+            return true;
+        }
+
+        public bool GoForward()
+        {
+            if (!_browser.CanGoForward)
+                return false;
+
+            _browser.GoForward();
+            return true;
+        }
+
+        public void ExecuteJavaScript(string code)
+        {
+            _browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
         }
     }
 

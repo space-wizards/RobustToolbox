@@ -9,12 +9,12 @@ namespace Robust.Client.CEF
         public static int Main(string[] args)
         {
             var mainArgs = new CefMainArgs(args);
-            var app = new RobustCefApp();
+            // var app = new RobustCefApp();
 
             // This will block executing IF this is a proper subprocess but it was broken and it returned -1
             // -1 means this process is the main method which... Wasn't possible.
             // We probably need a native program?
-            var code = CefRuntime.ExecuteProcess(mainArgs, app, IntPtr.Zero);
+            var code = CefRuntime.ExecuteProcess(mainArgs, null, IntPtr.Zero);
 
             if (code != 0)
             {

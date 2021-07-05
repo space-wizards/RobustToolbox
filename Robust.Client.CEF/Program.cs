@@ -8,17 +8,23 @@ namespace Robust.Client.CEF
         // This was supposed to be the main entry for the subprocess program... It doesn't work.
         public static int Main(string[] args)
         {
-            var mainArgs = new CefMainArgs(args);
-            // var app = new RobustCefApp();
+            // This is a workaround for this to work on UNIX.
+            var argv = args;
+            if (CefRuntime.Platform != CefRuntimePlatform.Windows)
+            {
+                argv = new string[args.Length + 1];
+                Array.Copy(args, 0, argv, 1, args.Length);
+                argv[0] = "-";
+            }
 
-            // This will block executing IF this is a proper subprocess but it was broken and it returned -1
-            // -1 means this process is the main method which... Wasn't possible.
-            // We probably need a native program?
+            var mainArgs = new CefMainArgs(argv);
+
+            // This will block executing until the subprocess is shut down.
             var code = CefRuntime.ExecuteProcess(mainArgs, null, IntPtr.Zero);
 
             if (code != 0)
             {
-                System.Console.WriteLine($"CEF Subprocess exited with exit code {code}! Arguments: {string.Join(' ', args)}");
+                System.Console.WriteLine($"CEF Subprocess exited unsuccessfully with exit code {code}! Arguments: {string.Join(' ', argv)}");
             }
 
             return code;

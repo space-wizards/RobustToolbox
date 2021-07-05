@@ -41,14 +41,8 @@ namespace Robust.Client.CEF
                 WindowlessRenderingEnabled = true, // So we can render to our UI controls.
                 ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
-
-                // Multi-process currently doesn't work...
                 BrowserSubprocessPath = subProcessPath,
-
-                // I don't think this is needed? Research.
                 LocalesDirPath = Path.Combine(PathHelpers.GetExecutableDirectory(), "locales"),
-
-                // I don't think this is needed either? Do research.
                 ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
             };
 
@@ -70,7 +64,7 @@ namespace Robust.Client.CEF
             _app = new RobustCefApp();
 
             // We pass no main arguments...
-            CefRuntime.Initialize(new CefMainArgs(Array.Empty<string>()), settings, _app, IntPtr.Zero);
+            CefRuntime.Initialize(new CefMainArgs(null), settings, _app, IntPtr.Zero);
 
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...

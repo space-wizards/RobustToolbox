@@ -351,6 +351,7 @@ namespace Robust.Shared.Physics.Dynamics
                 var broadPhase = fixtureA.Body.Broadphase;
                 bool? overlap;
 
+                // TODO: This + AddPair needs handling for cross-broadphase shenanigans.
                 if (broadPhase != fixtureB.Body.Broadphase)
                 {
                     overlap = false;

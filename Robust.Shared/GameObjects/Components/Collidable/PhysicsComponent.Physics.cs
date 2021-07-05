@@ -229,6 +229,8 @@ namespace Robust.Shared.GameObjects
 
         void ISerializationHooks.AfterDeserialization()
         {
+            FixtureCount = _fixtures.Count;
+
             foreach (var fixture in _fixtures)
             {
                 fixture.Body = this;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -244,9 +245,10 @@ namespace Robust.Shared.Physics
         public void CreateFixture(PhysicsComponent body, Fixture fixture)
         {
             // TODO: Assert world locked
-            if (body.CanCollide && body.Owner.Transform.MapID != MapId.Nullspace)
+            // Broadphase should be set in the future TM
+            // Should only happen for nullspace / initializing entities
+            if (body.Broadphase != null)
             {
-                var broadphase = GetBroadphase(body);
                 CreateProxies(fixture, body.Owner.Transform.WorldPosition);
             }
 
@@ -367,17 +369,18 @@ namespace Robust.Shared.Physics
 
             var broadphase = GetBroadphase(body);
 
-            if (broadphase == null)
+            if (broadphase == null || body.Broadphase != null)
             {
                 throw new InvalidOperationException();
             }
+
+            body.Broadphase = broadphase;
 
             foreach (var fixture in body.Fixtures)
             {
                 CreateProxies(fixture, worldPos);
             }
 
-            body.Broadphase = broadphase;
             // Logger.DebugS("physics", $"Created proxies for {body.Owner} on {broadphase.Owner}");
         }
 
@@ -390,7 +393,7 @@ namespace Robust.Shared.Physics
 
             if (proxyCount == 0) return;
 
-            var broadphase = GetBroadphase(fixture.Body);
+            var broadphase = fixture.Body.Broadphase;
 
             if (broadphase == null)
             {

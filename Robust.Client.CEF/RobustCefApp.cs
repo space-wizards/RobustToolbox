@@ -5,7 +5,7 @@ using Xilium.CefGlue;
 
 namespace Robust.Client.CEF
 {
-    public class RobustCefApp : CefApp
+    internal class RobustCefApp : CefApp
     {
         private readonly BrowserProcessHandler _browserProcessHandler = new();
         private readonly RenderProcessHandler _renderProcessHandler = new();

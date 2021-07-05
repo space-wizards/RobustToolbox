@@ -35,8 +35,8 @@ namespace Robust.Client.CEF
 
                 // Just the same stuff as in CefManager.
                 commandLine.AppendSwitch("--no-zygote");
-                commandLine.AppendSwitch("--disable-gpu");
-                commandLine.AppendSwitch("--disable-gpu-compositing");
+                //commandLine.AppendSwitch("--disable-gpu");
+                //commandLine.AppendSwitch("--disable-gpu-compositing");
                 commandLine.AppendSwitch("--in-process-gpu");
 
                 System.Console.WriteLine($"SUBPROCESS COMMAND LINE: {commandLine.ToString()}");

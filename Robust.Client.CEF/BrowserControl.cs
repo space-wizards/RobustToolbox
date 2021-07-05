@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Input;
@@ -11,7 +10,7 @@ using Xilium.CefGlue;
 namespace Robust.Client.CEF
 {
     // Funny browser control to integrate in UI.
-    public class BrowserControl : Control
+    public class BrowserControl : Control, IBrowserControl
     {
         [Dependency] private readonly IClyde _clyde = default!;
 

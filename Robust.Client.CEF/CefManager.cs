@@ -1,9 +1,7 @@
 using System;
 using System.IO;
 using JetBrains.Annotations;
-using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -16,10 +14,8 @@ namespace Robust.Client.CEF
     // TODO CEF: think if making this inherit CefApp is a good idea...
     // TODO CEF: A way to handle external window browsers...
     [UsedImplicitly]
-    public class CefManager : CefApp, IPostInjectInit
+    public partial class CefManager : CefApp
     {
-        [Dependency] private readonly IConsoleHost _consoleHost = default!;
-
         private readonly BrowserProcessHandler _browserProcessHandler;
         private readonly RenderProcessHandler _renderProcessHandler;
         private bool _initialized = false;
@@ -149,11 +145,6 @@ namespace Robust.Client.CEF
         // TODO CEF: Research - Is this even needed?
         private class RenderProcessHandler : CefRenderProcessHandler
         {
-        }
-
-        public void PostInject()
-        {
-
         }
     }
 }

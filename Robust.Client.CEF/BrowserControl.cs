@@ -1,12 +1,11 @@
 using System;
-using System.Drawing.Imaging;
 using System.IO;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
 
 namespace Robust.Client.CEF
@@ -16,22 +15,10 @@ namespace Robust.Client.CEF
     {
         [Dependency] private readonly IClyde _clyde = default!;
 
+        private OwnedTexture _texture;
         private RobustWebClient _client;
         private CefBrowser _browser;
         private ControlRenderHandler _renderer;
-
-        // TODO CEF: I don't know how to UI, are these methods below right?
-        protected override Vector2 MeasureOverride(Vector2 availableSize)
-        {
-            var buffer = _renderer.Buffer;
-            return new Vector2(buffer.Width, buffer.Height);
-        }
-
-        protected override Vector2 MeasureCore(Vector2 availableSize)
-        {
-            var buffer = _renderer.Buffer;
-            return new Vector2(buffer.Width, buffer.Height);
-        }
 
         public BrowserControl()
         {
@@ -58,9 +45,11 @@ namespace Robust.Client.CEF
 
             // Create the web browser! And by default, we go to about:blank.
             _browser = CefBrowserHost.CreateBrowserSync(info, _client, settings, "about:blank");
+
+            _texture = _clyde.CreateBlankTexture<Bgra32>(Vector2i.One);
         }
 
-        protected override void MouseMove(GUIMouseMoveEventArgs args)
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
 
@@ -68,7 +57,7 @@ namespace Robust.Client.CEF
             _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), false);
         }
 
-        protected override void MouseExited()
+        protected internal override void MouseExited()
         {
             base.MouseExited();
 
@@ -76,7 +65,7 @@ namespace Robust.Client.CEF
             _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent(0, 0, CefEventFlags.None), true);
         }
 
-        protected override void MouseWheel(GUIMouseWheelEventArgs args)
+        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
 
@@ -84,7 +73,7 @@ namespace Robust.Client.CEF
             _browser.GetHost().SendMouseWheelEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), (int)args.Delta.X*4, (int)args.Delta.Y*4);
         }
 
-        protected override void TextEntered(GUITextEventArgs args)
+        protected internal override void TextEntered(GUITextEventArgs args)
         {
             base.TextEntered(args);
 
@@ -92,7 +81,7 @@ namespace Robust.Client.CEF
             // _browser.GetHost().SendKeyEvent(new CefKeyEvent(){NativeKeyCode = (int) args.CodePoint});
         }
 
-        protected override void KeyBindUp(GUIBoundKeyEventArgs args)
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
         {
             base.KeyBindUp(args);
 
@@ -107,7 +96,7 @@ namespace Robust.Client.CEF
             }
         }
 
-        protected override void KeyBindDown(GUIBoundKeyEventArgs args)
+        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
         {
             base.KeyBindDown(args);
 
@@ -128,6 +117,8 @@ namespace Robust.Client.CEF
 
             _browser.GetHost().NotifyMoveOrResizeStarted();
             _browser.GetHost().WasResized();
+            _texture.Dispose();
+            _texture = _clyde.CreateBlankTexture<Bgra32>((PixelWidth, PixelHeight));
         }
 
         public void Browse(string url)
@@ -135,37 +126,32 @@ namespace Robust.Client.CEF
             _browser.GetMainFrame().LoadUrl(url);
         }
 
-        protected override void Draw(DrawingHandleScreen handle)
+        protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
 
-            var bitmap = _renderer.Buffer.CreateBitmap();
+            var bufImg = _renderer.Buffer.Buffer;
 
-            if (bitmap == null)
-                return;
+            _texture.SetSubImage(
+                Vector2i.Zero,
+                bufImg,
+                new UIBox2i(
+                    0, 0,
+                    Math.Min(PixelWidth, bufImg.Width),
+                    Math.Min(PixelHeight, bufImg.Height)));
 
-            using var memoryStream = new MemoryStream();
-
-            // Oof, ow, owie the allocations.
-            bitmap.Save(memoryStream, ImageFormat.Png);
-
-            memoryStream.Seek(0, SeekOrigin.Begin);
-
-            // TODO CEF: There must certainly be a better way of doing this... Right?
-            var texture = _clyde.LoadTextureFromPNGStream(memoryStream);
-
-            handle.DrawTexture(texture, Vector2.Zero);
+            handle.DrawTexture(_texture, Vector2.Zero);
         }
     }
 
     internal class ControlRenderHandler : CefRenderHandler
     {
-        public BitmapBuffer Buffer { get; }
+        public ImageBuffer Buffer { get; }
         private Control _control;
 
         internal ControlRenderHandler(Control control)
         {
-            Buffer = new BitmapBuffer(this);
+            Buffer = new ImageBuffer(control);
             _control = control;
         }
 

@@ -472,6 +472,8 @@ namespace Robust.Client
 
         internal void Cleanup()
         {
+            _modLoader.Shutdown();
+
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
             IoCManager.Resolve<IEntityLookup>().Shutdown();

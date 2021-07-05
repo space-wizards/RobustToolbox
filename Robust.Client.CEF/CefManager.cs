@@ -14,18 +14,10 @@ namespace Robust.Client.CEF
     // TODO CEF: think if making this inherit CefApp is a good idea...
     // TODO CEF: A way to handle external window browsers...
     [UsedImplicitly]
-    public partial class CefManager : CefApp
+    public partial class CefManager
     {
-        private readonly BrowserProcessHandler _browserProcessHandler;
-        private readonly RenderProcessHandler _renderProcessHandler;
+        private CefApp _app = default!;
         private bool _initialized = false;
-
-        public CefManager()
-        {
-            // Probably not needed?
-            _renderProcessHandler = new RenderProcessHandler();
-            _browserProcessHandler = new BrowserProcessHandler();
-        }
 
         /// <summary>
         ///     Call this to initialize CEF.
@@ -58,7 +50,6 @@ namespace Robust.Client.CEF
 
                 // I don't think this is needed either? Do research.
                 ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
-
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -76,8 +67,10 @@ namespace Robust.Client.CEF
             // Maybe. Good luck! If you get odd crashes with no info and a weird exit code, use GDB!
             // -------------------------------------------------------------------------------------
 
+            _app = new RobustCefApp();
+
             // We pass no main arguments...
-            CefRuntime.Initialize(new CefMainArgs(Array.Empty<string>()), settings, this, IntPtr.Zero);
+            CefRuntime.Initialize(new CefMainArgs(Array.Empty<string>()), settings, _app, IntPtr.Zero);
 
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
@@ -105,48 +98,7 @@ namespace Robust.Client.CEF
         {
             DebugTools.Assert(_initialized);
 
-            Dispose(true);
-
             CefRuntime.Shutdown();
-        }
-
-        protected override CefBrowserProcessHandler GetBrowserProcessHandler()
-        {
-            return _browserProcessHandler;
-        }
-
-        protected override CefRenderProcessHandler GetRenderProcessHandler()
-        {
-            return _renderProcessHandler;
-        }
-
-        protected override void OnBeforeCommandLineProcessing(string processType, CefCommandLine commandLine)
-        {
-            // Disable zygote. TODO CEF: Do research on this?
-            commandLine.AppendSwitch("--no-zygote");
-
-            // We use single-process for now as multi-process requires us to ship a native program
-            // commandLine.AppendSwitch("--single-process");
-
-            // We do CPU rendering, disable the GPU...
-            // commandLine.AppendSwitch("--disable-gpu");
-            // commandLine.AppendSwitch("--disable-gpu-compositing");
-            commandLine.AppendSwitch("--in-process-gpu");
-
-            commandLine.AppendSwitch("disable-threaded-scrolling", "1");
-            commandLine.AppendSwitch("disable-features", "TouchpadAndWheelScrollLatching,AsyncWheelEvents");
-
-            Logger.Debug($"{commandLine}");
-        }
-
-        // TODO CEF: Research - Is this even needed?
-        private class BrowserProcessHandler : CefBrowserProcessHandler
-        {
-        }
-
-        // TODO CEF: Research - Is this even needed?
-        private class RenderProcessHandler : CefRenderProcessHandler
-        {
         }
     }
 }

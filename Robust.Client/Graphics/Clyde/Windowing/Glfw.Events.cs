@@ -131,10 +131,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessEventKey(EventKey ev)
             {
-                EmitKeyEvent(ConvertGlfwKey(ev.Key), ev.Action, ev.Mods);
+                EmitKeyEvent(ConvertGlfwKey(ev.Key), ev.Action, ev.Mods, ev.ScanCode);
             }
 
-            private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
+            private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods, int scanCode)
             {
                 var shift = (mods & KeyModifiers.Shift) != 0;
                 var alt = (mods & KeyModifiers.Alt) != 0;
@@ -144,7 +144,8 @@ namespace Robust.Client.Graphics.Clyde
                 var ev = new KeyEventArgs(
                     key,
                     action == InputAction.Repeat,
-                    alt, control, shift, system);
+                    alt, control, shift, system,
+                    scanCode);
 
                 switch (action)
                 {
@@ -162,7 +163,7 @@ namespace Robust.Client.Graphics.Clyde
 
             private void ProcessEventMouseButton(EventMouseButton ev)
             {
-                EmitKeyEvent(Mouse.MouseButtonToKey(ConvertGlfwButton(ev.Button)), ev.Action, ev.Mods);
+                EmitKeyEvent(Mouse.MouseButtonToKey(ConvertGlfwButton(ev.Button)), ev.Action, ev.Mods, default);
             }
 
             private void ProcessEventScroll(EventScroll ev)

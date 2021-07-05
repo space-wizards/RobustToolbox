@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Client.Console;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -9,7 +9,6 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
@@ -324,9 +323,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool HandleCanFocusDown(ScreenCoordinates pointerPosition)
+        public bool HandleCanFocusDown(
+            ScreenCoordinates pointerPosition,
+            [NotNullWhen(true)] out (Control control, Vector2i rel)? hitData)
         {
-            var control = MouseGetControl(pointerPosition);
+            var hit = MouseGetControlAndRel(pointerPosition);
             var pos = pointerPosition.Position;
 
             // If we have a modal open and the mouse down was outside it, close said modal.
@@ -342,6 +343,7 @@ namespace Robust.Client.UserInterface
                     {
                         ControlFocused?.ControlFocusExited();
                         ControlFocused = top;
+                        hitData = null;
                         return false; // prevent anything besides the top modal control from receiving input
                     }
                 }
@@ -353,10 +355,13 @@ namespace Robust.Client.UserInterface
 
             ReleaseKeyboardFocus();
 
-            if (control == null)
+            if (hit == null)
             {
+                hitData = null;
                 return false;
             }
+
+            var (control, rel) = hit.Value;
 
             ControlFocused?.ControlFocusExited();
             ControlFocused = control;
@@ -366,6 +371,7 @@ namespace Robust.Client.UserInterface
                 ControlFocused.GrabKeyboardFocus();
             }
 
+            hitData = (control, (Vector2i) rel);
             return true;
         }
 
@@ -539,10 +545,15 @@ namespace Robust.Client.UserInterface
 
         public Control? MouseGetControl(ScreenCoordinates coordinates)
         {
+            return MouseGetControlAndRel(coordinates)?.control;
+        }
+
+        private (Control control, Vector2 rel)? MouseGetControlAndRel(ScreenCoordinates coordinates)
+        {
             if (!_windowsToRoot.TryGetValue(coordinates.Window, out var root))
                 return null;
 
-            return _mouseFindControlAtPos(root, coordinates.Position);
+            return MouseFindControlAtPos(root, coordinates.Position);
         }
 
         public ScreenCoordinates MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
@@ -758,7 +769,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private Control? _mouseFindControlAtPos(Control control, Vector2 position)
+        private static (Control control, Vector2 rel)? MouseFindControlAtPos(Control control, Vector2 position)
         {
             for (var i = control.ChildCount - 1; i >= 0; i--)
             {
@@ -768,7 +779,7 @@ namespace Robust.Client.UserInterface
                     continue;
                 }
 
-                var maybeFoundOnChild = _mouseFindControlAtPos(child, position - child.PixelPosition);
+                var maybeFoundOnChild = MouseFindControlAtPos(child, position - child.PixelPosition);
                 if (maybeFoundOnChild != null)
                 {
                     return maybeFoundOnChild;
@@ -777,7 +788,7 @@ namespace Robust.Client.UserInterface
 
             if (control.MouseFilter != Control.MouseFilterMode.Ignore && control.HasPoint(position / control.UIScale))
             {
-                return control;
+                return (control, position);
             }
 
             return null;
@@ -855,6 +866,17 @@ namespace Robust.Client.UserInterface
         public Control? GetSuppliedTooltipFor(Control control)
         {
             return CurrentlyHovered == control ? _suppliedTooltip : null;
+        }
+
+        public Vector2? CalcRelativeMousePositionFor(Control control, ScreenCoordinates mousePosScaled)
+        {
+            var (pos, window) = mousePosScaled;
+            var root = control.Root;
+
+            if (root?.Window == null || root.Window.Id != window)
+                return null;
+
+            return pos - control.GlobalPosition;
         }
 
         private void _resetTooltipTimer()

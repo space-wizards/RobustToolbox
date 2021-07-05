@@ -58,6 +58,7 @@ namespace Robust.Client.CEF
 
                 // I don't think this is needed either? Do research.
                 ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
+
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -131,6 +132,9 @@ namespace Robust.Client.CEF
             commandLine.AppendSwitch("--disable-gpu");
             commandLine.AppendSwitch("--disable-gpu-compositing");
             commandLine.AppendSwitch("--in-process-gpu");
+
+            commandLine.AppendSwitch("disable-threaded-scrolling", "1");
+            commandLine.AppendSwitch("disable-features", "TouchpadAndWheelScrollLatching,AsyncWheelEvents");
 
             Logger.Debug($"{commandLine}");
         }

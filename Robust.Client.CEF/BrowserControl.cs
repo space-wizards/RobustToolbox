@@ -1,28 +1,139 @@
 using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.UserInterface;
-using Robust.Shared.Input;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
+using static Robust.Client.CEF.CefKeyCodes;
+using static Robust.Client.CEF.CefKeyCodes.ChromiumKeyboardCode;
+using static Robust.Client.Input.Keyboard;
 
 namespace Robust.Client.CEF
 {
     // Funny browser control to integrate in UI.
-    public class BrowserControl : Control, IBrowserControl
+    public class BrowserControl : Control, IBrowserControl, IRawInputControl
     {
         private const int ScrollSpeed = 50;
 
         [Dependency] private readonly IClyde _clyde = default!;
+        [Dependency] private readonly IInputManager _inputMgr = default!;
 
         private OwnedTexture _texture;
         private RobustWebClient _client;
         private CefBrowser _browser;
         private ControlRenderHandler _renderer;
 
+        private readonly Dictionary<Key, ChromiumKeyboardCode> _keyMap = new()
+        {
+            [Key.A] = VKEY_A,
+            [Key.B] = VKEY_B,
+            [Key.C] = VKEY_C,
+            [Key.D] = VKEY_D,
+            [Key.E] = VKEY_E,
+            [Key.F] = VKEY_F,
+            [Key.G] = VKEY_G,
+            [Key.H] = VKEY_H,
+            [Key.I] = VKEY_I,
+            [Key.J] = VKEY_J,
+            [Key.K] = VKEY_K,
+            [Key.L] = VKEY_L,
+            [Key.M] = VKEY_M,
+            [Key.N] = VKEY_N,
+            [Key.O] = VKEY_O,
+            [Key.P] = VKEY_P,
+            [Key.Q] = VKEY_Q,
+            [Key.R] = VKEY_R,
+            [Key.S] = VKEY_S,
+            [Key.T] = VKEY_T,
+            [Key.U] = VKEY_U,
+            [Key.V] = VKEY_V,
+            [Key.W] = VKEY_W,
+            [Key.X] = VKEY_X,
+            [Key.Y] = VKEY_Y,
+            [Key.Z] = VKEY_Z,
+            [Key.Num0] = VKEY_0,
+            [Key.Num1] = VKEY_1,
+            [Key.Num2] = VKEY_2,
+            [Key.Num3] = VKEY_3,
+            [Key.Num4] = VKEY_4,
+            [Key.Num5] = VKEY_5,
+            [Key.Num6] = VKEY_6,
+            [Key.Num7] = VKEY_7,
+            [Key.Num8] = VKEY_8,
+            [Key.Num9] = VKEY_9,
+            [Key.NumpadNum0] = VKEY_NUMPAD0,
+            [Key.NumpadNum1] = VKEY_NUMPAD1,
+            [Key.NumpadNum2] = VKEY_NUMPAD2,
+            [Key.NumpadNum3] = VKEY_NUMPAD3,
+            [Key.NumpadNum4] = VKEY_NUMPAD4,
+            [Key.NumpadNum5] = VKEY_NUMPAD5,
+            [Key.NumpadNum6] = VKEY_NUMPAD6,
+            [Key.NumpadNum7] = VKEY_NUMPAD7,
+            [Key.NumpadNum8] = VKEY_NUMPAD8,
+            [Key.NumpadNum9] = VKEY_NUMPAD9,
+            [Key.Escape] = VKEY_ESCAPE,
+            [Key.Control] = VKEY_CONTROL,
+            [Key.Shift] = VKEY_SHIFT,
+            [Key.Alt] = VKEY_MENU,
+            [Key.LSystem] = VKEY_LWIN,
+            [Key.RSystem] = VKEY_RWIN,
+            [Key.LBracket] = VKEY_OEM_4,
+            [Key.RBracket] = VKEY_OEM_6,
+            [Key.SemiColon] = VKEY_OEM_1,
+            [Key.Comma] = VKEY_OEM_COMMA,
+            [Key.Period] = VKEY_OEM_PERIOD,
+            [Key.Apostrophe] = VKEY_OEM_7,
+            [Key.Slash] = VKEY_OEM_2,
+            [Key.BackSlash] = VKEY_OEM_5,
+            [Key.Tilde] = VKEY_OEM_3,
+            [Key.Equal] = VKEY_OEM_PLUS,
+            [Key.Space] = VKEY_SPACE,
+            [Key.Return] = VKEY_RETURN,
+            [Key.BackSpace] = VKEY_BACK,
+            [Key.Tab] = VKEY_TAB,
+            [Key.PageUp] = VKEY_PRIOR,
+            [Key.PageDown] = VKEY_NEXT,
+            [Key.End] = VKEY_END,
+            [Key.Home] = VKEY_HOME,
+            [Key.Insert] = VKEY_INSERT,
+            [Key.Delete] = VKEY_DELETE,
+            [Key.Minus] = VKEY_OEM_MINUS,
+            [Key.NumpadAdd] = VKEY_ADD,
+            [Key.NumpadSubtract] = VKEY_SUBTRACT,
+            [Key.NumpadDivide] = VKEY_DIVIDE,
+            [Key.NumpadMultiply] = VKEY_MULTIPLY,
+            [Key.NumpadDecimal] = VKEY_DECIMAL,
+            [Key.Left] = VKEY_LEFT,
+            [Key.Right] = VKEY_RIGHT,
+            [Key.Up] = VKEY_UP,
+            [Key.Down] = VKEY_DOWN,
+            [Key.F1] = VKEY_F1,
+            [Key.F2] = VKEY_F2,
+            [Key.F3] = VKEY_F3,
+            [Key.F4] = VKEY_F4,
+            [Key.F5] = VKEY_F5,
+            [Key.F6] = VKEY_F6,
+            [Key.F7] = VKEY_F7,
+            [Key.F8] = VKEY_F8,
+            [Key.F9] = VKEY_F9,
+            [Key.F10] = VKEY_F10,
+            [Key.F11] = VKEY_F11,
+            [Key.F12] = VKEY_F12,
+            [Key.F13] = VKEY_F13,
+            [Key.F14] = VKEY_F14,
+            [Key.F15] = VKEY_F15,
+            [Key.Pause] = VKEY_PAUSE,
+        };
+
         public BrowserControl()
         {
+            CanKeyboardFocus = true;
+            KeyboardFocusOnClick = true;
+
             IoCManager.InjectDependencies(this);
 
             // A funny render handler that will allow us to render to the control.
@@ -55,7 +166,10 @@ namespace Robust.Client.CEF
             base.MouseMove(args);
 
             // TODO CEF: Modifiers
-            _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), false);
+            _browser.GetHost()
+                .SendMouseMoveEvent(
+                    new CefMouseEvent((int) args.RelativePosition.X, (int) args.RelativePosition.Y, CefEventFlags.None),
+                    false);
         }
 
         protected internal override void MouseExited()
@@ -72,19 +186,11 @@ namespace Robust.Client.CEF
 
             // TODO CEF: Modifiers
             _browser.GetHost().SendMouseWheelEvent(
-                new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None),
-                (int)args.Delta.X*ScrollSpeed, (int)args.Delta.Y*ScrollSpeed);
+                new CefMouseEvent((int) args.RelativePosition.X, (int) args.RelativePosition.Y, CefEventFlags.None),
+                (int) args.Delta.X * ScrollSpeed, (int) args.Delta.Y * ScrollSpeed);
         }
 
-        protected internal override void TextEntered(GUITextEventArgs args)
-        {
-            base.TextEntered(args);
-
-            // TODO CEF: Yeah the thing below is not how this works.
-            // _browser.GetHost().SendKeyEvent(new CefKeyEvent(){NativeKeyCode = (int) args.CodePoint});
-        }
-
-        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        /*protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
         {
             base.KeyBindUp(args);
 
@@ -111,6 +217,113 @@ namespace Robust.Client.CEF
             } else if (args.Function == EngineKeyFunctions.UIRightClick)
             {
                 _browser.GetHost().SendMouseClickEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), CefMouseButtonType.Middle, false, 1);
+            }
+        }*/
+
+        bool IRawInputControl.RawKeyEvent(in GuiRawKeyEvent guiRawEvent)
+        {
+            var host = _browser.GetHost();
+
+            if (guiRawEvent.Key is Key.MouseLeft or Key.MouseMiddle or Key.MouseRight)
+            {
+                var key = guiRawEvent.Key switch
+                {
+                    Key.MouseLeft => CefMouseButtonType.Left,
+                    Key.MouseMiddle => CefMouseButtonType.Middle,
+                    Key.MouseRight => CefMouseButtonType.Right,
+                    _ => default // not possible
+                };
+
+                var mouseEvent = new CefMouseEvent(
+                    guiRawEvent.MouseRelative.X, guiRawEvent.MouseRelative.Y,
+                    CefEventFlags.None);
+
+                // TODO: double click support?
+                host.SendMouseClickEvent(mouseEvent, key, guiRawEvent.Action == RawKeyAction.Up, 1);
+            }
+            else
+            {
+                // TODO: Handle left/right modifier keys??
+                if (!_keyMap.TryGetValue(guiRawEvent.Key, out var vkKey))
+                    vkKey = default;
+
+                Logger.Debug($"{guiRawEvent.Action} {guiRawEvent.Key} {guiRawEvent.ScanCode} {vkKey}");
+
+                var lParam = 0;
+                lParam |= (guiRawEvent.ScanCode & 0xFF) << 16;
+                if (guiRawEvent.Action != RawKeyAction.Down)
+                    lParam |= 1 << 30;
+
+                if (guiRawEvent.Action == RawKeyAction.Up)
+                    lParam |= 1 << 31;
+
+                var modifiers = CalcModifiers(guiRawEvent.Key);
+
+                host.SendKeyEvent(new CefKeyEvent
+                {
+                    // Repeats are sent as key downs, I guess?
+                    EventType = guiRawEvent.Action == RawKeyAction.Up
+                        ? CefKeyEventType.KeyUp
+                        : CefKeyEventType.RawKeyDown,
+                    NativeKeyCode = lParam,
+                    // NativeKeyCode = guiRawEvent.ScanCode,
+                    WindowsKeyCode = (int) vkKey,
+                    IsSystemKey = false, // TODO
+                    Modifiers = modifiers // TODO
+                });
+
+                if (guiRawEvent.Action != RawKeyAction.Up && guiRawEvent.Key == Key.Return)
+                {
+                    host.SendKeyEvent(new CefKeyEvent
+                    {
+                        EventType = CefKeyEventType.Char,
+                        WindowsKeyCode = '\r',
+                        NativeKeyCode = lParam,
+                        Modifiers = modifiers
+                    });
+                }
+            }
+
+            return true;
+        }
+
+        private CefEventFlags CalcModifiers(Key key)
+        {
+            CefEventFlags modifiers = default;
+
+            if (_inputMgr.IsKeyDown(Key.Control))
+                modifiers |= CefEventFlags.ControlDown;
+
+            if (_inputMgr.IsKeyDown(Key.Alt))
+                modifiers |= CefEventFlags.AltDown;
+
+            if (_inputMgr.IsKeyDown(Key.Shift))
+                modifiers |= CefEventFlags.ShiftDown;
+
+            if (_inputMgr.IsKeyDown(Key.Shift))
+                modifiers |= CefEventFlags.ShiftDown;
+
+            return modifiers;
+        }
+
+        protected internal override void TextEntered(GUITextEventArgs args)
+        {
+            base.TextEntered(args);
+
+            var host = _browser.GetHost();
+
+            Span<char> buf = stackalloc char[2];
+            var written = args.AsRune.EncodeToUtf16(buf);
+
+            for (var i = 0; i < written; i++)
+            {
+                host.SendKeyEvent(new CefKeyEvent
+                {
+                    EventType = CefKeyEventType.Char,
+                    WindowsKeyCode = buf[i],
+                    Character = buf[i],
+                    UnmodifiedCharacter = buf[i]
+                });
             }
         }
 
@@ -180,7 +393,7 @@ namespace Robust.Client.CEF
             //rect = new CefRectangle((int) screenCoords.X, (int) screenCoords.Y, (int)Math.Max(_control.Size.X, 1), (int)Math.Max(_control.Size.Y, 1));
 
             // We do the max between size and 1 because it will LITERALLY CRASH WITHOUT AN ERROR otherwise.
-            rect = new CefRectangle(0, 0, (int)Math.Max(_control.Size.X, 1), (int)Math.Max(_control.Size.Y, 1));
+            rect = new CefRectangle(0, 0, (int) Math.Max(_control.Size.X, 1), (int) Math.Max(_control.Size.Y, 1));
         }
 
         protected override bool GetScreenInfo(CefBrowser browser, CefScreenInfo screenInfo)
@@ -200,7 +413,8 @@ namespace Robust.Client.CEF
                 return;
         }
 
-        protected override void OnPaint(CefBrowser browser, CefPaintElementType type, CefRectangle[] dirtyRects, IntPtr buffer, int width, int height)
+        protected override void OnPaint(CefBrowser browser, CefPaintElementType type, CefRectangle[] dirtyRects,
+            IntPtr buffer, int width, int height)
         {
             if (_control.Disposed)
                 return;
@@ -211,7 +425,8 @@ namespace Robust.Client.CEF
             }
         }
 
-        protected override void OnAcceleratedPaint(CefBrowser browser, CefPaintElementType type, CefRectangle[] dirtyRects, IntPtr sharedHandle)
+        protected override void OnAcceleratedPaint(CefBrowser browser, CefPaintElementType type,
+            CefRectangle[] dirtyRects, IntPtr sharedHandle)
         {
             // Unused, but we're forced to implement it so.. NOOP.
         }
@@ -222,7 +437,8 @@ namespace Robust.Client.CEF
                 return;
         }
 
-        protected override void OnImeCompositionRangeChanged(CefBrowser browser, CefRange selectedRange, CefRectangle[] characterBounds)
+        protected override void OnImeCompositionRangeChanged(CefBrowser browser, CefRange selectedRange,
+            CefRectangle[] characterBounds)
         {
             if (_control.Disposed)
                 return;

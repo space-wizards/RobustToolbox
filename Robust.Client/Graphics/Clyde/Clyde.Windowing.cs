@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -399,7 +398,7 @@ namespace Robust.Client.Graphics.Clyde
             public Action<WindowClosedEventArgs>? Closed;
         }
 
-        private sealed class WindowHandle : IClydeWindow
+        private sealed class WindowHandle : IClydeWindowInternal
         {
             // So funny story
             // When this class was a record, the C# compiler on .NET 5 stack overflowed
@@ -466,6 +465,8 @@ namespace Robust.Client.Graphics.Clyde
                 add => _reg.Closed += value;
                 remove => _reg.Closed -= value;
             }
+
+            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(_reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

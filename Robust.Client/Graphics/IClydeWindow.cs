@@ -30,4 +30,9 @@ namespace Robust.Client.Graphics
         /// </summary>
         event Action<WindowClosedEventArgs> Closed;
     }
+
+    public interface IClydeWindowInternal : IClydeWindow
+    {
+        nint? WindowsHWnd { get; }
+    }
 }

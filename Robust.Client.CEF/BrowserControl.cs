@@ -35,8 +35,7 @@ namespace Robust.Client.CEF
             set => _browser.GetMainFrame().LoadUrl(value);
         }
 
-        [ViewVariables]
-        public bool IsLoading => _browser.IsLoading;
+        [ViewVariables] public bool IsLoading => _browser.IsLoading;
 
         private readonly Dictionary<Key, ChromiumKeyboardCode> _keyMap = new()
         {
@@ -176,60 +175,38 @@ namespace Robust.Client.CEF
         {
             base.MouseMove(args);
 
-            // TODO CEF: Modifiers
-            _browser.GetHost()
-                .SendMouseMoveEvent(
-                    new CefMouseEvent((int) args.RelativePosition.X, (int) args.RelativePosition.Y, CefEventFlags.None),
-                    false);
+            // Logger.Debug();
+            var modifiers = CalcMouseModifiers();
+            var mouseEvent = new CefMouseEvent(
+                (int) args.RelativePosition.X, (int) args.RelativePosition.Y,
+                modifiers);
+
+            _browser.GetHost().SendMouseMoveEvent(mouseEvent, false);
         }
 
         protected internal override void MouseExited()
         {
             base.MouseExited();
 
-            // TODO CEF: Modifiers
-            _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent(0, 0, CefEventFlags.None), true);
+            var modifiers = CalcMouseModifiers();
+
+            _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent(0, 0, modifiers), true);
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
 
-            // TODO CEF: Modifiers
+            var modifiers = CalcMouseModifiers();
+            var mouseEvent = new CefMouseEvent(
+                (int) args.RelativePosition.X, (int) args.RelativePosition.Y,
+                modifiers);
+
             _browser.GetHost().SendMouseWheelEvent(
-                new CefMouseEvent((int) args.RelativePosition.X, (int) args.RelativePosition.Y, CefEventFlags.None),
-                (int) args.Delta.X * ScrollSpeed, (int) args.Delta.Y * ScrollSpeed);
+                mouseEvent,
+                (int) args.Delta.X * ScrollSpeed,
+                (int) args.Delta.Y * ScrollSpeed);
         }
-
-        /*protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
-        {
-            base.KeyBindUp(args);
-
-            // TODO CEF Clean up this shitty code. Also add middle click.
-
-            if (args.Function == EngineKeyFunctions.UIClick)
-            {
-                _browser.GetHost().SendMouseClickEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), CefMouseButtonType.Left, true, 1);
-            } else if (args.Function == EngineKeyFunctions.UIRightClick)
-            {
-                _browser.GetHost().SendMouseClickEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), CefMouseButtonType.Middle, true, 1);
-            }
-        }
-
-        protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
-        {
-            base.KeyBindDown(args);
-
-            // TODO CEF Clean up this shitty code. Also add middle click.
-
-            if (args.Function == EngineKeyFunctions.UIClick)
-            {
-                _browser.GetHost().SendMouseClickEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), CefMouseButtonType.Left, false, 1);
-            } else if (args.Function == EngineKeyFunctions.UIRightClick)
-            {
-                _browser.GetHost().SendMouseClickEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), CefMouseButtonType.Middle, false, 1);
-            }
-        }*/
 
         bool IRawInputControl.RawKeyEvent(in GuiRawKeyEvent guiRawEvent)
         {
@@ -249,6 +226,8 @@ namespace Robust.Client.CEF
                     guiRawEvent.MouseRelative.X, guiRawEvent.MouseRelative.Y,
                     CefEventFlags.None);
 
+                // Logger.Debug($"MOUSE: {guiRawEvent.Action} {guiRawEvent.Key} {guiRawEvent.ScanCode} {key}");
+
                 // TODO: double click support?
                 host.SendMouseClickEvent(mouseEvent, key, guiRawEvent.Action == RawKeyAction.Up, 1);
             }
@@ -258,7 +237,7 @@ namespace Robust.Client.CEF
                 if (!_keyMap.TryGetValue(guiRawEvent.Key, out var vkKey))
                     vkKey = default;
 
-                Logger.Debug($"{guiRawEvent.Action} {guiRawEvent.Key} {guiRawEvent.ScanCode} {vkKey}");
+                // Logger.Debug($"{guiRawEvent.Action} {guiRawEvent.Key} {guiRawEvent.ScanCode} {vkKey}");
 
                 var lParam = 0;
                 lParam |= (guiRawEvent.ScanCode & 0xFF) << 16;
@@ -280,7 +259,7 @@ namespace Robust.Client.CEF
                     // NativeKeyCode = guiRawEvent.ScanCode,
                     WindowsKeyCode = (int) vkKey,
                     IsSystemKey = false, // TODO
-                    Modifiers = modifiers // TODO
+                    Modifiers = modifiers
                 });
 
                 if (guiRawEvent.Action != RawKeyAction.Up && guiRawEvent.Key == Key.Return)
@@ -313,6 +292,34 @@ namespace Robust.Client.CEF
 
             if (_inputMgr.IsKeyDown(Key.Shift))
                 modifiers |= CefEventFlags.ShiftDown;
+
+            return modifiers;
+        }
+
+        private CefEventFlags CalcMouseModifiers()
+        {
+            CefEventFlags modifiers = default;
+
+            if (_inputMgr.IsKeyDown(Key.Control))
+                modifiers |= CefEventFlags.ControlDown;
+
+            if (_inputMgr.IsKeyDown(Key.Alt))
+                modifiers |= CefEventFlags.AltDown;
+
+            if (_inputMgr.IsKeyDown(Key.Shift))
+                modifiers |= CefEventFlags.ShiftDown;
+
+            if (_inputMgr.IsKeyDown(Key.Shift))
+                modifiers |= CefEventFlags.ShiftDown;
+
+            if (_inputMgr.IsKeyDown(Key.MouseLeft))
+                modifiers |= CefEventFlags.LeftMouseButton;
+
+            if (_inputMgr.IsKeyDown(Key.MouseMiddle))
+                modifiers |= CefEventFlags.MiddleMouseButton;
+
+            if (_inputMgr.IsKeyDown(Key.MouseRight))
+                modifiers |= CefEventFlags.RightMouseButton;
 
             return modifiers;
         }

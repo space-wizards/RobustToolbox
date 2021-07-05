@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
@@ -8,13 +9,9 @@ namespace Robust.Shared.Physics.Broadphase
 {
     public class DynamicTreeBroadPhase : IBroadPhase
     {
-        public MapId MapId { get; set; }
-
-        public GridId GridId { get; set; }
-
         // TODO: DynamicTree seems slow at updates when we have large entity counts so when we have boxstation
         // need to suss out whether chunking it might be useful.
-        private B2DynamicTree<FixtureProxy> _tree = new(capacity: 256);
+        private B2DynamicTree<FixtureProxy> _tree = default!;
 
         private readonly DynamicTree<FixtureProxy>.ExtractAabbDelegate _extractAabb = ExtractAabbFunc;
 
@@ -29,11 +26,9 @@ namespace Robust.Shared.Physics.Broadphase
         private B2DynamicTree<FixtureProxy>.QueryCallback _queryCallback;
         private DynamicTree.Proxy _queryProxyId;
 
-        public DynamicTreeBroadPhase(MapId mapId, GridId gridId)
+        public DynamicTreeBroadPhase(int capacity)
         {
-            MapId = mapId;
-            GridId = gridId;
-
+            _tree = new B2DynamicTree<FixtureProxy>(capacity);
             _queryCallback = QueryCallback;
             _proxyCount = 0;
 
@@ -45,6 +40,8 @@ namespace Robust.Shared.Physics.Broadphase
             _moveCount = 0;
             _moveBuffer = new DynamicTree.Proxy[_moveCapacity];
         }
+
+        public DynamicTreeBroadPhase() : this(256) {}
 
         private static Box2 ExtractAabbFunc(in FixtureProxy proxy)
         {
@@ -88,7 +85,7 @@ namespace Robust.Shared.Physics.Broadphase
                 FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyA)!;
                 FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyB)!;
 
-                callback(GridId, in userDataA, in userDataB);
+                callback(in userDataA, in userDataB);
                 ++i;
 
                 // Skip any duplicate pairs.

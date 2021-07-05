@@ -4,6 +4,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
@@ -40,7 +41,7 @@ namespace Robust.Server.GameObjects
             var grid = _mapManager.GetGrid(gridId);
             var collideComp = gridEntity.AddComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
-            collideComp.AddFixture(new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
+            Get<SharedBroadphaseSystem>().CreateFixture(collideComp, new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
         }
 
         /// <inheritdoc />

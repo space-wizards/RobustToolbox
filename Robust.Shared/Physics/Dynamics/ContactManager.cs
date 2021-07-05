@@ -37,6 +37,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -46,7 +47,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal MapId MapId { get; set; }
 
-        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+        private SharedBroadphaseSystem _broadPhaseSystem = default!;
 
         /// <summary>
         ///     Called when the broadphase finds two fixtures close to each other.
@@ -81,7 +82,7 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             InitializePool();
         }
 
@@ -95,9 +96,12 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void FindNewContacts(MapId mapId)
         {
-            foreach (var broadPhase in _broadPhaseSystem.GetBroadPhases(mapId))
+            var compManager = IoCManager.Resolve<IComponentManager>();
+
+            foreach (var broadphase in compManager.EntityQuery<BroadphaseComponent>(true))
             {
-                broadPhase.UpdatePairs(OnBroadPhaseCollision);
+                if (broadphase.Owner.Transform.MapID != mapId) continue;
+                broadphase.Tree.UpdatePairs(OnBroadPhaseCollision);
             }
         }
 
@@ -107,7 +111,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="gridId"></param>
         /// <param name="proxyA"></param>
         /// <param name="proxyB"></param>
-        private void AddPair(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB)
+        private void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
         {
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
@@ -167,7 +171,7 @@ namespace Robust.Shared.Physics.Dynamics
             */
 
             // Call the factory.
-            Contact c = Contact.Create(this, gridId, fixtureA, indexA, fixtureB, indexB);
+            Contact c = Contact.Create(this, fixtureA, indexA, fixtureB, indexB);
 
             // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
             if (c == null) return;
@@ -343,19 +347,13 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                bool? overlap = false;
+                var proxyIdA = fixtureA.Proxies[indexA].ProxyId;
+                var proxyIdB = fixtureB.Proxies[indexB].ProxyId;
 
-                // Sloth addition: Kind of hacky and might need to be removed at some point.
-                // One of the bodies was probably put into nullspace so we need to remove I think.
-                if (fixtureA.Proxies.ContainsKey(contact.GridId) && fixtureB.Proxies.ContainsKey(contact.GridId))
-                {
-                    var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
-                    var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
+                var broadPhase = fixtureA.Body.Broadphase;
+                DebugTools.Assert(broadPhase == fixtureB.Body.Broadphase);
 
-                    var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
-
-                    overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
-                }
+                var overlap = broadPhase?.Tree.TestOverlap(proxyIdA, proxyIdB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)
@@ -464,7 +462,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
     }
 
-    public delegate void BroadPhaseDelegate(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB);
+    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
 
     #region Collide Events Classes
 

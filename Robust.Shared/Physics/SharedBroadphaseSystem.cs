@@ -128,6 +128,10 @@ namespace Robust.Shared.Physics
             _queuedParents.Enqueue(args);
         }
 
+        /// <summary>
+        /// If our broadphase has changed then remove us from our old one and add to our new one.
+        /// </summary>
+        /// <param name="body"></param>
         private void UpdateBroadphase(PhysicsComponent body)
         {
             var oldBroadphase = body.Broadphase;
@@ -141,6 +145,10 @@ namespace Robust.Shared.Physics
             CreateProxies(body);
         }
 
+        /// <summary>
+        /// Remove all of our fixtures from the broadphase.
+        /// </summary>
+        /// <param name="body"></param>
         private void DestroyProxies(PhysicsComponent body)
         {
             var broadphase = body.Broadphase;
@@ -346,7 +354,7 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null)
             {
-                throw new InvalidOperationException($"Unable to find broadphase for Synchronize for {fixture.Body}");
+                throw new InvalidBroadphaseException($"Unable to find broadphase for Synchronize for {fixture.Body}");
             }
 
             for (var i = 0; i < proxyCount; i++)
@@ -378,9 +386,14 @@ namespace Robust.Shared.Physics
 
             var broadphase = GetBroadphase(body);
 
-            if (broadphase == null || body.Broadphase != null)
+            if (broadphase == null)
             {
-                throw new InvalidOperationException();
+                throw new InvalidBroadphaseException($"Unable to find broadphase for {body.Owner}");
+            }
+
+            if (body.Broadphase != null)
+            {
+                throw new InvalidBroadphaseException($"{body.Owner} already has proxies on a broadphase?");
             }
 
             body.Broadphase = broadphase;
@@ -393,6 +406,9 @@ namespace Robust.Shared.Physics
             // Logger.DebugS("physics", $"Created proxies for {body.Owner} on {broadphase.Owner}");
         }
 
+        /// <summary>
+        /// Create the proxies for this fixture on the body's broadphase.
+        /// </summary>
         private void CreateProxies(Fixture fixture, Vector2 worldPos)
         {
             DebugTools.Assert(fixture.ProxyCount == 0);
@@ -406,7 +422,7 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null)
             {
-                throw new InvalidOperationException($"Unable to find broadphase for create on {fixture.Body.Owner}");
+                throw new InvalidBroadphaseException($"Unable to find broadphase for create on {fixture.Body.Owner}");
             }
 
             fixture.ProxyCount = proxyCount;
@@ -433,11 +449,14 @@ namespace Robust.Shared.Physics
             }
         }
 
+        /// <summary>
+        /// Destroy the proxies for this fixture on the broadphase.
+        /// </summary>
         private void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
         {
             if (broadphase == null)
             {
-                throw new InvalidOperationException($"Unable to find broadphase for destroy on {fixture.Body}");
+                throw new InvalidBroadphaseException($"Unable to find broadphase for destroy on {fixture.Body}");
             }
 
             for (var i = 0; i < fixture.ProxyCount; i++)
@@ -452,20 +471,18 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
         {
-            if (!ev.Entity.Deleted && ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
-            {
-                physicsComponent.CanCollide = false;
-                physicsComponent.Awake = false;
-            }
+            if (ev.Entity.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            physicsComponent.CanCollide = false;
+            physicsComponent.Awake = false;
         }
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            if (!ev.Entity.Deleted && ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
-            {
-                physicsComponent.CanCollide = true;
-                physicsComponent.Awake = true;
-            }
+            if (ev.Entity.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+
+            physicsComponent.CanCollide = true;
+            physicsComponent.Awake = true;
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs e)
@@ -499,7 +516,13 @@ namespace Robust.Shared.Physics
             return GetBroadphase(body.Owner);
         }
 
-        public BroadphaseComponent? GetBroadphase(IEntity entity)
+        /// <summary>
+        /// Attempt to get the relevant broadphase for this entity.
+        /// Can return null if it's the map entity.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        private BroadphaseComponent? GetBroadphase(IEntity entity)
         {
             if (entity.Transform.MapID == MapId.Nullspace)
             {
@@ -588,11 +611,8 @@ namespace Robust.Shared.Physics
 
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
-            // TODO: In an ideal world we'd just iterate over the body's contacts (need to make more stuff immediate
-            // for physics for this to be viable so future-work).
-
-            // If the body has just had its collision enabled or disabled it may not be ready yet so we'll wait a tick.
-            if (!body.CanCollide || body.Owner.Transform.MapID == MapId.Nullspace)
+            var broadphase = body.Broadphase;
+            if (broadphase == null)
             {
                 return Array.Empty<PhysicsComponent>();
             }
@@ -600,11 +620,6 @@ namespace Robust.Shared.Physics
             var entities = new List<PhysicsComponent>();
 
             var state = (body, entities);
-            var broadphase = body.Broadphase;
-            if (broadphase == null)
-            {
-                throw new InvalidOperationException($"Broadphase can't be null here?");
-            }
 
             foreach (var fixture in body._fixtures)
             {
@@ -630,8 +645,6 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
-        /// <param name="body"></param>
-        /// <returns></returns>
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
@@ -787,5 +800,12 @@ namespace Robust.Shared.Physics
             return penetration;
         }
         #endregion
+
+        private sealed class InvalidBroadphaseException : Exception
+        {
+            public InvalidBroadphaseException() {}
+
+            public InvalidBroadphaseException(string message) : base(message) {}
+        }
     }
 }

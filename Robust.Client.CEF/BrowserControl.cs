@@ -12,6 +12,8 @@ namespace Robust.Client.CEF
     // Funny browser control to integrate in UI.
     public class BrowserControl : Control, IBrowserControl
     {
+        private const int ScrollSpeed = 50;
+
         [Dependency] private readonly IClyde _clyde = default!;
 
         private OwnedTexture _texture;
@@ -39,7 +41,7 @@ namespace Robust.Client.CEF
 
             var settings = new CefBrowserSettings()
             {
-                WindowlessFrameRate = 60,
+                WindowlessFrameRate = 60
             };
 
             // Create the web browser! And by default, we go to about:blank.
@@ -69,7 +71,9 @@ namespace Robust.Client.CEF
             base.MouseWheel(args);
 
             // TODO CEF: Modifiers
-            _browser.GetHost().SendMouseWheelEvent(new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None), (int)args.Delta.X*4, (int)args.Delta.Y*4);
+            _browser.GetHost().SendMouseWheelEvent(
+                new CefMouseEvent((int)args.RelativePosition.X, (int)args.RelativePosition.Y, CefEventFlags.None),
+                (int)args.Delta.X*ScrollSpeed, (int)args.Delta.Y*ScrollSpeed);
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)

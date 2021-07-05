@@ -4,8 +4,8 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
@@ -23,19 +23,23 @@ namespace Robust.Client.CEF
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IInputManager _inputMgr = default!;
 
-        private OwnedTexture _texture;
-        private RobustWebClient _client;
-        private CefBrowser _browser;
-        private ControlRenderHandler _renderer;
+        private LiveData? _data;
+        private string _startUrl = "about:blank";
 
         [ViewVariables(VVAccess.ReadWrite)]
         public string Url
         {
-            get => _browser.GetMainFrame().Url;
-            set => _browser.GetMainFrame().LoadUrl(value);
+            get => _data == null ? _startUrl : _data.Browser.GetMainFrame().Url;
+            set
+            {
+                if (_data == null)
+                    _startUrl = value;
+                else
+                    _data.Browser.GetMainFrame().LoadUrl(value);
+            }
         }
 
-        [ViewVariables] public bool IsLoading => _browser.IsLoading;
+        [ViewVariables] public bool IsLoading => _data?.Browser.IsLoading ?? false;
 
         private readonly Dictionary<Key, ChromiumKeyboardCode> _keyMap = new()
         {
@@ -145,13 +149,20 @@ namespace Robust.Client.CEF
             KeyboardFocusOnClick = true;
 
             IoCManager.InjectDependencies(this);
+        }
+
+        protected override void EnteredTree()
+        {
+            base.EnteredTree();
+
+            DebugTools.AssertNull(_data);
 
             // A funny render handler that will allow us to render to the control.
-            _renderer = new ControlRenderHandler(this);
+            var renderer = new ControlRenderHandler(this);
 
             // A funny web cef client. This can actually be shared by multiple browsers, but I'm not sure how the
             // rendering would work in that case? TODO CEF: Investigate a way to share the web client?
-            _client = new RobustWebClient(_renderer);
+            var client = new RobustWebClient(renderer);
 
             var info = CefWindowInfo.Create();
 
@@ -166,14 +177,30 @@ namespace Robust.Client.CEF
             };
 
             // Create the web browser! And by default, we go to about:blank.
-            _browser = CefBrowserHost.CreateBrowserSync(info, _client, settings, "about:blank");
+            var browser = CefBrowserHost.CreateBrowserSync(info, client, settings, "about:blank");
 
-            _texture = _clyde.CreateBlankTexture<Bgra32>(Vector2i.One);
+            var texture = _clyde.CreateBlankTexture<Bgra32>(Vector2i.One);
+
+            _data = new LiveData(texture, client, browser, renderer);
+        }
+
+        protected override void ExitedTree()
+        {
+            base.ExitedTree();
+
+            DebugTools.AssertNotNull(_data);
+
+            _data!.Texture.Dispose();
+            _data.Browser.GetHost().CloseBrowser(true);
+            _data = null;
         }
 
         protected internal override void MouseMove(GUIMouseMoveEventArgs args)
         {
             base.MouseMove(args);
+
+            if (_data == null)
+                return;
 
             // Logger.Debug();
             var modifiers = CalcMouseModifiers();
@@ -181,28 +208,34 @@ namespace Robust.Client.CEF
                 (int) args.RelativePosition.X, (int) args.RelativePosition.Y,
                 modifiers);
 
-            _browser.GetHost().SendMouseMoveEvent(mouseEvent, false);
+            _data.Browser.GetHost().SendMouseMoveEvent(mouseEvent, false);
         }
 
         protected internal override void MouseExited()
         {
             base.MouseExited();
 
+            if (_data == null)
+                return;
+
             var modifiers = CalcMouseModifiers();
 
-            _browser.GetHost().SendMouseMoveEvent(new CefMouseEvent(0, 0, modifiers), true);
+            _data.Browser.GetHost().SendMouseMoveEvent(new CefMouseEvent(0, 0, modifiers), true);
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
         {
             base.MouseWheel(args);
 
+            if (_data == null)
+                return;
+
             var modifiers = CalcMouseModifiers();
             var mouseEvent = new CefMouseEvent(
                 (int) args.RelativePosition.X, (int) args.RelativePosition.Y,
                 modifiers);
 
-            _browser.GetHost().SendMouseWheelEvent(
+            _data.Browser.GetHost().SendMouseWheelEvent(
                 mouseEvent,
                 (int) args.Delta.X * ScrollSpeed,
                 (int) args.Delta.Y * ScrollSpeed);
@@ -210,7 +243,10 @@ namespace Robust.Client.CEF
 
         bool IRawInputControl.RawKeyEvent(in GuiRawKeyEvent guiRawEvent)
         {
-            var host = _browser.GetHost();
+            if (_data == null)
+                return false;
+
+            var host = _data.Browser.GetHost();
 
             if (guiRawEvent.Key is Key.MouseLeft or Key.MouseMiddle or Key.MouseRight)
             {
@@ -328,7 +364,10 @@ namespace Robust.Client.CEF
         {
             base.TextEntered(args);
 
-            var host = _browser.GetHost();
+            if (_data == null)
+                return;
+
+            var host = _data.Browser.GetHost();
 
             Span<char> buf = stackalloc char[2];
             var written = args.AsRune.EncodeToUtf16(buf);
@@ -349,19 +388,25 @@ namespace Robust.Client.CEF
         {
             base.Resized();
 
-            _browser.GetHost().NotifyMoveOrResizeStarted();
-            _browser.GetHost().WasResized();
-            _texture.Dispose();
-            _texture = _clyde.CreateBlankTexture<Bgra32>((PixelWidth, PixelHeight));
+            if (_data == null)
+                return;
+
+            _data.Browser.GetHost().NotifyMoveOrResizeStarted();
+            _data.Browser.GetHost().WasResized();
+            _data.Texture.Dispose();
+            _data.Texture = _clyde.CreateBlankTexture<Bgra32>((PixelWidth, PixelHeight));
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
 
-            var bufImg = _renderer.Buffer.Buffer;
+            if (_data == null)
+                return;
 
-            _texture.SetSubImage(
+            var bufImg = _data.Renderer.Buffer.Buffer;
+
+            _data.Texture.SetSubImage(
                 Vector2i.Zero,
                 bufImg,
                 new UIBox2i(
@@ -369,40 +414,75 @@ namespace Robust.Client.CEF
                     Math.Min(PixelWidth, bufImg.Width),
                     Math.Min(PixelHeight, bufImg.Height)));
 
-            handle.DrawTexture(_texture, Vector2.Zero);
+            handle.DrawTexture(_data.Texture, Vector2.Zero);
         }
 
         public void StopLoad()
         {
-            _browser.StopLoad();
+            if (_data == null)
+                throw new InvalidOperationException();
+
+            _data.Browser.StopLoad();
         }
 
         public void Reload()
         {
-            _browser.Reload();
+            if (_data == null)
+                throw new InvalidOperationException();
+
+            _data.Browser.Reload();
         }
 
         public bool GoBack()
         {
-            if (!_browser.CanGoBack)
+            if (_data == null)
+                throw new InvalidOperationException();
+
+            if (!_data.Browser.CanGoBack)
                 return false;
 
-            _browser.GoBack();
+            _data.Browser.GoBack();
             return true;
         }
 
         public bool GoForward()
         {
-            if (!_browser.CanGoForward)
+            if (_data == null)
+                throw new InvalidOperationException();
+
+            if (!_data.Browser.CanGoForward)
                 return false;
 
-            _browser.GoForward();
+            _data.Browser.GoForward();
             return true;
         }
 
         public void ExecuteJavaScript(string code)
         {
-            _browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
+            if (_data == null)
+                throw new InvalidOperationException();
+
+            _data.Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
+        }
+
+        private sealed class LiveData
+        {
+            public OwnedTexture Texture;
+            public readonly RobustWebClient Client;
+            public readonly CefBrowser Browser;
+            public readonly ControlRenderHandler Renderer;
+
+            public LiveData(
+                OwnedTexture texture,
+                RobustWebClient client,
+                CefBrowser browser,
+                ControlRenderHandler renderer)
+            {
+                Texture = texture;
+                Client = client;
+                Browser = browser;
+                Renderer = renderer;
+            }
         }
     }
 
@@ -417,14 +497,7 @@ namespace Robust.Client.CEF
             _control = control;
         }
 
-        protected override CefAccessibilityHandler GetAccessibilityHandler()
-        {
-            if (_control.Disposed)
-                return null!;
-
-            // TODO CEF: Do we need this? Can we return null instead?
-            return new AccessibilityHandler();
-        }
+        protected override CefAccessibilityHandler? GetAccessibilityHandler() => null;
 
         protected override void GetViewRect(CefBrowser browser, out CefRectangle rect)
         {
@@ -488,18 +561,6 @@ namespace Robust.Client.CEF
         {
             if (_control.Disposed)
                 return;
-        }
-
-        // TODO CEF: Do we need this?
-        private class AccessibilityHandler : CefAccessibilityHandler
-        {
-            protected override void OnAccessibilityTreeChange(CefValue value)
-            {
-            }
-
-            protected override void OnAccessibilityLocationChange(CefValue value)
-            {
-            }
         }
     }
 }

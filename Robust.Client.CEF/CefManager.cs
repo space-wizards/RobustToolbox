@@ -129,8 +129,8 @@ namespace Robust.Client.CEF
             // commandLine.AppendSwitch("--single-process");
 
             // We do CPU rendering, disable the GPU...
-            commandLine.AppendSwitch("--disable-gpu");
-            commandLine.AppendSwitch("--disable-gpu-compositing");
+            // commandLine.AppendSwitch("--disable-gpu");
+            // commandLine.AppendSwitch("--disable-gpu-compositing");
             commandLine.AppendSwitch("--in-process-gpu");
 
             commandLine.AppendSwitch("disable-threaded-scrolling", "1");

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 using Xilium.CefGlue;
 
 namespace Robust.Client.CEF
@@ -33,13 +34,57 @@ namespace Robust.Client.CEF
 
         private sealed class BrowserWindowImpl : IBrowserWindow
         {
-            public readonly CefBrowser Browser;
+            internal readonly CefBrowser Browser;
             private readonly CefManager _manager;
+
+            [ViewVariables(VVAccess.ReadWrite)]
+            public string Url
+            {
+                get => Browser.GetMainFrame().Url;
+                set => Browser.GetMainFrame().LoadUrl(value);
+            }
+
+            [ViewVariables]
+            public bool IsLoading => Browser.IsLoading;
+
 
             public BrowserWindowImpl(CefManager manager, CefBrowser browser)
             {
                 Browser = browser;
                 _manager = manager;
+            }
+
+            public void StopLoad()
+            {
+                Browser.StopLoad();
+            }
+
+            public void Reload()
+            {
+                Browser.Reload();
+            }
+
+            public bool GoBack()
+            {
+                if (!Browser.CanGoBack)
+                    return false;
+
+                Browser.GoBack();
+                return true;
+            }
+
+            public bool GoForward()
+            {
+                if (!Browser.CanGoForward)
+                    return false;
+
+                Browser.GoForward();
+                return true;
+            }
+
+            public void ExecuteJavaScript(string code)
+            {
+                Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
             }
         }
 

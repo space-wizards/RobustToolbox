@@ -28,7 +28,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         public DynamicTreeBroadPhase(int capacity)
         {
-            _tree = new B2DynamicTree<FixtureProxy>(capacity);
+            _tree = new B2DynamicTree<FixtureProxy>(capacity: capacity);
             _queryCallback = QueryCallback;
             _proxyCount = 0;
 

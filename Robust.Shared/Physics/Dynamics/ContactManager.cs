@@ -108,9 +108,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Go through the cached broadphase movement and update contacts.
         /// </summary>
-        /// <param name="gridId"></param>
-        /// <param name="proxyA"></param>
-        /// <param name="proxyB"></param>
         private void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
         {
             Fixture fixtureA = proxyA.Fixture;
@@ -350,10 +347,18 @@ namespace Robust.Shared.Physics.Dynamics
                 var proxyIdA = fixtureA.Proxies[indexA].ProxyId;
                 var proxyIdB = fixtureB.Proxies[indexB].ProxyId;
 
+                // If one of the bodies changes its broadphase then contact is probably invalid.
                 var broadPhase = fixtureA.Body.Broadphase;
-                DebugTools.Assert(broadPhase == fixtureB.Body.Broadphase);
+                bool? overlap;
 
-                var overlap = broadPhase?.Tree.TestOverlap(proxyIdA, proxyIdB);
+                if (broadPhase != fixtureB.Body.Broadphase)
+                {
+                    overlap = false;
+                }
+                else
+                {
+                    overlap = broadPhase?.Tree.TestOverlap(proxyIdA, proxyIdB);
+                }
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)

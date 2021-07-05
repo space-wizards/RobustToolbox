@@ -17,6 +17,12 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        private const int MinimumBroadphaseCapacity = 256;
+
+        // We queue updates rather than handle them immediately for multiple reasons
+        // A) Entity initializing may call several events which only need handling once so we'd need to add a bunch of code to account for what stage of initializing they're at
+        // B) It's faster for instances like MoveEvent and RotateEvent both being issued
+
         private Queue<PhysicsUpdateMessage> _queuedBodyUpdates = new();
         private Queue<MoveEvent> _queuedMoves = new();
         private Queue<RotateEvent> _queuedRotates = new();
@@ -59,6 +65,9 @@ namespace Robust.Shared.Physics
             ProcessUpdates();
         }
 
+        /// <summary>
+        /// Go through every deferred event and update the broadphase.
+        /// </summary>
         public void ProcessUpdates()
         {
             _handledThisTick.Clear();
@@ -181,7 +190,7 @@ namespace Robust.Shared.Physics
 
             body.ContactEdges = null;
 
-            var broadphase = GetBroadphase(body);
+            var broadphase = body.Broadphase;
 
             if (broadphase != null)
             {
@@ -221,7 +230,7 @@ namespace Robust.Shared.Physics
                 edge = edge.Next;
             }
 
-            var broadphase = GetBroadphase(fixture.Body);
+            var broadphase = body.Broadphase;
 
             // If nullspace or whatever ignore it.
             if (broadphase == null) return;
@@ -481,7 +490,8 @@ namespace Robust.Shared.Physics
 
         private void HandleBroadphaseInit(EntityUid uid, BroadphaseComponent component, ComponentInit args)
         {
-            component.Tree = new DynamicTreeBroadPhase(Math.Min(256, component.Owner.Transform.ChildCount));
+            var capacity = (int) Math.Max(MinimumBroadphaseCapacity, Math.Ceiling(component.Owner.Transform.ChildCount / (float) MinimumBroadphaseCapacity) * MinimumBroadphaseCapacity);
+            component.Tree = new DynamicTreeBroadPhase(capacity);
         }
 
         private BroadphaseComponent? GetBroadphase(PhysicsComponent body)
@@ -496,7 +506,7 @@ namespace Robust.Shared.Physics
                 return null;
             }
 
-            // if it's map return null.
+            // if it's map return null. Grids should return the map's broadphase.
             if (entity.HasComponent<BroadphaseComponent>() &&
                 entity.Transform.Parent == null)
             {

@@ -28,10 +28,12 @@ namespace Robust.Client.CEF
             var impl = new BrowserWindowImpl(this);
 
             var lifeSpanHandler = new WindowLifeSpanHandler(impl);
-            var client = new WindowCefClient(lifeSpanHandler);
+            var reqHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
+            var client = new WindowCefClient(lifeSpanHandler, reqHandler);
             var settings = new CefBrowserSettings();
 
             impl.Browser = CefBrowserHost.CreateBrowserSync(info, client, settings, createParams.Url);
+            impl.RequestHandler = reqHandler;
 
             _browserWindows.Add(impl);
 
@@ -42,6 +44,9 @@ namespace Robust.Client.CEF
         {
             private readonly CefManager _manager;
             internal CefBrowser Browser = default!;
+            internal RobustRequestHandler RequestHandler = default!;
+
+            public Action<RequestHandlerContext>? OnResourceRequest { get; set; }
 
             [ViewVariables(VVAccess.ReadWrite)]
             public string Url
@@ -111,6 +116,16 @@ namespace Robust.Client.CEF
                 Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
             }
 
+            public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
+            {
+                RequestHandler.AddHandler(handler);
+            }
+
+            public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
+            {
+                RequestHandler.RemoveHandler(handler);
+            }
+
             public void Dispose()
             {
                 if (Closed)
@@ -139,16 +154,16 @@ namespace Robust.Client.CEF
         private sealed class WindowCefClient : CefClient
         {
             private readonly CefLifeSpanHandler _lifeSpanHandler;
+            private readonly CefRequestHandler _requestHandler;
 
-            public WindowCefClient(CefLifeSpanHandler lifeSpanHandler)
+            public WindowCefClient(CefLifeSpanHandler lifeSpanHandler, CefRequestHandler requestHandler)
             {
                 _lifeSpanHandler = lifeSpanHandler;
+                _requestHandler = requestHandler;
             }
 
-            protected override CefLifeSpanHandler GetLifeSpanHandler()
-            {
-                return _lifeSpanHandler;
-            }
+            protected override CefLifeSpanHandler GetLifeSpanHandler() => _lifeSpanHandler;
+            protected override CefRequestHandler GetRequestHandler() => _requestHandler;
         }
 
         private sealed class WindowLifeSpanHandler : CefLifeSpanHandler

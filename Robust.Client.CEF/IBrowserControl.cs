@@ -1,4 +1,6 @@
-﻿namespace Robust.Client.CEF
+﻿using System;
+
+namespace Robust.Client.CEF
 {
     public interface IBrowserControl
     {
@@ -39,5 +41,8 @@
         /// </summary>
         /// <param name="code">JavaScript code.</param>
         void ExecuteJavaScript(string code);
+
+        void AddResourceRequestHandler(Action<RequestHandlerContext> handler);
+        void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler);
     }
 }

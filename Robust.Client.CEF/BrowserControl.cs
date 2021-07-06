@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -23,6 +24,7 @@ namespace Robust.Client.CEF
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IInputManager _inputMgr = default!;
 
+        private RobustRequestHandler _requestHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
         private LiveData? _data;
         private string _startUrl = "about:blank";
 
@@ -162,7 +164,7 @@ namespace Robust.Client.CEF
 
             // A funny web cef client. This can actually be shared by multiple browsers, but I'm not sure how the
             // rendering would work in that case? TODO CEF: Investigate a way to share the web client?
-            var client = new RobustWebClient(renderer);
+            var client = new RobustCefClient(renderer, _requestHandler);
 
             var info = CefWindowInfo.Create();
 
@@ -177,7 +179,7 @@ namespace Robust.Client.CEF
             };
 
             // Create the web browser! And by default, we go to about:blank.
-            var browser = CefBrowserHost.CreateBrowserSync(info, client, settings, "about:blank");
+            var browser = CefBrowserHost.CreateBrowserSync(info, client, settings, _startUrl);
 
             var texture = _clyde.CreateBlankTexture<Bgra32>(Vector2i.One);
 
@@ -465,16 +467,26 @@ namespace Robust.Client.CEF
             _data.Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
         }
 
+        public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
+        {
+            _requestHandler.AddHandler(handler);
+        }
+
+        public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
+        {
+            _requestHandler.RemoveHandler(handler);
+        }
+
         private sealed class LiveData
         {
             public OwnedTexture Texture;
-            public readonly RobustWebClient Client;
+            public readonly RobustCefClient Client;
             public readonly CefBrowser Browser;
             public readonly ControlRenderHandler Renderer;
 
             public LiveData(
                 OwnedTexture texture,
-                RobustWebClient client,
+                RobustCefClient client,
                 CefBrowser browser,
                 ControlRenderHandler renderer)
             {

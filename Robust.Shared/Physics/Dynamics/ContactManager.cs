@@ -49,16 +49,11 @@ namespace Robust.Shared.Physics.Dynamics
 
         private SharedBroadphaseSystem _broadPhaseSystem = default!;
 
-        /// <summary>
-        ///     Called when the broadphase finds two fixtures close to each other.
-        /// </summary>
-        public BroadPhaseDelegate OnBroadPhaseCollision;
-
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
         private const int ContactPoolInitialSize = 64;
 
-        internal Stack<Contact> ContactPoolList = new Stack<Contact>(ContactPoolInitialSize);
+        internal Stack<Contact> ContactPoolList = new(ContactPoolInitialSize);
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -76,7 +71,6 @@ namespace Robust.Shared.Physics.Dynamics
         {
             ContactList = new ContactHead();
             ContactCount = 0;
-            OnBroadPhaseCollision = AddPair;
         }
 
         public void Initialize()
@@ -94,21 +88,10 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        public void FindNewContacts(MapId mapId)
-        {
-            var compManager = IoCManager.Resolve<IComponentManager>();
-
-            foreach (var broadphase in compManager.EntityQuery<BroadphaseComponent>(true))
-            {
-                if (broadphase.Owner.Transform.MapID != mapId) continue;
-                broadphase.Tree.UpdatePairs(OnBroadPhaseCollision);
-            }
-        }
-
         /// <summary>
         ///     Go through the cached broadphase movement and update contacts.
         /// </summary>
-        private void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
+        internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
         {
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
@@ -122,10 +105,8 @@ namespace Robust.Shared.Physics.Dynamics
             // Are the fixtures on the same body?
             if (bodyA.Owner.Uid.Equals(bodyB.Owner.Uid)) return;
 
-            // Box2D checks the mask / layer below but IMO doing it before contact is better.
-            // Check default filter
-            if (!ShouldCollide(fixtureA, fixtureB))
-                return;
+            // Broadphase has already done the faster check for collision mask / layers
+            // so no point duplicating
 
             // Does a contact already exist?
 
@@ -220,7 +201,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
+        internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
         {
             // TODO: Should we only be checking one side's mask? I think maybe fixtureB? IDK
             return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
@@ -344,22 +325,14 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                var proxyIdA = fixtureA.Proxies[indexA].ProxyId;
-                var proxyIdB = fixtureB.Proxies[indexB].ProxyId;
+                var proxyA = fixtureA.Proxies[indexA];
+                var proxyB = fixtureB.Proxies[indexB];
 
-                // If one of the bodies changes its broadphase then contact is probably invalid.
-                var broadPhase = fixtureA.Body.Broadphase;
-                bool? overlap;
+                // We can have cross-broadphase proxies hence need to change them to worlspace
+                var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
+                var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
 
-                // TODO: This + AddPair needs handling for cross-broadphase shenanigans.
-                if (broadPhase != fixtureB.Body.Broadphase)
-                {
-                    overlap = false;
-                }
-                else
-                {
-                    overlap = broadPhase?.Tree.TestOverlap(proxyIdA, proxyIdB);
-                }
+                var overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)

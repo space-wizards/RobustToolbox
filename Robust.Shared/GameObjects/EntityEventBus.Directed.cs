@@ -400,7 +400,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void ClearEventTables()
         {
-            _eventTables.ClearEntities();
+            _eventTables.Clear();
         }
 
         public void Dispose()

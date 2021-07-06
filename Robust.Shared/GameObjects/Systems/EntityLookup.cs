@@ -145,9 +145,6 @@ namespace Robust.Shared.GameObjects
             _handledThisTick.Clear();
             _parentChangeQueue.Clear();
 
-            _entityManager.EventBus.UnsubscribeEvents(this);
-            _entityManager.EventBus.UnsubscribeLocalEvent<EntityLookupComponent, ComponentInit>();
-            _entityManager.EventBus.UnsubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>();
             _entityManager.EntityDeleted -= HandleEntityDeleted;
             _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;

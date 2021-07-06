@@ -134,6 +134,26 @@ namespace Robust.Shared.GameObjects
             Started = true;
         }
 
+        public void Shutdown()
+        {
+            // If we haven't even started up, there's nothing to clean up then.
+            if (!Started)
+                return;
+
+            _moveQueue.Clear();
+            _rotateQueue.Clear();
+            _handledThisTick.Clear();
+            _parentChangeQueue.Clear();
+
+            _entityManager.EventBus.UnsubscribeEvents(this);
+            _entityManager.EventBus.UnsubscribeLocalEvent<EntityLookupComponent, ComponentInit>();
+            _entityManager.EventBus.UnsubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>();
+            _entityManager.EntityDeleted -= HandleEntityDeleted;
+            _entityManager.EntityStarted -= HandleEntityStarted;
+            _mapManager.MapCreated -= HandleMapCreated;
+            Started = false;
+        }
+
         private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
         {
             component.Tree.Clear();
@@ -153,24 +173,6 @@ namespace Robust.Shared.GameObjects
                 capacity: capacity,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
             );
-        }
-
-        public void Shutdown()
-        {
-            // If we haven't even started up, there's nothing to clean up then.
-            if (!Started)
-                return;
-
-            _moveQueue.Clear();
-            _rotateQueue.Clear();
-            _handledThisTick.Clear();
-            _parentChangeQueue.Clear();
-
-            _entityManager.EventBus.UnsubscribeEvents(this);
-            _entityManager.EntityDeleted -= HandleEntityDeleted;
-            _entityManager.EntityStarted -= HandleEntityStarted;
-            _mapManager.MapCreated -= HandleMapCreated;
-            Started = false;
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)

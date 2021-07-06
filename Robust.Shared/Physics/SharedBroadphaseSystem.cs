@@ -38,14 +38,15 @@ namespace Robust.Shared.Physics
          * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
          * Our problem is that we have nested broadphases (rather than being on separate maps) which makes this
          * not feasible because a body could be intersecting 2 broadphases.
-         * Hence we need to check which broadphases it does intersect and check for colliding bodies.
+         * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
         // TODO: Document the shit out of this madness internally. Also refactor DynamicTreeBroadphase.
 
         // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
         // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        private Dictionary<BroadphaseComponent, Box2> _broadphaseMoveBuffer = new();
+        // TODO: These need to be FixtureProxy instead retard.
+        private Dictionary<MapId, Dictionary<Fixture, Box2>> _broadphaseMoveBuffer = new();
         private Dictionary<MapId, Dictionary<Fixture, Box2>> _moveBuffer = new();
 
         public override void Initialize()
@@ -133,8 +134,44 @@ namespace Robust.Shared.Physics
             }
         }
 
+        /// <summary>
+        /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
+        /// </summary>
+        /// <param name="mapId"></param>
+        private void FindGridContacts(MapId mapId)
+        {
+            // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
+            // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
+
+            // TODO: Perf problems here too
+
+            var moveBuffer = _moveBuffer[mapId];
+
+            foreach (var (fixture, worldAABB) in _broadphaseMoveBuffer[mapId])
+            {
+                var broadphase = GetBroadphase(fixture.Body);
+                var offset = broadphase!.Owner.Transform.WorldPosition;
+
+                foreach (var proxy in fixture.Proxies)
+                {
+                    foreach (var other in broadphase!.Tree.QueryAabb(worldAABB.Translated(-offset)))
+                    {
+                        var otherFixture = other.Fixture;
+
+                        if (other == proxy || moveBuffer.ContainsKey(otherFixture)) continue;
+
+                        moveBuffer[otherFixture] = other.AABB.Translated(offset);
+                    }
+                }
+            }
+
+            _broadphaseMoveBuffer[mapId].Clear();
+        }
+
         internal void FindNewContacts(MapId mapId)
         {
+            FindGridContacts(mapId);
+
             if (_moveBuffer[mapId].Count == 0) return;
 
             // There is some mariana trench levels of bullshit going on.
@@ -465,9 +502,9 @@ namespace Robust.Shared.Physics
 
             _moveBuffer[broadphaseTransform.MapID][fixture] = fixtureAABB;
 
-            if (fixture.Body.Owner.TryGetComponent(out BroadphaseComponent? ownerBroadphase))
+            if (fixture.Body.Owner.HasComponent<BroadphaseComponent>())
             {
-                _broadphaseMoveBuffer[ownerBroadphase] = fixtureAABB;
+                _broadphaseMoveBuffer[broadphaseTransform.MapID][fixture] = fixtureAABB;
             }
         }
 
@@ -551,6 +588,11 @@ namespace Robust.Shared.Physics
             }
 
             _moveBuffer[broadphase.Owner.Transform.MapID][fixture] = fixtureAABB;
+
+            if (fixture.Body.Owner.HasComponent<BroadphaseComponent>())
+            {
+                _broadphaseMoveBuffer[broadphase.Owner.Transform.MapID][fixture] = fixtureAABB;
+            }
         }
 
         /// <summary>
@@ -573,6 +615,9 @@ namespace Robust.Shared.Physics
             }
 
             _moveBuffer[broadphase.Owner.Transform.MapID].Remove(fixture);
+            // TODO: Check HasComponent maybe? Just wanted to prevent leaks juusssttt in case.
+            _broadphaseMoveBuffer[broadphase.Owner.Transform.MapID].Remove(fixture);
+
             fixture.ProxyCount = 0;
         }
 
@@ -599,12 +644,14 @@ namespace Robust.Shared.Physics
             var mapEnt = _mapManager.GetMapEntity(e.Map);
             mapEnt.EnsureComponent<BroadphaseComponent>();
             _moveBuffer[e.Map] = new Dictionary<Fixture, Box2>(64);
+            _broadphaseMoveBuffer[e.Map] = new Dictionary<Fixture, Box2>(64);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
             _mapManager.MapCreated -= HandleMapCreated;
+            // TODO: Destroy buffers here
         }
 
         private void HandleGridInit(GridInitializeEvent ev)

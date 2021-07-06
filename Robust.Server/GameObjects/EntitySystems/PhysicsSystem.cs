@@ -1,4 +1,4 @@
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -41,6 +41,9 @@ namespace Robust.Server.GameObjects
             var grid = _mapManager.GetGrid(gridId);
             var collideComp = gridEntity.AddComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
+            // TODO: FIX THIS SHIT DON'T LET SLOTH MERGE IT REE
+            collideComp.BodyType = BodyType.Dynamic;
+            collideComp.BodyStatus = BodyStatus.InAir;
             Get<SharedBroadphaseSystem>().CreateFixture(collideComp, new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
         }
 

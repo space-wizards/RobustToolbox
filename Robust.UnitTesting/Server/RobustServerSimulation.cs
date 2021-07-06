@@ -192,9 +192,9 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
-            container.Register<IEntityLookup, EntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IComponentManager, ComponentManager>();
+            container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
@@ -223,6 +223,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<EntityLookupComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

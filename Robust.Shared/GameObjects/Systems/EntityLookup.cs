@@ -185,6 +185,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
+            if (eventArgs.Map == MapId.Nullspace) return;
+
             _mapManager.GetMapEntity(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
         }
 

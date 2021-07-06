@@ -166,10 +166,18 @@ namespace Robust.Shared.GameObjects
             var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / (float) GrowthRate) * GrowthRate);
 
             component.Tree = new DynamicTree<IEntity>(
-                GetWorldAabbFromEntity,
+                GetRelativeAABBFromEntity,
                 capacity: capacity,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
             );
+        }
+
+        private static Box2 GetRelativeAABBFromEntity(in IEntity entity)
+        {
+            var aabb = GetWorldAABB(entity);
+            var tree = GetLookup(entity);
+
+            return aabb.Translated(tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -482,7 +490,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private EntityLookupComponent? GetLookup(IEntity entity)
+        private static EntityLookupComponent? GetLookup(IEntity entity)
         {
             if (entity.Transform.MapID == MapId.Nullspace)
             {
@@ -580,6 +588,11 @@ namespace Robust.Shared.GameObjects
         }
 
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
+        {
+            return GetWorldAABB(ent);
+        }
+
+        private static Box2 GetWorldAABB(in IEntity ent)
         {
             var pos = ent.Transform.WorldPosition;
 

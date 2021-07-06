@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -66,15 +67,18 @@ namespace Robust.Shared.GameObjects
     [UsedImplicitly]
     public class EntityLookup : IEntityLookup, IEntityEventSubscriber
     {
+        private readonly IComponentManager _compManager;
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
 
-        private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new();
+        private const int GrowthRate = 256;
+
+        private const float PointEnlargeRange = .00001f / 2;
 
         // Using stacks so we always use latest data (given we only run it once per entity).
         private readonly Stack<MoveEvent> _moveQueue = new();
         private readonly Stack<RotateEvent> _rotateQueue = new();
-        private readonly Queue<EntMapIdChangedMessage> _mapChangeQueue = new();
+        private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
 
         /// <summary>
         /// Move and rotate events generate the same update so no point duplicating work in the same tick.
@@ -83,10 +87,17 @@ namespace Robust.Shared.GameObjects
 
         // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
 
+        // TODO: Combine GridTileLookupSystem and entity anchoring together someday.
+        // Queries are a bit of spaghet rn but ideally you'd just have:
+        // A) The fast tile-based one
+        // B) The physics-only one (given physics needs it to be fast af)
+        // C) A generic use one that covers anything not caught in the above.
+
         public bool Started { get; private set; } = false;
 
-        public EntityLookup(IEntityManager entityManager, IMapManager mapManager)
+        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
         {
+            _compManager = compManager;
             _entityManager = entityManager;
             _mapManager = mapManager;
         }
@@ -101,12 +112,37 @@ namespace Robust.Shared.GameObjects
             var eventBus = _entityManager.EventBus;
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
-            eventBus.SubscribeEvent<EntMapIdChangedMessage>(EventSource.Local, this, ev => _mapChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
+
+            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
+            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
+            eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, HandleGridInit);
+
             _entityManager.EntityDeleted += HandleEntityDeleted;
             _entityManager.EntityStarted += HandleEntityStarted;
             _mapManager.MapCreated += HandleMapCreated;
-            _mapManager.MapDestroyed += HandleMapDestroyed;
             Started = true;
+        }
+
+        private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
+        {
+            component.Tree.Clear();
+        }
+
+        private void HandleGridInit(GridInitializeEvent ev)
+        {
+            _entityManager.GetEntity(ev.EntityUid).EnsureComponent<EntityLookupComponent>();
+        }
+
+        private void HandleLookupInit(EntityUid uid, EntityLookupComponent component, ComponentInit args)
+        {
+            var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / (float) GrowthRate) * GrowthRate);
+
+            component.Tree = new DynamicTree<IEntity>(
+                GetWorldAabbFromEntity,
+                capacity: capacity,
+                growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
+            );
         }
 
         public void Shutdown()
@@ -118,14 +154,12 @@ namespace Robust.Shared.GameObjects
             _moveQueue.Clear();
             _rotateQueue.Clear();
             _handledThisTick.Clear();
-            _mapChangeQueue.Clear();
-            _entityTreesPerMap.Clear();
+            _parentChangeQueue.Clear();
 
             _entityManager.EventBus.UnsubscribeEvents(this);
             _entityManager.EntityDeleted -= HandleEntityDeleted;
             _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;
-            _mapManager.MapDestroyed -= HandleMapDestroyed;
             Started = false;
         }
 
@@ -141,63 +175,86 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
-            _entityTreesPerMap[eventArgs.Map] = new DynamicTree<IEntity>(
-                GetWorldAabbFromEntity,
-                capacity: 16,
-                growthFunc: x => x == 16 ? 3840 : x + 256
-            );
-        }
-
-        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
-        {
-            _entityTreesPerMap.Remove(eventArgs.Map);
+            _mapManager.GetMapEntity(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
         }
 
         public void Update()
         {
             // Acruid said he'd deal with Update being called around IEntityManager later.
-            _handledThisTick.Clear();
 
-            while (_mapChangeQueue.TryDequeue(out var mapChangeEvent))
+            // Could be more efficient but essentially nuke their old lookup and add to new lookup if applicable.
+            while (_parentChangeQueue.TryDequeue(out var mapChangeEvent))
             {
-                if (mapChangeEvent.Entity.Deleted) continue;
-                RemoveFromEntityTree(mapChangeEvent.Entity, mapChangeEvent.OldMapId);
-                UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
+                RemoveFromEntityTrees(mapChangeEvent.Entity);
+
+                if (mapChangeEvent.Entity.Deleted) continue;
+                UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
             {
-                if (moveEvent.Sender.Deleted || _handledThisTick.Contains(moveEvent.Sender.Uid)) continue;
+                if (moveEvent.Sender.Deleted || !_handledThisTick.Add(moveEvent.Sender.Uid)) continue;
 
                 UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
-                _handledThisTick.Add(moveEvent.Sender.Uid);
             }
 
             while (_rotateQueue.TryPop(out var rotateEvent))
             {
-                if (rotateEvent.Sender.Deleted || _handledThisTick.Contains(rotateEvent.Sender.Uid)) continue;
+                if (rotateEvent.Sender.Deleted || !_handledThisTick.Add(rotateEvent.Sender.Uid)) continue;
 
                 UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);
             }
+
+            _handledThisTick.Clear();
         }
 
         #region Spatial Queries
+
+        private IEnumerable<EntityLookupComponent> GetLookupsIntersecting(MapId mapId, Box2 worldAABB)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            var canBeEnclosed = true;
+
+            // TODO: Recursive and all that.
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                yield return _entityManager.GetEntity(grid.GridEntityId).GetComponent<EntityLookupComponent>();
+
+                // If wholly enclosed no point checking others.
+                if (canBeEnclosed && grid.WorldBounds.Encloses(worldAABB))
+                {
+                    yield break;
+                }
+
+                canBeEnclosed = false;
+            }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<EntityLookupComponent>();
+        }
 
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
         {
             var found = false;
-            _entityTreesPerMap[mapId].QueryAabb(ref found, (ref bool found, in IEntity ent) =>
-            {
-                if (!ent.Deleted)
-                {
-                    found = true;
-                    return false;
-                }
 
-                return true;
-            }, box, approximate);
+            foreach (var lookup in GetLookupsIntersecting(mapId, box))
+            {
+                var offsetBox = box.Translated(-lookup.Owner.Transform.WorldPosition);
+
+                lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
+                {
+                    if (!ent.Deleted)
+                    {
+                        found = true;
+                        return false;
+                    }
+
+                    return true;
+                }, offsetBox, approximate);
+            }
+
             return found;
         }
 
@@ -205,31 +262,34 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback)
         {
-            if (mapId == MapId.Nullspace)
-                return;
+            foreach (var lookup in GetLookupsIntersecting(mapId, position))
+            {
+                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
 
-            _entityTreesPerMap[mapId]._b2Tree
-                .FastQuery(ref position, (ref IEntity data) => callback(data));
+                lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
+            }
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
-            if (!_entityTreesPerMap.TryGetValue(mapId, out var mapTree))
-            {
-                return Enumerable.Empty<IEntity>();
-            }
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
             var list = new List<IEntity>();
 
-            mapTree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+            foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
-                if (!ent.Deleted)
+                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
+
+                lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    list.Add(ent);
-                }
-                return true;
-            }, position, approximate);
+                    if (!ent.Deleted)
+                    {
+                        list.Add(ent);
+                    }
+                    return true;
+                }, offsetBox, approximate);
+            }
 
             return list;
         }
@@ -237,25 +297,25 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false)
         {
-            const float range = .00001f / 2;
-            var aabb = new Box2(position, position).Enlarged(range);
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
-            if (mapId == MapId.Nullspace)
-            {
-                return Enumerable.Empty<IEntity>();
-            }
-
+            var aabb = new Box2(position, position).Enlarged(PointEnlargeRange);
             var list = new List<IEntity>();
             var state = (list, position);
 
-            _entityTreesPerMap[mapId].QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+            foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
             {
-                if (Intersecting(ent, state.position))
+                var offsetBox = aabb.Translated(-lookup.Owner.Transform.WorldPosition);
+
+                lookup.Tree.QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
-                    state.list.Add(ent);
-                }
-                return true;
-            }, aabb, approximate);
+                    if (Intersecting(ent, state.position))
+                    {
+                        state.list.Add(ent);
+                    }
+                    return true;
+                }, offsetBox, approximate);
+            }
 
             return list;
         }
@@ -365,34 +425,44 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
         {
-            if (!_entityTreesPerMap.TryGetValue(mapId, out var trees))
-                yield break;
-
-            foreach (var entity in trees)
+            foreach (EntityLookupComponent comp in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (!entity.Deleted)
+                foreach (var entity in comp.Tree)
+                {
+                    if (entity.Deleted) continue;
+
                     yield return entity;
+                }
             }
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false)
         {
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
+
             var list = new List<IEntity>();
 
             var state = (list, position);
 
-            _entityTreesPerMap[mapId].QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
-            {
-                var transform = ent.Transform;
-                if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
-                    MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
-                {
-                    state.list.Add(ent);
-                }
+            var aabb = new Box2(position, position).Enlarged(PointEnlargeRange);
 
-                return true;
-            }, position, approximate);
+            foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
+            {
+                var offsetPos = position -lookup.Owner.Transform.WorldPosition;
+
+                lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+                {
+                    var transform = ent.Transform;
+                    if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
+                        MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
+                    {
+                        state.list.Add(ent);
+                    }
+
+                    return true;
+                }, offsetPos, approximate);
+            }
 
             return list;
         }
@@ -400,6 +470,16 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         #region Entity DynamicTree
+
+        private EntityLookupComponent? GetLookup(IEntity entity)
+        {
+            return null;
+
+            // TODO: Copy stuff from broadphase pr
+
+            // TODO: NEED TO TRANSLATE ALL THE LOOKUP CO-ORDINATES.
+        }
+
         /// <inheritdoc />
         public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
@@ -414,74 +494,59 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var transform = entity.Transform;
+            var lookup = GetLookup(entity);
 
-            DebugTools.Assert(transform.Initialized);
-
-            var mapId = transform.MapID;
-
-            if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
+            if (lookup == null)
             {
-                entTree = new DynamicTree<IEntity>(
-                    GetWorldAabbFromEntity,
-                    capacity: 16,
-                    growthFunc: x => x == 16 ? 3840 : x + 256
-                );
-                _entityTreesPerMap.Add(mapId, entTree);
+                RemoveFromEntityTrees(entity);
+                return true;
             }
+
+            var transform = entity.Transform;
+            DebugTools.Assert(transform.Initialized);
 
             // for debugging
             var necessary = 0;
 
-            if (entTree.AddOrUpdate(entity, worldAABB))
+            if (lookup.Tree.AddOrUpdate(entity, worldAABB))
             {
                 ++necessary;
             }
 
-            foreach (var childTx in entity.Transform.ChildEntityUids)
+            if (!entity.HasComponent<EntityLookupComponent>())
             {
-                if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                foreach (var childTx in entity.Transform.ChildEntityUids)
                 {
-                    ++necessary;
+                    // TODO: Suss this out.
+                    // if (!_handledThisTick.Add(childTx)) continue;
+
+                    if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                    {
+                        ++necessary;
+                    }
                 }
             }
 
             return necessary > 0;
         }
 
-        public bool RemoveFromEntityTree(IEntity entity, MapId mapId)
-        {
-            if (_entityTreesPerMap.TryGetValue(mapId, out var tree))
-            {
-                return tree.Remove(entity);
-            }
-
-            return false;
-        }
-
         /// <inheritdoc />
         public void RemoveFromEntityTrees(IEntity entity)
         {
-            foreach (var mapId in _mapManager.GetAllMapIds())
+            foreach (EntityLookupComponent lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (_entityTreesPerMap.TryGetValue(mapId, out var entTree))
-                {
-                    entTree.Remove(entity);
-                }
+                lookup.Tree.Remove(entity);
             }
         }
 
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
-            if (ent.Deleted)
-                return new Box2(0, 0, 0, 0);
-
             var pos = ent.Transform.WorldPosition;
 
-            if (ent.TryGetComponent(out IPhysBody? collider))
-                return collider.GetWorldAABB(pos);
+            if (ent.Deleted || !ent.TryGetComponent(out PhysicsComponent? physics))
+                return new Box2(pos, pos);
 
-            return new Box2(pos, pos);
+            return physics.GetWorldAABB(pos);
         }
 
         #endregion

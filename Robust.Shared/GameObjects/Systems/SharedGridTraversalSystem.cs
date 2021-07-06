@@ -31,8 +31,15 @@ namespace Robust.Shared.GameObjects
 
             var transform = entity.Transform;
 
+            var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+
+            if (float.IsNaN(mapPos.X) || float.IsNaN(mapPos.Y))
+            {
+                return;
+            }
+
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
+            if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
                 grid.GridEntityId.IsValid() &&
                 grid.GridEntityId != entity.Uid)
             {

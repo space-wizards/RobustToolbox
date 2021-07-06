@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
 
-            return aabb.Translated(tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
+            return aabb.Translated(-tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -554,10 +554,12 @@ namespace Robust.Shared.GameObjects
             var transform = entity.Transform;
             DebugTools.Assert(transform.Initialized);
 
+            var aabb = worldAABB.Value.Translated(-lookup.Owner.Transform.WorldPosition);
+
             // for debugging
             var necessary = 0;
 
-            if (lookup.Tree.AddOrUpdate(entity, worldAABB))
+            if (lookup.Tree.AddOrUpdate(entity, aabb))
             {
                 ++necessary;
             }

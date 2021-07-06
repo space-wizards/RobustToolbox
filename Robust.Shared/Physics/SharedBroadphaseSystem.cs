@@ -214,11 +214,9 @@ namespace Robust.Shared.Physics
                         }
                         else
                         {
-                            var broadphaseOffset = -offsets[broadphase];
-
                             aabb = proxy.AABB
-                                .Translated(fixture.Body.Broadphase!.Owner.Transform.WorldPosition)
-                                .Translated(broadphaseOffset);
+                                .Translated(offsets[fixture.Body.Broadphase!])
+                                .Translated(-offsets[broadphase]);
                         }
 
                         // TODO: Approx or not?
@@ -443,7 +441,6 @@ namespace Robust.Shared.Physics
 
         private void SynchronizeFixtures(PhysicsComponent body)
         {
-            var broadphase = GetBroadphase(body);
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
 
             if (body.Awake)
@@ -484,14 +481,20 @@ namespace Robust.Shared.Physics
             // TODO: Inefficient as fuck
             var broadphaseTransform = broadphase.Owner.Transform;
             var broadphaseOffset = broadphaseTransform.WorldPosition;
+            var broadphaseRot = broadphaseTransform.WorldRotation;
+
+            var relativePos1 = new Transform(transform1.Position - broadphaseOffset,
+                transform1.Quaternion2D.Angle - (float) broadphaseRot.Theta);
+
+            var relativePos2 = new Transform(transform2.Position - broadphaseOffset,
+                transform2.Quaternion2D.Angle - (float) broadphaseRot.Theta);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
 
-                var aabb1 = fixture.Shape.CalculateLocalBounds(transform1.Quaternion2D.Angle).Translated(transform1.Position);
-                var aabb2 = fixture.Shape.CalculateLocalBounds(transform1.Quaternion2D.Angle)
-                    .Translated(transform2.Position);
+                var aabb1 = fixture.Shape.CalculateLocalBounds(relativePos1.Quaternion2D.Angle).Translated(relativePos1.Position);
+                var aabb2 = fixture.Shape.CalculateLocalBounds(relativePos2.Quaternion2D.Angle).Translated(relativePos2.Position);
 
                 proxy.AABB = aabb1.Union(aabb2);
                 var displacement = aabb2.Center - aabb1.Center;
@@ -584,7 +587,7 @@ namespace Robust.Shared.Physics
                 var proxy = new FixtureProxy(aabb, fixture, i);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
-                fixtureAABB = fixtureAABB.Union(aabb.Translated(broadphasePos));
+                fixtureAABB = fixtureAABB.Union(aabb).Translated(broadphasePos);
             }
 
             _moveBuffer[broadphase.Owner.Transform.MapID][fixture] = fixtureAABB;

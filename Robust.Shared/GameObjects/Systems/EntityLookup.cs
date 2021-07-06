@@ -473,11 +473,29 @@ namespace Robust.Shared.GameObjects
 
         private EntityLookupComponent? GetLookup(IEntity entity)
         {
+            if (entity.Transform.MapID == MapId.Nullspace)
+            {
+                return null;
+            }
+
+            // if it's map return null. Grids should return the map's broadphase.
+            if (entity.HasComponent<EntityLookupComponent>() &&
+                entity.Transform.Parent == null)
+            {
+                return null;
+            }
+
+            var parent = entity.Transform.Parent?.Owner;
+
+            while (true)
+            {
+                if (parent == null) break;
+
+                if (parent.TryGetComponent(out EntityLookupComponent? comp)) return comp;
+                parent = parent.Transform.Parent?.Owner;
+            }
+
             return null;
-
-            // TODO: Copy stuff from broadphase pr
-
-            // TODO: NEED TO TRANSLATE ALL THE LOOKUP CO-ORDINATES.
         }
 
         /// <inheritdoc />
@@ -489,7 +507,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (!entity.Initialized || !_entityManager.EntityExists(entity.Uid))
+            if (!entity.Initialized)
             {
                 return false;
             }
@@ -497,6 +515,16 @@ namespace Robust.Shared.GameObjects
             var lookup = GetLookup(entity);
 
             if (lookup == null)
+            {
+                RemoveFromEntityTrees(entity);
+                return true;
+            }
+
+            // Temp PVS guard for when we clear dynamictree for now.
+            worldAABB ??= GetWorldAabbFromEntity(entity);
+            var center = worldAABB.Value.Center;
+
+            if (float.IsNaN(center.X) || float.IsNaN(center.Y))
             {
                 RemoveFromEntityTrees(entity);
                 return true;
@@ -517,8 +545,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var childTx in entity.Transform.ChildEntityUids)
                 {
-                    // TODO: Suss this out.
-                    // if (!_handledThisTick.Add(childTx)) continue;
+                    if (!_handledThisTick.Add(childTx)) continue;
 
                     if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
                     {

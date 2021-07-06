@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -81,6 +82,12 @@ namespace Robust.Shared.GameObjects
         private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
 
         /// <summary>
+        /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
+        /// 1 EntityLookupComponent at a time (hence it may overlap without another lookup).
+        /// </summary>
+        private float _lookupEnlargementRange;
+
+        /// <summary>
         /// Move and rotate events generate the same update so no point duplicating work in the same tick.
         /// </summary>
         private readonly HashSet<EntityUid> _handledThisTick = new();
@@ -108,6 +115,9 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
@@ -218,7 +228,7 @@ namespace Robust.Shared.GameObjects
             var canBeEnclosed = true;
 
             // TODO: Recursive and all that.
-            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_lookupEnlargementRange)))
             {
                 yield return _entityManager.GetEntity(grid.GridEntityId).GetComponent<EntityLookupComponent>();
 
@@ -501,6 +511,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
+            // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
+            // PVS is more stable and entity anchoring has been battle-tested.
             if (entity.Deleted)
             {
                 RemoveFromEntityTrees(entity);
@@ -560,7 +572,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveFromEntityTrees(IEntity entity)
         {
-            foreach (EntityLookupComponent lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
+            foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
                 lookup.Tree.Remove(entity);
             }

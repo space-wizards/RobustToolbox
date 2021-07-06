@@ -26,7 +26,6 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
                 .RegisterComponents(factory =>
                 {
                     factory.RegisterClass<ContainerManagerComponent>();
-                    factory.RegisterClass<EntityLookupComponent>();
                 })
                 .InitializeInstance();
 

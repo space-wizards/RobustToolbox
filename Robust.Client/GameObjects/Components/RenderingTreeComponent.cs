@@ -21,23 +21,33 @@ namespace Robust.Client.GameObjects
         private static Box2 LightAabbFunc(in PointLightComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
-
+            var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
-            return Box2.CenteredAround(worldPos, (boxSize, boxSize));
+
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+
+            return Box2.CenteredAround(pos, (boxSize, boxSize));
         }
 
         internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null)
         {
             worldPos ??= value.Owner.Transform.WorldPosition;
+            var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            return new Box2(worldPos.Value, worldPos.Value);
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+
+            return new Box2(pos, pos);
         }
 
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
         {
             worldPos ??= value.Owner.Transform.WorldPosition;
+            var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
-            return Box2.CenteredAround(worldPos.Value, (boxSize, boxSize));
+
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+
+            return Box2.CenteredAround(pos, (boxSize, boxSize));
         }
     }
 }

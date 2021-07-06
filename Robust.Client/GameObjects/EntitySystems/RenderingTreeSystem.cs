@@ -259,9 +259,8 @@ namespace Robust.Client.GameObjects
             EntityManager.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).EnsureComponent<RenderingTreeComponent>();
         }
 
-        private RenderingTreeComponent? GetRenderTree(IEntity entity)
+        internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
-
             if (entity.Transform.MapID == MapId.Nullspace ||
                 entity.HasComponent<RenderingTreeComponent>()) return null;
 
@@ -302,8 +301,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
-                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite, worldPos).Translated(-treePos);
+                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite, worldPos);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)

@@ -33,6 +33,19 @@ namespace Robust.Shared.Physics
         /// </summary>
         private HashSet<EntityUid> _handledThisTick = new();
 
+        /*
+         * Okay so Box2D has its own "MoveProxy" stuff so you can easily find new contacts when required.
+         * Our problem is that we have nested broadphases (rather than being on separate maps) which makes this
+         * not feasible because a body could be intersecting 2 broadphases.
+         * Hence we need to check which broadphases it does intersect and check for colliding bodies.
+         */
+
+        // TODO: Document the shit out of this madness internally. Also refactor DynamicTreeBroadphase.
+
+        // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
+        private Dictionary<Fixture, Box2> _broadphaseMoveBuffer = new();
+        private Dictionary<Fixture, Box2> _moveBuffer = new();
+
         public override void Initialize()
         {
             base.Initialize();
@@ -116,6 +129,61 @@ namespace Robust.Shared.Physics
 
                 SynchronizeFixtures(body);
             }
+        }
+
+        internal void FindNewContacts()
+        {
+            // There is some mariana trench levels of bullshit going on.
+            // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
+            // broadphase intersecting a particular proxy instead of just on the 1 broadphase.
+            // This means we can generate contacts across different broadphases.
+            // If you have a better way of allowing for broadphases attached to grids then by all means code it yourself.
+
+            var offsets = new Dictionary<BroadphaseComponent, Vector2>();
+
+            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            {
+                offsets[broadphase] = broadphase.Owner.Transform.WorldPosition;
+            }
+
+            // TODO: Could store fixtures by broadphase for more perf
+            // TODO: Need to iterate over each broadphase intersecting our WorldAABB.
+
+            foreach (var (fixture, worldAABB) in _moveBuffer)
+            {
+                // Get every broadphase we may be intersecting.
+                foreach (var broadphase in GetBroadphases(fixture.Body.Owner.Transform.MapID, worldAABB))
+                {
+                    var broadphaseOffset = -offsets[broadphase];
+
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        Box2 aabb;
+                        
+                        // If it's the same broadphase as our body's one then don't need to translate the AABB.
+                        if (proxy.Fixture.Body.Broadphase == broadphase)
+                        {
+                            aabb = proxy.AABB;
+                        }
+                        else
+                        {
+                            aabb = proxy.AABB
+                                .Translated(fixture.Body.Broadphase!.Owner.Transform.WorldPosition)
+                                .Translated(broadphaseOffset);
+                        }
+
+                        // TODO: Approx or not?
+
+                        broadphase.Tree.QueryAabb((ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
+                        {
+                            // TODO: Check ShouldCollide and add if necessary
+                            return true;
+                        }, aabb, false);
+                    }
+                }
+            }
+
+            _moveBuffer.Clear();
         }
 
         private void HandleBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ComponentShutdown args)
@@ -357,6 +425,10 @@ namespace Robust.Shared.Physics
                 throw new InvalidBroadphaseException($"Unable to find broadphase for Synchronize for {fixture.Body}");
             }
 
+            var fixtureAABB = new Box2(transform1.Position, transform1.Position);
+            // TODO: Inefficient as fuck
+            var broadphaseOffset = broadphase.Owner.Transform.WorldPosition;
+
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
@@ -369,6 +441,13 @@ namespace Robust.Shared.Physics
                 var displacement = aabb2.Center - aabb1.Center;
 
                 broadphase.Tree.MoveProxy(proxy.ProxyId, proxy.AABB, displacement);
+                fixtureAABB = fixtureAABB.Union(proxy.AABB.Translated(broadphaseOffset));
+            }
+
+            if (proxyCount > 0)
+            {
+                // TODO: Remove MoveBuffer from broadphase
+                _moveBuffer[fixture] = fixtureAABB;
             }
         }
 
@@ -440,12 +519,20 @@ namespace Robust.Shared.Physics
             var posDiff = worldPos - broadphasePos;
             var rotDiff = worldRot - broadphaseRot;
 
+            var fixtureAABB = new Box2(worldPos, worldPos);
+
             for (var i = 0; i < proxyCount; i++)
             {
                 var aabb = fixture.Shape.CalculateLocalBounds(rotDiff).Translated(posDiff);
                 var proxy = new FixtureProxy(aabb, fixture, i);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
+                fixtureAABB = fixtureAABB.Union(aabb.Translated(broadphasePos));
+            }
+
+            if (proxyCount > 0)
+            {
+                _moveBuffer[fixture] = fixtureAABB;
             }
         }
 
@@ -459,13 +546,16 @@ namespace Robust.Shared.Physics
                 throw new InvalidBroadphaseException($"Unable to find broadphase for destroy on {fixture.Body}");
             }
 
-            for (var i = 0; i < fixture.ProxyCount; i++)
+            var proxyCount = fixture.ProxyCount;
+
+            for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
                 broadphase.Tree.RemoveProxy(proxy.ProxyId);
                 proxy.ProxyId = DynamicTree.Proxy.Free;
             }
 
+            _moveBuffer.Remove(fixture);
             fixture.ProxyCount = 0;
         }
 
@@ -566,13 +656,16 @@ namespace Robust.Shared.Physics
         {
             if (mapId == MapId.Nullspace) yield break;
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<BroadphaseComponent>();
-
             // TODO: Doesn't supported nested broadphase but future sloth problem coz fuck that guy
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, aabb))
             {
                 yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<BroadphaseComponent>();
+
+                // If we're wholly in 1 grid don't need to continue.
+                if (grid.WorldBounds.Encloses(aabb)) yield break;
             }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<BroadphaseComponent>();
         }
 
         /// <summary>

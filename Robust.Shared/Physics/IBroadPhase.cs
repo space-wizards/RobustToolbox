@@ -19,10 +19,6 @@ namespace Robust.Shared.Physics {
 
         void TouchProxy(DynamicTree.Proxy proxy);
 
-        void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
-            Box2 aabb,
-            bool approx = false);
-
         void QueryAabb<TState>(
             ref TState state,
             DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback,

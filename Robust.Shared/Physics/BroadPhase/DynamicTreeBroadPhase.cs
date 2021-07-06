@@ -204,11 +204,6 @@ namespace Robust.Shared.Physics.Broadphase
             _tree.DestroyProxy(proxy);
         }
 
-        public void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
-        {
-            QueryAabb(ref callback, EasyQueryCallback, aabb, approx);
-        }
-
         public FixtureProxy? GetProxy(DynamicTree.Proxy proxy)
         {
             return _tree.GetUserData(proxy);

@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -1165,14 +1166,15 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            if (!MathHelper.CloseTo(transformA.Quaternion2D.Angle, 0.0f))
-            {
-                CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
-                return;
-            }
+            // TODO: Ideally PhysShapeAabb wouldn't be rotatable but this at least gives us practice for OBBs anyway so fuck it
+            // We can axis-align AABBA here and get a faster AABB
+            var transformC = new Transform(transformA.Position, 0.0f);
 
+            var transformD = new Transform(Transform.Mul(transformA.Quaternion2D, transformB.Position),
+                transformB.Quaternion2D.Angle - transformA.Quaternion2D.Angle);
+            
             // Vector from A to B
-            var n = transformB.Position - transformA.Position;
+            var n = transformD.Position - transformC.Position;
 
             // Closest point on A to center of B
             var closest = n;
@@ -1220,7 +1222,7 @@ namespace Robust.Shared.Physics.Collision
 
             // Early out of the radius is shorter than distance to closest point and
             // Circle not inside the AABB
-            if (d > r * r && !inside)
+            if (!inside && d > r * r)
             {
                 manifold.PointCount = 0;
                 return;

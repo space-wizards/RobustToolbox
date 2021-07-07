@@ -29,7 +29,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics
 {
     // TODO: Probably replace this internally with just the Vector2 and radians but I'd need to re-learn trig so yeah....
-    internal struct Transform
+    public struct Transform
     {
         public Vector2 Position;
         public Quaternion2D Quaternion2D;
@@ -130,6 +130,8 @@ namespace Robust.Shared.Physics
     {
         public float C;
         public float S;
+
+        public float Angle => MathF.Atan2(S, C);
 
         public Quaternion2D(float cos, float sin)
         {

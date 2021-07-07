@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
@@ -1165,14 +1166,276 @@ namespace Robust.Shared.Physics.Collision
         public void CollideAabbAndCircle(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeCircle circleB,
             in Transform transformB)
         {
-            // TODO: Either port Acruid's or use Randy Gaul's or something. Big gains
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) aabbA, transformA, circleB, transformB);
+            // TODO: Ideally PhysShapeAabb wouldn't be rotatable but this at least gives us practice for OBBs anyway so fuck it
+            // We can axis-align AABBA here and get a faster AABB
+            var transformC = new Transform(transformA.Position, 0.0f);
+
+            var transformD = new Transform(Transform.Mul(transformA.Quaternion2D, transformB.Position),
+                transformB.Quaternion2D.Angle - transformA.Quaternion2D.Angle);
+            
+            // Vector from A to B
+            var n = transformD.Position - transformC.Position;
+
+            // Closest point on A to center of B
+            var closest = n;
+
+            // Calculate half extents along each axis
+            float x_extent = (aabbA.LocalBounds.Right - aabbA.LocalBounds.Left) / 2;
+            float y_extent = (aabbA.LocalBounds.Top - aabbA.LocalBounds.Bottom) / 2;
+
+            // Clamp point to edges of the AABB
+            closest.X = Math.Clamp(closest.X, -x_extent, x_extent);
+            closest.Y = Math.Clamp(closest.Y, -y_extent, y_extent);
+
+            bool inside = false;
+
+            // Circle is inside the AABB, so we need to clamp the circle's center
+            // to the closest edge
+            if (n == closest)
+            {
+                inside = true;
+
+                // Find closest axis
+                if (MathF.Abs(n.X) > MathF.Abs(n.Y))
+                {
+                    // Clamp to closest extent
+                    if (closest.X > 0)
+                        closest.X = x_extent;
+                    else
+                        closest.X = -x_extent;
+                }
+
+                // y axis is shorter
+                else
+                {
+                    // Clamp to closest extent
+                    if (closest.Y > 0)
+                        closest.Y = y_extent;
+                    else
+                        closest.Y = -y_extent;
+                }
+            }
+
+            var normal = n - closest;
+            var d = normal.LengthSquared;
+            var r = circleB.Radius;
+
+            // Early out of the radius is shorter than distance to closest point and
+            // Circle not inside the AABB
+            if (!inside && d > r * r)
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            manifold.PointCount = 1;
+            manifold.Type = ManifoldType.FaceA;
+
+            // Avoided sqrt until we needed
+            d = MathF.Sqrt(d);
+
+            // Collision normal needs to be flipped to point outside if circle was
+            // inside the AABB
+            /*
+            if (inside)
+            {
+                manifold.LocalNormal = -n;
+                //m->penetration = r - d
+            }
+            else
+            {
+                manifold.LocalNormal = n;
+                //m->penetration = r - d
+            }
+            */
+            if (n.X > 0.0f)
+            {
+                if (n.X >= MathF.Abs(n.Y))
+                {
+                    manifold.LocalNormal = new Vector2(1.0f, 0.0f);
+                    manifold.LocalPoint = new Vector2(closest.X, 0.0f);
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0.0f, closest.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, closest.Y);
+                }
+            }
+            else
+            {
+                if (MathF.Abs(n.X) > MathF.Abs(n.Y) || n.X == n.Y)
+                {
+                    manifold.LocalNormal = new Vector2(-1.0f, 0.0f);
+                    manifold.LocalPoint = new Vector2(closest.X, 0.0f);
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0.0f, closest.Y >= 0.0f ? 1.0f : -1.0f);
+                    manifold.LocalPoint = new Vector2(0.0f, closest.Y);
+                }
+            }
+
+            var p0 = manifold.Points[0];
+            p0.Id.Key = 0;
+            p0.LocalPoint = Vector2.Zero;
+            manifold.Points[0] = p0;
         }
 
         public void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeAabb aabbB,
             in Transform transformB)
         {
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+            if (transformA.Quaternion2D.Angle != transformB.Quaternion2D.Angle)
+            {
+                CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
+                return;
+            }
+
+            // Based on Randy Gaul's AABBvsAABB
+
+            // Vector from A to B
+            Vector2 n = transformB.Position - transformA.Position;
+
+            Box2 abox = aabbA.LocalBounds;
+            Box2 bbox = aabbB.LocalBounds;
+
+            // Calculate half extents along x axis for each object
+            float a_extent_x = (abox.Right - abox.Left) / 2;
+            float b_extent_x = (bbox.Right - bbox.Left) / 2;
+
+            // Calculate overlap on x axis
+            float x_overlap = a_extent_x + b_extent_x - MathF.Abs(n.X);
+
+            // SAT test on x axis
+            if (!(x_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            // Calculate half extents along y axis for each object
+            var a_extentY = (abox.Top - abox.Bottom) / 2;
+            var b_extentY = (bbox.Top - bbox.Bottom) / 2;
+
+            // Calculate overlap on y axis
+            float y_overlap = a_extentY + b_extentY - MathF.Abs(n.Y);
+
+            // SAT test on y axis
+            if (!(y_overlap > 0))
+            {
+                manifold.PointCount = 0;
+                return;
+            }
+
+            var p0 = manifold.Points[0];
+            var p1 = manifold.Points[1];
+
+            manifold.PointCount = 2;
+            manifold.Type = ManifoldType.FaceA;
+
+            var flip = false;
+
+            bool xSep;
+
+            if (x_overlap < y_overlap)
+            {
+                xSep = true;
+            }
+            else if (x_overlap == y_overlap && n.X >= n.Y)
+            {
+                xSep = true;
+            }
+            else
+            {
+                xSep = false;
+            }
+
+            // Find out which axis is axis of least penetration
+            if (xSep)
+            {
+                var offset = n.Y * -1;
+
+                // Point towards B knowing that n points from A to B
+                if (n.X < 0)
+                {
+                    manifold.LocalNormal = new Vector2(-1, 0);
+                    p0.LocalPoint.X = abox.Width / 2;
+                    p1.LocalPoint.X = abox.Width / 2;
+
+                    if (offset == 0.0f)
+                    {
+                        flip = true;
+                    }
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(1, 0);
+                    p0.LocalPoint.X = abox.Width / -2;
+                    p1.LocalPoint.X = abox.Width / -2;
+
+                    if (n.X == n.Y)
+                    {
+                        flip = true;
+                    }
+                }
+
+                if (!flip)
+                {
+                    p0.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2 + aabbA.Radius + aabbB.Radius);
+                    p1.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+                }
+                else
+                {
+                    p1.LocalPoint.Y = MathF.Min(abox.Height / 2, offset + bbox.Height / 2 + aabbA.Radius + aabbB.Radius);
+                    p0.LocalPoint.Y = MathF.Max(abox.Height / -2, offset - bbox.Height / 2 - aabbB.Radius - aabbA.Radius);
+                }
+
+                manifold.LocalPoint = manifold.LocalNormal * abox.Width / 2;
+            }
+            else
+            {
+                var offset = n.X * -1;
+
+                // Point toward B knowing that n points from A to B
+                if (n.Y < 0)
+                {
+                    manifold.LocalNormal = new Vector2(0, -1);
+                    p0.LocalPoint.Y = abox.Height / 2;
+                    p1.LocalPoint.Y = abox.Height / 2;
+                }
+                else
+                {
+                    manifold.LocalNormal = new Vector2(0, 1);
+                    p0.LocalPoint.Y = abox.Height / -2;
+                    p1.LocalPoint.Y = abox.Height / -2;
+
+                    if (offset == 0f)
+                    {
+                        flip = true;
+                    }
+                }
+
+                if (!flip)
+                {
+                    p0.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2 + aabbA.Radius + aabbB.Radius);
+                    p1.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+                }
+                else
+                {
+                    p1.LocalPoint.X = MathF.Min(abox.Width / 2, offset + bbox.Width / 2 + aabbA.Radius + aabbB.Radius);
+                    p0.LocalPoint.X = MathF.Max(abox.Width / -2, offset - bbox.Width / 2 - aabbB.Radius - aabbA.Radius);
+                }
+
+                manifold.LocalPoint = manifold.LocalNormal * abox.Height / 2;
+            }
+
+            p0.Id.Features.TypeA = (byte) ContactFeatureType.Face;
+            p0.Id.Features.TypeB = (byte) ContactFeatureType.Vertex;
+
+            p1.Id.Features.TypeA = (byte) ContactFeatureType.Face;
+            p1.Id.Features.TypeB = (byte) ContactFeatureType.Vertex;
+
+            manifold.Points[0] = p0;
+            manifold.Points[1] = p1;
         }
 
         public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,

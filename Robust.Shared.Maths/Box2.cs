@@ -82,6 +82,16 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static readonly Box2 UnitCentered = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
+        public Box2(float bottomLeft, float topRight)
+        {
+            Unsafe.SkipInit(out this);
+
+            Left = bottomLeft;
+            Bottom = bottomLeft;
+            Top = topRight;
+            Right = topRight;
+        }
+
         public Box2(Vector2 bottomLeft, Vector2 topRight)
         {
             Unsafe.SkipInit(out this);

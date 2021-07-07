@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -11,10 +12,23 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        private Queue<MoveEvent> _queuedEvents = new();
+
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(HandleMove);
+            SubscribeLocalEvent<MoveEvent>(ev => _queuedEvents.Enqueue(ev));
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            // Need to queue because otherwise calling HandleMove during FrameUpdate will lead to prediction isues.
+            while (_queuedEvents.TryDequeue(out var moveEvent))
+            {
+                HandleMove(moveEvent);
+            }
         }
 
         private void HandleMove(MoveEvent moveEvent)
@@ -31,12 +45,12 @@ namespace Robust.Shared.GameObjects
 
             var transform = entity.Transform;
 
-            var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
-
-            if (float.IsNaN(mapPos.X) || float.IsNaN(mapPos.Y))
+            if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
             {
                 return;
             }
+
+            var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&

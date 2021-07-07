@@ -346,7 +346,7 @@ namespace Robust.Client.GameObjects
                 }
 
                 var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
-                var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos).Translated(-treePos);
+                var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)

@@ -15,7 +15,11 @@ namespace Robust.Client.GameObjects
         private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
-            return new Box2(worldPos, worldPos);
+            var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
+
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+
+            return new Box2(pos, pos);
         }
 
         private static Box2 LightAabbFunc(in PointLightComponent value)

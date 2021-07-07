@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -229,6 +230,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId originMapId, in Ray ray, float maxLength,
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
+            if (originMapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
             var worldBox = new Box2();
 

@@ -159,7 +159,8 @@ namespace Robust.Shared.Physics.Dynamics
             set
             {
                 if (MathHelper.CloseTo(value, _mass)) return;
-                _mass = value;
+
+                _mass = MathF.Max(0f, value);
                 Body.FixtureChanged(this);
                 Body.ResetMassData();
                 ComputeProperties();

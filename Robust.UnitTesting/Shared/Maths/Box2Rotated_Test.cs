@@ -77,5 +77,37 @@ namespace Robust.UnitTesting.Shared.Maths
             var rotated = new Box2Rotated(baseBox, rotation, origin);
             Assert.That(rotated.CalcBoundingBoxSse(), Is.Approximately(expected));
         }
+
+        // Offset it just to make sure the rotation is also gucci.
+        private static readonly Vector2 Offset = new Vector2(10.0f, 10.0f);
+
+        private static Box2Rotated IntersectionBox = new(Box2.UnitCentered.Translated(Offset), Angle.FromDegrees(45));
+
+        private static IEnumerable<Vector2> InboundPoints => new Vector2[]
+        {
+            Offset,
+            Offset - new Vector2(-0.5f, 0.0f),
+            Offset + new Vector2(0.1f, 0.1f),
+        };
+
+        [Test]
+        public void TestPointIntersect([ValueSource(nameof(InboundPoints))] Vector2 point)
+        {
+            Assert.That(IntersectionBox.Contains(point), $"Rotated box doesn't contain {point}");
+        }
+
+        private static IEnumerable<Vector2> OutboundPoints => new Vector2[]
+        {
+            Offset + new Vector2(-0.48f, -0.48f),
+            Offset + new Vector2(-0.48f, 0.48f),
+            Offset + new Vector2(0.48f, 0.48f),
+            Offset + new Vector2(0.48f, -0.48f),
+        };
+
+        [Test]
+        public void TestPointNoIntersect([ValueSource(nameof(OutboundPoints))] Vector2 point)
+        {
+            Assert.That(!IntersectionBox.Contains(point), $"Rotated box contains {point}");
+        }
     }
 }

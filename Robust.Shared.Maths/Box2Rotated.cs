@@ -149,6 +149,26 @@ namespace Robust.Shared.Maths
             return new Box2(X0, Y0, X1, Y1);
         }
 
+        public bool Contains(Vector2 worldPoint)
+        {
+            // Get the worldpoint in our frame of reference so we can do a faster AABB check.
+            var localPoint = GetLocalPoint(worldPoint);
+            return Box.Contains(localPoint);
+        }
+
+        /// <summary>
+        /// Convert a point in world-space coordinates to our local coordinates.
+        /// </summary>
+        private Vector2 GetLocalPoint(Vector2 point)
+        {
+            // Could make this more efficient but works for now I guess...
+            var boxCenter = Box.Center;
+
+            var result = point - boxCenter;
+            result = Origin + Rotation.RotateVec(result - Origin);
+            return result + boxCenter;
+        }
+
         #region Equality
 
         /// <inheritdoc />

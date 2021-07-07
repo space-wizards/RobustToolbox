@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     ///     All discoverable implementations of IComponent must override the <see cref="Name" />.
     ///     Instances are dynamically instantiated by a <c>ComponentFactory</c>, and will have their IoC Dependencies resolved.
     /// </remarks>
-    public interface IComponent : IEntityEventSubscriber
+    public interface IComponent
     {
         /// <summary>
         ///     Represents the network ID for the component.
@@ -33,6 +33,12 @@ namespace Robust.Shared.GameObjects
         ///     Whether the Owner has been paused.
         /// </summary>
         bool Paused { get; }
+
+        /// <summary>
+        ///     The current lifetime stage of this component. You can use this to check
+        ///     if the component is initialized or being deleted.
+        /// </summary>
+        ComponentLifeStage LifeStage { get; }
 
         /// <summary>
         ///     Whether the client should synchronize component additions and removals.
@@ -64,9 +70,9 @@ namespace Robust.Shared.GameObjects
         bool Initialized { get; }
 
         /// <summary>
-        ///     This is true when the component is active. Set this value to start or stop the component.
+        ///     This is true when the component is active.
         /// </summary>
-        bool Running { get; set; }
+        bool Running { get; }
 
         /// <summary>
         ///     True if the component has been removed from its owner, AKA deleted.
@@ -87,19 +93,6 @@ namespace Robust.Shared.GameObjects
         ///     This is the last game tick Dirty() was called.
         /// </summary>
         GameTick LastModifiedTick { get; }
-
-        /// <summary>
-        ///     Called when the component is removed from an entity.
-        ///     Shuts down the component.
-        ///     This should be called AFTER any inheriting classes OnRemove code has run. This should be last.
-        /// </summary>
-        void OnRemove();
-
-        /// <summary>
-        ///     Called when all of the entity's other components have been added and are available,
-        ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
-        /// </summary>
-        void Initialize();
 
         /// <summary>
         ///     Handles a local incoming component message.

@@ -12,6 +12,11 @@ namespace Robust.Shared
         {
             return contentStart ? "../../" : "../../../";
         }
+
+        private static string FindEngineRootDir(bool contentStart)
+        {
+            return contentStart ? "../../RobustToolbox/" : "../../";
+        }
 #endif
 
         internal static void PrintRuntimeInfo(ISawmill sawmill)
@@ -20,17 +25,21 @@ namespace Robust.Shared
             sawmill.Debug($"OS: {RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture}");
         }
 
-        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir,
+        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, ResourcePath assembliesPath, bool loadContentResources = true,
             bool loader = false, bool contentStart = false)
         {
 #if FULL_RELEASE
             if (!loader)
                 res.MountContentDirectory(@"Resources/");
 #else
-            var contentRootDir = FindContentRootDir(contentStart);
-            res.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            res.MountContentDirectory($@"{contentRootDir}bin/{contentBuildDir}/", new ResourcePath("/Assemblies/"));
-            res.MountContentDirectory($@"{contentRootDir}Resources/");
+            res.MountContentDirectory($@"{FindEngineRootDir(contentStart)}Resources/");
+
+            if (loadContentResources)
+            {
+                var contentRootDir = FindContentRootDir(contentStart);
+                res.MountContentDirectory($@"{contentRootDir}bin/{contentBuildDir}/", assembliesPath);
+                res.MountContentDirectory($@"{contentRootDir}Resources/");
+            }
 #endif
 
             if (options == null)

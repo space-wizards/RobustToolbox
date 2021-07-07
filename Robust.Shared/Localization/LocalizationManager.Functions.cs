@@ -259,7 +259,16 @@ namespace Robust.Shared.Localization
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
                 string str => (FluentString)str,
+                byte num => (FluentNumber)num,
+                sbyte num => (FluentNumber)num,
+                short num => (FluentNumber)num,
+                ushort num => (FluentNumber)num,
+                int num => (FluentNumber)num,
+                uint num => (FluentNumber)num,
+                long num => (FluentNumber)num,
+                ulong num => (FluentNumber)num,
                 double dbl => (FluentNumber)dbl,
+                float dbl => (FluentNumber)dbl,
                 _ => (FluentString)obj.ToString()!,
             };
         }

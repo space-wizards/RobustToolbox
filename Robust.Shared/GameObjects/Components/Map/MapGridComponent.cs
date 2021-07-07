@@ -1,8 +1,8 @@
 using System;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Prototypes;
+using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -18,6 +18,9 @@ namespace Robust.Shared.GameObjects
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
         void ClearGridId();
+
+        bool AnchorEntity(ITransformComponent transform);
+        void UnanchorEntity(ITransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -47,12 +50,13 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
+        /// <inheritdoc />
         public void ClearGridId()
         {
             _gridIndex = GridId.Invalid;
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             var mapId = Owner.Transform.MapID;
@@ -63,11 +67,54 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <inheritdoc />
+        public bool AnchorEntity(ITransformComponent transform)
+        {
+            var xform = (TransformComponent) transform;
+            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
+            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner.Uid);
+
+            if (result)
+            {
+                xform.Parent = Owner.Transform;
+
+                // anchor snapping
+                xform.LocalPosition = Grid.GridTileToLocal(Grid.TileIndicesFor(xform.LocalPosition)).Position;
+
+                xform.SetAnchored(result);
+
+                if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+                {
+                    physicsComponent.BodyType = BodyType.Static;
+                }
+            }
+
+            return result;
+        }
+
+        /// <inheritdoc />
+        public void UnanchorEntity(ITransformComponent transform)
+        {
+            //HACK: Client grid pivot causes this.
+            //TODO: make grid components the actual grid
+            if(GridIndex == GridId.Invalid)
+                return;
+
+            var xform = (TransformComponent)transform;
+            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
+            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner.Uid);
+            xform.SetAnchored(false);
+            if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+            {
+                physicsComponent.BodyType = BodyType.Dynamic;
+            }
+        }
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MapGridComponentState(_gridIndex, Grid.HasGravity);
+            return new MapGridComponentState(_gridIndex);
         }
 
         /// <inheritdoc />
@@ -75,11 +122,10 @@ namespace Robust.Shared.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MapGridComponentState state))
+            if (curState is not MapGridComponentState state)
                 return;
 
             _gridIndex = state.GridIndex;
-            Grid.HasGravity = state.HasGravity;
         }
     }
 
@@ -94,17 +140,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public GridId GridIndex { get; }
 
-        public bool HasGravity { get; }
-
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
-        public MapGridComponentState(GridId gridIndex, bool hasGravity)
+        public MapGridComponentState(GridId gridIndex)
             : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
-            HasGravity = hasGravity;
         }
     }
 }

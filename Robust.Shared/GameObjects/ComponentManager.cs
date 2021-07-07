@@ -164,19 +164,15 @@ namespace Robust.Shared.GameObjects
 
             _componentDependencyManager.OnComponentAdd(entity.Uid, component);
 
-            component.OnAdd();
+            component.LifeAddToEntity();
 
-            if (!entity.Initialized && !entity.Initializing) return;
+            if (!entity.Initialized && !entity.Initializing)
+                return;
 
-            component.Initialize();
-
-            DebugTools.Assert(component.Initialized, "Component is not initialized after calling Initialize(). "
-                                                     + "Did you forget to call base.Initialize() in an override?");
+            component.LifeInitialize();
 
             if (entity.Initialized)
-            {
-                component.Running = true;
-            }
+                component.LifeStartup();
         }
 
         /// <inheritdoc />
@@ -190,14 +186,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, type), uid, false);
+            RemoveComponentDeferred((Component)GetComponent(uid, type), uid, false);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, uint netId)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, netId), uid, false);
+            RemoveComponentDeferred((Component)GetComponent(uid, netId), uid, false);
         }
 
         /// <inheritdoc />
@@ -209,7 +205,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred((Component) component, uid, false);
+            RemoveComponentDeferred((Component)component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -260,23 +256,26 @@ namespace Robust.Shared.GameObjects
             try
             {
 #endif
-                // these two components are required on all entities and cannot be removed normally.
-                if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
-                {
-                    DebugTools.Assert("Tried to remove a protected component.");
-                    return;
-                }
+            // these two components are required on all entities and cannot be removed normally.
+            if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+            {
+                DebugTools.Assert("Tried to remove a protected component.");
+                return;
+            }
 
-                if (!_deleteSet.Add(component))
-                {
-                    // already deferred deletion
-                    return;
-                }
+            if (!_deleteSet.Add(component))
+            {
+                // already deferred deletion
+                return;
+            }
 
-                component.Running = false;
-                component.OnRemove();
-                _componentDependencyManager.OnComponentRemove(uid, component);
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
+            if (component.Running)
+                component.LifeShutdown();
+
+            if (component.LifeStage != ComponentLifeStage.PreAdd)
+                component.LifeRemoveFromEntity();
+            _componentDependencyManager.OnComponentRemove(uid, component);
+            ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -300,8 +299,12 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                component.Running = false;
-                component.OnRemove(); // Sets delete
+                if (component.Running)
+                    component.LifeShutdown();
+
+                if (component.LifeStage != ComponentLifeStage.PreAdd)
+                    component.LifeRemoveFromEntity(); // Sets delete
+
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));
 
             }
@@ -374,7 +377,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            return (T) GetComponent(uid, typeof(T));
+            return (T)GetComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -406,7 +409,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!comp.Deleted)
                 {
-                    component = (T) comp;
+                    component = (T)comp;
                     return true;
                 }
             }
@@ -486,7 +489,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (comp.Deleted || !includePaused && comp.Paused) continue;
 
-                yield return (T) (object) comp;
+                yield return (T)(object)comp;
             }
         }
 
@@ -507,7 +510,7 @@ namespace Robust.Shared.GameObjects
                 if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value, (TComp2) (object) t2Comp);
+                yield return ((TComp1)(object)kvComp.Value, (TComp2)(object)t2Comp);
             }
         }
 
@@ -531,9 +534,9 @@ namespace Robust.Shared.GameObjects
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value,
-                    (TComp2) (object) t2Comp,
-                    (TComp3) (object) t3Comp);
+                yield return ((TComp1)(object)kvComp.Value,
+                    (TComp2)(object)t2Comp,
+                    (TComp3)(object)t3Comp);
             }
         }
 
@@ -562,10 +565,10 @@ namespace Robust.Shared.GameObjects
                 if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
                     continue;
 
-                yield return ((TComp1) (object) kvComp.Value,
-                    (TComp2) (object) t2Comp,
-                    (TComp3) (object) t3Comp,
-                    (TComp4) (object) t4Comp);
+                yield return ((TComp1)(object)kvComp.Value,
+                    (TComp2)(object)t2Comp,
+                    (TComp3)(object)t3Comp,
+                    (TComp4)(object)t4Comp);
             }
         }
 

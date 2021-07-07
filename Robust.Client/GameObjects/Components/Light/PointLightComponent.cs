@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -135,30 +137,13 @@ namespace Robust.Client.GameObjects
         public bool VisibleNested
         {
             get => _visibleNested;
-            set
-            {
-                if (_visibleNested == value) return;
-                _visibleNested = value;
-                if (value)
-                {
-                    if (Owner.Transform.Parent == null) return;
-
-                    _lightOnParent = true;
-                }
-                else
-                {
-                    if (!_lightOnParent) return;
-
-                    _lightOnParent = false;
-                }
-            }
+            set => _visibleNested = value;
         }
 
         [DataField("radius")]
         private float _radius = 5f;
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        private bool _lightOnParent;
         [DataField("color")]
         private Color _color = Color.White;
         [DataField("offset")]
@@ -185,6 +170,8 @@ namespace Robust.Client.GameObjects
             get => _radius;
             set
             {
+                if (MathHelper.CloseTo(value, _radius)) return;
+
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
@@ -198,17 +185,8 @@ namespace Robust.Client.GameObjects
                 Mask = null;
         }
 
-        /// <summary>
-        /// What MapId we are intersecting for RenderingTreeSystem.
-        /// </summary>
         [ViewVariables]
-        internal MapId IntersectingMapId { get; set; } = MapId.Nullspace;
-
-        /// <summary>
-        /// What grids we're on for RenderingTreeSystem.
-        /// </summary>
-        [ViewVariables]
-        internal List<GridId> IntersectingGrids = new();
+        internal RenderingTreeComponent? RenderTree { get; set; }
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -218,42 +196,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void Initialize()
+        protected override void Initialize()
         {
             base.Initialize();
             UpdateMask();
         }
 
-        /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, IComponent? component)
-        {
-            base.HandleMessage(message, component);
-
-            if (message is ParentChangedMessage msg)
-            {
-                HandleTransformParentChanged(msg);
-            }
-        }
-
-        private void HandleTransformParentChanged(ParentChangedMessage obj)
-        {
-            // TODO: this does not work for things nested multiply layers deep.
-            if (!VisibleNested)
-            {
-                return;
-            }
-
-            if (obj.NewParent != null && obj.NewParent.IsValid())
-            {
-                _lightOnParent = true;
-            }
-            else
-            {
-                _lightOnParent = false;
-            }
-        }
-
-        public override void OnRemove()
+        protected override void OnRemove()
         {
             base.OnRemove();
 

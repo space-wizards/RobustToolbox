@@ -11,7 +11,7 @@ namespace Robust.Client.Graphics.Clyde
     {
         static Clyde()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+            if (OperatingSystem.IsWindows() &&
                 RuntimeInformation.ProcessArchitecture == Architecture.X64 &&
                 Environment.GetEnvironmentVariable("ROBUST_INTEGRATED_GPU") != "1")
             {
@@ -28,20 +28,20 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (OperatingSystem.IsWindows())
             {
                 return;
             }
 
             NativeLibrary.SetDllImportResolver(typeof(GL).Assembly, (name, assembly, path) =>
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                if (OperatingSystem.IsLinux()
                     && _dllMapLinux.TryGetValue(name, out var mappedName))
                 {
                     return NativeLibrary.Load(mappedName);
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                if (OperatingSystem.IsMacOS()
                     && _dllMapMacOS.TryGetValue(name, out mappedName))
                 {
                     return NativeLibrary.Load(mappedName);

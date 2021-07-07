@@ -49,13 +49,13 @@ namespace Robust.Shared.Log
 
         private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
 
-        private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private bool _disposed;
 
         static ConsoleLogHandler()
         {
             WriteAnsiColors = !System.Console.IsOutputRedirected;
 
-            if (WriteAnsiColors && IsWindows)
+            if (WriteAnsiColors && OperatingSystem.IsWindows())
             {
                 WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
             }
@@ -68,7 +68,7 @@ namespace Robust.Shared.Log
             {
                 lock (_stream)
                 {
-                    if (IsConsoleActive)
+                    if (IsConsoleActive && !_disposed)
                     {
                         _stream.Flush();
                     }
@@ -81,13 +81,13 @@ namespace Robust.Shared.Log
 #endif
         public static void TryDetachFromConsoleWindow()
         {
-            if (IsWindows)
+            if (OperatingSystem.IsWindows())
             {
                 WindowsConsole.TryDetachFromConsoleWindow();
             }
         }
 
-        private bool IsConsoleActive => !IsWindows || WindowsConsole.IsConsoleActive;
+        private bool IsConsoleActive => !OperatingSystem.IsWindows() || WindowsConsole.IsConsoleActive;
 
         public void Log(string sawmillName, LogEvent message)
         {
@@ -183,8 +183,9 @@ namespace Robust.Shared.Log
         {
             lock (_stream)
             {
-                _stream.Dispose();
+                _disposed = true;
                 _timer.Dispose();
+                _stream.Dispose();
             }
         }
     }

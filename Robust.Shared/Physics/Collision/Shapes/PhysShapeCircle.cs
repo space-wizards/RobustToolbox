@@ -78,7 +78,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public bool Equals(IPhysShape? other)

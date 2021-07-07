@@ -80,9 +80,6 @@ namespace Robust.Server.GameObjects
             actor.PlayerSession = player;
             player.SetAttachedEntity(entity);
 
-            // TODO: Remove component message.
-            entity.SendMessage(actor, new PlayerAttachedMsg(player));
-
             // The player is fully attached now, raise an event!
             RaiseLocalEvent(uid, new PlayerAttachedEvent(entity, player, forceKicked));
             return true;
@@ -128,9 +125,6 @@ namespace Robust.Server.GameObjects
             component.PlayerSession.SetAttachedEntity(null);
 
             var entity = EntityManager.GetEntity(uid);
-
-            // TODO: Remove component message.
-            entity.SendMessage(component, new PlayerDetachedMsg(component.PlayerSession));
 
             // The player is fully detached now that the component has shut down.
             RaiseLocalEvent(uid, new PlayerDetachedEvent(entity, component.PlayerSession));

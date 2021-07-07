@@ -40,12 +40,14 @@ namespace Robust.Shared
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
+            IoCManager.Register<TaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IIslandManager, IslandManager>();
         }
     }
 }

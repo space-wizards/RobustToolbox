@@ -33,12 +33,12 @@ namespace Robust.Shared
                     return IntPtr.Zero;
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                if (OperatingSystem.IsLinux())
                 {
                     return NativeLibrary.Load(linuxName, assembly, path);
                 }
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (OperatingSystem.IsMacOS())
                 {
                     return NativeLibrary.Load(macName, assembly, path);
                 }

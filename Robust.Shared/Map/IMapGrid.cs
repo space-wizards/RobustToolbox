@@ -47,11 +47,6 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
-        /// <summary>
-        ///     Whether or not this grid has gravity
-        /// </summary>
-        bool HasGravity { get; set; }
-
         #region TileAccess
 
         /// <summary>
@@ -110,8 +105,8 @@ namespace Robust.Shared.Map
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
         Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);
 
-        void AddToSnapGridCell(Vector2i pos, EntityUid euid);
-        void AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
+        bool AddToSnapGridCell(Vector2i pos, EntityUid euid);
+        bool AddToSnapGridCell(EntityCoordinates coords, EntityUid euid);
         void RemoveFromSnapGridCell(Vector2i pos, EntityUid euid);
         void RemoveFromSnapGridCell(EntityCoordinates coords, EntityUid euid);
 

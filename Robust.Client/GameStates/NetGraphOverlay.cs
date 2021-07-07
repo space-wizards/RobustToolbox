@@ -184,7 +184,7 @@ namespace Robust.Client.GameStates
                 // Draw size if above average
                 if (drawSizeThreshold * 1.5 < state.Payload)
                 {
-                    DrawString(handle, _font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
+                    handle.DrawString(_font, new Vector2(xOff, yoff - _font.GetLineHeight(1)), state.Payload.ToString());
                 }
 
                 // second tick marks
@@ -224,14 +224,14 @@ namespace Robust.Client.GameStates
             handle.DrawLine(new Vector2(leftMargin, midYoff), new Vector2(leftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
 
             // payload text
-            DrawString(handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
-            DrawString(handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
+            handle.DrawString(_font, new Vector2(leftMargin + width, warnYoff), "56K");
+            handle.DrawString(_font, new Vector2(leftMargin + width, midYoff), "33.6K");
 
             // interp text info
             if(lastLagY != -1)
-                DrawString(handle, _font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
+                handle.DrawString(_font, new Vector2(leftMargin + width, lastLagY), $"{lastLagMs.ToString()}ms");
 
-            DrawString(handle, _font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
+            handle.DrawString(_font, new Vector2(leftMargin, height + LowerGraphOffset), $"{_gameStateManager.CurrentBufferSize.ToString()} states");
         }
 
         protected override void DisposeBehavior()
@@ -239,17 +239,6 @@ namespace Robust.Client.GameStates
             _gameStateManager.GameStateApplied -= HandleGameStateApplied;
 
             base.DisposeBehavior();
-        }
-
-        private void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
-        {
-            var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
-
-            foreach (var rune in str.EnumerateRunes())
-            {
-                var advance = font.DrawChar(handle, rune, baseLine, 1, Color.White);
-                baseLine += new Vector2(advance, 0);
-            }
         }
 
         private class NetShowGraphCommand : IConsoleCommand

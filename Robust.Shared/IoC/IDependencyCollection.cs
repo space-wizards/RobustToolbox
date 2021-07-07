@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Reflection;
@@ -62,6 +63,18 @@ namespace Robust.Shared.IoC
         void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface;
 
+
+        /// <summary>
+        /// Registers a simple implementation without an interface.
+        /// </summary>
+        /// <param name="implementation">The type that will be resolvable.</param>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false);
+
         /// <summary>
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
@@ -105,6 +118,11 @@ namespace Robust.Shared.IoC
         /// </exception>
         [Pure]
         object ResolveType(Type type);
+
+        /// <summary>
+        /// Resolve a dependency manually.
+        /// </summary>
+        bool TryResolveType(Type objectType, [MaybeNullWhen(false)] out object instance);
 
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.

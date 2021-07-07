@@ -12,8 +12,10 @@ using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -107,6 +109,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
+
+            IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
 
@@ -114,45 +118,24 @@ namespace Robust.Shared.GameObjects
         {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
             var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-            var allControllerTypes = new List<Type>();
+            var instantiated = new List<VirtualController>();
 
             foreach (var type in reflectionManager.GetAllChildren(typeof(VirtualController)))
             {
-                if (type.IsAbstract) continue;
-                allControllerTypes.Add(type);
+                if (type.IsAbstract)
+                    continue;
+
+                instantiated.Add(typeFactory.CreateInstance<VirtualController>(type));
             }
 
-            var instantiated = new Dictionary<Type, VirtualController>();
+            var nodes = TopologicalSort.FromBeforeAfter(
+                instantiated,
+                c => c.GetType(),
+                c => c,
+                c => c.UpdatesBefore,
+                c => c.UpdatesAfter);
 
-            foreach (var type in allControllerTypes)
-            {
-                instantiated.Add(type, (VirtualController) typeFactory.CreateInstance(type));
-            }
-
-            // Build dependency graph, copied from EntitySystemManager *COUGH
-
-            var nodes = new Dictionary<Type, EntitySystemManager.GraphNode<VirtualController>>();
-
-            foreach (var (_, controller) in instantiated)
-            {
-                var node = new EntitySystemManager.GraphNode<VirtualController>(controller);
-                nodes[controller.GetType()] = node;
-            }
-
-            foreach (var (type, node) in nodes)
-            {
-                foreach (var before in instantiated[type].UpdatesBefore)
-                {
-                    nodes[before].DependsOn.Add(node);
-                }
-
-                foreach (var after in instantiated[type].UpdatesAfter)
-                {
-                    node.DependsOn.Add(nodes[after]);
-                }
-            }
-
-            _controllers = GameObjects.EntitySystemManager.TopologicalSort(nodes.Values).Select(c => c.System).ToList();
+            _controllers = TopologicalSort.Sort(nodes).ToList();
 
             foreach (var controller in _controllers)
             {
@@ -266,6 +249,25 @@ namespace Robust.Shared.GameObjects
             var mapId = message.Container.Owner.Transform.MapID;
 
             _maps[mapId].AddBody(physicsComponent);
+        }
+
+        internal void FilterContactsForJoint(Joint joint)
+        {
+            var bodyA = joint.BodyA;
+            var bodyB = joint.BodyB;
+
+            var edge = bodyB.ContactEdges;
+            while (edge != null)
+            {
+                if (edge.Other == bodyA)
+                {
+                    // Flag the contact for filtering at the next time step (where either
+                    // body is awake).
+                    edge.Contact!.FilterFlag = true;
+                }
+
+                edge = edge.Next;
+            }
         }
 
         /// <summary>

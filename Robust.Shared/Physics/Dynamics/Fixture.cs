@@ -161,6 +161,8 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseTo(value, _mass)) return;
                 _mass = value;
                 Body.FixtureChanged(this);
+                Body.ResetMassData();
+                ComputeProperties();
             }
         }
 
@@ -441,7 +443,7 @@ namespace Robust.Shared.Physics.Dynamics
             _centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
+            _inertia = Mass;
         }
         #endregion
 

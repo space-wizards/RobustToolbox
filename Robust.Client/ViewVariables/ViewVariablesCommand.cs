@@ -33,6 +33,9 @@ namespace Robust.Client.ViewVariables
             var valArg = args[0];
             if (valArg.StartsWith("SI"))
             {
+                if (valArg.StartsWith("SIoC"))
+                    valArg = valArg.Substring(4);
+
                 // Server-side IoC selector.
                 var selector = new ViewVariablesIoCSelector(valArg.Substring(1));
                 vvm.OpenVV(selector);
@@ -41,6 +44,9 @@ namespace Robust.Client.ViewVariables
 
             if (valArg.StartsWith("I"))
             {
+                if (valArg.StartsWith("IoC"))
+                    valArg = valArg.Substring(3);
+
                 // Client-side IoC selector.
                 var reflection = IoCManager.Resolve<IReflectionManager>();
                 if (!reflection.TryLooseGetType(valArg, out var type))

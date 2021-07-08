@@ -208,6 +208,28 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
         private int _collisionMask;
 
+        public float Area
+        {
+            get
+            {
+                switch (Shape)
+                {
+                    case PhysShapeAabb aabb:
+                        return aabb.LocalBounds.Width * aabb.LocalBounds.Height;
+                    case PhysShapeRect rect:
+                        return rect.Rectangle.Width * rect.Rectangle.Height;
+                    case PhysShapeCircle circle:
+                        return MathF.PI * circle.Radius * circle.Radius;
+                    case PolygonShape poly:
+                        ComputePoly(poly, out var area);
+                        return area;
+                    default:
+                        return 0.0f;
+                }
+            }
+
+        }
+
         void ISerializationHooks.AfterDeserialization()
         {
             // TODO: Temporary until PhysShapeAabb is fixed because some weird shit happens with collisions.
@@ -276,7 +298,7 @@ namespace Robust.Shared.Physics.Dynamics
                     ComputeRect(rect);
                     break;
                 case PolygonShape poly:
-                    ComputePoly(poly);
+                    ComputePoly(poly, out _);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -322,7 +344,7 @@ namespace Robust.Shared.Physics.Dynamics
             _inertia = density * I;
         }
 
-        private void ComputePoly(PolygonShape poly)
+        private void ComputePoly(PolygonShape poly, out float area)
         {
             // Polygon mass, centroid, and inertia.
             // Let rho be the polygon density in mass per unit area.
@@ -352,7 +374,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             //FPE optimization: Consolidated the calculate centroid and mass code to a single method.
             Vector2 center = Vector2.Zero;
-            var area = 0.0f;
+            area = 0.0f;
             float I = 0.0f;
 
             // pRef is the reference point for forming triangles.

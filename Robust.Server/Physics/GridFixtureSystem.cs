@@ -17,6 +17,8 @@ namespace Robust.Server.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         // TODO: Need to add a cvar for update cd so people can have immediate ones if they want.
+
+        // also TODO: Need a way to disable this / increase it for performance reasons if people want it + event whenever the fixture changes.
         private float _cooldown = 0.4f;
 
         private float _accumulator;
@@ -77,7 +79,9 @@ namespace Robust.Server.Physics
             var origin = chunk.Indices * chunk.ChunkSize;
             bounds = bounds.Translated(origin);
 
-            var fixture = new Fixture(
+            var oldFixture = chunk.Fixture;
+
+            var newFixture = new Fixture(
                 new PolygonShape
                 {
                     Vertices = new List<Vector2>
@@ -93,16 +97,21 @@ namespace Robust.Server.Physics
                 true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}"};
 
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
-            if (chunk.Fixture?.Equals(fixture) == true) return;
+            if (oldFixture?.Equals(newFixture) == true) return;
 
-            if (chunk.Fixture != null)
-                Get<SharedBroadphaseSystem>().DestroyFixture(physicsComponent, chunk.Fixture);
+            if (oldFixture != null)
+                Get<SharedBroadphaseSystem>().DestroyFixture(physicsComponent, oldFixture);
 
-            Get<SharedBroadphaseSystem>().CreateFixture(physicsComponent, fixture);
-            chunk.Fixture = fixture;
+            Get<SharedBroadphaseSystem>().CreateFixture(physicsComponent, newFixture);
+            chunk.Fixture = newFixture;
 
-            // TODO: Compare to existing fixtures
-            // TODO: If same, do fuck all, otherwise, replace.
+            EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});
         }
+    }
+
+    public sealed class GridFixtureChangeEvent : EntityEventArgs
+    {
+        public Fixture? OldFixture { get; init; }
+        public Fixture? NewFixture { get; init; }
     }
 }

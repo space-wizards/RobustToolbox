@@ -37,6 +37,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
 
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
         public ShapeType ShapeType => ShapeType.Rectangle;
 
         /// <summary>

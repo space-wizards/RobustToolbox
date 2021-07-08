@@ -31,6 +31,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
@@ -940,12 +941,32 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
-        private string GetFixtureName(Fixture fixture)
+        public string GetFixtureName(Fixture fixture)
         {
             if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
 
-            // For any fixtures that aren't named in the code we will assign one.
-            return $"fixture-{_fixtures.IndexOf(fixture)}";
+            var i = 0;
+
+            while (true)
+            {
+                var found = false;
+                ++i;
+                var name = $"fixture_{i}";
+
+                foreach (var existing in _fixtures)
+                {
+                    if (existing.ID.Equals(name))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    return name;
+                }
+            }
         }
 
         private string GetJointName(Joint joint)
@@ -1127,7 +1148,27 @@ namespace Robust.Shared.GameObjects
                 var fixMass = fixture.Mass;
 
                 _mass += fixMass;
-                localCenter += fixture.Centroid * fixMass;
+
+                var center = Vector2.Zero;
+
+                // TODO: God this is garbage
+                switch (fixture.Shape)
+                {
+                    case PhysShapeAabb aabb:
+                        center = aabb.Centroid;
+                        break;
+                    case PhysShapeRect rect:
+                        center = rect.Centroid;
+                        break;
+                    case PolygonShape poly:
+                        center = poly.Centroid;
+                        break;
+                    case PhysShapeCircle circle:
+                        center = circle.Position;
+                        break;
+                }
+
+                localCenter += center * fixMass;
                 _inertia += fixture.Inertia;
             }
 

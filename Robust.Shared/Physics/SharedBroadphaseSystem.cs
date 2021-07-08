@@ -384,6 +384,11 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture)
         {
+            fixture.ID = body.GetFixtureName(fixture);
+            body._fixtures.Add(fixture);
+            body.FixtureCount += 1;
+            fixture.Body = body;
+
             // TODO: Assert world locked
             // Broadphase should be set in the future TM
             // Should only happen for nullspace / initializing entities
@@ -391,10 +396,6 @@ namespace Robust.Shared.Physics
             {
                 CreateProxies(fixture, body.Owner.Transform.WorldPosition);
             }
-
-            body._fixtures.Add(fixture);
-            body.FixtureCount += 1;
-            fixture.Body = body;
 
             // Supposed to be wrapped in density but eh
             body.ResetMassData();

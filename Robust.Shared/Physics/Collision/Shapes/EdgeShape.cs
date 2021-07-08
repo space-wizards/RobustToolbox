@@ -33,6 +33,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
     [DataDefinition]
     public sealed class EdgeShape : IPhysShape
     {
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
         /// <summary>
         ///     Edge start vertex
         /// </summary>

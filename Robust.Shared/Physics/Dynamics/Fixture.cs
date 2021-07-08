@@ -140,10 +140,6 @@ namespace Robust.Shared.Physics.Dynamics
         // MassData
         // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
         // Plus now it's WAYYY easier to share shapes even among different prototypes.
-        public Vector2 Centroid => _centroid;
-
-        private Vector2 _centroid = Vector2.Zero;
-
         public float Inertia => _inertia;
 
         private float _inertia;
@@ -276,9 +272,6 @@ namespace Robust.Shared.Physics.Dynamics
                 case PhysShapeCircle circle:
                     ComputeCircle(circle);
                     break;
-                case PhysShapeGrid grid:
-                    ComputeGrid(grid);
-                    break;
                 case PhysShapeRect rect:
                     ComputeRect(rect);
                     break;
@@ -304,7 +297,7 @@ namespace Robust.Shared.Physics.Dynamics
             var density = area > 0.0f ? Mass / area : 0.0f;
 
             // Center of mass
-            _centroid = Vector2.Zero;
+            aabb.Centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
@@ -323,7 +316,7 @@ namespace Robust.Shared.Physics.Dynamics
             var density = area > 0.0f ? Mass / area : 0.0f;
 
             // Center of mass
-            _centroid = Vector2.Zero;
+            rect.Centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
@@ -407,44 +400,26 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Center of mass
             center *= 1.0f / area;
-            _centroid = center + s;
+            poly.Centroid = center + s;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
 
             // Shift to center of mass then to original body origin.
-            _inertia += Mass * (Vector2.Dot(_centroid, _centroid) - Vector2.Dot(center, center));
+            _inertia += Mass * (Vector2.Dot(poly.Centroid, poly.Centroid) - Vector2.Dot(center, center));
         }
 
         private void ComputeCircle(PhysShapeCircle circle)
         {
             var radSquared = MathF.Pow(circle.Radius, 2);
-            _centroid = circle.Position;
 
             // inertia about the local origin
-            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(_centroid, _centroid));
+            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(circle.Position, circle.Position));
         }
 
         private void ComputeEdge(EdgeShape edge)
         {
-            _centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
-        }
-
-        private void ComputeGrid(PhysShapeGrid grid)
-        {
-            var area = grid.LocalBounds.Width * grid.LocalBounds.Height;
-            float I = 0.0f;
-
-            // Probably nothing bad happening if the area is 0?
-
-            // Total mass
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            _centroid = Vector2.Zero;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = Mass;
+            edge.Centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
         }
         #endregion
 

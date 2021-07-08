@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -364,6 +365,11 @@ namespace Robust.Server.Maps
 
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
+
+                // Regardless of what the frequency is we'll process fixtures sometime on map load.
+                // Here seems like the least amount of fuckery involved in deferring things content-side.
+                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+                gridFixtures.Process();
 
                 // Run Startup on all components.
                 FinishEntitiesStartup();

@@ -34,11 +34,10 @@ namespace Robust.Server.GameObjects
             var guid = ev.EntityUid;
 
             if (!EntityManager.TryGetEntity(guid, out var gridEntity)) return;
-            var grid = _mapManager.GetGrid(ev.GridId);
             var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
             collideComp.BodyType = BodyType.Static;
-            Get<SharedBroadphaseSystem>().CreateFixture(collideComp, new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
+            // TODO: Need to generate chunk fixtures here?
         }
 
         /// <inheritdoc />

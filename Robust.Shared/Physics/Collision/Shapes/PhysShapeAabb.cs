@@ -38,6 +38,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius;
 
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
         public ShapeType ShapeType => ShapeType.Aabb;
 
         [DataField("bounds")]

@@ -234,20 +234,10 @@ namespace Robust.Shared.GameObjects
         {
             if (mapId == MapId.Nullspace) yield break;
 
-            var canBeEnclosed = true;
-
             // TODO: Recursive and all that.
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_lookupEnlargementRange)))
             {
                 yield return _entityManager.GetEntity(grid.GridEntityId).GetComponent<EntityLookupComponent>();
-
-                // If wholly enclosed no point checking others.
-                if (canBeEnclosed && grid.WorldBounds.Encloses(worldAABB))
-                {
-                    yield break;
-                }
-
-                canBeEnclosed = false;
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<EntityLookupComponent>();

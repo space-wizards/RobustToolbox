@@ -41,22 +41,12 @@ namespace Robust.Client.GameObjects
         {
             if (mapId == MapId.Nullspace) yield break;
 
-            var enclosed = false;
-
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
                 yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
-
-                // if we're enclosed then we know no other grids relevant + don't need the map's rendertree
-                if (grid.WorldBounds.Encloses(in worldAABB))
-                {
-                    enclosed = true;
-                    break;
-                }
             }
 
-            if (!enclosed)
-                yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
         }
 
         internal IEnumerable<DynamicTree<SpriteComponent>> GetSpriteTrees(MapId mapId, Box2 worldAABB)

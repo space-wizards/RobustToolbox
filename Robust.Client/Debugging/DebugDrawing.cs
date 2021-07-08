@@ -167,7 +167,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
-                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+                    if (!physBody.Owner.HasComponent<MapGridComponent>()) continue;
 
                     // all entities have a TransformComponent
                     var transform = physBody.Owner.Transform;

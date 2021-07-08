@@ -725,15 +725,15 @@ namespace Robust.Shared.Physics
 
         internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Box2 aabb)
         {
+            // TODO Okay so problem: If we just do Encloses that's a lot faster BUT it also means we don't return the
+            // map's broadphase which avoids us iterating over it for 99% of bodies.
+
             if (mapId == MapId.Nullspace) yield break;
 
             // TODO: Doesn't supported nested broadphase but future sloth problem coz fuck that guy
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, aabb))
             {
                 yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<BroadphaseComponent>();
-
-                // If we're wholly in 1 grid don't need to continue.
-                if (grid.WorldBounds.Encloses(aabb)) yield break;
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<BroadphaseComponent>();

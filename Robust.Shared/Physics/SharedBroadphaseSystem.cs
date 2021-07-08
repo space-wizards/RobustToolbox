@@ -203,6 +203,8 @@ namespace Robust.Shared.Physics
                 // Get every broadphase we may be intersecting.
                 foreach (var broadphase in GetBroadphases(fixture.Body.Owner.Transform.MapID, worldAABB))
                 {
+                    if (fixture.Body.Owner == broadphase.Owner) continue;
+
                     foreach (var proxy in fixture.Proxies)
                     {
                         Box2 aabb;

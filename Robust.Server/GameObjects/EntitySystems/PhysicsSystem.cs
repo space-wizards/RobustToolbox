@@ -19,7 +19,7 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            _mapManager.OnGridCreated += HandleGridCreated;
+            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             LoadMetricCVar();
             _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
         }
@@ -29,21 +29,15 @@ namespace Robust.Server.GameObjects
             MetricsEnabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
         }
 
-        public override void Shutdown()
+        private void HandleGridInit(GridInitializeEvent ev)
         {
-            base.Shutdown();
-            _mapManager.OnGridCreated -= HandleGridCreated;
-        }
+            var guid = ev.EntityUid;
 
-        private void HandleGridCreated(MapId mapId, GridId gridId)
-        {
-            if (!EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEntity)) return;
-            var grid = _mapManager.GetGrid(gridId);
-            var collideComp = gridEntity.AddComponent<PhysicsComponent>();
+            if (!EntityManager.TryGetEntity(guid, out var gridEntity)) return;
+            var grid = _mapManager.GetGrid(ev.GridId);
+            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
-            // TODO: FIX THIS SHIT DON'T LET SLOTH MERGE IT REE
-            collideComp.BodyType = BodyType.Dynamic;
-            collideComp.BodyStatus = BodyStatus.InAir;
+            collideComp.BodyType = BodyType.Static;
             Get<SharedBroadphaseSystem>().CreateFixture(collideComp, new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
         }
 

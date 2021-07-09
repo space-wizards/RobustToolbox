@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(compManager.TryGetComponent<PhysicsComponent>(dummy.Uid, out var body));
                 Assert.That(body.LinearVelocity, Is.EqualTo(Vector2.Zero));
 
-                Assert.That(body.MapLinearVelocity == Vector2.One);
+                Assert.That(body.MapLinearVelocity, Is.EqualTo(Vector2.One));
 
                 // Check that the newly parented entity's velocity is correct
                 // it should retain its previous velocity despite new parent

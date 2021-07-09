@@ -41,7 +41,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 // Check that grid even moving first
                 gridPhysics.BodyType = BodyType.Dynamic;
                 gridPhysics.LinearVelocity = Vector2.One;
-                Assert.That(gridPhysics.LinearVelocity == Vector2.One);
+                Assert.That(gridPhysics.LinearVelocity, Is.EqualTo(Vector2.One));
 
                 // Check that map velocity is correct for entity
                 var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.GridEntityId, Vector2.Zero));

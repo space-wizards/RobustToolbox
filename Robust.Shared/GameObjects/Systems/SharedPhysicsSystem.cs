@@ -124,19 +124,23 @@ namespace Robust.Shared.GameObjects
                 entity.IsInContainer()) return;
 
             var oldParent = args.OldParent;
-            var velocityDiff = Vector2.Zero;
+            var linearVelocityDiff = Vector2.Zero;
+            var angularVelocityDiff = 0f;
 
             if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
             {
-                velocityDiff += oldBody.WorldLinearVelocity;
+                linearVelocityDiff += oldBody.WorldLinearVelocity;
+                angularVelocityDiff += oldBody.WorldAngularVelocity;
             }
 
             if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
             {
-                velocityDiff -= newBody.WorldLinearVelocity;
+                linearVelocityDiff -= newBody.WorldLinearVelocity;
+                angularVelocityDiff -= newBody.WorldAngularVelocity;
             }
 
-            body.LinearVelocity += velocityDiff;
+            body.LinearVelocity += linearVelocityDiff;
+            body.AngularVelocity += angularVelocityDiff;
         }
 
         private void BuildControllers()

@@ -54,12 +54,18 @@ namespace Robust.Shared.GameObjects
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
-                grid.GridEntityId.IsValid() &&
+                EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
                 grid.GridEntityId != entity.Uid)
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != transform.GridID)
                 {
+                    if (entity.TryGetComponent(out PhysicsComponent? body) &&
+                        gridEnt.TryGetComponent(out PhysicsComponent? gridBody))
+                    {
+                        body.LinearVelocity -= gridBody.LinearVelocity;
+                    }
+
                     transform.AttachParent(EntityManager.GetEntity(grid.GridEntityId));
                     RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, transform.GridID, grid.Index));
                 }
@@ -71,6 +77,13 @@ namespace Robust.Shared.GameObjects
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != GridId.Invalid)
                 {
+                    if (entity.TryGetComponent(out PhysicsComponent? body) &&
+                        EntityManager.TryGetEntity(_mapManager.GetGrid(oldGridId).GridEntityId, out var oldGridEnt) &&
+                        oldGridEnt.TryGetComponent(out PhysicsComponent? gridBody))
+                    {
+                        body.LinearVelocity += gridBody.LinearVelocity;
+                    }
+
                     transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
                     RaiseLocalEvent(entity.Uid, new ChangedGridMessage(entity, oldGridId, GridId.Invalid));
                 }

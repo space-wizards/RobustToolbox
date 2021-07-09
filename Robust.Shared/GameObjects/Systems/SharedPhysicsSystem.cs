@@ -107,12 +107,33 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
+
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
+        private void HandleParentChange(EntParentChangedMessage args)
+        {
+            if (!args.Entity.Initialized || !args.Entity.TryGetComponent(out PhysicsComponent? body)) return;
+
+            var oldParent = args.OldParent;
+            var velocityDiff = Vector2.Zero;
+
+            if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
+            {
+                velocityDiff += oldBody.WorldLinearVelocity;
+            }
+
+            if (args.Entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
+            {
+                velocityDiff -= newBody.WorldLinearVelocity;
+            }
+
+            body.LinearVelocity += velocityDiff;
+        }
 
         private void BuildControllers()
         {

@@ -836,6 +836,27 @@ namespace Robust.Shared.GameObjects
 
         private Vector2 _linVelocity;
 
+        public Vector2 WorldLinearVelocity
+        {
+            get
+            {
+                var velocity = _linVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        velocity += body.LinearVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return velocity;
+            }
+        }
+
         /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>

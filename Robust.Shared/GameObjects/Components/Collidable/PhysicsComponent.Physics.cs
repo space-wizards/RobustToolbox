@@ -837,9 +837,38 @@ namespace Robust.Shared.GameObjects
         private Vector2 _linVelocity;
 
         /// <summary>
+        /// Get the linear and angular velocities at the same time.
+        /// </summary>
+        public (Vector2 Linear, float Angular) MapVelocities
+        {
+            get
+            {
+                var linearVelocity = _linVelocity;
+                var angularVelocity = _angVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        linearVelocity += body.LinearVelocity;
+                        angularVelocity += body.AngularVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return (linearVelocity, angularVelocity);
+            }
+        }
+
+        /// <summary>
         /// Get the body's LinearVelocity in world terms.
         /// </summary>
-        public Vector2 WorldLinearVelocity
+        /// <remarks>
+        /// If you need the Angular velocity as well consider using <see cref="MapVelocities"/>.
+        /// </remarks>
+        public Vector2 MapLinearVelocity
         {
             get
             {
@@ -891,7 +920,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the body's AngularVelocity in world terms.
         /// </summary>
-        public float WorldAngularVelocity
+        /// /// <remarks>
+        /// If you need the Linear velocity as well consider using <see cref="MapVelocities"/>.
+        /// </remarks>
+        public float MapAngularVelocity
         {
             get
             {

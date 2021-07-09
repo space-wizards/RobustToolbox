@@ -129,14 +129,16 @@ namespace Robust.Shared.GameObjects
 
             if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
             {
-                linearVelocityDiff += oldBody.WorldLinearVelocity;
-                angularVelocityDiff += oldBody.WorldAngularVelocity;
+                var (linear, angular) = oldBody.MapVelocities;
+                linearVelocityDiff += linear;
+                angularVelocityDiff += angular;
             }
 
             if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
             {
-                linearVelocityDiff -= newBody.WorldLinearVelocity;
-                angularVelocityDiff -= newBody.WorldAngularVelocity;
+                var (linear, angular) = newBody.MapVelocities;
+                linearVelocityDiff -= linear;
+                angularVelocityDiff -= angular;
             }
 
             body.LinearVelocity += linearVelocityDiff;

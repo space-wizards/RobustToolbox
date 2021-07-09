@@ -132,7 +132,8 @@ namespace Robust.Build.Tasks
 
 #if DEBUG
             //Debugger.Launch();
-            var hotReloadManager = asm.MainModule.ImportReference(typeSystem.GetTypeReference(typeSystem.FindType("Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager")));
+            if(!asm.MainModule.TryGetTypeReference("Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager", out var hotReloadManager))
+                hotReloadManager = asm.MainModule.ImportReference(typeSystem.GetTypeReference(typeSystem.FindType("Robust.Client.Debugging.XAMLUI.XamlUiHotreloadManager")));
             var hotReloadMethod = hotReloadManager.Resolve().Methods.First(m => m.Name == "TryHotReloading");
 
             var iocmanager = typeSystem.GetTypeReference(typeSystem.FindType("Robust.Shared.IoC.IoCManager")).Resolve();

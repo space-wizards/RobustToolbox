@@ -117,7 +117,11 @@ namespace Robust.Shared.GameObjects
 
         private void HandleParentChange(EntParentChangedMessage args)
         {
-            if (!args.Entity.Initialized || !args.Entity.TryGetComponent(out PhysicsComponent? body)) return;
+            var entity = args.Entity;
+
+            if (!entity.Initialized ||
+                !entity.TryGetComponent(out PhysicsComponent? body) ||
+                entity.IsInContainer()) return;
 
             var oldParent = args.OldParent;
             var velocityDiff = Vector2.Zero;
@@ -127,7 +131,7 @@ namespace Robust.Shared.GameObjects
                 velocityDiff += oldBody.WorldLinearVelocity;
             }
 
-            if (args.Entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
+            if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
             {
                 velocityDiff -= newBody.WorldLinearVelocity;
             }

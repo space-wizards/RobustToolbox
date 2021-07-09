@@ -835,6 +835,32 @@ namespace Robust.Shared.GameObjects
         private float _angularDamping = 0.02f;
 
         /// <summary>
+        /// Get the linear and angular velocities at the same time.
+        /// </summary>
+        public (Vector2 Linear, float Angular) MapVelocities
+        {
+            get
+            {
+                var linearVelocity = _linVelocity;
+                var angularVelocity = _angVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        linearVelocity += body.LinearVelocity;
+                        angularVelocity += body.AngularVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return (linearVelocity, angularVelocity);
+            }
+        }
+
+        /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -863,9 +889,12 @@ namespace Robust.Shared.GameObjects
         private Vector2 _linVelocity;
 
         /// <summary>
-        /// Get the body's LinearVelocity in world terms.
+        /// Get the body's LinearVelocity in map terms.
         /// </summary>
-        public Vector2 WorldLinearVelocity
+        /// <remarks>
+        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
+        /// </remarks>
+        public Vector2 MapLinearVelocity
         {
             get
             {
@@ -915,9 +944,12 @@ namespace Robust.Shared.GameObjects
         private float _angVelocity;
 
         /// <summary>
-        /// Get the body's AngularVelocity in world terms.
+        /// Get the body's AngularVelocity in map terms.
         /// </summary>
-        public float WorldAngularVelocity
+        /// <remarks>
+        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
+        /// </remarks>
+        public float MapAngularVelocity
         {
             get
             {

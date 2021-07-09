@@ -863,6 +863,30 @@ namespace Robust.Shared.GameObjects
         private Vector2 _linVelocity;
 
         /// <summary>
+        /// Get the body's LinearVelocity in world terms.
+        /// </summary>
+        public Vector2 WorldLinearVelocity
+        {
+            get
+            {
+                var velocity = _linVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        velocity += body.LinearVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return velocity;
+            }
+        }
+
+        /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -889,6 +913,30 @@ namespace Robust.Shared.GameObjects
         }
 
         private float _angVelocity;
+
+        /// <summary>
+        /// Get the body's AngularVelocity in world terms.
+        /// </summary>
+        public float WorldAngularVelocity
+        {
+            get
+            {
+                var velocity = _angVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        velocity += body.AngularVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return velocity;
+            }
+        }
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second

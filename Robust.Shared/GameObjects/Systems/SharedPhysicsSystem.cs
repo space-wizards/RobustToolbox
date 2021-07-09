@@ -104,15 +104,43 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
             SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
-
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
+            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
+
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
+        private void HandleParentChange(EntParentChangedMessage args)
+        {
+            var entity = args.Entity;
+
+            if (!entity.Initialized ||
+                !entity.TryGetComponent(out PhysicsComponent? body) ||
+                entity.IsInContainer()) return;
+
+            var oldParent = args.OldParent;
+            var linearVelocityDiff = Vector2.Zero;
+            var angularVelocityDiff = 0f;
+
+            if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
+            {
+                linearVelocityDiff += oldBody.WorldLinearVelocity;
+                angularVelocityDiff += oldBody.WorldAngularVelocity;
+            }
+
+            if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
+            {
+                linearVelocityDiff -= newBody.WorldLinearVelocity;
+                angularVelocityDiff -= newBody.WorldAngularVelocity;
+            }
+
+            body.LinearVelocity += linearVelocityDiff;
+            body.AngularVelocity += angularVelocityDiff;
+        }
 
         private void BuildControllers()
         {

@@ -835,6 +835,32 @@ namespace Robust.Shared.GameObjects
         private float _angularDamping = 0.02f;
 
         /// <summary>
+        /// Get the linear and angular velocities at the same time.
+        /// </summary>
+        public (Vector2 Linear, float Angular) MapVelocities
+        {
+            get
+            {
+                var linearVelocity = _linVelocity;
+                var angularVelocity = _angVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        linearVelocity += body.LinearVelocity;
+                        angularVelocity += body.AngularVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return (linearVelocity, angularVelocity);
+            }
+        }
+
+        /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -863,6 +889,33 @@ namespace Robust.Shared.GameObjects
         private Vector2 _linVelocity;
 
         /// <summary>
+        /// Get the body's LinearVelocity in map terms.
+        /// </summary>
+        /// <remarks>
+        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
+        /// </remarks>
+        public Vector2 MapLinearVelocity
+        {
+            get
+            {
+                var velocity = _linVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        velocity += body.LinearVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return velocity;
+            }
+        }
+
+        /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -889,6 +942,33 @@ namespace Robust.Shared.GameObjects
         }
 
         private float _angVelocity;
+
+        /// <summary>
+        /// Get the body's AngularVelocity in map terms.
+        /// </summary>
+        /// <remarks>
+        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
+        /// </remarks>
+        public float MapAngularVelocity
+        {
+            get
+            {
+                var velocity = _angVelocity;
+                var parent = Owner.Transform.Parent?.Owner;
+
+                while (parent != null)
+                {
+                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    {
+                        velocity += body.AngularVelocity;
+                    }
+
+                    parent = parent.Transform.Parent?.Owner;
+                }
+
+                return velocity;
+            }
+        }
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second

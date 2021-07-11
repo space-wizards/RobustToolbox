@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Map
             IList<Box2> rects = new List<Box2>(8);
 
             // Act
-            GridChunkPartition.PartitionChunk(chunk, ref rects, out var bounds);
+            GridChunkPartition.PartitionChunk(chunk, out var bounds);
 
             // Assert
             Assert.That(rects.Count, Is.EqualTo(5));
@@ -63,7 +63,7 @@ namespace Robust.UnitTesting.Shared.Map
             IList<Box2> rects = new List<Box2>(16);
 
             // Act
-            GridChunkPartition.PartitionChunk(chunk, ref rects, out var bounds);
+            GridChunkPartition.PartitionChunk(chunk, out var bounds);
 
             // Assert
             Assert.That(rects.Count, Is.EqualTo(1));

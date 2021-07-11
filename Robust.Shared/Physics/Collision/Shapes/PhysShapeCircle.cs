@@ -58,6 +58,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
             }
         }
 
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
+            return bounds.Intersects(worldAABB);
+        }
+
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
@@ -78,7 +84,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public bool Equals(IPhysShape? other)

@@ -1,9 +1,10 @@
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
@@ -18,7 +19,7 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            _mapManager.OnGridCreated += HandleGridCreated;
+            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             LoadMetricCVar();
             _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => LoadMetricCVar());
         }
@@ -28,19 +29,15 @@ namespace Robust.Server.GameObjects
             MetricsEnabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
         }
 
-        public override void Shutdown()
+        private void HandleGridInit(GridInitializeEvent ev)
         {
-            base.Shutdown();
-            _mapManager.OnGridCreated -= HandleGridCreated;
-        }
+            var guid = ev.EntityUid;
 
-        private void HandleGridCreated(MapId mapId, GridId gridId)
-        {
-            if (!EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEntity)) return;
-            var grid = _mapManager.GetGrid(gridId);
-            var collideComp = gridEntity.AddComponent<PhysicsComponent>();
+            if (!EntityManager.TryGetEntity(guid, out var gridEntity)) return;
+            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
-            collideComp.AddFixture(new Fixture(collideComp, new PhysShapeGrid(grid)) {CollisionMask = MapGridHelpers.CollisionGroup, CollisionLayer = MapGridHelpers.CollisionGroup});
+            collideComp.BodyType = BodyType.Static;
+            // TODO: Need to generate chunk fixtures here?
         }
 
         /// <inheritdoc />

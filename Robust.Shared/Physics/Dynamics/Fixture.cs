@@ -427,9 +427,6 @@ namespace Robust.Shared.Physics.Dynamics
                 case PhysShapeCircle circle:
                     ComputeCircle(circle);
                     break;
-                case PhysShapeGrid grid:
-                    ComputeGrid(grid);
-                    break;
                 case PhysShapeRect rect:
                     ComputeRect(rect);
                     break;
@@ -579,23 +576,6 @@ namespace Robust.Shared.Physics.Dynamics
         private void ComputeEdge(EdgeShape edge)
         {
             _centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
-        }
-
-        private void ComputeGrid(PhysShapeGrid grid)
-        {
-            var area = grid.LocalBounds.Width * grid.LocalBounds.Height;
-            float I = 0.0f;
-
-            // Probably nothing bad happening if the area is 0?
-
-            // Total mass
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            _centroid = Vector2.Zero;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
         }
         #endregion
 

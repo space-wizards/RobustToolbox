@@ -6,6 +6,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
@@ -18,7 +19,7 @@ namespace Robust.Server.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private SharedBroadphaseSystem _broadphase = default!;
+        private SharedBroadPhaseSystem _broadphase = default!;
 
         // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
         // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
@@ -32,7 +33,7 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-            _broadphase = Get<SharedBroadphaseSystem>();
+            _broadphase = Get<SharedBroadPhaseSystem>();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);
@@ -107,9 +108,10 @@ namespace Robust.Server.Physics
             if (oldFixture?.Equals(newFixture) == true) return;
 
             if (oldFixture != null)
-                _broadphase.DestroyFixture(physicsComponent, oldFixture);
+                physicsComponent.RemoveFixture(oldFixture);
 
-            _broadphase.CreateFixture(physicsComponent, newFixture);
+            newFixture.Body = physicsComponent;
+            physicsComponent.AddFixture(newFixture);
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});

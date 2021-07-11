@@ -186,7 +186,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        internal static Contact Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;

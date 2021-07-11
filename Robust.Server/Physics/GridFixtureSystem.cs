@@ -112,9 +112,8 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}"};
-
-            newFixture.Body = physicsComponent;
+                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                Body = physicsComponent};
 
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
             if (oldFixture?.Equals(newFixture) == true) return;

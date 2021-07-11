@@ -327,12 +327,19 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
+                var broadphaseA = fixtureA.Body.Broadphase;
+                var broadphaseB = fixtureB.Body.Broadphase;
 
-                // We can have cross-broadphase proxies hence need to change them to worlspace
-                var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
-                var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
+                var overlap = false;
 
-                var overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
+                // We can have cross-broadphase proxies hence need to change them to worldspace
+                if (broadphaseA != null && broadphaseB != null)
+                {
+                    var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
+                    var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
+                    overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
+                }
+                // BIG TODO: Log if else? I think this can happen due to PVS fuckery?
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (overlap == false)
